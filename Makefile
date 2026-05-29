@@ -1,5 +1,5 @@
 #
-# rtcwcoop Makefile
+# WolfTech Makefile
 #
 # GNU Make required
 #
@@ -131,17 +131,17 @@ endif
 
 ifndef CLIENTBIN
   ifdef MINGW
-    CLIENTBIN=RTCWCoop
+    CLIENTBIN=WolfTech
   else
-    CLIENTBIN=rtcwcoop
+    CLIENTBIN=wolftech
   endif
 endif
 
 ifndef SERVERBIN
   ifdef MINGW
-    SERVERBIN=RTCWCoopDED
+    SERVERBIN=WolfTechDED
   else
-    SERVERBIN=rtcwcoopded
+    SERVERBIN=wolftechded
   endif
 endif
 
@@ -297,11 +297,20 @@ ifndef USE_AUTHORIZE_SERVER
 USE_AUTHORIZE_SERVER=0
 endif
 
+# Build flavor (steam / nosteam) affects output folder
+ifeq ($(STEAM),1)
+  BUILD_FLAVOR=steam
+else
+  BUILD_FLAVOR=nosteam
+endif
+
 
 #############################################################################
 
-BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
-BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
+BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)-$(BUILD_FLAVOR)
+BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)-$(BUILD_FLAVOR)
+STEAMDIR=$(MOUNT_DIR)/steam
+STEAMSHIMDIR=$(MOUNT_DIR)/steamshim
 CDIR=$(MOUNT_DIR)/client
 SDIR=$(MOUNT_DIR)/server
 RDIR=$(MOUNT_DIR)/renderer
@@ -993,9 +1002,9 @@ endif
 
 ifneq ($(BUILD_CLIENT),0)
   ifneq ($(USE_RENDERER_DLOPEN),0)
-    TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/renderer_coop_opengl1_$(SHLIBNAME)
+    TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/renderer_opengl1_$(SHLIBNAME)
     ifneq ($(BUILD_RENDERER_REND2), 0)
-      TARGETS += $(B)/renderer_coop_rend2_$(SHLIBNAME)
+      TARGETS += $(B)/renderer_rend2_$(SHLIBNAME)
     endif
   else
     TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT)
@@ -1009,9 +1018,9 @@ ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
    ifdef MINGW
     TARGETS += \
-	$(B)/$(BASEGAME)/cgame_coop_$(SHLIBNAME) \
-	$(B)/$(BASEGAME)/qagame_coop_$(SHLIBNAME) \
-	$(B)/$(BASEGAME)/ui_coop_$(SHLIBNAME)
+	$(B)/$(BASEGAME)/cgame_$(SHLIBNAME) \
+	$(B)/$(BASEGAME)/qagame_$(SHLIBNAME) \
+	$(B)/$(BASEGAME)/ui_$(SHLIBNAME)
    else
    TARGETS += \
         $(B)/$(BASEGAME)/cgame.coop.$(SHLIBNAME) \
@@ -1104,6 +1113,11 @@ endif
 
 ifeq ($(USE_MUMBLE),1)
   CLIENT_CFLAGS += -DUSE_MUMBLE
+endif
+
+ifeq ($(STEAM),1)
+  CFLAGS += -DSTEAM
+  CLIENT_CFLAGS += -DSTEAM
 endif
 
 ifeq ($(USE_INTERNAL_ZLIB),1)
@@ -1299,6 +1313,19 @@ define DO_SPLINE_CXX
 $(echo_cmd) "SPLINE_CXX $<"
 $(Q)$(CXX) $(NOTSHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
+
+
+#############################################################################
+# STEAMWORKS INTEGRATION
+#############################################################################
+
+ifeq ($(ARCH),x86)
+  CFLAGS += -DARCH_32
+endif
+ifeq ($(ARCH),x86_64)
+  CFLAGS += -DARCH_64
+endif
+  
 
 #############################################################################
 # MAIN TARGETS
@@ -2215,12 +2242,12 @@ $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 		-o $@ $(Q3OBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
 
-$(B)/renderer_coop_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(JPGOBJ) $(FTOBJ)
+$(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/renderer_coop_rend2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ)
+$(B)/renderer_rend2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
@@ -2430,7 +2457,7 @@ Q3CGOBJ = $(Q3CGOBJ_) $(B)/$(BASEGAME)/cgame/cg_syscalls.o
 Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
 
 ifdef MINGW
-$(B)/$(BASEGAME)/cgame_coop_$(SHLIBNAME): $(Q3CGOBJ)
+$(B)/$(BASEGAME)/cgame_$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
 else
@@ -2448,6 +2475,8 @@ $(B)/$(BASEGAME)/vm/cgame.coop.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3AS
 #############################################################################
 
 Q3GOBJ_ = \
+  $(B)/$(BASEGAME)/game/steam.o \
+  $(B)/$(BASEGAME)/game/steamshim_child.o \
   $(B)/$(BASEGAME)/game/g_main.o \
   $(B)/$(BASEGAME)/game/ai_cast.o \
   $(B)/$(BASEGAME)/game/ai_cast_characters.o \
@@ -2509,7 +2538,7 @@ Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
 Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
 ifdef MINGW
-$(B)/$(BASEGAME)/qagame_coop_$(SHLIBNAME): $(Q3GOBJ)
+$(B)/$(BASEGAME)/qagame_$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 else
@@ -2543,7 +2572,7 @@ Q3UIOBJ = $(Q3UIOBJ_) $(B)/$(BASEGAME)/ui/ui_syscalls.o
 Q3UIVMOBJ = $(Q3UIOBJ_:%.o=%.asm)
 
 ifdef MINGW
-$(B)/$(BASEGAME)/ui_coop_$(SHLIBNAME): $(Q3UIOBJ)
+$(B)/$(BASEGAME)/ui_$(SHLIBNAME): $(Q3UIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3UIOBJ)
 else
@@ -2555,6 +2584,16 @@ $(B)/$(BASEGAME)/vm/ui.coop.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm
 
+
+#############################################################################
+## STEAM INTEGRATION
+#############################################################################
+
+$(B)/$(BASEGAME)/game/%.o: $(STEAMSHIMDIR)/%.c
+	$(DO_GAME_CC)
+
+$(B)/$(BASEGAME)/game/%.o: $(STEAMDIR)/%.c
+	$(DO_GAME_CC)
 
 #############################################################################
 ## CLIENT/SERVER RULES
@@ -2847,9 +2886,9 @@ endif
 ifneq ($(BUILD_CLIENT),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)$(FULLBINEXT)
   ifneq ($(USE_RENDERER_DLOPEN),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_coop_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_coop_opengl1_$(SHLIBNAME)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_$(SHLIBNAME)
     ifneq ($(BUILD_RENDERER_REND2),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_coop_rend2_$(SHLIBNAME) $(COPYBINDIR)/renderer_coop_rend2_$(SHLIBNAME)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_rend2_$(SHLIBNAME) $(COPYBINDIR)/renderer_rend2_$(SHLIBNAME)
     endif
   else
     ifneq ($(BUILD_RENDERER_REND2),0)

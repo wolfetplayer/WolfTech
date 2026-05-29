@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "g_coop.h"
+#include "../../steam/steam.h"
 
 level_locals_t level;
 
@@ -1370,6 +1371,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	G_Printf( "gamename: %s\n", GAMEVERSION );
 	G_Printf( "gamedate: %s\n", PRODUCT_DATE );
 	//}
+
+	steamInit();
 
 	srand( randomSeed );
 
@@ -2976,6 +2979,11 @@ void G_RunFrame( int levelTime ) {
 	int i;
 	gentity_t   *ent;
 	qboolean newSpawns = qfalse;
+
+	if (steamAlive())
+	{
+		steamRun();
+	}
 
 	// if we are waiting for the level to restart, do nothing
 	if ( level.restarted ) {
