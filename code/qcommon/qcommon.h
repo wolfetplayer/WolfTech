@@ -318,7 +318,7 @@ extern int demo_protocols[];
 #endif
 #endif
 
-//#define AUTOUPDATE_SERVER_NAME	"foobar"
+#define AUTOUPDATE_SERVER_NAME	"foobar"
 
 // TTimo: allow override for easy dev/testing..
 // see cons -- update_server=myhost

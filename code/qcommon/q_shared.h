@@ -41,16 +41,14 @@ If you have questions concerning this license or the applicable additional terms
 // ver 1.3		- patch 2 (02/13/02)
 
 #ifdef STANDALONE
-  #define PRODUCT_NAME			"iofoo3"
-  #define BASEGAME			"foobar"
-  #define CLIENT_WINDOW_TITLE     	"changeme"
-  #define CLIENT_WINDOW_MIN_TITLE 	"changeme2"
-  #define HOMEPATH_NAME_UNIX		".foo"
-  #define HOMEPATH_NAME_WIN		"FooBar"
-//  #define STEAMPATH_NAME		"Foo Bar"
-//  #define STEAMPATH_APPID		""
+  #define PRODUCT_NAME			"WolfTech"
+  #define BASEGAME			"main"
+  #define CLIENT_WINDOW_TITLE     	"WolfTech"
+  #define CLIENT_WINDOW_MIN_TITLE 	"WolfTech"
+  #define HOMEPATH_NAME_UNIX		".wolftech"
+  #define HOMEPATH_NAME_WIN		"WolfTech"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-  #define GAMENAME_FOR_MASTER		"foobar"	// must NOT contain whitespace
+  #define GAMENAME_FOR_MASTER		"WolfTech"	// must NOT contain whitespace
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
 #else
   #define PRODUCT_NAME			"RTCWCoop"
