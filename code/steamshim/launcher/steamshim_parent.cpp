@@ -1,7 +1,7 @@
 #ifdef WIN32
-#define GAME_LAUNCH_NAME "./RealRTCW.x64.exe"
+#define GAME_LAUNCH_NAME "./WolfTech.x64.exe"
 #else
-#define GAME_LAUNCH_NAME "./RealRTCW.x86_64"
+#define GAME_LAUNCH_NAME "./WolfTech.x86_64"
 #endif
 #ifndef GAME_LAUNCH_NAME
 #error Please define your game exe name.
