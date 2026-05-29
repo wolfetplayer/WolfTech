@@ -3988,100 +3988,100 @@ char *AIFunc_GrenadeFlushStart( cast_state_t *cs ) {
 
 /*
 ============
-AIFunc_BattleMG42()
+AIFunc_BattleMG42
+
+Mounted MG42 combat behavior.
+Tracks valid enemies inside MG42 arcs, fires in bursts, and dismounts if no target is usable.
 ============
 */
 char *AIFunc_BattleMG42( cast_state_t *cs ) {
 	bot_state_t *bs;
 	gentity_t *mg42, *ent;
-	vec3_t angles, vec, bestangles;
-	qboolean unmount = qfalse;
+	vec3_t angles, vec;
+	qboolean unmount;
+	qboolean shouldAttack;
 
 	mg42 = &g_entities[cs->mountedEntity];
 	ent = &g_entities[cs->entityNum];
 	bs = cs->bs;
 
-	// have we dismounted the MG42?
+	unmount = qfalse;
+
+	// Already dismounted
 	if ( !ent->active ) {
 		return AIFunc_DefaultStart( cs );
 	}
 
-	// are we waiting to dismount
+	// Finish dismount by facing forward first
 	if ( cs->aiFlags & AIFL_DISMOUNTING ) {
-		// face straight forward
 		VectorCopy( mg42->s.angles, cs->ideal_viewangles );
-		// only dismount when facing forwards
+
 		if ( fabs( AngleDifference( mg42->s.angles[YAW], cs->viewangles[YAW] ) ) < 10 ) {
-			// try and unmount
 			Cmd_Activate_f( ent );
 		}
+
 		return NULL;
 	}
 
-	// if enemy is dead, stop attacking them
 	if ( g_entities[cs->enemyNum].health <= 0 ) {
 		cs->enemyNum = -1;
 	}
 
-	//if no enemy, or our current enemy isn't attackable, look for a better enemy
+	// Build aim angles toward current enemy, using recent real-visible position when possible
 	if ( cs->enemyNum >= 0 ) {
-		if ( cs->vislist[cs->enemyNum].real_visible_timestamp && cs->vislist[cs->enemyNum].real_visible_timestamp > ( level.time - 5000 ) ) {
+		if ( cs->vislist[cs->enemyNum].real_visible_timestamp > level.time - 5000 ) {
 			VectorSubtract( cs->vislist[cs->enemyNum].real_visible_pos, mg42->r.currentOrigin, vec );
-		} else if ( cs->vislist[cs->enemyNum].visible_timestamp && cs->vislist[cs->enemyNum].visible_timestamp > ( level.time - 5000 ) ) {
+		} else if ( cs->vislist[cs->enemyNum].visible_timestamp > level.time - 5000 ) {
 			VectorSubtract( cs->vislist[cs->enemyNum].visible_pos, mg42->r.currentOrigin, vec );
-		} else { // just aim straight forward
+		} else {
 			AngleVectors( mg42->s.angles, vec, NULL, NULL );
 		}
 
 		VectorNormalize( vec );
 		vectoangles( vec, angles );
 		angles[PITCH] = AngleNormalize180( angles[PITCH] );
-		VectorCopy( angles, bestangles );
 	}
 
-	// check for enemy outside harc
-	if (    cs->enemyNum < 0 ||
-			!AICast_CheckAttack( cs, cs->enemyNum, qfalse ) ||
-			( fabs( AngleDifference( angles[YAW], mg42->s.angles[YAW] ) ) > mg42->harc ) ||
-			( angles[PITCH] < 0 && angles[PITCH] + 5 < -mg42->varc ) ||
-			( angles[PITCH] > 0 && angles[PITCH] - 5 > 5.0 ) ) {
-		qboolean shouldAttack;
-
-		// look for a better enemy
+	// Current enemy is missing, blocked, or outside MG42 movement arcs
+	if ( cs->enemyNum < 0 ||
+		 !AICast_CheckAttack( cs, cs->enemyNum, qfalse ) ||
+		 fabs( AngleDifference( angles[YAW], mg42->s.angles[YAW] ) ) > mg42->harc ||
+		 ( angles[PITCH] < 0 && angles[PITCH] + 5 < -mg42->varc ) ||
+		 ( angles[PITCH] > 0 && angles[PITCH] - 5 > 5.0 ) ) {
 		numEnemies = AICast_ScanForEnemies( cs, enemies );
 		shouldAttack = qfalse;
+
 		if ( numEnemies > 0 ) {
 			int i;
-			// default to the first known enemy, overwrite if we find a clearer shot
+
 			cs->enemyNum = enemies[0];
-			//
-			// unmount unless we find an enemy within harc
 			unmount = qtrue;
-			//
+
 			for ( i = 0; i < numEnemies; i++ ) {
-				// if they are in the range
-				if ( cs->vislist[enemies[i]].real_visible_timestamp > ( level.time - 5000 ) ) {
+				if ( cs->vislist[enemies[i]].real_visible_timestamp > level.time - 5000 ) {
 					VectorSubtract( cs->vislist[enemies[i]].real_visible_pos, mg42->r.currentOrigin, vec );
 				} else {
 					VectorSubtract( cs->vislist[enemies[i]].visible_pos, mg42->r.currentOrigin, vec );
 				}
+
 				VectorNormalize( vec );
 				vectoangles( vec, angles );
 				angles[PITCH] = AngleNormalize180( angles[PITCH] );
-				if ( !(  ( fabs( AngleDifference( angles[YAW], mg42->s.angles[YAW] ) ) > mg42->harc ) ||
-						 ( angles[YAW] < 0 && angles[YAW] + 2 < -mg42->varc ) ||
-						 ( angles[YAW] > 0 && angles[YAW] - 2 > 5.0 ) ) ) {
-					//
-					// found someone inside harc, so dont unmount
+
+				// Keep original MG42 arc test behavior
+				if ( !( fabs( AngleDifference( angles[YAW], mg42->s.angles[YAW] ) ) > mg42->harc ||
+						( angles[YAW] < 0 && angles[YAW] + 2 < -mg42->varc ) ||
+						( angles[YAW] > 0 && angles[YAW] - 2 > 5.0 ) ) ) {
 					unmount = qfalse;
-					//
+
 					if ( AICast_CheckAttack( cs, enemies[i], qfalse ) ) {
 						cs->enemyNum = enemies[i];
 						shouldAttack = qtrue;
 						break;
-					} else if ( AICast_CheckAttack( cs, enemies[i], qtrue ) ) {
-						// keep firing at anything behind solids, in case they find a position where they can shoot us, but our checkattack() doesn't find a clear shot
-						VectorCopy( angles, bestangles );
+					}
+
+					// Suppress targets behind solids if they were recently visible
+					if ( AICast_CheckAttack( cs, enemies[i], qtrue ) ) {
 						cs->enemyNum = enemies[i];
 						shouldAttack = qtrue;
 					}
@@ -4090,31 +4090,30 @@ char *AIFunc_BattleMG42( cast_state_t *cs ) {
 		}
 
 		if ( !shouldAttack ) {
-			// keep firing at anything behind solids, in case they find a position where they can shoot us, but our checkattack() doesn't find a clear shot
-			if ( cs->enemyNum < 0 || !AICast_CheckAttack( cs, cs->enemyNum, qtrue ) ||
-				 (   !cs->vislist[cs->enemyNum].real_visible_timestamp ||
-					 ( cs->vislist[cs->enemyNum].real_visible_timestamp < level.time - 2000 ) ) ) {
-				// face straight forward
+			// If there is no useful suppressed target, return aim to neutral
+			if ( cs->enemyNum < 0 ||
+				 !AICast_CheckAttack( cs, cs->enemyNum, qtrue ) ||
+				 !cs->vislist[cs->enemyNum].real_visible_timestamp ||
+				 cs->vislist[cs->enemyNum].real_visible_timestamp < level.time - 2000 ) {
 				cs->ideal_viewangles[PITCH] = 0;
 				return NULL;
 			}
 		}
 
-		// if we had possible enemies, but couldnt find one to attack, then dismount now
+		// Enemy exists, but none are usable from this MG42
 		if ( unmount ) {
 			AICast_ScriptEvent( cs, "forced_mg42_unmount", NULL );
+
 			if ( !( cs->aiFlags & AIFL_DENYACTION ) ) {
 				cs->aiFlags |= AIFL_DISMOUNTING;
 				return NULL;
 			}
 		}
 	}
-	//
-	// hold down fire, and track them
-	//
-	// TODO: play a special "holding mg42" torso animation
-	//
+
+	// Track target and fire in controlled bursts
 	VectorCopy( angles, cs->ideal_viewangles );
+
 	if ( cs->triggerReleaseTime < level.time ) {
 		trap_EA_Attack( bs->client );
 		cs->bFlags |= BFL_ATTACKED;
@@ -4123,7 +4122,7 @@ char *AIFunc_BattleMG42( cast_state_t *cs ) {
 			cs->triggerReleaseTime = level.time + 700 + rand() % 700;
 		}
 	}
-	//
+
 	return NULL;
 }
 
