@@ -1301,6 +1301,9 @@ extern cvar_t   *r_wolffog;
 // done
 
 extern cvar_t  *r_highQualityVideo;
+
+extern byte s_intensitytable[256];
+extern unsigned char s_gammatable[256];
 //====================================================================
 
 float R_NoiseGet4f( float x, float y, float z, double t );
@@ -1977,6 +1980,19 @@ void R_MDC_DecodeXyzCompressed( mdcXyzCompressed_t *xyzComp, vec3_t out, vec3_t 
 	( out )[2] = ( (float)( ( ofsVec >> 16 ) & 255 ) - MDC_MAX_OFS ) * MDC_DIST_SCALE; \
 	VectorCopy( ( r_anormals )[( ofsVec >> 24 )], normal );
 #endif
+
+
+static ID_INLINE qboolean R_UseSoftwareGamma( void ) {
+	return !glConfig.deviceSupportsGamma;
+}
+
+static ID_INLINE byte R_GammaByte( byte c ) {
+	if ( !R_UseSoftwareGamma() ) {
+		return c;
+	}
+
+	return s_gammatable[c];
+}
 
 void R_AddMDCSurfaces( trRefEntity_t *ent );
 // done.
