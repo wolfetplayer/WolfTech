@@ -756,11 +756,6 @@ void CG_PredictPlayerState( void ) {
 			}
 		}
 
-                cg_pmove.ltChargeTime = cg_LTChargeTime.integer;
-                cg_pmove.soldierChargeTime = cg_soldierChargeTime.integer;
-                cg_pmove.engineerChargeTime = cg_engineerChargeTime.integer;
-                cg_pmove.medicChargeTime = cg_medicChargeTime.integer;
-
 		Pmove( &cg_pmove );
 
 		moved = qtrue;

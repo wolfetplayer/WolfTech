@@ -4,8 +4,7 @@
 gametypes {
   { "Battle" 0 }
   { "Speedrun" 1 }
-  { "Classes" 2 }
-  { "Cooperative" 3 }
+  { "Cooperative" 2 }
 }
 
 
@@ -18,7 +17,6 @@ joingametypes {
   { "All" -1 }
   { "Battle" 0 }
   { "Speedrun" 1 }
-  { "Classes" 2 }
-  { "Cooperative" 3 }
+  { "Cooperative" 2 }
 
 }
