@@ -1848,6 +1848,8 @@ extern vmCvar_t cg_solidCrosshair;
 extern vmCvar_t cg_bloodBlend;
 extern vmCvar_t cg_announcer;
 
+extern vmCvar_t cg_snipersCrosshair;
+
 //
 // cg_main.c
 //

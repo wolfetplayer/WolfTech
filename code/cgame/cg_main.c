@@ -291,6 +291,8 @@ vmCvar_t cg_solidCrosshair; // No pulsing when shoting
 vmCvar_t cg_bloodBlend;     // Blood covering the screen..
 vmCvar_t cg_announcer;
 
+vmCvar_t cg_snipersCrosshair;
+
 typedef struct {
 	vmCvar_t    *vmCvar;
 	char        *cvarName;
@@ -500,6 +502,8 @@ cvarTable_t cvarTable[] = {
 	{ &cg_solidCrosshair, "cg_solidCrosshair", "0", CVAR_ARCHIVE },
 	{ &cg_bloodBlend, "cg_bloodBlend", "0", CVAR_ARCHIVE },
 	{ &cg_announcer, "cg_announcer", "1", CVAR_ARCHIVE}, // This should be on by default imho.
+
+	{ &cg_snipersCrosshair, "cg_snipersCrosshair", "1", CVAR_ARCHIVE },
 
 	{ &cg_showAIState, "cg_showAIState", "0", CVAR_CHEAT},
 };
