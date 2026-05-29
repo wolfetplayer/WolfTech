@@ -97,8 +97,8 @@ typedef enum
 	P_SPRITE
 } particle_type_t;
 
-#define MAX_SHADER_ANIMS        8
-#define MAX_SHADER_ANIM_FRAMES  64
+#define MAX_SHADER_ANIMS        32
+#define MAX_SHADER_ANIM_FRAMES  128 
 static char *shaderAnimNames[MAX_SHADER_ANIMS] = {
 	"explode1",
 	"blacksmokeanim",
@@ -128,11 +128,11 @@ static float shaderAnimSTRatio[MAX_SHADER_ANIMS] = {
 static int numShaderAnims;
 
 #define     PARTICLE_GRAVITY    40
-#define     MAX_PARTICLES   1024 * 8
+#define     MAX_PARTICLES   16384 * 8
 
 cparticle_t *active_particles, *free_particles;
 cparticle_t particles[MAX_PARTICLES];
-int cl_numparticles = MAX_PARTICLES;
+int cl_numparticles = MAX_PARTICLES; 	
 
 qboolean initparticles = qfalse;
 vec3_t vforward, vright, vup;

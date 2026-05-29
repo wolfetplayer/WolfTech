@@ -555,7 +555,7 @@ typedef struct {
 // there shouldn't be any problem with increasing these values at the
 // expense of more memory allocation in the utilities
 //#define	MAX_MAP_MODELS		0x400
-#define MAX_MAP_MODELS      0x800
+#define MAX_MAP_MODELS      0x1000
 #define MAX_MAP_BRUSHES     0x8000
 #define MAX_MAP_ENTITIES    0x800
 #define MAX_MAP_ENTSTRING   0x40000
