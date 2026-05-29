@@ -146,7 +146,7 @@ ifndef SERVERBIN
 endif
 
 ifndef BASEGAME
-BASEGAME=coopmain
+BASEGAME=main
 endif
 
 ifndef BASEGAME_CFLAGS
