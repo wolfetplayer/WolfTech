@@ -38,6 +38,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <shlobj.h>
 #include <psapi.h>
 #include <float.h>
+#include <shlobj.h>
 
 #ifndef KEY_WOW64_32KEY
 #define KEY_WOW64_32KEY 0x0200
@@ -99,43 +100,33 @@ Sys_DefaultHomePath
 char *Sys_DefaultHomePath( void )
 {
 	TCHAR szPath[MAX_PATH];
-	FARPROC qSHGetFolderPath;
-	HMODULE shfolder = LoadLibrary("shfolder.dll");
 
-	if(shfolder == NULL)
+	if ( !*homePath && com_homepath )
 	{
-		Com_Printf("Unable to load SHFolder.dll\n");
-		return NULL;
-	}
-
-	if(!*homePath && com_homepath)
-	{
-		qSHGetFolderPath = GetProcAddress(shfolder, "SHGetFolderPathA");
-		if(qSHGetFolderPath == NULL)
+		// Store in My Documents so it is easily accessible to users.
+		if ( !SUCCEEDED( SHGetFolderPathA(
+				NULL,
+				CSIDL_PERSONAL,
+				NULL,
+				SHGFP_TYPE_CURRENT,
+				szPath ) ) )
 		{
-			Com_Printf("Unable to find SHGetFolderPath in SHFolder.dll\n");
-			FreeLibrary(shfolder);
+			Com_Printf( "Unable to detect CSIDL_PERSONAL\n" );
 			return NULL;
 		}
 
-		// Changed from CSIDL_APPDATA -> Stores in My Documents so it's more accessible
-		if( !SUCCEEDED( qSHGetFolderPath( NULL, CSIDL_PERSONAL,
-						NULL, 0, szPath ) ) )
-		{
-			Com_Printf("Unable to detect CSIDL_PERSONAL\n");
-			FreeLibrary(shfolder);
-			return NULL;
-		}
-		
-		Com_sprintf(homePath, sizeof(homePath), "%s%c", szPath, PATH_SEP);
+		Com_sprintf( homePath, sizeof( homePath ), "%s%c", szPath, PATH_SEP );
 
-		if(com_homepath->string[0])
-			Q_strcat(homePath, sizeof(homePath), com_homepath->string);
+		if ( com_homepath->string[0] )
+		{
+			Q_strcat( homePath, sizeof( homePath ), com_homepath->string );
+		}
 		else
-			Q_strcat(homePath, sizeof(homePath), HOMEPATH_NAME_WIN);
+		{
+			Q_strcat( homePath, sizeof( homePath ), HOMEPATH_NAME_WIN );
+		}
 	}
 
-	FreeLibrary(shfolder);
 	return homePath;
 }
 
