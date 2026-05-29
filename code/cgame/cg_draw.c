@@ -625,15 +625,15 @@ static void CG_DrawStatusBar( void ) {
 
 	
 	if ( cg_drawStatusHead.integer ) {
-		CG_DrawStatusBarHead( 185 + CHAR_WIDTH*3 + TEXT_ICON_SPACE );
+		CG_DrawStatusBarHead( 185 + CHAR_WIDTH_CG*3 + TEXT_ICON_SPACE );
 	}
 
 	CG_DrawStatusBarKeys();
 
 	if ( cg.predictedPlayerState.powerups[PW_REDFLAG] ) {
-		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH * 3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_RED );
+		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH_CG * 3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_RED );
 	} else if ( cg.predictedPlayerState.powerups[PW_BLUEFLAG] ) {
-		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH * 3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_BLUE );
+		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH_CG * 3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_BLUE );
 	}
 
 	//----(SA) further change... we don't need to draw the armor do we?
@@ -754,7 +754,7 @@ static void CG_DrawStatusBar( void ) {
 
 				icon = cg_weapons[ cg.predictedPlayerState.weapon ].ammoIcon;
 				if ( icon ) {
-					CG_DrawPic( CHAR_WIDTH * 3 + TEXT_ICON_SPACE, STATUSBARHEIGHT, ICON_SIZE, ICON_SIZE, icon );
+					CG_DrawPic( CHAR_WIDTH_CG * 3 + TEXT_ICON_SPACE, STATUSBARHEIGHT, ICON_SIZE, ICON_SIZE, icon );
 				}
 			}
 		}
