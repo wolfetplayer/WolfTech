@@ -126,7 +126,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=1.0.3
+VERSION=0.1
 endif
 
 ifndef CLIENTBIN
@@ -146,7 +146,7 @@ ifndef SERVERBIN
 endif
 
 ifndef BASEGAME
-BASEGAME=main
+BASEGAME=Main
 endif
 
 ifndef BASEGAME_CFLAGS
@@ -1023,9 +1023,9 @@ ifneq ($(BUILD_GAME_SO),0)
 	$(B)/$(BASEGAME)/ui_$(SHLIBNAME)
    else
    TARGETS += \
-        $(B)/$(BASEGAME)/cgame.coop.$(SHLIBNAME) \
-        $(B)/$(BASEGAME)/qagame.coop.$(SHLIBNAME) \
-        $(B)/$(BASEGAME)/ui.coop.$(SHLIBNAME)
+        $(B)/$(BASEGAME)/cgame.$(SHLIBNAME) \
+        $(B)/$(BASEGAME)/qagame.$(SHLIBNAME) \
+        $(B)/$(BASEGAME)/ui.$(SHLIBNAME)
    endif
   endif
 endif
@@ -1033,9 +1033,9 @@ endif
 ifneq ($(BUILD_GAME_QVM),0)
   ifneq ($(BUILD_BASEGAME),0)
     TARGETS += \
-    $(B)/$(BASEGAME)/vm/cgame.coop.qvm \
-    $(B)/$(BASEGAME)/vm/qagame.coop.qvm \
-    $(B)/$(BASEGAME)/vm/ui.coop.qvm
+    $(B)/$(BASEGAME)/vm/cgame.qvm \
+    $(B)/$(BASEGAME)/vm/qagame.qvm \
+    $(B)/$(BASEGAME)/vm/ui.qvm
   endif
 endif
 
@@ -2461,11 +2461,11 @@ $(B)/$(BASEGAME)/cgame_$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
 else
-$(B)/$(BASEGAME)/cgame.coop.$(SHLIBNAME): $(Q3CGOBJ)
+$(B)/$(BASEGAME)/cgame.$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
 endif
-$(B)/$(BASEGAME)/vm/cgame.coop.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm
 
@@ -2542,11 +2542,11 @@ $(B)/$(BASEGAME)/qagame_$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 else
-$(B)/$(BASEGAME)/qagame.coop.$(SHLIBNAME): $(Q3GOBJ)
+$(B)/$(BASEGAME)/qagame.$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 endif
-$(B)/$(BASEGAME)/vm/qagame.coop.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/qagame.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm
 
@@ -2576,11 +2576,11 @@ $(B)/$(BASEGAME)/ui_$(SHLIBNAME): $(Q3UIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3UIOBJ)
 else
-$(B)/$(BASEGAME)/ui.coop.$(SHLIBNAME): $(Q3UIOBJ)
+$(B)/$(BASEGAME)/ui.$(SHLIBNAME): $(Q3UIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3UIOBJ)
 endif
-$(B)/$(BASEGAME)/vm/ui.coop.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm
 
@@ -2905,11 +2905,11 @@ endif
 
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/cgame.coop.$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/cgame.$(SHLIBNAME) \
                                         $(COPYDIR)/$(BASEGAME)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/qagame.coop.$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/qagame.$(SHLIBNAME) \
                                         $(COPYDIR)/$(BASEGAME)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/ui.coop.$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/ui.$(SHLIBNAME) \
                                         $(COPYDIR)/$(BASEGAME)/.
   endif
 endif

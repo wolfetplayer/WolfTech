@@ -1476,10 +1476,10 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 					if(strstr(filename, Sys_GetDLLName( "ui" )))
 						pak->referenced |= FS_UI_REF;
 
-					if(strstr(filename, "cgame.coop.qvm"))
+					if(strstr(filename, "cgame.qvm"))
 						pak->referenced |= FS_CGAME_REF;
 
-					if(strstr(filename, "ui.coop.qvm"))
+					if(strstr(filename, "ui.qvm"))
 						pak->referenced |= FS_UI_REF;
 
 					// Don't allow the multiplayer maps to be loaded
@@ -3595,12 +3595,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 			continue;
 		}
 
-		// never autodownload any of the coop paks
-		if(FS_idPak(fs_serverReferencedPakNames[i], COOP_BASEGAME, NUM_ID_PAKS))
-		{
-			continue;
-		}
-
 		// Make sure the server cannot make us write to non-quake3 directories.
 		if(FS_CheckDirTraversal(fs_serverReferencedPakNames[i]))
 		{
@@ -3817,18 +3811,18 @@ static void FS_Startup( const char *gameName )
 	fs_gogpath = Cvar_Get ("fs_gogpath", Sys_GogPath(), CVAR_INIT|CVAR_PROTECTED );
 	if (fs_gogpath->string[0]) {
 		FS_AddGameDirectory( fs_gogpath->string, gameName, qtrue );
-		FS_AddGameDirectory( fs_gogpath->string, COOP_BASEGAME, qtrue );
+		//FS_AddGameDirectory( fs_gogpath->string, COOP_BASEGAME, qtrue );
 	}
 
 	fs_steampath = Cvar_Get ("fs_steampath", Sys_SteamPath(), CVAR_INIT|CVAR_PROTECTED );
 	if (fs_steampath->string[0]) {
 		FS_AddGameDirectory( fs_steampath->string, gameName, qtrue );
-		FS_AddGameDirectory( fs_steampath->string, COOP_BASEGAME, qtrue );
+		//FS_AddGameDirectory( fs_steampath->string, COOP_BASEGAME, qtrue );
 	}
 #endif
 	if ( fs_basepath->string[0] ) {
 		FS_AddGameDirectory( fs_basepath->string, gameName, qtrue );
-		FS_AddGameDirectory( fs_basepath->string, COOP_BASEGAME, qtrue );
+		//FS_AddGameDirectory( fs_basepath->string, COOP_BASEGAME, qtrue );
 	}
 
 #ifdef __APPLE__
@@ -3836,7 +3830,7 @@ static void FS_Startup( const char *gameName )
 	// Make MacOSX also include the base path included with the .app bundle
 	if (fs_apppath->string[0]) {
 		FS_AddGameDirectory(fs_apppath->string, gameName, qtrue);
-		FS_AddGameDirectory(fs_apppath->string, COOP_BASEGAME, qtrue);
+		//FS_AddGameDirectory(fs_apppath->string, COOP_BASEGAME, qtrue);
 	}
 #endif
 
@@ -3844,7 +3838,7 @@ static void FS_Startup( const char *gameName )
 	if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string,fs_basepath->string)) {
 		FS_CreatePath ( fs_homepath->string );
 		FS_AddGameDirectory( fs_homepath->string, gameName, qtrue );
-		FS_AddGameDirectory( fs_homepath->string, COOP_BASEGAME, qtrue );
+		//FS_AddGameDirectory( fs_homepath->string, COOP_BASEGAME, qtrue );
 	}
 
 	// check for additional base game so mods can be based upon other mods

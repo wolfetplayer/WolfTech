@@ -864,7 +864,7 @@ Sys_GetDLLName
 ==============
 */
 char* Sys_GetDLLName( const char *name ) {
-	return va("%s_coop_" ARCH_STRING DLL_EXT, name);
+	return va("%s_" ARCH_STRING DLL_EXT, name);
 }
 
 /*
