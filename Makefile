@@ -745,7 +745,7 @@ ifdef MINGW
     CLIENT_LIBS += $(LIBSDIR)/win64/libSDL3.dll.a
     RENDERER_LIBS += $(LIBSDIR)/win64/libSDL3.dll.a
     SDLDLL=SDL3.dll
-    CLIENT_EXTRA_FILES += $(LIBSDIR)/win64/SDL264.dll $(LIBSDIR)/win64/OpenAL64.dll
+    CLIENT_EXTRA_FILES += $(LIBSDIR)/win64/SDL3.dll $(LIBSDIR)/win64/OpenAL64.dll
     endif
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)

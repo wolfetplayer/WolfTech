@@ -646,6 +646,7 @@ static void DrawSkyBox( shader_t *shader ) {
 			sky_maxs_subd[1] = HALF_SKY_SUBDIVISIONS;
 		}
 
+
 		//
 		// iterate through the subdivisions
 		//
