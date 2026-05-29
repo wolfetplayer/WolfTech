@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug WolfTech (Steam)",
+      "type": "cppdbg",
+      "request": "launch",
+
+      "program": "${workspaceFolder}/build/debug-mingw64-x86_64-steam/WolfTech.x64.exe",
+      "cwd": "${workspaceFolder}",
+
+      "MIMode": "gdb",
+      "miDebuggerPath": "C:/msys64/mingw64/bin/gdb.exe",
+
+      "externalConsole": true
+    }
+  ]
+}

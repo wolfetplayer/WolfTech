@@ -1,0 +1,89 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-steam-debug",
+      "type": "shell",
+      "command": "ARCH=x86_64 STEAM=1 mingw32-make debug",
+      "group": "build",
+      "problemMatcher": ["$gcc"],
+      "detail": "Builds the Steam version of RealRTCW with debug configuration.",
+      "options": {
+        "shell": {
+          "executable": "C:/msys64/usr/bin/bash.exe",
+          "args": ["-c"]
+        }
+      }
+    },
+    {
+      "label": "build-nonsteam-debug",
+      "type": "shell",
+      "command": "ARCH=x86_64 mingw32-make debug",
+      "group": "build",
+      "problemMatcher": ["$gcc"],
+      "detail": "Builds the standalone (non-Steam) version of RealRTCW with debug configuration.",
+      "options": {
+        "shell": {
+          "executable": "C:/msys64/usr/bin/bash.exe",
+          "args": ["-c"]
+        }
+      }
+    },
+    {
+      "label": "build-steam-release",
+      "type": "shell",
+      "command": "ARCH=x86_64 STEAM=1 mingw32-make release",
+      "group": "build",
+      "problemMatcher": ["$gcc"],
+      "detail": "Builds the Steam version of RealRTCW (release build).",
+      "options": {
+        "shell": {
+          "executable": "C:/msys64/usr/bin/bash.exe",
+          "args": ["-c"]
+        }
+      }
+    },
+    {
+      "label": "build-nonsteam-release",
+      "type": "shell",
+      "command": "ARCH=x86_64 BUILD_STANDALONE=1 mingw32-make release",
+      "group": "build",
+      "problemMatcher": ["$gcc"],
+      "detail": "Builds the non-Steam version of WolfTech (release build).",
+      "options": {
+        "shell": {
+          "executable": "C:/msys64/usr/bin/bash.exe",
+          "args": ["-c"]
+        }
+      }
+    }
+	{
+      "label": "build-bspc-only 64-bit",
+      "type": "shell",
+      "command": "ARCH=x86_64 mingw32-make release ONLY_BSPC=1",
+      "group": "build",
+      "problemMatcher": ["$gcc"],
+      "detail": "Builds the custom realrtcw bspc (64-bit)",
+      "options": {
+        "shell": {
+          "executable": "C:/msys64/usr/bin/bash.exe",
+          "args": ["-c"]
+        }
+      }
+    }
+	{
+      "label": "build-bspc-only 32-bit",
+      "type": "shell",
+      "command": "ARCH=x86 mingw32-make release ONLY_BSPC=1",
+      "group": "build",
+      "problemMatcher": ["$gcc"],
+      "detail": "Builds the custom realrtcw bspc (32-bit)",
+      "options": {
+        "shell": {
+          "executable": "C:/msys64/usr/bin/bash.exe",
+          "args": ["-c"]
+        }
+      }
+    }
+  ]
+}

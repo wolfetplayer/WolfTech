@@ -1,0 +1,19 @@
+{
+    "makefile.configureOnOpen": false,
+    "files.associations": {
+        "setjmp.h": "c",
+        "cstddef": "c",
+        "functional": "c",
+        "stdlib.h": "c",
+        "g_local.h": "c",
+        "steam.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "format": "c",
+        "initializer_list": "c",
+        "span": "c"
+    },
+    "files.exclude": {
+        "**/sdk": true
+    }
+}
