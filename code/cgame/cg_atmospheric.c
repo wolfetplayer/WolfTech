@@ -869,11 +869,12 @@ noSky:	cg_atmFx.skyOverMe = qfalse;
 	if (rainSFX && cg_atm_effects_low.integer != 2)
 	{
 		if (cg_atmFx.skyOverMe)
-			CG_S_AddLoopingSound (ENTITYNUM_NONE, cg.refdef.vieworg, vec3_origin, rainSFX, 255);
+			CG_S_AddLoopingSound (cg.snap->ps.clientNum, cg.refdef.vieworg, vec3_origin, rainSFX, 255);
 		else
 		{
-			CG_S_AddLoopingSound (ENTITYNUM_NONE, cg.refdef.vieworg, vec3_origin, rainSFXindoor, 255);
+			CG_S_AddLoopingSound (cg.snap->ps.clientNum, cg.refdef.vieworg, vec3_origin, rainSFXindoor, 255);
 		}
+
 	}
 
 	rainSFXenabled = (qboolean)(cg_atm_effects_low.integer != 2);
