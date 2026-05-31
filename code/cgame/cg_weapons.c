@@ -74,9 +74,9 @@ static void CG_MachineGunEjectBrassNew( centity_t *cent ) {
 	le = CG_AllocLocalEntity();
 	re = &le->refEntity;
 
-	velocity[0] = 16;
-	velocity[1] = -50 + 40 * crandom();
-	velocity[2] = 100 + 50 * crandom();
+	velocity[0] = -50 + 25 * crandom(); // New eject brass RealRTCW
+	velocity[1] = -100 + 40 * crandom();
+	velocity[2] = 200 + 50 * random();
 
 	le->leType = LE_FRAGMENT;
 	le->startTime = cg.time;
@@ -102,15 +102,15 @@ static void CG_MachineGunEjectBrassNew( centity_t *cent ) {
 	VectorScale( xvelocity, waterScale, le->pos.trDelta );
 
 	AxisCopy( axisDefault, re->axis );
-	re->hModel = cgs.media.smallgunBrassModel;
+	re->hModel = cgs.media.machinegunBrassModel;
 
 	le->bounceFactor = 0.4 * waterScale;
 
 	le->angles.trType = TR_LINEAR;
 	le->angles.trTime = cg.time;
-	le->angles.trBase[0] = rand() & 31;
-	le->angles.trBase[1] = rand() & 31;
-	le->angles.trBase[2] = rand() & 31;
+	le->angles.trBase[0]  = (rand() & 31) + 60;  // new eject brass RealRTCW
+	le->angles.trBase[1]  = rand() & 255; 
+	le->angles.trBase[2]  = rand() & 31;
 	le->angles.trDelta[0] = 2;
 	le->angles.trDelta[1] = 1;
 	le->angles.trDelta[2] = 0;
