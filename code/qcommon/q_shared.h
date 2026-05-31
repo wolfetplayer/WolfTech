@@ -1293,7 +1293,7 @@ typedef enum {
 #define MAX_SOUNDS          256     // so they cannot be blindly increased
 
 
-#define MAX_PARTICLES_AREAS     128
+#define MAX_PARTICLES_AREAS     512
 
 #define MAX_MULTI_SPAWNTARGETS  16 // JPW NERVE
 

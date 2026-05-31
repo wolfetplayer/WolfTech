@@ -289,6 +289,10 @@ vmCvar_t cg_announcer;
 
 vmCvar_t cg_snipersCrosshair;
 
+vmCvar_t cg_atm_effects;
+vmCvar_t cg_atm_effects_low;
+vmCvar_t cg_atm_effects_force;
+
 typedef struct {
 	vmCvar_t    *vmCvar;
 	char        *cvarName;
@@ -297,207 +301,211 @@ typedef struct {
 } cvarTable_t;
 
 cvarTable_t cvarTable[] = {
-	{ &cg_ignore, "cg_ignore", "0", 0 },  // used for debugging
-	{ &cg_autoswitch, "cg_autoswitch", "2", CVAR_ARCHIVE },
-	{ &cg_drawGun, "cg_drawGun", "1", CVAR_ARCHIVE },
-	{ &cg_drawGamemodels, "cg_drawGamemodels", "1", CVAR_CHEAT },
-	{ &cg_drawFPGun, "cg_drawFPGun", "1", CVAR_ARCHIVE },
-	{ &cg_gun_frame, "cg_gun_frame", "0", CVAR_TEMP },
-	{ &cg_cursorHints, "cg_cursorHints", "1", CVAR_ARCHIVE },
-	{ &cg_hintFadeTime, "cg_hintFadeTime", "500", CVAR_ARCHIVE }, //----(SA)	added
-	{ &cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE },
-	{ &cg_zoomDefaultBinoc, "cg_zoomDefaultBinoc", "22.5", CVAR_ARCHIVE },
-	{ &cg_zoomDefaultSniper, "cg_zoomDefaultSniper", "15", CVAR_ARCHIVE },
-	{ &cg_zoomDefaultSnooper, "cg_zoomDefaultSnooper", "40", CVAR_ARCHIVE },
-	{ &cg_zoomDefaultFG, "cg_zoomDefaultFG", "55", CVAR_ARCHIVE },                //----(SA)	added
-	{ &cg_zoomStepBinoc, "cg_zoomStepBinoc", "3", CVAR_ARCHIVE },
-	{ &cg_zoomStepSniper, "cg_zoomStepSniper", "2", CVAR_ARCHIVE },
-	{ &cg_zoomStepSnooper, "cg_zoomStepSnooper", "5", CVAR_ARCHIVE },
-	{ &cg_zoomStepFG, "cg_zoomStepFG", "10", CVAR_ARCHIVE },          //----(SA)	added
-	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE },	// NOTE: there is already a dmflag (DF_FIXED_FOV) to allow server control of this cheat
-	{ &cg_fixedAspect, "cg_fixedAspect", "0", CVAR_ARCHIVE | CVAR_LATCH }, // Essentially the same as setting DF_FIXED_FOV for widescreen aspects
-	{ &cg_fixedAspectFOV, "cg_fixedAspectFOV", "1", CVAR_ARCHIVE },
-	{ &cg_oldWolfUI, "cg_oldWolfUI", "0", CVAR_ARCHIVE },
-	{ &cg_drawStatusHead, "cg_drawStatusHead", "0", CVAR_ARCHIVE },
-	{ &cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE },
-	{ &cg_letterbox, "cg_letterbox", "0", CVAR_TEMP },    //----(SA)	added
-	{ &cg_shadows, "cg_shadows", "1", CVAR_ARCHIVE  },
-	{ &cg_gibs, "cg_gibs", "1", CVAR_ARCHIVE  },
-	{ &cg_draw2D, "cg_draw2D", "1", CVAR_ARCHIVE  },
-	{ &cg_drawSpreadScale, "cg_drawSpreadScale", "1", CVAR_ARCHIVE },
-	{ &cg_drawFrags, "cg_drawFrags", "1", CVAR_ARCHIVE },
-	{ &cg_drawStatus, "cg_drawStatus", "1", CVAR_ARCHIVE  },
-	{ &cg_drawTimer, "cg_drawTimer", "0", CVAR_ARCHIVE  },
-	{ &cg_drawFPS, "cg_drawFPS", "0", CVAR_ARCHIVE  },
-	{ &cg_drawSnapshot, "cg_drawSnapshot", "0", CVAR_ARCHIVE  },
-	{ &cg_draw3dIcons, "cg_draw3dIcons", "1", CVAR_ARCHIVE  },
-	{ &cg_drawIcons, "cg_drawIcons", "1", CVAR_ARCHIVE  },
-	{ &cg_drawAmmoWarning, "cg_drawAmmoWarning", "1", CVAR_ARCHIVE  },
-	{ &cg_drawAttacker, "cg_drawAttacker", "1", CVAR_ARCHIVE  },
-	{ &cg_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE },
-	{ &cg_drawCrosshairBinoc, "cg_drawCrosshairBinoc", "0", CVAR_ARCHIVE },
-	{ &cg_drawCrosshairNames, "cg_drawCrosshairNames", "1", CVAR_ARCHIVE },
-	{ &cg_drawCrosshairPickups, "cg_drawCrosshairPickups", "1", CVAR_ARCHIVE },
-	{ &cg_drawCrosshairReticle, "cg_drawCrosshairReticle", "1", CVAR_ARCHIVE },
-	{ &cg_drawRewards, "cg_drawRewards", "1", CVAR_ARCHIVE },
-	{ &cg_hudAlpha, "cg_hudAlpha", "0.8", CVAR_ARCHIVE },
-	{ &cg_useWeapsForZoom,  "cg_useWeapsForZoom", "1", CVAR_ARCHIVE },
-	{ &cg_weaponCycleDelay, "cg_weaponCycleDelay", "150", CVAR_ARCHIVE }, //----(SA)	added
-	{ &cg_cycleAllWeaps,    "cg_cycleAllWeaps", "1", CVAR_ARCHIVE },
-	{ &cg_drawAllWeaps,     "cg_drawAllWeaps",   "1", CVAR_ARCHIVE },
-	{ &cg_crosshairSize, "cg_crosshairSize", "24", CVAR_ARCHIVE },
-	{ &cg_crosshairAlpha, "cg_crosshairAlpha", "0.5", CVAR_ARCHIVE }, //----(SA)	added
-	{ &cg_crosshairHealth, "cg_crosshairHealth", "1", CVAR_ARCHIVE },
-	{ &cg_crosshairX, "cg_crosshairX", "0", CVAR_ARCHIVE },
-	{ &cg_crosshairY, "cg_crosshairY", "0", CVAR_ARCHIVE },
-	{ &cg_brassTime, "cg_brassTime", "1250", CVAR_ARCHIVE },
-	{ &cg_simpleItems, "cg_simpleItems", "0", CVAR_ARCHIVE },
-	{ &cg_reticles, "cg_reticles", "1", CVAR_CHEAT },
-	{ &cg_reticleBrightness, "cg_reticleBrightness", "0.7", CVAR_ARCHIVE },
-	{ &cg_markTime, "cg_marktime", "3600000", CVAR_ARCHIVE },
-	{ &cg_lagometer, "cg_lagometer", "0", CVAR_ARCHIVE },
-	{ &cg_railTrailTime, "cg_railTrailTime", "400", CVAR_ARCHIVE  },
-	{ &cg_gun_x, "cg_gunX", "0", CVAR_CHEAT },
-	{ &cg_gun_y, "cg_gunY", "0", CVAR_CHEAT },
-	{ &cg_gun_z, "cg_gunZ", "0", CVAR_CHEAT },
-	{ &cg_centertime, "cg_centertime", "3", CVAR_CHEAT },
-	{ &cg_runpitch, "cg_runpitch", "0.002", CVAR_ARCHIVE},
-	{ &cg_runroll, "cg_runroll", "0.005", CVAR_ARCHIVE },
-	{ &cg_bobup, "cg_bobup", "0.005", CVAR_ARCHIVE },
-	{ &cg_bobpitch, "cg_bobpitch", "0.002", CVAR_ARCHIVE },
-	{ &cg_bobroll, "cg_bobroll", "0.002", CVAR_ARCHIVE },
+	{&cg_ignore, "cg_ignore", "0", 0}, // used for debugging
+	{&cg_autoswitch, "cg_autoswitch", "2", CVAR_ARCHIVE},
+	{&cg_drawGun, "cg_drawGun", "1", CVAR_ARCHIVE},
+	{&cg_drawGamemodels, "cg_drawGamemodels", "1", CVAR_CHEAT},
+	{&cg_drawFPGun, "cg_drawFPGun", "1", CVAR_ARCHIVE},
+	{&cg_gun_frame, "cg_gun_frame", "0", CVAR_TEMP},
+	{&cg_cursorHints, "cg_cursorHints", "1", CVAR_ARCHIVE},
+	{&cg_hintFadeTime, "cg_hintFadeTime", "500", CVAR_ARCHIVE}, //----(SA)	added
+	{&cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE},
+	{&cg_zoomDefaultBinoc, "cg_zoomDefaultBinoc", "22.5", CVAR_ARCHIVE},
+	{&cg_zoomDefaultSniper, "cg_zoomDefaultSniper", "15", CVAR_ARCHIVE},
+	{&cg_zoomDefaultSnooper, "cg_zoomDefaultSnooper", "40", CVAR_ARCHIVE},
+	{&cg_zoomDefaultFG, "cg_zoomDefaultFG", "55", CVAR_ARCHIVE}, //----(SA)	added
+	{&cg_zoomStepBinoc, "cg_zoomStepBinoc", "3", CVAR_ARCHIVE},
+	{&cg_zoomStepSniper, "cg_zoomStepSniper", "2", CVAR_ARCHIVE},
+	{&cg_zoomStepSnooper, "cg_zoomStepSnooper", "5", CVAR_ARCHIVE},
+	{&cg_zoomStepFG, "cg_zoomStepFG", "10", CVAR_ARCHIVE},				 //----(SA)	added
+	{&cg_fov, "cg_fov", "90", CVAR_ARCHIVE},							 // NOTE: there is already a dmflag (DF_FIXED_FOV) to allow server control of this cheat
+	{&cg_fixedAspect, "cg_fixedAspect", "0", CVAR_ARCHIVE | CVAR_LATCH}, // Essentially the same as setting DF_FIXED_FOV for widescreen aspects
+	{&cg_fixedAspectFOV, "cg_fixedAspectFOV", "1", CVAR_ARCHIVE},
+	{&cg_oldWolfUI, "cg_oldWolfUI", "0", CVAR_ARCHIVE},
+	{&cg_drawStatusHead, "cg_drawStatusHead", "0", CVAR_ARCHIVE},
+	{&cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE},
+	{&cg_letterbox, "cg_letterbox", "0", CVAR_TEMP}, //----(SA)	added
+	{&cg_shadows, "cg_shadows", "1", CVAR_ARCHIVE},
+	{&cg_gibs, "cg_gibs", "1", CVAR_ARCHIVE},
+	{&cg_draw2D, "cg_draw2D", "1", CVAR_ARCHIVE},
+	{&cg_drawSpreadScale, "cg_drawSpreadScale", "1", CVAR_ARCHIVE},
+	{&cg_drawFrags, "cg_drawFrags", "1", CVAR_ARCHIVE},
+	{&cg_drawStatus, "cg_drawStatus", "1", CVAR_ARCHIVE},
+	{&cg_drawTimer, "cg_drawTimer", "0", CVAR_ARCHIVE},
+	{&cg_drawFPS, "cg_drawFPS", "0", CVAR_ARCHIVE},
+	{&cg_drawSnapshot, "cg_drawSnapshot", "0", CVAR_ARCHIVE},
+	{&cg_draw3dIcons, "cg_draw3dIcons", "1", CVAR_ARCHIVE},
+	{&cg_drawIcons, "cg_drawIcons", "1", CVAR_ARCHIVE},
+	{&cg_drawAmmoWarning, "cg_drawAmmoWarning", "1", CVAR_ARCHIVE},
+	{&cg_drawAttacker, "cg_drawAttacker", "1", CVAR_ARCHIVE},
+	{&cg_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE},
+	{&cg_drawCrosshairBinoc, "cg_drawCrosshairBinoc", "0", CVAR_ARCHIVE},
+	{&cg_drawCrosshairNames, "cg_drawCrosshairNames", "1", CVAR_ARCHIVE},
+	{&cg_drawCrosshairPickups, "cg_drawCrosshairPickups", "1", CVAR_ARCHIVE},
+	{&cg_drawCrosshairReticle, "cg_drawCrosshairReticle", "1", CVAR_ARCHIVE},
+	{&cg_drawRewards, "cg_drawRewards", "1", CVAR_ARCHIVE},
+	{&cg_hudAlpha, "cg_hudAlpha", "0.8", CVAR_ARCHIVE},
+	{&cg_useWeapsForZoom, "cg_useWeapsForZoom", "1", CVAR_ARCHIVE},
+	{&cg_weaponCycleDelay, "cg_weaponCycleDelay", "150", CVAR_ARCHIVE}, //----(SA)	added
+	{&cg_cycleAllWeaps, "cg_cycleAllWeaps", "1", CVAR_ARCHIVE},
+	{&cg_drawAllWeaps, "cg_drawAllWeaps", "1", CVAR_ARCHIVE},
+	{&cg_crosshairSize, "cg_crosshairSize", "24", CVAR_ARCHIVE},
+	{&cg_crosshairAlpha, "cg_crosshairAlpha", "0.5", CVAR_ARCHIVE}, //----(SA)	added
+	{&cg_crosshairHealth, "cg_crosshairHealth", "1", CVAR_ARCHIVE},
+	{&cg_crosshairX, "cg_crosshairX", "0", CVAR_ARCHIVE},
+	{&cg_crosshairY, "cg_crosshairY", "0", CVAR_ARCHIVE},
+	{&cg_brassTime, "cg_brassTime", "1250", CVAR_ARCHIVE},
+	{&cg_simpleItems, "cg_simpleItems", "0", CVAR_ARCHIVE},
+	{&cg_reticles, "cg_reticles", "1", CVAR_CHEAT},
+	{&cg_reticleBrightness, "cg_reticleBrightness", "0.7", CVAR_ARCHIVE},
+	{&cg_markTime, "cg_marktime", "3600000", CVAR_ARCHIVE},
+	{&cg_lagometer, "cg_lagometer", "0", CVAR_ARCHIVE},
+	{&cg_railTrailTime, "cg_railTrailTime", "400", CVAR_ARCHIVE},
+	{&cg_gun_x, "cg_gunX", "0", CVAR_CHEAT},
+	{&cg_gun_y, "cg_gunY", "0", CVAR_CHEAT},
+	{&cg_gun_z, "cg_gunZ", "0", CVAR_CHEAT},
+	{&cg_centertime, "cg_centertime", "3", CVAR_CHEAT},
+	{&cg_runpitch, "cg_runpitch", "0.002", CVAR_ARCHIVE},
+	{&cg_runroll, "cg_runroll", "0.005", CVAR_ARCHIVE},
+	{&cg_bobup, "cg_bobup", "0.005", CVAR_ARCHIVE},
+	{&cg_bobpitch, "cg_bobpitch", "0.002", CVAR_ARCHIVE},
+	{&cg_bobroll, "cg_bobroll", "0.002", CVAR_ARCHIVE},
 
-	{ &cg_quickMessageAlt, "cg_quickMessageAlt", "1", CVAR_ARCHIVE },
-	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},                          // NERVE - SMF
-	{ &cg_voiceSpriteTime, "cg_voiceSpriteTime", "6000", CVAR_ARCHIVE},           // DHM - Nerve
-	{ &cg_noVoiceChats, "cg_noVoiceChats", "0", CVAR_ARCHIVE },                   // NERVE - SMF
-	{ &cg_noVoiceText, "cg_noVoiceText", "0", CVAR_ARCHIVE },
+	{&cg_quickMessageAlt, "cg_quickMessageAlt", "1", CVAR_ARCHIVE},
+	{&cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},					   // NERVE - SMF
+	{&cg_voiceSpriteTime, "cg_voiceSpriteTime", "6000", CVAR_ARCHIVE}, // DHM - Nerve
+	{&cg_noVoiceChats, "cg_noVoiceChats", "0", CVAR_ARCHIVE},		   // NERVE - SMF
+	{&cg_noVoiceText, "cg_noVoiceText", "0", CVAR_ARCHIVE},
 
 	// JOSEPH 10-27-99
-	{ &cg_autoactivate, "cg_autoactivate", "1", CVAR_ARCHIVE },
-	{ &cg_emptyswitch, "cg_emptyswitch", "0", CVAR_ARCHIVE },
+	{&cg_autoactivate, "cg_autoactivate", "1", CVAR_ARCHIVE},
+	{&cg_emptyswitch, "cg_emptyswitch", "0", CVAR_ARCHIVE},
 	// END JOSEPH
 
-//----(SA)	added
-	{ &cg_particleDist, "cg_particleDist", "1024", CVAR_ARCHIVE },
-	{ &cg_particleLOD, "cg_particleLOD", "0", CVAR_ARCHIVE },
-	{ &cg_useSuggestedWeapons, "cg_useSuggestedWeapons", "1", CVAR_ARCHIVE }, //----(SA)	added
-//----(SA)	end
+	//----(SA)	added
+	{&cg_particleDist, "cg_particleDist", "1024", CVAR_ARCHIVE},
+	{&cg_particleLOD, "cg_particleLOD", "0", CVAR_ARCHIVE},
+	{&cg_useSuggestedWeapons, "cg_useSuggestedWeapons", "1", CVAR_ARCHIVE}, //----(SA)	added
+																			//----(SA)	end
 
 	// Ridah, more fluid rotations
-	{ &cg_swingSpeed, "cg_swingSpeed", "0.1", CVAR_CHEAT },   // was 0.3 for Q3
-	{ &cg_bloodTime, "cg_bloodTime", "120", CVAR_ARCHIVE },
-	{ &cg_hunkUsed, "com_hunkUsed", "0", 0 },
-	{ &cg_soundAdjust, "hunk_soundadjust", "0", 0 },
+	{&cg_swingSpeed, "cg_swingSpeed", "0.1", CVAR_CHEAT}, // was 0.3 for Q3
+	{&cg_bloodTime, "cg_bloodTime", "120", CVAR_ARCHIVE},
+	{&cg_hunkUsed, "com_hunkUsed", "0", 0},
+	{&cg_soundAdjust, "hunk_soundadjust", "0", 0},
 
-	{ &cg_skybox, "cg_skybox", "1", CVAR_CHEAT },
+	{&cg_skybox, "cg_skybox", "1", CVAR_CHEAT},
 	// done.
 
-	{ &cg_animSpeed, "cg_animspeed", "1", CVAR_CHEAT },
-	{ &cg_debugAnim, "cg_debuganim", "0", CVAR_CHEAT },
-	{ &cg_debugPosition, "cg_debugposition", "0", CVAR_CHEAT },
-	{ &cg_debugEvents, "cg_debugevents", "0", CVAR_CHEAT },
-	{ &cg_errorDecay, "cg_errordecay", "100", 0 },
-	{ &cg_nopredict, "cg_nopredict", "0", 0 },
-	{ &cg_noPlayerAnims, "cg_noplayeranims", "0", CVAR_CHEAT },
-	{ &cg_showmiss, "cg_showmiss", "0", 0 },
-	{ &cg_footsteps, "cg_footsteps", "1", CVAR_CHEAT },
-	{ &cg_tracerChance, "cg_tracerchance", "0.4", CVAR_CHEAT },
-	{ &cg_tracerWidth, "cg_tracerwidth", "0.8", CVAR_CHEAT },
-	{ &cg_tracerSpeed, "cg_tracerSpeed", "4500", CVAR_CHEAT },
-	{ &cg_tracerLength, "cg_tracerlength", "160", CVAR_CHEAT },
-	{ &cg_thirdPersonRange, "cg_thirdPersonRange", "40", 0 },
-	{ &cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT },
-	{ &cg_thirdPerson, "cg_thirdPerson", "0", 0 },
-	{ &cg_teamChatTime, "cg_teamChatTime", "10000", CVAR_ARCHIVE  },
-	{ &cg_teamChatHeight, "cg_teamChatHeight", "8", CVAR_ARCHIVE  },
-	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE  },
-	{ &cg_coronafardist, "cg_coronafardist", "32000", CVAR_ARCHIVE },
-	{ &cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE },
-	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE },
-	{ &cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE },
-	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE },
-	{ &cg_stats, "cg_stats", "0", 0 },
-	{ &cg_blinktime, "cg_blinktime", "100", CVAR_ARCHIVE},         //----(SA)	added
+	{&cg_animSpeed, "cg_animspeed", "1", CVAR_CHEAT},
+	{&cg_debugAnim, "cg_debuganim", "0", CVAR_CHEAT},
+	{&cg_debugPosition, "cg_debugposition", "0", CVAR_CHEAT},
+	{&cg_debugEvents, "cg_debugevents", "0", CVAR_CHEAT},
+	{&cg_errorDecay, "cg_errordecay", "100", 0},
+	{&cg_nopredict, "cg_nopredict", "0", 0},
+	{&cg_noPlayerAnims, "cg_noplayeranims", "0", CVAR_CHEAT},
+	{&cg_showmiss, "cg_showmiss", "0", 0},
+	{&cg_footsteps, "cg_footsteps", "1", CVAR_CHEAT},
+	{&cg_tracerChance, "cg_tracerchance", "0.4", CVAR_CHEAT},
+	{&cg_tracerWidth, "cg_tracerwidth", "0.8", CVAR_CHEAT},
+	{&cg_tracerSpeed, "cg_tracerSpeed", "4500", CVAR_CHEAT},
+	{&cg_tracerLength, "cg_tracerlength", "160", CVAR_CHEAT},
+	{&cg_thirdPersonRange, "cg_thirdPersonRange", "40", 0},
+	{&cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT},
+	{&cg_thirdPerson, "cg_thirdPerson", "0", 0},
+	{&cg_teamChatTime, "cg_teamChatTime", "10000", CVAR_ARCHIVE},
+	{&cg_teamChatHeight, "cg_teamChatHeight", "8", CVAR_ARCHIVE},
+	{&cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE},
+	{&cg_coronafardist, "cg_coronafardist", "32000", CVAR_ARCHIVE},
+	{&cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE},
+	{&cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE},
+	{&cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE},
+	{&cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE},
+	{&cg_stats, "cg_stats", "0", 0},
+	{&cg_blinktime, "cg_blinktime", "100", CVAR_ARCHIVE}, //----(SA)	added
 
-	{ &cg_enableBreath, "g_enableBreath", "1", CVAR_SERVERINFO},
-	{ &cg_cameraOrbit, "cg_cameraOrbit", "0", CVAR_CHEAT},
-	{ &cg_cameraOrbitDelay, "cg_cameraOrbitDelay", "50", CVAR_ARCHIVE},
-	{ &cg_timescaleFadeEnd, "cg_timescaleFadeEnd", "1", 0},
-	{ &cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0},
-	{ &cg_timescale, "timescale", "1", 0},
-//	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
-	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
+	{&cg_enableBreath, "g_enableBreath", "1", CVAR_SERVERINFO},
+	{&cg_cameraOrbit, "cg_cameraOrbit", "0", CVAR_CHEAT},
+	{&cg_cameraOrbitDelay, "cg_cameraOrbitDelay", "50", CVAR_ARCHIVE},
+	{&cg_timescaleFadeEnd, "cg_timescaleFadeEnd", "1", 0},
+	{&cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0},
+	{&cg_timescale, "timescale", "1", 0},
+	//	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
+	{&cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
 
-	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO},
-	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO},
-	{ &cg_smallFont, "ui_smallFont", "0.25", CVAR_ARCHIVE},
-	{ &cg_bigFont, "ui_bigFont", "0.4", CVAR_ARCHIVE},
-	{ &cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
+	{&pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO},
+	{&pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO},
+	{&cg_smallFont, "ui_smallFont", "0.25", CVAR_ARCHIVE},
+	{&cg_bigFont, "ui_bigFont", "0.4", CVAR_ARCHIVE},
+	{&cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
 
-	{ &cg_teamChatsOnly, "cg_teamChatsOnly", "0", CVAR_ARCHIVE },
+	{&cg_teamChatsOnly, "cg_teamChatsOnly", "0", CVAR_ARCHIVE},
 	// the following variables are created in other parts of the system,
 	// but we also reference them here
 
-	{ &cg_buildScript, "com_buildScript", "0", 0 },   // force loading of all possible data amd error on failures
-	{ &cg_paused, "cl_paused", "0", CVAR_ROM },
+	{&cg_buildScript, "com_buildScript", "0", 0}, // force loading of all possible data amd error on failures
+	{&cg_paused, "cl_paused", "0", CVAR_ROM},
 
-	{ &cg_blood, "com_blood", "1", CVAR_ARCHIVE },
-	{ &cg_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO },
+	{&cg_blood, "com_blood", "1", CVAR_ARCHIVE},
+	{&cg_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO},
 
 	// Rafael - particle switch
-	{ &cg_wolfparticles, "cg_wolfparticles", "1", CVAR_ARCHIVE },
+	{&cg_wolfparticles, "cg_wolfparticles", "1", CVAR_ARCHIVE},
 	// done
 
 	// Ridah
-	{ &cg_gameType, "g_gametype", "0", 0 }, // communicated by systeminfo
+	{&cg_gameType, "g_gametype", "0", 0}, // communicated by systeminfo
 
-	{ &cg_obituaries, "cg_obituaries", "2", CVAR_ARCHIVE },
-	{ &cg_drawcompass, "cg_drawcompass", "1", CVAR_ARCHIVE },
-	{ &cg_fancyfx, "cg_fancyfx", "0", CVAR_ARCHIVE },
-	{ &cg_entityEditCounter, "cg_entityEditCounter", "0", CVAR_ARCHIVE | CVAR_ROM },
-	{ &cg_limbotime, "", "30000", 0 },
+	{&cg_obituaries, "cg_obituaries", "2", CVAR_ARCHIVE},
+	{&cg_drawcompass, "cg_drawcompass", "1", CVAR_ARCHIVE},
+	{&cg_fancyfx, "cg_fancyfx", "0", CVAR_ARCHIVE},
+	{&cg_entityEditCounter, "cg_entityEditCounter", "0", CVAR_ARCHIVE | CVAR_ROM},
+	{&cg_limbotime, "", "30000", 0},
 
-	{ &cg_norender, "cg_norender", "1", 0 },  // only used during single player, to suppress rendering until the server is ready
+	{&cg_norender, "cg_norender", "1", 0}, // only used during single player, to suppress rendering until the server is ready
 
-	{ &cg_gameSkill, "g_gameskill", "2", 0 }, // communicated by systeminfo	// (SA) new default '2' (was '1')
+	{&cg_gameSkill, "g_gameskill", "2", 0}, // communicated by systeminfo	// (SA) new default '2' (was '1')
 
-	{ &cg_reloading, "g_reloading", "0", 0 }, //----(SA)	added
+	{&cg_reloading, "g_reloading", "0", 0}, //----(SA)	added
 
-	{ &cg_notebook, "cl_notebook", "0", CVAR_ROM },
-	{ &cg_notebookpages, "cg_notebookpages", "0", CVAR_ROM},
-//	{ &cg_youGotMail, "cg_youGotMail", "0", CVAR_ROM},	// used to display notebook new-info icon
-	{ &cg_youGotMail, "cg_youGotMail", "0", 0},   // used to display notebook new-info icon
+	{&cg_notebook, "cl_notebook", "0", CVAR_ROM},
+	{&cg_notebookpages, "cg_notebookpages", "0", CVAR_ROM},
+	//	{ &cg_youGotMail, "cg_youGotMail", "0", CVAR_ROM},	// used to display notebook new-info icon
+	{&cg_youGotMail, "cg_youGotMail", "0", 0}, // used to display notebook new-info icon
 
-	{ &cg_animState, "cg_animState", "0", CVAR_CHEAT},
-	{ &cg_missionStats, "g_missionStats", "0", CVAR_ROM},
-	{ &cg_waitForFire, "cl_waitForFire", "0", CVAR_ROM},
-	{ &cg_drawNotifyText, "cg_drawNotifyText", "1", CVAR_ARCHIVE },
+	{&cg_animState, "cg_animState", "0", CVAR_CHEAT},
+	{&cg_missionStats, "g_missionStats", "0", CVAR_ROM},
+	{&cg_waitForFire, "cl_waitForFire", "0", CVAR_ROM},
+	{&cg_drawNotifyText, "cg_drawNotifyText", "1", CVAR_ARCHIVE},
 
-	{ &cg_loadWeaponSelect, "cg_loadWeaponSelect", "0", CVAR_ROM},
+	{&cg_loadWeaponSelect, "cg_loadWeaponSelect", "0", CVAR_ROM},
 
-	{ &cg_expectedhunkusage, "com_expectedhunkusage", "0", CVAR_ROM},
+	{&cg_expectedhunkusage, "com_expectedhunkusage", "0", CVAR_ROM},
 
 	// NERVE - SMF
-	{ &mp_playerType, "mp_playerType", "0", 0 },
-	{ &mp_team, "mp_team", "0", 0 },
-	{ &mp_weapon, "mp_weapon", "0", 0 },
-	{ &mp_pistol, "mp_pistol", "0", 0 },
-	{ &mp_item1, "mp_item1", "0", 0 },
+	{&mp_playerType, "mp_playerType", "0", 0},
+	{&mp_team, "mp_team", "0", 0},
+	{&mp_weapon, "mp_weapon", "0", 0},
+	{&mp_pistol, "mp_pistol", "0", 0},
+	{&mp_item1, "mp_item1", "0", 0},
 
-	{ &mp_item2, "mp_item2", "0", 0 },
-	{ &mp_mapDesc, "mp_mapDesc", "", 0 },
-	{ &mp_mapTitle, "mp_mapTitle", "", 0 },
-	{ &mp_itemDesc, "mp_itemDesc", "", 0 },
+	{&mp_item2, "mp_item2", "0", 0},
+	{&mp_mapDesc, "mp_mapDesc", "", 0},
+	{&mp_mapTitle, "mp_mapTitle", "", 0},
+	{&mp_itemDesc, "mp_itemDesc", "", 0},
 	// -NERVE - SMF
 
-	{ &cg_solidCrosshair, "cg_solidCrosshair", "0", CVAR_ARCHIVE },
-	{ &cg_bloodBlend, "cg_bloodBlend", "0", CVAR_ARCHIVE },
-	{ &cg_announcer, "cg_announcer", "1", CVAR_ARCHIVE}, // This should be on by default imho.
+	{&cg_solidCrosshair, "cg_solidCrosshair", "0", CVAR_ARCHIVE},
+	{&cg_bloodBlend, "cg_bloodBlend", "0", CVAR_ARCHIVE},
+	{&cg_announcer, "cg_announcer", "1", CVAR_ARCHIVE}, // This should be on by default imho.
 
-	{ &cg_snipersCrosshair, "cg_snipersCrosshair", "1", CVAR_ARCHIVE },
+	{&cg_snipersCrosshair, "cg_snipersCrosshair", "1", CVAR_ARCHIVE},
 
-	{ &cg_showAIState, "cg_showAIState", "0", CVAR_CHEAT},
+	{&cg_atm_effects, "cg_atm_effects", "1", CVAR_ARCHIVE,},																			
+	{&cg_atm_effects_low, "cg_atm_effects_low", "0", CVAR_ARCHIVE},	  
+	{&cg_atm_effects_force, "cg_atm_effects_force", "0", CVAR_LATCH},
+
+	{&cg_showAIState, "cg_showAIState", "0", CVAR_CHEAT},
 };
 int cvarTableSize = ARRAY_LEN( cvarTable );
 

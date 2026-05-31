@@ -1036,6 +1036,8 @@ typedef struct {
 	int centerPrintAnnouncerMode;
 	// end
 
+	refdef_t *refdef_current;                       ///< Handling of some drawing elements for MV (not only MV!)
+
 } cg_t;
 
 #define NUM_FUNNEL_SPRITES  21
@@ -1845,6 +1847,10 @@ extern vmCvar_t cg_announcer;
 
 extern vmCvar_t cg_snipersCrosshair;
 
+extern vmCvar_t cg_atm_effects;
+extern vmCvar_t cg_atm_effects_low;
+extern vmCvar_t cg_atm_effects_force;
+
 //
 // cg_main.c
 //
@@ -1900,6 +1906,11 @@ void CG_ZoomUp_f( void );
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback );
 
 void CG_Concussive( centity_t *cent );
+
+// cg_atmospheric
+void CG_EffectParse(const char *effectstr);
+void CG_AddAtmosphericEffects(void);
+qboolean CG_AtmosphericKludge();
 
 //
 // cg_drawtools.c

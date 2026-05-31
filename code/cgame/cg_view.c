@@ -1591,6 +1591,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 		DEBUGTIME
 
+		CG_AddAtmosphericEffects();
+
 		if ( cgs.localServer ) {
 			OmnibotRenderDebugLines();
 		}

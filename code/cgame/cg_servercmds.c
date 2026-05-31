@@ -413,6 +413,9 @@ void CG_SetConfigValues( void ) {
 	cgs.scores2 = atoi( CG_ConfigString( CS_SCORES2 ) );
 	cgs.levelStartTime = atoi( CG_ConfigString( CS_LEVEL_START_TIME ) );
 	cg.warmup = atoi( CG_ConfigString( CS_WARMUP ) );
+
+	if (cg_atm_effects.integer)
+		CG_EffectParse(CG_ConfigString(CS_ATMOSEFFECT));
 }
 
 /*
@@ -551,6 +554,8 @@ static void CG_ConfigStringModified( void ) {
 		CG_ShaderStateChanged();
 	} else if ( num == CS_MISSIONSTATS_FUN ) {
 		CG_ParseMissionFunStats();
+	} else if (num == CS_ATMOSEFFECT) {
+		CG_EffectParse(str);
 	}
 }
 
