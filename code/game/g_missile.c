@@ -371,7 +371,16 @@ M_think
 void M_think( gentity_t *ent ) {
 	gentity_t *tent;
 
+	int contents;
+
+	contents = trap_PointContents( ent->s.origin, -1 );
+
 	ent->count++;
+
+	if (contents & MASK_WATER)
+	{
+		return;
+	}
 
 //	if (ent->count == 1)
 //		Concussive_fx (ent);	//----(SA)	moved to G_ExplodeMissile()

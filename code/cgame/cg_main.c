@@ -1079,6 +1079,7 @@ static void CG_RegisterSounds( void ) {
 //	cgs.media.sfx_railg = trap_S_RegisterSound( "sound/weapons/railgun/railgf1a.wav" );
 	cgs.media.sfx_rockexp = trap_S_RegisterSound( "sound/weapons/rocket/rocklx1a.wav" );
 	cgs.media.sfx_dynamiteexp = trap_S_RegisterSound( "sound/weapons/dynamite/dynamite_exp.wav" );
+	cgs.media.sfx_grenexpWater =    trap_S_RegisterSound( "sound/weapons/grenade/grenade_explode_water.wav");
 	cgs.media.sfx_dynamiteexpDist = trap_S_RegisterSound( "sound/weapons/dynamite/dynamite_exp_dist.wav" );   //----(SA)	added
 
 

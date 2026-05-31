@@ -1356,6 +1356,7 @@ typedef struct {
 	sfxHandle_t sfx_ric3;
 	//sfxHandle_t sfx_railg;
 	sfxHandle_t sfx_rockexp;
+	sfxHandle_t sfx_grenexpWater;
 	sfxHandle_t sfx_dynamiteexp;
 	sfxHandle_t sfx_dynamiteexpDist;    //----(SA)	added
 	sfxHandle_t sfx_spearhit;

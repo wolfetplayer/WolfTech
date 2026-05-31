@@ -4810,9 +4810,10 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 	qhandle_t mark;
 	qhandle_t shader;
 	sfxHandle_t sfx, sfx2;
+	vec3_t lightColor, tmpv, tmpv2;
+	trace_t trace;
 	float radius;
 	float light;
-	vec3_t lightColor;
 	localEntity_t   *le;
 	int r = 0;
 	qboolean alphaFade = qfalse;
@@ -5165,28 +5166,33 @@ void CG_Shard(centity_t *cent, vec3_t origin, vec3_t dir)
 			shakeRad = 600;
 		}
 
+
 		// Ridah, explosion sprite animation
 		VectorMA( origin, 16, dir, sprOrg );
 		VectorScale( dir, 100, sprVel );
 
-		// RF, testing new explosion animation
-		CG_ParticleExplosion( "expblue", sprOrg, sprVel, 700, 20, 160 );
-		//CG_ParticleExplosion( "twiltb", sprOrg, sprVel, 600, 9, 100 );
-		//CG_ParticleExplosion( 3, sprOrg, sprVel, 900, 9, 250 );
-/*
-		r = 2 + rand()%3;
-		for (i=0; i<3; i++) {
-			for (j=0;j<3;j++) sprOrg[j] = origin[j] + 14*dir[j] + 14*crandom();
-			CG_ParticleExplosion( 3, sprOrg, sprVel, 800+rand()%250, 9, 60+rand()%200 );
-		}
-*/
-		// Ridah, throw some debris
-		CG_AddDebris( origin, dir,
-					  280,      // speed
-					  1400,     // duration
-					  // 15 + rand()%5 );	// count
-					  7 + rand() % 2 ); // count
+		if ( CG_PointContents( origin, 0 ) & CONTENTS_WATER ) {
+			sfx = cgs.media.sfx_grenexpWater;
 
+			VectorCopy( origin,tmpv );
+			tmpv[2] += 10000;
+
+			trap_CM_BoxTrace( &trace, tmpv,origin, NULL, NULL, 0, MASK_WATER );
+			CG_WaterRipple( cgs.media.wakeMarkShaderAnim, trace.endpos, dir, 150, 1000 );
+
+			CG_AddDirtBulletParticles( trace.endpos, dir, 400, 900, 15, 0.5, 256,128, 0.125, "water_splash" );
+		} else {
+			VectorCopy( origin,tmpv );
+			tmpv[2] += 20;
+			VectorCopy( origin,tmpv2 );
+			tmpv2[2] -= 20;
+			trap_CM_BoxTrace( &trace,tmpv,tmpv2,NULL,NULL,0,MASK_SHOT );
+			if ( trace.surfaceFlags & SURF_GRASS || trace.surfaceFlags & SURF_GRAVEL ) {
+				CG_AddDirtBulletParticles( origin, dir, 400, 2000, 10, 0.5, 200,75, 0.25, "dirt_splash" );
+			}
+			CG_ParticleExplosion( "expblue", sprOrg, sprVel, 700, 20, 160 );
+			CG_AddDebris( origin, dir, 280, 1400, 7 + rand() % 2 );
+		}
 		break;
 	case VERYBIGEXPLOSION:
 	case WP_PANZERFAUST:
