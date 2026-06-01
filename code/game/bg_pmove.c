@@ -3371,10 +3371,10 @@ static void PM_Weapon( void ) {
 	{
 
 		pm->pmext->lastRecoilDeltaTime = 0;
-		pm->pmext->weapRecoilTime      = ammoTable[pm->ps->weapon].weapRecoilDuration ? pm->cmd.serverTime : 0;
-		pm->pmext->weapRecoilDuration  = ammoTable[pm->ps->weapon].weapRecoilDuration;
-		pm->pmext->weapRecoilYaw       = ammoTable[pm->ps->weapon].weapRecoilYaw[0]   * crandom() * ammoTable[pm->ps->weapon].weapRecoilYaw[1];
-		pm->pmext->weapRecoilPitch     = ammoTable[pm->ps->weapon].weapRecoilPitch[0] * random()  * ammoTable[pm->ps->weapon].weapRecoilPitch[1];
+		pm->pmext->weapRecoilTime = GetWeaponTableData(pm->ps->weapon)->weapRecoilDuration ? pm->cmd.serverTime : 0;
+		pm->pmext->weapRecoilDuration = GetWeaponTableData(pm->ps->weapon)->weapRecoilDuration;
+		pm->pmext->weapRecoilYaw = GetWeaponTableData(pm->ps->weapon)->weapRecoilYaw[0] * crandom() * GetWeaponTableData(pm->ps->weapon)->weapRecoilYaw[1];
+		pm->pmext->weapRecoilPitch = GetWeaponTableData(pm->ps->weapon)->weapRecoilPitch[0] * random() * GetWeaponTableData(pm->ps->weapon)->weapRecoilPitch[1];
 
 
 		if ((pm->ps->eFlags & EF_CROUCHING) && (pm->ps->groundEntityNum != ENTITYNUM_NONE))

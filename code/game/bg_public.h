@@ -635,11 +635,15 @@ typedef struct ammotable_s {
 	float weapRecoilPitch[2];       
 	float weapRecoilYaw[2];
 
+	int soundRange; 
+	
 	int mod;                // means of death
 } ammotable_t;
 
-extern ammotable_t ammoTable[];     // defined in bg_misc.c
+extern ammotable_t ammoTable[WP_NUM_WEAPONS];
 extern int weapAlts[];  // defined in bg_misc.c
+
+#define GetWeaponTableData(weaponIndex) ((ammotable_t *)(&ammoTable[weaponIndex]))
 
 
 //----(SA)

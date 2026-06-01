@@ -94,6 +94,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 0,
         .mod                = 0,
     },
     [WP_KNIFE] = {
@@ -108,6 +109,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 64,
         .mod                = 0,
     },
     [WP_LUGER] = {
@@ -122,6 +124,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 50,
         .weapRecoilPitch    = { 0.2f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 700,
         .mod                = MOD_LUGER,
     },
     [WP_MP40] = {
@@ -136,6 +139,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 30,
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
         .mod                = MOD_MP40,
     },
     [WP_MAUSER] = {
@@ -150,6 +154,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 60,
         .weapRecoilPitch    = { 1.0f, 1.0f },
         .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 2000,
         .mod                = MOD_MAUSER,
     },
     [WP_FG42] = {
@@ -164,6 +169,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 40,
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1500,
         .mod                = MOD_FG42,
     },
     [WP_GRENADE_LAUNCHER] = {
@@ -178,6 +184,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1500,
         .mod                = MOD_GRENADE_LAUNCHER,
     },
     [WP_PANZERFAUST] = {
@@ -192,6 +199,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
         .mod                = MOD_PANZERFAUST,
     },
     [WP_VENOM] = {
@@ -206,6 +214,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 50,
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 1000,
         .mod                = MOD_VENOM,
     },
     [WP_FLAMETHROWER] = {
@@ -220,6 +229,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
         .mod                = MOD_FLAMETHROWER,
     },
     [WP_TESLA] = {
@@ -234,6 +244,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
         .mod                = MOD_TESLA,
     },
     [WP_COLT] = {
@@ -248,6 +259,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 50,
         .weapRecoilPitch    = { 0.2f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 700,
         .mod                = MOD_COLT,
     },
     [WP_THOMPSON] = {
@@ -262,6 +274,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 30,
         .weapRecoilPitch    = { 0.2f, 0.2f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
         .mod                = MOD_THOMPSON,
     },
     [WP_GARAND] = {
@@ -276,6 +289,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 1.0f, 1.0f },
         .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 128,
         .mod                = MOD_GARAND,
     },
     [WP_GRENADE_PINEAPPLE] = {
@@ -290,6 +304,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1500,
         .mod                = MOD_GRENADE_PINEAPPLE,
     },
     [WP_SNIPERRIFLE] = {
@@ -304,6 +319,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 300,
         .weapRecoilPitch    = { 0.4f, 0.0f },
         .weapRecoilYaw      = { 0.2f, 0.0f },
+		.soundRange         = 2000,
         .mod                = MOD_SNIPERRIFLE,
     },
     [WP_SNOOPERSCOPE] = {
@@ -318,6 +334,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 300,
         .weapRecoilPitch    = { 0.7f, 0.0f },
         .weapRecoilYaw      = { 0.4f, 0.0f },
+		.soundRange         = 128,
         .mod                = MOD_SNOOPERSCOPE,
     },
     [WP_FG42SCOPE] = {
@@ -332,6 +349,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 40,
         .weapRecoilPitch    = { 0.2f, 0.0f },
         .weapRecoilYaw      = { 0.1f, 0.0f },
+		.soundRange         = 1500,
         .mod                = MOD_FG42SCOPE,
     },
     [WP_STEN] = {
@@ -346,6 +364,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 40,
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 64,
         .mod                = MOD_STEN,
     },
     [WP_SILENCER] = {
@@ -360,6 +379,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 50,
         .weapRecoilPitch    = { 0.2f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 64,
         .mod                = MOD_SILENCER,
     },
     [WP_AKIMBO] = {
@@ -374,6 +394,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 50,
         .weapRecoilPitch    = { 0.2f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 700,
         .mod                = MOD_AKIMBO,
     },
     [WP_CLASS_SPECIAL] = {
@@ -388,6 +409,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 0,
         .mod                = 0,
     },
     [WP_DYNAMITE] = {
@@ -402,6 +424,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 64,
         .mod                = MOD_DYNAMITE,
     },
     [WP_MONSTER_ATTACK1] = {
@@ -416,6 +439,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 0,
         .mod                = 0,
     },
     [WP_MONSTER_ATTACK2] = {
@@ -430,6 +454,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 0,
         .mod                = 0,
     },
     [WP_MONSTER_ATTACK3] = {
@@ -444,6 +469,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 0,
         .mod                = 0,
     },
     [WP_GAUNTLET] = {
@@ -458,6 +484,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilDuration = 0,
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 0,
         .mod                = 0,
     },
 };

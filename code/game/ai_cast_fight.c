@@ -1824,52 +1824,7 @@ float AICast_GetWeaponSoundRange( int weapon ) {
 	// NOTE: made this a case, that way changing the ordering of weapons won't cause problems, as it would
 	// with an array lookup
 
-	switch ( weapon ) {
-	case    WP_NONE:
-		return 0;
-	case    WP_KNIFE:
-	case    WP_GAUNTLET:
-	case    WP_STEN:
-	case    WP_SILENCER:
-		return 64;
-	case    WP_GRENADE_LAUNCHER:
-	case    WP_GRENADE_PINEAPPLE:
-		return 1500;
-	case    WP_GARAND:
-	case    WP_SNOOPERSCOPE:
-		return 128;
-	case    WP_LUGER:
-	case    WP_COLT:
-	case    WP_AKIMBO:
-		return 700;
-
-	case    WP_MONSTER_ATTACK1:
-	case    WP_MONSTER_ATTACK2:
-	case    WP_MONSTER_ATTACK3:
-		// TODO: case for each monster
-		return 1000;
-
-	case    WP_MP40:
-	case    WP_THOMPSON:
-		return 1000;
-
-	case    WP_FG42:
-	case    WP_FG42SCOPE:
-		return 1500;
-
-	case    WP_SNIPERRIFLE:
-	case    WP_MAUSER:
-		return 2000;
-
-	case    WP_DYNAMITE:
-		return 3000;
-
-	case    WP_PANZERFAUST:
-	case    WP_VENOM:
-	case    WP_FLAMETHROWER:
-	case    WP_TESLA:
-		return 1000;
-	}
+	return GetWeaponTableData(weapon)->soundRange;
 
 	G_Error( "AICast_GetWeaponSoundRange: unknown weapon index: %i\n", weapon );
 	return 0;   // shutup the compiler
