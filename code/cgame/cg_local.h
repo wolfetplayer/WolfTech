@@ -1038,6 +1038,8 @@ typedef struct {
 
 	refdef_t *refdef_current;                       ///< Handling of some drawing elements for MV (not only MV!)
 
+	pmoveExt_t pmext;
+
 } cg_t;
 
 #define NUM_FUNNEL_SPRITES  21

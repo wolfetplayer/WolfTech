@@ -663,6 +663,8 @@ struct gclient_s {
 	clientMarker_t clientMarkers[MAX_CLIENT_MARKERS];
 	clientMarker_t backupMarker;
 	gentity_t       *tempHead;
+
+	pmoveExt_t pmext;
 };
 
 

@@ -283,9 +283,23 @@ typedef enum {
 #define PMF_ALL_TIMES   ( PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_KNOCKBACK | PMF_TIME_LOAD )
 
 #define MAXTOUCH    32
+
+// RealRTCW. Data used both in client and server
+typedef struct
+{
+	qboolean	releasedFire;
+	int lastRecoilDeltaTime;
+	int weapRecoilDuration;
+	float weapRecoilPitch;       
+	float weapRecoilYaw;
+	int weapRecoilTime;
+} pmoveExt_t;
+
 typedef struct {
 	// state (in / out)
 	playerState_t   *ps;
+
+	pmoveExt_t *pmext;
 
 	// command (in)
 	usercmd_t cmd, oldcmd;
@@ -607,16 +621,20 @@ extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
 // jpw
 
 typedef struct ammotable_s {
-	int maxammo;            //
-	int uses;               //
-	int maxclip;            //
-	int reloadTime;         //
-	int fireDelayTime;      //
-	int nextShotTime;       //
-//----(SA)	added
-	int maxHeat;            // max active firing time before weapon 'overheats' (at which point the weapon will fail)
-	int coolRate;           // how fast the weapon cools down. (per second)
-//----(SA)	end
+	int maxammo;            
+	int uses;               
+	int maxclip;            
+	int reloadTime;         
+	int fireDelayTime;      
+	int nextShotTime;       
+	int maxHeat;            
+	int coolRate;          
+
+	// Real recoil
+	int weapRecoilDuration;
+	float weapRecoilPitch[2];       
+	float weapRecoilYaw[2];
+
 	int mod;                // means of death
 } ammotable_t;
 

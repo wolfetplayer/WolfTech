@@ -81,79 +81,386 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 
 extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
 
-// [0] = maxammo		-	max player ammo carrying capacity.
-// [1] = uses			-	how many 'rounds' it takes/costs to fire one cycle.
-// [2] = maxclip		-	max 'rounds' in a clip.
-// [3] = reloadTime		-	time from start of reload until ready to fire.
-// [4] = fireDelayTime	-	time from pressing 'fire' until first shot is fired. (used for delaying fire while weapon is 'readied' in animation)
-// [5] = nextShotTime	-	when firing continuously, this is the time between shots
-// [6] = maxHeat		-	max active firing time before weapon 'overheats' (at which point the weapon will fail for a moment)
-// [7] = coolRate		-	how fast the weapon cools down.
-// [8] = mod			-	means of death
-
-// potential inclusions in the table:
-// damage			-
-// splashDamage		-
-// soundRange		-	distance which ai can hear the weapon
-// ammoWarning		-	amount we give the player a 'low on ammo' warning (just a HUD color change or something)
-// clipWarning		-	amount we give the player a 'low in clip' warning (just a HUD color change or something)
-// maxclip2			-	allow the player to (mod/powerup) upgrade clip size when aplicable (luger has 8 round standard clip and 32 round snail magazine, for ex.)
-//
-//
-//
-
 ammotable_t ammoTable[] = {
-	//	MAX				USES	MAX		RELOAD	FIRE			NEXT	HEAT,	COOL,	MOD,	...
-	//	AMMO			AMT.	CLIP	TIME	DELAY			SHOT
-	{   0,              0,      0,      0,      50,             0,      0,      0,      0                       },  //	WP_NONE					// 0
-
-	{   999,            0,      999,    0,      50,             200,    0,      0,      MOD_KNIFE               },  //	WP_KNIFE				// 1
-
-	{   MAX_AMMO_9MM,   1,      8,      1500,   DELAY_PISTOL,   400,    0,      0,      MOD_LUGER               },  //	WP_LUGER				// 2	// NOTE: also 32 round 'snail' magazine
-	{   MAX_AMMO_9MM,   1,      32,     2600,   DELAY_LOW,      100,    0,      0,      MOD_MP40                },  //	WP_MP40					// 3
-	{   MAX_AMMO_MAUSER,1,      10,     2500,   DELAY_HIGH,     1200,   0,      0,      MOD_MAUSER              },  //	WP_MAUSER				// 4	// NOTE: authentic clips are 5/10/25 rounds
-	{   MAX_AMMO_FG42,  1,      20,     2000,   DELAY_LOW,      200,    0,      0,      MOD_FG42                },  //	WP_FG42					// 5
-	{   15,             1,      15,     1000,   DELAY_THROW,    1600,   0,      0,      MOD_GRENADE_LAUNCHER    },  //	WP_GRENADE_LAUNCHER		// 6
-	{   5,              1,      1,      1000,   DELAY_SHOULDER, 2000,   0,      0,      MOD_PANZERFAUST         },  //	WP_PANZERFAUST			// 7
-//	{	MAX_AMMO_VENOM,	1,		500,	3000,	750,			30,		5000,	200,	MOD_VENOM				},	//	WP_VENOM				// -
-	{   MAX_AMMO_VENOM, 1,      500,    3000,   750,            45,     5000,   200,    MOD_VENOM               },  //	WP_VENOM				// 8	// JPW NOTE: changed next_shot 50->45 to genlock firing to every server frame (fire rate shouldn't be framerate dependent now)
-	{   150,            1,      150,    1000,   DELAY_LOW,      50,     0,      0,      MOD_FLAMETHROWER        },  //	WP_FLAMETHROWER			// 9
-	{   300,            1,      300,    1000,   DELAY_LOW,      0,      0,      0,      MOD_TESLA               },  //	WP_TESLA				// 10
-//	{	50,				1,		50,		1000,	DELAY_LOW,		1200,	0,		0,		MOD_SPEARGUN			},	//	WP_SPEARGUN				// 11
-
-//	{	999,			0,		999,	0,		50,				200,	0,		0,		MOD_KNIFE2				},	//	WP_KNIFE2				// 12
-	{   MAX_AMMO_45,    1,      8,      1500,   DELAY_PISTOL,   400,    0,      0,      MOD_COLT                },  //	WP_COLT					// 13
-	{   MAX_AMMO_45,    1,      30,     2400,   DELAY_LOW,      120,    0,      0,      MOD_THOMPSON            },  //	WP_THOMPSON				// 14	// NOTE: also 50 round drum magazine
-	{   MAX_AMMO_GARAND,1,      5,      2500,   DELAY_HIGH,     1200,   0,      0,      MOD_GARAND              },  //	WP_GARAND				// 15	// NOTE: always 5 round clips
-//	{	MAX_AMMO_BAR,	1,		20,		2000,	DELAY_LOW,		200,	0,		0,		MOD_BAR					},	//	WP_BAR					// 16
-	{   15,             1,      15,     1000,   DELAY_THROW,    1600,   0,      0,      MOD_GRENADE_PINEAPPLE   },  //	WP_GRENADE_PINEAPPLE	// 17
-//	{	5,				1,		5,		1000,	DELAY_SHOULDER,	1200,	0,		0,		MOD_ROCKET_LAUNCHER		},	//	WP_ROCKET_LAUNCHER		// 18
-
-	{   MAX_AMMO_MAUSER,1,      10,     3000,   0,              1700,   0,      0,      MOD_SNIPERRIFLE         },  //	WP_SNIPER_GER			// 19
-	{   MAX_AMMO_GARAND,1,      5,      3000,   0,              1200,   0,      0,      MOD_SNOOPERSCOPE        },  //	WP_SNIPER_AM			// 20
-//	{	MAX_AMMO_VENOM,	10,		300,	3000,	1200,			1200,	0,		0,		MOD_VENOM_FULL			},	//	WP_VENOM_FULL			// -
-//	{	MAX_AMMO_VENOM,	10,		300,	3000,	1000,			1000,	0,		0,		MOD_VENOM_FULL			},	//	WP_VENOM_FULL			// 21
-//	{	20,				1,		20,		1000,	DELAY_LOW,		1200,	0,		0,		MOD_SPEARGUN_CO2		},	//	WP_SPEARGUN_CO2			// 22
-
-	{   MAX_AMMO_FG42,  1,      20,     2000,   DELAY_LOW,      200,    0,      0,      MOD_FG42SCOPE           },  //	WP_FG42SCOPE			// 23
-//	{	MAX_AMMO_BAR,	1,		20,		2000,	DELAY_LOW,		90,		0,		0,		MOD_BAR					},	//	WP_BAR2					// 24
-	{   MAX_AMMO_9MM,   1,      32,     3100,   DELAY_LOW,      110,    700,    300,    MOD_STEN                },  //	WP_STEN					// 25
-	{   MAX_AMMO_9MM,   1,      8,      1500,   DELAY_PISTOL,   400,    0,      0,      MOD_SILENCER            },  //	WP_SILENCER				// 26
-	{   MAX_AMMO_45,    1,      8,      2700,   DELAY_PISTOL,   200,    0,      0,      MOD_AKIMBO              },  //	WP_AKIMBO				// 27
-
-	{   999,            0,      999,    0,      50,             0,      0,      0,      0                       },  //	WP_CLASS_SPECIAL		// 28	//	class_special
-//	{	100,			1,		100,	1000,	DELAY_PISTOL,	900,	0,		0,		MOD_CROSS				},	//	WP_CROSS				// 29
-	{   10,             1,      10,     1000,   DELAY_THROW,    1600,   0,      0,      MOD_DYNAMITE            },  //	WP_DYNAMITE				// 30
-//	{	10,				1,		10,		1000,	DELAY_THROW,	1600,	0,		0,		MOD_DYNAMITE			},	//	WP_DYNAMITE2			// 31
-
-// stubs for some "not-real" weapons (so they always return "yes, you have enough ammo for that gauntlet", etc.)
-//	{	5,				1,		5,		1000,	DELAY_SHOULDER,	1200,	0,		0,		0 /*mod_prox*/			},	//	WP_PROX					// 32
-	{   999,            0,      999,    0,      50,             0,      0,      0,      0                       },  //	WP_MONSTER_ATTACK1		// 33
-	{   999,            0,      999,    0,      50,             0,      0,      0,      0                       },  //	WP_MONSTER_ATTACK2		// 34
-	{   999,            0,      999,    0,      50,             0,      0,      0,      0                       },  //	WP_MONSTER_ATTACK3		// 35
-	{   999,            0,      999,    0,      50,             0,      0,      0,      0                       }   //	WP_GAUNTLET				// 36
+    [WP_NONE] = {
+        .maxammo            = 0,
+        .uses               = 0,
+        .maxclip            = 0,
+        .reloadTime         = 0,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 0,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = 0,
+    },
+    [WP_KNIFE] = {
+        .maxammo            = 999,
+        .uses               = 0,
+        .maxclip            = 999,
+        .reloadTime         = 0,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = 0,
+    },
+    [WP_LUGER] = {
+        .maxammo            = MAX_AMMO_9MM,
+        .uses               = 1,
+        .maxclip            = 8,
+        .reloadTime         = 1500,
+        .fireDelayTime      = DELAY_PISTOL,
+        .nextShotTime       = 400,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_LUGER,
+    },
+    [WP_MP40] = {
+        .maxammo            = MAX_AMMO_9MM,
+        .uses               = 1,
+        .maxclip            = 32,
+        .reloadTime         = 2600,
+        .fireDelayTime      = DELAY_LOW,
+        .nextShotTime       = 110,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 30,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_MP40,
+    },
+    [WP_MAUSER] = {
+        .maxammo            = MAX_AMMO_MAUSER,
+        .uses               = 1,
+        .maxclip            = 10,
+        .reloadTime         = 2500,
+        .fireDelayTime      = DELAY_HIGH,
+        .nextShotTime       = 1200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 60,
+        .weapRecoilPitch    = { 1.0f, 1.0f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+        .mod                = MOD_MAUSER,
+    },
+    [WP_FG42] = {
+        .maxammo            = MAX_AMMO_FG42,
+        .uses               = 1,
+        .maxclip            = 20,
+        .reloadTime         = 2000,
+        .fireDelayTime      = DELAY_LOW,
+        .nextShotTime       = 200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 40,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_FG42,
+    },
+    [WP_GRENADE_LAUNCHER] = {
+        .maxammo            = 15,
+        .uses               = 1,
+        .maxclip            = 15,
+        .reloadTime         = 1000,
+        .fireDelayTime      = DELAY_THROW,
+        .nextShotTime       = 1600,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_GRENADE_LAUNCHER,
+    },
+    [WP_PANZERFAUST] = {
+        .maxammo            = 5,
+        .uses               = 1,
+        .maxclip            = 1,
+        .reloadTime         = 1000,
+        .fireDelayTime      = DELAY_SHOULDER,
+        .nextShotTime       = 2000,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_PANZERFAUST,
+    },
+    [WP_VENOM] = {
+        .maxammo            = MAX_AMMO_VENOM,
+        .uses               = 1,
+        .maxclip            = 500,
+        .reloadTime         = 3000,
+        .fireDelayTime      = 750,
+        .nextShotTime       = 45,
+        .maxHeat            = 5000,
+        .coolRate           = 200,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+        .mod                = MOD_VENOM,
+    },
+    [WP_FLAMETHROWER] = {
+        .maxammo            = 150,
+        .uses               = 1,
+        .maxclip            = 150,
+        .reloadTime         = 1000,
+        .fireDelayTime      = DELAY_LOW,
+        .nextShotTime       = 50,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_FLAMETHROWER,
+    },
+    [WP_TESLA] = {
+        .maxammo            = 300,
+        .uses               = 1,
+        .maxclip            = 300,
+        .reloadTime         = 1000,
+        .fireDelayTime      = DELAY_LOW,
+        .nextShotTime       = 0,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_TESLA,
+    },
+    [WP_COLT] = {
+        .maxammo            = MAX_AMMO_45,
+        .uses               = 1,
+        .maxclip            = 8,
+        .reloadTime         = 1500,
+        .fireDelayTime      = DELAY_PISTOL,
+        .nextShotTime       = 400,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_COLT,
+    },
+    [WP_THOMPSON] = {
+        .maxammo            = MAX_AMMO_45,
+        .uses               = 1,
+        .maxclip            = 30,
+        .reloadTime         = 2400,
+        .fireDelayTime      = DELAY_LOW,
+        .nextShotTime       = 120,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 30,
+        .weapRecoilPitch    = { 0.2f, 0.2f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_THOMPSON,
+    },
+    [WP_GARAND] = {
+        .maxammo            = MAX_AMMO_GARAND,
+        .uses               = 1,
+        .maxclip            = 5,
+        .reloadTime         = 2500,
+        .fireDelayTime      = DELAY_HIGH,
+        .nextShotTime       = 1200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 1.0f, 1.0f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+        .mod                = MOD_GARAND,
+    },
+    [WP_GRENADE_PINEAPPLE] = {
+        .maxammo            = 15,
+        .uses               = 1,
+        .maxclip            = 15,
+        .reloadTime         = 1000,
+        .fireDelayTime      = DELAY_THROW,
+        .nextShotTime       = 1600,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_GRENADE_PINEAPPLE,
+    },
+    [WP_SNIPERRIFLE] = {
+        .maxammo            = MAX_AMMO_MAUSER,
+        .uses               = 1,
+        .maxclip            = 10,
+        .reloadTime         = 3000,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 1700,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 300,
+        .weapRecoilPitch    = { 0.4f, 0.0f },
+        .weapRecoilYaw      = { 0.2f, 0.0f },
+        .mod                = MOD_SNIPERRIFLE,
+    },
+    [WP_SNOOPERSCOPE] = {
+        .maxammo            = MAX_AMMO_GARAND,
+        .uses               = 1,
+        .maxclip            = 5,
+        .reloadTime         = 3000,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 1200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 300,
+        .weapRecoilPitch    = { 0.7f, 0.0f },
+        .weapRecoilYaw      = { 0.4f, 0.0f },
+        .mod                = MOD_SNOOPERSCOPE,
+    },
+    [WP_FG42SCOPE] = {
+        .maxammo            = MAX_AMMO_FG42,
+        .uses               = 1,
+        .maxclip            = 20,
+        .reloadTime         = 2000,
+        .fireDelayTime      = DELAY_LOW,
+        .nextShotTime       = 200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 40,
+        .weapRecoilPitch    = { 0.2f, 0.0f },
+        .weapRecoilYaw      = { 0.1f, 0.0f },
+        .mod                = MOD_FG42SCOPE,
+    },
+    [WP_STEN] = {
+        .maxammo            = MAX_AMMO_9MM,
+        .uses               = 1,
+        .maxclip            = 32,
+        .reloadTime         = 3100,
+        .fireDelayTime      = DELAY_LOW,
+        .nextShotTime       = 110,
+        .maxHeat            = 700,
+        .coolRate           = 300,
+        .weapRecoilDuration = 40,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_STEN,
+    },
+    [WP_SILENCER] = {
+        .maxammo            = MAX_AMMO_9MM,
+        .uses               = 1,
+        .maxclip            = 8,
+        .reloadTime         = 1500,
+        .fireDelayTime      = DELAY_PISTOL,
+        .nextShotTime       = 400,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_SILENCER,
+    },
+    [WP_AKIMBO] = {
+        .maxammo            = MAX_AMMO_45,
+        .uses               = 1,
+        .maxclip            = 8,
+        .reloadTime         = 2700,
+        .fireDelayTime      = DELAY_PISTOL,
+        .nextShotTime       = 200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_AKIMBO,
+    },
+    [WP_CLASS_SPECIAL] = {
+        .maxammo            = 999,
+        .uses               = 0,
+        .maxclip            = 999,
+        .reloadTime         = 0,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 0,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = 0,
+    },
+    [WP_DYNAMITE] = {
+        .maxammo            = 10,
+        .uses               = 1,
+        .maxclip            = 10,
+        .reloadTime         = 1000,
+        .fireDelayTime      = DELAY_THROW,
+        .nextShotTime       = 1600,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = MOD_DYNAMITE,
+    },
+    [WP_MONSTER_ATTACK1] = {
+        .maxammo            = 999,
+        .uses               = 0,
+        .maxclip            = 999,
+        .reloadTime         = 0,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 0,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = 0,
+    },
+    [WP_MONSTER_ATTACK2] = {
+        .maxammo            = 999,
+        .uses               = 0,
+        .maxclip            = 999,
+        .reloadTime         = 0,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 0,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = 0,
+    },
+    [WP_MONSTER_ATTACK3] = {
+        .maxammo            = 999,
+        .uses               = 0,
+        .maxclip            = 999,
+        .reloadTime         = 0,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 0,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = 0,
+    },
+    [WP_GAUNTLET] = {
+        .maxammo            = 999,
+        .uses               = 0,
+        .maxclip            = 999,
+        .reloadTime         = 0,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 0,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+        .mod                = 0,
+    },
 };
-
 
 //----(SA)	moved in here so both games can get to it
 int weapAlts[] = {
@@ -168,27 +475,18 @@ int weapAlts[] = {
 	WP_NONE,            // 8 WP_VENOM
 	WP_NONE,            // 9 WP_FLAMETHROWER
 	WP_NONE,            // 10 WP_TESLA
-//	WP_SPEARGUN_CO2,	// 11 WP_SPEARGUN
-//	WP_NONE,			// 12 WP_KNIFE2
 	WP_AKIMBO,          // 13 WP_COLT		//----(SA)	new
 	WP_NONE,            // 14 WP_THOMPSON
 	WP_SNOOPERSCOPE,    // 15 WP_GARAND
-//	WP_BAR2,			// 16 WP_BAR		//----(SA)	modified
 	WP_NONE,            // 17 WP_GRENADE_PINEAPPLE
-//	WP_NONE,			// 18 WP_ROCKET_LAUNCHER
 	WP_MAUSER,          // 19 WP_SNIPERRIFLE
 	WP_GARAND,          // 20 WP_SNOOPERSCOPE
-//	WP_VENOM,			// 21 WP_VENOM_FULL
-//	WP_SPEARGUN,		// 22 WP_SPEARGUN_CO2
 	WP_FG42,            // 23 WP_FG42SCOPE
-//	WP_BAR,				// 24 WP_BAR2		//----(SA)	new
 	WP_NONE,            // 25 WP_STEN
 	WP_LUGER,           // 26 WP_SILENCER	//----(SA)	was sp5
 	WP_COLT,            // 27 WP_AKIMBO		//----(SA)	new
 	WP_NONE,            // 28 WP_CLASS_SPECIAL
-//	WP_NONE,			// 29 WP_CROSS
 	WP_NONE             // 30 WP_DYNAMITE	//----(SA)	modified (not in rotation yet)
-//	WP_DYNAMITE			// 31 WP_DYNAMITE2	//----(SA)	new
 };
 
 

@@ -49,7 +49,7 @@ extern vmCvar_t g_gametype;
 
 // JPW NERVE -- stuck this here so it can be seen client & server side
 float Com_GetFlamethrowerRange( void ) {
-	return 1250;
+	return 2000;
 }
 // jpw
 
@@ -396,6 +396,24 @@ static float PM_CmdScale( usercmd_t *cmd ) {
 	total = sqrt( cmd->forwardmove * cmd->forwardmove
 				  + cmd->rightmove * cmd->rightmove + cmd->upmove * cmd->upmove );
 	scale = (float)pm->ps->speed * max / ( 127.0 * total );
+
+
+	if ( pm->ps->aiChar == AICHAR_ZOMBIE || pm->ps->aiChar == AICHAR_WARZOMBIE ) {
+		scale *= 1.1;
+	}
+
+	if ( pm->ps->aiChar == AICHAR_ELITEGUARD ) {
+		scale *= 1.2;
+	}
+
+		if ( pm->ps->aiChar == AICHAR_HEINRICH ) {
+		scale *= 1.2;
+	}
+
+		if ( pm->ps->aiChar == AICHAR_HELGA ) {
+		scale *= 1.2;
+	}
+	
 
 	if ( pm->cmd.buttons & BUTTON_SPRINT && pm->ps->sprintTime > 50 ) {
 		scale *= pm->ps->sprintSpeedScale;
@@ -2506,6 +2524,53 @@ void PM_CoolWeapons( void ) {
 
 }
 
+
+static void PM_HandleRecoil ( void ) {
+		
+		if( !pm->pmext->weapRecoilTime ) {
+		return;
+	    }
+		
+		vec3_t muzzlebounce;
+		int i, deltaTime;
+
+ 		deltaTime = pm->cmd.serverTime - pm->pmext->weapRecoilTime;
+		VectorCopy( pm->ps->viewangles, muzzlebounce );
+
+ 		if ( deltaTime > pm->pmext->weapRecoilDuration ) {
+			deltaTime = pm->pmext->weapRecoilDuration;
+		}
+
+ 		for ( i = pm->pmext->lastRecoilDeltaTime; i < deltaTime; i += 15 ) {
+			if ( pm->pmext->weapRecoilPitch > 0.f ) {
+				muzzlebounce[PITCH] -= 2*pm->pmext->weapRecoilPitch*cos( 2.5*(i) / pm->pmext->weapRecoilDuration );
+				muzzlebounce[PITCH] -= 0.25 * random() * ( 1.0f - ( i ) / pm->pmext->weapRecoilDuration );
+			}
+
+ 			if ( pm->pmext->weapRecoilYaw > 0.f ) {
+				muzzlebounce[YAW] += 0.5*pm->pmext->weapRecoilYaw*cos( 1.0 - (i)*3 / pm->pmext->weapRecoilDuration );
+				muzzlebounce[YAW] += 0.5 * crandom() * ( 1.0f - ( i ) / pm->pmext->weapRecoilDuration );
+			}
+		}
+
+ 		// set the delta angle
+		for ( i = 0; i < 3; i++ ) {
+			int cmdAngle;
+
+ 			cmdAngle = ANGLE2SHORT( muzzlebounce[i] );
+			pm->ps->delta_angles[i] = cmdAngle - pm->cmd.angles[i];
+		}
+		VectorCopy( muzzlebounce, pm->ps->viewangles );
+
+ 		if ( deltaTime == pm->pmext->weapRecoilDuration ) {
+			pm->pmext->weapRecoilTime = 0;
+			pm->pmext->lastRecoilDeltaTime = 0;
+		} else {
+			pm->pmext->lastRecoilDeltaTime = deltaTime;
+		}
+
+}
+
 /*
 ==============
 PM_AdjustAimSpreadScale
@@ -2771,6 +2836,9 @@ static void PM_Weapon( void ) {
 
 	// weapon cool down
 	PM_CoolWeapons();
+
+	// do the recoil before setting the values, that way it will be shown next frame and not this
+	PM_HandleRecoil();
 
 	// check for item using
 	if ( pm->cmd.buttons & BUTTON_USE_HOLDABLE ) {
@@ -3287,6 +3355,32 @@ static void PM_Weapon( void ) {
 			break;
 		}
 		break;
+	}
+
+		// set weapon recoil (kickback)
+	// no recoil for AI
+	if (pm->ps->aiChar)
+	{
+		pm->pmext->lastRecoilDeltaTime = 0;
+		pm->pmext->weapRecoilTime = 0;
+		pm->pmext->weapRecoilDuration = 0;
+		pm->pmext->weapRecoilYaw = 0;
+		pm->pmext->weapRecoilPitch = 0;
+	}
+	else
+	{
+
+		pm->pmext->lastRecoilDeltaTime = 0;
+		pm->pmext->weapRecoilTime      = ammoTable[pm->ps->weapon].weapRecoilDuration ? pm->cmd.serverTime : 0;
+		pm->pmext->weapRecoilDuration  = ammoTable[pm->ps->weapon].weapRecoilDuration;
+		pm->pmext->weapRecoilYaw       = ammoTable[pm->ps->weapon].weapRecoilYaw[0]   * crandom() * ammoTable[pm->ps->weapon].weapRecoilYaw[1];
+		pm->pmext->weapRecoilPitch     = ammoTable[pm->ps->weapon].weapRecoilPitch[0] * random()  * ammoTable[pm->ps->weapon].weapRecoilPitch[1];
+
+
+		if ((pm->ps->eFlags & EF_CROUCHING) && (pm->ps->groundEntityNum != ENTITYNUM_NONE))
+		{
+			pm->pmext->weapRecoilDuration *= 0.5;
+		}
 	}
 
 	// check for overheat
