@@ -897,7 +897,7 @@ static qboolean CG_ParseWeaponConfig( const char *filename, weaponInfo_t *wi, in
 		token = COM_Parse( &text_p );   // first frame
 		if ( !token[0] ) {
 			// don't show warning for weapon cfg without altswitch that does not require it.
-			if ( i == WEAP_ALTSWITCHFROM && weapAlts[weaponNum] == WP_NONE ) {
+			if ( i == WEAP_ALTSWITCHFROM && ammoTable[weaponNum].weapAlts == WP_NONE ) {
 				for ( ; i < MAX_WP_ANIMATIONS  ; i++ ) {
 					Com_Memcpy( &wi->weapAnimations[i], &wi->weapAnimations[WEAP_IDLE1], sizeof( wi->weapAnimations[0] ) );
 				}
@@ -3413,12 +3413,9 @@ getAltWeapon
 ==============
 */
 static int getAltWeapon( int weapnum ) {
-	if ( weapnum > MAX_WEAP_ALTS ) {
-		return weapnum;
-	}
-
-	if ( weapAlts[weapnum] ) {
-		return weapAlts[weapnum];
+	
+	if ( ammoTable[weapnum].weapAlts ) {
+		return ammoTable[weapnum].weapAlts;
 	}
 
 	return weapnum;

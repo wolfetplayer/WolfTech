@@ -621,6 +621,8 @@ extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
 // jpw
 
 typedef struct ammotable_s {
+	weapon_t weapAlts;
+	
 	int maxammo;            
 	int uses;               
 	int maxclip;            
@@ -636,12 +638,11 @@ typedef struct ammotable_s {
 	float weapRecoilYaw[2];
 
 	int soundRange; 
-	
+
 	int mod;                // means of death
 } ammotable_t;
 
 extern ammotable_t ammoTable[WP_NUM_WEAPONS];
-extern int weapAlts[];  // defined in bg_misc.c
 
 #define GetWeaponTableData(weaponIndex) ((ammotable_t *)(&ammoTable[weaponIndex]))
 

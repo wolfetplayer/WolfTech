@@ -2058,7 +2058,7 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 		return;
 	}
 
-	altswitch = (qboolean)( newweapon == weapAlts[oldweapon] );
+	altswitch = (qboolean)( newweapon == ammoTable[oldweapon].weapAlts );
 
 	showdrop = qtrue;
 
@@ -2196,18 +2196,18 @@ static void PM_FinishWeaponChange( void ) {
 	// sometimes different switch times for alt weapons
 	switch ( newweapon ) {
 	case WP_LUGER:
-		if ( newweapon == weapAlts[oldweapon] ) {
+		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
 			switchtime = 50;
 		}
 		break;
 	case WP_SILENCER:
-		if ( newweapon == weapAlts[oldweapon] ) {
+		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
 			switchtime = 1190;
 		}
 		break;
 	case WP_FG42:
 	case WP_FG42SCOPE:
-		if ( newweapon == weapAlts[oldweapon] ) {
+		if ( newweapon == ammoTable[oldweapon].weapAlts) {
 			switchtime = 50;        // fast
 		}
 		break;
@@ -2222,7 +2222,7 @@ static void PM_FinishWeaponChange( void ) {
 	BG_AnimScriptEvent( pm->ps, ANIM_ET_RAISEWEAPON, qfalse, qfalse );
 
 	// alt weapon switch was played when switching away, just go into idle
-	if ( weapAlts[oldweapon] == newweapon ) {
+	if ( ammoTable[oldweapon].weapAlts == newweapon ) {
 		PM_StartWeaponAnim( WEAP_ALTSWITCHTO );
 	} else {
 		PM_StartWeaponAnim( WEAP_RAISE );
@@ -2317,7 +2317,7 @@ void PM_CheckForReload( int weapon ) {
 				if ( !( pm->ps->ammo[ammoWeap] ) ) { // no ammo left. when you switch out, don't try to reload
 					doReload = qfalse;
 				}
-				PM_BeginWeaponChange( weapon, weapAlts[weapon], doReload );
+				PM_BeginWeaponChange( weapon,ammoTable[weapon].weapAlts, doReload );
 			}
 			return;
 		default:

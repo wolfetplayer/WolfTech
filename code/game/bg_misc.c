@@ -83,6 +83,7 @@ extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
 
 ammotable_t ammoTable[] = {
     [WP_NONE] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 0,
         .uses               = 0,
         .maxclip            = 0,
@@ -98,6 +99,7 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
     },
     [WP_KNIFE] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 999,
         .uses               = 0,
         .maxclip            = 999,
@@ -113,6 +115,7 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
     },
     [WP_LUGER] = {
+		.weapAlts           = WP_SILENCER,
         .maxammo            = MAX_AMMO_9MM,
         .uses               = 1,
         .maxclip            = 8,
@@ -128,6 +131,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_LUGER,
     },
     [WP_MP40] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = MAX_AMMO_9MM,
         .uses               = 1,
         .maxclip            = 32,
@@ -143,6 +147,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_MP40,
     },
     [WP_MAUSER] = {
+		.weapAlts           = WP_SNIPERRIFLE,
         .maxammo            = MAX_AMMO_MAUSER,
         .uses               = 1,
         .maxclip            = 10,
@@ -158,6 +163,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_MAUSER,
     },
     [WP_FG42] = {
+		.weapAlts           = WP_FG42SCOPE,
         .maxammo            = MAX_AMMO_FG42,
         .uses               = 1,
         .maxclip            = 20,
@@ -173,6 +179,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_FG42,
     },
     [WP_GRENADE_LAUNCHER] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 15,
         .uses               = 1,
         .maxclip            = 15,
@@ -188,6 +195,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_GRENADE_LAUNCHER,
     },
     [WP_PANZERFAUST] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 5,
         .uses               = 1,
         .maxclip            = 1,
@@ -203,6 +211,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_PANZERFAUST,
     },
     [WP_VENOM] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = MAX_AMMO_VENOM,
         .uses               = 1,
         .maxclip            = 500,
@@ -218,6 +227,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_VENOM,
     },
     [WP_FLAMETHROWER] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 150,
         .uses               = 1,
         .maxclip            = 150,
@@ -233,6 +243,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_FLAMETHROWER,
     },
     [WP_TESLA] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 300,
         .uses               = 1,
         .maxclip            = 300,
@@ -248,6 +259,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_TESLA,
     },
     [WP_COLT] = {
+		.weapAlts           = WP_AKIMBO,
         .maxammo            = MAX_AMMO_45,
         .uses               = 1,
         .maxclip            = 8,
@@ -263,6 +275,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_COLT,
     },
     [WP_THOMPSON] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = MAX_AMMO_45,
         .uses               = 1,
         .maxclip            = 30,
@@ -278,6 +291,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_THOMPSON,
     },
     [WP_GARAND] = {
+		.weapAlts           = WP_SNOOPERSCOPE,
         .maxammo            = MAX_AMMO_GARAND,
         .uses               = 1,
         .maxclip            = 5,
@@ -293,6 +307,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_GARAND,
     },
     [WP_GRENADE_PINEAPPLE] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 15,
         .uses               = 1,
         .maxclip            = 15,
@@ -308,6 +323,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_GRENADE_PINEAPPLE,
     },
     [WP_SNIPERRIFLE] = {
+		.weapAlts           = WP_MAUSER,
         .maxammo            = MAX_AMMO_MAUSER,
         .uses               = 1,
         .maxclip            = 10,
@@ -323,6 +339,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_SNIPERRIFLE,
     },
     [WP_SNOOPERSCOPE] = {
+		.weapAlts           = WP_GARAND,
         .maxammo            = MAX_AMMO_GARAND,
         .uses               = 1,
         .maxclip            = 5,
@@ -338,6 +355,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_SNOOPERSCOPE,
     },
     [WP_FG42SCOPE] = {
+		.weapAlts           = WP_FG42,
         .maxammo            = MAX_AMMO_FG42,
         .uses               = 1,
         .maxclip            = 20,
@@ -353,6 +371,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_FG42SCOPE,
     },
     [WP_STEN] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = MAX_AMMO_9MM,
         .uses               = 1,
         .maxclip            = 32,
@@ -368,6 +387,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_STEN,
     },
     [WP_SILENCER] = {
+		.weapAlts           = WP_LUGER,
         .maxammo            = MAX_AMMO_9MM,
         .uses               = 1,
         .maxclip            = 8,
@@ -383,6 +403,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_SILENCER,
     },
     [WP_AKIMBO] = {
+		.weapAlts           = WP_COLT,
         .maxammo            = MAX_AMMO_45,
         .uses               = 1,
         .maxclip            = 8,
@@ -398,6 +419,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_AKIMBO,
     },
     [WP_CLASS_SPECIAL] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 999,
         .uses               = 0,
         .maxclip            = 999,
@@ -413,6 +435,7 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
     },
     [WP_DYNAMITE] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 10,
         .uses               = 1,
         .maxclip            = 10,
@@ -428,6 +451,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_DYNAMITE,
     },
     [WP_MONSTER_ATTACK1] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 999,
         .uses               = 0,
         .maxclip            = 999,
@@ -443,6 +467,7 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
     },
     [WP_MONSTER_ATTACK2] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 999,
         .uses               = 0,
         .maxclip            = 999,
@@ -458,6 +483,7 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
     },
     [WP_MONSTER_ATTACK3] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 999,
         .uses               = 0,
         .maxclip            = 999,
@@ -473,6 +499,7 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
     },
     [WP_GAUNTLET] = {
+		.weapAlts           = WP_NONE,
         .maxammo            = 999,
         .uses               = 0,
         .maxclip            = 999,
@@ -487,33 +514,6 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 0,
         .mod                = 0,
     },
-};
-
-//----(SA)	moved in here so both games can get to it
-int weapAlts[] = {
-	WP_NONE,            // 0 WP_NONE
-	WP_NONE,            // 1 WP_KNIFE
-	WP_SILENCER,        // 2 WP_LUGER
-	WP_NONE,            // 3 WP_MP40
-	WP_SNIPERRIFLE,     // 4 WP_MAUSER
-	WP_FG42SCOPE,       // 5 WP_FG42	// was SP5
-	WP_NONE,            // 6 WP_GRENADE_LAUNCHER
-	WP_NONE,            // 7 WP_PANZERFAUST
-	WP_NONE,            // 8 WP_VENOM
-	WP_NONE,            // 9 WP_FLAMETHROWER
-	WP_NONE,            // 10 WP_TESLA
-	WP_AKIMBO,          // 13 WP_COLT		//----(SA)	new
-	WP_NONE,            // 14 WP_THOMPSON
-	WP_SNOOPERSCOPE,    // 15 WP_GARAND
-	WP_NONE,            // 17 WP_GRENADE_PINEAPPLE
-	WP_MAUSER,          // 19 WP_SNIPERRIFLE
-	WP_GARAND,          // 20 WP_SNOOPERSCOPE
-	WP_FG42,            // 23 WP_FG42SCOPE
-	WP_NONE,            // 25 WP_STEN
-	WP_LUGER,           // 26 WP_SILENCER	//----(SA)	was sp5
-	WP_COLT,            // 27 WP_AKIMBO		//----(SA)	new
-	WP_NONE,            // 28 WP_CLASS_SPECIAL
-	WP_NONE             // 30 WP_DYNAMITE	//----(SA)	modified (not in rotation yet)
 };
 
 
