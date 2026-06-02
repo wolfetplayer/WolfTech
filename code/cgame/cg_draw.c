@@ -3930,6 +3930,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 	}
 
 	if ( cg_draw2D.integer == 0 ) {
+		CG_DrawFlashBlend();    // (for fades)
 		return;
 	}
 
