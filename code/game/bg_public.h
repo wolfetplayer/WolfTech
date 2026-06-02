@@ -39,7 +39,7 @@ If you have questions concerning this license or the applicable additional terms
 #define	GAME_VERSION		BASEGAME "-1"
 
 #define DEFAULT_GRAVITY     800
-#define GIB_HEALTH          -40
+#define GIB_HEALTH          -120
 #define ARMOR_PROTECTION    0.66
 
 #define MAX_ITEMS           256
