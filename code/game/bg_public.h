@@ -622,6 +622,7 @@ extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
 
 typedef struct ammotable_s {
 	weapon_t weapAlts;
+	int weaponClass;
 	
 	int maxammo;            
 	int uses;               
@@ -630,7 +631,10 @@ typedef struct ammotable_s {
 	int fireDelayTime;      
 	int nextShotTime;       
 	int maxHeat;            
-	int coolRate;          
+	int coolRate;
+	
+	int weaponDamage;
+	int weaponSpread;
 
 	// Real recoil
 	int weapRecoilDuration;
@@ -1246,6 +1250,25 @@ typedef enum {
 
 } meansOfDeath_t;
 
+typedef enum
+{
+	WEAPON_CLASS_NONE  =         0b0000000000000000,
+	WEAPON_CLASS_MELEE =         0b0000000000000001,
+	WEAPON_CLASS_PISTOL =        0b0000000000000010,
+	WEAPON_CLASS_SMG =           0b0000000000000100,
+	WEAPON_CLASS_RIFLE =         0b0000000000001000,
+	WEAPON_CLASS_ASSAULT_RIFLE = 0b0000000000010000,
+	WEAPON_CLASS_SHOTGUN =       0b0000000000100000,
+	WEAPON_CLASS_GRENADE =       0b0000000001000000,
+	WEAPON_CLASS_RIFLENADE =     0b0000000010000000,
+	WEAPON_CLASS_MG =            0b0000000100000000,
+	WEAPON_CLASS_LAUNCHER =      0b0000001000000000,
+	WEAPON_CLASS_BEAM =          0b0000010000000000,
+	WEAPON_CLASS_SCOPED =        0b0000100000000000,
+	WEAPON_CLASS_SCOPABLE =      0b0001000000000000,
+	WEAPON_CLASS_AKIMBO =        0b0010000000000000,
+	WEAPON_CLASS_UNUSED =        0b0100000000000000,
+} weaponClass_t;
 
 //---------------------------------------------------------
 

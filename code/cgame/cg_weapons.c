@@ -5442,9 +5442,6 @@ static void CG_VenomPellet( vec3_t start, vec3_t end, int skipNum ) {
 
 //----(SA)	all changes to venom below should be mine
 #define DEFAULT_VENOM_COUNT 10
-//#define DEFAULT_VENOM_SPREAD 20
-//#define DEFAULT_VENOM_SPREAD 400
-#define DEFAULT_VENOM_SPREAD 700
 
 /*
 ================
@@ -5471,8 +5468,8 @@ static void CG_VenomPattern( vec3_t origin, vec3_t origin2, int otherEntNum ) {
 
 	// generate the "random" spread pattern
 	for ( i = 0 ; i < DEFAULT_VENOM_COUNT ; i++ ) {
-		r = crandom() * DEFAULT_VENOM_SPREAD;
-		u = crandom() * DEFAULT_VENOM_SPREAD;
+		r = crandom() * GetWeaponTableData(WP_VENOM)->weaponSpread;
+		u = crandom() * GetWeaponTableData(WP_VENOM)->weaponSpread;
 		VectorMA( origin, 8192, forward, end );
 		VectorMA( end, r, right, end );
 		VectorMA( end, u, up, end );

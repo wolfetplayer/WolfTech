@@ -48,7 +48,7 @@ void weapon_zombiespit( gentity_t *ent );
 void Bullet_Fire( gentity_t *ent, float spread, int damage );
 void Bullet_Fire_Extended( gentity_t *source, gentity_t *attacker, vec3_t start, vec3_t end, float spread, int damage, int recursion );
 
-int G_GetWeaponDamage( int weapon ); // JPW
+int G_GetWeaponDamage( int weapon, gentity_t *ent ); // JPW
 
 #define NUM_NAILSHOTS 10
 
@@ -122,7 +122,7 @@ void Weapon_Knife( gentity_t *ent ) {
 		return;
 	}
 
-	damage = G_GetWeaponDamage( ent->s.weapon ); // JPW		// default knife damage for frontal attacks
+	damage = G_GetWeaponDamage( ent->s.weapon, ent ); // JPW		// default knife damage for frontal attacks
 
 	if ( traceEnt->client ) {
 		if ( ent->client->ps.serverCursorHint == HINT_KNIFE ) {
@@ -566,118 +566,24 @@ void SnapVectorTowards( vec3_t v, vec3_t to ) {
 	}
 }
 
-// JPW
-// mechanism allows different weapon damage for single/multiplayer; we want "balanced" weapons
-// in multiplayer but don't want to alter the existing single-player damage items that have already
-// been changed
-//
-// KLUDGE/FIXME: also modded #defines below to become macros that call this fn for minimal impact elsewhere
-//
-int G_GetWeaponDamage( int weapon ) {
-	switch ( weapon )
-	{
-		case WP_LUGER:
-		case WP_SILENCER: return 6;
-		case WP_COLT: return 8;
-		case WP_AKIMBO: return 8;           //----(SA)	added
-		case WP_VENOM: return 12;           // 15  ----(SA)	slight modify for DM
-		case WP_MP40: return 6;
-		case WP_THOMPSON: return 8;
-		case WP_STEN: return 10;
-		case WP_FG42SCOPE:
-		case WP_FG42: return 15;
-		case WP_MAUSER: return 20;
-		case WP_GARAND: return 25;
-		case WP_SNIPERRIFLE: return 55;
-		case WP_SNOOPERSCOPE: return 25;
-		case WP_NONE: return 0;
-		case WP_KNIFE: return 5;
-		case WP_GRENADE_LAUNCHER: return 100;
-		case WP_GRENADE_PINEAPPLE: return 80;
-		case WP_DYNAMITE: return 400;
-		case WP_PANZERFAUST: return 200;            // (SA) was 100
-		case WP_MORTAR: return 100;
-		case WP_FLAMETHROWER:         // FIXME -- not used in single player yet
-		case WP_TESLA:
-		case WP_GAUNTLET:
-		case WP_SNIPER:
-		default:    return 1;
-	}
+
+int G_GetWeaponDamage(int weapon, gentity_t *ent)
+{
+
+	if (weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS || !ent)
+		return 0;
+
+	return GetWeaponTableData(weapon)->weaponDamage;
 }
 
-// RF, wrote this so we can dynamically switch between old and new values while testing g_userAim
-float G_GetWeaponSpread( int weapon ) {
-	if ( g_userAim.integer ) {
-		// these should be higher since they become erratic if aiming is out
-		switch ( weapon )
-		{
-			case WP_LUGER:      return 600;
-			case WP_SILENCER:   return 900;
-			case WP_COLT:       return 700;
-			case WP_AKIMBO:     return 700;     //----(SA)	added
-			case WP_VENOM:      return 1000;
-			case WP_MP40:       return 1000;
-			case WP_FG42SCOPE:  return 300;
-			case WP_FG42:       return 800;
-			case WP_THOMPSON:   return 1200;
-			case WP_STEN:       return 1200;
-			case WP_MAUSER:     return 400;
-			case WP_GARAND:     return 500;
-			case WP_SNIPERRIFLE:    return 300;
-			case WP_SNOOPERSCOPE:   return 300;
-		}
-	} else {        // old values
-		switch ( weapon )
-		{
-			case WP_LUGER:      return 25;
-			case WP_SILENCER:   return 150;
-			case WP_COLT:       return 30;
-			case WP_AKIMBO:     return 30;          //----(SA)	added
-			case WP_VENOM:      return 200;
-			case WP_MP40:       return 200;
-			case WP_FG42SCOPE:  return 10;
-			case WP_FG42:       return 150;
-			case WP_THOMPSON:   return 250;
-			case WP_STEN:       return 300;
-			case WP_MAUSER:     return 15;
-			case WP_GARAND:     return 25;
-			case WP_SNIPERRIFLE:    return 10;
-			case WP_SNOOPERSCOPE:   return 10;		
-		}
-	}
-	G_Printf( "shouldn't ever get here (weapon %d)\n",weapon );
 
-	return 0;   // shouldn't get here
+float G_GetWeaponSpread(int weapon, gentity_t *ent)
+{
+	if (!g_userAim.integer)
+		return 0.0f;
+
+	return GetWeaponTableData(weapon)->weaponSpread;
 }
-
-#define LUGER_SPREAD    G_GetWeaponSpread( WP_LUGER )
-#define LUGER_DAMAGE    G_GetWeaponDamage( WP_LUGER ) // JPW
-#define SILENCER_SPREAD G_GetWeaponSpread( WP_SILENCER )
-#define COLT_SPREAD     G_GetWeaponSpread( WP_COLT )
-#define COLT_DAMAGE     G_GetWeaponDamage( WP_COLT ) // JPW
-
-#define VENOM_SPREAD    G_GetWeaponSpread( WP_VENOM )
-#define VENOM_DAMAGE    G_GetWeaponDamage( WP_VENOM ) // JPW
-
-#define MP40_SPREAD     G_GetWeaponSpread( WP_MP40 )
-#define MP40_DAMAGE     G_GetWeaponDamage( WP_MP40 ) // JPW
-#define THOMPSON_SPREAD G_GetWeaponSpread( WP_THOMPSON )
-#define THOMPSON_DAMAGE G_GetWeaponDamage( WP_THOMPSON ) // JPW
-#define STEN_SPREAD     G_GetWeaponSpread( WP_STEN )
-#define STEN_DAMAGE     G_GetWeaponDamage( WP_STEN ) // JPW
-#define FG42_SPREAD     G_GetWeaponSpread( WP_FG42 )
-#define FG42_DAMAGE     G_GetWeaponDamage( WP_FG42 ) // JPW
-
-#define MAUSER_SPREAD   G_GetWeaponSpread( WP_MAUSER )
-#define MAUSER_DAMAGE   G_GetWeaponDamage( WP_MAUSER ) // JPW
-#define GARAND_SPREAD   G_GetWeaponSpread( WP_GARAND )
-#define GARAND_DAMAGE   G_GetWeaponDamage( WP_GARAND ) // JPW
-
-#define SNIPER_SPREAD   G_GetWeaponSpread( WP_SNIPERRIFLE )
-#define SNIPER_DAMAGE   G_GetWeaponDamage( WP_SNIPERRIFLE ) // JPW
-
-#define SNOOPER_SPREAD  G_GetWeaponSpread( WP_SNOOPERSCOPE )
-#define SNOOPER_DAMAGE  G_GetWeaponDamage( WP_SNOOPERSCOPE ) // JPW
 
 /*
 ==============
@@ -862,6 +768,33 @@ void Bullet_Fire( gentity_t *ent, float spread, int damage ) {
 		G_HistoricalTraceEnd( ent );
 	}
 }
+
+
+/*
+==============
+Bullet_Fire_Normal
+==============
+*/
+#define NUM_SHOTGUN_PELLETS 12
+static void Bullet_Fire_Normal( gentity_t *ent, float aimSpreadScale ) {
+	int numPellets;
+	weapon_t weapon = ent->s.weapon;
+	float spread = G_GetWeaponSpread(weapon, ent) * aimSpreadScale;
+	int damage = G_GetWeaponDamage(weapon, ent);
+	int pelletMultNum = 1;
+	int pelletMultDen = 1;
+
+	if (ammoTable[weapon].weaponClass & WEAPON_CLASS_SHOTGUN) {
+		numPellets = NUM_SHOTGUN_PELLETS;
+	} else {
+		numPellets = 1;
+	}
+
+	for (int i = 0; i < (ammoTable[weapon].uses * numPellets * pelletMultNum) / pelletMultDen; i++)
+	{
+			Bullet_Fire(ent, spread, damage);
+	}
+};
 
 
 /*
@@ -1345,8 +1278,6 @@ VENOM GUN TRACING
 ============================================================================
 */
 #define DEFAULT_VENOM_COUNT 10
-#define DEFAULT_VENOM_SPREAD 20
-#define DEFAULT_VENOM_DAMAGE 15
 
 qboolean VenomPellet( vec3_t start, vec3_t end, gentity_t *ent ) {
 	trace_t tr;
@@ -1362,7 +1293,7 @@ qboolean VenomPellet( vec3_t start, vec3_t end, gentity_t *ent ) {
 	}
 
 	if ( traceEnt->takedamage ) {
-		damage = DEFAULT_VENOM_DAMAGE * s_quadFactor;
+		damage = GetWeaponTableData(WP_VENOM)->weaponDamage * s_quadFactor;
 
 		G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_VENOM );
 		if ( LogAccuracyHit( traceEnt, ent ) ) {
@@ -1388,8 +1319,8 @@ void VenomPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
 
 	// generate the "random" spread pattern
 	for ( i = 0 ; i < DEFAULT_VENOM_COUNT ; i++ ) {
-		r = Q_crandom( &seed ) * DEFAULT_VENOM_SPREAD;
-		u = Q_crandom( &seed ) * DEFAULT_VENOM_SPREAD;
+		r = Q_crandom( &seed ) * GetWeaponTableData(WP_VENOM)->weaponSpread;
+		u = Q_crandom( &seed ) * GetWeaponTableData(WP_VENOM)->weaponSpread;
 		VectorMA( origin, 8192, forward, end );
 		VectorMA( end, r, right, end );
 		VectorMA( end, u, up, end );
@@ -1426,11 +1357,11 @@ void weapon_venom_fire( gentity_t *ent, qboolean fullmode, float aimSpreadScale 
 	} else
 	{
 		int dam;
-		dam = VENOM_DAMAGE;
+		dam = GetWeaponTableData(WP_VENOM)->weaponDamage;
 		if ( ent->aiCharacter ) {  // venom guys are /vicious/
 			dam *= 0.5f;
 		}
-		Bullet_Fire( ent, VENOM_SPREAD * aimSpreadScale, dam );
+		Bullet_Fire( ent, GetWeaponTableData(WP_VENOM)->weaponSpread * aimSpreadScale, dam );
 	}
 }
 
@@ -1821,11 +1752,6 @@ void FireWeapon( gentity_t *ent ) {
 		s_quadFactor = 1;
 	}
 
-	// track shots taken for accuracy tracking.  Grapple is not a weapon and gauntet is just not tracked
-//----(SA)	removing old weapon references
-//	if( ent->s.weapon != WP_GRAPPLING_HOOK && ent->s.weapon != WP_GAUNTLET ) {
-//		ent->client->ps.persistant[PERS_ACCURACY_SHOTS]++;
-//	}
 
 	// Ridah, need to call this for AI prediction also
 	CalcMuzzlePoints( ent, ent->s.weapon );
@@ -1868,85 +1794,61 @@ void FireWeapon( gentity_t *ent ) {
 	}
 
 	// fire the specific weapon
-	switch ( ent->s.weapon ) {
-	case WP_KNIFE:
+	switch ( ent->s.weapon ) {	
+		case WP_KNIFE:
 		Weapon_Knife( ent );
 		break;
 // JPW NERVE
 	case WP_CLASS_SPECIAL:
 		Weapon_Class_Special( ent );
 		break;
-// jpw
-		break;
+	// these weapons can be handled at the same way
 	case WP_LUGER:
-		Bullet_Fire( ent, LUGER_SPREAD * aimSpreadScale, LUGER_DAMAGE );
-		break;
 	case WP_SILENCER:
-		Bullet_Fire( ent, SILENCER_SPREAD * aimSpreadScale, LUGER_DAMAGE );
-		break;
-	case WP_AKIMBO: //----(SA)	added
 	case WP_COLT:
-		Bullet_Fire( ent, COLT_SPREAD * aimSpreadScale, COLT_DAMAGE );
+	case WP_AKIMBO: //----(SA)	added
+	case WP_MP40:
+	case WP_THOMPSON:
+	case WP_STEN:
+	case WP_MAUSER:
+	case WP_GARAND:
+	case WP_FG42:
+		Bullet_Fire_Normal( ent, aimSpreadScale );
 		break;
 	case WP_VENOM:
-		weapon_venom_fire( ent, qfalse, aimSpreadScale );
+		weapon_venom_fire(ent, qfalse, aimSpreadScale);
 		break;
 	case WP_SNIPERRIFLE:
-		Bullet_Fire( ent, SNIPER_SPREAD * aimSpreadScale, SNIPER_DAMAGE );
-// JPW NERVE -- added muzzle flip in multiplayer
-		if ( !ent->aiCharacter ) {
-//		if (g_gametype.integer != GT_SINGLE_PLAYER) {
-			VectorCopy( ent->client->ps.viewangles,viewang );
-//			viewang[PITCH] -= 6; // handled in clientthink instead
-			ent->client->sniperRifleMuzzleYaw = crandom() * 0.5; // used in clientthink
-			ent->client->sniperRifleMuzzlePitch = 0.8f;
+		Bullet_Fire_Normal( ent, aimSpreadScale );
+		if (!ent->aiCharacter)
+		{
+			VectorCopy(ent->client->ps.viewangles, viewang);
+			ent->client->sniperRifleMuzzleYaw = crandom() * ammoTable[WP_SNIPERRIFLE].weapRecoilYaw[0]; // used in clientthink
+			ent->client->sniperRifleMuzzlePitch = ammoTable[WP_SNIPERRIFLE].weapRecoilPitch[0];
 			ent->client->sniperRifleFiredTime = level.time;
-			SetClientViewAngle( ent,viewang );
+			SetClientViewAngle(ent, viewang);
 		}
-// jpw
 		break;
 	case WP_SNOOPERSCOPE:
-		Bullet_Fire( ent, SNOOPER_SPREAD * aimSpreadScale, SNOOPER_DAMAGE );
-// JPW NERVE -- added muzzle flip in multiplayer
+		Bullet_Fire_Normal( ent, aimSpreadScale );
 		if ( !ent->aiCharacter ) {
-//		if (g_gametype.integer != GT_SINGLE_PLAYER) {
 			VectorCopy( ent->client->ps.viewangles,viewang );
-			ent->client->sniperRifleMuzzleYaw = crandom() * 0.5; // used in clientthink
-			ent->client->sniperRifleMuzzlePitch = 0.9f;
+			ent->client->sniperRifleMuzzleYaw = crandom() * ammoTable[WP_SNOOPERSCOPE].weapRecoilYaw[0]; // used in clientthink
+			ent->client->sniperRifleMuzzlePitch = ammoTable[WP_SNOOPERSCOPE].weapRecoilPitch[0];
 			ent->client->sniperRifleFiredTime = level.time;
 			SetClientViewAngle( ent,viewang );
 		}
-// jpw
 		break;
-	case WP_MAUSER:
-		Bullet_Fire( ent, MAUSER_SPREAD * aimSpreadScale, MAUSER_DAMAGE );
-		break;
-	case WP_GARAND:
-		Bullet_Fire( ent, GARAND_SPREAD * aimSpreadScale, GARAND_DAMAGE );
-		break;
-//----(SA)	added
 	case WP_FG42SCOPE:
-		if ( !ent->aiCharacter ) {
-//		if (g_gametype.integer != GT_SINGLE_PLAYER) {
-			VectorCopy( ent->client->ps.viewangles,viewang );
-//			ent->client->sniperRifleMuzzleYaw = crandom()*0.04; // used in clientthink
-			ent->client->sniperRifleMuzzleYaw = 0;
-			ent->client->sniperRifleMuzzlePitch = 0.07f;
+		Bullet_Fire_Normal( ent, aimSpreadScale );
+		if (!ent->aiCharacter)
+		{
+			VectorCopy(ent->client->ps.viewangles, viewang);
+			ent->client->sniperRifleMuzzleYaw = crandom() * ammoTable[WP_FG42SCOPE].weapRecoilYaw[0]; // used in clientthink
+			ent->client->sniperRifleMuzzlePitch = ammoTable[WP_FG42SCOPE].weapRecoilPitch[0];
 			ent->client->sniperRifleFiredTime = level.time;
-			SetClientViewAngle( ent,viewang );
+			SetClientViewAngle(ent, viewang);
 		}
-	case WP_FG42:
-		Bullet_Fire( ent, FG42_SPREAD * aimSpreadScale, FG42_DAMAGE );
-		break;
-//----(SA)	end
-	case WP_STEN:
-		Bullet_Fire( ent, STEN_SPREAD * aimSpreadScale, STEN_DAMAGE );
-		break;
-	case WP_MP40:
-		Bullet_Fire( ent, MP40_SPREAD * aimSpreadScale, MP40_DAMAGE );
-		break;
-	case WP_THOMPSON:
-		Bullet_Fire( ent, THOMPSON_SPREAD * aimSpreadScale, THOMPSON_DAMAGE );
 		break;
 	case WP_PANZERFAUST:
 		ent->client->ps.classWeaponTime = level.time; // JPW NERVE
@@ -1955,11 +1857,6 @@ void FireWeapon( gentity_t *ent ) {
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
-		// weapon_grenadelauncher_fire( ent, ent->s.weapon );
-		//RF- disabled this since it's broken (do we still want it?)
-		//if (ent->aiName && !Q_strncmp(ent->aiName, "mechanic", 8) && !AICast_HasFiredWeapon(ent->s.number, ent->s.weapon))
-		//	weapon_crowbar_throw (ent);
-		//else
 		if ( ent->s.weapon == WP_DYNAMITE ) {
 			ent->client->ps.classWeaponTime = level.time; // JPW NERVE
 		}
@@ -1970,11 +1867,10 @@ void FireWeapon( gentity_t *ent ) {
 		}
 		break;
 	case WP_FLAMETHROWER:
-		Weapon_FlamethrowerFire( ent );
+		Weapon_FlamethrowerFire(ent);
 		break;
 	case WP_TESLA:
-		Tesla_Fire( ent );
-
+	    Tesla_Fire( ent );
 		// push the player back a bit
 		if ( !ent->aiCharacter ) {
 			vec3_t forward, vangle;
@@ -1989,17 +1885,11 @@ void FireWeapon( gentity_t *ent ) {
 			}
 		}
 		break;
-	case WP_GAUNTLET:
-		Weapon_Gauntlet( ent );
-		break;
-
 	case WP_MONSTER_ATTACK1:
 		switch ( ent->aiCharacter ) {
 		case AICHAR_WARZOMBIE:
 			break;
 		case AICHAR_ZOMBIE:
-			// temp just to show it works
-			// G_Printf("ptoo\n");
 			weapon_zombiespit( ent );
 			break;
 		default:
@@ -2012,6 +1902,7 @@ void FireWeapon( gentity_t *ent ) {
 		break;
 
 	default:
+// FIXME		G_Error( "Bad ent->s.weapon" );
 		break;
 	}
 

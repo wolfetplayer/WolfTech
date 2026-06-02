@@ -1240,7 +1240,7 @@ gentity_t *fire_flamechunk( gentity_t *self, vec3_t start, vec3_t dir ) {
 
 //----(SA) removed unused quake3 weapons.
 
-int G_GetWeaponDamage( int weapon ); // JPW NERVE
+int G_GetWeaponDamage( int weapon, gentity_t *ent ); // JPW NERVE
 
 /*
 =================
@@ -1303,8 +1303,8 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 
 // JPW NERVE -- commented out bolt->damage and bolt->splashdamage, override with G_GetWeaponDamage()
 // so it works with different netgame balance.  didn't uncomment bolt->damage on dynamite 'cause its so *special*
-	bolt->damage = G_GetWeaponDamage( grenadeWPID ); // overridden for dynamite
-	bolt->splashDamage = G_GetWeaponDamage( grenadeWPID );
+	bolt->damage = G_GetWeaponDamage(grenadeWPID, self);
+	bolt->splashDamage = G_GetWeaponDamage(grenadeWPID, self);
 
 	if ( self->client && !self->aiCharacter ) {
 		bolt->damage *= 2;
@@ -1418,7 +1418,7 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 
 // JPW NERVE -- blast radius proportional to damage
 	if ( g_gametype.integer > GT_SINGLE_PLAYER ) {
-		bolt->splashRadius = G_GetWeaponDamage( grenadeWPID );
+		bolt->splashRadius = G_GetWeaponDamage(grenadeWPID, self);
 	}
 // jpw
 
@@ -1466,24 +1466,9 @@ gentity_t *fire_rocket( gentity_t *self, vec3_t start, vec3_t dir ) {
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
 
-	if ( self->aiCharacter ) { // ai keep the values they've been using
-		bolt->damage = 100;
-		bolt->splashDamage = 120;
-	} else {
-		bolt->damage = G_GetWeaponDamage( WP_PANZERFAUST );
-		bolt->splashDamage = G_GetWeaponDamage( WP_PANZERFAUST );
-	}
-
-// JPW NERVE
-	if ( g_gametype.integer > GT_SINGLE_PLAYER ) {
-		bolt->splashRadius = G_GetWeaponDamage( WP_PANZERFAUST );
-	} else {
-		if ( self->aiCharacter ) {
-			bolt->splashRadius = 120;
-		} else {
-			bolt->splashRadius = G_GetWeaponDamage( WP_PANZERFAUST );
-		}
-	}
+	bolt->damage = G_GetWeaponDamage(WP_PANZERFAUST, self);
+	bolt->splashDamage = G_GetWeaponDamage(WP_PANZERFAUST, self);
+	bolt->splashRadius = G_GetWeaponDamage(WP_PANZERFAUST, self);
 
 // jpw
 	bolt->methodOfDeath = MOD_ROCKET;
@@ -1826,8 +1811,8 @@ gentity_t *fire_mortar( gentity_t *self, vec3_t start, vec3_t dir ) {
 	bolt->s.weapon = WP_MORTAR;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = G_GetWeaponDamage( WP_MORTAR ); // JPW NERVE
-	bolt->splashDamage = G_GetWeaponDamage( WP_MORTAR ); // JPW NERVE
+	bolt->damage = G_GetWeaponDamage(WP_PANZERFAUST, self);
+	bolt->splashDamage = G_GetWeaponDamage(WP_PANZERFAUST, self);
 	bolt->splashRadius = 120;
 	bolt->methodOfDeath = MOD_MORTAR;
 	bolt->splashMethodOfDeath = MOD_MORTAR_SPLASH;

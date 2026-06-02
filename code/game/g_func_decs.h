@@ -192,8 +192,8 @@ extern void EmitterCheck ( gentity_t * ent , gentity_t * attacker , trace_t * tr
 extern void RubbleFlagCheck ( gentity_t * ent , trace_t tr ) ;
 extern void Tesla_Fire ( gentity_t * ent ) ;
 extern void Cross_Fire ( gentity_t * ent ) ;
-extern float G_GetWeaponSpread ( int weapon ) ;
-extern int G_GetWeaponDamage ( int weapon ) ;
+extern float G_GetWeaponSpread ( int weapon, gentity_t * ent ) ;
+extern int G_GetWeaponDamage ( int weapon, gentity_t * ent ) ;
 extern void SnapVectorTowards ( vec3_t v , vec3_t to ) ;
 extern trace_t * CheckMeleeAttack ( gentity_t * ent , float dist , qboolean isTest ) ;
 extern void Weapon_Gauntlet ( gentity_t * ent ) ;
