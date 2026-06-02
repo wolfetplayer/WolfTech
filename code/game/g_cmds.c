@@ -2983,17 +2983,13 @@ void ClientDamage( gentity_t *clent, int entnum, int enemynum, int id ) {
 		if ( ent->takedamage /*&& !AICast_NoFlameDamage(ent->s.number)*/ ) {
 			VectorSubtract( ent->r.currentOrigin, enemy->r.currentOrigin, vec );
 			VectorNormalize( vec );
-			if ( !( enemy->r.svFlags & SVF_CASTAI ) ) {
-				G_Damage( ent, enemy, enemy, vec, ent->r.currentOrigin, 8, 0, MOD_LIGHTNING );
-			} else {
-				G_Damage( ent, enemy, enemy, vec, ent->r.currentOrigin, 4, 0, MOD_LIGHTNING );
-			}
+			G_Damage( ent, enemy, enemy, vec, ent->r.currentOrigin, GetWeaponTableData(WP_TESLA)->weaponDamage, 0, MOD_LIGHTNING );
 		}
 		break;
 	case CLDMG_FLAMETHROWER:
 		if ( ( enemy->aiCharacter == AICHAR_ZOMBIE || !Q_stricmp( enemy->classname, "props_flamethrower" ) ) && ent->takedamage && !AICast_NoFlameDamage( ent->s.number ) ) {
-			#define FLAME_THRESHOLD 50
-			int damage = 5;
+			#define FLAME_THRESHOLD 10
+			int damage = GetWeaponTableData(WP_FLAMETHROWER)->weaponDamage;
 
 			// RF, only do damage once they start burning
 			//if (ent->health > 0)	// don't explode from flamethrower
@@ -3013,7 +3009,7 @@ void ClientDamage( gentity_t *clent, int entnum, int enemynum, int id ) {
 			ent->flameQuotaTime = level.time;
 
 			// Ridah, make em burn
-			if ( ent->client && ( /*g_gametype.integer != GT_SINGLE_PLAYER ||*/ !( ent->r.svFlags & SVF_CASTAI ) || ent->health <= 0 || ent->flameQuota > FLAME_THRESHOLD ) ) {
+			if ( ent->client && ( !( ent->r.svFlags & SVF_CASTAI ) || ent->health <= 0 || ent->flameQuota > FLAME_THRESHOLD ) ) {
 				if ( ent->s.onFireEnd < level.time ) {
 					ent->s.onFireStart = level.time;
 				}
