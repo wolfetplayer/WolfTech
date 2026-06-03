@@ -91,8 +91,6 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 	}
 
-	// DHM - Nerve :: special case for WP_CLASS_SPECIAL
-
 	realweap = cg.predictedPlayerState.weapon;
 
 	size = weapIconDrawSize( realweap );
@@ -400,7 +398,6 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 	}
 
 	switch ( weap ) {      // some weapons don't draw ammo count text
-	//case WP_KNIFE:
 	case WP_CLASS_SPECIAL:              // DHM - Nerve
 		return;
 

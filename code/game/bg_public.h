@@ -614,6 +614,8 @@ typedef struct ammotable_s {
 	
 	int weaponDamage;
 	int weaponSpread;
+	float spreadScale;
+	int spreadScaleAdd;
 
 	int weapRecoilDuration;
 	float weapRecoilPitch[2];       

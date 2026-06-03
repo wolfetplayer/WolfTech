@@ -4840,14 +4840,10 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 	vec3_t sprOrg;
 	vec3_t sprVel;
 	int i,j;
-
-//----(SA)	added
 	float shakeAmt;
 	int shakeDur, shakeRad;
 	shakeAmt = 0;
 	shakeDur = shakeRad = 0;
-//----(SA)	end
-
 	mark = 0;
 	radius = 32;
 	sfx = 0;
@@ -4883,7 +4879,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 		break;
 
 	case WP_LUGER:
-	case WP_AKIMBO: //----(SA)	added
+	case WP_AKIMBO:
 	case WP_COLT:
 	case WP_MAUSER:
 	case WP_GARAND:
@@ -4909,11 +4905,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 			sfx = cgs.media.sfx_ric3;
 		}
 
-		// clientNum is a dummy field used to define what sort of effect to spawn
-
 		if ( !clientNum ) {
-			// RF, why is this here? we need sparks if clientNum = 0, used for warzombie
-			// if ( sfx )
 			CG_AddSparks( origin, dir,
 						  350,      // speed
 						  200,      // duration
@@ -4987,18 +4979,8 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 
 			break;  // (SA) testing
 
-#if 0
-			// play a water splash
-			mod = cgs.media.waterSplashModel;
-			shader = cgs.media.waterSplashShader;
-			duration = 250;
-#endif
 		}
 
-		// Ridah, optimization, only spawn the bullet hole if we are close
-		// enough to see it, this way we can leave other marks around a lot
-		// longer, since most of the time we can't actually see the bullet holes
-// (SA) small modification.  only do this for non-rifles (so you can see your shots hitting when you're zooming with a rifle scope)
 		if ( weapon == WP_FG42SCOPE || weapon == WP_SNIPERRIFLE || weapon == WP_SNOOPERSCOPE || ( Distance( cg.refdef.vieworg, origin ) < 384 ) ) {
 
 			if ( clientNum ) {
@@ -5018,42 +5000,6 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 					mark = cgs.media.bulletMarkShaderWood;
 					alphaFade = qtrue;
 					radius += 1;    // experimenting with different mark sizes per surface
-
-/*
-					if (rand()%100 > 75)
-					{
-						gentity_t	*sfx;
-						vec3_t		start;
-						vec3_t		dir;
-
-						sfx = G_Spawn ();
-
-						sfx->s.density = type;
-
-						VectorCopy (tr.endpos, start);
-
-						VectorCopy (muzzleTrace, dir);
-						VectorNegate (dir, dir);
-
-						G_SetOrigin (sfx, start);
-						G_SetAngle (sfx, dir);
-
-						G_AddEvent( sfx, EV_SHARD, DirToByte( dir ));
-
-						sfx->think = G_FreeEntity;
-						sfx->nextthink = level.time + 1000;
-
-						sfx->s.frame = 3 + (rand()%3) ;
-
-						trap_LinkEntity (sfx);
-
-
-void CG_Shard(centity_t *cent, vec3_t origin, vec3_t dir)
-						CG_Shard
-
-					}
-
-*/
 
 
 				} else if ( surfFlags & SURF_CERAMIC ) {
@@ -5103,15 +5049,12 @@ void CG_Shard(centity_t *cent, vec3_t origin, vec3_t dir)
 			for ( j = 0; j < 3; j++ )
 				sprOrg[j] = origin[j] + 64 * dir[j] + 24 * crandom();
 			sprVel[2] += rand() % 50;
-//			CG_ParticleExplosion( 2, sprOrg, sprVel, 1000+rand()%250, 20, 40+rand()%60 );
 			CG_ParticleExplosion( "blacksmokeanimb", sprOrg, sprVel, 3500 + rand() % 250, 10, 250 + rand() % 60 );
 		}
 
 		VectorMA( origin, 24, dir, sprOrg );
 		VectorScale( dir, 64, sprVel );
-		// RF, I like this new animation, feel free to revert
 		CG_ParticleExplosion( "expblue", sprOrg, sprVel, 1000, 20, 300 );
-//		CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1200, 9, 300 );
 		break;
 
 	case WP_DYNAMITE:
@@ -5163,8 +5106,6 @@ void CG_Shard(centity_t *cent, vec3_t origin, vec3_t dir)
 	case WP_GRENADE_SMOKE: // JPW NERVE
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
-//		mod = cgs.media.dishFlashModel;
-//		shader = cgs.media.grenadeExplosionShader;
 		shader = cgs.media.rocketExplosionShader;       // copied from RL
 		sfx = cgs.media.sfx_rockexp;
 		mark = cgs.media.burnMarkShader;
@@ -5212,18 +5153,12 @@ void CG_Shard(centity_t *cent, vec3_t origin, vec3_t dir)
 		break;
 	case VERYBIGEXPLOSION:
 	case WP_PANZERFAUST:
-//		mod = cgs.media.dishFlashModel;
-//		shader = cgs.media.rocketExplosionShader;
 		sfx = cgs.media.sfx_rockexp;
 		mark = cgs.media.burnMarkShader;
 		radius = 64;
 		light = 600;
 		isSprite = qtrue;
 		duration = 1000;
-		// Ridah, changed to flamethrower colors
-//		lightColor[0] = 1;
-//		lightColor[1] = 1;//0.75;
-//		lightColor[2] = 0.6;//0.0;
 		lightColor[0] = 0.75;
 		lightColor[1] = 0.5;
 		lightColor[2] = 0.1;
@@ -5285,11 +5220,9 @@ void CG_Shard(centity_t *cent, vec3_t origin, vec3_t dir)
 		trap_S_StartSound( origin, ENTITYNUM_WORLD, CHAN_AUTO, sfx );
 	}
 
-//----(SA)	added
 	if ( sfx2 ) {  // distant sounds for weapons with a broadcast fire sound (so you /always/ hear dynamite explosions)
 		trap_S_StartLocalSound( sfx2, CHAN_AUTO );
 	}
-//----(SA)	end
 
 
 	//

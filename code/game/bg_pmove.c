@@ -2577,11 +2577,9 @@ PM_AdjustAimSpreadScale
 ==============
 */
 void PM_AdjustAimSpreadScale( void ) {
-//	int		increase, decrease, i;
 	int i;
-	float increase, decrease;       // (SA) was losing lots of precision on slower weapons (scoped)
+	float increase, decrease;      
 	float viewchange, cmdTime, wpnScale;
-//#define	AIMSPREAD_DECREASE_RATE		300.0f
 #define AIMSPREAD_DECREASE_RATE     200.0f      // (SA) when I made the increase/decrease floats (so slower weapon recover could happen for scoped weaps) the average rate increased significantly
 #define AIMSPREAD_INCREASE_RATE     800.0f
 #define AIMSPREAD_VIEWRATE_MIN      30.0f       // degrees per second
@@ -2598,61 +2596,14 @@ void PM_AdjustAimSpreadScale( void ) {
 
 	cmdTime = (float)( pm->cmd.serverTime - pm->oldcmd.serverTime ) / 1000.0;
 
-	wpnScale = 0.0f;
-	switch ( pm->ps->weapon ) {
-	case WP_LUGER:
-	case WP_SILENCER:
-		wpnScale = 0.5f;
-		break;
-	case WP_AKIMBO: //----(SA)	added
-		wpnScale = 0.5;
-		break;
-	case WP_COLT:
-		wpnScale = 0.4f;        // doesn't fire as fast, but easier to handle than luger
-		break;
-	case WP_VENOM:
-		wpnScale = 0.9f;        // very heavy
-		break;
-	case WP_SNIPERRIFLE:    // (SA) looong time to recover
-		wpnScale = 10.0f;
-		break;
-	case WP_SNOOPERSCOPE:   // (SA) looong time to recover
-		wpnScale = 8.0f;
-		break;
-	case WP_MAUSER:
-		wpnScale = 0.5f;
-		break;
-	case WP_GARAND:
-		wpnScale = 0.5f;
-		break;
-	case WP_MP40:
-		wpnScale = 0.5f;        // 2 handed, but not as long as mauser, so harder to keep aim
-		break;
-	case WP_FG42:
-		wpnScale = 0.9f;
-		break;
-	case WP_FG42SCOPE:
-		wpnScale = 0.7f;
-		break;
-	case WP_THOMPSON:
-		wpnScale = 0.4f;
-		break;
-	case WP_STEN:
-		wpnScale = 0.6f;
-		break;
-	case WP_PANZERFAUST:
-//		wpnScale = 1.3f;
-		wpnScale = 0.6f;
-		break;
-	}
+	wpnScale = GetWeaponTableData(pm->ps->weapon)->spreadScale;
 
 	if ( wpnScale ) {
 
-// JPW NERVE crouched players recover faster (mostly useful for snipers)
 		if ( ( pm->ps->eFlags & EF_CROUCHING ) && ( pm->ps->groundEntityNum != ENTITYNUM_NONE ) ) {  //----(SA)	modified so you can't do this in the air.  cool?
 			wpnScale *= 0.5;
 		}
-// jpw
+
 
 		decrease = ( cmdTime * AIMSPREAD_DECREASE_RATE ) / wpnScale;
 
@@ -2663,22 +2614,13 @@ void PM_AdjustAimSpreadScale( void ) {
 
 		// take player movement into account (even if only for the scoped weapons)
 		// TODO: also check for jump/crouch and adjust accordingly
-		switch ( pm->ps->weapon ) {
-		case WP_SNIPERRIFLE:
-		case WP_SNOOPERSCOPE:
-		case WP_FG42SCOPE:
-			for ( i = 0; i < 2; i++ )
-				viewchange += fabs( pm->ps->velocity[i] );
-			break;
-		case WP_PANZERFAUST:        // don't take movement into account as much
-			for ( i = 0; i < 2; i++ )
-				viewchange += ( 0.01f * fabs( pm->ps->velocity[i] ) );
-			break;
-		default:
-			break;
+
+		if (GetWeaponTableData(pm->ps->weapon)->weaponClass == WEAPON_CLASS_SCOPED)
+		{
+
+			for (i = 0; i < 2; i++)
+				viewchange += fabs(pm->ps->velocity[i]);
 		}
-
-
 
 		viewchange = (float)viewchange / cmdTime;   // convert into this movement for a second
 		viewchange -= AIMSPREAD_VIEWRATE_MIN / wpnScale;
@@ -3248,102 +3190,17 @@ static void PM_Weapon( void ) {
 
 	aimSpreadScaleAdd = 0;
 
+	addTime = GetWeaponTableData(pm->ps->weapon)->nextShotTime;
+	aimSpreadScaleAdd = GetWeaponTableData(pm->ps->weapon)->spreadScaleAdd;
+
 	switch ( pm->ps->weapon ) {
-	case WP_KNIFE:
-	case WP_DYNAMITE:
-	case WP_GRENADE_LAUNCHER:
-	case WP_GRENADE_PINEAPPLE:
-	case WP_FLAMETHROWER:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		break;
-
-	case WP_PANZERFAUST:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 30;
-		break;
-
-	case WP_LUGER:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 35;
-		break;
-
-	case WP_COLT:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 20;
-		break;
-
-	//----(SA)	added
 	case WP_AKIMBO:
-		// if you're firing an akimbo colt, and your other gun is dry,
-		// nextshot needs to take 2x time
-
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-
-		// (SA) (added check for last shot in both guns so there's no delay for the last shot)
 		if ( !pm->ps->ammoclip[WP_AKIMBO] || !pm->ps->ammoclip[WP_COLT] ) {
 			if ( ( !pm->ps->ammoclip[WP_AKIMBO] && !akimboFire ) || ( !pm->ps->ammoclip[WP_COLT] && akimboFire ) ) {
 				addTime = 2 * ammoTable[pm->ps->weapon].nextShotTime;
 			}
 		}
-
-		aimSpreadScaleAdd = 20;
 		break;
-	//----(SA)	end
-
-	case WP_MAUSER:
-	case WP_GARAND:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 50;
-		break;
-
-	case WP_SNIPERRIFLE:        // (SA) not so much added per shot.  these weapons mostly uses player movement to get out of whack
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 20;
-		break;
-	case WP_SNOOPERSCOPE:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 10;
-		break;
-
-	case WP_FG42SCOPE:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 10;
-		break;
-
-	case WP_FG42:
-	case WP_MP40:
-	case WP_THOMPSON:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 15 + rand() % 10;       // (SA) new values for DM
-		break;
-
-	case WP_STEN:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 15 + rand() % 10;       // (SA) new values for DM
-		break;
-
-	case WP_SILENCER:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 35;
-		break;
-
-	case WP_VENOM:
-		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		aimSpreadScaleAdd = 10;
-		break;
-
-	// JPW NERVE
-	case WP_CLASS_SPECIAL:
-		// can't reliably get cvars for restart time in here, so set it small and check it in fireweapon routine
-		addTime = 50;
-		break;
-	// jpw
-
-	case WP_MONSTER_ATTACK1:
-		addTime = 1000;
-		break;
-
-	default:
 	case WP_GAUNTLET:
 		switch ( pm->ps->aiChar )
 		{
@@ -3355,6 +3212,11 @@ static void PM_Weapon( void ) {
 			break;
 		}
 		break;
+	}
+
+	if (ammoTable[pm->ps->weapon].weaponClass == WEAPON_CLASS_SMG)
+	{
+		aimSpreadScaleAdd += rand() % 5;
 	}
 
 		// set weapon recoil (kickback)
