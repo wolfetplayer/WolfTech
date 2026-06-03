@@ -4402,59 +4402,68 @@ void CG_WeaponFireRecoil( int weapon ) {
 	pitchAdd = 0;
 	yawRandom = 0;
 
+	const ammotable_t *wt = GetWeaponTableData(weapon);
+	weaponClass_t wc = wt->weaponClass;
+
 	if ( cg_thirdPerson.integer ) {
 		return;
 	}
-	
-	switch ( weapon ) {
-	case WP_LUGER:
-	case WP_SILENCER:
-	case WP_COLT:
-	case WP_AKIMBO:
-	   yawRandom = 0.5;
-	   pitchRecoilAdd = 2;
-	   pitchAdd = 1;
-	break;
-    break;
-	case WP_MAUSER:
-	case WP_GARAND:
+
+	if (wc & WEAPON_CLASS_PISTOL)
+	{
+		yawRandom = 0.5;
+		pitchRecoilAdd = 2;
 		pitchAdd = 1;
-		yawRandom = 1; 
-	    pitchRecoilAdd = 1.5;   
-	break;
-	case WP_SNIPERRIFLE:
-	case WP_SNOOPERSCOPE:
-		pitchAdd = 0.8;
-	break;
-	case WP_MP40:
-	case WP_THOMPSON:
-	case WP_STEN:
+	}
+	else if (wc & WEAPON_CLASS_SMG)
+	{
 		pitchAdd = 1;
-		pitchRecoilAdd = 1;  
+		pitchRecoilAdd = 1;
 		yawRandom = 1;
-	break;
-	case WP_FG42SCOPE:
+	}
+	else if (wc & WEAPON_CLASS_SCOPED)
+	{
 		pitchAdd = 0.8;
-	break;
-	case WP_FG42:
+	}
+	else if ((wc & WEAPON_CLASS_RIFLE_BOLTACTION) ||
+			 (wc & WEAPON_CLASS_RIFLE_AUTO))
+	{
 		pitchAdd = 1;
-		pitchRecoilAdd = 1;   
-		yawRandom = 1;  
-	break;
-	case WP_PANZERFAUST:
-		CG_StartShakeCamera( 0.05, 700, cg.snap->ps.origin, 100 );
-		break;
-	case WP_VENOM:
-		pitchRecoilAdd = pow( random(),8 ) * ( 5 + VectorLength( cg.snap->ps.velocity ) / 5 );
-		pitchAdd = ( rand() % 5 ) - 2;
+		yawRandom = 1;
+		pitchRecoilAdd = 1.5;
+	}
+	else if (wc & WEAPON_CLASS_ASSAULT_RIFLE)
+	{
+		pitchAdd = 1;
+		pitchRecoilAdd = 1;
+		yawRandom = 1;
+	}
+	else if (wc & WEAPON_CLASS_LAUNCHER)
+	{
+		CG_StartShakeCamera(0.05, 700, cg.snap->ps.origin, 100);
+	}
+	else if (wc & WEAPON_CLASS_MG)
+	{
+		pitchRecoilAdd = pow(random(), 8) * (5 + VectorLength(cg.snap->ps.velocity) / 5);
+		pitchAdd = (rand() % 5) - 2;
 		yawRandom = 1;
 		pitchRecoilAdd *= 0.5;
 		pitchAdd *= 0.5;
 		yawRandom *= 0.5;
-	break;
-	default:
+	}
+	else if (wc & WEAPON_CLASS_MINIGUN)
+	{
+		pitchRecoilAdd = pow(random(), 8) * (5 + VectorLength(cg.snap->ps.velocity) / 5);
+		pitchAdd = (rand() % 5) - 2;
+		yawRandom = 1;
+		pitchRecoilAdd *= 0.5;
+		pitchAdd *= 0.5;
+		yawRandom *= 0.5;
+	} else 
+	{
 		return;
 	}
+
 	// calc the recoil
 	recoil[YAW] = crandom() * yawRandom;
 	recoil[ROLL] = -recoil[YAW];    // why not
