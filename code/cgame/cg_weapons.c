@@ -3081,31 +3081,21 @@ void CG_DrawWeaponSelect( void ) {
 
 	for ( i = 0; i < maxWeapsInBank; i++ ) {
 
-		qboolean wideweap; // is the icon one of the double width ones
+		qboolean wideweap;
+		int iconDrawSize;
 
 		// primary fire
 		drawweap = weapBanks[curweapbank][i];
+		realweap = drawweap;     
 
-		realweap = drawweap;        // DHM - Nerve
+		iconDrawSize = GetWeaponTableData( drawweap )->iconDrawSize;
 
-		switch ( drawweap ) {
-		case WP_THOMPSON:
-		case WP_MP40:
-		case WP_STEN:
-		case WP_MAUSER:
-		case WP_GARAND:
-		case WP_VENOM:
-		case WP_TESLA:
-		case WP_PANZERFAUST:
-		case WP_FLAMETHROWER:
-		case WP_FG42:
-		case WP_FG42SCOPE:
-			wideweap = qtrue;
-			break;
-		default:
-			wideweap = qfalse;
-			break;
+		if (iconDrawSize == WEAPON_ICON_HIDE)
+		{
+			continue;
 		}
+
+		wideweap = (iconDrawSize == WEAPON_ICON_WIDE);
 
 		if ( wideweap ) {
 			x = WP_DRAW_X_WIDE;

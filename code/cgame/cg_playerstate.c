@@ -85,10 +85,6 @@ void CG_CheckAmmo( void ) {
 		case WP_GARAND:
 		default:
 			total += cg.snap->ps.ammo[BG_FindAmmoForWeapon( i )] * 1000;
-//				break;
-//			default:
-//				total += cg.snap->ps.ammo[BG_FindAmmoForWeapon(i)] * 200;
-//				break;
 		}
 
 		if ( total >= 5000 ) {
