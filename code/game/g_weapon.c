@@ -1796,27 +1796,21 @@ void FireWeapon( gentity_t *ent ) {
 	}
 
 	// fire the specific weapon
-
 	const ammotable_t *wt = GetWeaponTableData(ent->s.weapon);
+	weaponClass_t wc = wt->weaponClass;
 
-	switch (wt->weaponClass)
+	if (wc & WEAPON_CLASS_MELEE)
 	{
-	case WEAPON_CLASS_MELEE:
 		Weapon_Knife(ent);
-		break;
-	case WEAPON_CLASS_PISTOL:
-	case WEAPON_CLASS_SMG:
-	case WEAPON_CLASS_ASSAULT_RIFLE:
-	case WEAPON_CLASS_RIFLE:
-	case WEAPON_CLASS_AKIMBO:
-	case WEAPON_CLASS_MG:
-		Bullet_Fire_Normal(ent, aimSpreadScale);
-		break;
-	case WEAPON_CLASS_MINIGUN:
+	}
+	else if (wc & WEAPON_CLASS_MINIGUN)
+	{
 		weapon_venom_fire(ent, qfalse, aimSpreadScale);
-		break;
-	case WEAPON_CLASS_SCOPED:
+	}
+	else if (wc & WEAPON_CLASS_SCOPED)
+	{
 		Bullet_Fire_Normal(ent, aimSpreadScale);
+
 		if (!ent->aiCharacter)
 		{
 			VectorCopy(ent->client->ps.viewangles, viewang);
@@ -1825,22 +1819,28 @@ void FireWeapon( gentity_t *ent ) {
 			ent->client->sniperRifleFiredTime = level.time;
 			SetClientViewAngle(ent, viewang);
 		}
-		break;
-	case WEAPON_CLASS_LAUNCHER:
+	}
+	else if (wc & WEAPON_CLASS_LAUNCHER)
+	{
 		ent->client->ps.classWeaponTime = level.time;
 		Weapon_RocketLauncher_Fire(ent, aimSpreadScale);
-		break;
-	case WEAPON_CLASS_FLAMER:
+	}
+	else if (wc & WEAPON_CLASS_FLAMER)
+	{
 		Weapon_FlamethrowerFire(ent);
-		break;
-	case WEAPON_CLASS_ENERGY:
+	}
+	else if (wc & WEAPON_CLASS_ENERGY)
+	{
 		Tesla_Fire(ent);
+
 		if (!ent->aiCharacter)
 		{
 			vec3_t forward, vangle;
+
 			VectorCopy(ent->client->ps.viewangles, vangle);
 			vangle[PITCH] = 0;
 			AngleVectors(vangle, forward, NULL, NULL);
+
 			if (ent->s.groundEntityNum == ENTITYNUM_NONE)
 			{
 				VectorMA(ent->client->ps.velocity, -32, forward, ent->client->ps.velocity);
@@ -1850,8 +1850,12 @@ void FireWeapon( gentity_t *ent ) {
 				VectorMA(ent->client->ps.velocity, -100, forward, ent->client->ps.velocity);
 			}
 		}
-		break;
-	case WEAPON_CLASS_GRENADE:
+	}
+	else if (wc & WEAPON_CLASS_DYNAMITE)
+	{
+
+		ent->client->ps.classWeaponTime = level.time;
+
 		if (g_gametype.integer <= GT_COOP)
 		{
 			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
@@ -1860,12 +1864,9 @@ void FireWeapon( gentity_t *ent ) {
 		{
 			weapon_grenadelauncher_fire(ent, ent->s.weapon);
 		}
-		break;
-	case WEAPON_CLASS_DYNAMITE:
-		if (ent->s.weapon == WP_DYNAMITE)
-		{
-			ent->client->ps.classWeaponTime = level.time;
-		}
+	}
+	else if (wc & WEAPON_CLASS_GRENADE)
+	{
 		if (g_gametype.integer <= GT_COOP)
 		{
 			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
@@ -1874,7 +1875,16 @@ void FireWeapon( gentity_t *ent ) {
 		{
 			weapon_grenadelauncher_fire(ent, ent->s.weapon);
 		}
-		break;
+	}
+	else if (wc & (WEAPON_CLASS_PISTOL |
+				   WEAPON_CLASS_SMG |
+				   WEAPON_CLASS_ASSAULT_RIFLE |
+				   WEAPON_CLASS_RIFLE_AUTO |
+				   WEAPON_CLASS_RIFLE_BOLTACTION |
+				   WEAPON_CLASS_AKIMBO |
+				   WEAPON_CLASS_MG))
+	{
+		Bullet_Fire_Normal(ent, aimSpreadScale);
 	}
 
 	switch (ent->s.weapon)

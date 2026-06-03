@@ -291,7 +291,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_MAUSER] = {
 		.weapAlts           = WP_SNIPERRIFLE,
-		.weaponClass        = WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPABLE,
+		.weaponClass        = WEAPON_CLASS_RIFLE_BOLTACTION | WEAPON_CLASS_SCOPABLE,
         .maxammo            = MAX_AMMO_MAUSER,
         .uses               = 1,
         .maxclip            = 10,
@@ -313,7 +313,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_SNIPERRIFLE] = {
 		.weapAlts           = WP_MAUSER,
-		.weaponClass        = WEAPON_CLASS_SCOPED,
+		.weaponClass        = WEAPON_CLASS_SCOPED | WEAPON_CLASS_RIFLE_BOLTACTION,
         .maxammo            = MAX_AMMO_MAUSER,
         .uses               = 1,
         .maxclip            = 10,
@@ -336,7 +336,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_GARAND] = {
 		.weapAlts           = WP_SNOOPERSCOPE,
-		.weaponClass        = WEAPON_CLASS_SCOPABLE,
+		.weaponClass        = WEAPON_CLASS_RIFLE_AUTO | WEAPON_CLASS_SCOPABLE,
         .maxammo            = MAX_AMMO_GARAND,
         .uses               = 1,
         .maxclip            = 5,
@@ -405,7 +405,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_FG42SCOPE] = {
 		.weapAlts           = WP_FG42,
-		.weaponClass        = WEAPON_CLASS_SCOPED,
+		.weaponClass        = WEAPON_CLASS_SCOPED | WEAPON_CLASS_ASSAULT_RIFLE,
         .maxammo            = MAX_AMMO_FG42,
         .uses               = 1,
         .maxclip            = 20,
