@@ -1591,23 +1591,21 @@ AICast_RandomTriggerRelease
 qboolean AICast_RandomTriggerRelease( cast_state_t *cs ) {
 	// some characters override all weapon settings for trigger release
 	switch ( cs->aiCharacter ) {
-	case AICHAR_BLACKGUARD:     // this is here since his "ready" frame is different to his firing frame, so it looks wierd to keep swapping between them
+	case AICHAR_BLACKGUARD:
 	case AICHAR_STIMSOLDIER1:
 	case AICHAR_STIMSOLDIER2:
 	case AICHAR_STIMSOLDIER3:
 		return qfalse;
+	default:
+		break;
 	}
 
-	switch ( cs->weaponNum ) {
-	case WP_MP40:
-	case WP_VENOM:
-	case WP_FG42SCOPE:
-	case WP_FG42:
-		//case WP_FLAMETHROWER:
-		return qtrue;
-	default:
+	if ( cs->weaponNum <= WP_NONE || cs->weaponNum >= WP_NUM_WEAPONS ) {
 		return qfalse;
 	}
+
+	return GetWeaponTableData(cs->weaponNum)->rndTriggerRelease;
+
 }
 
 /*

@@ -644,6 +644,7 @@ typedef struct ammotable_s {
 	int soundRange; 
 
 	int mod;                // means of death
+	qboolean rndTriggerRelease;
 } ammotable_t;
 
 extern ammotable_t ammoTable[WP_NUM_WEAPONS];
