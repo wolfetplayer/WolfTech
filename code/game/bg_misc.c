@@ -309,7 +309,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.1f, 0.1f },
 		.soundRange         = 2000,
         .mod                = MOD_MAUSER,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,			
     },
     [WP_SNIPERRIFLE] = {
 		.weapAlts           = WP_MAUSER,
