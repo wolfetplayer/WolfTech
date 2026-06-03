@@ -549,70 +549,49 @@ typedef enum
 // NOTE: we can only use up to 15 in the client-server stream
 // SA NOTE: should be 31 now (I added 1 bit in msg.c)
 typedef enum {
-	WP_NONE,                // 0
+	WP_NONE,                
 
-	WP_KNIFE,               // 1
-	// German weapons
-	WP_LUGER,               // 2
-	WP_MP40,                // 3
-	WP_MAUSER,              // 4
-	WP_FG42,                // 5
-	WP_GRENADE_LAUNCHER,    // 6
-	WP_PANZERFAUST,         // 7
-	WP_VENOM,               // 8
-	WP_FLAMETHROWER,        // 9
-	WP_TESLA,               // 10
-//	WP_SPEARGUN,			// 11
+	WP_KNIFE,               
+	WP_LUGER,               
+	WP_MP40,                
+	WP_MAUSER,              
+	WP_FG42,                
+	WP_GRENADE_LAUNCHER,    
+	WP_PANZERFAUST,         
+	WP_VENOM,               
+	WP_FLAMETHROWER,        
+	WP_TESLA,               
 
-// weapon keys only go 1-0, so put the alternates above that (since selection will be a double click on the german weapon key)
-
-	// American equivalents
-//	WP_KNIFE2,				// 12
-	WP_COLT,                // 11	equivalent american weapon to german luger
-	WP_THOMPSON,            // 12	equivalent american weapon to german mp40
-	WP_GARAND,              // 13	equivalent american weapon to german mauser
-//	WP_BAR,					// 16	equivalent american weapon to german fg42
-	WP_GRENADE_PINEAPPLE,   // 14
-//	WP_ROCKET_LAUNCHER,		// 18	equivalent american weapon to german panzerfaust
-
-	// secondary fire weapons
-	WP_SNIPERRIFLE,         // 15
-	WP_SNOOPERSCOPE,        // 16
-//	WP_VENOM_FULL,			// 21
-//	WP_SPEARGUN_CO2,		// 22
-	WP_FG42SCOPE,           // 17	fg42 alt fire
-//	WP_BAR2,				// 24
+	WP_COLT,                
+	WP_THOMPSON,            
+	WP_GARAND,             
+	WP_GRENADE_PINEAPPLE,   
+	WP_SNIPERRIFLE,         
+	WP_SNOOPERSCOPE,        
+	WP_FG42SCOPE,           
 
 	// more weapons
-	WP_STEN,                // 18	silenced sten sub-machinegun
-	WP_SILENCER,            // 19	// used to be sp5
-	WP_AKIMBO,              // 20	//----(SA)	added
+	WP_STEN,                
+	WP_SILENCER,           
+	WP_AKIMBO,              
 
-	// specialized/one-time weapons
-// JPW NERVE -- swapped mortar & antitank (unused?) and added class_special
-	WP_CLASS_SPECIAL,       // 21	// class-specific multiplayer weapon (airstrike, engineer, or medpack)
-	// (SA) go ahead and take the 'freezeray' spot.  it ain't happenin
-	//      (I checked for instances of WP_CLASS_SPECIAL and I don't think this'll cause you a problem.  however, if it does, move it where you need to. ) (SA)
-// jpw
-//	WP_CROSS,				// 29
-	WP_DYNAMITE,            // 22
-//	WP_DYNAMITE2,			// 31
-//	WP_PROX,				// 32
+	WP_CLASS_SPECIAL,       
+	WP_DYNAMITE,            
 
-	WP_MONSTER_ATTACK1,     // 23	// generic monster attack, slot 1
-	WP_MONSTER_ATTACK2,     // 24	// generic monster attack, slot 2
-	WP_MONSTER_ATTACK3,     // 25	// generic monster attack, slot 2
+	WP_MONSTER_ATTACK1,     
+	WP_MONSTER_ATTACK2,     
+	WP_MONSTER_ATTACK3,     
 
-	WP_GAUNTLET,            // 26
+	WP_GAUNTLET,            
 
-	WP_SNIPER,              // 27
-	WP_GRENADE_SMOKE,       // 28	// smoke grenade for LT multiplayer
-	WP_MEDIC_HEAL,          // 29	// DHM - Nerve :: Medic special weapon
-	WP_MORTAR,              // 30
+	WP_SNIPER,              
+	WP_GRENADE_SMOKE,       
+	WP_MEDIC_HEAL,          
+	WP_MORTAR,              
 
-	VERYBIGEXPLOSION,       // 31	// explosion effect for airplanes
+	VERYBIGEXPLOSION,      
 
-	WP_NUM_WEAPONS          // 32   NOTE: this cannot be larger than 64 for AI/player weapons!
+	WP_NUM_WEAPONS          
 
 } weapon_t;
 

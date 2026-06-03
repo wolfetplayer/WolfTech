@@ -1025,13 +1025,6 @@ ClearRegisteredItems
 */
 void ClearRegisteredItems( void ) {
 	memset( itemRegistered, 0, sizeof( itemRegistered ) );
-
-	// players always start with the base weapon
-	// (SA) Nope, not any more...
-
-//----(SA)	this will be determined by the level or starting position, or the savegame
-//			but for now, re-register the MP40 automatically
-//	RegisterItem( BG_FindItemForWeapon( WP_MP40 ) );
 	RegisterItem( BG_FindItem( "Med Health" ) );           // NERVE - SMF - this is so med packs properly display
 }
 

@@ -1471,8 +1471,6 @@ UI_PlayerInfo_SetModel
 void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model ) {
 	memset( pi, 0, sizeof( *pi ) );
 	UI_RegisterClientModelname( pi, model );
-//	pi->weapon = WP_MACHINEGUN;
-//	pi->weapon = WP_MP40;
 	pi->currentWeapon = pi->weapon;
 	pi->lastWeapon = pi->weapon;
 	pi->pendingWeapon = WP_NUM_WEAPONS;

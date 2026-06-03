@@ -3034,18 +3034,6 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 			if ( cs->attributes[RUNNING_SPEED] > 140 ) {
 				AICast_AimAtEnemy( cs );
 			}
-			/* disabled, causes them to use up ammo in the clip before they get visible
-			if ((cs->castScriptStatus.scriptNoAttackTime < level.time) && (cs->noAttackTime < level.time)) {
-				// if we are using a bullet weapon, start firing now
-				switch (cs->weaponNum) {
-				case WP_MP40:
-				case WP_VENOM:
-				case WP_THOMPSON:
-				case WP_STEN:	//----(SA)	added
-					trap_EA_Attack(cs->entityNum);
-				}
-			}
-			*/
 		}
 	}
 

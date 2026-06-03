@@ -1978,8 +1978,6 @@ static void UI_DrawPlayerModel( rectDef_t *rect ) {
 		VectorCopy( moveangles, info.moveAngles );
 	}
 
-	//	info.moveAngles[YAW] += 1;
-	//   UI_PlayerInfo_SetInfo( &info, LEGS_IDLE, TORSO_STAND, viewangles, moveangles, WP_MP40, qfalse );
 	UI_DrawPlayer( rect->x, rect->y, rect->w, rect->h, &info, uiInfo.uiDC.realTime / 2 );
 
 }
