@@ -1789,120 +1789,113 @@ void FireWeapon( gentity_t *ent ) {
 				aimSpreadScale = 1.0f;  // still cap at 1.0
 			}
 		}
-	} else {
+	}
+	else
+	{
 		aimSpreadScale = 1.0;
 	}
 
 	// fire the specific weapon
-	switch ( ent->s.weapon ) {	
-		case WP_KNIFE:
-		Weapon_Knife( ent );
+
+	const ammotable_t *wt = GetWeaponTableData(ent->s.weapon);
+
+	switch (wt->weaponClass)
+	{
+	case WEAPON_CLASS_MELEE:
+		Weapon_Knife(ent);
 		break;
-// JPW NERVE
-	case WP_CLASS_SPECIAL:
-		Weapon_Class_Special( ent );
+	case WEAPON_CLASS_PISTOL:
+	case WEAPON_CLASS_SMG:
+	case WEAPON_CLASS_ASSAULT_RIFLE:
+	case WEAPON_CLASS_RIFLE:
+	case WEAPON_CLASS_AKIMBO:
+	case WEAPON_CLASS_MG:
+		Bullet_Fire_Normal(ent, aimSpreadScale);
 		break;
-	// these weapons can be handled at the same way
-	case WP_LUGER:
-	case WP_SILENCER:
-	case WP_COLT:
-	case WP_AKIMBO: //----(SA)	added
-	case WP_MP40:
-	case WP_THOMPSON:
-	case WP_STEN:
-	case WP_MAUSER:
-	case WP_GARAND:
-	case WP_FG42:
-		Bullet_Fire_Normal( ent, aimSpreadScale );
-		break;
-	case WP_VENOM:
+	case WEAPON_CLASS_MINIGUN:
 		weapon_venom_fire(ent, qfalse, aimSpreadScale);
 		break;
-	case WP_SNIPERRIFLE:
-		Bullet_Fire_Normal( ent, aimSpreadScale );
+	case WEAPON_CLASS_SCOPED:
+		Bullet_Fire_Normal(ent, aimSpreadScale);
 		if (!ent->aiCharacter)
 		{
 			VectorCopy(ent->client->ps.viewangles, viewang);
-			ent->client->sniperRifleMuzzleYaw = crandom() * ammoTable[WP_SNIPERRIFLE].weapRecoilYaw[0]; // used in clientthink
-			ent->client->sniperRifleMuzzlePitch = ammoTable[WP_SNIPERRIFLE].weapRecoilPitch[0];
+			ent->client->sniperRifleMuzzleYaw = crandom() * ammoTable[ent->s.weapon].weapRecoilYaw[0];
+			ent->client->sniperRifleMuzzlePitch = ammoTable[ent->s.weapon].weapRecoilPitch[0];
 			ent->client->sniperRifleFiredTime = level.time;
 			SetClientViewAngle(ent, viewang);
 		}
 		break;
-	case WP_SNOOPERSCOPE:
-		Bullet_Fire_Normal( ent, aimSpreadScale );
-		if ( !ent->aiCharacter ) {
-			VectorCopy( ent->client->ps.viewangles,viewang );
-			ent->client->sniperRifleMuzzleYaw = crandom() * ammoTable[WP_SNOOPERSCOPE].weapRecoilYaw[0]; // used in clientthink
-			ent->client->sniperRifleMuzzlePitch = ammoTable[WP_SNOOPERSCOPE].weapRecoilPitch[0];
-			ent->client->sniperRifleFiredTime = level.time;
-			SetClientViewAngle( ent,viewang );
-		}
+	case WEAPON_CLASS_LAUNCHER:
+		ent->client->ps.classWeaponTime = level.time;
+		Weapon_RocketLauncher_Fire(ent, aimSpreadScale);
 		break;
-	case WP_FG42SCOPE:
-		Bullet_Fire_Normal( ent, aimSpreadScale );
-		if (!ent->aiCharacter)
-		{
-			VectorCopy(ent->client->ps.viewangles, viewang);
-			ent->client->sniperRifleMuzzleYaw = crandom() * ammoTable[WP_FG42SCOPE].weapRecoilYaw[0]; // used in clientthink
-			ent->client->sniperRifleMuzzlePitch = ammoTable[WP_FG42SCOPE].weapRecoilPitch[0];
-			ent->client->sniperRifleFiredTime = level.time;
-			SetClientViewAngle(ent, viewang);
-		}
-		break;
-	case WP_PANZERFAUST:
-		ent->client->ps.classWeaponTime = level.time; // JPW NERVE
-		Weapon_RocketLauncher_Fire( ent, aimSpreadScale );
-		break;
-	case WP_GRENADE_LAUNCHER:
-	case WP_GRENADE_PINEAPPLE:
-	case WP_DYNAMITE:
-		if ( ent->s.weapon == WP_DYNAMITE ) {
-			ent->client->ps.classWeaponTime = level.time; // JPW NERVE
-		}
-		if ( g_gametype.integer <= GT_COOP ) {
-			weapon_grenadelauncher_fire_coop( ent, ent->s.weapon );
-		} else {
-			weapon_grenadelauncher_fire( ent, ent->s.weapon );
-		}
-		break;
-	case WP_FLAMETHROWER:
+	case WEAPON_CLASS_FLAMER:
 		Weapon_FlamethrowerFire(ent);
 		break;
-	case WP_TESLA:
-	    Tesla_Fire( ent );
-		// push the player back a bit
-		if ( !ent->aiCharacter ) {
+	case WEAPON_CLASS_ENERGY:
+		Tesla_Fire(ent);
+		if (!ent->aiCharacter)
+		{
 			vec3_t forward, vangle;
-			VectorCopy( ent->client->ps.viewangles, vangle );
-			vangle[PITCH] = 0;  // nullify pitch so you can't lightning jump
-			AngleVectors( vangle, forward, NULL, NULL );
-			// make it less if in the air
-			if ( ent->s.groundEntityNum == ENTITYNUM_NONE ) {
-				VectorMA( ent->client->ps.velocity, -32, forward, ent->client->ps.velocity );
-			} else {
-				VectorMA( ent->client->ps.velocity, -100, forward, ent->client->ps.velocity );
+			VectorCopy(ent->client->ps.viewangles, vangle);
+			vangle[PITCH] = 0;
+			AngleVectors(vangle, forward, NULL, NULL);
+			if (ent->s.groundEntityNum == ENTITYNUM_NONE)
+			{
+				VectorMA(ent->client->ps.velocity, -32, forward, ent->client->ps.velocity);
+			}
+			else
+			{
+				VectorMA(ent->client->ps.velocity, -100, forward, ent->client->ps.velocity);
 			}
 		}
 		break;
+	case WEAPON_CLASS_GRENADE:
+		if (g_gametype.integer <= GT_COOP)
+		{
+			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
+		}
+		else
+		{
+			weapon_grenadelauncher_fire(ent, ent->s.weapon);
+		}
+		break;
+	case WEAPON_CLASS_DYNAMITE:
+		if (ent->s.weapon == WP_DYNAMITE)
+		{
+			ent->client->ps.classWeaponTime = level.time;
+		}
+		if (g_gametype.integer <= GT_COOP)
+		{
+			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
+		}
+		else
+		{
+			weapon_grenadelauncher_fire(ent, ent->s.weapon);
+		}
+		break;
+	}
+
+	switch (ent->s.weapon)
+	{
+	case WP_CLASS_SPECIAL:
+		Weapon_Class_Special(ent);
+		break;
+
 	case WP_MONSTER_ATTACK1:
-		switch ( ent->aiCharacter ) {
+		switch (ent->aiCharacter)
+		{
 		case AICHAR_WARZOMBIE:
 			break;
 		case AICHAR_ZOMBIE:
-			weapon_zombiespit( ent );
+			weapon_zombiespit(ent);
 			break;
 		default:
-			//G_Printf( "FireWeapon: unknown ai weapon: %s attack1\n", ent->classname );
-			// ??? bug ???
 			break;
 		}
 
 	case WP_MORTAR:
-		break;
-
-	default:
-// FIXME		G_Error( "Bad ent->s.weapon" );
 		break;
 	}
 

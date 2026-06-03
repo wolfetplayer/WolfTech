@@ -313,7 +313,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_SNIPERRIFLE] = {
 		.weapAlts           = WP_MAUSER,
-		.weaponClass        = WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPED,
+		.weaponClass        = WEAPON_CLASS_SCOPED,
         .maxammo            = MAX_AMMO_MAUSER,
         .uses               = 1,
         .maxclip            = 10,
@@ -336,7 +336,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_GARAND] = {
 		.weapAlts           = WP_SNOOPERSCOPE,
-		.weaponClass        = WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPABLE,
+		.weaponClass        = WEAPON_CLASS_SCOPABLE,
         .maxammo            = MAX_AMMO_GARAND,
         .uses               = 1,
         .maxclip            = 5,
@@ -359,7 +359,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_SNOOPERSCOPE] = {
 		.weapAlts           = WP_GARAND,
-		.weaponClass        = WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPED,
+		.weaponClass        = WEAPON_CLASS_SCOPED,
         .maxammo            = MAX_AMMO_GARAND,
         .uses               = 1,
         .maxclip            = 5,
@@ -405,7 +405,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_FG42SCOPE] = {
 		.weapAlts           = WP_FG42,
-		.weaponClass        = WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPED,
+		.weaponClass        = WEAPON_CLASS_SCOPED,
         .maxammo            = MAX_AMMO_FG42,
         .uses               = 1,
         .maxclip            = 20,
@@ -474,7 +474,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_DYNAMITE] = {
 		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_GRENADE,	
+		.weaponClass        = WEAPON_CLASS_DYNAMITE,	
         .maxammo            = 10,
         .uses               = 1,
         .maxclip            = 10,
@@ -519,7 +519,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_VENOM] = {
 		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_MG,
+		.weaponClass        = WEAPON_CLASS_MINIGUN,
         .maxammo            = MAX_AMMO_VENOM,
         .uses               = 1,
         .maxclip            = 500,
@@ -542,7 +542,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_FLAMETHROWER] = {
 		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_BEAM,
+		.weaponClass        = WEAPON_CLASS_FLAMER,
         .maxammo            = 150,
         .uses               = 1,
         .maxclip            = 150,
@@ -565,7 +565,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_TESLA] = {
 		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_BEAM,
+		.weaponClass        = WEAPON_CLASS_ENERGY,
         .maxammo            = 300,
         .uses               = 1,
         .maxclip            = 300,
@@ -680,7 +680,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_GAUNTLET] = {
 		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_MELEE, 		
+		.weaponClass        = WEAPON_CLASS_NONE, 		
         .maxammo            = 999,
         .uses               = 0,
         .maxclip            = 999,
