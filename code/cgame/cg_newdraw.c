@@ -232,30 +232,8 @@ weapIconDrawSize
 ==============
 */
 static int weapIconDrawSize( int weap ) {
-	switch ( weap ) {
 
-		// weapons to not draw
-	case WP_KNIFE:
-		return 0;
-
-		// weapons with 'wide' icons
-	case WP_THOMPSON:
-	case WP_MP40:
-	case WP_STEN:
-	case WP_MAUSER:
-	case WP_GARAND:
-	case WP_VENOM:
-	case WP_TESLA:
-	case WP_PANZERFAUST:
-	case WP_FLAMETHROWER:
-	case WP_FG42:
-	case WP_FG42SCOPE:
-	case WP_SNOOPERSCOPE:
-	case WP_SNIPERRIFLE:
-		return 2;
-	}
-
-	return 1;
+	return GetWeaponTableData( weap )->iconDrawSize;
 }
 
 

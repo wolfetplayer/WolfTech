@@ -101,6 +101,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_HIDE,
     },
     [WP_KNIFE] = {
 		.weapAlts           = WP_NONE,
@@ -121,6 +122,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 64,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_HIDE,
     },
     [WP_LUGER] = {
 		.weapAlts           = WP_SILENCER,
@@ -141,6 +143,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 700,
         .mod                = MOD_LUGER,
 		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
     },
     [WP_SILENCER] = {
 		.weapAlts           = WP_LUGER,
@@ -160,7 +163,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 64,
         .mod                = MOD_SILENCER,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_COLT] = {
 		.weapAlts           = WP_AKIMBO,
@@ -180,7 +184,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 700,
         .mod                = MOD_COLT,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_AKIMBO] = {
 		.weapAlts           = WP_COLT,
@@ -200,7 +205,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 700,
         .mod                = MOD_AKIMBO,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_MP40] = {
 		.weapAlts           = WP_NONE,
@@ -221,6 +227,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_MP40,
 		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
     },
     [WP_THOMPSON] = {
 		.weapAlts           = WP_NONE,
@@ -240,7 +247,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
         .mod                = MOD_THOMPSON,
-		.rndTriggerRelease  = qtrue,		
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_STEN] = {
 		.weapAlts           = WP_NONE,
@@ -260,7 +268,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 64,
         .mod                = MOD_STEN,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_MAUSER] = {
 		.weapAlts           = WP_SNIPERRIFLE,
@@ -300,7 +309,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.2f, 0.0f },
 		.soundRange         = 2000,
         .mod                = MOD_SNIPERRIFLE,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_GARAND] = {
 		.weapAlts           = WP_SNOOPERSCOPE,
@@ -320,7 +330,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.1f, 0.1f },
 		.soundRange         = 128,
         .mod                = MOD_GARAND,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_SNOOPERSCOPE] = {
 		.weapAlts           = WP_GARAND,
@@ -340,7 +351,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.4f, 0.0f },
 		.soundRange         = 128,
         .mod                = MOD_SNOOPERSCOPE,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_FG42] = {
 		.weapAlts           = WP_FG42SCOPE,
@@ -361,6 +373,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1500,
         .mod                = MOD_FG42,
 		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
     },
     [WP_FG42SCOPE] = {
 		.weapAlts           = WP_FG42,
@@ -380,7 +393,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.1f, 0.0f },
 		.soundRange         = 1500,
         .mod                = MOD_FG42SCOPE,
-		.rndTriggerRelease  = qtrue,		
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weapAlts           = WP_NONE,
@@ -400,7 +414,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1500,
         .mod                = MOD_GRENADE_LAUNCHER,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_GRENADE_PINEAPPLE] = {
 		.weapAlts           = WP_NONE,
@@ -420,7 +435,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1500,
         .mod                = MOD_GRENADE_PINEAPPLE,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_DYNAMITE] = {
 		.weapAlts           = WP_NONE,
@@ -440,7 +456,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 64,
         .mod                = MOD_DYNAMITE,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_PANZERFAUST] = {
 		.weapAlts           = WP_NONE,
@@ -461,6 +478,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_PANZERFAUST,
 		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
     },
     [WP_VENOM] = {
 		.weapAlts           = WP_NONE,
@@ -480,7 +498,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.1f, 0.1f },
 		.soundRange         = 1000,
         .mod                = MOD_VENOM,
-		.rndTriggerRelease  = qtrue,		
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_FLAMETHROWER] = {
 		.weapAlts           = WP_NONE,
@@ -500,7 +519,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
         .mod                = MOD_FLAMETHROWER,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_TESLA] = {
 		.weapAlts           = WP_NONE,
@@ -520,7 +540,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
         .mod                = MOD_TESLA,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,		
     },
     [WP_CLASS_SPECIAL] = {
 		.weapAlts           = WP_NONE,
@@ -540,7 +561,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
         .mod                = 0,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_MONSTER_ATTACK1] = {
 		.weapAlts           = WP_NONE,
@@ -560,7 +582,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
         .mod                = 0,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_MONSTER_ATTACK2] = {
 		.weapAlts           = WP_NONE,
@@ -580,7 +603,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
         .mod                = 0,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_MONSTER_ATTACK3] = {
 		.weapAlts           = WP_NONE,
@@ -600,7 +624,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
         .mod                = 0,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
     [WP_GAUNTLET] = {
 		.weapAlts           = WP_NONE,
@@ -618,7 +643,8 @@ ammotable_t ammoTable[] = {
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
         .mod                = 0,
-		.rndTriggerRelease  = qfalse,		
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
     },
 };
 

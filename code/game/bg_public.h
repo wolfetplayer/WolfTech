@@ -636,16 +636,20 @@ typedef struct ammotable_s {
 	int weaponDamage;
 	int weaponSpread;
 
-	// Real recoil
 	int weapRecoilDuration;
 	float weapRecoilPitch[2];       
 	float weapRecoilYaw[2];
 
 	int soundRange; 
 
-	int mod;                // means of death
+	int mod;              
 	qboolean rndTriggerRelease;
+	int iconDrawSize;
 } ammotable_t;
+
+#define WEAPON_ICON_HIDE    0
+#define WEAPON_ICON_NORMAL  1
+#define WEAPON_ICON_WIDE    2
 
 extern ammotable_t ammoTable[WP_NUM_WEAPONS];
 
