@@ -65,27 +65,8 @@ void CG_CheckAmmo( void ) {
 		if ( cg.snap->ps.ammo[BG_FindAmmoForWeapon( i )] < 0 ) {
 			continue;
 		}
-		switch ( i )
-		{
-		case WP_PANZERFAUST:
-		case WP_GRENADE_LAUNCHER:
-		case WP_GRENADE_PINEAPPLE:
-		case WP_LUGER:
-		case WP_COLT:
-		case WP_AKIMBO:
-		case WP_SILENCER:
-		case WP_FG42:
-		case WP_FG42SCOPE:
-		case WP_MP40:
-		case WP_THOMPSON:
-		case WP_STEN:
-		case WP_VENOM:
-		case WP_TESLA:
-		case WP_MAUSER:
-		case WP_GARAND:
-		default:
-			total += cg.snap->ps.ammo[BG_FindAmmoForWeapon( i )] * 1000;
-		}
+		
+        total += cg.snap->ps.ammo[BG_FindAmmoForWeapon( i )] * 1000;
 
 		if ( total >= 5000 ) {
 			cg.lowAmmoWarning = 0;
