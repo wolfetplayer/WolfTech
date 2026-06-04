@@ -2406,9 +2406,11 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 
 	// don't draw weapon stuff when looking through a scope
-	if ( weaponNum == WP_SNOOPERSCOPE || weaponNum == WP_SNIPERRIFLE || weaponNum == WP_FG42SCOPE ||
-		 weapSelect == WP_SNOOPERSCOPE || weapSelect == WP_SNIPERRIFLE || weapSelect == WP_FG42SCOPE ) {
-		if ( isPlayer && !cg.renderingThirdPerson ) {
+	if ((GetWeaponTableData(weaponNum)->weaponClass & WEAPON_CLASS_SCOPED) ||
+		(GetWeaponTableData(weapSelect)->weaponClass & WEAPON_CLASS_SCOPED))
+	{
+		if (isPlayer && !cg.renderingThirdPerson)
+		{
 			return;
 		}
 	}
@@ -2701,38 +2703,69 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		// continuous smoke after firing
 #define BARREL_SMOKE_TIME 1000
 
-		if ( ps || cg.renderingThirdPerson || !isPlayer ) {
-			if ( weaponNum == WP_VENOM || weaponNum == WP_STEN ) {
-				if ( !cg_paused.integer ) {    // don't add while paused
-					// hot smoking gun
-					if ( cg.time - cent->overheatTime < 3000 ) {
-						if ( !( rand() % 3 ) ) {
-							float alpha;
-							alpha = 1.0f - ( (float)( cg.time - cent->overheatTime ) / 3000.0f );
-							alpha *= 0.25f;     // .25 max alpha
-							if ( weaponNum == WP_VENOM ) { // silly thing that makes the smoke off the venom swirlier since it's spinning real fast
-								CG_ParticleImpactSmokePuffExtended( cgs.media.smokeParticleShader, flash.origin, tv( 0,0,1 ), 8, 1000, 8, 20, 70, alpha );
-							} else {
-								CG_ParticleImpactSmokePuffExtended( cgs.media.smokeParticleShader, flash.origin, tv( 0,0,1 ), 8, 1000, 8, 20, 30, alpha );
-							}
+		if (ps || cg.renderingThirdPerson || !isPlayer)
+		{
+			const ammotable_t *wt = GetWeaponTableData(weaponNum);
+
+			if (!cg_paused.integer)
+			{
+				// hot smoking gun after overheating
+				if (wt->maxHeat > 0 && cg.time - cent->overheatTime < 3000)
+				{
+					if (!(rand() % 3))
+					{
+						float alpha;
+						int endSize;
+
+						alpha = 1.0f - ((float)(cg.time - cent->overheatTime) / 3000.0f);
+						alpha *= 0.25f;
+
+						// Venom gets swirlier smoke because barrel spins fast
+						if (weaponNum == WP_VENOM)
+						{
+							endSize = 70;
 						}
+						else
+						{
+							endSize = 30;
+						}
+
+						CG_ParticleImpactSmokePuffExtended(
+							cgs.media.smokeParticleShader,
+							flash.origin,
+							tv(0, 0, 1),
+							8,
+							1000,
+							8,
+							20,
+							endSize,
+							alpha);
 					}
 				}
+				// barrel smoke after firing, currently only panzer-style
+				else if (weaponNum == WP_PANZERFAUST && cg.time - cent->muzzleFlashTime < BARREL_SMOKE_TIME)
+				{
+					if (!(rand() % 5))
+					{
+						float alpha;
 
-			} else if ( weaponNum == WP_PANZERFAUST ) {
-				if ( !cg_paused.integer ) {    // don't add while paused
-					if ( cg.time - cent->muzzleFlashTime < BARREL_SMOKE_TIME ) {
-						if ( !( rand() % 5 ) ) {
-							float alpha;
-							alpha = 1.0f - ( (float)( cg.time - cent->muzzleFlashTime ) / (float)BARREL_SMOKE_TIME ); // what fraction of BARREL_SMOKE_TIME are we at
-							alpha *= 0.25f;     // .25 max alpha
-							CG_ParticleImpactSmokePuffExtended( cgs.media.smokeParticleShader, flash.origin, tv( 0,0,1 ), 8, 1000, 8, 20, 30, alpha );
-						}
+						alpha = 1.0f - ((float)(cg.time - cent->muzzleFlashTime) / (float)BARREL_SMOKE_TIME);
+						alpha *= 0.25f;
+
+						CG_ParticleImpactSmokePuffExtended(
+							cgs.media.smokeParticleShader,
+							flash.origin,
+							tv(0, 0, 1),
+							8,
+							1000,
+							8,
+							20,
+							30,
+							alpha);
 					}
 				}
 			}
 		}
-
 		// impulse flash
 		if ( cg.time - cent->muzzleFlashTime > MUZZLE_FLASH_TIME ) {
 			// Ridah, blue ignition flame if not firing flamer
@@ -2744,16 +2777,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 
 	// weapons that don't need to go any further as they have no flash or light
-	if ( weaponNum == WP_GRENADE_LAUNCHER ||
-		 weaponNum == WP_GRENADE_PINEAPPLE ||
-		 weaponNum == WP_KNIFE ||
-		 weaponNum == WP_DYNAMITE ) {
-		return;
-	}
-
-	if (!(GetWeaponTableData(weaponNum)->hasMuzzle))
+	if (!GetWeaponTableData(weaponNum)->hasMuzzle)
 	{
-		flash.hModel = 0;
+		return;
 	}
 
 	// weaps with barrel smoke
@@ -3670,13 +3696,6 @@ void CG_AltWeapon_f( void ) {
 
 	if ( CG_WeaponSelectable( num ) ) {   // new weapon is valid
 
-//----(SA)	testing mod functionality for the silencer on the luger
-		// (SA) this way, if you switch away from the silenced luger,
-		//		the silencer will still be attached when you switch back
-		//		(until you remove it)
-		// TODO: will need to make sure the table gets initialized properly on restart/death/whatever.
-		//		 I still think I'm going to make the weapon banks stored in the config, so this will
-		//		just be a matter of resetting the banks to what's in the config.
 		switch ( original ) {
 		case WP_LUGER:
 			if ( cg.snap->ps.eFlags & EF_MELEE_ACTIVE ) {   // if you're holding a chair, you can't screw on the silencer

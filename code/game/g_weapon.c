@@ -1756,43 +1756,51 @@ void FireWeapon( gentity_t *ent ) {
 	// Ridah, need to call this for AI prediction also
 	CalcMuzzlePoints( ent, ent->s.weapon );
 
-	if ( g_userAim.integer ) {
+	if (g_userAim.integer)
+	{
 		aimSpreadScale = ent->client->currentAimSpreadScale;
+
 		// Ridah, add accuracy factor for AI
-		if ( ent->aiCharacter ) {
+		if (ent->aiCharacter)
+		{
 			float aim_accuracy;
-			aim_accuracy = AICast_GetAccuracy( ent->s.number );
-			if ( aim_accuracy <= 0 ) {
-				aim_accuracy = 0.0001;
+
+			aim_accuracy = AICast_GetAccuracy(ent->s.number);
+			if (aim_accuracy <= 0)
+			{
+				aim_accuracy = 0.0001f;
 			}
-			aimSpreadScale = ( 1.0 - aim_accuracy ) * 2.0;
-		} else {
-			//	/maximum/ accuracy for player for a given weapon
-			switch ( ent->s.weapon ) {
-			case WP_LUGER:
-			case WP_SILENCER:
-			case WP_COLT:
-			case WP_AKIMBO:
+
+			aimSpreadScale = (1.0f - aim_accuracy) * 2.0f;
+		}
+		else
+		{
+			const ammotable_t *wt = GetWeaponTableData(ent->s.weapon);
+			weaponClass_t wc = wt->weaponClass;
+
+			// maximum accuracy modifier for player for a given weapon
+			if (wc & (WEAPON_CLASS_PISTOL | WEAPON_CLASS_AKIMBO))
+			{
 				aimSpreadScale += 0.4f;
-				break;
-
-			case WP_PANZERFAUST:
-				aimSpreadScale += 0.3f;     // it's calculated a different way, so this keeps the accuracy never perfect, but never rediculously wild either
-				break;
-
-			default:
+			}
+			else if (wc & WEAPON_CLASS_LAUNCHER)
+			{
+				aimSpreadScale += 0.3f;
+			}
+			else
+			{
 				aimSpreadScale += 0.15f;
-				break;
 			}
 
-			if ( aimSpreadScale > 1 ) {
-				aimSpreadScale = 1.0f;  // still cap at 1.0
+			if (aimSpreadScale > 1.0f)
+			{
+				aimSpreadScale = 1.0f;
 			}
 		}
 	}
 	else
 	{
-		aimSpreadScale = 1.0;
+		aimSpreadScale = 1.0f;
 	}
 
 	// fire the specific weapon

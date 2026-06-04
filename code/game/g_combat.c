@@ -111,17 +111,17 @@ void TossClientItems( gentity_t *self ) {
 		}
 	}
 
-//----(SA)	added
+
 	if ( weapon == WP_SNOOPERSCOPE ) {
 		weapon = WP_GARAND;
 	}
 	if ( weapon == WP_FG42SCOPE ) {
 		weapon = WP_FG42;
 	}
-	if ( weapon == WP_AKIMBO ) { //----(SA)	added
+	if ( weapon == WP_AKIMBO ) { 
 		weapon = WP_COLT;
 	}
-//----(SA)	end
+
 
 
 	if ( weapon > WP_NONE && weapon < WP_MONSTER_ATTACK1 && self->client->ps.ammo[ BG_FindAmmoForWeapon( weapon )] ) {
