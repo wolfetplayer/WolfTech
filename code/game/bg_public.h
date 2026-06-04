@@ -573,7 +573,9 @@ typedef enum {
 	// more weapons
 	WP_STEN,                
 	WP_SILENCER,           
-	WP_AKIMBO,              
+	WP_AKIMBO,
+	
+	WP_MP34,
 
 	WP_CLASS_SPECIAL,       
 	WP_DYNAMITE,            
@@ -629,6 +631,7 @@ typedef struct ammotable_s {
 	qboolean bulletBased;
 	qboolean hasMuzzle;
 	qboolean underwaterFire;
+	vec3_t gunOffset;
 } ammotable_t;
 
 #define WEAPON_ICON_HIDE    0
@@ -1174,6 +1177,7 @@ typedef enum {
 	MOD_LUGER,
 	MOD_COLT,
 	MOD_MP40,
+	MOD_MP34,
 	MOD_THOMPSON,
 	MOD_STEN,
 	MOD_MAUSER,

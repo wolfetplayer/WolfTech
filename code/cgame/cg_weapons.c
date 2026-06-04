@@ -1277,6 +1277,14 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->ejectBrassFunc = CG_MachineGunEjectBrass;
 		break;
 
+	case WP_MP34:
+		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mp34/mp34_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp34/mp34_far.wav" );
+		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mp34/mp34_reload.wav" );
+		weaponInfo->ejectBrassFunc = CG_MachineGunEjectBrass;
+		break;
+
 	case WP_STEN:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/sten/stenf1.wav" );
@@ -2964,39 +2972,19 @@ void CG_AddViewWeapon( playerState_t *ps ) {
  	}
 
 	memset( &hand, 0, sizeof( hand ) );
+	const ammotable_t *wt;
 
 	if ( ps->weapon > WP_NONE ) {
 		CG_RegisterWeapon( ps->weapon );
 		weapon = &cg_weapons[ ps->weapon ];
+		wt = GetWeaponTableData( ps->weapon );
 
 		// set up gun position
 		CG_CalculateWeaponPosition( hand.origin, angles );
 
-		gunoff[0] = cg_gun_x.value;
-		gunoff[1] = cg_gun_y.value;
-		gunoff[2] = cg_gun_z.value;
-
-#if 0
-		if ( !cg_fixedAspect.integer ) {
-			if ( ps->weapon == WP_LUGER ) {
-				gunoff[2] += 4.0;
-			}
-	
-			// example for other weapons
-	
-			if ( ps->weapon == WP_SILENCER ) {
-				gunoff[2] += 4.0;
-			}
-	
-			if ( ps->weapon == WP_PANZERFAUST ) {
-				gunoff[0] += 1.0;
-				gunoff[1] += 1.0;
-				gunoff[2] += 0.0;
-			}
-		}
-#endif
-
-//----(SA)	removed
+		gunoff[0] = wt->gunOffset[0] + cg_gun_x.value;
+		gunoff[1] = wt->gunOffset[1] + cg_gun_y.value;
+		gunoff[2] = wt->gunOffset[2] + cg_gun_z.value;
 
 		VectorMA( hand.origin, ( gunoff[0] + fovOffset[0] ), cg.refdef.viewaxis[0], hand.origin );
 		VectorMA( hand.origin, ( gunoff[1] + fovOffset[1] ), cg.refdef.viewaxis[1], hand.origin );

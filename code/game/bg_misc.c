@@ -69,7 +69,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 
 	{WP_KNIFE,              0,                      0           },  //	1
 	{WP_LUGER,              WP_COLT,                0           },  //	2	// WP_AKIMBO
-	{WP_MP40,               WP_THOMPSON,            WP_STEN     },  //	3
+	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
 	{WP_MAUSER,             WP_GARAND,              0           },  //	4
 	{WP_FG42,               0,                      0           },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
@@ -315,6 +315,33 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qfalse,
 		.underwaterFire     = qfalse,	
+    },
+    [WP_MP34] = {
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_SMG,
+        .maxammo            = MAX_AMMO_9MM,
+        .uses               = 1,
+        .maxclip            = 32,
+        .reloadTime         = 2620,
+        .fireDelayTime      = DELAY_LOW,
+        .nextShotTime       = 105,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 6,
+		.weaponSpread       = 850,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 15,			
+        .weapRecoilDuration = 30,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
+        .mod                = MOD_MP34,
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -12.0f, -1.0f, 0.0f },
     },
     [WP_MAUSER] = {
 		.weapAlts           = WP_SNIPERRIFLE,
@@ -1592,6 +1619,28 @@ gitem_t bg_itemlist[] =
     WP_MP40,
     WP_LUGER,   // ammo pool
     WP_MP40,    // clip pool
+    "",
+    "",
+    {0,0,0,0}
+},
+
+{
+    "weapon_mp34",
+    "sound/misc/w_pkup.wav",
+    {
+        "models/weapons/smgs/mp34/mp34_3rd.md3",
+        "models/weapons/smgs/mp34/v_mp34.md3",
+        "models/weapons/smgs/mp34/mp34_3rd.md3",
+        0, 0
+    },
+    "icons/iconw_mp34_1",
+    "icons/ammo2",
+    "MP34",
+    30,
+    IT_WEAPON,
+    WP_MP34,
+    WP_LUGER,   // ammo pool
+    WP_MP34,    // clip pool
     "",
     "",
     {0,0,0,0}
