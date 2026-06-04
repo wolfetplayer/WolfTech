@@ -4830,7 +4830,7 @@ Caused by an EV_MISSILE_MISS event, or directly by local bullet tracing
 ClientNum is a dummy field used to define what sort of effect to spawn
 =================
 */
-void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, int surfFlags ) { //	(SA) modified to send missilehitwall surface parameters
+void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, int surfFlags ) {
 	qhandle_t mod;
 	qhandle_t mark;
 	qhandle_t shader;
@@ -4839,18 +4839,20 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 	trace_t trace;
 	float radius;
 	float light;
-	localEntity_t   *le;
+	localEntity_t *le;
 	int r = 0;
 	qboolean alphaFade = qfalse;
 	qboolean isSprite;
 	int duration;
-	// Ridah
 	int lightOverdraw;
 	vec3_t sprOrg;
 	vec3_t sprVel;
-	int i,j;
+	int i, j;
 	float shakeAmt;
 	int shakeDur, shakeRad;
+	const ammotable_t *wt;
+	weaponClass_t wc;
+
 	shakeAmt = 0;
 	shakeDur = shakeRad = 0;
 	mark = 0;
@@ -4863,10 +4865,8 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 	lightColor[0] = 1;
 	lightColor[1] = 1;
 	lightColor[2] = 0;
-	// Ridah
 	lightOverdraw = 0;
 
-	// set defaults
 	isSprite = qfalse;
 	duration = 600;
 
@@ -4874,170 +4874,23 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 		return;
 	}
 
+	wt = GetWeaponTableData( weapon );
+
+	if ( !wt ) {
+		return;
+	}
+
+	wc = wt->weaponClass;
+
+	/*
+	==============
+	Special fake / legacy weapon ids
+
+	Keep these explicit because they may not have normal weapon table data,
+	or they may need unique behavior.
+	==============
+	*/
 	switch ( weapon ) {
-	case WP_KNIFE:
-		sfx     = cgs.media.sfx_knifehit[4];    // different values for different types (stone/metal/wood/etc.)
-		mark    = cgs.media.bulletMarkShader;
-		radius  = 1 + rand() % 2;
-
-		CG_AddBulletParticles( origin, dir,
-							   20,      // speed
-							   800,     // duration
-							   3 + rand() % 6, // count
-							   1.0 );   // rand scale
-		break;
-
-	case WP_LUGER:
-	case WP_AKIMBO:
-	case WP_COLT:
-	case WP_MAUSER:
-	case WP_GARAND:
-	case WP_SNIPERRIFLE:
-	case WP_SNOOPERSCOPE:
-	case WP_MP40:
-	case WP_FG42:
-	case WP_FG42SCOPE:
-	case WP_THOMPSON:
-	case WP_STEN:
-	case WP_SILENCER:
-	case WP_VENOM:
-
-		// actually yeah.  meant that.  very rare.
-		if ( cg_gameType.integer <= GT_SINGLE_PLAYER ) { // JPW NERVE
-			r = rand() & 31;
-		}
-		if ( r == 3 ) {
-			sfx = cgs.media.sfx_ric1;
-		} else if ( r == 2 ) {
-			sfx = cgs.media.sfx_ric2;
-		} else if ( r == 1 ) {
-			sfx = cgs.media.sfx_ric3;
-		}
-
-		if ( !clientNum ) {
-			CG_AddSparks( origin, dir,
-						  350,      // speed
-						  200,      // duration
-						  15 + rand() % 7,  // count
-						  0.2 );    // rand scale
-		} else if ( clientNum == 1 )      { // just do a little smoke puff
-			vec3_t d, o;
-			VectorMA( origin, 12, dir, o );
-			VectorScale( dir, 7, d );
-			d[2] += 16;
-
-			// just snow
-			if ( surfFlags & SURF_SNOW ) {
-				CG_AddDirtBulletParticles( origin, dir,
-										   120, // speed
-										   900, // duration
-										   3, // count
-										   0.6f,
-										   20,
-										   4,
-										   0.3f,
-										   "water_splash" ); // rand scale
-			}
-
-			// grass/gravel
-			if ( surfFlags & ( SURF_GRASS | SURF_GRAVEL ) ) {
-				CG_AddDirtBulletParticles( origin, dir,
-										   190, // speed
-										   800, // duration
-										   3, // count
-										   0.1,
-										   60,
-										   10,
-										   0.5,
-										   "dirt_splash" ); // rand scale
-			} else {
-				CG_ParticleImpactSmokePuff( cgs.media.smokeParticleShader, o );
-
-				// some debris particles
-				CG_AddBulletParticles( origin, dir,
-									   20, // speed
-									   800, // duration
-									   3 + rand() % 6, // count
-									   1.0 ); // rand scale
-
-				// just do a little one
-				if ( sfx && ( rand() % 3 == 0 ) ) {
-					CG_AddSparks( origin, dir,
-								  450,      // speed
-								  300,      // duration
-								  3 + rand() % 3,   // count
-								  0.5 );    // rand scale
-				}
-			}
-		} else if ( clientNum == 2 )      {
-			sfx = 0;
-			mark = 0;
-
-			// (SA) needed to do the CG_WaterRipple using a localent since I needed the timer reset on the shader for each shot
-			CG_WaterRipple( cgs.media.wakeMarkShaderAnim, origin, tv( 0, 0, 1 ), 32, 1000 );
-
-			CG_AddDirtBulletParticles( origin, dir,
-									   190, // speed
-									   900, // duration
-									   5, // count
-									   0.5, // rand scale
-									   50, // w
-									   12, // h
-									   0.125, // alpha
-									   "water_splash" );
-
-			break;  // (SA) testing
-
-		}
-
-		if ( weapon == WP_FG42SCOPE || weapon == WP_SNIPERRIFLE || weapon == WP_SNOOPERSCOPE || ( Distance( cg.refdef.vieworg, origin ) < 384 ) ) {
-
-			if ( clientNum ) {
-
-				// mark and sound can potentially use the surface for override values
-
-				mark = cgs.media.bulletMarkShader;  // default
-				alphaFade = qtrue;      // max made the bullet mark alpha (he'll make everything in the game out of 1024 textures, all with alpha blend funcs yet...)
-				radius = 1.5f + rand() % 2;   // slightly larger for DM
-
-				if ( surfFlags & SURF_METAL ) {
-					sfx = cgs.media.sfx_bullet_metalhit[rand() % 3];
-					mark = cgs.media.bulletMarkShaderMetal;
-					alphaFade = qtrue;
-				} else if ( surfFlags & SURF_WOOD ) {
-					sfx = cgs.media.sfx_bullet_woodhit[rand() % 3];
-					mark = cgs.media.bulletMarkShaderWood;
-					alphaFade = qtrue;
-					radius += 1;    // experimenting with different mark sizes per surface
-
-
-				} else if ( surfFlags & SURF_CERAMIC ) {
-					sfx = cgs.media.sfx_bullet_ceramichit[rand() % 3];
-					mark = cgs.media.bulletMarkShaderCeramic;
-					alphaFade = qtrue;
-					radius += 2;    // experimenting with different mark sizes per surface
-
-				} else if ( surfFlags & SURF_GLASS ) {
-					sfx = cgs.media.sfx_bullet_glasshit[rand() % 3];
-					mark = cgs.media.bulletMarkShaderGlass;
-					alphaFade = qtrue;
-				} else if ( surfFlags & SURF_GRASS ) {
-
-				} else if ( surfFlags & SURF_GRAVEL ) {
-
-				} else if ( surfFlags & SURF_SNOW ) {
-
-				} else if ( surfFlags & SURF_ROOF ) {
-
-				} else if ( surfFlags & SURF_CARPET ) {
-
-				}
-
-			}
-		}
-		break;
-
-
 	case WP_MORTAR:
 		sfx = cgs.media.sfx_rockexp;
 		mark = cgs.media.burnMarkShader;
@@ -5055,8 +4908,9 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 
 		VectorScale( dir, 16, sprVel );
 		for ( i = 0; i < 5; i++ ) {
-			for ( j = 0; j < 3; j++ )
+			for ( j = 0; j < 3; j++ ) {
 				sprOrg[j] = origin[j] + 64 * dir[j] + 24 * crandom();
+			}
 			sprVel[2] += rand() % 50;
 			CG_ParticleExplosion( "blacksmokeanimb", sprOrg, sprVel, 3500 + rand() % 250, 10, 250 + rand() % 60 );
 		}
@@ -5066,102 +4920,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 		CG_ParticleExplosion( "expblue", sprOrg, sprVel, 1000, 20, 300 );
 		break;
 
-	case WP_DYNAMITE:
-		shader = cgs.media.rocketExplosionShader;
-		sfx = cgs.media.sfx_dynamiteexp;
-		sfx2 = cgs.media.sfx_dynamiteexpDist;
-		mark = cgs.media.burnMarkShader;
-		radius = 64;
-		light = 300;
-		isSprite = qtrue;
-		duration = 1000;
-		lightColor[0] = 0.75;
-		lightColor[1] = 0.5;
-		lightColor[2] = 0.1;
-
-		shakeAmt = 0.25f;
-		shakeDur = 2800;
-		shakeRad = 8192;
-
-		if ( cg_gameType.integer <= GT_SINGLE_PLAYER ) { // JPW NERVE
-
-			VectorScale( dir, 16, sprVel );
-			for ( i = 0; i < 5; i++ ) {
-				for ( j = 0; j < 3; j++ )
-					sprOrg[j] = origin[j] + 64 * dir[j] + 24 * crandom();
-				sprVel[2] += rand() % 50;
-				CG_ParticleExplosion( "blacksmokeanimb", sprOrg, sprVel,
-									  3500 + rand() % 250,          // duration
-									  10,                           // startsize
-									  250 + rand() % 60 );          // endsize
-			}
-
-			VectorMA( origin, 16, dir, sprOrg );
-			VectorScale( dir, 100, sprVel );
-
-			// trying this one just for now just for variety
-			CG_ParticleExplosion( "explode1", sprOrg, sprVel,
-								  1200,         // duration
-								  9,            // startsize
-								  300 );        // endsize
-
-			CG_AddDebris( origin, dir,
-						  280,              // speed
-						  1400,             // duration
-						  7 + rand() % 2 ); // count
-		}
-		break;
-
-	case WP_GRENADE_SMOKE: // JPW NERVE
-	case WP_GRENADE_LAUNCHER:
-	case WP_GRENADE_PINEAPPLE:
-		shader = cgs.media.rocketExplosionShader;       // copied from RL
-		sfx = cgs.media.sfx_rockexp;
-		mark = cgs.media.burnMarkShader;
-		radius = 64;
-		light = 300;
-		isSprite = qtrue;
-		duration = 1000;
-		lightColor[0] = 0.75;
-		lightColor[1] = 0.5;
-		lightColor[2] = 0.1;
-
-		if ( weapon != WP_GRENADE_SMOKE ) {
-			shakeAmt = 0.15f;
-			shakeDur = 1000;
-			shakeRad = 600;
-		}
-
-
-		// Ridah, explosion sprite animation
-		VectorMA( origin, 16, dir, sprOrg );
-		VectorScale( dir, 100, sprVel );
-
-		if ( CG_PointContents( origin, 0 ) & CONTENTS_WATER ) {
-			sfx = cgs.media.sfx_grenexpWater;
-
-			VectorCopy( origin,tmpv );
-			tmpv[2] += 10000;
-
-			trap_CM_BoxTrace( &trace, tmpv,origin, NULL, NULL, 0, MASK_WATER );
-			CG_WaterRipple( cgs.media.wakeMarkShaderAnim, trace.endpos, dir, 150, 1000 );
-
-			CG_AddDirtBulletParticles( trace.endpos, dir, 400, 900, 15, 0.5, 256,128, 0.125, "water_splash" );
-		} else {
-			VectorCopy( origin,tmpv );
-			tmpv[2] += 20;
-			VectorCopy( origin,tmpv2 );
-			tmpv2[2] -= 20;
-			trap_CM_BoxTrace( &trace,tmpv,tmpv2,NULL,NULL,0,MASK_SHOT );
-			if ( trace.surfaceFlags & SURF_GRASS || trace.surfaceFlags & SURF_GRAVEL ) {
-				CG_AddDirtBulletParticles( origin, dir, 400, 2000, 10, 0.5, 200,75, 0.25, "dirt_splash" );
-			}
-			CG_ParticleExplosion( "expblue", sprOrg, sprVel, 700, 20, 160 );
-			CG_AddDebris( origin, dir, 280, 1400, 7 + rand() % 2 );
-		}
-		break;
 	case VERYBIGEXPLOSION:
-	case WP_PANZERFAUST:
 		sfx = cgs.media.sfx_rockexp;
 		mark = cgs.media.burnMarkShader;
 		radius = 64;
@@ -5172,94 +4931,262 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 		lightColor[1] = 0.5;
 		lightColor[2] = 0.1;
 
-		// explosion sprite animation
 		VectorMA( origin, 24, dir, sprOrg );
 		VectorScale( dir, 64, sprVel );
 
-		// cam shake
-		if ( weapon == VERYBIGEXPLOSION ) {
-			shakeAmt = 0.2f;
-			shakeDur = 1000;
-			shakeRad = 1200;
-		} else {
-			shakeAmt = 0.15f;
-			shakeDur = 800;
-			shakeRad = 1000;
-		}
+		shakeAmt = 0.2f;
+		shakeDur = 1000;
+		shakeRad = 1200;
 
-// JPW NERVE
 		if ( cg_gameType.integer <= GT_SINGLE_PLAYER ) {
-			if ( weapon == VERYBIGEXPLOSION ) {
-				CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1200, 20, 300 );
-			} else {
-				CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1400, 40, 70 );
-			}
+			CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1200, 20, 300 );
 
-			// NOTE: these must all have the same duration, so that we are less likely to use a wider range of images per scene
 			for ( i = 0; i < 4; i++ ) {
-				if ( weapon == VERYBIGEXPLOSION ) {
-					for ( j = 0; j < 3; j++ ) sprOrg[j] = origin[j] + 32 * dir[j] + 32 * crandom();
-					CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1200, 40, 160 + rand() % 120 );
-				} else if ( i < 2 ) {
-					for ( j = 0; j < 3; j++ ) sprOrg[j] = origin[j] + 24 * dir[j] + 16 * crandom();
-					CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1400, 15, 40 + rand() % 30 );
+				for ( j = 0; j < 3; j++ ) {
+					sprOrg[j] = origin[j] + 32 * dir[j] + 32 * crandom();
 				}
+				CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1200, 40, 160 + rand() % 120 );
 			}
 
-			// Ridah, throw some debris
-			CG_AddDebris( origin, dir,
-						  120,      // speed
-						  2000,  //350,	// duration
-						  // 15 + rand()%5 );	// count
-						  7 + rand() % 2 ); // count
+			CG_AddDebris( origin, dir, 120, 2000, 7 + rand() % 2 );
 		}
 		break;
 
 	default:
-	case WP_FLAMETHROWER:
-		// no explosion at LG impact, it is added with the beam
-		return;
+		/*
+		==============
+		Normal weapon-class based impact behavior
+		==============
+		*/
+
+		if ( wc & WEAPON_CLASS_MELEE ) {
+			sfx = cgs.media.sfx_knifehit[4];
+			mark = cgs.media.bulletMarkShader;
+			radius = 1 + rand() % 2;
+
+			CG_AddBulletParticles( origin, dir, 20, 800, 3 + rand() % 6, 1.0 );
+		}
+		else if ( wt->bulletBased == qtrue ) {
+			if ( cg_gameType.integer <= GT_SINGLE_PLAYER ) {
+				r = rand() & 31;
+			}
+
+			if ( r == 3 ) {
+				sfx = cgs.media.sfx_ric1;
+			} else if ( r == 2 ) {
+				sfx = cgs.media.sfx_ric2;
+			} else if ( r == 1 ) {
+				sfx = cgs.media.sfx_ric3;
+			}
+
+			if ( !clientNum ) {
+				CG_AddSparks( origin, dir, 350, 200, 15 + rand() % 7, 0.2 );
+			} else if ( clientNum == 1 ) {
+				vec3_t d, o;
+
+				VectorMA( origin, 12, dir, o );
+				VectorScale( dir, 7, d );
+				d[2] += 16;
+
+				if ( surfFlags & SURF_SNOW ) {
+					CG_AddDirtBulletParticles( origin, dir, 120, 900, 3, 0.6f, 20, 4, 0.3f, "water_splash" );
+				}
+
+				if ( surfFlags & ( SURF_GRASS | SURF_GRAVEL ) ) {
+					CG_AddDirtBulletParticles( origin, dir, 190, 800, 3, 0.1f, 60, 10, 0.5f, "dirt_splash" );
+				} else {
+					CG_ParticleImpactSmokePuff( cgs.media.smokeParticleShader, o );
+
+					CG_AddBulletParticles( origin, dir, 20, 800, 3 + rand() % 6, 1.0 );
+
+					if ( sfx && ( rand() % 3 == 0 ) ) {
+						CG_AddSparks( origin, dir, 450, 300, 3 + rand() % 3, 0.5 );
+					}
+				}
+			} else if ( clientNum == 2 ) {
+				sfx = 0;
+				mark = 0;
+
+				CG_WaterRipple( cgs.media.wakeMarkShaderAnim, origin, tv( 0, 0, 1 ), 32, 1000 );
+
+				CG_AddDirtBulletParticles( origin, dir, 190, 900, 5, 0.5f, 50, 12, 0.125f, "water_splash" );
+			}
+
+			if ( ( wc & WEAPON_CLASS_SCOPED ) || ( Distance( cg.refdef.vieworg, origin ) < 384 ) ) {
+				if ( clientNum ) {
+					mark = cgs.media.bulletMarkShader;
+					alphaFade = qtrue;
+					radius = 1.5f + rand() % 2;
+
+					if ( surfFlags & SURF_METAL ) {
+						sfx = cgs.media.sfx_bullet_metalhit[rand() % 3];
+						mark = cgs.media.bulletMarkShaderMetal;
+						alphaFade = qtrue;
+					} else if ( surfFlags & SURF_WOOD ) {
+						sfx = cgs.media.sfx_bullet_woodhit[rand() % 3];
+						mark = cgs.media.bulletMarkShaderWood;
+						alphaFade = qtrue;
+						radius += 1;
+					} else if ( surfFlags & SURF_CERAMIC ) {
+						sfx = cgs.media.sfx_bullet_ceramichit[rand() % 3];
+						mark = cgs.media.bulletMarkShaderCeramic;
+						alphaFade = qtrue;
+						radius += 2;
+					} else if ( surfFlags & SURF_GLASS ) {
+						sfx = cgs.media.sfx_bullet_glasshit[rand() % 3];
+						mark = cgs.media.bulletMarkShaderGlass;
+						alphaFade = qtrue;
+					}
+				}
+			}
+		}
+		else if ( wc & WEAPON_CLASS_GRENADE ) {
+			shader = cgs.media.rocketExplosionShader;
+			sfx = cgs.media.sfx_rockexp;
+			mark = cgs.media.burnMarkShader;
+			radius = 64;
+			light = 300;
+			isSprite = qtrue;
+			duration = 1000;
+			lightColor[0] = 0.75;
+			lightColor[1] = 0.5;
+			lightColor[2] = 0.1;
+
+			if ( weapon != WP_GRENADE_SMOKE ) {
+				shakeAmt = 0.15f;
+				shakeDur = 1000;
+				shakeRad = 600;
+			}
+
+			VectorMA( origin, 16, dir, sprOrg );
+			VectorScale( dir, 100, sprVel );
+
+			if ( CG_PointContents( origin, 0 ) & CONTENTS_WATER ) {
+				sfx = cgs.media.sfx_grenexpWater;
+
+				VectorCopy( origin, tmpv );
+				tmpv[2] += 10000;
+
+				trap_CM_BoxTrace( &trace, tmpv, origin, NULL, NULL, 0, MASK_WATER );
+				CG_WaterRipple( cgs.media.wakeMarkShaderAnim, trace.endpos, dir, 150, 1000 );
+
+				CG_AddDirtBulletParticles( trace.endpos, dir, 400, 900, 15, 0.5f, 256, 128, 0.125f, "water_splash" );
+			} else {
+				VectorCopy( origin, tmpv );
+				tmpv[2] += 20;
+				VectorCopy( origin, tmpv2 );
+				tmpv2[2] -= 20;
+
+				trap_CM_BoxTrace( &trace, tmpv, tmpv2, NULL, NULL, 0, MASK_SHOT );
+
+				if ( ( trace.surfaceFlags & SURF_GRASS ) || ( trace.surfaceFlags & SURF_GRAVEL ) ) {
+					CG_AddDirtBulletParticles( origin, dir, 400, 2000, 10, 0.5f, 200, 75, 0.25f, "dirt_splash" );
+				}
+
+				CG_ParticleExplosion( "expblue", sprOrg, sprVel, 700, 20, 160 );
+				CG_AddDebris( origin, dir, 280, 1400, 7 + rand() % 2 );
+			}
+		}
+		else if ( wc & WEAPON_CLASS_DYNAMITE ) {
+			shader = cgs.media.rocketExplosionShader;
+			sfx = cgs.media.sfx_dynamiteexp;
+			sfx2 = cgs.media.sfx_dynamiteexpDist;
+			mark = cgs.media.burnMarkShader;
+			radius = 64;
+			light = 300;
+			isSprite = qtrue;
+			duration = 1000;
+			lightColor[0] = 0.75;
+			lightColor[1] = 0.5;
+			lightColor[2] = 0.1;
+
+			shakeAmt = 0.25f;
+			shakeDur = 2800;
+			shakeRad = 8192;
+
+			if ( cg_gameType.integer <= GT_SINGLE_PLAYER ) {
+				VectorScale( dir, 16, sprVel );
+
+				for ( i = 0; i < 5; i++ ) {
+					for ( j = 0; j < 3; j++ ) {
+						sprOrg[j] = origin[j] + 64 * dir[j] + 24 * crandom();
+					}
+					sprVel[2] += rand() % 50;
+					CG_ParticleExplosion( "blacksmokeanimb", sprOrg, sprVel, 3500 + rand() % 250, 10, 250 + rand() % 60 );
+				}
+
+				VectorMA( origin, 16, dir, sprOrg );
+				VectorScale( dir, 100, sprVel );
+
+				CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1200, 9, 300 );
+
+				CG_AddDebris( origin, dir, 280, 1400, 7 + rand() % 2 );
+			}
+		}
+		else if ( wc & WEAPON_CLASS_LAUNCHER ) {
+			sfx = cgs.media.sfx_rockexp;
+			mark = cgs.media.burnMarkShader;
+			radius = 64;
+			light = 600;
+			isSprite = qtrue;
+			duration = 1000;
+			lightColor[0] = 0.75;
+			lightColor[1] = 0.5;
+			lightColor[2] = 0.1;
+
+			VectorMA( origin, 24, dir, sprOrg );
+			VectorScale( dir, 64, sprVel );
+
+			shakeAmt = 0.15f;
+			shakeDur = 800;
+			shakeRad = 1000;
+
+			if ( cg_gameType.integer <= GT_SINGLE_PLAYER ) {
+				CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1400, 40, 70 );
+
+				for ( i = 0; i < 4; i++ ) {
+					if ( i < 2 ) {
+						for ( j = 0; j < 3; j++ ) {
+							sprOrg[j] = origin[j] + 24 * dir[j] + 16 * crandom();
+						}
+						CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1400, 15, 40 + rand() % 30 );
+					}
+				}
+
+				CG_AddDebris( origin, dir, 120, 2000, 7 + rand() % 2 );
+			}
+		}
+		else if ( ( wc & WEAPON_CLASS_ENERGY ) || ( wc & WEAPON_CLASS_FLAMER ) ) {
+			return;
+		}
+		else {
+			return;
+		}
 
 		break;
-
 	}
-	// done.
 
 	if ( sfx ) {
 		trap_S_StartSound( origin, ENTITYNUM_WORLD, CHAN_AUTO, sfx );
 	}
 
-	if ( sfx2 ) {  // distant sounds for weapons with a broadcast fire sound (so you /always/ hear dynamite explosions)
+	if ( sfx2 ) {
 		trap_S_StartLocalSound( sfx2, CHAN_AUTO );
 	}
 
-
-	//
-	// camera shake
-	//
 	if ( shakeAmt ) {
 		CG_StartShakeCamera( shakeAmt, shakeDur, origin, shakeRad );
 	}
 
-
-	//
-	// create the explosion
-	//
 	if ( mod ) {
-		le = CG_MakeExplosion( origin, dir,
-							   mod, shader,
-							   duration, isSprite );
+		le = CG_MakeExplosion( origin, dir, mod, shader, duration, isSprite );
 		le->light = light;
-		// Ridah
 		le->lightOverdraw = lightOverdraw;
 		VectorCopy( lightColor, le->lightColor );
 	}
 
-	//
-	// impact mark
-	//
 	if ( mark ) {
-		CG_ImpactMark( mark, origin, dir, random() * 360, 1,1,1,1, alphaFade, radius, qfalse, -1 );
+		CG_ImpactMark( mark, origin, dir, random() * 360, 1, 1, 1, 1, alphaFade, radius, qfalse, -1 );
 	}
 }
 

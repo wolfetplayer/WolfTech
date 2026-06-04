@@ -104,6 +104,7 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_HIDE,
+		.bulletBased        = qfalse,
     },
     [WP_KNIFE] = {
 		.weapAlts           = WP_NONE,
@@ -127,6 +128,7 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_HIDE,
+		.bulletBased        = qfalse,
     },
     [WP_LUGER] = {
 		.weapAlts           = WP_SILENCER,
@@ -150,6 +152,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_LUGER,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,
     },
     [WP_SILENCER] = {
 		.weapAlts           = WP_LUGER,
@@ -172,7 +175,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 64,
         .mod                = MOD_SILENCER,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,		
     },
     [WP_COLT] = {
 		.weapAlts           = WP_AKIMBO,
@@ -195,7 +199,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 700,
         .mod                = MOD_COLT,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,	
+		.bulletBased        = qtrue,	
     },
     [WP_AKIMBO] = {
 		.weapAlts           = WP_COLT,
@@ -218,7 +223,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 700,
         .mod                = MOD_AKIMBO,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,	
+		.bulletBased        = qtrue,	
     },
     [WP_MP40] = {
 		.weapAlts           = WP_NONE,
@@ -242,6 +248,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_MP40,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
     },
     [WP_THOMPSON] = {
 		.weapAlts           = WP_NONE,
@@ -264,7 +271,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_THOMPSON,
 		.rndTriggerRelease  = qtrue,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
     },
     [WP_STEN] = {
 		.weapAlts           = WP_NONE,
@@ -287,7 +295,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 64,
         .mod                = MOD_STEN,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,	
+		.bulletBased        = qtrue,	
     },
     [WP_MAUSER] = {
 		.weapAlts           = WP_SNIPERRIFLE,
@@ -310,7 +319,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 2000,
         .mod                = MOD_MAUSER,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,			
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,			
     },
     [WP_SNIPERRIFLE] = {
 		.weapAlts           = WP_MAUSER,
@@ -333,7 +343,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 2000,
         .mod                = MOD_SNIPERRIFLE,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,		
     },
     [WP_GARAND] = {
 		.weapAlts           = WP_SNOOPERSCOPE,
@@ -356,7 +367,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 128,
         .mod                = MOD_GARAND,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,		
     },
     [WP_SNOOPERSCOPE] = {
 		.weapAlts           = WP_GARAND,
@@ -379,7 +391,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 128,
         .mod                = MOD_SNOOPERSCOPE,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,		
     },
     [WP_FG42] = {
 		.weapAlts           = WP_FG42SCOPE,
@@ -403,6 +416,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_FG42,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
     },
     [WP_FG42SCOPE] = {
 		.weapAlts           = WP_FG42,
@@ -425,7 +439,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1500,
         .mod                = MOD_FG42SCOPE,
 		.rndTriggerRelease  = qtrue,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,		
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weapAlts           = WP_NONE,
@@ -448,7 +463,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1500,
         .mod                = MOD_GRENADE_LAUNCHER,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,		
     },
     [WP_GRENADE_PINEAPPLE] = {
 		.weapAlts           = WP_NONE,
@@ -471,7 +487,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1500,
         .mod                = MOD_GRENADE_PINEAPPLE,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,		
     },
     [WP_DYNAMITE] = {
 		.weapAlts           = WP_NONE,
@@ -493,7 +510,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 64,
         .mod                = MOD_DYNAMITE,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,		
     },
     [WP_PANZERFAUST] = {
 		.weapAlts           = WP_NONE,
@@ -517,6 +535,7 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_PANZERFAUST,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qfalse,
     },
     [WP_VENOM] = {
 		.weapAlts           = WP_NONE,
@@ -539,7 +558,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_VENOM,
 		.rndTriggerRelease  = qtrue,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,		
     },
     [WP_FLAMETHROWER] = {
 		.weapAlts           = WP_NONE,
@@ -562,7 +582,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_FLAMETHROWER,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qfalse,		
     },
     [WP_TESLA] = {
 		.weapAlts           = WP_NONE,
@@ -585,7 +606,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_TESLA,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,		
+	    .iconDrawSize       = WEAPON_ICON_WIDE,	
+		.bulletBased        = qfalse,	
     },
     [WP_CLASS_SPECIAL] = {
 		.weapAlts           = WP_NONE,
@@ -608,7 +630,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,		
     },
     [WP_MONSTER_ATTACK1] = {
 		.weapAlts           = WP_NONE,
@@ -631,7 +654,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,		
     },
     [WP_MONSTER_ATTACK2] = {
 		.weapAlts           = WP_NONE,
@@ -654,7 +678,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,		
     },
     [WP_MONSTER_ATTACK3] = {
 		.weapAlts           = WP_NONE,
@@ -677,7 +702,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,		
     },
     [WP_GAUNTLET] = {
 		.weapAlts           = WP_NONE,
@@ -700,7 +726,8 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,		
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,		
     },
 };
 

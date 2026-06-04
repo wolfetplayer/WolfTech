@@ -496,13 +496,13 @@ static void CG_ItemPickup( int itemNum ) {
 			//	5 - "New and Better"
 
 
-			if (GetWeaponTableData( weapon )->weaponClass == WEAPON_CLASS_SCOPED)
+			if (GetWeaponTableData( weapon )->weaponClass & WEAPON_CLASS_SCOPED)
 			{
 			   weapon = GetWeaponTableData( weapon )->weapAlts;
 		    }
 
 			// don't ever autoswitch to secondary fire weapons
-			if (GetWeaponTableData( weapon )->weaponClass != WEAPON_CLASS_SCOPED) {  //----(SA)	modified
+			if (!(GetWeaponTableData( weapon )->weaponClass & WEAPON_CLASS_SCOPED)) {  //----(SA)	modified
 
 				// no weap currently selected, always just select the new one
 				if ( !cg.weaponSelect ) {

@@ -2615,7 +2615,7 @@ void PM_AdjustAimSpreadScale( void ) {
 		// take player movement into account (even if only for the scoped weapons)
 		// TODO: also check for jump/crouch and adjust accordingly
 
-		if (GetWeaponTableData(pm->ps->weapon)->weaponClass == WEAPON_CLASS_SCOPED)
+		if (GetWeaponTableData(pm->ps->weapon)->weaponClass & WEAPON_CLASS_SCOPED)
 		{
 
 			for (i = 0; i < 2; i++)
@@ -3214,12 +3214,13 @@ static void PM_Weapon( void ) {
 		break;
 	}
 
-	if (ammoTable[pm->ps->weapon].weaponClass == WEAPON_CLASS_SMG)
+	if (GetWeaponTableData(pm->ps->weapon)->weaponClass &
+		(WEAPON_CLASS_SMG | WEAPON_CLASS_ASSAULT_RIFLE))
 	{
 		aimSpreadScaleAdd += rand() % 5;
 	}
 
-		// set weapon recoil (kickback)
+	// set weapon recoil (kickback)
 	// no recoil for AI
 	if (pm->ps->aiChar)
 	{
