@@ -3808,7 +3808,7 @@ void PmoveSingle( pmove_t *pmove ) {
 
 	if ( pm->cmd.wbuttons & WBUTTON_ZOOM ) {
 		if ( pm->ps->stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) {        // (SA) binoculars are an inventory item (inventory==keys)
-			if ( pm->ps->weapon != WP_SNIPERRIFLE && pm->ps->weapon != WP_SNOOPERSCOPE && pm->ps->weapon != WP_FG42SCOPE ) {   // don't allow binocs if using scope
+			if (! (GetWeaponTableData( pm->ps->weapon )->weaponClass & WEAPON_CLASS_SCOPED)) {   // don't allow binocs if using scope
 				if ( !( pm->ps->eFlags & EF_MG42_ACTIVE ) ) {    // or if mounted on a weapon
 					pm->ps->eFlags |= EF_ZOOMING;
 				}

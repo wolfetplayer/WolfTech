@@ -730,9 +730,8 @@ void Bullet_Endpos( gentity_t *ent, float spread, vec3_t *end ) {
 		r += crandom() * accuracy;
 		u += crandom() * ( accuracy * 1.25 );
 	} else {
-		if ( ent->s.weapon == WP_SNOOPERSCOPE || ent->s.weapon == WP_SNIPERRIFLE || ent->s.weapon == WP_FG42SCOPE ) {
-//		if(ent->s.weapon == WP_SNOOPERSCOPE || ent->s.weapon == WP_SNIPERRIFLE) {
-			// aim dir already accounted for sway of scoped weapons in CalcMuzzlePoints()
+		if (GetWeaponTableData(ent->s.weapon)->weaponClass & WEAPON_CLASS_SCOPED)
+		{
 			dist *= 2;
 			randSpread = qfalse;
 		}
@@ -1706,15 +1705,16 @@ void CalcMuzzlePoints( gentity_t *ent, int weapon ) {
 	if ( !( ent->r.svFlags & SVF_CASTAI ) ) {   // non ai's take into account scoped weapon 'sway' (just another way aimspread is visualized/utilized)
 		float spreadfrac, phase;
 
-		if ( weapon == WP_SNIPERRIFLE || weapon == WP_SNOOPERSCOPE || weapon == WP_FG42SCOPE ) {
+		if (GetWeaponTableData(weapon)->weaponClass & WEAPON_CLASS_SCOPED)
+		{
 			spreadfrac = ent->client->currentAimSpreadScale;
 
 			// rotate 'forward' vector by the sway
 			phase = level.time / 1000.0 * ZOOM_PITCH_FREQUENCY * M_PI * 2;
-			viewang[PITCH] += ZOOM_PITCH_AMPLITUDE * sin( phase ) * ( spreadfrac + ZOOM_PITCH_MIN_AMPLITUDE );
+			viewang[PITCH] += ZOOM_PITCH_AMPLITUDE * sin(phase) * (spreadfrac + ZOOM_PITCH_MIN_AMPLITUDE);
 
 			phase = level.time / 1000.0 * ZOOM_YAW_FREQUENCY * M_PI * 2;
-			viewang[YAW] += ZOOM_YAW_AMPLITUDE * sin( phase ) * ( spreadfrac + ZOOM_YAW_MIN_AMPLITUDE );
+			viewang[YAW] += ZOOM_YAW_AMPLITUDE * sin(phase) * (spreadfrac + ZOOM_YAW_MIN_AMPLITUDE);
 		}
 	}
 

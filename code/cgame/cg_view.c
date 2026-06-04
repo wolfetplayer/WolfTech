@@ -1502,7 +1502,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		return;
 	}
 
-	if ( cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE ) {
+	if (GetWeaponTableData( cg.weaponSelect )->weaponClass & WEAPON_CLASS_SCOPED) {
 		float spd;
 		spd = VectorLength( cg.snap->ps.velocity );
 		if ( spd > 180.0f ) {

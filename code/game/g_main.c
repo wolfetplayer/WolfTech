@@ -738,108 +738,140 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 						hintVal = 255;
 					}
 				}
-			} else if ( checkEnt->s.eType == ET_MG42 ) {
-				if ( g_gametype.integer <= GT_SINGLE_PLAYER ) {
-					if ( ent->s.weapon != WP_SNIPERRIFLE &&
-						 ent->s.weapon != WP_SNOOPERSCOPE &&
-						 ent->s.weapon != WP_FG42SCOPE ) {
-						if ( traceEnt->takedamage ) {
-							hintDist = CH_ACTIVATE_DIST;
-							hintType = HINT_MG42;
+				}
+				else if (checkEnt->s.eType == ET_MG42)
+				{
+					if (g_gametype.integer <= GT_SINGLE_PLAYER)
+					{
+
+						if (GetWeaponTableData(ent->s.weapon)->weaponClass & WEAPON_CLASS_SCOPED)
+						{
+							if (traceEnt->takedamage)
+							{
+								hintDist = CH_ACTIVATE_DIST;
+								hintType = HINT_MG42;
+							}
 						}
 					}
 				}
-			} else if ( checkEnt->s.eType == ET_EXPLOSIVE )      {
-				if ( checkEnt->takedamage && checkEnt->health > 0 ) {              // 0 health explosives are not breakable
-					hintDist    = CH_BREAKABLE_DIST;
-					hintType    = HINT_BREAKABLE;
-					hintVal     = checkEnt->health;     // also send health to client for visualization
+				else if (checkEnt->s.eType == ET_EXPLOSIVE)
+				{
+					if (checkEnt->takedamage && checkEnt->health > 0)
+					{ // 0 health explosives are not breakable
+						hintDist = CH_BREAKABLE_DIST;
+						hintType = HINT_BREAKABLE;
+						hintVal = checkEnt->health; // also send health to client for visualization
+					}
 				}
-			} else if ( checkEnt->s.eType == ET_ALARMBOX )      {
-				if ( checkEnt->health > 0 ) {
-//					hintDist	= CH_BREAKABLE_DIST;
-					hintType    = HINT_ACTIVATE;
+				else if (checkEnt->s.eType == ET_ALARMBOX)
+				{
+					if (checkEnt->health > 0)
+					{
+						//					hintDist	= CH_BREAKABLE_DIST;
+						hintType = HINT_ACTIVATE;
+					}
 				}
-			} else if ( checkEnt->s.eType == ET_ITEM )      {
-				gitem_t *it;
-				it = &bg_itemlist[checkEnt->item - bg_itemlist];
+				else if (checkEnt->s.eType == ET_ITEM)
+				{
+					gitem_t *it;
+					it = &bg_itemlist[checkEnt->item - bg_itemlist];
 
-				hintDist = CH_ACTIVATE_DIST;
-
-				switch ( it->giType ) {
-				case IT_HEALTH:
-					if ( !( checkEnt->s.density == ( 1 << 9 ) ) ) { // (10 bits of data transmission for density)
-						hintType = HINT_HEALTH;
-					}
-					break;
-				case IT_TREASURE:
-					hintType = HINT_TREASURE;
-					break;
-				case IT_CLIPBOARD:
-					hintType = HINT_CLIPBOARD;
-					break;
-				case IT_WEAPON:
-					hintType = HINT_WEAPON;
-					break;
-				case IT_AMMO:
-					hintType = HINT_AMMO;
-					break;
-				case IT_ARMOR:
-					hintType = HINT_ARMOR;
-					break;
-				case IT_POWERUP:
-					if ( !( checkEnt->s.density == ( 1 << 9 ) ) ) { // (10 bits of data transmission for density)
-						hintType = HINT_POWERUP;
-					}
-					break;
-				case IT_HOLDABLE:
-					hintType = HINT_HOLDABLE;
-					break;
-				case IT_KEY:
-					hintType = HINT_INVENTORY;
-					break;
-				case IT_TEAM:
-				case IT_BAD:
-				default:
-					break;
-				}
-			} else if ( checkEnt->s.eType == ET_MOVER )     {
-				if ( !Q_stricmp( checkEnt->classname, "func_door_rotating" ) ) {
-					if ( checkEnt->moverState == MOVER_POS1ROTATE    ||      // stationary/closed
-						 ( checkEnt->moverState == MOVER_POS2ROTATE && checkEnt->flags & FL_TOGGLE ) ) { // toggle door that's open
-
-						hintDist = CH_DOOR_DIST;
-						hintType = HINT_DOOR_ROTATING;
-
-						if ( checkEnt->key >= KEY_LOCKED_TARGET ) {    // locked
-							//hintType = HINT_DOOR_ROTATING_LOCKED;
-						}
-					}
-				} else if ( !Q_stricmp( checkEnt->classname, "func_door" ) )         {
-					if ( checkEnt->moverState == MOVER_POS1   || // stationary/closed
-						 ( checkEnt->moverState == MOVER_POS2 && checkEnt->flags & FL_TOGGLE ) ) { // toggle door that's open
-
-						hintDist = CH_DOOR_DIST;
-						hintType = HINT_DOOR;
-
-						if ( checkEnt->key >= KEY_LOCKED_TARGET ) {    // locked
-							//hintType = HINT_DOOR_LOCKED;
-						}
-					}
-				} else if ( !Q_stricmp( checkEnt->classname, "func_button" ) )         {
 					hintDist = CH_ACTIVATE_DIST;
-					hintType = HINT_BUTTON;
-				} else if ( !Q_stricmp( checkEnt->classname, "props_flamebarrel" ) )         {
-					hintDist = CH_BREAKABLE_DIST;
-					hintType = HINT_BREAKABLE;
-				} else if ( !Q_stricmp( checkEnt->classname, "props_statue" ) )         {
-					hintDist = CH_BREAKABLE_DIST;
-					hintType = HINT_BREAKABLE;
-				} else if ( strstr( checkEnt->classname, "chair" ) )         {
-					hintDist = CH_ACTIVATE_DIST;
-					hintType = HINT_CHAIR;
+
+					switch (it->giType)
+					{
+					case IT_HEALTH:
+						if (!(checkEnt->s.density == (1 << 9)))
+						{ // (10 bits of data transmission for density)
+							hintType = HINT_HEALTH;
+						}
+						break;
+					case IT_TREASURE:
+						hintType = HINT_TREASURE;
+						break;
+					case IT_CLIPBOARD:
+						hintType = HINT_CLIPBOARD;
+						break;
+					case IT_WEAPON:
+						hintType = HINT_WEAPON;
+						break;
+					case IT_AMMO:
+						hintType = HINT_AMMO;
+						break;
+					case IT_ARMOR:
+						hintType = HINT_ARMOR;
+						break;
+					case IT_POWERUP:
+						if (!(checkEnt->s.density == (1 << 9)))
+						{ // (10 bits of data transmission for density)
+							hintType = HINT_POWERUP;
+						}
+						break;
+					case IT_HOLDABLE:
+						hintType = HINT_HOLDABLE;
+						break;
+					case IT_KEY:
+						hintType = HINT_INVENTORY;
+						break;
+					case IT_TEAM:
+					case IT_BAD:
+					default:
+						break;
+					}
 				}
-			}
+				else if (checkEnt->s.eType == ET_MOVER)
+				{
+					if (!Q_stricmp(checkEnt->classname, "func_door_rotating"))
+					{
+						if (checkEnt->moverState == MOVER_POS1ROTATE || // stationary/closed
+							(checkEnt->moverState == MOVER_POS2ROTATE && checkEnt->flags & FL_TOGGLE))
+						{ // toggle door that's open
+
+							hintDist = CH_DOOR_DIST;
+							hintType = HINT_DOOR_ROTATING;
+
+							if (checkEnt->key >= KEY_LOCKED_TARGET)
+							{	// locked
+								// hintType = HINT_DOOR_ROTATING_LOCKED;
+							}
+						}
+					}
+					else if (!Q_stricmp(checkEnt->classname, "func_door"))
+					{
+						if (checkEnt->moverState == MOVER_POS1 || // stationary/closed
+							(checkEnt->moverState == MOVER_POS2 && checkEnt->flags & FL_TOGGLE))
+						{ // toggle door that's open
+
+							hintDist = CH_DOOR_DIST;
+							hintType = HINT_DOOR;
+
+							if (checkEnt->key >= KEY_LOCKED_TARGET)
+							{	// locked
+								// hintType = HINT_DOOR_LOCKED;
+							}
+						}
+					}
+					else if (!Q_stricmp(checkEnt->classname, "func_button"))
+					{
+						hintDist = CH_ACTIVATE_DIST;
+						hintType = HINT_BUTTON;
+					}
+					else if (!Q_stricmp(checkEnt->classname, "props_flamebarrel"))
+					{
+						hintDist = CH_BREAKABLE_DIST;
+						hintType = HINT_BREAKABLE;
+					}
+					else if (!Q_stricmp(checkEnt->classname, "props_statue"))
+					{
+						hintDist = CH_BREAKABLE_DIST;
+						hintType = HINT_BREAKABLE;
+					}
+					else if (strstr(checkEnt->classname, "chair"))
+					{
+						hintDist = CH_ACTIVATE_DIST;
+						hintType = HINT_CHAIR;
+					}
+				}
 
 			// hint icon specified in check entity (possibly an entity targeted by an invis_user) and appropriate contact was made, so hintType was set
 			// first try the checkent...

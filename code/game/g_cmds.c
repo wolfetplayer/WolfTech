@@ -2630,14 +2630,9 @@ void Cmd_Activate_f( gentity_t *ent ) {
 					cl = &level.clients[ ent->s.clientNum ];
 
 					// no mounting while using a scoped weap
-					switch ( cl->ps.weapon ) {
-					case WP_SNIPERRIFLE:
-					case WP_SNOOPERSCOPE:
-					case WP_FG42SCOPE:
+					if (GetWeaponTableData( cl->ps.weapon )->weaponClass & WEAPON_CLASS_SCOPED)
+					{
 						return;
-
-					default:
-						break;
 					}
 
 					if ( !( cl->ps.grenadeTimeLeft ) ) { // make sure the client isn't holding a hot potato
