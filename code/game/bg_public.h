@@ -627,6 +627,7 @@ typedef struct ammotable_s {
 	qboolean rndTriggerRelease;
 	int iconDrawSize;
 	qboolean bulletBased;
+	qboolean hasMuzzle;
 } ammotable_t;
 
 #define WEAPON_ICON_HIDE    0

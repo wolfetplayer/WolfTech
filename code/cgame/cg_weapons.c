@@ -2751,7 +2751,8 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		return;
 	}
 
-	if ( weaponNum == WP_STEN ) {  // sten has no muzzleflash
+	if (!(GetWeaponTableData(weaponNum)->hasMuzzle))
+	{
 		flash.hModel = 0;
 	}
 
@@ -2760,7 +2761,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		if ( !cg_paused.integer ) {    // don't add while paused
 			if ( weaponNum == WP_STEN || weaponNum == WP_VENOM ) {
 				if ( cg.time - cent->muzzleFlashTime < 100 ) {
-//					CG_ParticleImpactSmokePuff (cgs.media.smokeParticleShader, flash.origin);
 					CG_ParticleImpactSmokePuffExtended( cgs.media.smokeParticleShader, flash.origin, tv( 0,0,1 ), 8, 500, 8, 20, 30, 0.25f );
 				}
 			}
