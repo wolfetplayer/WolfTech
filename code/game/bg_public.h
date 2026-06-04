@@ -628,6 +628,7 @@ typedef struct ammotable_s {
 	int iconDrawSize;
 	qboolean bulletBased;
 	qboolean hasMuzzle;
+	qboolean underwaterFire;
 } ammotable_t;
 
 #define WEAPON_ICON_HIDE    0

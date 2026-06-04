@@ -2953,14 +2953,11 @@ static void PM_Weapon( void ) {
 	}
 
 	// player is underwater - no fire
-	if ( pm->waterlevel == 3 ) {
-		if ( pm->ps->weapon != WP_KNIFE &&
-			 pm->ps->weapon != WP_GRENADE_LAUNCHER &&
-			 pm->ps->weapon != WP_GRENADE_PINEAPPLE ) {
-			PM_AddEvent( EV_NOFIRE_UNDERWATER );        // event for underwater 'click' for nofire
-			pm->ps->weaponTime  = 500;
-			return;
-		}
+	if (pm->waterlevel == 3 && !(GetWeaponTableData(pm->ps->weapon)->underwaterFire))
+	{
+		PM_AddEvent(EV_NOFIRE_UNDERWATER);
+		pm->ps->weaponTime = 500;
+		return;
 	}
 
 {

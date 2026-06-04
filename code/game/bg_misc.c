@@ -106,6 +106,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_HIDE,
 		.bulletBased        = qfalse,
 		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
     },
     [WP_KNIFE] = {
 		.weapAlts           = WP_NONE,
@@ -131,6 +132,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_HIDE,
 		.bulletBased        = qfalse,
 		.hasMuzzle          = qfalse,
+		.underwaterFire     = qtrue,
     },
     [WP_LUGER] = {
 		.weapAlts           = WP_SILENCER,
@@ -156,6 +158,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
     },
     [WP_SILENCER] = {
 		.weapAlts           = WP_LUGER,
@@ -181,6 +184,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qfalse,		
+		.underwaterFire     = qfalse,
     },
     [WP_COLT] = {
 		.weapAlts           = WP_AKIMBO,
@@ -206,6 +210,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,	
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,	
+		.underwaterFire     = qfalse,
     },
     [WP_AKIMBO] = {
 		.weapAlts           = WP_COLT,
@@ -230,7 +235,8 @@ ammotable_t ammoTable[] = {
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,	
 		.bulletBased        = qtrue,
-		.hasMuzzle          = qtrue,	
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,	
     },
     [WP_MP40] = {
 		.weapAlts           = WP_NONE,
@@ -256,6 +262,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
     },
     [WP_THOMPSON] = {
 		.weapAlts           = WP_NONE,
@@ -281,6 +288,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,	
+		.underwaterFire     = qfalse,
     },
     [WP_STEN] = {
 		.weapAlts           = WP_NONE,
@@ -305,7 +313,8 @@ ammotable_t ammoTable[] = {
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,	
 		.bulletBased        = qtrue,
-		.hasMuzzle          = qfalse,	
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,	
     },
     [WP_MAUSER] = {
 		.weapAlts           = WP_SNIPERRIFLE,
@@ -331,6 +340,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,			
 		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
     },
     [WP_SNIPERRIFLE] = {
 		.weapAlts           = WP_MAUSER,
@@ -356,6 +366,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
 		.bulletBased        = qtrue,		
 		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
     },
     [WP_GARAND] = {
 		.weapAlts           = WP_SNOOPERSCOPE,
@@ -381,6 +392,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,		
 		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
     },
     [WP_SNOOPERSCOPE] = {
 		.weapAlts           = WP_GARAND,
@@ -406,6 +418,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
 		.bulletBased        = qtrue,		
 		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
     },
     [WP_FG42] = {
 		.weapAlts           = WP_FG42SCOPE,
@@ -431,6 +444,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
     },
     [WP_FG42SCOPE] = {
 		.weapAlts           = WP_FG42,
@@ -456,6 +470,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
 		.bulletBased        = qtrue,		
 		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weapAlts           = WP_NONE,
@@ -481,6 +496,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qfalse,	
 		.hasMuzzle          = qfalse,	
+		.underwaterFire     = qtrue,
     },
     [WP_GRENADE_PINEAPPLE] = {
 		.weapAlts           = WP_NONE,
@@ -505,7 +521,8 @@ ammotable_t ammoTable[] = {
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qfalse,	
-		.hasMuzzle          = qfalse,	
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qtrue,	
     },
     [WP_DYNAMITE] = {
 		.weapAlts           = WP_NONE,
@@ -529,7 +546,8 @@ ammotable_t ammoTable[] = {
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qfalse,	
-		.hasMuzzle          = qfalse,	
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qtrue,	
     },
     [WP_PANZERFAUST] = {
 		.weapAlts           = WP_NONE,
@@ -555,6 +573,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qfalse,
 		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
     },
     [WP_VENOM] = {
 		.weapAlts           = WP_NONE,
@@ -580,6 +599,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,	
 		.hasMuzzle          = qtrue,	
+		.underwaterFire     = qfalse,
     },
     [WP_FLAMETHROWER] = {
 		.weapAlts           = WP_NONE,
@@ -605,6 +625,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qfalse,		
 		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
     },
     [WP_TESLA] = {
 		.weapAlts           = WP_NONE,
@@ -629,7 +650,8 @@ ammotable_t ammoTable[] = {
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,	
 		.bulletBased        = qfalse,
-		.hasMuzzle          = qfalse,	
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,	
     },
     [WP_CLASS_SPECIAL] = {
 		.weapAlts           = WP_NONE,
@@ -654,7 +676,8 @@ ammotable_t ammoTable[] = {
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qfalse,	
-		.hasMuzzle          = qfalse,	
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,	
     },
     [WP_MONSTER_ATTACK1] = {
 		.weapAlts           = WP_NONE,
@@ -680,6 +703,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qfalse,	
 		.hasMuzzle          = qfalse,	
+		.underwaterFire     = qfalse,
     },
     [WP_MONSTER_ATTACK2] = {
 		.weapAlts           = WP_NONE,
@@ -704,7 +728,8 @@ ammotable_t ammoTable[] = {
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qfalse,
-		.hasMuzzle          = qfalse,		
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,		
     },
     [WP_MONSTER_ATTACK3] = {
 		.weapAlts           = WP_NONE,
@@ -730,6 +755,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qfalse,	
 		.hasMuzzle          = qfalse,	
+		.underwaterFire     = qfalse,
     },
     [WP_GAUNTLET] = {
 		.weapAlts           = WP_NONE,
@@ -755,6 +781,7 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
 		.bulletBased        = qfalse,	
 		.hasMuzzle          = qfalse,	
+		.underwaterFire     = qfalse,
     },
 };
 
