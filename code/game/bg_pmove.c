@@ -2963,85 +2963,61 @@ static void PM_Weapon( void ) {
 		}
 	}
 
-	// start the animation even if out of ammo
-	switch ( pm->ps->weapon )
-	{
-	default:
-		if ( !weaponstateFiring ) {
-			pm->ps->weaponDelay = ammoTable[pm->ps->weapon].fireDelayTime;          // delay so the weapon can get up into position before firing (and showing the flash)
-		} else {
-			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qtrue );
+{
+	const ammotable_t *wt = GetWeaponTableData( pm->ps->weapon );
+	weaponClass_t wc = wt->weaponClass;
+
+	if ( wc & WEAPON_CLASS_MELEE ) {
+		if ( !delayedFire ) {
+			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
 		}
-		break;
-		// machineguns should continue the anim, rather than start each fire
-	case WP_MP40:
-	case WP_THOMPSON:
-	case WP_STEN:
-	case WP_VENOM:
-	case WP_FG42:
-	case WP_FG42SCOPE:
+	}
+	else if ( wc & ( WEAPON_CLASS_GRENADE | WEAPON_CLASS_DYNAMITE ) ) {
+		if ( !delayedFire ) {
+			if ( pm->ps->aiChar ) {
+				// AI characters go into their regular animation setup
+				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
+			} else {
+				// Player pulls the fuse and holds the hot potato
+				if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) ) {
+					if ( wc & WEAPON_CLASS_DYNAMITE ) {
+						pm->ps->grenadeTimeLeft = 50;
+					} else {
+						pm->ps->grenadeTimeLeft = 4000;
+					}
+
+					PM_StartWeaponAnim( WEAP_ATTACK1 );
+				}
+			}
+
+			pm->ps->weaponDelay = wt->fireDelayTime;
+		}
+	}
+	else if ( wc & ( WEAPON_CLASS_SMG |
+					WEAPON_CLASS_RIFLE_AUTO |
+					WEAPON_CLASS_ASSAULT_RIFLE |
+					WEAPON_CLASS_MG |
+					WEAPON_CLASS_MINIGUN ) ) {
 		if ( !weaponstateFiring ) {
 			if ( pm->ps->aiChar && pm->ps->weapon == WP_VENOM ) {
 				// AI get fast spin-up
 				pm->ps->weaponDelay = 150;
 			} else {
-				pm->ps->weaponDelay = ammoTable[pm->ps->weapon].fireDelayTime;          // delay so the weapon can get up into position before firing (and showing the flash)
+				pm->ps->weaponDelay = wt->fireDelayTime;
 			}
 		} else {
+			// machineguns should continue the anim, rather than start each fire
 			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
 		}
-		break;
-	case WP_PANZERFAUST:
-	case WP_SILENCER:
-	case WP_LUGER:
-	case WP_COLT:
-	case WP_AKIMBO:         //----(SA)	added
-	case WP_SNIPERRIFLE:
-	case WP_SNOOPERSCOPE:
-	case WP_MAUSER:
-	case WP_GARAND:
+	}
+	else {
 		if ( !weaponstateFiring ) {
-			// NERVE's panzerfaust spinup
-			pm->ps->weaponDelay = ammoTable[pm->ps->weapon].fireDelayTime;
+			pm->ps->weaponDelay = wt->fireDelayTime;
 		} else {
 			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qtrue );
 		}
-		break;
-	// melee
-	case WP_KNIFE:
-		if ( !delayedFire ) {
-			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
-		}
-		break;
-	case WP_GAUNTLET:
-		if ( !delayedFire ) {
-			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
-		}
-		break;
-	// throw
-	case WP_DYNAMITE:
-	case WP_GRENADE_LAUNCHER:
-	case WP_GRENADE_PINEAPPLE:
-		if ( !delayedFire ) {
-			if ( pm->ps->aiChar ) {         // ai characters go into their regular animation setup
-				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
-			} else {                    // the player pulls the fuse and holds the hot potato
-				if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) ) {
-					if ( pm->ps->weapon == WP_DYNAMITE ) {
-						pm->ps->grenadeTimeLeft = 50;
-					} else {
-						pm->ps->grenadeTimeLeft = 4000;         // start at four seconds and count down
-	
-					}
-					PM_StartWeaponAnim( WEAP_ATTACK1 );
-				}
-			}
-	
-			pm->ps->weaponDelay = ammoTable[pm->ps->weapon].fireDelayTime;
-	
-		}
-		break;
 	}
+}	
 
 	pm->ps->weaponstate = WEAPON_FIRING;
 
@@ -3146,27 +3122,19 @@ static void PM_Weapon( void ) {
 		}
 	}
 
-	switch ( pm->ps->weapon ) {
-	case WP_MAUSER:
-	case WP_GRENADE_LAUNCHER:
-	case WP_GRENADE_PINEAPPLE:
-	case WP_DYNAMITE:
-		PM_StartWeaponAnim( weapattackanim );
-		break;
+{
+	const ammotable_t *wt;
+	weaponClass_t wc;
 
-	case WP_VENOM:
-	case WP_MP40:
-	case WP_THOMPSON:
-	case WP_STEN:
+	wt = GetWeaponTableData( pm->ps->weapon );
+	wc = wt->weaponClass;
+
+	if ( wc & ( WEAPON_CLASS_SMG | WEAPON_CLASS_MINIGUN ) ) {
 		PM_ContinueWeaponAnim( weapattackanim );
-		break;
-	
-	default:
+	} else {
 		PM_StartWeaponAnim( weapattackanim );
-	break;
 	}
-
-
+}
 
 	if ( pm->ps->weapon == WP_AKIMBO ) {
 		if ( pm->ps->weapon == WP_AKIMBO && !akimboFire ) {

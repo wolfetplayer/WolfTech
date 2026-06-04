@@ -632,6 +632,7 @@ typedef struct ammotable_s {
 #define WEAPON_ICON_HIDE    0
 #define WEAPON_ICON_NORMAL  1
 #define WEAPON_ICON_WIDE    2
+#define WEAPON_ICON_WIDE_OFFSET 3
 
 extern ammotable_t ammoTable[WP_NUM_WEAPONS];
 

@@ -247,7 +247,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_MP40,
 		.rndTriggerRelease  = qtrue,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,
     },
     [WP_THOMPSON] = {
@@ -271,7 +271,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_THOMPSON,
 		.rndTriggerRelease  = qtrue,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,
     },
     [WP_STEN] = {
@@ -295,7 +295,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 64,
         .mod                = MOD_STEN,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,	
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,	
 		.bulletBased        = qtrue,	
     },
     [WP_MAUSER] = {
@@ -319,7 +319,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 2000,
         .mod                = MOD_MAUSER,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,			
     },
     [WP_SNIPERRIFLE] = {
@@ -367,7 +367,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 128,
         .mod                = MOD_GARAND,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,		
     },
     [WP_SNOOPERSCOPE] = {
@@ -534,7 +534,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_PANZERFAUST,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qfalse,
     },
     [WP_VENOM] = {
@@ -558,7 +558,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_VENOM,
 		.rndTriggerRelease  = qtrue,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,		
     },
     [WP_FLAMETHROWER] = {
@@ -582,7 +582,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_FLAMETHROWER,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qfalse,		
     },
     [WP_TESLA] = {
@@ -593,7 +593,7 @@ ammotable_t ammoTable[] = {
         .maxclip            = 300,
         .reloadTime         = 1000,
         .fireDelayTime      = DELAY_LOW,
-        .nextShotTime       = 0,
+        .nextShotTime       = 250,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 15,
@@ -606,7 +606,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 1000,
         .mod                = MOD_TESLA,
 		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,	
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,	
 		.bulletBased        = qfalse,	
     },
     [WP_CLASS_SPECIAL] = {
@@ -707,7 +707,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_GAUNTLET] = {
 		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_NONE, 		
+		.weaponClass        = WEAPON_CLASS_MELEE, 		
         .maxammo            = 999,
         .uses               = 0,
         .maxclip            = 999,

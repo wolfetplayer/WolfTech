@@ -3095,7 +3095,7 @@ void CG_DrawWeaponSelect( void ) {
 			continue;
 		}
 
-		wideweap = (iconDrawSize == WEAPON_ICON_WIDE);
+		wideweap = (iconDrawSize == WEAPON_ICON_WIDE || iconDrawSize == WEAPON_ICON_WIDE_OFFSET );
 
 		if ( wideweap ) {
 			x = WP_DRAW_X_WIDE;

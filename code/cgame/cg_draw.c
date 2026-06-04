@@ -712,22 +712,13 @@ static void CG_DrawStatusBar( void ) {
 				scale = halfScale = 0;
 			}
 
-
-			switch ( cg.predictedPlayerState.weapon ) {
-			case WP_THOMPSON:
-			case WP_MP40:
-			case WP_STEN:
-			case WP_MAUSER:
-			case WP_GARAND:
-			case WP_VENOM:
-			case WP_TESLA:
-			case WP_PANZERFAUST:
-			case WP_FLAMETHROWER:
+			if (GetWeaponTableData(cg.predictedPlayerState.weapon)->iconDrawSize == WEAPON_ICON_WIDE_OFFSET)
+			{
 				wideOffset = -38;
-				break;
-			default:
+			}
+			else
+			{
 				wideOffset = 0;
-				break;
 			}
 
 			// don't draw ammo value for knife
@@ -1095,45 +1086,49 @@ static float CG_DrawCoopOverlay( float y ) {
 			//val = cg_entities[ ci->clientNum ].currentState.teamNum;
 			val = ci->curWeapon;
 
-			switch ( val )
+			if (val > WP_NONE && val < WP_NUM_WEAPONS)
 			{
-			case WP_KNIFE:
-				classType[0] = 'K';	// knife
-				break;
-			case WP_LUGER:
-			case WP_COLT:
-			case WP_AKIMBO:
-			case WP_SILENCER:
-				classType[0] = 'P';	// pistol
-				break;
-			case WP_THOMPSON:
-			case WP_MP40:
-			case WP_STEN:
-				classType[0] = 'S';	// smg
-				break;
-			case WP_GRENADE_LAUNCHER:
-			case WP_GRENADE_PINEAPPLE:
-			case WP_DYNAMITE:
-				classType[0] = 'E';	// explosive
-				break;
-			case WP_MAUSER:
-			case WP_GARAND:
-			case WP_SNIPERRIFLE:
-			case WP_SNOOPERSCOPE:
-			case WP_FG42SCOPE:
-			case WP_FG42:
-			case WP_SNIPER:
-				classType[0] = 'R';	// rifle
-				break;
-			case WP_PANZERFAUST:
-			case WP_VENOM:
-			case WP_FLAMETHROWER:
-			case WP_TESLA:
-				classType[0] = 'H';	// heavy weapon
-				break;
-			default:
-				classType[0] = 'X';	// ERROR !
-				break;
+				const ammotable_t *wt = GetWeaponTableData(val);
+				weaponClass_t wc = wt->weaponClass;
+
+				if (wc & WEAPON_CLASS_MELEE)
+				{
+					classType[0] = 'K'; // knife / melee
+				}
+				else if (wc & (WEAPON_CLASS_PISTOL | WEAPON_CLASS_AKIMBO))
+				{
+					classType[0] = 'P'; // pistol
+				}
+				else if (wc & WEAPON_CLASS_SMG)
+				{
+					classType[0] = 'S'; // smg
+				}
+				else if (wc & (WEAPON_CLASS_GRENADE | WEAPON_CLASS_DYNAMITE | WEAPON_CLASS_RIFLENADE))
+				{
+					classType[0] = 'E'; // explosive
+				}
+				else if (wc & (WEAPON_CLASS_RIFLE_BOLTACTION |
+							   WEAPON_CLASS_RIFLE_AUTO |
+							   WEAPON_CLASS_ASSAULT_RIFLE ))
+				{
+					classType[0] = 'R'; // rifle
+				}
+				else if (wc & (WEAPON_CLASS_MG |
+							   WEAPON_CLASS_LAUNCHER |
+							   WEAPON_CLASS_FLAMER |
+							   WEAPON_CLASS_MINIGUN |
+							   WEAPON_CLASS_ENERGY))
+				{
+					classType[0] = 'H'; // heavy weapon
+				}
+				else
+				{
+					classType[0] = 'X';
+				}
+			}
+			else
+			{
+				classType[0] = 'X';
 			}
 
 			Com_sprintf( st, sizeof( st ), "%s", classType );
