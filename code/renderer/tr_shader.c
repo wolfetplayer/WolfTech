@@ -1745,6 +1745,27 @@ static qboolean ParseShader( char **text ) {
 			}
 			continue;
 		}
+		// ydnar: distancecull
+		else if ( !Q_stricmp( token, "distancecull" ) ) {
+			int i;
+
+			for ( i = 0; i < 3; i++ )
+			{
+				token = COM_ParseExt( text, qfalse );
+				if ( token[ 0 ] == 0 ) {
+					ri.Printf( PRINT_WARNING, "WARNING: missing distancecull parms in shader '%s'\n", shader.name );
+				} else {
+					shader.distanceCull[ i ] = atof( token );
+				}
+			}
+
+			if ( shader.distanceCull[ 1 ] - shader.distanceCull[ 0 ] > 0 ) {
+				shader.distanceCull[ 3 ] = 1.0 / ( shader.distanceCull[ 1 ] - shader.distanceCull[ 0 ] );
+			} else {
+				shader.distanceCull[ 0 ] = shader.distanceCull[ 1 ] = shader.distanceCull[ 2 ] = shader.distanceCull[ 3 ] = 0;
+			}
+			continue;
+		}
 		// sort
 		else if ( !Q_stricmp( token, "sort" ) ) {
 			ParseSort( text );
@@ -2118,9 +2139,12 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	*newShader = shader;
 
-	if ( shader.sort <= SS_OPAQUE ) {
+	if (shader.sort <= SS_SEE_THROUGH)      // was SS_DECAL, this allows grates to be fogged
+	{
 		newShader->fogPass = FP_EQUAL;
-	} else if ( shader.contentFlags & CONTENTS_FOG ) {
+	}
+	else if (shader.contentFlags & CONTENTS_FOG)
+	{
 		newShader->fogPass = FP_LE;
 	}
 
