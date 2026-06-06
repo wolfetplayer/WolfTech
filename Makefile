@@ -2478,8 +2478,6 @@ $(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 #############################################################################
 
 Q3GOBJ_ = \
- ## $(B)/$(BASEGAME)/game/steam.o \ 
- ## $(B)/$(BASEGAME)/game/steamshim_child.o \ 
   $(B)/$(BASEGAME)/game/g_main.o \
   $(B)/$(BASEGAME)/game/ai_cast.o \
   $(B)/$(BASEGAME)/game/ai_cast_characters.o \

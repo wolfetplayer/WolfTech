@@ -2101,6 +2101,11 @@ void CL_SteamLobbyCreate_f(void)
 	steamLobbyCreate(8);
 }
 
+void CL_SteamLobbyList_f(void)
+{
+	steamLobbyList();
+}
+
 /*
 ==================
 CL_PK3List_f
@@ -4302,6 +4307,8 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "setRecommended", CL_SetRecommended_f );
 
 	Cmd_AddCommand("steam_create", CL_SteamLobbyCreate_f);
+
+	Cmd_AddCommand("steam_list", CL_SteamLobbyList_f);
 
 	CL_InitRef();
 
