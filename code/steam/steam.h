@@ -1,3 +1,6 @@
+
+#include <stdint.h>
+
 int steamInit(void);
 
 void steamRun(void);
