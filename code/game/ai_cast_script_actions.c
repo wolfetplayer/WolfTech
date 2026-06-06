@@ -46,6 +46,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "ai_cast.h"
 
+#include "../steam/steam.h"
+
 /*
 Contains the code to handle the various commands available with an event script.
 
@@ -2870,6 +2872,34 @@ qboolean AICast_ScriptAction_ChangeLevel( cast_state_t *cs, char *params ) {
 	}
 
 	return qtrue;
+}
+
+
+qboolean AICast_ScriptAction_AchievementGeneric( cast_state_t *cs, char *params )
+{
+    const cast_script_stack_action_t *a;
+    const cast_achievementDef_t *def;
+
+    if ( !cs ) {
+        return qtrue;
+    }
+
+    a = cs->castScriptStatus.currentAction;
+    if ( !a ) {
+        return qtrue;
+    }
+
+    def = (const cast_achievementDef_t *)a->userdata;
+    if ( !def || !def->steamId || !def->steamId[0] ) {
+        return qtrue;
+    }
+
+    if ( g_cheats.integer ) {
+        return qtrue;
+    }
+
+    steamSetAchievement( def->steamId );
+    return qtrue;
 }
 
 /*

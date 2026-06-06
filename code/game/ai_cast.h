@@ -240,6 +240,7 @@ typedef struct
 {
 	char    *actionString;
 	qboolean ( *actionFunc )( struct cast_state_s *cs, char *params );
+	const void *userdata;
 } cast_script_stack_action_t;
 //
 typedef struct
@@ -290,6 +291,7 @@ typedef struct
 	int scriptNoSightTime;
 	int scriptAttackEnt;            // we should always attack this AI if they are alive
 	vec3_t playanim_viewangles;
+	const cast_script_stack_action_t *currentAction;
 } cast_script_status_t;
 //
 typedef struct
@@ -735,3 +737,8 @@ void    GibEntity( gentity_t *self, int killer );
 void    GibHead( gentity_t *self, int killer );
 //
 extern bot_state_t  *botstates[MAX_CLIENTS];
+
+typedef struct
+{
+	const char *steamId;
+} cast_achievementDef_t;

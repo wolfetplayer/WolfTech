@@ -138,6 +138,8 @@ qboolean AICast_ScriptAction_AnimCondition( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_PushAway( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_CatchFire( cast_state_t *cs, char *params );
 
+qboolean AICast_ScriptAction_AchievementGeneric( cast_state_t *cs, char *params );
+
 // these are the actions that each event can call
 cast_script_stack_action_t scriptActions[] =
 {

@@ -150,6 +150,7 @@ If you have questions concerning this license or the applicable additional terms
 {"AICast_ScriptAction_CrouchToMarker", (byte *)AICast_ScriptAction_CrouchToMarker},
 {"AICast_ScriptAction_WalkToMarker", (byte *)AICast_ScriptAction_WalkToMarker},
 {"AICast_ScriptAction_GotoMarker", (byte *)AICast_ScriptAction_GotoMarker},
+{"AICast_ScriptAction_AchievementGeneric", (byte *)AICast_ScriptAction_AchievementGeneric},
 {"AICast_NoAttackIfNotHurtSinceLastScriptAction", (byte *)AICast_NoAttackIfNotHurtSinceLastScriptAction},
 {"SP_team_WOLF_checkpoint", (byte *)SP_team_WOLF_checkpoint},
 {"checkpoint_spawntouch", (byte *)checkpoint_spawntouch},
