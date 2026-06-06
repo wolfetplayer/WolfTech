@@ -194,6 +194,12 @@ typedef enum ShimCmd
     SHIMCMD_GETSTATF,
     SHIMCMD_RESTARTAPP,
     SHIMCMD_SETRICHPRESENCE,
+    SHIMCMD_LOBBY_CREATE,
+    SHIMCMD_LOBBY_LIST,
+    SHIMCMD_LOBBY_JOIN,
+    SHIMCMD_LOBBY_LEAVE,
+    SHIMCMD_LOBBY_SETDATA,
+    SHIMCMD_LOBBY_INVITE,
 } ShimCmd;
 
 static int write1ByteCmd(const uint8 b1)
@@ -318,7 +324,13 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
     PRINTGOTEVENT(SHIMEVENT_GETSTATF);
     PRINTGOTEVENT(SHIMEVENT_APPRESTARTED);
     PRINTGOTEVENT(SHIMEVENT_SETRICHPRESENCE);
-    #undef PRINTGOTEVENT
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_CREATED);
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_LIST);
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_JOINED);
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_DATA);
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_CHAT);
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_INVITE);
+#undef PRINTGOTEVENT
     else printf("Child got unknown shimevent %d.\n", (int) type);
     #endif
 
@@ -380,6 +392,14 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
             if (buflen < 2) return NULL;
             event.okay = *(buf++) ? 1 : 0;
             strcpy(event.name, (const char *) buf);
+            break;
+        case SHIMEVENT_LOBBY_CREATED:
+        case SHIMEVENT_LOBBY_JOINED:
+        case SHIMEVENT_LOBBY_LIST:
+            event.okay = *(buf++) ? 1 : 0;
+            event.epochsecs = *((uint64_t *)buf);
+            buf += sizeof(uint64_t);
+            strcpy(event.name, (const char *)buf);
             break;
 
         default:  /* uh oh */
@@ -549,6 +569,85 @@ void STEAMSHIM_setRichPresence(const char* key, const char* value)
     buf[0] = (uint8) ((ptr-1) - buf);
     writePipe(GPipeWrite, buf, buf[0] + 1);
 } /* STEAMSHIM_setRichPresence */
+
+
+void STEAMSHIM_lobbyCreate(int maxPlayers)
+{
+    uint8 buf[8];
+    uint8 *ptr = buf + 1;
+
+    if (isDead()) return;
+
+    *(ptr++) = (uint8)SHIMCMD_LOBBY_CREATE;
+    *(ptr++) = (uint8)maxPlayers;
+
+    buf[0] = (uint8)((ptr - 1) - buf);
+    writePipe(GPipeWrite, buf, buf[0] + 1);
+}
+
+
+void STEAMSHIM_lobbyJoin(uint64_t lobbyID)
+{
+    uint8 buf[16];
+    uint8 *ptr = buf + 1;
+
+    if (isDead()) return;
+
+    *(ptr++) = (uint8)SHIMCMD_LOBBY_JOIN;
+    *(uint64_t *)ptr = lobbyID;
+    ptr += sizeof(uint64_t);
+
+    buf[0] = (uint8)((ptr - 1) - buf);
+    writePipe(GPipeWrite, buf, buf[0] + 1);
+}
+
+void STEAMSHIM_lobbySetData(const char *key, const char *value)
+{
+    uint8 buf[256];
+    uint8 *ptr = buf + 1;
+
+    if (isDead()) return;
+
+    *(ptr++) = (uint8)SHIMCMD_LOBBY_SETDATA;
+
+    strcpy((char *)ptr, key);
+    ptr += strlen(key) + 1;
+
+    strcpy((char *)ptr, value);
+    ptr += strlen(value) + 1;
+
+    buf[0] = (uint8)((ptr - 1) - buf);
+    writePipe(GPipeWrite, buf, buf[0] + 1);
+}
+
+void STEAMSHIM_lobbyList(void)
+{
+    if (isDead()) return;
+    dbgpipe("Child sending SHIMCMD_LOBBY_LIST().\n");
+    write1ByteCmd(SHIMCMD_LOBBY_LIST);
+}
+
+void STEAMSHIM_lobbyLeave(void)
+{
+    if (isDead()) return;
+    dbgpipe("Child sending SHIMCMD_LOBBY_LEAVE().\n");
+    write1ByteCmd(SHIMCMD_LOBBY_LEAVE);
+}
+
+void STEAMSHIM_lobbyInvite(uint64_t lobbyID)
+{
+    uint8 buf[16];
+    uint8 *ptr = buf + 1;
+
+    if (isDead()) return;
+
+    *(ptr++) = (uint8)SHIMCMD_LOBBY_INVITE;
+    *(uint64_t *)ptr = lobbyID;
+    ptr += sizeof(uint64_t);
+
+    buf[0] = (uint8)((ptr - 1) - buf);
+    writePipe(GPipeWrite, buf, buf[0] + 1);
+}
 
 /* end of steamshim_child.c ... */
 

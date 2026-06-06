@@ -2,37 +2,44 @@
 #define _INCL_STEAMSHIM_CHILD_H_
 
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef enum STEAMSHIM_EventType
-{
-    SHIMEVENT_BYE,
-    SHIMEVENT_STATSRECEIVED,
-    SHIMEVENT_STATSSTORED,
-    SHIMEVENT_SETACHIEVEMENT,
-    SHIMEVENT_GETACHIEVEMENT,
-    SHIMEVENT_RESETSTATS,
-    SHIMEVENT_SETSTATI,
-    SHIMEVENT_GETSTATI,
-    SHIMEVENT_SETSTATF,
-    SHIMEVENT_GETSTATF,
-    SHIMEVENT_APPRESTARTED,
-    SHIMEVENT_SETRICHPRESENCE,
-} STEAMSHIM_EventType;
+    typedef enum STEAMSHIM_EventType
+    {
+        SHIMEVENT_BYE,
+        SHIMEVENT_STATSRECEIVED,
+        SHIMEVENT_STATSSTORED,
+        SHIMEVENT_SETACHIEVEMENT,
+        SHIMEVENT_GETACHIEVEMENT,
+        SHIMEVENT_RESETSTATS,
+        SHIMEVENT_SETSTATI,
+        SHIMEVENT_GETSTATI,
+        SHIMEVENT_SETSTATF,
+        SHIMEVENT_GETSTATF,
+        SHIMEVENT_APPRESTARTED,
+        SHIMEVENT_SETRICHPRESENCE,
+        SHIMEVENT_LOBBY_CREATED,
+        SHIMEVENT_LOBBY_LIST,
+        SHIMEVENT_LOBBY_JOINED,
+        SHIMEVENT_LOBBY_DATA,
+        SHIMEVENT_LOBBY_CHAT,
+        SHIMEVENT_LOBBY_INVITE,
+    } STEAMSHIM_EventType;
 
-/* not all of these fields make sense in a given event. */
-typedef struct STEAMSHIM_Event
-{
-    STEAMSHIM_EventType type;
-    int okay;
-    int ivalue;
-    float fvalue;
-    unsigned long long epochsecs;
-    char name[256];
-} STEAMSHIM_Event;
+    /* not all of these fields make sense in a given event. */
+    typedef struct STEAMSHIM_Event
+    {
+        STEAMSHIM_EventType type;
+        int okay;
+        int ivalue;
+        float fvalue;
+        unsigned long long epochsecs;
+        char name[256];
+    } STEAMSHIM_Event;
 
 int STEAMSHIM_init(void);  /* non-zero on success, zero on failure. */
 void STEAMSHIM_deinit(void);
@@ -49,6 +56,13 @@ void STEAMSHIM_setStatF(const char *name, const float val);
 void STEAMSHIM_getStatF(const char *name);
 void STEAMSHIM_restartIfNecessary(unsigned int unOwnAppID);
 void STEAMSHIM_setRichPresence(const char* key, const char* value);
+
+void STEAMSHIM_lobbyCreate(int maxPlayers);
+void STEAMSHIM_lobbyList(void);
+void STEAMSHIM_lobbyJoin(uint64_t lobbyID);
+void STEAMSHIM_lobbyLeave(void);
+void STEAMSHIM_lobbySetData(const char *key, const char *value);
+void STEAMSHIM_lobbyInvite(uint64_t lobbyID);
 
 #ifdef __cplusplus
 }

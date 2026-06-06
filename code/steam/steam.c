@@ -51,6 +51,31 @@ void steamSetRichPresence(const char* key, const char* value)
 	STEAMSHIM_setRichPresence(key, value);
 }
 
+void steamLobbyCreate(int maxPlayers)
+{
+	STEAMSHIM_lobbyCreate(maxPlayers);
+}
+
+void steamLobbyList(void)
+{
+	STEAMSHIM_lobbyList();
+}
+
+void steamLobbyJoin(uint64_t lobbyID)
+{
+	STEAMSHIM_lobbyJoin((uint64_t)lobbyID);
+}
+
+void steamLobbyLeave(void)
+{
+	STEAMSHIM_lobbyLeave();
+}
+
+void steamLobbySetData(const char *key, const char *value)
+{
+	STEAMSHIM_lobbySetData(key, value);
+}
+
 #else
 
 void steamRun(void)
@@ -81,6 +106,31 @@ void steamSetRichPresence(const char* key, const char* value)
 void steamResetStats(const int bAlsoAchievements)
 {
 	return;
+}
+
+
+void steamLobbyCreate(int maxPlayers)
+{
+	(void)maxPlayers;
+}
+
+void steamLobbyList(void)
+{
+}
+
+void steamLobbyJoin(uint64_t lobbyID)
+{
+	(void)lobbyID;
+}
+
+void steamLobbyLeave(void)
+{
+}
+
+void steamLobbySetData(const char *key, const char *value)
+{
+	(void)key;
+	(void)value;
 }
 
 #endif

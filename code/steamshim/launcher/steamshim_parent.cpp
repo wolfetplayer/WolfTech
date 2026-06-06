@@ -33,6 +33,9 @@ typedef int PipeType;
 
 #include "steam/steam_api.h"
 
+static ISteamMatchmaking *GSteamMatchmaking = NULL;
+static CSteamID GCurrentLobby;
+
 static const uint32_t steam_app_id = 1379630u;
 
 #define DEBUGPIPE 1
@@ -391,8 +394,18 @@ class SteamBridge
 {
 public:
     SteamBridge(PipeType _fd);
-	STEAM_CALLBACK(SteamBridge, OnUserStatsReceived, UserStatsReceived_t, m_CallbackUserStatsReceived);
-	STEAM_CALLBACK(SteamBridge, OnUserStatsStored, UserStatsStored_t, m_CallbackUserStatsStored);
+
+    STEAM_CALLBACK(SteamBridge, OnUserStatsReceived, UserStatsReceived_t, m_CallbackUserStatsReceived);
+    STEAM_CALLBACK(SteamBridge, OnUserStatsStored, UserStatsStored_t, m_CallbackUserStatsStored);
+
+    STEAM_CALLBACK(SteamBridge, OnLobbyEnter, LobbyEnter_t, m_CallbackLobbyEnter);
+    STEAM_CALLBACK(SteamBridge, OnLobbyDataUpdate, LobbyDataUpdate_t, m_CallbackLobbyDataUpdate);
+
+    void OnLobbyCreated(LobbyCreated_t *pCallback, bool bIOFailure);
+    void OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure);
+
+    CCallResult<SteamBridge, LobbyCreated_t> m_CallResultLobbyCreated;
+    CCallResult<SteamBridge, LobbyMatchList_t> m_CallResultLobbyMatchList;
 
 private:
     PipeType fd;
@@ -413,6 +426,11 @@ typedef enum ShimCmd
     SHIMCMD_GETSTATF,
     SHIMCMD_RESTARTAPP,
     SHIMCMD_SETRICHPRESENCE,
+    SHIMCMD_LOBBY_CREATE,
+    SHIMCMD_LOBBY_LIST,
+    SHIMCMD_LOBBY_JOIN,
+    SHIMCMD_LOBBY_LEAVE,
+    SHIMCMD_LOBBY_SETDATA,
 } ShimCmd;
 
 typedef enum ShimEvent
@@ -429,6 +447,10 @@ typedef enum ShimEvent
     SHIMEVENT_GETSTATF,
     SHIMEVENT_APPRESTARTED,
     SHIMEVENT_SETRICHPRESENCE,
+    SHIMEVENT_LOBBY_CREATED,
+    SHIMEVENT_LOBBY_LIST,
+    SHIMEVENT_LOBBY_ENTERED,
+    SHIMEVENT_LOBBY_DATA,
 } ShimEvent;
 
 static bool write1ByteCmd(PipeType fd, const uint8 b1)
@@ -575,11 +597,13 @@ static inline bool writeSetRichPresence(PipeType fd, const bool result)
 
 
 SteamBridge::SteamBridge(PipeType _fd)
-    : m_CallbackUserStatsReceived( this, &SteamBridge::OnUserStatsReceived )
-	, m_CallbackUserStatsStored( this, &SteamBridge::OnUserStatsStored )
-	, fd(_fd)
+    : m_CallbackUserStatsReceived(this, &SteamBridge::OnUserStatsReceived)
+    , m_CallbackUserStatsStored(this, &SteamBridge::OnUserStatsStored)
+    , m_CallbackLobbyEnter(this, &SteamBridge::OnLobbyEnter)
+    , m_CallbackLobbyDataUpdate(this, &SteamBridge::OnLobbyDataUpdate)
+    , fd(_fd)
 {
-} // SteamBridge::SteamBridge
+}
 
 void SteamBridge::OnUserStatsReceived(UserStatsReceived_t *pCallback)
 {
@@ -593,6 +617,52 @@ void SteamBridge::OnUserStatsStored(UserStatsStored_t *pCallback)
 	if (GAppID != pCallback->m_nGameID) return;
     writeStatsStored(fd, pCallback->m_eResult == k_EResultOK);
 } // SteamBridge::OnUserStatsStored
+
+void SteamBridge::OnLobbyCreated(LobbyCreated_t *pCallback, bool bIOFailure)
+{
+    if (bIOFailure || pCallback->m_eResult != k_EResultOK) {
+        dbgpipe("Lobby create failed\n");
+        return;
+    }
+
+    GCurrentLobby = CSteamID(pCallback->m_ulSteamIDLobby);
+
+    GSteamMatchmaking->SetLobbyData(GCurrentLobby, "game", "wolftech");
+    GSteamMatchmaking->SetLobbyData(GCurrentLobby, "connect", "127.0.0.1:27960");
+
+    dbgpipe("Lobby created: %llu\n", GCurrentLobby.ConvertToUint64());
+}
+
+void SteamBridge::OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure)
+{
+    if (bIOFailure) {
+        dbgpipe("Lobby list failed\n");
+        return;
+    }
+
+    dbgpipe("Lobbies found: %u\n", pCallback->m_nLobbiesMatching);
+
+    for (uint32 i = 0; i < pCallback->m_nLobbiesMatching; i++) {
+        CSteamID lobby = GSteamMatchmaking->GetLobbyByIndex(i);
+        dbgpipe("Lobby %u: %llu\n", i, lobby.ConvertToUint64());
+    }
+}
+
+void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
+{
+    GCurrentLobby = CSteamID(pCallback->m_ulSteamIDLobby);
+
+    const char *connect = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "connect");
+
+    dbgpipe("Entered lobby: %llu connect=%s\n",
+        GCurrentLobby.ConvertToUint64(),
+        connect ? connect : "");
+}
+
+void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
+{
+    dbgpipe("Lobby data updated\n");
+}
 
 
 static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
@@ -769,6 +839,62 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
                 writeSetRichPresence(fd, result);
             }
             break;
+
+        case SHIMCMD_LOBBY_CREATE:
+        {
+            if (!GSteamMatchmaking || buflen < 1)
+                break;
+
+            int maxPlayers = *(buf++);
+            SteamAPICall_t call = GSteamMatchmaking->CreateLobby(k_ELobbyTypePublic, maxPlayers);
+            GSteamBridge->m_CallResultLobbyCreated.Set(call, GSteamBridge, &SteamBridge::OnLobbyCreated);
+            break;
+        }
+
+        case SHIMCMD_LOBBY_LIST:
+        {
+            if (!GSteamMatchmaking)
+                break;
+
+            GSteamMatchmaking->AddRequestLobbyListStringFilter("game", "wolftech", k_ELobbyComparisonEqual);
+            SteamAPICall_t call = GSteamMatchmaking->RequestLobbyList();
+            GSteamBridge->m_CallResultLobbyMatchList.Set(call, GSteamBridge, &SteamBridge::OnLobbyMatchList);
+            break;
+        }
+
+        case SHIMCMD_LOBBY_JOIN:
+        {
+            if (!GSteamMatchmaking || buflen < sizeof(uint64))
+                break;
+
+            uint64 lobbyID = *(uint64 *)buf;
+            GSteamMatchmaking->JoinLobby(CSteamID(lobbyID));
+            break;
+        }
+
+        case SHIMCMD_LOBBY_LEAVE:
+        {
+            if (GSteamMatchmaking && GCurrentLobby.IsValid())
+            {
+                GSteamMatchmaking->LeaveLobby(GCurrentLobby);
+                GCurrentLobby.Clear();
+            }
+            break;
+        }
+
+        case SHIMCMD_LOBBY_SETDATA:
+        {
+            if (!GSteamMatchmaking || !GCurrentLobby.IsValid())
+                break;
+
+            const char *key = (const char *)buf;
+            buf += strlen(key) + 1;
+
+            const char *value = (const char *)buf;
+
+            GSteamMatchmaking->SetLobbyData(GCurrentLobby, key, value);
+            break;
+        }
     } // switch
 
     return true;  // keep going.
@@ -851,6 +977,7 @@ static bool initSteamworks(PipeType fd)
     GSteamBridge = new SteamBridge(fd);
 
     SteamFriends()->SetRichPresence("steam_display", "#status_mainmenu");
+    GSteamMatchmaking = SteamMatchmaking();
 
     return 1;
 } // initSteamworks
@@ -863,6 +990,8 @@ static void deinitSteamworks(void)
     GSteamStats = NULL;
     GSteamUtils= NULL;
     GSteamUser = NULL;
+    GSteamMatchmaking = NULL;
+    GCurrentLobby.Clear();
 } // deinitSteamworks
 
 static int mainline(void)
