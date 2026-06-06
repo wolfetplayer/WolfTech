@@ -33,6 +33,17 @@ typedef int PipeType;
 #define DEBUGPIPE
 #ifdef DEBUGPIPE
 
+static void SteamDebugLog(const char *msg)
+{
+	FILE *f = fopen("steam_debug.txt", "a");
+	if (!f) {
+		return;
+	}
+
+	fprintf(f, "%s\n", msg);
+	fclose(f);
+}
+
 static void dbgpipe(const char *fmt, ...)
 {
     va_list args;
@@ -265,10 +276,12 @@ static int initPipes(void)
 
 int STEAMSHIM_init(void)
 {
+    SteamDebugLog("STEAMSHIM_init: entered");
     dbgpipe("Child init start.\n");
     if (!initPipes())
     {
         dbgpipe("Child init failed.\n");
+        SteamDebugLog("STEAMSHIM_init: returning failure");
         return 0;
     } /* if */
 
@@ -279,6 +292,7 @@ int STEAMSHIM_init(void)
 #endif
 
     dbgpipe("Child init success!\n");
+    SteamDebugLog("STEAMSHIM_init: SUCCESS");
     return 1;
 } /* STEAMSHIM_init */
 
@@ -612,22 +626,28 @@ void STEAMSHIM_lobbyCreate(int maxPlayers)
 {
 	uint8 buf[8];
 	uint8 *ptr = buf + 1;
+	char msg[128];
+
+	SteamDebugLog("STEAMSHIM_lobbyCreate: entered");
 
 	if (isDead()) {
-		return;
+		SteamDebugLog("STEAMSHIM_lobbyCreate: shim says dead, trying anyway");
 	}
 
-	if (maxPlayers < 1) {
-		maxPlayers = 1;
-	} else if (maxPlayers > 250) {
-		maxPlayers = 250;
-	}
+	snprintf(msg, sizeof(msg), "STEAMSHIM_lobbyCreate: sending maxPlayers=%d", maxPlayers);
+	SteamDebugLog(msg);
 
 	*(ptr++) = (uint8)SHIMCMD_LOBBY_CREATE;
 	*(ptr++) = (uint8)maxPlayers;
 
 	buf[0] = (uint8)((ptr - 1) - buf);
+
+	snprintf(msg, sizeof(msg), "STEAMSHIM_lobbyCreate: write len=%d", buf[0] + 1);
+	SteamDebugLog(msg);
+
 	writePipe(GPipeWrite, buf, buf[0] + 1);
+
+	SteamDebugLog("STEAMSHIM_lobbyCreate: writePipe done");
 }
 
 void STEAMSHIM_lobbyJoin(uint64_t lobbyID)

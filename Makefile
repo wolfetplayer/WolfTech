@@ -1642,6 +1642,8 @@ $(Q3ASM): $(Q3ASMOBJ)
 #############################################################################
 
 Q3OBJ = \
+  $(B)/client/steam.o \
+  $(B)/client/steamshim_child.o \
   $(B)/client/cl_cgame.o \
   $(B)/client/cl_cin.o \
   $(B)/client/cl_console.o \
@@ -2476,8 +2478,8 @@ $(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 #############################################################################
 
 Q3GOBJ_ = \
-  $(B)/$(BASEGAME)/game/steam.o \
-  $(B)/$(BASEGAME)/game/steamshim_child.o \
+ ## $(B)/$(BASEGAME)/game/steam.o \ 
+ ## $(B)/$(BASEGAME)/game/steamshim_child.o \ 
   $(B)/$(BASEGAME)/game/g_main.o \
   $(B)/$(BASEGAME)/game/ai_cast.o \
   $(B)/$(BASEGAME)/game/ai_cast_characters.o \
@@ -2590,11 +2592,18 @@ $(B)/$(BASEGAME)/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 ## STEAM INTEGRATION
 #############################################################################
 
-$(B)/$(BASEGAME)/game/%.o: $(STEAMSHIMDIR)/%.c
-	$(DO_GAME_CC)
+$(B)/client/%.o: $(STEAMDIR)/%.c
+	$(DO_CC)
 
-$(B)/$(BASEGAME)/game/%.o: $(STEAMDIR)/%.c
-	$(DO_GAME_CC)
+$(B)/client/%.o: $(STEAMSHIMDIR)/%.c
+	$(DO_CC)
+
+
+## $(B)/$(BASEGAME)/game/%.o: $(STEAMSHIMDIR)/%.c 
+##	$(DO_GAME_CC)
+
+## $(B)/$(BASEGAME)/game/%.o: $(STEAMDIR)/%.c
+##	$(DO_GAME_CC)
 
 #############################################################################
 ## CLIENT/SERVER RULES

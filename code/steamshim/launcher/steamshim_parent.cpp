@@ -65,6 +65,15 @@ static bool setEnvVar(const char *key, const char *val);
 static bool launchChild(ProcessType *pid);
 static int closeProcess(ProcessType *pid);
 
+static void SteamParentLog(const char *msg)
+{
+	FILE *f = fopen("steam_parent_debug.txt", "a");
+	if (!f) return;
+
+	fprintf(f, "%s\n", msg);
+	fclose(f);
+}
+
 #ifdef WIN32
 bool ReleaseConsole()
 {
@@ -672,6 +681,9 @@ void SteamBridge::OnLobbyCreated(LobbyCreated_t *pCallback, bool bIOFailure)
 {
 	const bool okay = (!bIOFailure && pCallback->m_eResult == k_EResultOK);
 
+
+SteamParentLog("PARENT: OnLobbyCreated called");
+
 	if (!okay) {
 		dbgpipe("Lobby create failed\n");
 		writeLobbyEvent(fd, SHIMEVENT_LOBBY_CREATED, false, 0, "");
@@ -690,6 +702,8 @@ void SteamBridge::OnLobbyCreated(LobbyCreated_t *pCallback, bool bIOFailure)
 		Later replace with real public address or Steam networking.
 		*/
 		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "connect", "127.0.0.1:27960");
+
+        
 	}
 
 	dbgpipe("Lobby created: %llu\n", GCurrentLobby.ConvertToUint64());
@@ -972,6 +986,9 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
 
         case SHIMCMD_LOBBY_CREATE:
         {
+
+            SteamParentLog("PARENT: got SHIMCMD_LOBBY_CREATE");
+
             if (!GSteamMatchmaking || buflen < 1)
             {
                 writeLobbyEvent(fd, SHIMEVENT_LOBBY_CREATED, false, 0, "");

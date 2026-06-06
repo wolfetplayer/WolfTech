@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
+
 #ifdef STEAM
 
 static uint64_t s_steamCurrentLobby = 0;
@@ -66,15 +69,31 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 	}
 }
 
+static const char *SteamEventName(STEAMSHIM_EventType type)
+{
+	switch (type)
+	{
+	case SHIMEVENT_LOBBY_CREATED: return "LOBBY_CREATED";
+	case SHIMEVENT_LOBBY_LIST:    return "LOBBY_LIST";
+	case SHIMEVENT_LOBBY_JOINED:  return "LOBBY_JOINED";
+	case SHIMEVENT_LOBBY_DATA:    return "LOBBY_DATA";
+	default:                      return "UNKNOWN";
+	}
+}
+
 void steamRun(void)
 {
 	const STEAMSHIM_Event *ev;
 
-	/*
-	Pump can return one event per call.
-	Loop a few times so multiple pending lobby-list events are consumed.
-	*/
 	while ((ev = STEAMSHIM_pump()) != NULL) {
+Com_Printf(
+	"STEAMRUN: %s okay=%d lobby=%llu name='%s'\n",
+	SteamEventName(ev->type),
+		ev->okay,
+	(unsigned long long)ev->uvalue,
+	ev->name
+);
+
 		steamHandleEvent(ev);
 	}
 }
@@ -103,9 +122,10 @@ void steamResetStats(const int bAlsoAchievements)
 
 int steamAlive(void)
 {
-	return STEAMSHIM_alive();
-}
+	int alive = STEAMSHIM_alive();
 
+	return alive;
+}
 void steamSetRichPresence(const char *key, const char *value)
 {
 	STEAMSHIM_setRichPresence(key, value);
@@ -113,6 +133,7 @@ void steamSetRichPresence(const char *key, const char *value)
 
 void steamLobbyCreate(int maxPlayers)
 {
+	Com_Printf("steamLobbyCreate: maxPlayers=%d\n", maxPlayers);
 	STEAMSHIM_lobbyCreate(maxPlayers);
 }
 

@@ -42,6 +42,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "libmumblelink.h"
 #endif
 
+#include "../../steam/steam.h"
+
 #ifdef USE_MUMBLE
 cvar_t	*cl_useMumble;
 cvar_t	*cl_mumbleScale;
@@ -2090,6 +2092,15 @@ void CL_Snd_Restart_f(void)
 	CL_Vid_Restart_f();
 }
 
+void CL_SteamLobbyCreate_f(void)
+{
+	Com_Printf("steam_create: command called\n");
+	Com_Printf("steam_create: steamAlive=%d\n", steamAlive());
+
+	Com_Printf("steam_create: requesting lobby create anyway\n");
+	steamLobbyCreate(8);
+}
+
 /*
 ==================
 CL_PK3List_f
@@ -3140,6 +3151,12 @@ void CL_Frame( int msec ) {
 		return;
 	}
 
+	if (steamAlive())
+	{
+		steamRun();
+	}
+
+
 #ifdef USE_CURL
 	if(clc.downloadCURLM) {
 		CL_cURL_PerformDownload();
@@ -3989,6 +4006,8 @@ void CL_Init( void ) {
 
 	Con_Init();
 
+	steamInit();
+
 	if(!com_fullyInitialized)
 	{
 		CL_ClearState();
@@ -4281,6 +4300,8 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "shellExecute", CL_ShellExecute_URL_f );
 
 	Cmd_AddCommand( "setRecommended", CL_SetRecommended_f );
+
+	Cmd_AddCommand("steam_create", CL_SteamLobbyCreate_f);
 
 	CL_InitRef();
 

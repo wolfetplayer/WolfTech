@@ -1370,7 +1370,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	G_Printf( "gamedate: %s\n", PRODUCT_DATE );
 	//}
 
-	steamInit();
+	//steamInit();
 
 	srand( randomSeed );
 
@@ -1567,9 +1567,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	// fretn
 	G_LoadArenas();
 
-	steamSetRichPresence("Mapname", g_mapname.string);
-	steamSetRichPresence("Skill", G_GameSkillIntToStr(g_gameskill.integer));
-	steamSetRichPresence("steam_display", "#status_map");
+	//steamSetRichPresence("Mapname", g_mapname.string);
+	//steamSetRichPresence("Skill", G_GameSkillIntToStr(g_gameskill.integer));
+	//steamSetRichPresence("steam_display", "#status_map");
 }
 
 
@@ -2980,10 +2980,10 @@ void G_RunFrame( int levelTime ) {
 	gentity_t   *ent;
 	qboolean newSpawns = qfalse;
 
-	if (steamAlive())
-	{
-		steamRun();
-	}
+	//if (steamAlive())
+	//{
+	//	steamRun();
+	//}
 
 	// if we are waiting for the level to restart, do nothing
 	if ( level.restarted ) {
