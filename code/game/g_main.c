@@ -190,6 +190,8 @@ vmCvar_t g_motd4;           // MESSAGE 4
 vmCvar_t g_motd5;           // MESSAGE 5
 vmCvar_t g_motd6;           // MESSAGE 6
 
+vmCvar_t g_mapname;
+
 cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
 	{ &g_cheats, "sv_cheats", "", 0, qfalse },
@@ -343,7 +345,9 @@ cvarTable_t gameCvarTable[] = {
 	{ &motdNum, "motdNum", "0", CVAR_ROM, 0, qfalse},
 
 	// et sdk antilag
-	{ &g_antilag, "g_antilag", "1", 0, 0, qfalse }
+	{ &g_antilag, "g_antilag", "1", 0, 0, qfalse },
+
+	{&g_mapname, "mapname", "", CVAR_ARCHIVE}
 };
 
 static int gameCvarTableSize = ARRAY_LEN( gameCvarTable );
@@ -1337,6 +1341,16 @@ int G_SendMissionStats( void ) {
 	return canExit;
 }
 
+static inline const char* G_GameSkillIntToStr( int skill ) {
+	switch ( skill ) {
+		case GSKILL_EASY:		return "easy";
+		case GSKILL_MEDIUM:		return "medium";
+		case GSKILL_HARD:		return "hard";
+		case GSKILL_MAX:		return "max";
+		default:				return "";
+	}
+}
+
 /*
 ============
 G_InitGame
@@ -1552,6 +1566,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	// fretn
 	G_LoadArenas();
+
+	steamSetRichPresence("Mapname", g_mapname.string);
+	steamSetRichPresence("Skill", G_GameSkillIntToStr(g_gameskill.integer));
+	steamSetRichPresence("steam_display", "#status_map");
 }
 
 
@@ -1596,6 +1614,10 @@ void G_ShutdownGame( int restart ) {
 
 	if ( trap_Cvar_VariableIntegerValue( "bot_enable" ) ) {
 		BotAIShutdown( restart );
+	}
+
+	if ( !restart ) {
+		steamSetRichPresence( "steam_display", "#status_mainmenu" );
 	}
 }
 
