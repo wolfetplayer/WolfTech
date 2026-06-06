@@ -35,6 +35,7 @@ typedef int PipeType;
 
 static ISteamMatchmaking *GSteamMatchmaking = NULL;
 static CSteamID GCurrentLobby;
+static ISteamFriends *GSteamFriends = NULL;
 
 static const uint32_t steam_app_id = 1379630u;
 
@@ -413,44 +414,49 @@ private:
 
 typedef enum ShimCmd
 {
-    SHIMCMD_BYE,
-    SHIMCMD_PUMP,
-    SHIMCMD_REQUESTSTATS,
-    SHIMCMD_STORESTATS,
-    SHIMCMD_SETACHIEVEMENT,
-    SHIMCMD_GETACHIEVEMENT,
-    SHIMCMD_RESETSTATS,
-    SHIMCMD_SETSTATI,
-    SHIMCMD_GETSTATI,
-    SHIMCMD_SETSTATF,
-    SHIMCMD_GETSTATF,
-    SHIMCMD_RESTARTAPP,
-    SHIMCMD_SETRICHPRESENCE,
-    SHIMCMD_LOBBY_CREATE,
-    SHIMCMD_LOBBY_LIST,
-    SHIMCMD_LOBBY_JOIN,
-    SHIMCMD_LOBBY_LEAVE,
-    SHIMCMD_LOBBY_SETDATA,
+	SHIMCMD_BYE,
+	SHIMCMD_PUMP,
+	SHIMCMD_REQUESTSTATS,
+	SHIMCMD_STORESTATS,
+	SHIMCMD_SETACHIEVEMENT,
+	SHIMCMD_GETACHIEVEMENT,
+	SHIMCMD_RESETSTATS,
+	SHIMCMD_SETSTATI,
+	SHIMCMD_GETSTATI,
+	SHIMCMD_SETSTATF,
+	SHIMCMD_GETSTATF,
+	SHIMCMD_RESTARTAPP,
+	SHIMCMD_SETRICHPRESENCE,
+
+	SHIMCMD_LOBBY_CREATE,
+	SHIMCMD_LOBBY_LIST,
+	SHIMCMD_LOBBY_JOIN,
+	SHIMCMD_LOBBY_LEAVE,
+	SHIMCMD_LOBBY_SETDATA,
+	SHIMCMD_LOBBY_INVITE,
 } ShimCmd;
 
 typedef enum ShimEvent
 {
-    SHIMEVENT_BYE,
-    SHIMEVENT_STATSRECEIVED,
-    SHIMEVENT_STATSSTORED,
-    SHIMEVENT_SETACHIEVEMENT,
-    SHIMEVENT_GETACHIEVEMENT,
-    SHIMEVENT_RESETSTATS,
-    SHIMEVENT_SETSTATI,
-    SHIMEVENT_GETSTATI,
-    SHIMEVENT_SETSTATF,
-    SHIMEVENT_GETSTATF,
-    SHIMEVENT_APPRESTARTED,
-    SHIMEVENT_SETRICHPRESENCE,
-    SHIMEVENT_LOBBY_CREATED,
-    SHIMEVENT_LOBBY_LIST,
-    SHIMEVENT_LOBBY_ENTERED,
-    SHIMEVENT_LOBBY_DATA,
+	SHIMEVENT_BYE,
+	SHIMEVENT_STATSRECEIVED,
+	SHIMEVENT_STATSSTORED,
+	SHIMEVENT_SETACHIEVEMENT,
+	SHIMEVENT_GETACHIEVEMENT,
+	SHIMEVENT_RESETSTATS,
+	SHIMEVENT_SETSTATI,
+	SHIMEVENT_GETSTATI,
+	SHIMEVENT_SETSTATF,
+	SHIMEVENT_GETSTATF,
+	SHIMEVENT_APPRESTARTED,
+	SHIMEVENT_SETRICHPRESENCE,
+
+	SHIMEVENT_LOBBY_CREATED,
+	SHIMEVENT_LOBBY_LIST,
+	SHIMEVENT_LOBBY_JOINED,
+	SHIMEVENT_LOBBY_DATA,
+	SHIMEVENT_LOBBY_CHAT,
+	SHIMEVENT_LOBBY_INVITE,
 } ShimEvent;
 
 static bool write1ByteCmd(PipeType fd, const uint8 b1)
@@ -541,23 +547,67 @@ static bool writeStatThing(PipeType fd, const ShimEvent ev, const char *name, co
 
 static bool writeRestartResult(PipeType fd, const ShimEvent ev, const bool result)
 {
-    uint8 buf[3];
-    uint8 *ptr = buf+1;
-    *(ptr++) = (uint8) ev;
-    *(ptr++) = result ? 1 : 0; 
-    buf[0] = (uint8) (ptr - buf);
-    return writePipe(fd, buf, buf[0]);
-} // writeRestartResult
+	uint8 buf[3];
+	uint8 *ptr = buf + 1;
+
+	*(ptr++) = (uint8)ev;
+	*(ptr++) = result ? 1 : 0;
+
+	buf[0] = (uint8)((ptr - 1) - buf);
+	return writePipe(fd, buf, buf[0] + 1);
+}
 
 static bool writeSetRichPresenceResult(PipeType fd, const ShimEvent ev, const bool result)
 {
-    uint8 buf[3];
-    uint8* ptr = buf + 1;
-    *(ptr++) = (uint8)ev;
-    *(ptr++) = result ? 1 : 0;
-    buf[0] = (uint8)(ptr - buf);
-    return writePipe(fd, buf, buf[0]);
-} // writeSetRichPresenceResult
+	uint8 buf[3];
+	uint8 *ptr = buf + 1;
+
+	*(ptr++) = (uint8)ev;
+	*(ptr++) = result ? 1 : 0;
+
+	buf[0] = (uint8)((ptr - 1) - buf);
+	return writePipe(fd, buf, buf[0] + 1);
+}
+
+static bool writeLobbyEvent(PipeType fd, const ShimEvent ev, const bool okay, const uint64 lobbyID, const char *text)
+{
+	uint8 buf[256];
+	uint8 *ptr = buf + 1;
+	uint8 *end = buf + sizeof(buf);
+
+	*(ptr++) = (uint8)ev;
+	*(ptr++) = okay ? 1 : 0;
+
+	if (ptr + sizeof(lobbyID) > end) {
+		return false;
+	}
+
+	memcpy(ptr, &lobbyID, sizeof(lobbyID));
+	ptr += sizeof(lobbyID);
+
+	if (!text) {
+		text = "";
+	}
+
+	size_t textLen = strlen(text) + 1;
+	if (ptr + textLen > end) {
+		textLen = (size_t)(end - ptr);
+
+		if (textLen == 0) {
+			return false;
+		}
+
+		memcpy(ptr, text, textLen - 1);
+		ptr += textLen - 1;
+		*(ptr++) = '\0';
+	} else {
+		memcpy(ptr, text, textLen);
+		ptr += textLen;
+	}
+
+	buf[0] = (uint8)((ptr - 1) - buf);
+	return writePipe(fd, buf, buf[0] + 1);
+}
 
 static inline bool writeSetStatI(PipeType fd, const char *name, const int32 val, const bool okay)
 {
@@ -620,48 +670,122 @@ void SteamBridge::OnUserStatsStored(UserStatsStored_t *pCallback)
 
 void SteamBridge::OnLobbyCreated(LobbyCreated_t *pCallback, bool bIOFailure)
 {
-    if (bIOFailure || pCallback->m_eResult != k_EResultOK) {
-        dbgpipe("Lobby create failed\n");
-        return;
-    }
+	const bool okay = (!bIOFailure && pCallback->m_eResult == k_EResultOK);
 
-    GCurrentLobby = CSteamID(pCallback->m_ulSteamIDLobby);
+	if (!okay) {
+		dbgpipe("Lobby create failed\n");
+		writeLobbyEvent(fd, SHIMEVENT_LOBBY_CREATED, false, 0, "");
+		return;
+	}
 
-    GSteamMatchmaking->SetLobbyData(GCurrentLobby, "game", "wolftech");
-    GSteamMatchmaking->SetLobbyData(GCurrentLobby, "connect", "127.0.0.1:27960");
+	GCurrentLobby = CSteamID(pCallback->m_ulSteamIDLobby);
 
-    dbgpipe("Lobby created: %llu\n", GCurrentLobby.ConvertToUint64());
+	if (GSteamMatchmaking && GCurrentLobby.IsValid()) {
+		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "game", "wolftech");
+		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "name", "WolfTech Lobby");
+
+		/*
+		Temporary.
+		This is fine for local testing only.
+		Later replace with real public address or Steam networking.
+		*/
+		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "connect", "127.0.0.1:27960");
+	}
+
+	dbgpipe("Lobby created: %llu\n", GCurrentLobby.ConvertToUint64());
+
+	writeLobbyEvent(
+		fd,
+		SHIMEVENT_LOBBY_CREATED,
+		true,
+		GCurrentLobby.ConvertToUint64(),
+		""
+	);
 }
 
 void SteamBridge::OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure)
 {
-    if (bIOFailure) {
-        dbgpipe("Lobby list failed\n");
-        return;
-    }
+	if (bIOFailure) {
+		dbgpipe("Lobby list failed\n");
+		writeLobbyEvent(fd, SHIMEVENT_LOBBY_LIST, false, 0, "");
+		return;
+	}
 
-    dbgpipe("Lobbies found: %u\n", pCallback->m_nLobbiesMatching);
+	dbgpipe("Lobbies found: %u\n", pCallback->m_nLobbiesMatching);
 
-    for (uint32 i = 0; i < pCallback->m_nLobbiesMatching; i++) {
-        CSteamID lobby = GSteamMatchmaking->GetLobbyByIndex(i);
-        dbgpipe("Lobby %u: %llu\n", i, lobby.ConvertToUint64());
-    }
+	for (uint32 i = 0; i < pCallback->m_nLobbiesMatching; i++) {
+		CSteamID lobby = GSteamMatchmaking->GetLobbyByIndex(i);
+
+		const char *name = GSteamMatchmaking->GetLobbyData(lobby, "name");
+		const char *map = GSteamMatchmaking->GetLobbyData(lobby, "map");
+
+		char display[128];
+
+		if (name && name[0] && map && map[0]) {
+			snprintf(display, sizeof(display), "%s [%s]", name, map);
+		} else if (name && name[0]) {
+			snprintf(display, sizeof(display), "%s", name);
+		} else {
+			snprintf(display, sizeof(display), "WolfTech Lobby");
+		}
+
+		dbgpipe("Lobby %u: %llu %s\n",
+			i,
+			lobby.ConvertToUint64(),
+			display);
+
+		writeLobbyEvent(
+			fd,
+			SHIMEVENT_LOBBY_LIST,
+			true,
+			lobby.ConvertToUint64(),
+			display
+		);
+	}
+
+	/*
+	Terminator event.
+	Game side can treat lobbyID 0 as "list finished".
+	*/
+	writeLobbyEvent(fd, SHIMEVENT_LOBBY_LIST, true, 0, "DONE");
 }
 
 void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 {
-    GCurrentLobby = CSteamID(pCallback->m_ulSteamIDLobby);
+	GCurrentLobby = CSteamID(pCallback->m_ulSteamIDLobby);
 
-    const char *connect = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "connect");
+	const char *connect = "";
 
-    dbgpipe("Entered lobby: %llu connect=%s\n",
-        GCurrentLobby.ConvertToUint64(),
-        connect ? connect : "");
+	if (GSteamMatchmaking && GCurrentLobby.IsValid()) {
+		connect = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "connect");
+	}
+
+	dbgpipe("Entered lobby: %llu connect=%s\n",
+		GCurrentLobby.ConvertToUint64(),
+		connect ? connect : "");
+
+	writeLobbyEvent(
+		fd,
+		SHIMEVENT_LOBBY_JOINED,
+		true,
+		GCurrentLobby.ConvertToUint64(),
+		connect ? connect : ""
+	);
 }
 
 void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
 {
-    dbgpipe("Lobby data updated\n");
+	const uint64 lobbyID = pCallback->m_ulSteamIDLobby;
+
+	dbgpipe("Lobby data updated: %llu\n", lobbyID);
+
+	writeLobbyEvent(
+		fd,
+		SHIMEVENT_LOBBY_DATA,
+		true,
+		lobbyID,
+		""
+	);
 }
 
 
@@ -689,7 +813,13 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
     PRINTGOTCMD(SHIMCMD_GETSTATF);
     PRINTGOTCMD(SHIMCMD_RESTARTAPP);
     PRINTGOTCMD(SHIMCMD_SETRICHPRESENCE);
-    #undef PRINTGOTCMD
+    PRINTGOTCMD(SHIMCMD_LOBBY_CREATE);
+    PRINTGOTCMD(SHIMCMD_LOBBY_LIST);
+    PRINTGOTCMD(SHIMCMD_LOBBY_JOIN);
+    PRINTGOTCMD(SHIMCMD_LOBBY_LEAVE);
+    PRINTGOTCMD(SHIMCMD_LOBBY_SETDATA);
+    PRINTGOTCMD(SHIMCMD_LOBBY_INVITE);
+#undef PRINTGOTCMD
     else printf("Parent got unknown shimcmd %d.\n", (int) cmd);
     #endif
 
@@ -843,9 +973,22 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
         case SHIMCMD_LOBBY_CREATE:
         {
             if (!GSteamMatchmaking || buflen < 1)
+            {
+                writeLobbyEvent(fd, SHIMEVENT_LOBBY_CREATED, false, 0, "");
                 break;
+            }
 
             int maxPlayers = *(buf++);
+
+            if (maxPlayers < 1)
+            {
+                maxPlayers = 1;
+            }
+            else if (maxPlayers > 250)
+            {
+                maxPlayers = 250;
+            }
+
             SteamAPICall_t call = GSteamMatchmaking->CreateLobby(k_ELobbyTypePublic, maxPlayers);
             GSteamBridge->m_CallResultLobbyCreated.Set(call, GSteamBridge, &SteamBridge::OnLobbyCreated);
             break;
@@ -854,9 +997,14 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
         case SHIMCMD_LOBBY_LIST:
         {
             if (!GSteamMatchmaking)
+            {
+                writeLobbyEvent(fd, SHIMEVENT_LOBBY_LIST, false, 0, "");
                 break;
+            }
 
             GSteamMatchmaking->AddRequestLobbyListStringFilter("game", "wolftech", k_ELobbyComparisonEqual);
+            GSteamMatchmaking->AddRequestLobbyListDistanceFilter(k_ELobbyDistanceFilterWorldwide);
+
             SteamAPICall_t call = GSteamMatchmaking->RequestLobbyList();
             GSteamBridge->m_CallResultLobbyMatchList.Set(call, GSteamBridge, &SteamBridge::OnLobbyMatchList);
             break;
@@ -865,9 +1013,14 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
         case SHIMCMD_LOBBY_JOIN:
         {
             if (!GSteamMatchmaking || buflen < sizeof(uint64))
+            {
+                writeLobbyEvent(fd, SHIMEVENT_LOBBY_JOINED, false, 0, "");
                 break;
+            }
 
-            uint64 lobbyID = *(uint64 *)buf;
+            uint64 lobbyID = 0;
+            memcpy(&lobbyID, buf, sizeof(lobbyID));
+
             GSteamMatchmaking->JoinLobby(CSteamID(lobbyID));
             break;
         }
@@ -879,20 +1032,65 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
                 GSteamMatchmaking->LeaveLobby(GCurrentLobby);
                 GCurrentLobby.Clear();
             }
+
             break;
         }
 
         case SHIMCMD_LOBBY_SETDATA:
         {
             if (!GSteamMatchmaking || !GCurrentLobby.IsValid())
+            {
                 break;
+            }
 
             const char *key = (const char *)buf;
-            buf += strlen(key) + 1;
+            size_t keyLen = strlen(key) + 1;
+
+            if (keyLen >= buflen)
+            {
+                break;
+            }
+
+            buf += keyLen;
+            buflen -= (unsigned int)keyLen;
 
             const char *value = (const char *)buf;
 
             GSteamMatchmaking->SetLobbyData(GCurrentLobby, key, value);
+
+            dbgpipe("Lobby set data: %s=%s\n", key, value);
+            break;
+        }
+
+        case SHIMCMD_LOBBY_INVITE:
+        {
+            uint64 lobbyID = 0;
+
+            if (!GSteamFriends || !GSteamMatchmaking)
+            {
+                writeLobbyEvent(fd, SHIMEVENT_LOBBY_INVITE, false, 0, "");
+                break;
+            }
+
+            if (buflen >= sizeof(uint64))
+            {
+                memcpy(&lobbyID, buf, sizeof(lobbyID));
+            }
+
+            if (lobbyID == 0 && GCurrentLobby.IsValid())
+            {
+                lobbyID = GCurrentLobby.ConvertToUint64();
+            }
+
+            if (lobbyID == 0)
+            {
+                writeLobbyEvent(fd, SHIMEVENT_LOBBY_INVITE, false, 0, "");
+                break;
+            }
+
+            GSteamFriends->ActivateGameOverlayInviteDialog(CSteamID(lobbyID));
+
+            writeLobbyEvent(fd, SHIMEVENT_LOBBY_INVITE, true, lobbyID, "");
             break;
         }
     } // switch
