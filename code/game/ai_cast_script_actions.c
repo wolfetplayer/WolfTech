@@ -2898,7 +2898,7 @@ qboolean AICast_ScriptAction_AchievementGeneric( cast_state_t *cs, char *params 
         return qtrue;
     }
 
-    steamSetAchievement( def->steamId );
+   // steamSetAchievement( def->steamId );
     return qtrue;
 }
 

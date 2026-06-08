@@ -1616,9 +1616,9 @@ void G_ShutdownGame( int restart ) {
 		BotAIShutdown( restart );
 	}
 
-	if ( !restart ) {
-		steamSetRichPresence( "steam_display", "#status_mainmenu" );
-	}
+	//if ( !restart ) {
+	//	steamSetRichPresence( "steam_display", "#status_mainmenu" );
+	//}
 }
 
 
