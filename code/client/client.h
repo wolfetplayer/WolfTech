@@ -564,6 +564,7 @@ void CL_StopRecord_f(void);
 
 void CL_SteamLobbyCreate_f(void);
 void CL_SteamLobbyList_f(void);
+void CL_SteamJoin_f(void);
 
 void CL_InitDownloads( void );
 void CL_NextDownload( void );

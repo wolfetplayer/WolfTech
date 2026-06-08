@@ -2106,6 +2106,11 @@ void CL_SteamLobbyList_f(void)
 	steamLobbyList();
 }
 
+void CL_SteamJoin_f(void)
+{
+	steamLobbyJoin(109775243153417783ULL);
+}
+
 /*
 ==================
 CL_PK3List_f
