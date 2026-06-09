@@ -513,6 +513,18 @@ typedef enum {
 	HI_NUM_HOLDABLE
 } holdable_t;
 
+
+typedef enum {
+	PERK_NONE,
+	PERK_RESILIENCE,
+	PERK_SCAVENGER,
+	PERK_RUNNER,
+	PERK_WEAPONHANDLING,
+	PERK_RIFLING,
+	PERK_SECONDCHANCE,
+	NUM_PERKS
+} perk_t;
+
 // Ridah
 //
 // character presets
@@ -1284,7 +1296,8 @@ typedef enum {
 	IT_KEY,
 	IT_TREASURE,            // gold bars, etc.  things that can be picked up and counted for a tally at end-level
 	IT_CLIPBOARD,           // 'clipboard' used as a general term for 'popup' items where you pick up the item and it pauses and opens a menu
-	IT_TEAM
+	IT_TEAM,
+	IT_PERK
 } itemType_t;
 
 #define MAX_ITEM_MODELS 5

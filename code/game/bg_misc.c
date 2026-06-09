@@ -2550,6 +2550,198 @@ model="models/flags/b_flag.md3"
 	},
 
 
+
+/*QUAKED perk_resilience(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Protection from fatigue
+Using the "sprint" key will not fatigue the character
+
+pickup sound : "sound/pickup/holdable/get_bandages.wav"
+use sound : "sound/pickup/holdable/use_bandages.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/bandages.md3"
+*/
+	{
+		"perk_resilience",
+		"sound/pickup/holdable/get_bandages.wav",
+		{
+		"models/powerups/holdable/bandages.md3",
+		0, 
+		0
+		},
+
+		"icons/perk_regen",   
+		NULL,                    
+		"Resilience",             
+		1,
+		IT_PERK,
+		PERK_RESILIENCE,
+		0,
+		0,
+		"",                             
+		"",
+		{0,0,0,0}
+	},
+
+/*QUAKED perk_scavenger(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Protection from fatigue
+Using the "sprint" key will not fatigue the character
+
+pickup sound : "sound/pickup/holdable/get_bandages.wav"
+use sound : "sound/pickup/holdable/use_bandages.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/bandages.md3"
+*/
+	{
+		"perk_scavenger",
+		"sound/pickup/holdable/get_bandages.wav",
+		{
+		"models/powerups/holdable/bandages.md3",
+		0, 
+		0
+		},
+
+		"icons/perk_scavenger",   
+		NULL,                   // ammo icon          
+		"Scavenger",             
+		1,
+		IT_PERK,
+		PERK_SCAVENGER,
+		0,
+		0,
+		"",                             
+		"",
+		{0,0,0,0}
+	},
+
+
+/*QUAKED perk_runner(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Protection from fatigue
+Using the "sprint" key will not fatigue the character
+
+pickup sound : "sound/pickup/holdable/get_bandages.wav"
+use sound : "sound/pickup/holdable/use_bandages.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/bandages.md3"
+*/
+	{
+		"perk_runner",
+		"sound/pickup/holdable/get_bandages.wav",
+		{
+		"models/powerups/holdable/bandages.md3",
+		0, 
+		0
+		},
+
+		"icons/perk_runner",             
+		NULL,                   // ammo icon
+		"Runner",             
+		1,
+		IT_PERK,
+		PERK_RUNNER,
+		0,
+		0,
+		"",                             
+		"",
+		{0,0,0,0}
+	},
+
+
+/*QUAKED perk_weaponhandling(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Protection from fatigue
+Using the "sprint" key will not fatigue the character
+
+pickup sound : "sound/pickup/holdable/get_bandages.wav"
+use sound : "sound/pickup/holdable/use_bandages.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/bandages.md3"
+*/
+	{
+		"perk_weaponhandling",
+		"sound/pickup/holdable/get_bandages.wav",
+		{
+		"models/powerups/holdable/bandages.md3",
+		0, 
+		0
+		},
+
+		"icons/perk_weaponhandling",    
+		NULL,                   // ammo icon         
+		"Weapon Handling",             
+		1,
+		IT_PERK,
+		PERK_WEAPONHANDLING,
+		0,
+		0,
+		"",                             
+		"",
+		{0,0,0,0}
+	},
+
+
+/*QUAKED perk_rifling(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Protection from fatigue
+Using the "sprint" key will not fatigue the character
+
+pickup sound : "sound/pickup/holdable/get_bandages.wav"
+use sound : "sound/pickup/holdable/use_bandages.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/bandages.md3"
+*/
+	{
+		"perk_rifling",
+		"sound/pickup/holdable/get_bandages.wav",
+		{
+		"models/powerups/holdable/bandages.md3",
+		0, 
+		0
+		},
+
+		"icons/perk_rifling",        
+		NULL,                   // ammo icon     
+		"Advanced Rifling",             
+		1,
+		IT_PERK,
+		PERK_RIFLING,
+		0,
+		0,
+		"",                             
+		"",
+		{0,0,0,0}
+	},
+
+
+/*QUAKED perk_secondchance(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Protection from fatigue
+Using the "sprint" key will not fatigue the character
+
+pickup sound : "sound/pickup/holdable/get_bandages.wav"
+use sound : "sound/pickup/holdable/use_bandages.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/bandages.md3"
+*/
+	{
+		"perk_secondchance",
+		"sound/pickup/holdable/get_bandages.wav",
+		{
+		"models/powerups/holdable/bandages.md3",
+		0, 
+		0
+		},
+
+		"icons/perk_secondchance",    
+		NULL,                   // ammo icon         
+		"Second Chance",             
+		1,
+		IT_PERK,
+		PERK_SECONDCHANCE,
+		0,
+		0,
+		"",                             
+		"",
+		{0,0,0,0}
+	},
+
+
 	// end of list marker
 	{NULL}
 };
