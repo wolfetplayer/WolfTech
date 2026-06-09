@@ -1239,6 +1239,10 @@ extern void SP_info_player_intermission ( gentity_t * ent ) ;
 extern void SP_coop_spawnpoint ( gentity_t * ent ) ;
 extern void SP_info_player_start ( gentity_t * ent ) ;
 extern void SP_info_player_deathmatch ( gentity_t * ent ) ;
+
+extern void SP_info_ai_respawn ( gentity_t * ent ) ;
+extern void info_ai_respawn_toggle ( gentity_t * ent ) ;
+
 extern char * G_GetBotInfoByName ( const char * name ) ;
 extern char * G_GetBotInfoByNumber ( int num ) ;
 extern void Svcmd_AddBot_f ( void ) ;

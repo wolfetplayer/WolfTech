@@ -40,6 +40,19 @@ vec3_t playerMins = {-18, -18, -24};
 vec3_t playerMaxs = {18, 18, 48};
 // done.
 
+
+void info_ai_respawn_toggle( gentity_t *ent ) {
+	if ( !ent ) {
+		return;
+	}
+
+	if ( ent->spawnflags & 1 ) {
+		ent->spawnflags &= ~1;
+	} else {
+		ent->spawnflags |= 1;
+	}
+}
+
 /*QUAKED info_player_deathmatch (1 0 1) (-16 -16 -24) (16 16 32) initial
 potential spawning position for deathmatch games.
 The first time a player enters the game, they will be at an 'initial' spot.
@@ -69,6 +82,45 @@ void SP_info_player_deathmatch( gentity_t *ent ) {
 
 }
 
+
+/*QUAKED info_ai_respawn (1 0 1) (-16 -16 -24) (16 16 32) initial
+potential spawning position for deathmatch games.
+The first time a player enters the game, they will be at an 'initial' spot.
+Targets will be fired when someone spawns in on them.
+"nobots" will prevent bots from using this spot.
+"nohumans" will prevent non-bots from using this spot.
+If the start position is targeting an entity, the players camera will start out facing that ent (like an info_notnull)
+*/
+void SP_info_ai_respawn( gentity_t *ent ) {
+    int i;
+    vec3_t dir;
+    char *s;
+
+    if ( !ent ) return;
+
+    G_SpawnInt( "nobots", "0", &i );    if ( i ) ent->flags |= FL_NO_BOTS;
+    G_SpawnInt( "nohumans", "0", &i );  if ( i ) ent->flags |= FL_NO_HUMANS;
+
+    // IMPORTANT: store team restriction on the SPAWN SPOT entity
+    // Default 0. With strict matching below, 0 means "team 0 only", not wildcard.
+    G_SpawnInt( "aiteam", "0", &ent->aiTeam );
+
+    // Optional name restriction
+    G_SpawnString( "ainame", "", &s );
+    if ( s && s[0] ) {
+        ent->aiName = G_NewString( s );
+    } else {
+        ent->aiName = NULL;
+    }
+
+    ent->enemy = G_PickTarget( ent->target );
+    if ( ent->enemy ) {
+        VectorSubtract( ent->enemy->s.origin, ent->s.origin, dir );
+        vectoangles( dir, ent->s.angles );
+    }
+
+    ent->AIScript_AlertEntity = info_ai_respawn_toggle;
+}
 
 
 /*QUAKED info_player_start (1 0 0) (-16 -16 -24) (16 16 32)

@@ -1239,6 +1239,10 @@ If you have questions concerning this license or the applicable additional terms
 {"SP_coop_spawnpoint", (byte *)SP_coop_spawnpoint},
 {"SP_info_player_start", (byte *)SP_info_player_start},
 {"SP_info_player_deathmatch", (byte *)SP_info_player_deathmatch},
+
+{"SP_info_ai_respawn", (byte *)SP_info_ai_respawn},
+{"info_ai_respawn_toggle", (byte *)info_ai_respawn_toggle},
+
 {"G_GetBotInfoByName", (byte *)G_GetBotInfoByName},
 {"G_GetBotInfoByNumber", (byte *)G_GetBotInfoByNumber},
 {"Svcmd_AddBot_f", (byte *)Svcmd_AddBot_f},

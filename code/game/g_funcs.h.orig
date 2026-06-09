@@ -55,6 +55,10 @@ If you have questions concerning this license or the applicable additional terms
 {"SP_info_player_intermission", (byte *)SP_info_player_intermission},
 {"SP_info_player_start", (byte *)SP_info_player_start},
 {"SP_info_player_deathmatch", (byte *)SP_info_player_deathmatch},
+
+{"SP_info_ai_respawn", (byte *)SP_info_ai_respawn},
+{"info_ai_respawn_toggle", (byte *)info_ai_respawn_toggle},
+
 {"G_RadiusDamage", (byte *)G_RadiusDamage},
 {"CanDamage", (byte *)CanDamage},
 {"G_Damage", (byte *)G_Damage},
