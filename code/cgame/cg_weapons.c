@@ -2401,6 +2401,19 @@ qboolean CG_MonsterUsingWeapon( centity_t *cent, int aiChar, int weaponNum ) {
 }
 
 /*
+==============
+CG_WeaponIsUpgraded
+==============
+*/
+qboolean CG_WeaponIsUpgraded(weapon_t weaponNum) {
+	if (cg.snap->ps.clientNum != cg.clientNum) {
+		return qfalse;
+	}
+	return (cg.snap->ps.weaponUpgraded[weaponNum] != 0);
+}
+
+
+/*
 =============
 CG_AddPlayerWeapon
 
@@ -3288,6 +3301,11 @@ static qboolean CG_WeaponSelectable( int i ) {
 
 	// check for weapon
 	if ( !( COM_BitCheck( cg.predictedPlayerState.weapons, i ) ) ) {
+		return qfalse;
+	}
+
+	if (!CG_WeaponHasAmmo(i) && (cg_gameType.integer != GT_COOP_SURVIVAL))
+	{
 		return qfalse;
 	}
 

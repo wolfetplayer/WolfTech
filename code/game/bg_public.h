@@ -617,6 +617,7 @@ extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
 // jpw
 
 typedef struct ammotable_s {
+	int weaponindex;
 	weapon_t weapAlts;
 	int weaponClass;
 	
@@ -1357,6 +1358,7 @@ weapon_t BG_FindClipForWeapon( weapon_t weapon );
 qboolean BG_AkimboFireSequence( int weapon, int akimboClip, int coltClip );
 //qboolean BG_AkimboFireSequence	( playerState_t *ps );	//----(SA)	added
 
+#define IS_VALID_WEAPON(w) ((w) > WP_NONE && (w) < WP_NUM_WEAPONS)
 #define ITEM_INDEX( x ) ( ( x ) - bg_itemlist )
 
 qboolean    BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *ps );

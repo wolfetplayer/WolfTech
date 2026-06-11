@@ -1404,6 +1404,7 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 	int weapon;
 	int i;
 	gentity_t   *ent = &g_entities[cs->entityNum];
+	int slotId = G_GetFreeWeaponSlot( ent );
 
 #ifdef MONEY
 	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) )
@@ -1441,8 +1442,44 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		}
 	}
 
+	if (!ent->aiCharacter)
+	{
+		if (g_gametype.integer == GT_COOP_SURVIVAL)
+		{
+			if (weapon != WP_KNIFE)
+			{
+				if (slotId < 0)
+				{
+					return qfalse;
+				}
+			}
+			else
+			{
+				slotId = 0;
+			}
+		}
+	}
+
 	if ( weapon != WP_NONE ) {
 		COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, weapon );
+
+		if (!ent->aiCharacter)
+		{
+			if (g_gametype.integer == GT_COOP_SURVIVAL)
+			{
+				if (weapon != WP_GRENADE_LAUNCHER && weapon != WP_GRENADE_PINEAPPLE && weapon != WP_DYNAMITE) // Skip WP_AIRSTRIKE and WP_ARTY	
+				{
+					if (ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_SOLDIER)
+					{
+						ent->client->ps.weaponSlotsSoldier[slotId] = weapon;
+					}
+					else
+					{
+						ent->client->ps.weaponSlots[slotId] = weapon;
+					}
+				}
+			}
+		}
 
 //----(SA)	some weapons always go together (and they share a clip, so this is okay)
 		if ( weapon == WP_GARAND ) {

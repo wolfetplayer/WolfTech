@@ -1120,6 +1120,10 @@ extern gentity_t * Drop_Item ( gentity_t * ent , gitem_t * item , float angle , 
 extern gentity_t * LaunchItem ( gitem_t * item , vec3_t origin , vec3_t velocity , int ownerNum ) ;
 extern void Touch_Item ( gentity_t * entity , gentity_t * activator , trace_t * trace ) ;
 extern void Touch_Item_Auto ( gentity_t * ent , gentity_t * other , trace_t * trace ) ;
+extern int Pickup_Weapon_New_Inventory ( gentity_t * ent , gentity_t * other ) ;
+extern void G_DropWeapon ( gentity_t * ent, weapon_t weapon ) ;
+extern int G_FindWeaponSlot( gentity_t *other, weapon_t weapon );
+extern int G_GetFreeWeaponSlot ( gentity_t * other ) ;
 extern void RespawnItem ( gentity_t * ent ) ;
 extern int Pickup_Armor ( gentity_t * ent , gentity_t * other ) ;
 extern int Pickup_Health ( gentity_t * ent , gentity_t * other ) ;

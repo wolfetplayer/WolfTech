@@ -83,6 +83,7 @@ extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
 
 ammotable_t ammoTable[] = {
     [WP_NONE] = {
+		.weaponindex        = WP_NONE,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_NONE,
         .maxammo            = 0,
@@ -109,6 +110,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_KNIFE] = {
+		.weaponindex        = WP_KNIFE,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_MELEE,
         .maxammo            = 999,
@@ -135,6 +137,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qtrue,
     },
     [WP_LUGER] = {
+		.weaponindex        = WP_LUGER,
 		.weapAlts           = WP_SILENCER,
 		.weaponClass        = WEAPON_CLASS_PISTOL,
         .maxammo            = MAX_AMMO_9MM,
@@ -161,6 +164,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_SILENCER] = {
+		.weaponindex        = WP_SILENCER,
 		.weapAlts           = WP_LUGER,
 		.weaponClass        = WEAPON_CLASS_PISTOL,	
         .maxammo            = MAX_AMMO_9MM,
@@ -187,6 +191,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_COLT] = {
+		.weaponindex        = WP_COLT,
 		.weapAlts           = WP_AKIMBO,
 		.weaponClass        = WEAPON_CLASS_PISTOL,
         .maxammo            = MAX_AMMO_45,
@@ -213,6 +218,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_AKIMBO] = {
+		.weaponindex        = WP_AKIMBO,		
 		.weapAlts           = WP_COLT,
 		.weaponClass        = WEAPON_CLASS_PISTOL,	
         .maxammo            = MAX_AMMO_45,
@@ -239,6 +245,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,	
     },
     [WP_MP40] = {
+		.weaponindex        = WP_MP40,		
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_SMG,
         .maxammo            = MAX_AMMO_9MM,
@@ -265,6 +272,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_THOMPSON] = {
+		.weaponindex        = WP_THOMPSON,		
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_SMG,
         .maxammo            = MAX_AMMO_45,
@@ -291,6 +299,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_STEN] = {
+		.weaponindex        = WP_STEN,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_SMG,		
         .maxammo            = MAX_AMMO_9MM,
@@ -317,6 +326,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,	
     },
     [WP_MP34] = {
+		.weaponindex        = WP_MP34,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_SMG,
         .maxammo            = MAX_AMMO_9MM,
@@ -344,6 +354,7 @@ ammotable_t ammoTable[] = {
 		.gunOffset          = { -12.0f, -1.0f, 0.0f },
     },
     [WP_MAUSER] = {
+		.weaponindex        = WP_MAUSER,
 		.weapAlts           = WP_SNIPERRIFLE,
 		.weaponClass        = WEAPON_CLASS_RIFLE_BOLTACTION | WEAPON_CLASS_SCOPABLE,
         .maxammo            = MAX_AMMO_MAUSER,
@@ -370,6 +381,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_SNIPERRIFLE] = {
+		.weaponindex        = WP_SNIPERRIFLE,
 		.weapAlts           = WP_MAUSER,
 		.weaponClass        = WEAPON_CLASS_SCOPED | WEAPON_CLASS_RIFLE_BOLTACTION,
         .maxammo            = MAX_AMMO_MAUSER,
@@ -396,6 +408,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_GARAND] = {
+		.weaponindex        = WP_GARAND,
 		.weapAlts           = WP_SNOOPERSCOPE,
 		.weaponClass        = WEAPON_CLASS_RIFLE_AUTO | WEAPON_CLASS_SCOPABLE,
         .maxammo            = MAX_AMMO_GARAND,
@@ -422,6 +435,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_SNOOPERSCOPE] = {
+		.weaponindex        = WP_SNOOPERSCOPE,
 		.weapAlts           = WP_GARAND,
 		.weaponClass        = WEAPON_CLASS_SCOPED,
         .maxammo            = MAX_AMMO_GARAND,
@@ -448,6 +462,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_FG42] = {
+		.weaponindex        = WP_FG42,
 		.weapAlts           = WP_FG42SCOPE,
 		.weaponClass        = WEAPON_CLASS_ASSAULT_RIFLE | WEAPON_CLASS_SCOPABLE,
         .maxammo            = MAX_AMMO_FG42,
@@ -474,6 +489,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_FG42SCOPE] = {
+		.weaponindex        = WP_FG42SCOPE,
 		.weapAlts           = WP_FG42,
 		.weaponClass        = WEAPON_CLASS_SCOPED | WEAPON_CLASS_ASSAULT_RIFLE,
         .maxammo            = MAX_AMMO_FG42,
@@ -500,6 +516,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_GRENADE_LAUNCHER] = {
+		.weaponindex        = WP_GRENADE_LAUNCHER,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_GRENADE,
         .maxammo            = 15,
@@ -526,6 +543,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qtrue,
     },
     [WP_GRENADE_PINEAPPLE] = {
+		.weaponindex        = WP_GRENADE_PINEAPPLE,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_GRENADE,
         .maxammo            = 15,
@@ -552,6 +570,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qtrue,	
     },
     [WP_DYNAMITE] = {
+		.weaponindex        = WP_DYNAMITE,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_DYNAMITE,	
         .maxammo            = 10,
@@ -577,6 +596,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qtrue,	
     },
     [WP_PANZERFAUST] = {
+		.weaponindex        = WP_PANZERFAUST,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_LAUNCHER,
         .maxammo            = 5,
@@ -603,6 +623,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_VENOM] = {
+		.weaponindex        = WP_VENOM,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_MINIGUN,
         .maxammo            = MAX_AMMO_VENOM,
@@ -629,6 +650,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_FLAMETHROWER] = {
+		.weaponindex        = WP_FLAMETHROWER,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_FLAMER,
         .maxammo            = 150,
@@ -655,6 +677,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_TESLA] = {
+		.weaponindex        = WP_TESLA,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_ENERGY,
         .maxammo            = 300,
@@ -681,6 +704,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,	
     },
     [WP_CLASS_SPECIAL] = {
+		.weaponindex        = WP_CLASS_SPECIAL,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_NONE, 	
         .maxammo            = 999,
@@ -707,6 +731,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,	
     },
     [WP_MONSTER_ATTACK1] = {
+		.weaponindex        = WP_MONSTER_ATTACK1,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_NONE, 
         .maxammo            = 999,
@@ -733,6 +758,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_MONSTER_ATTACK2] = {
+		.weaponindex        = WP_MONSTER_ATTACK2,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_NONE, 		
         .maxammo            = 999,
@@ -759,6 +785,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,		
     },
     [WP_MONSTER_ATTACK3] = {
+		.weaponindex        = WP_MONSTER_ATTACK3,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_NONE, 		
         .maxammo            = 999,
@@ -785,6 +812,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
     [WP_GAUNTLET] = {
+		.weaponindex        = WP_GAUNTLET,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_MELEE, 		
         .maxammo            = 999,

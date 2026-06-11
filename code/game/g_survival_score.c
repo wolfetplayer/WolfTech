@@ -55,7 +55,6 @@ void Survival_AddKillScore(gentity_t *attacker, gentity_t *victim, int meansOfDe
 
 	if (score > 0 &&
 		(victim->aiCharacter == AICHAR_HELGA ||
-		 victim->aiCharacter == AICHAR_SUPERSOLDIER_LAB ||
 		 victim->aiCharacter == AICHAR_HEINRICH))
 	{
 		if (svParams.waveCount > 15)

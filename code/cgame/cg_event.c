@@ -2058,7 +2058,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			trap_S_StartSound( NULL, es->number, CHAN_AUTO, cgs.media.noAmmoSound );
 		}
 		if ( es->number == cg.snap->ps.clientNum ) {
-			CG_OutOfAmmoChange();
+            if ( cg_gameType.integer != GT_COOP_SURVIVAL) {
+				CG_OutOfAmmoChange();
+			}
 		}
 		break;
 	case EV_CHANGE_WEAPON:

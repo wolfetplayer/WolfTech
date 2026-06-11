@@ -1350,6 +1350,9 @@ typedef enum
 #define MAX_HOLDABLE            16
 #define MAX_PERKS 			    16
 
+#define MAX_WEAPON_SLOTS         3 
+#define MAX_WEAPON_SLOTS_SOLDIER 4
+
 // Ridah, increased this
 //#define	MAX_PS_EVENTS			2
 // ACK: I'd really like to make this 4, but that seems to cause network problems
@@ -1448,6 +1451,9 @@ typedef struct playerState_s {
 	int holding;                        // the current item in holdable[] that is selected (held)
 	int weapons[MAX_WEAPONS / ( sizeof( int ) * 8 )];   // 64 bits for weapons held
 
+	int weaponSlots[MAX_WEAPON_SLOTS];
+	int weaponSlotsSoldier [MAX_WEAPON_SLOTS_SOLDIER]; 
+
 	int perks[MAX_PERKS];                // Perks
 
 	// Ridah, allow for individual bounding boxes
@@ -1530,6 +1536,8 @@ typedef struct playerState_s {
 	aistateEnum_t aiState;
 
 	float footstepCount;
+
+	int weaponUpgraded[MAX_WEAPONS]; // 0 = not upgraded, 1 = upgraded
 
 } playerState_t;
 
