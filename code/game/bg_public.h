@@ -356,7 +356,8 @@ typedef enum {
 	STAT_DEAD_YAW,                  // look this direction when dead (FIXME: get rid of?)
 	STAT_CLIENTS_READY,             // bit mask of clients wishing to exit the intermission (FIXME: configstring?)
 	STAT_MAX_HEALTH,                // health / armor limit, changable by handicap
-	STAT_PLAYER_CLASS               // DHM - Nerve :: player class in multiplayer
+	STAT_PLAYER_CLASS,               // DHM - Nerve :: player class in multiplayer
+	STAT_PERK
 } statIndex_t;
 
 
@@ -1316,6 +1317,8 @@ typedef struct gitem_s {
 
 	int quantity;               // for ammo how much, or duration of powerup (value not necessary for ammo/health.  that value set in gameskillnumber[] below)
 	itemType_t giType;          // IT_* flags
+
+	weapon_t giWeapon;
 
 	int giTag;
 

@@ -420,6 +420,8 @@ struct gentity_s {
 
 	int lastPushTime;       // Shove
 	int thrownKnifeTime;    // Throwing Knives
+
+	int price;                 // item price, survival mode
 };
 
 // Ridah

@@ -1113,6 +1113,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,
+		0,
 		0,          // ammotype
 		0,          // cliptype
 		"",          // precache
@@ -1133,6 +1134,7 @@ gitem_t bg_itemlist[] =
 		"",
 		1,
 		IT_CLIPBOARD,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1153,6 +1155,7 @@ gitem_t bg_itemlist[] =
 		"Treasure Item",     // (SA) placeholder
 		5,
 		IT_TREASURE,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1178,6 +1181,7 @@ gitem_t bg_itemlist[] =
 		"Small Health",
 		5,
 		IT_HEALTH,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1197,6 +1201,7 @@ gitem_t bg_itemlist[] =
 		"Med Health",
 		25,
 		IT_HEALTH,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1215,6 +1220,7 @@ gitem_t bg_itemlist[] =
 		"Large Health",
 		50,
 		IT_HEALTH,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1235,6 +1241,7 @@ gitem_t bg_itemlist[] =
 		"Hot Meal",
 		15,                 // amount given in last stage
 		IT_HEALTH,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1255,6 +1262,7 @@ gitem_t bg_itemlist[] =
 		"Cold Meal",
 		10,                 // amount given in last stage
 		IT_HEALTH,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1274,6 +1282,7 @@ gitem_t bg_itemlist[] =
 		"Health",
 		25,
 		IT_HEALTH,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1292,6 +1301,7 @@ gitem_t bg_itemlist[] =
 		"Health",
 		25,
 		IT_HEALTH,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1316,6 +1326,7 @@ gitem_t bg_itemlist[] =
 		"Stamina",
 		25,
 		IT_POWERUP,
+		WP_NONE,
 		PW_NOFATIGUE,
 		0,
 		0,
@@ -1336,6 +1347,7 @@ gitem_t bg_itemlist[] =
 		"Stamina",
 		25,
 		IT_POWERUP,
+		WP_NONE,
 		PW_NOFATIGUE,
 		0,
 		0,
@@ -1360,6 +1372,7 @@ gitem_t bg_itemlist[] =
 		"Flak Jacket",
 		75,
 		IT_ARMOR,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1378,6 +1391,7 @@ gitem_t bg_itemlist[] =
 		"Flak Jacket",
 		75,
 		IT_ARMOR,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1396,6 +1410,7 @@ gitem_t bg_itemlist[] =
 		"Armored Helmet",
 		25,
 		IT_ARMOR,
+		WP_NONE,
 		0,
 		0,
 		0,
@@ -1424,6 +1439,7 @@ gitem_t bg_itemlist[] =
 		WP_GAUNTLET,
 		WP_GAUNTLET,
 		WP_GAUNTLET,
+		WP_GAUNTLET,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1448,6 +1464,7 @@ gitem_t bg_itemlist[] =
 		WP_KNIFE,
 		WP_KNIFE,
 		WP_KNIFE,
+		WP_KNIFE,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1466,6 +1483,7 @@ gitem_t bg_itemlist[] =
 		"Luger",             // pickup
 		50,
 		IT_WEAPON,
+		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
@@ -1490,6 +1508,7 @@ gitem_t bg_itemlist[] =
 		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
+		WP_MAUSER,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1508,6 +1527,7 @@ gitem_t bg_itemlist[] =
 		"Thompson",              // pickup
 		30,
 		IT_WEAPON,
+		WP_THOMPSON,
 		WP_THOMPSON,
 		WP_COLT,
 		WP_THOMPSON,
@@ -1528,6 +1548,7 @@ gitem_t bg_itemlist[] =
 		"Sten",                  // pickup
 		30,
 		IT_WEAPON,
+		WP_STEN,
 		WP_STEN,
 		WP_LUGER,
 		WP_STEN,
@@ -1550,6 +1571,7 @@ gitem_t bg_itemlist[] =
 		"Dual Colts",            // pickup
 		50,
 		IT_WEAPON,
+		WP_AKIMBO,
 		WP_AKIMBO,
 		WP_COLT,
 //		WP_COLT,
@@ -1575,6 +1597,7 @@ gitem_t bg_itemlist[] =
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
+		WP_COLT,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1597,6 +1620,7 @@ gitem_t bg_itemlist[] =
 		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
+		WP_GARAND,
 		"",                          // precache
 		"",                          // sounds
 		{0,0,0,0}
@@ -1616,6 +1640,7 @@ gitem_t bg_itemlist[] =
     "MP40",
     30,
     IT_WEAPON,
+	WP_MP40,
     WP_MP40,
     WP_LUGER,   // ammo pool
     WP_MP40,    // clip pool
@@ -1638,6 +1663,7 @@ gitem_t bg_itemlist[] =
     "MP34",
     30,
     IT_WEAPON,
+	WP_MP34,
     WP_MP34,
     WP_LUGER,   // ammo pool
     WP_MP34,    // clip pool
@@ -1660,6 +1686,7 @@ gitem_t bg_itemlist[] =
 		10,
 		IT_WEAPON,
 		WP_FG42,
+		WP_FG42,
 		WP_MAUSER,
 		WP_FG42,
 		"",                  // precache
@@ -1681,6 +1708,7 @@ gitem_t bg_itemlist[] =
 		"sp5 pistol",
 		10,
 		IT_WEAPON,
+		WP_SILENCER,
 		WP_SILENCER,
 		WP_LUGER,
 		WP_LUGER,
@@ -1705,6 +1733,7 @@ gitem_t bg_itemlist[] =
 		WP_PANZERFAUST,
 		WP_PANZERFAUST,
 		WP_PANZERFAUST,
+		WP_PANZERFAUST,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1723,6 +1752,7 @@ gitem_t bg_itemlist[] =
 		"Grenade",               // pickup
 		6,
 		IT_WEAPON,
+		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
@@ -1747,6 +1777,7 @@ gitem_t bg_itemlist[] =
 		WP_GRENADE_PINEAPPLE,
 		WP_GRENADE_PINEAPPLE,
 		WP_GRENADE_PINEAPPLE,
+		WP_GRENADE_PINEAPPLE,
 		"",                      // precache
 		"sound/weapons/grenade/hgrenb1a.wav sound/weapons/grenade/hgrenb2a.wav",             // sounds
 		{0,0,0,0}
@@ -1765,6 +1796,7 @@ gitem_t bg_itemlist[] =
 		"Dynamite Weapon",       // pickup
 		7,
 		IT_WEAPON,
+		WP_DYNAMITE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
@@ -1790,6 +1822,7 @@ gitem_t bg_itemlist[] =
 		WP_VENOM,
 		WP_VENOM,
 		WP_VENOM,
+		WP_VENOM,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1808,6 +1841,7 @@ gitem_t bg_itemlist[] =
 		"Flamethrower",              // pickup
 		200,
 		IT_WEAPON,
+		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
@@ -1833,6 +1867,7 @@ gitem_t bg_itemlist[] =
 		WP_TESLA,
 		WP_TESLA,
 		WP_TESLA,
+		WP_TESLA,
 		"",                          // precache
 		"",                          // sounds
 		{0,0,0,0}
@@ -1853,6 +1888,7 @@ gitem_t bg_itemlist[] =
 		"Sniper Scope",              // pickup
 		200,
 		IT_WEAPON,
+		WP_SNIPERRIFLE,
 		WP_SNIPERRIFLE,
 		WP_MAUSER,
 		WP_MAUSER,
@@ -1875,6 +1911,7 @@ gitem_t bg_itemlist[] =
 		20,
 		IT_WEAPON,
 		WP_SNOOPERSCOPE,
+		WP_SNOOPERSCOPE,
 		WP_GARAND,
 		WP_GARAND,
 		"",                          // precache
@@ -1895,6 +1932,7 @@ gitem_t bg_itemlist[] =
 		"FG42 Scope",                // pickup		//----(SA)	modified
 		0,
 		IT_WEAPON,
+		WP_FG42SCOPE,
 		WP_FG42SCOPE,   // this weap
 		WP_MAUSER,      // shares ammo w/
 		WP_FG42,        // shares clip w/
@@ -1915,6 +1953,7 @@ gitem_t bg_itemlist[] =
 		"MonsterAttack1",            // pickup
 		100,
 		IT_WEAPON,
+		WP_MONSTER_ATTACK1,
 		WP_MONSTER_ATTACK1,
 		WP_MONSTER_ATTACK1,         // ammo
 		WP_MONSTER_ATTACK1,         //
@@ -1937,6 +1976,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		100,
 		IT_WEAPON,
 		WP_MONSTER_ATTACK2,
+		WP_MONSTER_ATTACK2,
 		WP_MONSTER_ATTACK2,         // ammo
 		WP_MONSTER_ATTACK2,         //
 		"",                          // precache
@@ -1955,6 +1995,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"MonsterAttack3",            // pickup
 		100,
 		IT_WEAPON,
+		WP_MONSTER_ATTACK3,
 		WP_MONSTER_ATTACK3,
 		WP_MONSTER_ATTACK3,         // ammo
 		WP_MONSTER_ATTACK3,
@@ -1979,6 +2020,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_MORTAR,
 		WP_MORTAR,
 		WP_MORTAR,
+		WP_MORTAR,
 		"",                      // precache
 		"sound/weapons/mortar/mortarf1.wav",             // sounds
 		{0,0,0,0}
@@ -2000,6 +2042,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"9mm Rounds",        // pickup
 		30,
 		IT_AMMO,
+		WP_NONE,
 		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
@@ -2018,6 +2061,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"9mm",           // pickup			//----(SA)	changed
 		60,
 		IT_AMMO,
+		WP_NONE,
 		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
@@ -2036,6 +2080,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"9mm Box",           // pickup
 		100,
 		IT_AMMO,
+		WP_NONE,
 		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
@@ -2055,6 +2100,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		".45cal Rounds", // pickup
 		20,
 		IT_AMMO,
+		WP_NONE,
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
@@ -2073,6 +2119,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		".45cal",        // pickup			//----(SA)	changed
 		60,
 		IT_AMMO,
+		WP_NONE,
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
@@ -2091,6 +2138,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		".45cal Box",        // pickup
 		100,
 		IT_AMMO,
+		WP_NONE,
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
@@ -2110,6 +2158,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"7.92mm Rounds",         // pickup
 		50,
 		IT_AMMO,
+		WP_NONE,
 		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
@@ -2128,6 +2177,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"7.92mm",                // pickup			//----(SA)	changed
 		10,
 		IT_AMMO,
+		WP_NONE,
 		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
@@ -2146,6 +2196,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"7.92mm Box",                // pickup
 		50,
 		IT_AMMO,
+		WP_NONE,
 		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
@@ -2165,6 +2216,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		".30cal Rounds",         // pickup
 		50,
 		IT_AMMO,
+		WP_NONE,
 		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
@@ -2183,6 +2235,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		".30cal",                // pickup			//----(SA)	changed
 		50,
 		IT_AMMO,
+		WP_NONE,
 		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
@@ -2201,6 +2254,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		".30cal Box",                // pickup
 		50,
 		IT_AMMO,
+		WP_NONE,
 		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
@@ -2219,6 +2273,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"12.7mm",                    // pickup
 		100,
 		IT_AMMO,
+		WP_NONE,
 		WP_VENOM,
 		WP_VENOM,
 		WP_VENOM,
@@ -2237,6 +2292,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"Grenades",              // pickup
 		5,
 		IT_AMMO,
+		WP_NONE,
 		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
@@ -2255,6 +2311,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"Pineapples",            // pickup
 		5,
 		IT_AMMO,
+		WP_NONE,
 		WP_GRENADE_PINEAPPLE,
 		WP_GRENADE_PINEAPPLE,
 		WP_GRENADE_PINEAPPLE,
@@ -2273,6 +2330,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"Dynamite",              // pickup
 		1,
 		IT_AMMO,
+		WP_NONE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
@@ -2292,6 +2350,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"Cell",              // pickup
 		500,
 		IT_AMMO,
+		WP_NONE,
 		WP_TESLA,
 		WP_TESLA,
 		WP_TESLA,
@@ -2311,6 +2370,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"Fuel",              // pickup
 		100,
 		IT_AMMO,
+		WP_NONE,
 		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
@@ -2330,6 +2390,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"Panzerfaust Rockets",               // pickup
 		5,
 		IT_AMMO,
+		WP_NONE,
 		WP_PANZERFAUST,
 		WP_PANZERFAUST,
 		WP_PANZERFAUST,
@@ -2348,6 +2409,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"MonsterAttack1",        // pickup
 		60,
 		IT_AMMO,
+		WP_NONE,
 		WP_MONSTER_ATTACK1,
 		WP_MONSTER_ATTACK1,
 		WP_MONSTER_ATTACK1,
@@ -2381,6 +2443,7 @@ model="models/powerups/holdable/wine.md3"
 		"1921 Chateau Lafite",           // pickup
 		1,
 		IT_HOLDABLE,
+		WP_NONE,
 		HI_WINE,
 		0,
 		0,
@@ -2402,6 +2465,7 @@ model="models/powerups/holdable/wine.md3"
 		"Added Stamina",             // pickup
 		1,
 		IT_HOLDABLE,
+		WP_NONE,
 		HI_STAMINA,
 		0,
 		0,
@@ -2423,6 +2487,7 @@ model="models/powerups/holdable/wine.md3"
 		"Venom Tech Manual",     // pickup
 		1,
 		IT_HOLDABLE,
+		WP_NONE,
 		HI_BOOK1,
 		0,
 		0,
@@ -2444,6 +2509,7 @@ model="models/powerups/holdable/wine.md3"
 		"Project Book",                  // pickup
 		1,
 		IT_HOLDABLE,
+		WP_NONE,
 		HI_BOOK2,
 		0,
 		0,
@@ -2466,6 +2532,7 @@ model="models/powerups/holdable/wine.md3"
 		"Dr. Zemph's Journal",       // pickup
 		1,
 		IT_HOLDABLE,
+		WP_NONE,
 		HI_BOOK3,
 		0,
 		0,
@@ -2496,6 +2563,7 @@ model="models/flags/r_flag.md3"
 		"Red Flag",          // pickup
 		0,
 		IT_TEAM,
+		WP_NONE,
 		PW_REDFLAG,
 		0,
 		0,
@@ -2519,6 +2587,7 @@ model="models/flags/b_flag.md3"
 		"Blue Flag",     // pickup
 		0,
 		IT_TEAM,
+		WP_NONE,
 		PW_BLUEFLAG,
 		0,
 		0,
@@ -2541,6 +2610,7 @@ model="models/flags/b_flag.md3"
 		"Binoculars",            // pickup
 		0,
 		IT_KEY,
+		WP_NONE,
 		INV_BINOCS,
 		0,
 		0,
@@ -2574,6 +2644,7 @@ model="models/powerups/holdable/bandages.md3"
 		"Resilience",             
 		1,
 		IT_PERK,
+		WP_NONE,
 		PERK_RESILIENCE,
 		0,
 		0,
@@ -2605,6 +2676,7 @@ model="models/powerups/holdable/bandages.md3"
 		"Scavenger",             
 		1,
 		IT_PERK,
+		WP_NONE,
 		PERK_SCAVENGER,
 		0,
 		0,
@@ -2637,6 +2709,7 @@ model="models/powerups/holdable/bandages.md3"
 		"Runner",             
 		1,
 		IT_PERK,
+		WP_NONE,
 		PERK_RUNNER,
 		0,
 		0,
@@ -2669,6 +2742,7 @@ model="models/powerups/holdable/bandages.md3"
 		"Weapon Handling",             
 		1,
 		IT_PERK,
+		WP_NONE,
 		PERK_WEAPONHANDLING,
 		0,
 		0,
@@ -2701,6 +2775,7 @@ model="models/powerups/holdable/bandages.md3"
 		"Advanced Rifling",             
 		1,
 		IT_PERK,
+		WP_NONE,
 		PERK_RIFLING,
 		0,
 		0,
@@ -2733,6 +2808,7 @@ model="models/powerups/holdable/bandages.md3"
 		"Second Chance",             
 		1,
 		IT_PERK,
+		WP_NONE,
 		PERK_SECONDCHANCE,
 		0,
 		0,
