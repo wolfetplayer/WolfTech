@@ -88,6 +88,7 @@ void TossClientItems( gentity_t *self ) {
 
 	switch ( self->aiCharacter ) {
 	case AICHAR_ZOMBIE:
+	case AICHAR_ZOMBIE_SURV:
 	case AICHAR_WARZOMBIE:
 	case AICHAR_LOPER:
 		return;         //----(SA)	removed DK's special case
@@ -619,18 +620,6 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 			// ai's allowed headshots in skill==GSKILL_MAX
 			return qfalse;
 		}
-	}
-
-	switch ( targ->aiCharacter ) {
-		// get out quick for ai's that don't take headshots
-	case AICHAR_ZOMBIE:
-	case AICHAR_WARZOMBIE:
-	case AICHAR_HELGA:      // boss1 (beast)
-	case AICHAR_LOPER:
-	case AICHAR_VENOM:      //----(SA)	added
-		return qfalse;
-	default:
-		break;
 	}
 
 	switch ( mod ) {

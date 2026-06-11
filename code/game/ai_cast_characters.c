@@ -196,6 +196,34 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 		AISTATE_ALERT
 	},
 
+	//AICHAR_ZOMBIE_SURV
+	{
+		"Zombie Surv",
+		{ // Default
+			0
+		},
+		{
+			"zombieSightPlayer",
+			"zombieAttackPlayer",
+			"zombieOrders",
+			"zombieDeath",
+			"zombieSilentDeath",				//----(SA)	added
+			"zombieFlameDeath",					//----(SA)	added
+			"zombiePain",
+			"sound/weapons/melee/fstatck.wav",	// stay - you're told to stay put
+			"sound/weapons/melee/fstmiss.wav",	// follow - go with ordering player ("i'm with you" rather than "yes sir!")
+			"zombieOrdersDeny",					// deny - refuse orders (doing something else)
+		},
+		AITEAM_MONSTER,
+		"zombie/default",
+		{WP_MONSTER_ATTACK3},
+		BBOX_SMALL, {32,48},
+		/*AIFL_NOPAIN|AIFL_WALKFORWARD|*/ AIFL_NO_RELOAD,
+		AIFunc_ZombieFlameAttackStart, AIFunc_ZombieAttack2Start, AIFunc_ZombieMeleeStart,
+		NULL,
+		AISTATE_ALERT
+	},
+
 //----(SA)	added
 	//AICHAR_WARZOMBIE
 	{
@@ -1885,4 +1913,15 @@ SP_ai_blackguard
 */
 void SP_ai_blackguard( gentity_t *ent ) {
 	AICast_DelayedSpawnCast( ent, AICHAR_BLACKGUARD );
+}
+
+
+/*
+============
+SP_ai_zombie_surv
+============
+*/
+void SP_ai_zombie_surv( gentity_t *ent ) {
+	ent->r.svFlags |= SVF_NOFOOTSTEPS;
+	AICast_DelayedSpawnCast( ent, AICHAR_ZOMBIE_SURV );
 }

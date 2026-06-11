@@ -1907,6 +1907,7 @@ void FireWeapon( gentity_t *ent ) {
 		case AICHAR_WARZOMBIE:
 			break;
 		case AICHAR_ZOMBIE:
+		case AICHAR_ZOMBIE_SURV:
 			weapon_zombiespit(ent);
 			break;
 		default:

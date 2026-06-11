@@ -3193,7 +3193,7 @@ void CG_AddZombieSpiritEffect( centity_t *cent ) {
 
 	static int lastSpiritRelease;
 
-	if ( cent->currentState.aiChar != AICHAR_ZOMBIE ) {
+	if ( cent->currentState.aiChar != AICHAR_ZOMBIE && cent->currentState.aiChar != AICHAR_ZOMBIE_SURV) {
 		return;
 	}
 
@@ -3501,7 +3501,7 @@ void CG_AddZombieFlameEffect( centity_t *cent ) {
 
 	// qboolean active=qfalse; // TTimo: unused
 
-	if ( cent->currentState.aiChar != AICHAR_ZOMBIE ) {
+	if ( cent->currentState.aiChar != AICHAR_ZOMBIE && cent->currentState.aiChar != AICHAR_ZOMBIE_SURV ) {
 		return;
 	}
 
@@ -3580,7 +3580,7 @@ CG_AddZombieFlameEffect
 void CG_AddZombieFlameShort( centity_t *cent ) {
 	vec3_t morg, maxis[3], mang;
 
-	if ( cent->currentState.aiChar != AICHAR_ZOMBIE ) {
+	if ( cent->currentState.aiChar != AICHAR_ZOMBIE && cent->currentState.aiChar != AICHAR_ZOMBIE_SURV ) {
 		return;
 	}
 
@@ -4879,6 +4879,7 @@ void CG_Player( centity_t *cent ) {
 
 				switch ( cent->currentState.aiChar ) {
 				case AICHAR_ZOMBIE:
+				case AICHAR_ZOMBIE_SURV:
 				case AICHAR_LOPER:
 					talk_frame = (int)( (float)talk_frame * 1.2 );
 					closed = qfalse;
