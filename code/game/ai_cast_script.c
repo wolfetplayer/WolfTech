@@ -408,7 +408,7 @@ AICast_ScriptParse
   Parses the script for the given character
 ==============
 */
-#define MAX_SCRIPT_EVENTS   64
+#define MAX_SCRIPT_EVENTS   128
 cast_script_event_t cast_temp_events[MAX_SCRIPT_EVENTS];
 void AICast_ScriptParse( cast_state_t *cs ) {
 	gentity_t   *ent;
@@ -419,11 +419,22 @@ void AICast_ScriptParse( cast_state_t *cs ) {
 	int eventNum;
 	int numEventItems;
 	cast_script_event_t *curEvent;
-	char params[MAX_QPATH];
+	char params[MAX_INFO_STRING];
 	cast_script_stack_action_t  *action;
 	int i;
 	int bracketLevel;
 	qboolean buildScript;       //----(SA)	added
+
+	// ---- Multi-name header support:
+	// We collect names until '{', then decide if this block matches ent->aiName.
+	#define MAX_SCRIPT_NAMES_IN_HEADER  32
+	char scriptNames[MAX_SCRIPT_NAMES_IN_HEADER][MAX_QPATH];
+	int  numScriptNames = 0;
+	qboolean collectingNames = qfalse;
+	// ---- end multi-name support
+
+	// multi-name support helper: did we just consume '{' for a script block?
+	qboolean blockJustOpened = qfalse;
 
 	if ( !level.scriptAI ) {
 		return;
@@ -459,22 +470,69 @@ void AICast_ScriptParse( cast_state_t *cs ) {
 		// end of script
 		if ( token[0] == '}' ) {
 			if ( inScript ) {
+				blockJustOpened = qfalse;
 				break;
 			}
 			if ( wantName ) {
 				G_Error( "AICast_ScriptParse(), Error (line %d): '}' found, but not expected.\n", COM_GetCurrentParseLine() );
 			}
 			wantName = qtrue;
+
+			// reset multi-name header collection when a block ends
+			collectingNames = qfalse;
+			numScriptNames = 0;
+
 		} else if ( token[0] == '{' )    {
 			if ( wantName ) {
 				G_Error( "AICast_ScriptParse(), Error (line %d): '{' found, NAME expected.\n", COM_GetCurrentParseLine() );
 			}
-		} else if ( wantName )   {
-			if ( !Q_strcasecmp( ent->aiName, token ) ) {
-				inScript = qtrue;
-				numEventItems = 0;
+
+			// Multi-name header: when we hit '{' after collecting one or more names,
+			// decide whether we parse this block or skip it entirely.
+			if ( collectingNames ) {
+				qboolean match = qfalse;
+
+				for ( i = 0; i < numScriptNames; i++ ) {
+					if ( !Q_strcasecmp( ent->aiName, scriptNames[i] ) ) {
+						match = qtrue;
+						break;
+					}
+				}
+
+				if ( match ) {
+					inScript = qtrue;
+					numEventItems = 0;
+				} else {
+					inScript = qfalse;
+				}
+
+				// done with header regardless of match
+				collectingNames = qfalse;
+				numScriptNames = 0;
+
+				// We have consumed the opening brace for this script block.
+				blockJustOpened = qtrue;
 			}
+
+		} else if ( wantName || collectingNames )   {
+
+			// Multi-name header start/continue: collect all NAME tokens until '{'
+			// Old behavior (single name) still works: one name then '{' is identical.
+			if ( !collectingNames ) {
+				collectingNames = qtrue;
+				numScriptNames = 0;
+			}
+
+			if ( numScriptNames >= MAX_SCRIPT_NAMES_IN_HEADER ) {
+				G_Error( "AICast_ScriptParse(), Error (line %d): too many names in script header (max %d)\n",
+					COM_GetCurrentParseLine(), MAX_SCRIPT_NAMES_IN_HEADER );
+			}
+
+			Q_strncpyz( scriptNames[numScriptNames], token, sizeof( scriptNames[numScriptNames] ) );
+			numScriptNames++;
+
 			wantName = qfalse;
+
 		} else if ( inScript )   {
 			if ( !Q_strcasecmp( token, "attributes" ) ) {
 				// read in all the attributes
@@ -520,7 +578,7 @@ void AICast_ScriptParse( cast_state_t *cs ) {
 			}
 
 			if ( strlen( params ) ) { // copy the params into the event
-				curEvent->params = trap_Alloc( strlen( params ) + 1 );
+				curEvent->params = G_Alloc( strlen( params ) + 1 );
 				Q_strncpyz( curEvent->params, params, strlen( params ) + 1 );
 			}
 
@@ -570,12 +628,6 @@ void AICast_ScriptParse( cast_state_t *cs ) {
 //							if(weap)
 							RegisterItem( weap );   // don't be nice, just do it.  if it can't find it, you'll bomb out to the error menu
 						}
-
-						// need to get this for callvote nextmap
-						if ( !Q_stricmp( action->actionString, "changelevel" ) ) {
-							Q_strncpyz( level.nextMap, token, sizeof( level.nextMap ) );
-							trap_Cvar_Set( "nextmap", level.nextMap );
-						}
 //----(SA)	end
 					}
 
@@ -593,7 +645,7 @@ void AICast_ScriptParse( cast_state_t *cs ) {
 				}
 
 				if ( strlen( params ) ) { // copy the params into the event
-					curEvent->stack.items[curEvent->stack.numItems].params = trap_Alloc( strlen( params ) + 1 );
+					curEvent->stack.items[curEvent->stack.numItems].params = G_Alloc( strlen( params ) + 1 );
 					Q_strncpyz( curEvent->stack.items[curEvent->stack.numItems].params, params, strlen( params ) + 1 );
 				}
 
@@ -607,6 +659,11 @@ void AICast_ScriptParse( cast_state_t *cs ) {
 			numEventItems++;
 		} else    // skip this character completely
 		{
+			// Multi-name header note:
+			// If we got here via the "collectingNames" '{' path, then the opening '{' was already consumed,
+			// so we must start bracketLevel at 1 to skip the whole block correctly.
+			bracketLevel = blockJustOpened ? 1 : 0;
+			blockJustOpened = qfalse;
 
 			while ( ( token = COM_Parse( &pScript ) ) )
 			{
@@ -620,12 +677,21 @@ void AICast_ScriptParse( cast_state_t *cs ) {
 					}
 				}
 			}
+
+			// reset header collection state after skipping a full block
+			wantName = qtrue;
+			collectingNames = qfalse;
+			numScriptNames = 0;
 		}
+
+		// If we just collected names (wantName was consumed) but haven't hit '{' yet,
+		// keep wantName false so we continue collecting until '{' appears.
+		// If we're not collectingNames and not inScript, the next '}' will reset wantName as usual.
 	}
 
 	// alloc and copy the events into the cast_state_t for this cast
 	if ( numEventItems > 0 ) {
-		cs->castScriptEvents = trap_Alloc( sizeof( cast_script_event_t ) * numEventItems );
+		cs->castScriptEvents = G_Alloc( sizeof( cast_script_event_t ) * numEventItems );
 		memcpy( cs->castScriptEvents, cast_temp_events, sizeof( cast_script_event_t ) * numEventItems );
 		cs->numCastScriptEvents = numEventItems;
 
