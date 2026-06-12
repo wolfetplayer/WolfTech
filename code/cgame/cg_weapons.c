@@ -2017,6 +2017,7 @@ qboolean CG_DrawRealWeapons( centity_t *cent ) {
 
 	switch ( cent->currentState.aiChar ) {
 	case AICHAR_LOPER:
+	case AICHAR_LOPER_SPECIAL:
 	case AICHAR_SUPERSOLDIER:       //----(SA)	added
 	case AICHAR_PROTOSOLDIER:
 	case AICHAR_ZOMBIE:

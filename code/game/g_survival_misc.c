@@ -33,6 +33,12 @@ If you have questions concerning this license or the applicable additional terms
 
 svParams_t svParams;
 
+#define TREASURE_DROP_CHANCE 3
+#define SCAVENGER_TREASURE_DROP_INCREASE 3
+
+#define POWERUPS_DROP_CHANCE 3
+#define SCAVENGER_POWERUPS_DROP_INCREASE 3
+
 /*
 ============
 TossClientItems_Survival
@@ -51,9 +57,9 @@ void TossClientItems_Survival(gentity_t *self, gentity_t *attacker) {
 
     AngleVectors(self->r.currentAngles, forward, NULL, NULL);
 
-    int dropChance = svParams.treasureDropChance;
+    int dropChance = TREASURE_DROP_CHANCE;
     if (attacker->client->ps.perks[PERK_SCAVENGER] > 0) {
-        dropChance += svParams.treasureDropChanceScavengerIncrease;
+        dropChance += SCAVENGER_TREASURE_DROP_INCREASE;
     }
 
     if (rand() % 100 < dropChance) {
@@ -108,9 +114,9 @@ void TossClientPowerups(gentity_t *self, gentity_t *attacker) {
 
     AngleVectors(self->r.currentAngles, forward, NULL, NULL);
 
-    int dropChance = svParams.powerupDropChance;
+    int dropChance = POWERUPS_DROP_CHANCE;
     if (attacker->client->ps.perks[PERK_SCAVENGER] > 0) {
-        dropChance += svParams.powerupDropChanceScavengerIncrease;
+        dropChance += SCAVENGER_POWERUPS_DROP_INCREASE;
     }
 
     if (rand() % 100 < dropChance) {
@@ -153,7 +159,6 @@ static qboolean Survival_SpotMatchesAI( gentity_t *spot, gentity_t *ent ) {
         case AICHAR_SUPERSOLDIER:
         case AICHAR_HELGA:
         case AICHAR_HEINRICH:
-        case AICHAR_SUPERSOLDIER_LAB:
             if ( !( spot->spawnflags & 2 ) ) return qfalse;
             break;
         default:

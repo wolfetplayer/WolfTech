@@ -1162,7 +1162,9 @@ extern void body_die ( gentity_t * self , gentity_t * inflictor , gentity_t * at
 extern void GibEntity ( gentity_t * self , int killer ) ;
 extern void GibHead ( gentity_t * self , int killer ) ;
 extern void LookAtKiller ( gentity_t * self , gentity_t * inflictor , gentity_t * attacker ) ;
-extern void TossClientItems ( gentity_t * self ) ;
+extern void TossClientWeapons ( gentity_t * self ) ;
+extern void TossClientItems_Survival ( gentity_t * self, gentity_t *attacker ) ;
+extern void TossClientPowerups ( gentity_t * self, gentity_t *attacker ) ;
 extern void AddScore ( gentity_t * ent , int score ) ;
 extern void Cmd_StartCamera_f ( gentity_t * ent ) ;
 extern void Cmd_Teleport_f ( gentity_t * ent ) ;
@@ -1647,6 +1649,7 @@ extern void SP_ai_loper ( gentity_t * ent ) ;
 extern void SP_ai_venom ( gentity_t * ent ) ;
 extern void SP_ai_warzombie ( gentity_t * ent ) ;
 extern void SP_ai_zombie ( gentity_t * ent ) ;
+extern void SP_ai_loper_special ( gentity_t * ent ) ;
 extern void SP_ai_zombie_surv ( gentity_t * ent ) ;
 extern void SP_ai_american ( gentity_t * ent ) ;
 extern void SP_ai_soldier ( gentity_t * ent ) ;

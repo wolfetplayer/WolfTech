@@ -565,7 +565,7 @@ void limbo( gentity_t *ent, qboolean makeCorpse ) {
 		contents = trap_PointContents( ent->r.currentOrigin, -1 );         // drop stuff
 		ent->s.weapon = ent->client->limboDropWeapon;         // stored in player_die()
 		if ( makeCorpse && !( contents & CONTENTS_NODROP ) ) {
-			TossClientItems( ent );
+			TossClientWeapons( ent );
 		}
 
 
@@ -1835,6 +1835,8 @@ void ClientSpawn( gentity_t *ent ) {
 	ent->watertype = 0;
 	ent->flags = 0;
 
+	client->ps.persistant[PERS_WAVES] = 0;
+
 	// freeze the players if needed
 	if ( g_freeze.integer && g_gametype.integer <= GT_COOP && !( ent->r.svFlags & SVF_CASTAI ) ) {
 		int frozen = 0;
@@ -2038,7 +2040,7 @@ void ClientDisconnect( int clientNum ) {
 			// They don't get to take powerups with them!
 			// Especially important for stuff like CTF flags
 			if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
-				TossClientItems( ent );
+				TossClientWeapons( ent );
 			}
 
 			// Forcefully throw the chair.

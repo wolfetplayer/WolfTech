@@ -195,6 +195,8 @@ struct gentity_s {
 
 	int flags;                      // FL_* variables
 
+	char        *translation;
+
 	char        *model;
 	char        *model2;
 	int freetime;                   // level.time when the object was freed
@@ -422,6 +424,9 @@ struct gentity_s {
 	int thrownKnifeTime;    // Throwing Knives
 
 	int price;                 // item price, survival mode
+    char  *buy_item;
+	int isWeapon;   
+	int lastPainMOD; // last meansOfDeath used in pain function  
 };
 
 // Ridah
@@ -942,7 +947,7 @@ qboolean CanDamage( gentity_t *targ, vec3_t origin );
 void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int mod );
 qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage, float radius, gentity_t *ignore, int mod );
 void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath );
-void TossClientItems( gentity_t *self );
+void TossClientWeapons( gentity_t *self );
 // et sdk antilag
 gentity_t* G_BuildHead( gentity_t *ent );
 

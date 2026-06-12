@@ -374,6 +374,35 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 		AISTATE_ALERT
 	},
 
+	//AICHAR_LOPER_SPECIAL
+	{
+		"Loper Special",
+		{ // Default
+			0
+		},
+		{
+			"loperSightPlayer",
+			"loperAttackPlayer",
+			"loperOrders",
+			"loperDeath",
+			"loperSilentDeath",		//----(SA)	added
+			"loperFlameDeath",		//----(SA)	added
+			"loperPain",
+			"loperAttack2Start",	// stay - you're told to stay put
+			"loperAttackStart",		// follow - go with ordering player ("i'm with you" rather than "yes sir!")
+			"loperHit1",			// deny - refuse orders (doing something else)
+			"loperHit2",			// misc1
+		},
+		AITEAM_MONSTER,
+		"loper/default_survival",
+		{ /*WP_MONSTER_ATTACK1,*/ WP_MONSTER_ATTACK2,WP_MONSTER_ATTACK3},
+		BBOX_SMALL, {32,32},		// large is for wide characters
+		AIFL_NO_RELOAD,
+		0 /*AIFunc_LoperAttack1Start*/, AIFunc_LoperAttack2Start, AIFunc_LoperAttack3Start,
+		"sound/world/electloop.wav",
+		AISTATE_ALERT
+	},
+
 	//AICHAR_ELITEGUARD
 	{
 		"Elite Guard",
@@ -1047,6 +1076,7 @@ void AIChar_Death( gentity_t *ent, gentity_t *attacker, int damage, int mod ) { 
 				G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex( aiDefaults[ent->aiCharacter].soundScripts[QUIETDEATHSOUNDSCRIPT] ) );
 				break;
 			case MOD_FLAMETHROWER:
+			case MOD_FLAMETRAP:
 				G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex( aiDefaults[ent->aiCharacter].soundScripts[FLAMEDEATHSOUNDSCRIPT] ) );      //----(SA)	added
 				break;
 			default:
@@ -1924,4 +1954,16 @@ SP_ai_zombie_surv
 void SP_ai_zombie_surv( gentity_t *ent ) {
 	ent->r.svFlags |= SVF_NOFOOTSTEPS;
 	AICast_DelayedSpawnCast( ent, AICHAR_ZOMBIE_SURV );
+}
+
+/*
+============
+SP_ai_loper_special
+============
+*/
+void SP_ai_loper_special( gentity_t *ent ) {
+	ent->r.svFlags |= SVF_NOFOOTSTEPS;
+	AICast_DelayedSpawnCast( ent, AICHAR_LOPER_SPECIAL );
+	//
+	level.loperZapSound = G_SoundIndex( "loperZap" );
 }

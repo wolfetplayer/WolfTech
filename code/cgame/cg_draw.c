@@ -630,12 +630,6 @@ static void CG_DrawStatusBar( void ) {
 
 	CG_DrawStatusBarKeys();
 
-	if ( cg.predictedPlayerState.powerups[PW_REDFLAG] ) {
-		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH_CG * 3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_RED );
-	} else if ( cg.predictedPlayerState.powerups[PW_BLUEFLAG] ) {
-		CG_DrawStatusBarFlag( 185 + CHAR_WIDTH_CG * 3 + TEXT_ICON_SPACE + ICON_SIZE, TEAM_BLUE );
-	}
-
 	//----(SA) further change... we don't need to draw the armor do we?
 /*
 	if ( ps->stats[ STAT_ARMOR ] ) {

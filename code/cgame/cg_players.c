@@ -2761,22 +2761,15 @@ static void CG_PlayerPowerups( centity_t *cent ) {
 		trap_R_AddLightToScene( cent->lerpOrigin, 200 + ( rand() & 31 ), 0.2, 0.2, 1, 0 );
 	}
 
+	// vampire gives a red light
+	if ( powerups & ( 1 << PW_VAMPIRE ) ) {
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + ( rand() & 31 ), 1.0, 0.0, 0.0, 0 );
+	}
+
 	// flight plays a looped sound
 //	if ( powerups & ( 1 << PW_FLIGHT ) ) {
 //		CG_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, cgs.media.flightSound, 255 );
 //	}
-
-	// redflag
-	if ( powerups & ( 1 << PW_REDFLAG ) ) {
-		CG_TrailItem( cent, cgs.media.redFlagModel );
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + ( rand() & 31 ), 1, 0.2, 0.2, 0 );
-	}
-
-	// blueflag
-	if ( powerups & ( 1 << PW_BLUEFLAG ) ) {
-		CG_TrailItem( cent, cgs.media.blueFlagModel );
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + ( rand() & 31 ), 0.2, 0.2, 1, 0 );
-	}
 
 	// haste leaves smoke trails
 	if ( powerups & ( 1 << PW_HASTE ) ) {
@@ -3632,7 +3625,7 @@ void CG_AddLoperLightningEffect( centity_t *cent ) {
 	int numPoints;
 	float colTake;
 
-	if ( cent->currentState.aiChar != AICHAR_LOPER ) {
+	if ( cent->currentState.aiChar != AICHAR_LOPER && cent->currentState.aiChar != AICHAR_LOPER_SPECIAL) {
 		return;
 	}
 
@@ -3757,7 +3750,7 @@ void CG_AddLoperGroundEffect( centity_t *cent ) {
 	int duration;
 	float alpha, lightAlpha = 0.0f;   // TTimo: init
 
-	if ( cent->currentState.aiChar != AICHAR_LOPER ) {
+	if ( cent->currentState.aiChar != AICHAR_LOPER && cent->currentState.aiChar != AICHAR_LOPER_SPECIAL) {
 		return;
 	}
 
@@ -4380,11 +4373,22 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, int powerups, int team, enti
 			}
 			trap_R_AddRefEntityToScene( ent );
 		}
+
+		if ( powerups & ( 1 << PW_VAMPIRE ) ) {
+
+			ent->customShader = cgs.media.redQuadShader;
+			
+			trap_R_AddRefEntityToScene( ent );
+		}
 		if ( powerups & ( 1 << PW_REGEN ) ) {
 			if ( ( ( cg.time / 100 ) % 10 ) == 1 ) {
 				ent->customShader = cgs.media.regenShader;
 				trap_R_AddRefEntityToScene( ent );
 			}
+		}
+		if ( powerups & ( 1 << PW_BATTLESUIT_SURV ) ) {
+			ent->customShader = cgs.media.battleSuitShader;
+			trap_R_AddRefEntityToScene( ent );
 		}
 		if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
 			ent->customShader = cgs.media.battleSuitShader;
@@ -4785,13 +4789,13 @@ void CG_Player( centity_t *cent ) {
 	//----(SA)	also taking care of the Loper's interesting heirarchy (his upper body is effectively the same as a weapon_hand.md3.  it keeps things connected, but has no geometry)
 
 	if ( !ci->isSkeletal ) {
-		if ( ( cgsnap == cent && ( cg.snap->ps.pm_flags & PMF_LADDER ) ) || ( cent->currentState.aiChar == AICHAR_LOPER ) ) {
+		if ( ( cgsnap == cent && ( cg.snap->ps.pm_flags & PMF_LADDER ) ) || ( cent->currentState.aiChar == AICHAR_LOPER || cent->currentState.aiChar == AICHAR_LOPER_SPECIAL ) ) {
 			CG_PositionEntityOnTag( &torso, &legs, "tag_torso", 0, NULL );
 		} else {
 			CG_PositionRotatedEntityOnTag( &torso,  &legs, "tag_torso" );
 		}
 	} else {    // just clear out the angles
-		if ( ( cgsnap == cent && ( cg.snap->ps.pm_flags & PMF_LADDER ) ) || ( cent->currentState.aiChar == AICHAR_LOPER ) ) {
+		if ( ( cgsnap == cent && ( cg.snap->ps.pm_flags & PMF_LADDER ) ) || ( cent->currentState.aiChar == AICHAR_LOPER || cent->currentState.aiChar == AICHAR_LOPER_SPECIAL ) ) {
 			memcpy( torso.axis, legs.axis, sizeof( torso.axis ) );
 		}
 	}
@@ -4881,6 +4885,7 @@ void CG_Player( centity_t *cent ) {
 				case AICHAR_ZOMBIE:
 				case AICHAR_ZOMBIE_SURV:
 				case AICHAR_LOPER:
+				case AICHAR_LOPER_SPECIAL:
 					talk_frame = (int)( (float)talk_frame * 1.2 );
 					closed = qfalse;
 					break;
@@ -5017,8 +5022,7 @@ void CG_Player( centity_t *cent ) {
 	//
 	// add player specific models
 	//
-
-	if ( cent->currentState.aiChar == AICHAR_LOPER ) {
+	if ( cent->currentState.aiChar == AICHAR_LOPER || cent->currentState.aiChar == AICHAR_LOPER_SPECIAL ) {
 		if ( ci->partModels[8] ) {
 			vec3_t angles;
 

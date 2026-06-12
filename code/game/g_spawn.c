@@ -184,6 +184,9 @@ field_t fields[] = {
 
 	{"scriptName",       FOFS( scriptName ),           F_STRING},
 
+	{"buy_item",         FOFS( buy_item ),           F_STRING},
+	{"isWeapon",         FOFS( isWeapon ),             F_INT},
+
 	{NULL}
 };
 
@@ -321,6 +324,7 @@ void SP_ai_protosoldier( gentity_t *ent );
 void SP_ai_frogman( gentity_t *ent );
 void SP_ai_partisan( gentity_t *ent );
 void SP_ai_civilian( gentity_t *ent );
+void SP_ai_loper_special( gentity_t *ent );
 // done.
 
 // Rafael particles
@@ -591,6 +595,7 @@ spawn_t spawns[] = {
 	{"ai_blackguard", SP_ai_blackguard},
 	{"ai_partisan", SP_ai_partisan},
 	{"ai_civilian", SP_ai_civilian},
+	{"ai_loper_special", SP_ai_loper_special},
 
 
 	{"ai_marker", SP_ai_marker},

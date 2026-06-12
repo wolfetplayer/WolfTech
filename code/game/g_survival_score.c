@@ -31,6 +31,16 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 #include "g_survival.h"
 
+#define SCORE_BASE_KILL 5
+#define SCORE_HEADSHOT_KILL 5
+#define SCORE_KNIFE_BONUS 5
+#define SCORE_BOSS_BONUS 150
+#define SCORE_BOSS_BONUS_HIGH 300
+#define SCORE_HIT 1
+
+#define VAMPIRE_HEAL 5
+#define VAMPIRE_CAP 300
+
 /*
 ============
 Survival_AddKillScore
@@ -43,10 +53,10 @@ void Survival_AddKillScore(gentity_t *attacker, gentity_t *victim, int meansOfDe
 	if (attacker->aiTeam == victim->aiTeam)
 		return; // no score for teamkills
 
-	int score = svParams.scoreBaseKill;
+	int score = SCORE_BASE_KILL;
 
 	if (meansOfDeath == MOD_KNIFE || meansOfDeath == MOD_KICKED) {
-		score += svParams.scoreKnifeBonus;
+		score += SCORE_KNIFE_BONUS;
 	}
 
 	if (meansOfDeath == MOD_MACHINEGUN || meansOfDeath == MOD_FLAMETRAP) {
@@ -59,11 +69,11 @@ void Survival_AddKillScore(gentity_t *attacker, gentity_t *victim, int meansOfDe
 	{
 		if (svParams.waveCount > 15)
 		{
-			score += 300;
+			score += SCORE_BOSS_BONUS_HIGH;
 		}
 		else
 		{
-			score += 150;
+			score += SCORE_BOSS_BONUS;
 		}
 	}
 
@@ -80,7 +90,7 @@ void Survival_AddHeadshotBonus(gentity_t *attacker, gentity_t *victim) {
 	if (!attacker || !victim || !attacker->client || attacker->aiTeam == victim->aiTeam)
 		return;
 
-	attacker->client->ps.persistant[PERS_SCORE] += svParams.scoreHeadshotKill;
+	attacker->client->ps.persistant[PERS_SCORE] += SCORE_HEADSHOT_KILL;
 }
 
 /*
@@ -97,13 +107,13 @@ void Survival_AddPainScore(gentity_t *attacker, gentity_t *victim, int damage) {
 
 	// Vampire perk healing
 	if (attacker->client->ps.powerups[PW_VAMPIRE]) {
-		attacker->health += 5;
-		if (attacker->health > 300) {
-			attacker->health = 300;
+		attacker->health += VAMPIRE_HEAL;
+		if (attacker->health > VAMPIRE_CAP) {
+			attacker->health = VAMPIRE_CAP;
 		}
 	}
 
-	attacker->client->ps.persistant[PERS_SCORE] += svParams.scoreHit;
+	attacker->client->ps.persistant[PERS_SCORE] += SCORE_HIT;
 }
 
 /*

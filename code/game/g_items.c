@@ -98,6 +98,20 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 		}
 	}
 
+		if (ent->item->giTag == PW_AMMO)
+	{
+		// Restore ammo for every weapon the player has
+		for (weapon_t w = WP_KNIFE; w < WP_NUM_WEAPONS; w++)
+		{
+			if (COM_BitCheck(other->client->ps.weapons, w))
+			{
+				int ammo = BG_GetMaxAmmo(&other->client->ps, w, LT_AMMO_BONUS_MULTIPLIER);
+
+				Add_Ammo(other, w, ammo, qtrue);
+			}
+		}
+	}
+
 	if ( ent->s.density == 2 ) {   // multi-stage health first stage
 		return RESPAWN_PARTIAL;
 	} else if ( ent->s.density == 1 ) {    // last stage, leave the plate
@@ -1404,7 +1418,7 @@ qboolean NeedAmmo(gentity_t *other, weapon_t weapon) {
 		ammoweap = BG_FindAmmoForWeapon(weapon);
 	}
 
-	int maxAmmo = BG_GetMaxAmmo(&other->client->ps, ammoweap, 1.5);
+	int maxAmmo = BG_GetMaxAmmo(&other->client->ps, ammoweap, LT_AMMO_BONUS_MULTIPLIER);
 	return other->client->ps.ammo[ammoweap] < maxAmmo;
 }
 
@@ -1627,7 +1641,7 @@ int Pickup_Weapon_New_Inventory( gentity_t *ent, gentity_t *other ) {
 
 	if (weapon == WP_KNIFE)
 	{
-		int maxAmmo = BG_GetMaxAmmo(&other->client->ps, weapon, 1.5);
+		int maxAmmo = BG_GetMaxAmmo(&other->client->ps, weapon, LT_AMMO_BONUS_MULTIPLIER);
 
 		if (other->client->ps.ammoclip[weapon] < maxAmmo)
 		{

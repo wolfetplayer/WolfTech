@@ -49,7 +49,10 @@ If you have questions concerning this license or the applicable additional terms
 #define DEFAULT_SHOTGUN_SPREAD  700
 #define DEFAULT_SHOTGUN_COUNT   11
 
-//#define	ITEM_RADIUS			15		// item sizes are needed for client side pickup detection
+// Survival
+#define LT_AMMO_BONUS_MULTIPLIER 1.5
+
+
 #define ITEM_RADIUS     10 // Rafael changed the radius so that the items would fit in the 3 new containers
 
 // RF, zombie getup
@@ -384,7 +387,10 @@ typedef enum {
 	// Rafael - mg42		// (SA) I don't understand these here.  can someone explain?
 	PERS_HWEAPON_USE,
 	// Rafael wolfkick
-	PERS_WOLFKICK
+	PERS_WOLFKICK,
+
+	PERS_KILLS,
+	PERS_WAVES
 
 } persEnum_t;
 
@@ -445,17 +451,12 @@ typedef enum {
 	PW_INVIS,
 	PW_REGEN,
 	PW_FLIGHT,
-
-	// (SA) for Wolf
 	PW_INVULNERABLE,
-//	PW_FIRE,			//----(SA)
-//	PW_ELECTRIC,		//----(SA)
-//	PW_BREATHER,		//----(SA)
-	PW_NOFATIGUE,       //----(SA)
+	PW_NOFATIGUE, 
 
-	PW_REDFLAG,
-	PW_BLUEFLAG,
-	PW_BALL,
+	PW_AMMO,
+	PW_BATTLESUIT_SURV,
+	PW_VAMPIRE,
 
 	PW_NUM_POWERUPS
 } powerup_t;
@@ -554,6 +555,8 @@ typedef enum
 
 	AICHAR_PARTISAN,
 	AICHAR_CIVILIAN,
+
+	AICHAR_LOPER_SPECIAL,
 
 	NUM_CHARACTERS
 } AICharacters_t;
@@ -817,6 +820,7 @@ typedef enum {
 	EV_OBITUARY,
 	EV_POWERUP_QUAD,
 	EV_POWERUP_BATTLESUIT,
+	EV_POWERUP_BATTLESUIT_SURV,
 	EV_POWERUP_REGEN,
 	EV_GIB_PLAYER,          // gib a previously living player
 	EV_DEBUG_LINE,
@@ -1211,6 +1215,7 @@ typedef enum {
 	MOD_VENOM,
 	MOD_VENOM_FULL,
 	MOD_FLAMETHROWER,
+	MOD_FLAMETRAP,
 	MOD_TESLA,
 	MOD_SPEARGUN,
 	MOD_SPEARGUN_CO2,

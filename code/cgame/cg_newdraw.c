@@ -1107,15 +1107,6 @@ static void CG_DrawBlueName( rectDef_t *rect, int font, float scale, vec4_t colo
 }
 
 static void CG_DrawBlueFlagName( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
-#ifdef MISSIONPACK
-	int i;
-	for ( i = 0 ; i < cgs.maxclients ; i++ ) {
-		if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_RED  && cgs.clientinfo[i].powerups & ( 1 << PW_BLUEFLAG ) ) {
-			CG_Text_Paint( rect->x, rect->y + rect->h, scale, color, cgs.clientinfo[i].name, 0, 0, textStyle );
-			return;
-		}
-	}
-#endif  // #ifdef MISSIONPACK
 }
 
 static void CG_DrawBlueFlagStatus( rectDef_t *rect, qhandle_t shader ) {
@@ -1132,17 +1123,6 @@ static void CG_DrawBlueFlagStatus( rectDef_t *rect, qhandle_t shader ) {
 	if ( shader ) {
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
 	} else {
-		gitem_t *item = BG_FindItemForPowerup( PW_BLUEFLAG );
-		if ( item ) {
-			vec4_t color = {0, 0, 1, 1};
-			trap_R_SetColor( color );
-			if ( cgs.blueflag >= 0 && cgs.blueflag <= 2 ) {
-				CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cgs.media.flagShaders[cgs.blueflag] );
-			} else {
-				CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cgs.media.flagShaders[0] );
-			}
-			trap_R_SetColor( NULL );
-		}
 	}
 #endif  // #ifdef MISSIONPACK
 }
@@ -1150,15 +1130,6 @@ static void CG_DrawBlueFlagStatus( rectDef_t *rect, qhandle_t shader ) {
 static void CG_DrawBlueFlagHead( rectDef_t *rect ) {
 #ifdef MISSIONPACK
 	int i;
-	for ( i = 0 ; i < cgs.maxclients ; i++ ) {
-		if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_RED  && cgs.clientinfo[i].powerups & ( 1 << PW_BLUEFLAG ) ) {
-			vec3_t angles;
-			VectorClear( angles );
-			angles[YAW] = 180 + 20 * sin( cg.time / 650.0 );;
-			CG_DrawHead( rect->x, rect->y, rect->w, rect->h, 0,angles );
-			return;
-		}
-	}
 #endif  // #ifdef MISSIONPACK
 }
 
@@ -1650,22 +1621,8 @@ qboolean CG_OwnerDrawVisible( int flags ) {
 		}
 	}
 
-	if ( flags & CG_SHOW_TOURNAMENT ) {
-		if ( cgs.gametype == GT_TOURNAMENT ) {
-			return qtrue;
-		}
-	}
-
 	if ( flags & CG_SHOW_DURINGINCOMINGVOICE ) {
 	}
-
-#ifdef MISSIONPACK
-	if ( flags & CG_SHOW_IF_PLAYER_HAS_FLAG ) {
-		if ( cg.snap->ps.powerups[PW_REDFLAG] || cg.snap->ps.powerups[PW_BLUEFLAG] || cg.snap->ps.powerups[PW_NEUTRALFLAG] ) {
-			return qtrue;
-		}
-	}
-#endif  // #ifdef MISSIONPACK
 
 //----(SA)	added
 	if ( flags & CG_SHOW_NOT_V_CLEAR ) {
@@ -1689,20 +1646,6 @@ qboolean CG_OwnerDrawVisible( int flags ) {
 	return qfalse;
 }
 
-
-
-static void CG_DrawPlayerHasFlag( rectDef_t *rect, qboolean force2D ) {
-#ifdef MISSIONPACK
-	int adj = ( force2D ) ? 0 : 2;
-	if ( cg.predictedPlayerState.powerups[PW_REDFLAG] ) {
-		CG_DrawFlagModel( rect->x + adj, rect->y + adj, rect->w - adj, rect->h - adj, TEAM_RED, force2D );
-	} else if ( cg.predictedPlayerState.powerups[PW_BLUEFLAG] ) {
-		CG_DrawFlagModel( rect->x + adj, rect->y + adj, rect->w - adj, rect->h - adj, TEAM_BLUE, force2D );
-	} else if ( cg.predictedPlayerState.powerups[PW_NEUTRALFLAG] ) {
-		CG_DrawFlagModel( rect->x + adj, rect->y + adj, rect->w - adj, rect->h - adj, TEAM_FREE, force2D );
-	}
-#endif  // #ifdef MISSIONPACK
-}
 
 static void CG_DrawAreaSystemChat( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader ) {
 	CG_Text_Paint( rect->x, rect->y + rect->h, font, scale, color, systemChat, 0, 0, 0 );
@@ -2332,6 +2275,12 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 	case CG_PLAYER_SCORE:
 		CG_DrawPlayerScore( &rect, font, scale, color, shader, textStyle );
 		break;
+	case CG_PLAYER_KILLS:
+		CG_DrawPlayerKills( &rect, font, scale, color, shader, textStyle );
+		break;
+	case CG_PLAYER_WAVES:
+		CG_DrawPlayerWaves( &rect, font, scale, color, shader, textStyle );
+		break;
 	case CG_PLAYER_HEALTH:
 		CG_DrawPlayerHealth( &rect, font, scale, color, shader, textStyle );
 		break;
@@ -2394,12 +2343,6 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_STATUS:
 		CG_DrawPlayerStatus( &rect );
-		break;
-	case CG_PLAYER_HASFLAG:
-		CG_DrawPlayerHasFlag( &rect, qfalse );
-		break;
-	case CG_PLAYER_HASFLAG2D:
-		CG_DrawPlayerHasFlag( &rect, qtrue );
 		break;
 	case CG_AREA_SYSTEMCHAT:
 		CG_DrawAreaSystemChat( &rect, font, scale, color, shader );

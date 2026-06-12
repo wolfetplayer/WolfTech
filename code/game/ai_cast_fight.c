@@ -500,7 +500,9 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 			return 80;
 		case AICHAR_WARZOMBIE:
 			return 80;      // make it larger so we can start swinging early, and move in while swinging
-		case AICHAR_LOPER:  // close attack, head-butt, fist
+		case AICHAR_LOPER:
+		 case AICHAR_LOPER_SPECIAL: 
+		  // close attack, head-butt, fist
 			return 60;
 		case AICHAR_BLACKGUARD:
 			return BLACKGUARD_MELEE_RANGE;
@@ -519,7 +521,8 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 			return 1000;
 		case AICHAR_HELGA:  // zombie spirit attack
 			return 1900;
-		case AICHAR_LOPER:  // loper leap attack
+		case AICHAR_LOPER: 
+		case AICHAR_LOPER_SPECIAL:  // loper leap attack
 			return 8000;    // use it to gain on them also
 		}
 		break;
@@ -528,6 +531,7 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 		case AICHAR_HEINRICH:   // spirits
 			return 50000;
 		case AICHAR_LOPER:  // loper ground attack
+		 case AICHAR_LOPER_SPECIAL: 
 			return LOPER_GROUND_RANGE;
 		case AICHAR_WARZOMBIE:  // warzombie defense
 			return 2000;
@@ -980,6 +984,7 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 
 			// melee attacks are always available
 		case AICHAR_LOPER:
+		 case AICHAR_LOPER_SPECIAL: 
 		case AICHAR_WARZOMBIE:
 			return qtrue;   // always usable
 
@@ -1048,6 +1053,7 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 			}
 			break;
 		case AICHAR_LOPER:  // loper leap attack
+		 case AICHAR_LOPER_SPECIAL: 
 			if ( cs->bs->areanum && VectorLength( cs->bs->velocity ) > 1 ) {    // if we are in a valid area, and are persuing, then leave a delay
 				// if there isn't a direct trace to our enemy, then fail
 				if ( cs->enemyNum >= 0 ) {
@@ -1079,6 +1085,7 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 			delay = 7000;
 			break;
 		case AICHAR_LOPER:  // loper ground zap
+		 case AICHAR_LOPER_SPECIAL: 
 			delay = 3500;
 			if ( dist < 0 || dist > LOPER_GROUND_RANGE ) {
 				return qfalse;

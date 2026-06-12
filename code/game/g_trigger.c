@@ -885,24 +885,6 @@ void Touch_flagonly( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	if ( !other->client ) {
 		return;
 	}
-
-	if ( ent->spawnflags & RED_FLAG && other->client->ps.powerups[ PW_REDFLAG ] ) {
-
-		G_Script_ScriptEvent( ent, "death", "" );
-
-		// Removes itself
-		ent->touch = 0;
-		ent->nextthink = level.time + FRAMETIME;
-		ent->think = G_FreeEntity;
-	} else if ( ent->spawnflags & BLUE_FLAG && other->client->ps.powerups[ PW_BLUEFLAG ] )   {
-
-		G_Script_ScriptEvent( ent, "death", "" );
-
-		// Removes itself
-		ent->touch = 0;
-		ent->nextthink = level.time + FRAMETIME;
-		ent->think = G_FreeEntity;
-	}
 }
 
 void SP_trigger_flagonly( gentity_t *ent ) {

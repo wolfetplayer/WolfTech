@@ -69,96 +69,98 @@ void AddScore( gentity_t *ent, int score ) {
 
 extern qboolean G_ThrowChair( gentity_t *ent, vec3_t dir, qboolean force );
 
+
 /*
 =================
-TossClientItems
+TossClientWeapons
 
-Toss the weapon and powerups for the killed player
+Toss the weapon and powerups for the killed entity
 =================
 */
-void TossClientItems( gentity_t *self ) {
-	gitem_t     *item;
+void TossClientWeapons( gentity_t *self )
+{
+	gitem_t *item;
+	vec3_t forward;
 	int weapon;
-	float angle;
-	int i;
-	gentity_t   *drop = 0;
+	gentity_t *drop = 0;
 
 	// drop the weapon if not a gauntlet or machinegun
 	weapon = self->s.weapon;
 
-	switch ( self->aiCharacter ) {
-	case AICHAR_ZOMBIE:
-	case AICHAR_ZOMBIE_SURV:
-	case AICHAR_WARZOMBIE:
-	case AICHAR_LOPER:
-		return;         //----(SA)	removed DK's special case
-	default:
-		break;
+	if (g_gametype.integer == GT_COOP_SURVIVAL)
+	{
+		return;
 	}
+
+		switch (self->aiCharacter)
+		{
+		case AICHAR_ZOMBIE:
+		case AICHAR_WARZOMBIE:
+		case AICHAR_LOPER:
+		case AICHAR_LOPER_SPECIAL:
+			return;
+		default:
+			break;
+		}
+	
+
+	AngleVectors(self->r.currentAngles, forward, NULL, NULL);
+
+	G_ThrowChair(self, forward, qtrue); // drop chair if you're holding one  //----(SA)	added
 
 	// make a special check to see if they are changing to a new
 	// weapon that isn't the mg or gauntlet.  Without this, a client
 	// can pick up a weapon, be killed, and not drop the weapon because
 	// their weapon change hasn't completed yet and they are still holding the MG.
 
-// (SA) always drop what you were switching to
-	if ( 1 ) {
-//	if ( weapon == WP_MACHINEGUN || weapon == WP_GRAPPLING_HOOK ) {
-		if ( self->client->ps.weaponstate == WEAPON_DROPPING || self->client->ps.weaponstate == WEAPON_DROPPING_TORELOAD ) {
+	// (SA) always drop what you were switching to
+	if (1)
+	{
+		if (self->client->ps.weaponstate == WEAPON_DROPPING || self->client->ps.weaponstate == WEAPON_DROPPING_TORELOAD)
+		{
 			weapon = self->client->pers.cmd.weapon;
 		}
-		if ( !( COM_BitCheck( self->client->ps.weapons, weapon ) ) ) {
+		if (!(COM_BitCheck(self->client->ps.weapons, weapon)))
+		{
 			weapon = WP_NONE;
 		}
 	}
 
-
-	if ( weapon == WP_SNOOPERSCOPE ) {
+	//----(SA)	added
+	if (weapon == WP_SNOOPERSCOPE)
+	{
 		weapon = WP_GARAND;
 	}
-	if ( weapon == WP_FG42SCOPE ) {
+	if (weapon == WP_FG42SCOPE)
+	{
 		weapon = WP_FG42;
 	}
-	if ( weapon == WP_AKIMBO ) { 
-		weapon = WP_COLT;
-	}
 
-
-
-	if ( weapon > WP_NONE && weapon < WP_MONSTER_ATTACK1 && self->client->ps.ammo[ BG_FindAmmoForWeapon( weapon )] ) {
+	if (weapon > WP_NONE && weapon < WP_DUMMY_MG42 && self->client->ps.ammo[BG_FindAmmoForWeapon(weapon)])
+	{
 		// find the item type for this weapon
-		item = BG_FindItemForWeapon( weapon );
+		item = BG_FindItemForWeapon(weapon);
 		// spawn the item
 
 		// Rafael
-		if ( !( self->client->ps.persistant[PERS_HWEAPON_USE] ) ) {
-			drop = Drop_Item( self, item, 0, qfalse );
+		if (!(self->client->ps.persistant[PERS_HWEAPON_USE]))
+		{
+			drop = Drop_Item(self, item, 0, qfalse);
 		}
 	}
 
-	// dropped items stay forever in SP and coop games where NPC's do not respawn
-	if ( g_gametype.integer <= GT_SINGLE_PLAYER && g_gameskill.integer < GSKILL_MAX ) {
-		if ( drop ) {
+	// dropped items stay forever in SP
+	if (drop)
+	{
+		if (g_gametype.integer == GT_COOP_SURVIVAL)
+		{
+			drop->nextthink = level.time + 100000;
+		}
+		else
+		{
 			drop->nextthink = 0;
 		}
-	}
 
-	angle = 45;
-	for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ ) {
-		if ( self->client->ps.powerups[ i ] > level.time ) {
-			item = BG_FindItemForPowerup( i );
-			if ( !item ) {
-				continue;
-			}
-			drop = Drop_Item( self, item, angle, qfalse );
-			// decide how many seconds it has left
-			drop->count = ( self->client->ps.powerups[ i ] - level.time ) / 1000;
-			if ( drop->count < 1 ) {
-				drop->count = 1;
-			}
-			drop->nextthink = 0;    // stay forever
-			angle += 45;
-		}
 	}
 }
 
@@ -280,6 +282,7 @@ char    *modNames[] = {
 	"MOD_VENOM",
 	"MOD_VENOM_FULL",
 	"MOD_FLAMETHROWER",
+	"MOD_FLAMETRAP",
 	"MOD_TESLA",
 	"MOD_SPEARGUN",
 	"MOD_SPEARGUN_CO2",
@@ -426,7 +429,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {   // only drop here in single player; in multiplayer, drop @ limbo
 		contents = trap_PointContents( self->r.currentOrigin, -1 );
 		if ( !( contents & CONTENTS_NODROP ) ) {
-			TossClientItems( self );
+			TossClientWeapons( ent );
 		}
 	}
 
@@ -1159,6 +1162,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		damage *= 0.5;
 	}
 
+	if ( client && client->ps.powerups[PW_BATTLESUIT_SURV] ) {
+		G_AddEvent( targ, EV_POWERUP_BATTLESUIT_SURV, 0 );
+
+		damage *= 0.05;
+	}
+
 	// always give half damage if hurting self
 	// calculated after knockback, so rocket jumping works
 	if ( g_gametype.integer <= GT_SINGLE_PLAYER ) {     // JPW NERVE -- removed from multiplayer -- plays havoc with pfaust & demolition balancing
@@ -1474,6 +1483,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			}
 
 		} else if ( targ->pain ) {
+			targ->lastPainMOD = mod; // set mod for AICast_Pain to access
+
 			if ( dir ) {  // Ridah, had to add this to fix NULL dir crash
 				VectorCopy( dir, targ->rotate );
 				VectorCopy( point, targ->pos3 ); // this will pass loc of hit
@@ -1484,8 +1495,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 			Coop_AddStats( targ, attacker, take, mod );
 			targ->pain( targ, attacker, take, point );
+			targ->lastPainMOD = 0; // optional: reset after use
 		} else {
 			Coop_AddStats( targ, attacker, take, mod );
+			targ->lastPainMOD = 0; // optional: reset after use
 		}
 
 		if ( attacker->health <= 0 && attackerpain ) {

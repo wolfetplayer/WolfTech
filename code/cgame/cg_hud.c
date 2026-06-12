@@ -523,6 +523,37 @@ static void CG_DrawPlayerLocation( rectDef_t *rect, int font, float scale, vec4_
 	}
 }
 
+static void CG_DrawPlayerKills( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
+	char num[16];
+	int value = cg.snap->ps.persistant[PERS_KILLS];
+
+	if ( shader ) {
+		trap_R_SetColor( color );
+		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
+		trap_R_SetColor( NULL );
+	} else {
+		Com_sprintf( num, sizeof( num ), "%i", value );
+		value = CG_Text_Width( num, font, scale, 0 );
+		CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
+	}
+}
+
+static void CG_DrawPlayerWaves( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
+	char num[16];
+	int value = cg.snap->ps.persistant[PERS_WAVES];
+
+	if ( shader ) {
+		trap_R_SetColor( color );
+		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
+		trap_R_SetColor( NULL );
+	} else {
+		Com_sprintf( num, sizeof( num ), "%i", value );
+		value = CG_Text_Width( num, font, scale, 0 );
+		CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
+	}
+}
+
+
 static void CG_DrawPlayerScore( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
 	char num[16];
 	int value = cg.snap->ps.persistant[PERS_SCORE];
@@ -727,6 +758,9 @@ float CG_GetValue( int ownerDraw, int type ) {
 		break;
 	case CG_PLAYER_SCORE:
 		return cg.snap->ps.persistant[PERS_SCORE];
+		break;
+	case CG_PLAYER_KILLS:
+		return cg.snap->ps.persistant[PERS_KILLS];
 		break;
 	case CG_PLAYER_LIVES:
 		return ps->persistant[PERS_RESPAWNS_LEFT];
@@ -1381,6 +1415,12 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 	case CG_PLAYER_SCORE:
 		CG_DrawPlayerScore( &rect, font, scale, color, shader, textStyle );
 		break;
+	case CG_PLAYER_KILLS:
+		CG_DrawPlayerKills( &rect, font, scale, color, shader, textStyle );
+		break;
+	case CG_PLAYER_WAVES:
+		CG_DrawPlayerWaves( &rect, font, scale, color, shader, textStyle );
+		break;
 	case CG_PLAYER_LIVES:
 		CG_DrawPlayerLives( &rect, font, scale, color, shader, textStyle );
 		break;
@@ -1427,10 +1467,6 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 	case CG_CTF_POWERUP:
 		break;
 	case CG_PLAYER_STATUS:
-		break;
-	case CG_PLAYER_HASFLAG:
-		break;
-	case CG_PLAYER_HASFLAG2D:
 		break;
 	case CG_AREA_SYSTEMCHAT:
 		CG_DrawAreaSystemChat( &rect, font, scale, color, shader );

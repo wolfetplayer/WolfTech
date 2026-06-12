@@ -142,14 +142,6 @@ void Team_FragBonuses( gentity_t *targ, gentity_t *inflictor, gentity_t *attacke
 		return; // whoever died isn't on a team
 
 	}
-	// same team, if the flag at base, check to he has the enemy flag
-	if ( team == TEAM_RED ) {
-		flag_pw = PW_REDFLAG;
-		enemy_flag_pw = PW_BLUEFLAG;
-	} else {
-		flag_pw = PW_BLUEFLAG;
-		enemy_flag_pw = PW_REDFLAG;
-	}
 
 	// did the attacker frag the flag carrier?
 	if ( targ->client->ps.powerups[enemy_flag_pw] ) {
@@ -277,12 +269,6 @@ void Team_CheckHurtCarrier( gentity_t *targ, gentity_t *attacker ) {
 		return;
 	}
 
-	if ( targ->client->sess.sessionTeam == TEAM_RED ) {
-		flag_pw = PW_BLUEFLAG;
-	} else {
-		flag_pw = PW_REDFLAG;
-	}
-
 	if ( targ->client->ps.powerups[flag_pw] &&
 		 targ->client->sess.sessionTeam != attacker->client->sess.sessionTeam ) {
 		attacker->client->pers.teamState.lasthurtcarrier = level.time;
@@ -345,11 +331,6 @@ void Team_ReturnFlag( int team ) {
 }
 
 void Team_FreeEntity( gentity_t *ent ) {
-	if ( ent->item->giTag == PW_REDFLAG ) {
-		Team_ReturnFlag( TEAM_RED );
-	} else if ( ent->item->giTag == PW_BLUEFLAG ) {
-		Team_ReturnFlag( TEAM_BLUE );
-	}
 }
 
 /*
@@ -362,11 +343,6 @@ Flags are unique in that if they are dropped, the base flag must be respawned wh
 ==============
 */
 void Team_DroppedFlagThink( gentity_t *ent ) {
-	if ( ent->item->giTag == PW_REDFLAG ) {
-		Team_ReturnFlagSound( Team_ResetFlag( TEAM_RED ), TEAM_RED );
-	} else if ( ent->item->giTag == PW_BLUEFLAG ) {
-		Team_ReturnFlagSound( Team_ResetFlag( TEAM_BLUE ), TEAM_BLUE );
-	}
 	// Reset Flag will delete this entity
 }
 
@@ -376,14 +352,6 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	gclient_t *cl = other->client;
 	int our_flag, enemy_flag;
 	gentity_t   *te;
-
-	if ( cl->sess.sessionTeam == TEAM_RED ) {
-		our_flag = PW_REDFLAG;
-		enemy_flag = PW_BLUEFLAG;
-	} else {
-		our_flag = PW_BLUEFLAG;
-		enemy_flag = PW_REDFLAG;
-	}
 
 	if ( ent->flags & FL_DROPPED_ITEM ) {
 		// hey, it's not home.  return it by teleporting it back
@@ -476,12 +444,6 @@ int Team_TouchEnemyFlag( gentity_t *ent, gentity_t *other, int team ) {
 			  other->client->pers.netname, TeamName( team ) );
 	AddScore( other, CTF_FLAG_BONUS );
 
-	if ( team == TEAM_RED ) {
-		cl->ps.powerups[PW_REDFLAG] = INT_MAX; // flags never expire
-	} else {
-		cl->ps.powerups[PW_BLUEFLAG] = INT_MAX; // flags never expire
-
-	}
 	cl->pers.teamState.flagsince = level.time;
 
 	return -1; // Do not respawn this automatically, but do delete it if it was FL_DROPPED

@@ -2576,54 +2576,78 @@ model="models/powerups/holdable/wine.md3"
 	// POWERUP ITEMS
 	//
 
-/*QUAKED team_CTF_redflag (1 0 0) (-16 -16 -16) (16 16 16)
-Only in CTF games
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/flags/r_flag.md3"
+
+/*QUAKED item_ammopw (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
-	{
-		"team_CTF_redflag",
-		"sound/teamplay/flagtk_red.wav",
-		{ "models/flags/r_flag.md3",
-		  0, 0, 0,   0 },
-		"icons/iconf_red",   // icon
-		NULL,               // ammo icon
-		"Red Flag",          // pickup
-		0,
-		IT_TEAM,
+		{
+		"item_ammopw",
+		"sound/misc/powerup_resupply.wav",
+		{
+		"models/powerups/survival/thule_gr.md3",
+		0, 
+		0
+		},
+		"",              
+		"Veil Ressuply",       
+		1,
+		IT_POWERUP,
 		WP_NONE,
-		PW_REDFLAG,
+		PW_AMMO,
 		0,
 		0,
-		"",                  // precache
-		"sound/teamplay/flagcap_red.wav sound/teamplay/flagtk_red.wav sound/teamplay/flagret_red.wav",   // sounds
-		{0,0,0,0}
+		0,
+		"",                            
+		"",   
+		{0,0,0,0,0,0}
 	},
 
-/*QUAKED team_CTF_blueflag (0 0 1) (-16 -16 -16) (16 16 16)
-Only in CTF games
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/flags/b_flag.md3"
+		/*QUAKED item_enviro (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
-	{
-		"team_CTF_blueflag",
-		"sound/teamplay/flagtk_blu.wav",
-		{ "models/flags/b_flag.md3",
-		  0, 0, 0,   0 },
-		"icons/iconf_blu",   // icon
-		NULL,               // ammo icon
-		"Blue Flag",     // pickup
-		0,
-		IT_TEAM,
+		{
+		"item_enviro_surv",
+		"sound/misc/powerup_shield.wav",
+		{
+		"models/powerups/survival/thule_g.md3",
+		0, 
+		0
+		},
+		"",                             
+		"Veil Shield",     
+		30,
+		IT_POWERUP,
 		WP_NONE,
-		PW_BLUEFLAG,
+		PW_BATTLESUIT_SURV,
 		0,
 		0,
-		"",                  // precache
-		"sound/teamplay/flagcap_blu.wav sound/teamplay/flagtk_blu.wav sound/teamplay/flagret_blu.wav",   // sounds
-		{0,0,0,0}
+		0,
+		"",                          
+		"sound/items/airout.wav sound/items/protect3.wav",   
+		{0,0,0,0,0,0}
 	},
 
+/*QUAKED item_vampire (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+		{
+		"item_vampire",
+		"sound/misc/powerup_vampirism.wav",
+		{
+		"models/powerups/survival/thule_r.md3",
+		0, 
+		0
+		},
+		"",              
+		"Veil Essence Reaver",       
+		30,
+		IT_POWERUP,
+		WP_NONE,
+		PW_VAMPIRE,
+		0,
+		0,
+		0,
+		"",                            
+		"",   
+		{0,0,0,0,0,0}
+	},
 
 	{
 		"key_binocs",
@@ -3334,19 +3358,6 @@ qboolean    BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *
 		// ent->modelindex2 is non-zero on items if they are dropped
 		// we need to know this because we can pick up our dropped flag (and return it)
 		// but we can't pick up our flag at base
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED ) {
-			if ( item->giTag == PW_BLUEFLAG ||
-				 ( item->giTag == PW_REDFLAG && ent->otherEntityNum2 /*ent->modelindex2*/ ) ||
-				 ( item->giTag == PW_REDFLAG && ps->powerups[PW_BLUEFLAG] ) ) {
-				return qtrue;
-			}
-		} else if ( ps->persistant[PERS_TEAM] == TEAM_BLUE ) {
-			if ( item->giTag == PW_REDFLAG ||
-				 ( item->giTag == PW_BLUEFLAG && ent->otherEntityNum2 /*ent->modelindex2*/ ) ||
-				 ( item->giTag == PW_BLUEFLAG && ps->powerups[PW_REDFLAG] ) ) {
-				return qtrue;
-			}
-		}
 		return qfalse;
 
 
@@ -3684,6 +3695,7 @@ char *eventnames[] = {
 	"EV_OBITUARY",
 	"EV_POWERUP_QUAD",
 	"EV_POWERUP_BATTLESUIT",
+	"EV_POWERUP_BATTLESUIT_SURV",
 	"EV_POWERUP_REGEN",
 	"EV_GIB_PLAYER",         // gib a previously living player
 	"EV_DEBUG_LINE",
@@ -3971,4 +3983,49 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->aiChar = ps->aiChar; // Ridah
 	s->teamNum = ps->teamNum;
 	s->aiState = ps->aiState;
+}
+
+
+/*
+==========================
+BG_GetMaxAmmo
+
+Returns the correct max ammo capacity for the given weapon and player state,
+taking into account whether the weapon is upgraded and any class-specific bonuses.
+==========================
+*/
+int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus) {
+	int maxAmmo;
+	int upgradeLevel;
+
+	if (!ps || weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS) {
+		return 0;
+	}
+
+	const ammotable_t *wt = &ammoTable[weapon];
+
+	upgradeLevel = ps->weaponUpgraded[weapon];
+	if (upgradeLevel < 0) {
+		upgradeLevel = 0;
+	}
+
+	if (upgradeLevel >= 1) {
+		float multiplier = 1.0f;
+
+		if (upgradeLevel == 2) {
+			multiplier = 1.5f;
+		} else if (upgradeLevel >= 3) {
+			multiplier = 2.0f;
+		}
+
+		maxAmmo = (int)(wt->maxammoUpgraded * multiplier);
+	} else {
+		maxAmmo = wt->maxammo;
+	}
+
+	if (ps->stats[STAT_PLAYER_CLASS] == PC_LT) {
+		maxAmmo = (int)(maxAmmo * LT_AMMO_BONUS_MULTIPLIER);
+	}
+
+	return maxAmmo;
 }

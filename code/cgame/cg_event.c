@@ -1645,7 +1645,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_ZOMBIE_STEP ][footstepcnt] );
 			} else if ( cent->currentState.aiChar == AICHAR_ZOMBIE_SURV ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_ZOMBIE_STEP ][footstepcnt] );
-			} else if ( cent->currentState.aiChar == AICHAR_LOPER ) {
+			} else if ( cent->currentState.aiChar == AICHAR_LOPER || cent->currentState.aiChar == AICHAR_LOPER_SPECIAL ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_LOPER_STEP ][footstepcnt] );
 			} else if ( cent->currentState.aiChar == AICHAR_PROTOSOLDIER ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_PROTOSOLDIER_STEP ][footstepcnt] );
@@ -1668,7 +1668,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		if ( cg_footsteps.integer ) {
 			if ( cent->currentState.aiChar == AICHAR_ELITEGUARD ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_ELITE_METAL ][footstepcnt] );
-			} else if ( cent->currentState.aiChar == AICHAR_LOPER ) {
+			} else if ( cent->currentState.aiChar == AICHAR_LOPER || cent->currentState.aiChar == AICHAR_LOPER_SPECIAL) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_LOPER_METAL ][footstepcnt] );
 			} else if ( cent->currentState.aiChar == AICHAR_PROTOSOLDIER ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_PROTOSOLDIER_METAL ][footstepcnt] );
@@ -1692,7 +1692,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_ZOMBIE_WOOD ][footstepcnt] );
 			}  else if ( cent->currentState.aiChar == AICHAR_ZOMBIE_SURV ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_ZOMBIE_WOOD ][footstepcnt] );
-			} else if ( cent->currentState.aiChar == AICHAR_LOPER ) {
+			} else if ( cent->currentState.aiChar == AICHAR_LOPER || cent->currentState.aiChar == AICHAR_LOPER_SPECIAL) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_LOPER_WOOD ][footstepcnt] );
 			} else if ( cent->currentState.aiChar == AICHAR_PROTOSOLDIER ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_PROTOSOLDIER_WOOD ][footstepcnt] );
@@ -2477,6 +2477,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME( "EV_POWERUP_BATTLESUIT" );
 		if ( es->number == cg.snap->ps.clientNum ) {
 			cg.powerupActive = PW_BATTLESUIT;
+			cg.powerupTime = cg.time;
+		}
+		trap_S_StartSound( NULL, es->number, CHAN_ITEM, trap_S_RegisterSound( "sound/items/protect3.wav" ) );
+		break;
+	case EV_POWERUP_BATTLESUIT_SURV:
+		DEBUGNAME( "EV_POWERUP_BATTLESUIT_SURV" );
+		if ( es->number == cg.snap->ps.clientNum ) {
+			cg.powerupActive = PW_BATTLESUIT_SURV;
 			cg.powerupTime = cg.time;
 		}
 		trap_S_StartSound( NULL, es->number, CHAN_ITEM, trap_S_RegisterSound( "sound/items/protect3.wav" ) );

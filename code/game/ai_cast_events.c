@@ -119,6 +119,15 @@ void AICast_Pain( gentity_t *targ, gentity_t *attacker, int damage, vec3_t point
 		return;
 	}
 
+	if (g_gametype.integer == GT_COOP_SURVIVAL)
+	{
+		// prevent scoring for fire damage
+		if (targ->lastPainMOD != MOD_FLAMETHROWER && targ->lastPainMOD != MOD_FLAMETRAP)
+		{
+			Survival_AddPainScore(attacker, targ, damage);
+		}
+	}
+
 	// process the event (turn to face the attacking direction? go into hide/retreat state?)
 	// need to weigh up the situation, but foremost, an inactive AI cast should always react in some way to being hurt
 	cs->lastPain = level.time;
@@ -253,7 +262,7 @@ void AICast_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		// if client is in a nodrop area, don't drop anything
 		contents = trap_PointContents( self->r.currentOrigin, -1 );
 		if ( !( contents & CONTENTS_NODROP ) ) {
-			TossClientItems( self );
+			TossClientWeapons( self );
 		}
 
 		// make sure the client doesn't forget about this entity until it's set to "dead" frame

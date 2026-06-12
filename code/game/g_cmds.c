@@ -2968,10 +2968,12 @@ void ClientDamage( gentity_t *clent, int entnum, int enemynum, int id ) {
 		}
 		break;
 	case CLDMG_TESLA:
-		if (    ( ent->aiCharacter == AICHAR_PROTOSOLDIER ) ||
-				( ent->aiCharacter == AICHAR_SUPERSOLDIER ) ||
-				( ent->aiCharacter == AICHAR_LOPER ) ||
-				( ent->aiCharacter >= AICHAR_STIMSOLDIER1 && ent->aiCharacter <= AICHAR_STIMSOLDIER3 ) ) {
+		if ((ent->aiCharacter == AICHAR_PROTOSOLDIER) ||
+			(ent->aiCharacter == AICHAR_SUPERSOLDIER) ||
+			(ent->aiCharacter == AICHAR_LOPER) ||
+			(ent->aiCharacter == AICHAR_LOPER_SPECIAL) 
+			)
+		{
 			break;
 		}
 
@@ -2982,6 +2984,12 @@ void ClientDamage( gentity_t *clent, int entnum, int enemynum, int id ) {
 		}
 		break;
 	case CLDMG_FLAMETHROWER:
+
+		if (ent->client && (ent->client->ps.powerups[PW_BATTLESUIT_SURV] ) )
+		{
+			break; // Don't apply flamethrower effects
+		}
+
 		if ( ( enemy->aiCharacter == AICHAR_ZOMBIE || !Q_stricmp( enemy->classname, "props_flamethrower" ) ) && ent->takedamage && !AICast_NoFlameDamage( ent->s.number ) ) {
 			#define FLAME_THRESHOLD 10
 			int damage = GetWeaponTableData(WP_FLAMETHROWER)->weaponDamage;

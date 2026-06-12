@@ -372,14 +372,6 @@ static void CG_TouchItem( centity_t *cent ) {
 
 	// Special case for flags.
 	// We don't predict touching our own flag
-	if ( cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_RED &&
-		 item->giTag == PW_REDFLAG ) {
-		return;
-	}
-	if ( cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_BLUE &&
-		 item->giTag == PW_BLUEFLAG ) {
-		return;
-	}
 
 
 	// grab it
