@@ -189,7 +189,6 @@ typedef struct svParams_s
 	int intermissionTime;
 	int prepareTime;
 
-	float ltAmmoBonus;
 	float soldierExplosiveDmgBonus;
 	float cvopsmeleeDmgBonus;
 	float cvopsthrowspeedBonus;

@@ -70,24 +70,15 @@ void AICast_InitSurvival(void) {
     svParams.lastSpecialWave      = 0;
 
 	svParams.maxActiveAI[AICHAR_SOLDIER] = svParams.initialSoldiersCount;
-	svParams.maxActiveAI[AICHAR_MERCENARY] = svParams.initialMercsCount;
-	svParams.maxActiveAI[AICHAR_TRENCH] = svParams.initialTrenchCount;
-	svParams.maxActiveAI[AICHAR_XSHEPHERD] = svParams.initialXdogCount;
 	svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = svParams.initialZombiesCount;
-	svParams.maxActiveAI[AICHAR_FLESH] = svParams.initialFleshCount;
-	svParams.maxActiveAI[AICHAR_ZOMBIE_GHOST] = svParams.initialGhostsCount;
-	svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] = svParams.initialFlamersCount;
 	svParams.maxActiveAI[AICHAR_WARZOMBIE] = svParams.initialWarriorsCount;
 	svParams.maxActiveAI[AICHAR_PROTOSOLDIER] = svParams.initialProtosCount;
 	svParams.maxActiveAI[AICHAR_PARTISAN] = svParams.initialPartisansCount;
-	svParams.maxActiveAI[AICHAR_PRIEST] = svParams.initialPriestsCount;
 	svParams.maxActiveAI[AICHAR_ELITEGUARD] = svParams.initialEliteGuardsCount;
 	svParams.maxActiveAI[AICHAR_BLACKGUARD] = svParams.initialBlackGuardsCount;
 	svParams.maxActiveAI[AICHAR_VENOM] = svParams.initialVenomsCount;
 	svParams.maxActiveAI[AICHAR_LOPER] = svParams.initialLopersCount;
 	svParams.maxActiveAI[AICHAR_HELGA] = svParams.initialHelgaCount;
-	svParams.maxActiveAI[AICHAR_SUPERSOLDIER_LAB] = svParams.initialssCount;
-	svParams.maxActiveAI[AICHAR_DOG] = svParams.initialdogCount;
 	svParams.maxActiveAI[AICHAR_HEINRICH] = svParams.initialheinCount;
 }
 
@@ -328,20 +319,11 @@ void AICast_SetRebirthTimeSurvival(gentity_t *ent, cast_state_t *cs) {
 			case AICHAR_ELITEGUARD:
 				baseTime = svParams.egSpawnTime * 1000;
 				break;
-			case AICHAR_TRENCH:
-			    baseTime = svParams.trenchSpawnTime * 1000;
-				break;
 			case AICHAR_HELGA:
 			    baseTime = svParams.helgaSpawnTime * 1000;
 				break;
-			case AICHAR_XSHEPHERD:
-			    baseTime = svParams.XdogSpawnTime * 1000;
-				break;
 			case AICHAR_HEINRICH:
 			    baseTime = svParams.heinSpawnTime * 1000;
-				break;
-			case AICHAR_SUPERSOLDIER_LAB:
-			    baseTime = svParams.ssSpawnTime * 1000;
 				break;
 			case AICHAR_BLACKGUARD:
 				baseTime = svParams.bgSpawnTime * 1000;
@@ -355,20 +337,8 @@ void AICast_SetRebirthTimeSurvival(gentity_t *ent, cast_state_t *cs) {
 			case AICHAR_WARZOMBIE:
 				baseTime = svParams.warzSpawnTime * 1000;
 				break;
-			case AICHAR_ZOMBIE_GHOST:
-				baseTime = svParams.ghostSpawnTime * 1000;
-				break;
-			case AICHAR_PRIEST:
-				baseTime = svParams.priestSpawnTime * 1000;
-				break;
-			case AICHAR_ZOMBIE_FLAME:
-				baseTime = svParams.flamerSpawnTime * 1000;
-				break;
 			case AICHAR_LOPER:
 				baseTime = svParams.loperSpawnTime * 1000;
-				break;
-			case AICHAR_DOG:
-				baseTime = svParams.dogSpawnTime * 1000;
 				break;
 			default: // Regular soldiers and zombies
 				baseTime = svParams.defaultSpawnTime * 1000;
@@ -397,76 +367,11 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 	qboolean modKicked = (meansOfDeath == MOD_KICKED);
 	qboolean modKnife = (meansOfDeath == MOD_KNIFE);
 	qboolean killerPlayer	 = attacker && attacker->client && !( attacker->aiCharacter );
-
-    // ETSP Achievements stuff!
-	qboolean modGL = (meansOfDeath == MOD_M7 );
-	qboolean modBr = (meansOfDeath == MOD_BROWNING );
-	qboolean modAir = (meansOfDeath == MOD_AIRSTRIKE );
-	qboolean modGas = (meansOfDeath == MOD_POISONGAS );
 	
 	
-	if(self->aiCharacter == AICHAR_LOPER && killerPlayer && modPanzerfaust)
-	{
-		if ( !g_cheats.integer )
-		{
-		steamSetAchievement("ACH_LOPER_ROCKET");
-		}
-	}
-
-		
-	if(self->aiCharacter == AICHAR_ELITEGUARD && killerPlayer && modKicked)
-	{
-		if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_ELITE_FOOT");
-		}
-	}
-
-	if(self->aiCharacter == AICHAR_PROTOSOLDIER && killerPlayer && modKnife)
-	{
-		if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_PROTO_KNIFE");
-		}
-	}
-
-		if(self->aiCharacter && killerPlayer && modGL)
-	{
-		if ( !g_cheats.integer )
-		{
-		steamSetAchievement("ACH_GL");
-		}
-	}
-
-		if(self->aiCharacter == AICHAR_VENOM && killerPlayer && modBr)
-	{
-		if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_BROWNING");
-		}
-	}
-
-		if(self->aiCharacter && killerPlayer && modAir)
-	{
-		if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_AIR");
-		}
-	}
-
-
-		if(self->aiCharacter && killerPlayer && modGas)
-	{
-		if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_GAS");
-		}
-	}
-
 	  if (killerPlayer && attacker->client->ps.powerups[PW_VAMPIRE]) {
 
 			trap_SendServerCommand( -1, "mu_play sound/Zombie/firstsight/firstsight3.wav 0\n" );
-			G_AddEvent( self, EV_GIB_VAMPIRISM, killer );
 		    attacker->health += 25;
 		
 			if ( attacker->health > 300 ) 
@@ -496,7 +401,7 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 		AICast_UpdateVisibility( self, attacker, qtrue, qtrue );
 	}
 
-	if ( self->aiCharacter == AICHAR_HEINRICH || self->aiCharacter == AICHAR_HELGA || self->aiCharacter == AICHAR_SUPERSOLDIER || self->aiCharacter == AICHAR_SUPERSOLDIER_LAB || self->aiCharacter == AICHAR_PROTOSOLDIER ) {
+	if ( self->aiCharacter == AICHAR_HEINRICH || self->aiCharacter == AICHAR_HELGA || self->aiCharacter == AICHAR_SUPERSOLDIER || self->aiCharacter == AICHAR_PROTOSOLDIER ) {
 		if ( self->health <= GIB_HEALTH ) {
 			self->health = -1;
 		}
@@ -506,7 +411,7 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 	if ( self->client->ps.pm_type == PM_DEAD ) {
 		// already dead
 		if ( self->health < GIB_HEALTH ) {
-			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV || self->aiCharacter == AICHAR_ZOMBIE_GHOST || self->aiCharacter == AICHAR_ZOMBIE_FLAME ) {
+			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV  ) {
 				// RF, changed this so Zombies always gib now
 				GibEntity( self, killer );
 				nogib = qfalse;
@@ -571,7 +476,7 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 
 		// never gib in a nodrop
 		if ( self->health <= GIB_HEALTH ) {
-			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV || self->aiCharacter == AICHAR_ZOMBIE_GHOST || self->aiCharacter == AICHAR_ZOMBIE_FLAME  ) {
+			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV  ) {
 				// RF, changed this so Zombies always gib now
 				GibEntity( self, killer );
 				nogib = qfalse;
@@ -678,12 +583,6 @@ void AICast_UpdateMaxActiveAI(void)
         svParams.maxActiveAI[AICHAR_SOLDIER] = svParams.maxSoldiers;
     }
 
-    // Mercs
-    svParams.maxActiveAI[AICHAR_MERCENARY] += svParams.mercsIncrease;
-    if (svParams.maxActiveAI[AICHAR_MERCENARY] > svParams.maxMercs) {
-        svParams.maxActiveAI[AICHAR_MERCENARY] = svParams.maxMercs;
-    }
-
     // Elite Guards
     if (svParams.waveCount >= svParams.waveEg) {
         svParams.maxActiveAI[AICHAR_ELITEGUARD] += svParams.eliteGuardsIncrease;
@@ -693,19 +592,10 @@ void AICast_UpdateMaxActiveAI(void)
 
 	}
 		
-    // Trench
-	 if (svParams.waveCount >= svParams.waveTrench) {
-    svParams.maxActiveAI[AICHAR_TRENCH] += svParams.trenchIncrease;
-    if (svParams.maxActiveAI[AICHAR_TRENCH] > svParams.maxTrench) {
-        svParams.maxActiveAI[AICHAR_TRENCH] = svParams.maxTrench;
-    }
-    }
-
 	// disable bosses completely
 	if (!g_survivalBosses.integer)
 	{
 		svParams.maxActiveAI[AICHAR_HELGA] = 0;
-		svParams.maxActiveAI[AICHAR_SUPERSOLDIER_LAB] = 0;
 		svParams.maxActiveAI[AICHAR_HEINRICH] = 0;
 	}
 	else
@@ -720,14 +610,6 @@ void AICast_UpdateMaxActiveAI(void)
 			}
 		}
 
-		if (svParams.waveCount >= svParams.wavess)
-		{
-			svParams.maxActiveAI[AICHAR_SUPERSOLDIER_LAB] += svParams.ssIncrease;
-			if (svParams.maxActiveAI[AICHAR_SUPERSOLDIER_LAB] > svParams.maxss)
-			{
-				svParams.maxActiveAI[AICHAR_SUPERSOLDIER_LAB] = svParams.maxss;
-			}
-		}
 
 		if (svParams.waveCount >= svParams.wavehein)
 		{
@@ -739,20 +621,6 @@ void AICast_UpdateMaxActiveAI(void)
 		}
 	}
 
-	if (svParams.waveCount >= svParams.wavedog) {
-    svParams.maxActiveAI[AICHAR_DOG] += svParams.dogIncrease;
-    if (svParams.maxActiveAI[AICHAR_DOG] > svParams.maxdog) {
-        svParams.maxActiveAI[AICHAR_DOG] = svParams.maxdog;
-    }
-    }
-
-    // Xdog
-	 if (svParams.waveCount >= svParams.waveXdog) {
-    svParams.maxActiveAI[AICHAR_XSHEPHERD] += svParams.XdogIncrease;
-    if (svParams.maxActiveAI[AICHAR_XSHEPHERD] > svParams.maxXdog) {
-        svParams.maxActiveAI[AICHAR_XSHEPHERD] = svParams.maxXdog;
-    }
-    }
 
     // Black Guards
     if (svParams.waveCount >= svParams.waveBg) {
@@ -776,11 +644,6 @@ void AICast_UpdateMaxActiveAI(void)
         svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = svParams.maxZombies;
     }
 
-    // Default Zombies (flesh variant)
-    svParams.maxActiveAI[AICHAR_FLESH] += svParams.fleshIncrease;
-    if (svParams.maxActiveAI[AICHAR_FLESH] > svParams.maxFlesh) {
-        svParams.maxActiveAI[AICHAR_FLESH] = svParams.maxFlesh;
-    }
 
     // Warriors
     if (svParams.waveCount >= svParams.waveWarz) {
@@ -795,30 +658,6 @@ void AICast_UpdateMaxActiveAI(void)
         svParams.maxActiveAI[AICHAR_PROTOSOLDIER] += svParams.protosIncrease;
         if (svParams.maxActiveAI[AICHAR_PROTOSOLDIER] > svParams.maxProtos) {
             svParams.maxActiveAI[AICHAR_PROTOSOLDIER] = svParams.maxProtos;
-        }
-    }
-
-    // Ghost Zombies
-    if (svParams.waveCount >= svParams.waveGhosts) {
-        svParams.maxActiveAI[AICHAR_ZOMBIE_GHOST] += svParams.ghostsIncrease;
-        if (svParams.maxActiveAI[AICHAR_ZOMBIE_GHOST] > svParams.maxGhosts) {
-            svParams.maxActiveAI[AICHAR_ZOMBIE_GHOST] = svParams.maxGhosts;
-        }
-    }
-
-    // Priests
-    if (svParams.waveCount >= svParams.wavePriests) {
-        svParams.maxActiveAI[AICHAR_PRIEST] += svParams.priestsIncrease;
-        if (svParams.maxActiveAI[AICHAR_PRIEST] > svParams.maxPriests) {
-            svParams.maxActiveAI[AICHAR_PRIEST] = svParams.maxPriests;
-        }
-    }
-
-	// Flamers
-    if (svParams.waveCount >= svParams.waveFlamers) {
-        svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] += svParams.flamersIncrease;
-        if (svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] > svParams.maxFlamers) {
-            svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] = svParams.maxFlamers;
         }
     }
 
@@ -1522,21 +1361,6 @@ void AICast_CheckSurvivalProgression(gentity_t *attacker) {
 
         svParams.wavePending = qtrue;
         svParams.waveChangeTime = level.time + svParams.intermissionTime * 1000;
-
-		if (player && player->client)
-		{
-
-			if ((svParams.waveCount == 4) && (!g_cheats.integer) && (!player->client->hasPurchased))
-			{
-				steamSetAchievement("ACH_NO_BUY");
-			}
-
-			if ((svParams.waveCount == 9) && (!g_cheats.integer) &&
-				(player->client->ps.stats[STAT_PLAYER_CLASS] == PC_NONE))
-			{
-				steamSetAchievement("ACH_NO_CLASS");
-			}
-		}
 
 		char endEvtBuf[32];
 		Q_strncpyz(
