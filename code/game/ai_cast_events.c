@@ -46,6 +46,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "ai_cast.h"
 
+#include "g_survival.h"
+
 /*
 Contains response functions for various events that require specific handling
 for Cast AI's.

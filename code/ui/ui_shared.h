@@ -486,8 +486,6 @@ void Menu_Reset( void );
 qboolean Menus_AnyFullScreenVisible( void );
 void  Menus_Activate( menuDef_t *menu );
 
-int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus);
-
 int UI_SelectForKey(int key);
 displayContextDef_t *Display_GetContext( void );
 void        *Display_CaptureItem( int x, int y );

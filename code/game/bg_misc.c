@@ -2587,7 +2587,8 @@ model="models/powerups/holdable/wine.md3"
 		0, 
 		0
 		},
-		"",              
+		"", 
+		NULL,                       // ammo icon             
 		"Veil Ressuply",       
 		1,
 		IT_POWERUP,
@@ -2595,10 +2596,9 @@ model="models/powerups/holdable/wine.md3"
 		PW_AMMO,
 		0,
 		0,
-		0,
 		"",                            
 		"",   
-		{0,0,0,0,0,0}
+		{0,0,0,0}
 	},
 
 		/*QUAKED item_enviro (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
@@ -2611,7 +2611,8 @@ model="models/powerups/holdable/wine.md3"
 		0, 
 		0
 		},
-		"",                             
+		"",            
+		NULL,                       // ammo icon                   
 		"Veil Shield",     
 		30,
 		IT_POWERUP,
@@ -2619,10 +2620,9 @@ model="models/powerups/holdable/wine.md3"
 		PW_BATTLESUIT_SURV,
 		0,
 		0,
-		0,
 		"",                          
 		"sound/items/airout.wav sound/items/protect3.wav",   
-		{0,0,0,0,0,0}
+		{0,0,0,0}
 	},
 
 /*QUAKED item_vampire (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
@@ -2635,7 +2635,8 @@ model="models/powerups/holdable/wine.md3"
 		0, 
 		0
 		},
-		"",              
+		"",
+		NULL,                       // ammo icon                
 		"Veil Essence Reaver",       
 		30,
 		IT_POWERUP,
@@ -2643,10 +2644,9 @@ model="models/powerups/holdable/wine.md3"
 		PW_VAMPIRE,
 		0,
 		0,
-		0,
 		"",                            
 		"",   
-		{0,0,0,0,0,0}
+		{0,0,0,0}
 	},
 
 	{
@@ -3128,6 +3128,19 @@ gitem_t *BG_FindItem( const char *pickupName ) {
 
 	return NULL;
 }
+
+gitem_t *BG_FindItemForClassName( const char *className ) {
+	gitem_t *it;
+
+	for ( it = bg_itemlist + 1 ; it->classname ; it++ ) {
+		if ( !Q_stricmp( it->classname, className ) ) {
+			return it;
+		}
+	}
+
+	return NULL;
+}
+
 
 /*
 ==============
@@ -4011,15 +4024,15 @@ int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus) {
 	}
 
 	if (upgradeLevel >= 1) {
-		float multiplier = 1.0f;
+		float multiplier = 2.0f;
 
 		if (upgradeLevel == 2) {
-			multiplier = 1.5f;
+			multiplier = 2.5f;
 		} else if (upgradeLevel >= 3) {
-			multiplier = 2.0f;
+			multiplier = 3.0f;
 		}
 
-		maxAmmo = (int)(wt->maxammoUpgraded * multiplier);
+		maxAmmo = (int)(wt->maxammo * multiplier);
 	} else {
 		maxAmmo = wt->maxammo;
 	}
@@ -4029,4 +4042,43 @@ int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus) {
 	}
 
 	return maxAmmo;
+}
+
+
+/*
+==========================
+BG_GetMaxClip
+
+Returns the correct clip size for the given weapon and player state,
+taking into account the weapon upgrade level.
+==========================
+*/
+int BG_GetMaxClip(const playerState_t *ps, int weapon) {
+	int upgradeLevel;
+	int maxClip;
+
+	if (!ps || weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS) {
+		return 0;
+	}
+
+	const ammotable_t *wt = &ammoTable[weapon];
+
+	upgradeLevel = ps->weaponUpgraded[weapon];
+	if (upgradeLevel < 0) {
+		upgradeLevel = 0;
+	}
+
+	if (upgradeLevel >= 1) {
+		maxClip = wt->maxclip;
+
+		if (upgradeLevel == 2) {
+			maxClip *= 1.5f;
+		} else if (upgradeLevel >= 3) {
+			maxClip *= 2.0f;
+		}
+
+		return maxClip;
+	}
+
+	return wt->maxclip;
 }

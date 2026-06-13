@@ -1346,6 +1346,10 @@ extern vmCvar_t g_motd4;
 extern vmCvar_t g_motd5;
 extern vmCvar_t g_motd6;
 
+extern vmCvar_t g_specialWaves;
+extern vmCvar_t g_survivalAiHealthCap;
+extern vmCvar_t g_survivalDifficulty;
+
 void	trap_Print( const char *text );
 void	trap_Error( const char *text ) __attribute__((noreturn));
 void    trap_Endgame( void );   //----(SA)	added

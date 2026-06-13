@@ -190,6 +190,10 @@ vmCvar_t g_motd4;           // MESSAGE 4
 vmCvar_t g_motd5;           // MESSAGE 5
 vmCvar_t g_motd6;           // MESSAGE 6
 
+vmCvar_t g_survivalAiHealthCap;
+vmCvar_t g_survivalDifficulty;
+vmCvar_t g_specialWaves;
+
 vmCvar_t g_mapname;
 
 cvarTable_t gameCvarTable[] = {
@@ -346,6 +350,10 @@ cvarTable_t gameCvarTable[] = {
 
 	// et sdk antilag
 	{ &g_antilag, "g_antilag", "1", 0, 0, qfalse },
+
+	{&g_specialWaves, "g_specialwaves", "1", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse},
+	{&g_survivalAiHealthCap, "g_survivalAiHealthCap", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse},
+	{&g_survivalDifficulty, "g_survivalDifficulty", "0", CVAR_ARCHIVE, 0, qfalse},
 
 	{&g_mapname, "mapname", "", CVAR_ARCHIVE}
 };

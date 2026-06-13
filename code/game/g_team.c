@@ -388,9 +388,6 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	AddScore( other, CTF_CAPTURE_BONUS );
 
 	te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_SOUND );
-	te->s.eventParm = G_SoundIndex( our_flag == PW_REDFLAG ?
-									"sound/teamplay/flagcap_red.wav" :
-									"sound/teamplay/flagcap_blu.wav" );
 	te->r.svFlags |= SVF_BROADCAST;
 
 	// Ok, let's do the player loop, hand out the bonuses

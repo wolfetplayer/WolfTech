@@ -1352,6 +1352,7 @@ extern gitem_t bg_itemlist[];
 extern int bg_numItems;
 
 gitem_t *BG_FindItem( const char *pickupName );
+gitem_t *BG_FindItemForClassName( const char *className );
 gitem_t *BG_FindItem2( const char *name );  //----(SA)	added
 gitem_t *BG_FindItemForWeapon( weapon_t weapon );
 gitem_t *BG_FindItemForPowerup( powerup_t pw );
@@ -1863,3 +1864,6 @@ float BG_AnimGetFootstepGap( playerState_t *ps, float xyspeed );
 
 extern animStringItem_t animStateStr[];
 extern animStringItem_t animBodyPartsStr[];
+
+int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus);
+int BG_GetMaxClip(const playerState_t *ps, int weapon);

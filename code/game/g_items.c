@@ -54,6 +54,10 @@ If you have questions concerning this license or the applicable additional terms
 #define RESPAWN_PARTIAL     998     // for multi-stage ammo/health
 #define RESPAWN_PARTIAL_DONE 999    // for multi-stage ammo/health
 
+weapon_t GetComplexWeapon( weapon_t weapon );
+weapon_t GetSimpleWeapon( weapon_t weapon );
+qboolean IsWeaponComplex( weapon_t weapon );
+
 
 //======================================================================
 
@@ -589,6 +593,109 @@ void Touch_Item_Auto( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	}
 }
 
+qboolean NeedAmmo(gentity_t *other, weapon_t weapon) {
+	int ammoweap;
+
+	if (G_FindWeaponSlot(other, weapon) < 0) {
+		weapon_t altWeapon = GetWeaponTableData(weapon)->weapAlts;
+
+		if (!altWeapon) {
+			return qfalse;
+		}
+
+		if (G_FindWeaponSlot(other, altWeapon) < 0) {
+			return qfalse;
+		}
+
+		ammoweap = BG_FindAmmoForWeapon(altWeapon);
+	} else {
+		ammoweap = BG_FindAmmoForWeapon(weapon);
+	}
+
+	int maxAmmo = BG_GetMaxAmmo(&other->client->ps, ammoweap, LT_AMMO_BONUS_MULTIPLIER);
+	return other->client->ps.ammo[ammoweap] < maxAmmo;
+}
+
+
+
+int Pickup_Weapon_New_Inventory( gentity_t *ent, gentity_t *other ) {
+	qboolean isPickedUp = qfalse;
+	qboolean alreadyHave = qfalse;
+	weapon_t weapon = ent->item->giTag;
+	int quantity;
+
+	if ( level.time - other->client->dropWeaponTime < 1000 ) {
+		ent->active = qtrue;
+		return 0;
+	}
+
+	if (ent->count < 0)
+	{
+		quantity = 0; // None for you, sir!
+	}
+	else
+	{
+		if (ent->count)
+		{
+			quantity = ent->count;
+		}
+		else
+		{
+			int maxclip = (other && other->client)
+							  ? BG_GetMaxClip(&other->client->ps, weapon)
+							  : ammoTable[weapon].maxclip;
+
+			quantity = (random() * (maxclip - 4)) + 4; // giving 4 to maxclip
+		}
+
+	}
+
+	// check for special colt->akimbo add (if you've got a colt already, add the second now)
+	if ( weapon == WP_COLT ) {
+		if ( COM_BitCheck( other->client->ps.weapons, WP_COLT ) ) {
+			weapon = WP_AKIMBO;
+		}
+	}
+
+	if (weapon == WP_KNIFE)
+	{
+		int maxAmmo = BG_GetMaxAmmo(&other->client->ps, weapon, LT_AMMO_BONUS_MULTIPLIER);
+
+		if (other->client->ps.ammoclip[weapon] < maxAmmo)
+		{
+			Add_Ammo(other, weapon, 1, qfalse);
+		}
+
+		if (!(ent->spawnflags & 8))
+		{
+			return RESPAWN_SP;
+		}
+
+		return g_weaponRespawn.integer;
+	}
+
+	alreadyHave = COM_BitCheck( other->client->ps.weapons, weapon );
+
+	isPickedUp = Give_Weapon_New_Inventory( other, weapon, qtrue );
+
+	if ( NeedAmmo( other, weapon ) ) {
+		Add_Ammo( other, weapon, quantity, !alreadyHave );
+	} else if ( !isPickedUp ) {
+		ent->active = qtrue;
+		return 0;
+	}
+
+	if ( isPickedUp ) {
+		// now pickup the other one
+		other->client->dropWeaponTime = level.time;
+	}
+
+	if ( !( ent->spawnflags & 8 ) ) {
+		return RESPAWN_SP;
+	}
+
+	return g_weaponRespawn.integer;
+}
 
 /*
 ===============
@@ -1399,29 +1506,6 @@ qboolean IsUpgradingWeapon( gentity_t *other, weapon_t weapon ) {
 	}
 }
 
-qboolean NeedAmmo(gentity_t *other, weapon_t weapon) {
-	int ammoweap;
-
-	if (G_FindWeaponSlot(other, weapon) < 0) {
-		weapon_t altWeapon = GetWeaponTableData(weapon)->weapAlts;
-
-		if (!altWeapon) {
-			return qfalse;
-		}
-
-		if (G_FindWeaponSlot(other, altWeapon) < 0) {
-			return qfalse;
-		}
-
-		ammoweap = BG_FindAmmoForWeapon(altWeapon);
-	} else {
-		ammoweap = BG_FindAmmoForWeapon(weapon);
-	}
-
-	int maxAmmo = BG_GetMaxAmmo(&other->client->ps, ammoweap, LT_AMMO_BONUS_MULTIPLIER);
-	return other->client->ps.ammo[ammoweap] < maxAmmo;
-}
-
 /**
  * @brief Remove Weapon
  * @param[in] ent
@@ -1510,7 +1594,7 @@ void G_DropWeapon( gentity_t *ent, weapon_t weapon ) {
 	trap_Trace( &tr, client->ps.origin, mins, maxs, org, ent->s.number, MASK_SOLID );
 	VectorCopy( tr.endpos, org );
 
-	LaunchItem( item, org, velocity );
+	LaunchItem( item, org, velocity, client->ps.clientNum );
 
 	G_RemoveWeapon( ent, weapon );
 }
@@ -1598,83 +1682,4 @@ qboolean Give_Weapon_New_Inventory( gentity_t *other, weapon_t weapon, qboolean 
 	}
 
 	return qfalse;
-}
-
-int Pickup_Weapon_New_Inventory( gentity_t *ent, gentity_t *other ) {
-	qboolean isPickedUp = qfalse;
-	qboolean alreadyHave = qfalse;
-	weapon_t weapon = ent->item->giTag;
-	int quantity;
-
-	if ( level.time - other->client->dropWeaponTime < 1000 ) {
-		ent->active = qtrue;
-		return 0;
-	}
-
-	if (ent->count < 0)
-	{
-		quantity = 0; // None for you, sir!
-	}
-	else
-	{
-		if (ent->count)
-		{
-			quantity = ent->count;
-		}
-		else
-		{
-			int maxclip = (other && other->client)
-							  ? BG_GetMaxClip(&other->client->ps, weapon)
-							  : ammoTable[weapon].maxclip;
-
-			quantity = (random() * (maxclip - 4)) + 4; // giving 4 to maxclip
-		}
-
-	}
-
-	// check for special colt->akimbo add (if you've got a colt already, add the second now)
-	if ( weapon == WP_COLT ) {
-		if ( COM_BitCheck( other->client->ps.weapons, WP_COLT ) ) {
-			weapon = WP_AKIMBO;
-		}
-	}
-
-	if (weapon == WP_KNIFE)
-	{
-		int maxAmmo = BG_GetMaxAmmo(&other->client->ps, weapon, LT_AMMO_BONUS_MULTIPLIER);
-
-		if (other->client->ps.ammoclip[weapon] < maxAmmo)
-		{
-			Add_Ammo(other, weapon, 1, qfalse);
-		}
-
-		if (!(ent->spawnflags & 8))
-		{
-			return RESPAWN_SP;
-		}
-
-		return g_weaponRespawn.integer;
-	}
-
-	alreadyHave = COM_BitCheck( other->client->ps.weapons, weapon );
-
-	isPickedUp = Give_Weapon_New_Inventory( other, weapon, qtrue );
-
-	if ( NeedAmmo( other, weapon ) ) {
-		Add_Ammo( other, weapon, quantity, !alreadyHave );
-	} else if ( !isPickedUp ) {
-		ent->active = qtrue;
-		return 0;
-	}
-
-	if ( isPickedUp ) {
-		// now pickup the other one
-		other->client->dropWeaponTime = level.time;
-	}
-
-	if ( !( ent->spawnflags & 8 ) ) {
-		return RESPAWN_SP;
-	}
-
-	return g_weaponRespawn.integer;
 }
