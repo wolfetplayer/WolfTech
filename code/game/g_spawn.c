@@ -186,6 +186,8 @@ field_t fields[] = {
 
 	{"buy_item",         FOFS( buy_item ),           F_STRING},
 	{"isWeapon",         FOFS( isWeapon ),             F_INT},
+	{"oneshot",          FOFS( oneshot ),                F_INT},
+	{"wave",             FOFS( wave ),                F_INT},
 
 	{NULL}
 };
@@ -315,13 +317,9 @@ void SP_ai_loper( gentity_t *ent );
 void SP_ai_boss_helga( gentity_t *ent );
 void SP_ai_boss_heinrich( gentity_t *ent ); //----(SA)	added
 void SP_ai_eliteguard( gentity_t *ent );
-void SP_ai_stimsoldier_dual( gentity_t *ent );
-void SP_ai_stimsoldier_rocket( gentity_t *ent );
-void SP_ai_stimsoldier_tesla( gentity_t *ent );
 void SP_ai_supersoldier( gentity_t *ent );
 void SP_ai_blackguard( gentity_t *ent );
 void SP_ai_protosoldier( gentity_t *ent );
-void SP_ai_frogman( gentity_t *ent );
 void SP_ai_partisan( gentity_t *ent );
 void SP_ai_civilian( gentity_t *ent );
 void SP_ai_loper_special( gentity_t *ent );
@@ -425,6 +423,8 @@ void SP_misc_tagemitter( gentity_t *ent );   //----(SA)	added
 void SP_trigger_deathCheck( gentity_t *ent );
 void SP_misc_spawner( gentity_t *ent );
 void SP_props_decor_Scale( gentity_t *ent );
+
+void SP_target_buy( gentity_t *ent );
 
 spawn_t spawns[] = {
 	// info entities don't do anything at all, but provide positional
@@ -586,12 +586,8 @@ spawn_t spawns[] = {
 	{"ai_boss_helga", SP_ai_boss_helga},
 	{"ai_boss_heinrich", SP_ai_boss_heinrich},   //----(SA)
 	{"ai_eliteguard", SP_ai_eliteguard},
-	{"ai_stimsoldier_dual", SP_ai_stimsoldier_dual},
-	{"ai_stimsoldier_rocket", SP_ai_stimsoldier_rocket},
-	{"ai_stimsoldier_tesla", SP_ai_stimsoldier_tesla},
 	{"ai_supersoldier", SP_ai_supersoldier},
 	{"ai_protosoldier", SP_ai_protosoldier},
-	{"ai_frogman", SP_ai_frogman},
 	{"ai_blackguard", SP_ai_blackguard},
 	{"ai_partisan", SP_ai_partisan},
 	{"ai_civilian", SP_ai_civilian},
@@ -684,6 +680,8 @@ spawn_t spawns[] = {
 	{"script_model_med", SP_script_model_med},
 	{"script_mover", SP_script_mover},
 	{"script_multiplayer", SP_script_multiplayer},           // DHM - Nerve
+
+	{"target_buy", SP_target_buy},
 
 	{NULL, 0}
 };

@@ -939,6 +939,8 @@ static const char *CG_GameTypeString( void ) {
 		return "Single Player";
 	} else if ( cgs.gametype == GT_COOP ) {
 		return "Cooperative";
+	} else if ( cgs.gametype == GT_COOP_SURVIVAL ) {
+		return "Survival";
 	} else if ( cgs.gametype == GT_COOP_SPEEDRUN ) {
 		return "Speedrun";
 	} else if ( cgs.gametype == GT_COOP_BATTLE ) {

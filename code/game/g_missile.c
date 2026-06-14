@@ -1312,6 +1312,17 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 	}
 // jpw
 
+
+		// Soldier bonus (applied after base/upgraded damage is picked)
+		if (g_gametype.integer == GT_COOP_SURVIVAL &&
+			self->client &&
+			self->client->ps.stats[STAT_PLAYER_CLASS] == PC_SOLDIER)
+		{
+			bolt->damage *= 1.50f;
+			bolt->splashDamage *= 1.50f;
+			bolt->splashRadius *= 1.50f;
+		}
+
 	switch ( grenadeWPID ) {
 	case WP_GRENADE_LAUNCHER:
 		bolt->classname             = "grenade";
@@ -1469,6 +1480,16 @@ gentity_t *fire_rocket( gentity_t *self, vec3_t start, vec3_t dir ) {
 	bolt->damage = G_GetWeaponDamage(WP_PANZERFAUST, self);
 	bolt->splashDamage = G_GetWeaponDamage(WP_PANZERFAUST, self);
 	bolt->splashRadius = G_GetWeaponDamage(WP_PANZERFAUST, self);
+
+		// Soldier bonus (applied after base/upgraded damage is picked)
+		if (g_gametype.integer == GT_COOP_SURVIVAL &&
+			self->client &&
+			self->client->ps.stats[STAT_PLAYER_CLASS] == PC_SOLDIER)
+		{
+			bolt->damage *= 1.50f;
+			bolt->splashDamage *= 1.50f;
+			bolt->splashRadius *= 1.50f;
+		}
 
 // jpw
 	bolt->methodOfDeath = MOD_ROCKET;

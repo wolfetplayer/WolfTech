@@ -407,6 +407,7 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	newent->aiName = ent->aiName;
 	newent->aiTeam = ent->aiTeam;
 	newent->targetname = ent->targetname;
+	newent->oneshot = ent->oneshot;
 	//
 	newent->AIScript_AlertEntity = ent->AIScript_AlertEntity;
 	newent->aiInactive = ent->aiInactive;
@@ -435,6 +436,7 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	}
 
 	if ( g_gametype.integer <= GT_COOP ) {
+		
 #if 0
 		if ( newent->health < 125 ) {
 			if ( g_gameskill.integer == GSKILL_EASY ) {
@@ -475,6 +477,12 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 
 		cs->respawnsleft = g_airespawn.integer;
 	}
+
+	// Unlimited respawn in Survival mode (unless entity is oneshot)
+	if ( g_gametype.integer == GT_COOP_SURVIVAL && !ent->oneshot ) {
+		AICast_ApplySurvivalAttributes( newent, cs );
+		AICast_CreateCharacter_Survival( newent, cs );
+	} 
 	//
 	cs->weaponInfo = weaponInfo;
 	//
@@ -629,6 +637,11 @@ void AIChar_AIScript_AlertEntity( gentity_t *ent ) {
 	vec3_t mins, maxs;
 	int numTouch, touch[10], i;
 	cast_state_t    *cs;
+
+	if (g_gametype.integer == GT_COOP_SURVIVAL  && !ent->oneshot) {
+		AIChar_AIScript_AlertEntity_Survival(ent);
+		return;
+	}
 
 	if ( !ent->aiInactive ) {
 		return;

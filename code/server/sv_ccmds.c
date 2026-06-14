@@ -294,6 +294,17 @@ static void SV_Map_f( void ) {
 		} else {
 			cheat = qfalse;
 		}
+	}  else if ( Q_stricmpn( cmd, "sv", 2 ) == 0 ) {
+		Cvar_SetValue( "g_gametype", GT_COOP_SURVIVAL );
+		// may not set sv_maxclients directly, always set latched
+		Cvar_SetLatched( "sv_maxclients", va( "%d", MAX_CLIENTS ) ); // Ridah, modified this
+		cmd += 4;
+		killBots = qtrue;
+		if ( !Q_stricmp( cmd, "devmap" ) ) {
+			cheat = qtrue;
+		} else {
+			cheat = qfalse;
+		}
 	}
 
 
@@ -1750,6 +1761,11 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_SetCommandCompletionFunc( "coopdevmap", SV_CompleteMapName );
 	Cmd_AddCommand( "devmap", SV_Map_f );
 	Cmd_SetCommandCompletionFunc( "devmap", SV_CompleteMapName );
+
+	Cmd_AddCommand( "svmap", SV_Map_f );
+	Cmd_SetCommandCompletionFunc( "svmap", SV_CompleteMapName );
+	Cmd_AddCommand( "svdevmap", SV_Map_f );
+	Cmd_SetCommandCompletionFunc( "svdevmap", SV_CompleteMapName );
 	
 #ifndef WOLF_SP_DEMO
 	Cmd_AddCommand( "spdevmap", SV_Map_f );

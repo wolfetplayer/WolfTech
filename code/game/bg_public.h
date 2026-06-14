@@ -541,22 +541,17 @@ typedef enum
 	AICHAR_WARZOMBIE,
 	AICHAR_VENOM,
 	AICHAR_LOPER,
+	AICHAR_LOPER_SPECIAL,
 	AICHAR_ELITEGUARD,
-	AICHAR_STIMSOLDIER1,    // dual machineguns
-	AICHAR_STIMSOLDIER2,    // rocket in left hand
-	AICHAR_STIMSOLDIER3,    // tesla in left hand
 	AICHAR_SUPERSOLDIER,
 	AICHAR_BLACKGUARD,
 	AICHAR_PROTOSOLDIER,
 
-	AICHAR_FROGMAN,
 	AICHAR_HELGA,
 	AICHAR_HEINRICH,    //----(SA)	added
 
 	AICHAR_PARTISAN,
 	AICHAR_CIVILIAN,
-
-	AICHAR_LOPER_SPECIAL,
 
 	NUM_CHARACTERS
 } AICharacters_t;
@@ -1867,3 +1862,4 @@ extern animStringItem_t animBodyPartsStr[];
 
 int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus);
 int BG_GetMaxClip(const playerState_t *ps, int weapon);
+void BG_SetBehaviorForSurvival(AICharacters_t characterNum);

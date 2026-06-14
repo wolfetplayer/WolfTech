@@ -40,6 +40,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 
+#include "g_survival.h"
+
 
 
 #define RESPAWN_SP          -1
@@ -165,6 +167,10 @@ Pickup_Treasure
 int Pickup_Treasure( gentity_t *ent, gentity_t *other ) {
 	level.numTreasureFound++;
 	G_SendMissionStats();
+
+    if (g_gametype.integer == GT_COOP_SURVIVAL) {
+        Survival_PickupTreasure(other);
+	}
 
 	if ( g_gametype.integer == GT_COOP ) {
 		other->client->ps.persistant[PERS_SCORE] += 120;

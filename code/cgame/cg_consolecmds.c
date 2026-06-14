@@ -414,17 +414,15 @@ static void CG_DumpCastAi_f( void ) {
 		 strcmp( "ai_american", aitype ) &&
 		 strcmp( "ai_zombie", aitype ) &&
 		 strcmp( "ai_warzombie", aitype ) &&
+		 strcmp( "ai_zombie_surv", aitype ) &&
 		 strcmp( "ai_venom", aitype ) &&
 		 strcmp( "ai_loper", aitype ) &&
+		 strcmp( "ai_loper_special", aitype ) &&
 		 strcmp( "ai_boss_helga", aitype ) &&
 		 strcmp( "ai_boss_heinrich", aitype ) &&
 		 strcmp( "ai_eliteguard", aitype ) &&
-		 strcmp( "ai_stimsoldier_dual", aitype ) &&
-		 strcmp( "ai_stimsoldier_rocket", aitype ) &&
-		 strcmp( "ai_stimsoldier_tesla", aitype ) &&
 		 strcmp( "ai_supersoldier", aitype ) &&
 		 strcmp( "ai_protosoldier", aitype ) &&
-		 strcmp( "ai_frogman", aitype ) &&
 		 strcmp( "ai_blackguard", aitype ) &&
 		 strcmp( "ai_partisan", aitype ) &&
 		 strcmp( "ai_civilian", aitype ) ) {

@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "g_coop.h"
+#include "g_survival.h"
 #include "../../steam/steam.h"
 
 level_locals_t level;
@@ -193,6 +194,7 @@ vmCvar_t g_motd6;           // MESSAGE 6
 vmCvar_t g_survivalAiHealthCap;
 vmCvar_t g_survivalDifficulty;
 vmCvar_t g_specialWaves;
+vmCvar_t g_playerSurvivalClass;   
 
 vmCvar_t g_mapname;
 
@@ -354,6 +356,7 @@ cvarTable_t gameCvarTable[] = {
 	{&g_specialWaves, "g_specialwaves", "1", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse},
 	{&g_survivalAiHealthCap, "g_survivalAiHealthCap", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse},
 	{&g_survivalDifficulty, "g_survivalDifficulty", "0", CVAR_ARCHIVE, 0, qfalse},
+	{&g_playerSurvivalClass, "g_playersurvivalclass", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse},
 
 	{&g_mapname, "mapname", "", CVAR_ARCHIVE}
 };
@@ -2836,11 +2839,20 @@ void CheckReloadStatus( void ) {
 
 				if ( g_reloading.integer == RELOAD_NEXTMAP_WAITING ) {
 					trap_Cvar_Set( "g_reloading", va( "%d", RELOAD_NEXTMAP ) ); // set so sv_map_f will know it's okay to start a map
-					if ( g_gametype.integer <= GT_COOP ) {
+					if ( g_gametype.integer == GT_COOP ) {
 						if ( g_cheats.integer ) {
 							trap_SendConsoleCommand( EXEC_APPEND, va( "coopdevmap %s\n", level.nextMap ) );
 						} else {
 							trap_SendConsoleCommand( EXEC_APPEND, va( "coopmap %s\n", level.nextMap ) );
+						}
+					} else if (g_gametype.integer == GT_COOP_SURVIVAL) {
+						if (g_cheats.integer)
+						{
+							trap_SendConsoleCommand(EXEC_APPEND, va("svdevmap %s\n", level.nextMap));
+						}
+						else
+						{
+							trap_SendConsoleCommand(EXEC_APPEND, va("svmap %s\n", level.nextMap));
 						}
 					} else {
 						if ( g_cheats.integer ) {
@@ -3184,6 +3196,12 @@ void G_RunFrame( int levelTime ) {
 
 	// Ridah, move the AI
 	AICast_StartServerFrame( level.time );
+
+	if (g_gametype.integer == GT_COOP_SURVIVAL)
+	{
+		AICast_TickSurvivalWave();
+	}
+
 
 	// perform final fixups on the players
 	ent = &g_entities[0];

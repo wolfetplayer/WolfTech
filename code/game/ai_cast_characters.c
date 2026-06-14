@@ -44,6 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
+#include "g_survival.h"
 
 //---------------------------------------------------------------------------
 // Character specific attributes (defaults, these can be altered in the editor (TODO!))
@@ -449,150 +450,6 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 		0, 0, 0,
 		NULL,
 		AISTATE_RELAXED
-	},
-
-	//AICHAR_STIMSOLDIER1
-	{
-		"Stim Soldier",
-		{
-			170,        // running speed
-			100,        // walking speed
-			90,         // crouching speed
-			90,         // Field of View
-			150,        // Yaw Speed
-			0.0,        // leader
-			0.7,        // aim skill
-			1.0,        // aim accuracy
-			0.9,        // attack skill
-			0.6,        // reaction time
-			0.05,       // attack crouch
-			0.0,        // idle crouch
-			0.9,        // aggression
-			0.1,        // tactical
-			0.0,        // camper
-			16000,      // alertness
-			300,        // starting health
-			1.0,        // hearing scale
-			0.9,        // not in pvs hearing scale
-			512,        // relaxed detection radius
-			1.0,        // pain threshold multiplier
-		},
-		{
-			"stimSoldierSightPlayer",
-			"stimSoldierAttackPlayer",
-			"stimSoldierOrders",
-			"stimSoldierDeath",
-			"stimSoldierSilentDeath",	//----(SA)	added
-			"stimSoldeirFlameDeath",	//----(SA)	added
-			"stimSoldierPain",
-			"stimSoldierStay",			// stay - you're told to stay put
-			"stimSoldierFollow",		// follow - go with ordering player ("i'm with you" rather than "yes sir!")
-			"stimSoldierOrdersDeny",	// deny - refuse orders (doing something else)
-		},
-		AITEAM_NAZI,
-		"stim/default",
-		{WP_MONSTER_ATTACK2},			// TODO: dual machinegun attack
-		BBOX_LARGE, {48,64},
-		AIFL_NO_RELOAD,
-		0, AIFunc_StimSoldierAttack2Start, 0,
-		NULL,
-		AISTATE_ALERT
-	},
-
-	//AICHAR_STIMSOLDIER2
-	{
-		"Stim Soldier",
-		{
-			170,        // running speed
-			100,        // walking speed
-			90,         // crouching speed
-			90,         // Field of View
-			150,        // Yaw Speed
-			0.0,        // leader
-			0.7,        // aim skill
-			1.0,        // aim accuracy
-			0.9,        // attack skill
-			0.6,        // reaction time
-			0.05,       // attack crouch
-			0.0,        // idle crouch
-			0.9,        // aggression
-			0.1,        // tactical
-			0.0,        // camper
-			16000,      // alertness
-			300,        // starting health
-			1.0,        // hearing scale
-			0.9,        // not in pvs hearing scale
-			512,        // relaxed detection radius
-			1.0,        // pain threshold multiplier
-		},
-		{
-			"stimSoldierSightPlayer",
-			"stimSoldierAttackPlayer",
-			"stimSoldierOrders",
-			"stimSoldierDeath",
-			"stimSoldierSilentDeath",	//----(SA)	added
-			"stimSoldierFlameDeath",	//----(SA)	added
-			"stimSoldierPain",
-			"stimSoldierStay",			// stay - you're told to stay put
-			"stimSoldierFollow",		// follow - go with ordering player ("i'm with you" rather than "yes sir!")
-			"stimSoldierOrdersDeny",	// deny - refuse orders (doing something else)
-		},
-		AITEAM_NAZI,
-		"stim/default",
-		{WP_MP40, WP_MONSTER_ATTACK1},	// attack1 is leaping rocket attack
-		BBOX_LARGE, {48,64},
-		AIFL_NO_RELOAD,
-		AIFunc_StimSoldierAttack1Start, 0, 0,
-		NULL,
-		AISTATE_ALERT
-	},
-
-	//AICHAR_STIMSOLDIER3
-	{
-		"Stim Soldier",
-		{
-			170,        // running speed
-			100,        // walking speed
-			90,         // crouching speed
-			90,         // Field of View
-			150,        // Yaw Speed
-			0.0,        // leader
-			0.7,        // aim skill
-			1.0,        // aim accuracy
-			0.9,        // attack skill
-			0.6,        // reaction time
-			0.05,       // attack crouch
-			0.0,        // idle crouch
-			0.9,        // aggression
-			0.1,        // tactical
-			0.0,        // camper
-			16000,      // alertness
-			300,        // starting health
-			1.0,        // hearing scale
-			0.9,        // not in pvs hearing scale
-			512,        // relaxed detection radius
-			1.0,        // pain threshold multiplier
-		},
-		{
-			"stimSoldierSightPlayer",
-			"stimSoldierAttackPlayer",
-			"stimSoldierOrders",
-			"stimSoldierDeath",
-			"stimSoldierSilentDeath",	//----(SA)	added
-			"stimSoldierFlameDeath",	//----(SA)	added
-			"stimSoldierPain",
-			"stimSoldierStay",			// stay - you're told to stay put
-			"stimSoldierFollow",		// follow - go with ordering player ("i'm with you" rather than "yes sir!")
-			"stimSoldierOrdersDeny",	// deny - refuse orders (doing something else)
-		},
-		AITEAM_NAZI,
-		"stim/default",
-		{WP_MP40, WP_TESLA},			// no monster_attack1, since that's only used for the jumping rocket attack
-		BBOX_LARGE, {48,64},
-		AIFL_NO_RELOAD,
-		AIFunc_StimSoldierAttack1Start, 0, 0,
-		NULL,
-		AISTATE_ALERT
 	},
 
 	//AICHAR_SUPERSOLDIER
@@ -1066,9 +923,16 @@ AIChar_Death
 void AIChar_Death( gentity_t *ent, gentity_t *attacker, int damage, int mod ) { //----(SA)	added mod
 	// need this check otherwise sound will overwrite gib message
 	if ( ent->health > GIB_HEALTH  ) {
-		if ( ent->client->ps.eFlags & EF_HEADSHOT ) {
-			G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex( aiDefaults[ent->aiCharacter].soundScripts[QUIETDEATHSOUNDSCRIPT] ) );
-		} else {
+		if (ent->client->ps.eFlags & EF_HEADSHOT)
+		{
+			if (g_gametype.integer == GT_COOP_SURVIVAL)
+			{
+				Survival_AddHeadshotBonus(attacker, ent);
+			}
+			G_AddEvent(ent, EV_GENERAL_SOUND, G_SoundIndex(aiDefaults[ent->aiCharacter].soundScripts[QUIETDEATHSOUNDSCRIPT]));
+		}
+		else
+		{
 			switch ( mod ) {               //----(SA)	modified to add 'quiet' deaths
 			case MOD_KNIFE_STEALTH:
 			case MOD_SNIPERRIFLE:
@@ -1437,6 +1301,11 @@ void AIChar_spawn( gentity_t *ent ) {
 	//
 	// create the character
 
+	if (g_gametype.integer == GT_COOP_SURVIVAL && !ent->oneshot )
+	{
+		BG_SetBehaviorForSurvival(ent->aiCharacter);
+	}
+
 	// (there will always be an ent->aiSkin (SA))
 	//newent = AICast_CreateCharacter( ent, aiCharDefaults->attributes, &weaponInfo, aiCharDefaults->name, ent->aiSkin, ent->aihSkin, "m", "7", "100" );
 	//newent = AICast_CreateCharacter( ent, aiCharDefaults->attributes, &weaponInfo, ent->aiName, ent->aiSkin, ent->aihSkin, "m", "7", "100" );
@@ -1450,6 +1319,9 @@ void AIChar_spawn( gentity_t *ent ) {
 	if ( !strcmp( ent->classname, "ai_zombie" ) ) {
 		name = "zombie";
 	}
+	if ( !strcmp( ent->classname, "ai_zombie_surv" ) ) {
+		name = "zombie_surv";
+	}
 	if ( !strcmp( ent->classname, "ai_warzombie" ) ) {
 		name = "warzombie";
 	}
@@ -1458,6 +1330,9 @@ void AIChar_spawn( gentity_t *ent ) {
 	}
 	if ( !strcmp( ent->classname, "ai_loper" ) ) {
 		name = "loper";
+	}
+	if ( !strcmp( ent->classname, "ai_loper_special" ) ) {
+		name = "loper_special";
 	}
 	if ( !strcmp( ent->classname, "ai_boss_helga" ) ) {
 		name = "helga";
@@ -1468,23 +1343,11 @@ void AIChar_spawn( gentity_t *ent ) {
 	if ( !strcmp( ent->classname, "ai_eliteguard" ) ) {
 		name = "eliteguard";
 	}
-	if ( !strcmp( ent->classname, "ai_stimsoldier_dual" ) ) {
-		name = "dual stimsoldier";
-	}
-	if ( !strcmp( ent->classname, "ai_stimsoldier_rocket" ) ) {
-		name = "rocket stimsoldier";
-	}
-	if ( !strcmp( ent->classname, "ai_stimsoldier_tesla" ) ) {
-		name = "tesla stimsoldier";
-	}
 	if ( !strcmp( ent->classname, "ai_supersoldier" ) ) {
 		name = "super soldier";
 	}
 	if ( !strcmp( ent->classname, "ai_protosoldier" ) ) {
 		name = "protosoldier";
-	}
-	if ( !strcmp( ent->classname, "ai_frogman" ) ) {
-		name = "frogman";
 	}
 	if ( !strcmp( ent->classname, "ai_blackguard" ) ) {
 		name = "blackguard";
@@ -1513,6 +1376,7 @@ void AIChar_spawn( gentity_t *ent ) {
 	newent->client->ps.aiChar = ent->aiCharacter;
 	newent->spawnflags = ent->spawnflags;
 	newent->aiTeam = ent->aiTeam;
+	newent->oneshot = ent->oneshot;
 	if ( newent->aiTeam < 0 ) {
 		newent->aiTeam = aiCharDefaults->aiTeam;
 	}
@@ -1825,74 +1689,6 @@ elite guard entity
 "head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
 "ainame" name of AI
 */
-
-/*
-============
-SP_ai_frogman
-============
-*/
-void SP_ai_frogman( gentity_t *ent ) {
-	ent->r.svFlags |= SVF_NOFOOTSTEPS;
-	AICast_DelayedSpawnCast( ent, AICHAR_FROGMAN );
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------------
-/*QUAKED ai_stimsoldier_dual (1 0.25 0) (-32 -32 -24) (32 32 64) TriggerSpawn NoRevive
-stim soldier entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'stim/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
-*/
-
-/*
-============
-SP_ai_stimsoldier_dual
-============
-*/
-void SP_ai_stimsoldier_dual( gentity_t *ent ) {
-	AICast_DelayedSpawnCast( ent, AICHAR_STIMSOLDIER1 );
-	//
-	level.stimSoldierFlySound = G_SoundIndex( "sound/stimsoldier/flyloop.wav" );
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-/*QUAKED ai_stimsoldier_rocket (1 0.25 0) (-32 -32 -24) (32 32 64) TriggerSpawn NoRevive
-stim soldier entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'stim/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
-*/
-
-/*
-============
-SP_ai_stimsoldier_rocket
-============
-*/
-void SP_ai_stimsoldier_rocket( gentity_t *ent ) {
-	AICast_DelayedSpawnCast( ent, AICHAR_STIMSOLDIER2 );
-	//
-	level.stimSoldierFlySound = G_SoundIndex( "sound/stimsoldier/flyloop.wav" );
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-/*QUAKED ai_stimsoldier_tesla (1 0.25 0) (-32 -32 -24) (32 32 64) TriggerSpawn NoRevive
-stim soldier entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'stim/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
-*/
-
-/*
-============
-SP_ai_stimsoldier_tesla
-============
-*/
-void SP_ai_stimsoldier_tesla( gentity_t *ent ) {
-	AICast_DelayedSpawnCast( ent, AICHAR_STIMSOLDIER3 );
-	//
-	level.stimSoldierFlySound = G_SoundIndex( "sound/stimsoldier/flyloop.wav" );
-}
 
 //----------------------------------------------------------------------------------------------------------------------------
 /*QUAKED ai_supersoldier (1 0.25 0) (-32 -32 -24) (32 32 64) TriggerSpawn NoRevive

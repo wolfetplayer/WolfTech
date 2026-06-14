@@ -427,6 +427,8 @@ struct gentity_s {
     char  *buy_item;
 	int isWeapon;   
 	int lastPainMOD; // last meansOfDeath used in pain function  
+	int oneshot;
+	int wave;
 };
 
 // Ridah
@@ -1349,6 +1351,7 @@ extern vmCvar_t g_motd6;
 extern vmCvar_t g_specialWaves;
 extern vmCvar_t g_survivalAiHealthCap;
 extern vmCvar_t g_survivalDifficulty;
+extern vmCvar_t g_playerSurvivalClass;
 
 void	trap_Print( const char *text );
 void	trap_Error( const char *text ) __attribute__((noreturn));

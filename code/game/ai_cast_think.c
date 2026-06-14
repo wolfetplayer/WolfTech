@@ -499,6 +499,13 @@ void AICast_Think( int client, float thinktime ) {
 			ent->client->ps.pm_type = PM_NORMAL;
 			cs->revivingTime = 0;
 		}
+
+        if ( g_gametype.integer == GT_COOP_SURVIVAL && !ent->oneshot )  { // Survival Respawn
+		if ( cs->rebirthTime && cs->rebirthTime < level.time ) {
+           AICast_SurvivalRespawn(ent, cs);
+		}
+		}
+
 		//
 		if ( cs->rebirthTime && cs->rebirthTime < level.time ) {
 			vec3_t mins, maxs;

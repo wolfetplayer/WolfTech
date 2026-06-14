@@ -757,3 +757,5 @@ typedef struct
 {
 	const char *steamId;
 } cast_achievementDef_t;
+
+qboolean AICast_Loadouts_ApplyToEnt( cast_state_t *cs, gentity_t *target, const char *loadoutName );

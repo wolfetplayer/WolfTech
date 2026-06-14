@@ -1088,8 +1088,11 @@ qboolean AICast_ScriptAction_SetAmmo( cast_state_t *cs, char *params ) {
 
 	if ( weapon != WP_NONE ) {
 		// give them the ammo
-
-		if ( atoi( token ) ) {
+		if (Q_strcasecmp(token, "full") == 0) {
+        // Set the ammo amount to the maximum ammo size for the weapon
+        int amt = ammoTable[BG_FindAmmoForWeapon( weapon )].maxammo;
+        Add_Ammo( &g_entities[cs->entityNum], weapon, amt, qtrue );
+		} else if ( atoi( token ) ) {
 			int amt;
 			amt = atoi( token );
 			if ( amt > 50 + ammoTable[BG_FindAmmoForWeapon( weapon )].maxammo ) {
@@ -1165,8 +1168,11 @@ qboolean AICast_ScriptAction_SetClip( cast_state_t *cs, char *params ) {
 
 		int spillover = atoi( token ) - ammoTable[weapon].maxclip;
 
-		if ( spillover > 0 ) {
-			// there was excess, put it in storage and fill the clip
+		if (Q_strcasecmp(token, "full") == 0) {
+        // Set the clip amount to the maximum clip size for the weapon
+        g_entities[cs->entityNum].client->ps.ammoclip[BG_FindClipForWeapon( weapon )] = ammoTable[weapon].maxclip;
+	    } else if ( spillover > 0 ) {
+		// there was excess, put it in storage and fill the clip
 			g_entities[cs->entityNum].client->ps.ammo[BG_FindAmmoForWeapon( weapon )] += spillover;
 			g_entities[cs->entityNum].client->ps.ammoclip[BG_FindClipForWeapon( weapon )] = ammoTable[weapon].maxclip;
 		} else {
@@ -1252,6 +1258,24 @@ qboolean AICast_ScriptAction_PlayerName( cast_state_t *cs, char *params ) {
 			Info_ValueForKey( userinfo, "skill" ) );
 
 	trap_SetConfigstring( CS_PLAYERS + cs->entityNum, s );
+
+	return qtrue;
+}
+
+
+/*
+==============
+AICast_ScriptAction_GiveScore
+	syntax: givescore <amount>
+
+==============
+*/
+qboolean AICast_ScriptAction_GiveScore( cast_state_t *cs, char *params ) {
+	if ( !params || !params[0] ) {
+		G_Error( "AI Scripting: setarmor requires an armor value" );
+	}
+
+	g_entities[cs->entityNum].client->ps.persistant[PERS_SCORE] += atoi( params );
 
 	return qtrue;
 }
@@ -1391,7 +1415,20 @@ qboolean AICast_ScriptAction_GiveArmor( cast_state_t *cs, char *params ) {
 }
 //----(SA)	end
 
+qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
+    gentity_t *player;
 
+    if ( !params || !params[0] ) {
+        G_Error( "AI Scripting: applyloadout requires loadout name\n" );
+    }
+
+    player = AICast_FindEntityForName( "player" );
+    if ( !player ) {
+        return qfalse;
+    }
+
+    return AICast_Loadouts_ApplyToEnt( cs, player, params );
+}
 
 /*
 =================
@@ -1504,6 +1541,124 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 			}
 			Fill_Clip( &g_entities[cs->entityNum].client->ps, weapon );      //----(SA)	added
 		}
+		// conditional flags
+		if ( ent->aiCharacter == AICHAR_ZOMBIE || ent->aiCharacter == AICHAR_ZOMBIE_SURV ) {
+			if ( COM_BitCheck( ent->client->ps.weapons, WP_MONSTER_ATTACK1 ) ) {
+				cs->aiFlags |= AIFL_NO_FLAME_DAMAGE;
+				SET_FLAMING_ZOMBIE( ent->s, 1 );
+			}
+		}
+	} else {
+		G_Error( "AI Scripting: giveweapon %s, unknown weapon", params );
+	}
+
+	return qtrue;
+}
+
+
+/*
+=================
+AICast_ScriptAction_GiveWeaponFull
+
+  syntax: giveweaponfull <pickupname>
+=================
+*/
+qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params ) {
+	int weapon;
+	int i;
+	gentity_t   *ent = &g_entities[cs->entityNum];
+
+	char localParams[256];
+    char *tokens[16];
+    int tCount = 0;
+    char *chosenParam;
+    char *token;
+
+	if (!params || !params[0]) {
+		G_Error("AI Scripting: giveweaponfull requires pickupname\n");
+	}
+
+	Q_strncpyz(localParams, params, sizeof(localParams));
+
+	token = strtok(localParams, " ");
+    while (token && tCount < 16)
+    {
+        tokens[tCount++] = token;
+        token = strtok(NULL, " ");
+    }
+
+    if (tCount > 1) {
+        chosenParam = tokens[rand() % tCount];
+	} else {
+        chosenParam = tokens[0];
+	}
+
+	int maxAmmo = sizeof(ammoTable) / sizeof(ammoTable[0]);
+	
+	weapon = WP_NONE;
+
+	// clear out all weapons
+	memset( g_entities[cs->entityNum].client->ps.weapons, 0, sizeof( g_entities[cs->entityNum].client->ps.weapons ) );
+	memset( g_entities[cs->entityNum].client->ps.ammo, 0, sizeof( g_entities[cs->entityNum].client->ps.ammo ) );
+	memset( g_entities[cs->entityNum].client->ps.ammoclip, 0, sizeof( g_entities[cs->entityNum].client->ps.ammoclip ) );
+	cs->weaponNum = WP_NONE;
+
+    for ( i = 1; bg_itemlist[i].classname; i++ )
+    {
+        if ( !Q_strcasecmp( chosenParam, bg_itemlist[i].classname ) ) {
+            weapon = bg_itemlist[i].giTag;
+            break;
+        }
+        if ( !Q_strcasecmp( chosenParam, bg_itemlist[i].pickup_name ) ) {
+            weapon = bg_itemlist[i].giTag;
+        }
+    }
+
+
+	// if you had the colt already, now you've got two!
+	if ( weapon == WP_COLT ) {
+		if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_COLT ) ) {
+			weapon = WP_AKIMBO;
+		}
+	}
+
+	if ( weapon != WP_NONE ) {
+		COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, weapon );
+
+//----(SA)	some weapons always go together (and they share a clip, so this is okay)
+		if ( weapon == WP_GARAND ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_SNOOPERSCOPE );
+		}
+		if ( weapon == WP_SNOOPERSCOPE ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_GARAND );
+		}
+        if ( weapon == WP_FG42 ) {
+         // Only grant FG42SCOPE if the entity is not an AI
+          if ( !ent->aiCharacter ) {
+            COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_FG42SCOPE );
+          }
+        }
+		if ( weapon == WP_SNIPERRIFLE ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_MAUSER );
+		}
+//----(SA)	end
+
+		// giveweaponfull gives you max ammo and fills your clip for all weapons
+        g_entities[cs->entityNum].client->ps.ammo[BG_FindAmmoForWeapon( weapon )] = 999;
+		Fill_Clip( &g_entities[cs->entityNum].client->ps, weapon );
+		// and also selects this weapon
+		if ( cs->bs ) {
+			cs->weaponNum = weapon;
+		}
+		cs->castScriptStatus.scriptFlags |= SFL_NOCHANGEWEAPON;
+
+		g_entities[cs->entityNum].client->ps.weapon = weapon;
+		g_entities[cs->entityNum].client->ps.weaponstate = WEAPON_READY;
+
+		if ( !cs->aiCharacter ) {  // only do this for player
+			g_entities[cs->entityNum].client->ps.weaponTime = 750;  // (SA) HACK: FIXME: TODO: delay to catch initial weapon reload
+		}    
+		
 		// conditional flags
 		if ( ent->aiCharacter == AICHAR_ZOMBIE || ent->aiCharacter == AICHAR_ZOMBIE_SURV ) {
 			if ( COM_BitCheck( ent->client->ps.weapons, WP_MONSTER_ATTACK1 ) ) {
@@ -1696,6 +1851,8 @@ qboolean AICast_ScriptAction_NoRespawn( cast_state_t *cs, char *params ) {
 /*
 ==============
 AICast_ScriptAction_GiveInventory
+
+ syntax: giveinventory <pickupname>
 ==============
 */
 qboolean AICast_ScriptAction_GiveInventory( cast_state_t *cs, char *params ) {
@@ -1727,9 +1884,57 @@ qboolean AICast_ScriptAction_GiveInventory( cast_state_t *cs, char *params ) {
 
 	if ( item->giType == IT_KEY ) {
 		g_entities[cs->entityNum].client->ps.stats[STAT_KEYS] |= ( 1 << item->giTag );
-	} else if ( item->giType == IT_HOLDABLE )      {
-		// (SA) TODO
+	} else if ( item->giType == IT_HOLDABLE )  {
+	    if ( item->gameskillnumber[0] ) { 
+		g_entities[cs->entityNum].client->ps.holdable[item->giTag] += item->gameskillnumber[0];
+	    } else {
+		g_entities[cs->entityNum].client->ps.holdable[item->giTag] += 1;   // add default of 1
+	    }
+		g_entities[cs->entityNum].client->ps.stats[STAT_HOLDABLE_ITEM] |= ( 1 << item->giTag );
 	}
+
+	return qtrue;
+}
+
+
+/*
+==============
+AICast_ScriptAction_GivePerk
+
+ syntax: giveperk <pickupname>
+==============
+*/
+qboolean AICast_ScriptAction_GivePerk( cast_state_t *cs, char *params ) {
+	int i;
+	gitem_t     *item = 0;
+
+	int clientNum;
+	clientNum = level.sortedClients[0];
+
+	if (!params || !params[0]) {
+		G_Error("AI Scripting: giveperk requires pickupname\n");
+	}
+
+	for ( i = 1; bg_itemlist[i].classname; i++ ) {
+		if ( !Q_strcasecmp( params, bg_itemlist[i].classname ) ) {
+			item = &bg_itemlist[i];
+		}
+
+		if ( !Q_strcasecmp( params, bg_itemlist[i].pickup_name ) ) {
+			item = &bg_itemlist[i];
+		}
+	}
+
+	if ( !item ) { // item not found
+		G_Error( "AI Scripting: giveperk %s, unknown item", params );
+	}
+
+     if ( item->giType == IT_PERK )  {
+		g_entities[cs->entityNum].client->ps.perks[item->giTag] += 1;   // add default of 1
+		g_entities[cs->entityNum].client->ps.stats[STAT_PERK] |= ( 1 << item->giTag );
+	}
+
+	ClientUserinfoChanged( clientNum );
 
 	return qtrue;
 }
@@ -3556,19 +3761,35 @@ AICast_ScriptAction_MusicQueue
 ==================
 */
 qboolean AICast_ScriptAction_MusicQueue( cast_state_t *cs, char *params ) {
-	char    *pString, *token;
-	char cvarName[MAX_QPATH];
+    char *pString, *token;
+    char cvarNameArray[16][MAX_INFO_STRING];
+    int fileCount = 0;
 
-	pString = params;
-	token = COM_ParseExt( &pString, qfalse );
-	if ( !token[0] ) {
-		G_Error( "AI_Scripting: syntax: mu_queue <musicfile>" );
-	}
-	Q_strncpyz( cvarName, token, sizeof( cvarName ) );
+    pString = params;
+    while (1) {
+        token = COM_ParseExt(&pString, qfalse);
+        if (!token[0]) {
+            break;
+        }
+        Q_strncpyz(cvarNameArray[fileCount], token, sizeof(cvarNameArray[fileCount]));
+        fileCount++;
+        if (fileCount >= 16) {
+            break;
+        }
+    }
 
-	trap_SetConfigstring( CS_MUSIC_QUEUE, cvarName );
+    if (fileCount == 0) {
+        G_Error("AI_Scripting: syntax: mu_queue <musicfile> [musicfile2] ...");
+    }
 
-	return qtrue;
+    if (fileCount == 1) {
+        trap_SetConfigstring(CS_MUSIC_QUEUE, cvarNameArray[0]);
+    } else {
+        int randomIndex = rand() % fileCount;
+        trap_SetConfigstring(CS_MUSIC_QUEUE, cvarNameArray[randomIndex]);
+    }
+
+    return qtrue;
 }
 
 

@@ -1185,6 +1185,11 @@ void ClientUserinfoChanged( int clientNum ) {
 		}
 	}
 
+	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		// To communicate it to cgame
+		client->ps.stats[ STAT_PLAYER_CLASS ] = client->sess.playerType;
+	}
+
 	// set max health
 	client->pers.maxHealth = atoi( Info_ValueForKey( userinfo, "handicap" ) );
 	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
@@ -1902,6 +1907,9 @@ void ClientSpawn( gentity_t *ent ) {
 	}
 	// dhm - end
 */
+	if ( !( ent->r.svFlags & SVF_CASTAI ) && ( g_gametype.integer == GT_COOP_SURVIVAL ) ) {  
+         client->sess.playerType = g_playerSurvivalClass.integer;
+	}
 
 	// give the player some basic stuff
 	if ( g_gametype.integer <= GT_COOP ) {

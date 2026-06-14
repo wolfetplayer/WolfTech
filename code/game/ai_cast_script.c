@@ -69,13 +69,16 @@ qboolean AICast_ScriptAction_PlayAnim( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_ClearAnim( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SetAmmo( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SetClip( cast_state_t *cs, char *params );			//----(SA)	added
+qboolean AICast_ScriptAction_GiveScore( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_SelectWeapon( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_PlayerName( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_GiveArmor( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_SetArmor( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_SuggestWeapon( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_GiveInventory( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_GivePerk( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_TakeWeapon( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_NoRespawn( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_RandomRespawn( cast_state_t *cs, char *params );
@@ -139,6 +142,7 @@ qboolean AICast_ScriptAction_PushAway( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_CatchFire( cast_state_t *cs, char *params );
 
 qboolean AICast_ScriptAction_AchievementGeneric( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params );
 
 // these are the actions that each event can call
 cast_script_stack_action_t scriptActions[] =
@@ -168,7 +172,9 @@ cast_script_stack_action_t scriptActions[] =
 	{"givearmor",        AICast_ScriptAction_GiveArmor},				//----(SA)	added
 	{"setarmor",     AICast_ScriptAction_SetArmor},					//----(SA)	added
 	{"giveinventory",    AICast_ScriptAction_GiveInventory},
+	{"giveperk", AICast_ScriptAction_GivePerk},
 	{"giveweapon",       AICast_ScriptAction_GiveWeapon},
+	{"giveweaponfull", AICast_ScriptAction_GiveWeaponFull},
 	{"takeweapon",       AICast_ScriptAction_TakeWeapon},
 	{"norespawn",       AICast_ScriptAction_NoRespawn},
 	{"randomrespawn",       AICast_ScriptAction_RandomRespawn},
@@ -234,6 +240,9 @@ cast_script_stack_action_t scriptActions[] =
 	{"anim_condition",   AICast_ScriptAction_AnimCondition},
 	{"pushaway",     AICast_ScriptAction_PushAway},
 	{"catchfire",        AICast_ScriptAction_CatchFire},
+	{"givescore", AICast_ScriptAction_GiveScore},
+
+	{"applyloadout", AICast_ScriptAction_ApplyLoadout, NULL},
 
 	{NULL,              0}
 };
@@ -270,6 +279,12 @@ cast_script_event_define_t scriptEvents[] =
 	{"inspectfriendlycombatstart", 0},
 	{"painenemy",        AICast_EventMatch_StringEqual},
 	{"forced_mg42_unmount",  0},
+	{"respawn",          0},
+	{"wave_start",          0},
+	{"wave_end",          0},
+	{"start_survival",          0},
+	{"specialwave_start",            0},
+	{"specialwave_end",          0},
 
 	{NULL,              0}
 };

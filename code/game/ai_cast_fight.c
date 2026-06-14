@@ -506,8 +506,6 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 			return 60;
 		case AICHAR_BLACKGUARD:
 			return BLACKGUARD_MELEE_RANGE;
-		case AICHAR_STIMSOLDIER3:
-			return TESLA_RANGE;
 		case AICHAR_ZOMBIE: // zombie flaming attack
 			return ZOMBIE_FLAME_RADIUS - 50;      // get well within range before starting
 		}
@@ -955,14 +953,6 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 			}
 		}
 		break;
-	case WP_TESLA:
-		switch ( cs->aiCharacter ) {
-		case AICHAR_STIMSOLDIER3:
-			if ( dist < 0 || dist >= TESLA_RANGE ) {
-				return qfalse;
-			}
-		}
-		break;
 	case WP_MONSTER_ATTACK1:
 		switch ( g_entities[cs->entityNum].aiCharacter ) {
 		case AICHAR_ZOMBIE: // zombie flaming attack
@@ -984,21 +974,9 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 
 			// melee attacks are always available
 		case AICHAR_LOPER:
-		 case AICHAR_LOPER_SPECIAL: 
+		case AICHAR_LOPER_SPECIAL: 
 		case AICHAR_WARZOMBIE:
 			return qtrue;   // always usable
-
-		case AICHAR_STIMSOLDIER2:
-			delay = 7000;
-			if ( dist < 0 || dist < 300 ) {
-				return qfalse;
-			}
-			break;
-		case AICHAR_STIMSOLDIER3:   // stim flying tesla attack
-			delay = 7000;
-			if ( dist < 0 || dist < 300 ) {
-				return qfalse;
-			}
 			break;
 		case AICHAR_BLACKGUARD:
 			delay = 5000;
@@ -1505,12 +1483,6 @@ qboolean AICast_AimAtEnemy( cast_state_t *cs ) {
 		aim_accuracy = 0.0001;
 	}
 
-	// StimSoldier is very good at firing Rocket Launcher
-	if ( cs->aiCharacter == AICHAR_STIMSOLDIER2 && cs->weaponNum == WP_PANZERFAUST ) {
-		aim_skill = 1;
-		aim_accuracy = 1;
-	}
-
 	//get the weapon information
 
 	//get the enemy entity information
@@ -1603,9 +1575,6 @@ qboolean AICast_RandomTriggerRelease( cast_state_t *cs ) {
 	// some characters override all weapon settings for trigger release
 	switch ( cs->aiCharacter ) {
 	case AICHAR_BLACKGUARD:
-	case AICHAR_STIMSOLDIER1:
-	case AICHAR_STIMSOLDIER2:
-	case AICHAR_STIMSOLDIER3:
 		return qfalse;
 	default:
 		break;

@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "g_local.h"
+#include "g_survival.h"
 
 //==========================================================
 
@@ -68,6 +69,10 @@ void Use_Target_Give( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 
 void SP_target_give( gentity_t *ent ) {
 	ent->use = Use_Target_Give;
+}
+
+void SP_target_buy( gentity_t *ent ) {
+	ent->use = Use_Target_buy;
 }
 
 

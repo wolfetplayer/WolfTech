@@ -133,11 +133,6 @@ void P_WorldEffects( gentity_t *ent ) {
 			ent->client->airOutTime = level.time + 10000;
 		}
 
-		//----(SA)	both these will end up being by virtue of having the 'breather' powerup
-		if ( ent->client->ps.aiChar == AICHAR_FROGMAN ) {  // let frogmen breathe forever
-			ent->client->airOutTime = level.time + 10000;
-		}
-
 		// if out of air, start drowning
 		if ( ent->client->airOutTime < level.time ) {
 
@@ -1072,6 +1067,15 @@ void ClientThink_real( gentity_t *ent ) {
 	if ( client->ps.powerups[PW_HASTE] ) {
 		client->ps.speed *= 1.3;
 	}
+
+	if (g_gametype.integer == GT_COOP_SURVIVAL)
+	{
+		if (!ent->aiCharacter && client->ps.perks[PERK_RUNNER] >= 2)
+		{
+			client->ps.speed *= 1.25;
+		}
+	}
+
 
 	// set up for pmove
 	oldEventSequence = client->ps.eventSequence;

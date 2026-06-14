@@ -1084,6 +1084,14 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		knockback = 0;
 	}
 
+	// cant push big guys. too heavy. Survival only.
+	if (g_gametype.integer == GT_COOP_SURVIVAL ) {
+	if (targ->aiCharacter == AICHAR_HEINRICH || targ->aiCharacter == AICHAR_HELGA || targ->aiCharacter == AICHAR_PROTOSOLDIER || targ->aiCharacter == AICHAR_SUPERSOLDIER)
+	{
+		knockback = 0;
+	}
+    }
+
 	// figure momentum add, even if the damage won't be taken
 	if ( knockback && targ->client ) {
 		vec3_t kvel;
@@ -1744,6 +1752,15 @@ qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage, float
 			// push the center of mass higher than the origin so players
 			// get knocked into the air more
 			dir[2] += 24;
+
+			// Reduce self-damage in Survival mode only
+			if (ent == attacker && attacker->client)
+			{
+				if (mod == MOD_ROCKET_SPLASH && g_gametype.integer == GT_COOP_SURVIVAL)
+				{
+					points *= 0.3f;
+				}
+			}
 
 			G_Damage( ent, NULL, attacker, dir, origin, (int)points, DAMAGE_RADIUS, mod );
 		}
