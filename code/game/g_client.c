@@ -1195,6 +1195,26 @@ void ClientUserinfoChanged( int clientNum ) {
 	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
 		client->pers.maxHealth = 100;
 	}
+
+// --- SURVIVAL maxHealth rules ---
+if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+
+    if ( client->ps.perks[ PERK_RESILIENCE ] ) {
+        if ( client->ps.stats[ STAT_PLAYER_CLASS ] == PC_MEDIC ) {
+            client->pers.maxHealth = 250;
+        } else {
+            client->pers.maxHealth = 200;
+        }
+    } else {
+        if ( client->ps.stats[ STAT_PLAYER_CLASS ] == PC_MEDIC ) {
+            client->pers.maxHealth = 150;
+        } else {
+            client->pers.maxHealth = 100;
+        }
+    }
+
+}
+
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 
 	// set model

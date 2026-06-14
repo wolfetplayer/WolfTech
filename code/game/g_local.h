@@ -674,6 +674,8 @@ struct gclient_s {
 	gentity_t       *tempHead;
 
 	pmoveExt_t pmext;
+
+	int healthRegenStartTime;
 };
 
 

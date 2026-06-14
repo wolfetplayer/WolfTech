@@ -514,10 +514,66 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 			}
 		}
 
-		// count down armor when over max
-		if ( client->ps.stats[STAT_ARMOR] > client->ps.stats[STAT_MAX_HEALTH] ) {
-			client->ps.stats[STAT_ARMOR]--;
+		
+		// regenerate health only if cvar is turned on
+if ((g_gametype.integer == GT_COOP_SURVIVAL) && level.time >= client->healthRegenStartTime ) {
+
+		    if (ent->health < client->ps.stats[STAT_MAX_HEALTH])
+		    {
+			if (!ent->aiCharacter){ // no regen for AI
+
+
+			if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.75)
+				{
+					client->healthRegenStartTime = level.time + 500;
+					ent->health += 10;
+
+					if (ent->health > client->ps.stats[STAT_MAX_HEALTH])
+					{
+						ent->health = client->ps.stats[STAT_MAX_HEALTH];
+					}
+				}
+				  else if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.50 && ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.75)
+				{
+					client->healthRegenStartTime = level.time + 750;
+					ent->health += 9;
+				} else if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.25 && ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.50)
+				{
+                   	client->healthRegenStartTime = level.time + 1000;
+					ent->health += 7;
+				}  else if (ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.25)
+				{
+					client->healthRegenStartTime = level.time + 1500;
+					ent->health += 5;
+				}
+
+
+			}
+		    }
+
+			// resilience PRO: slight armor regen tied to healthRegenStartTime gate
+			if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+				if ( !ent->aiCharacter && client->ps.perks[PERK_RESILIENCE] >= 2 ) {
+					if ( client->ps.stats[STAT_ARMOR] < 100 ) {
+						client->ps.stats[STAT_ARMOR] += 2;
+						if ( client->ps.stats[STAT_ARMOR] > 100 ) {
+							client->ps.stats[STAT_ARMOR] = 100;
+						}
+					}
+				}
+			}
 		}
+
+
+		// count down armor when over max
+		if (g_gametype.integer != GT_COOP_SURVIVAL)
+		{
+			if (client->ps.stats[STAT_ARMOR] > 100)
+			{
+				client->ps.stats[STAT_ARMOR]--;
+			}
+		}
+
 	}
 }
 

@@ -1334,6 +1334,7 @@ If you have questions concerning this license or the applicable additional terms
 {"BG_FindClipForWeapon", (byte *)BG_FindClipForWeapon},
 {"BG_FindItemForWeapon", (byte *)BG_FindItemForWeapon},
 {"BG_FindItemForHoldable", (byte *)BG_FindItemForHoldable},
+{"BG_FindItemForPerk", (byte *)BG_FindItemForPerk},
 {"BG_FindItemForPowerup", (byte *)BG_FindItemForPowerup},
 {"BG_AnimGetFootstepGap", (byte *)BG_AnimGetFootstepGap},
 {"BG_AnimUpdatePlayerStateConditions", (byte *)BG_AnimUpdatePlayerStateConditions},

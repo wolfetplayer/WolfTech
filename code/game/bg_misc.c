@@ -1143,6 +1143,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,          // ammotype
+		0,
 		0,          // cliptype
 		"",          // precache
 		"",          // sounds
@@ -1166,6 +1167,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,
+		0,
 		"",
 		"",
 		{0,0,0,0}
@@ -1184,6 +1186,7 @@ gitem_t bg_itemlist[] =
 		5,
 		IT_TREASURE,
 		WP_NONE,
+		0,
 		0,
 		0,
 		0,
@@ -1213,6 +1216,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,
+		0,
 		"",
 		"",
 		{10,10,5,5}
@@ -1233,6 +1237,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,
+		0,
 		"",
 		"",
 		{25,25,15,15}
@@ -1249,6 +1254,7 @@ gitem_t bg_itemlist[] =
 		50,
 		IT_HEALTH,
 		WP_NONE,
+		0,
 		0,
 		0,
 		0,
@@ -1273,6 +1279,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,
+		0,
 		"",
 		"",
 		{45,35,25,15}   // amount given in first stage based on gameskill level
@@ -1291,6 +1298,7 @@ gitem_t bg_itemlist[] =
 		10,                 // amount given in last stage
 		IT_HEALTH,
 		WP_NONE,
+		0,
 		0,
 		0,
 		0,
@@ -1314,6 +1322,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,
+		0,
 		"",
 		"",
 		{25,25,25,25}
@@ -1330,6 +1339,7 @@ gitem_t bg_itemlist[] =
 		25,
 		IT_HEALTH,
 		WP_NONE,
+		0,
 		0,
 		0,
 		0,
@@ -1358,6 +1368,7 @@ gitem_t bg_itemlist[] =
 		PW_NOFATIGUE,
 		0,
 		0,
+		0,
 		"",
 		"",
 		{30,25,20,15}
@@ -1377,6 +1388,7 @@ gitem_t bg_itemlist[] =
 		IT_POWERUP,
 		WP_NONE,
 		PW_NOFATIGUE,
+		0,
 		0,
 		0,
 		"",
@@ -1404,6 +1416,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,
+		0,
 		"",
 		"",
 		{75,75,75,75}
@@ -1423,6 +1436,7 @@ gitem_t bg_itemlist[] =
 		0,
 		0,
 		0,
+		0,
 		"",
 		"",
 		{75,75,75,75}
@@ -1439,6 +1453,7 @@ gitem_t bg_itemlist[] =
 		25,
 		IT_ARMOR,
 		WP_NONE,
+		0,
 		0,
 		0,
 		0,
@@ -1468,6 +1483,7 @@ gitem_t bg_itemlist[] =
 		WP_GAUNTLET,
 		WP_GAUNTLET,
 		WP_GAUNTLET,
+		WP_GAUNTLET,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1489,6 +1505,7 @@ gitem_t bg_itemlist[] =
 		"Knife",             // pickup
 		50,
 		IT_WEAPON,
+		WP_KNIFE,
 		WP_KNIFE,
 		WP_KNIFE,
 		WP_KNIFE,
@@ -1515,6 +1532,7 @@ gitem_t bg_itemlist[] =
 		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
+		WP_LUGER,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1533,6 +1551,7 @@ gitem_t bg_itemlist[] =
 		"Mauser Rifle",          // pickup
 		50,
 		IT_WEAPON,
+		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
@@ -1559,6 +1578,7 @@ gitem_t bg_itemlist[] =
 		WP_THOMPSON,
 		WP_COLT,
 		WP_THOMPSON,
+		WP_THOMPSON,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
@@ -1579,6 +1599,7 @@ gitem_t bg_itemlist[] =
 		WP_STEN,
 		WP_STEN,
 		WP_LUGER,
+		WP_STEN,
 		WP_STEN,
 		"",                  // precache
 		"",                  // sounds
@@ -1602,7 +1623,7 @@ gitem_t bg_itemlist[] =
 		WP_AKIMBO,
 		WP_AKIMBO,
 		WP_COLT,
-//		WP_COLT,
+		WP_AKIMBO,
 		WP_AKIMBO,
 		"",                      // precache
 		"",                      // sounds
@@ -1622,6 +1643,7 @@ gitem_t bg_itemlist[] =
 		"Colt",                  // pickup
 		50,
 		IT_WEAPON,
+		WP_COLT,
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
@@ -1649,6 +1671,7 @@ gitem_t bg_itemlist[] =
 		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
+		WP_GARAND,
 		"",                          // precache
 		"",                          // sounds
 		{0,0,0,0}
@@ -1671,6 +1694,7 @@ gitem_t bg_itemlist[] =
 	WP_MP40,
     WP_MP40,
     WP_LUGER,   // ammo pool
+    WP_MP40,    // clip pool
     WP_MP40,    // clip pool
     "",
     "",
@@ -1695,6 +1719,7 @@ gitem_t bg_itemlist[] =
     WP_MP34,
     WP_LUGER,   // ammo pool
     WP_MP34,    // clip pool
+    WP_MP34,    // clip pool
     "",
     "",
     {0,0,0,0}
@@ -1716,6 +1741,7 @@ gitem_t bg_itemlist[] =
 		WP_FG42,
 		WP_FG42,
 		WP_MAUSER,
+		WP_FG42,
 		WP_FG42,
 		"",                  // precache
 		"",                  // sounds
@@ -1739,6 +1765,7 @@ gitem_t bg_itemlist[] =
 		WP_SILENCER,
 		WP_SILENCER,
 		WP_LUGER,
+		WP_SILENCER,
 		WP_LUGER,
 		"",                  // precache
 		"",                  // sounds
@@ -1758,6 +1785,7 @@ gitem_t bg_itemlist[] =
 		"Panzerfaust",               // pickup
 		1,
 		IT_WEAPON,
+		WP_PANZERFAUST,
 		WP_PANZERFAUST,
 		WP_PANZERFAUST,
 		WP_PANZERFAUST,
@@ -1784,6 +1812,7 @@ gitem_t bg_itemlist[] =
 		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
+		WP_GRENADE_LAUNCHER,
 		"",                      // precache
 		"sound/weapons/grenade/hgrenb1a.wav sound/weapons/grenade/hgrenb2a.wav",             // sounds
 		{0,0,0,0}
@@ -1806,6 +1835,7 @@ gitem_t bg_itemlist[] =
 		WP_GRENADE_PINEAPPLE,
 		WP_GRENADE_PINEAPPLE,
 		WP_GRENADE_PINEAPPLE,
+		WP_GRENADE_PINEAPPLE,
 		"",                      // precache
 		"sound/weapons/grenade/hgrenb1a.wav sound/weapons/grenade/hgrenb2a.wav",             // sounds
 		{0,0,0,0}
@@ -1824,6 +1854,7 @@ gitem_t bg_itemlist[] =
 		"Dynamite Weapon",       // pickup
 		7,
 		IT_WEAPON,
+		WP_DYNAMITE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
@@ -1851,6 +1882,7 @@ gitem_t bg_itemlist[] =
 		WP_VENOM,
 		WP_VENOM,
 		WP_VENOM,
+		WP_VENOM,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -1869,6 +1901,7 @@ gitem_t bg_itemlist[] =
 		"Flamethrower",              // pickup
 		200,
 		IT_WEAPON,
+		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
@@ -1896,6 +1929,7 @@ gitem_t bg_itemlist[] =
 		WP_TESLA,
 		WP_TESLA,
 		WP_TESLA,
+		WP_TESLA,
 		"",                          // precache
 		"",                          // sounds
 		{0,0,0,0}
@@ -1919,6 +1953,7 @@ gitem_t bg_itemlist[] =
 		WP_SNIPERRIFLE,
 		WP_SNIPERRIFLE,
 		WP_MAUSER,
+		WP_SNIPERRIFLE,
 		WP_MAUSER,
 		"",                          // precache
 		"",                          // sounds
@@ -1941,6 +1976,7 @@ gitem_t bg_itemlist[] =
 		WP_SNOOPERSCOPE,
 		WP_SNOOPERSCOPE,
 		WP_GARAND,
+		WP_SNOOPERSCOPE,
 		WP_GARAND,
 		"",                          // precache
 		"",                          // sounds
@@ -1963,6 +1999,7 @@ gitem_t bg_itemlist[] =
 		WP_FG42SCOPE,
 		WP_FG42SCOPE,   // this weap
 		WP_MAUSER,      // shares ammo w/
+		WP_FG42SCOPE,   // this weap
 		WP_FG42,        // shares clip w/
 		"",                          // precache
 		"",                          // sounds
@@ -1983,6 +2020,7 @@ gitem_t bg_itemlist[] =
 		IT_WEAPON,
 		WP_MONSTER_ATTACK1,
 		WP_MONSTER_ATTACK1,
+		WP_MONSTER_ATTACK1,         // ammo
 		WP_MONSTER_ATTACK1,         // ammo
 		WP_MONSTER_ATTACK1,         //
 		"",                          // precache
@@ -2006,6 +2044,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_MONSTER_ATTACK2,
 		WP_MONSTER_ATTACK2,
 		WP_MONSTER_ATTACK2,         // ammo
+		WP_MONSTER_ATTACK2,         // ammo
 		WP_MONSTER_ATTACK2,         //
 		"",                          // precache
 		"",                          // sounds
@@ -2026,6 +2065,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_MONSTER_ATTACK3,
 		WP_MONSTER_ATTACK3,
 		WP_MONSTER_ATTACK3,         // ammo
+		WP_MONSTER_ATTACK3,         // ammo
 		WP_MONSTER_ATTACK3,
 		"",                          // precache
 		"",                          // sounds
@@ -2045,6 +2085,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"nopickup(WP_MORTAR)",       // pickup
 		6,
 		IT_WEAPON,
+		WP_MORTAR,
 		WP_MORTAR,
 		WP_MORTAR,
 		WP_MORTAR,
@@ -2074,6 +2115,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
+		WP_LUGER,
 		"",                  // precache
 		"",                  // sounds
 		{32,24,16,16}
@@ -2093,6 +2135,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
+		WP_LUGER,
 		"",                  // precache
 		"",                  // sounds
 		{64,48,32,32}
@@ -2109,6 +2152,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		100,
 		IT_AMMO,
 		WP_NONE,
+		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
 		WP_LUGER,
@@ -2132,6 +2176,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
+		WP_COLT,
 		"",                  // precache
 		"",                  // sounds
 		{30,20,15,15}
@@ -2151,6 +2196,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
+		WP_COLT,
 		"",                  // precache
 		"",                  // sounds
 		{60,45,30,30}
@@ -2167,6 +2213,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		100,
 		IT_AMMO,
 		WP_NONE,
+		WP_COLT,
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
@@ -2190,6 +2237,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
+		WP_MAUSER,
 		"",                          // precache
 		"",                          // sounds
 		{16,12,8,8}
@@ -2209,6 +2257,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
+		WP_MAUSER,
 		"",                          // precache
 		"",                          // sounds
 		{32,24,16,16}
@@ -2225,6 +2274,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		50,
 		IT_AMMO,
 		WP_NONE,
+		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
 		WP_MAUSER,
@@ -2248,6 +2298,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
+		WP_GARAND,
 		"",                          // precache
 		"",                          // sounds
 		{5,2,2,2}
@@ -2264,6 +2315,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		50,
 		IT_AMMO,
 		WP_NONE,
+		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
@@ -2286,6 +2338,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_GARAND,
 		WP_GARAND,
 		WP_GARAND,
+		WP_GARAND,
 		"",                          // precache
 		"",                          // sounds
 		{10,10,10,5}
@@ -2302,6 +2355,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		100,
 		IT_AMMO,
 		WP_NONE,
+		WP_VENOM,
 		WP_VENOM,
 		WP_VENOM,
 		WP_VENOM,
@@ -2324,6 +2378,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
 		WP_GRENADE_LAUNCHER,
+		WP_GRENADE_LAUNCHER,
 		"",                      // precache
 		"",                      // sounds
 		{5,4,3,3}
@@ -2343,6 +2398,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_GRENADE_PINEAPPLE,
 		WP_GRENADE_PINEAPPLE,
 		WP_GRENADE_PINEAPPLE,
+		WP_GRENADE_PINEAPPLE,
 		"",                      // precache
 		"",                      // sounds
 		{5,4,3,3}
@@ -2359,6 +2415,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		1,
 		IT_AMMO,
 		WP_NONE,
+		WP_DYNAMITE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
@@ -2382,6 +2439,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_TESLA,
 		WP_TESLA,
 		WP_TESLA,
+		WP_TESLA,
 		"",                  // precache
 		"",                  // sounds
 		{100,75,50,50}
@@ -2399,6 +2457,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		100,
 		IT_AMMO,
 		WP_NONE,
+		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
 		WP_FLAMETHROWER,
@@ -2422,6 +2481,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_PANZERFAUST,
 		WP_PANZERFAUST,
 		WP_PANZERFAUST,
+		WP_PANZERFAUST,
 		"",                      // precache
 		"",                      // sounds
 		{4,3,2,2}
@@ -2438,6 +2498,7 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		60,
 		IT_AMMO,
 		WP_NONE,
+		WP_MONSTER_ATTACK1,
 		WP_MONSTER_ATTACK1,
 		WP_MONSTER_ATTACK1,
 		WP_MONSTER_ATTACK1,
@@ -2475,6 +2536,7 @@ model="models/powerups/holdable/wine.md3"
 		HI_WINE,
 		0,
 		0,
+		0,
 		"",                              // precache
 		"sound/pickup/holdable/use_wine.wav",        // sounds
 		{3,0,0,0}
@@ -2495,6 +2557,7 @@ model="models/powerups/holdable/wine.md3"
 		IT_HOLDABLE,
 		WP_NONE,
 		HI_STAMINA,
+		0,
 		0,
 		0,
 		"",                              // precache
@@ -2519,6 +2582,7 @@ model="models/powerups/holdable/wine.md3"
 		HI_BOOK1,
 		0,
 		0,
+		0,
 		"",                              // precache
 		"sound/pickup/holdable/use_book.wav",    // sounds
 		{0,0,0,0}
@@ -2539,6 +2603,7 @@ model="models/powerups/holdable/wine.md3"
 		IT_HOLDABLE,
 		WP_NONE,
 		HI_BOOK2,
+		0,
 		0,
 		0,
 		"",                              // precache
@@ -2562,6 +2627,7 @@ model="models/powerups/holdable/wine.md3"
 		IT_HOLDABLE,
 		WP_NONE,
 		HI_BOOK3,
+		0,
 		0,
 		0,
 		"",                              // precache
@@ -2596,6 +2662,7 @@ model="models/powerups/holdable/wine.md3"
 		PW_AMMO,
 		0,
 		0,
+		0,
 		"",                            
 		"",   
 		{0,0,0,0}
@@ -2618,6 +2685,7 @@ model="models/powerups/holdable/wine.md3"
 		IT_POWERUP,
 		WP_NONE,
 		PW_BATTLESUIT_SURV,
+		0,
 		0,
 		0,
 		"",                          
@@ -2644,6 +2712,7 @@ model="models/powerups/holdable/wine.md3"
 		PW_VAMPIRE,
 		0,
 		0,
+		0,
 		"",                            
 		"",   
 		{0,0,0,0}
@@ -2664,6 +2733,7 @@ model="models/powerups/holdable/wine.md3"
 		IT_KEY,
 		WP_NONE,
 		INV_BINOCS,
+		0,
 		0,
 		0,
 		"",                      // precache
@@ -2700,6 +2770,7 @@ model="models/powerups/holdable/bandages.md3"
 		PERK_RESILIENCE,
 		0,
 		0,
+		0,
 		"",                             
 		"",
 		{0,0,0,0}
@@ -2730,6 +2801,7 @@ model="models/powerups/holdable/bandages.md3"
 		IT_PERK,
 		WP_NONE,
 		PERK_SCAVENGER,
+		0,
 		0,
 		0,
 		"",                             
@@ -2765,6 +2837,7 @@ model="models/powerups/holdable/bandages.md3"
 		PERK_RUNNER,
 		0,
 		0,
+		0,
 		"",                             
 		"",
 		{0,0,0,0}
@@ -2796,6 +2869,7 @@ model="models/powerups/holdable/bandages.md3"
 		IT_PERK,
 		WP_NONE,
 		PERK_WEAPONHANDLING,
+		0,
 		0,
 		0,
 		"",                             
@@ -2831,6 +2905,7 @@ model="models/powerups/holdable/bandages.md3"
 		PERK_RIFLING,
 		0,
 		0,
+		0,
 		"",                             
 		"",
 		{0,0,0,0}
@@ -2862,6 +2937,7 @@ model="models/powerups/holdable/bandages.md3"
 		IT_PERK,
 		WP_NONE,
 		PERK_SECONDCHANCE,
+		0,
 		0,
 		0,
 		"",                             
@@ -2913,6 +2989,23 @@ gitem_t *BG_FindItemForHoldable( holdable_t pw ) {
 	}
 
 //	Com_Error( ERR_DROP, "HoldableItem not found" );
+
+	return NULL;
+}
+
+/*
+==============
+BG_FindItemForPerk
+==============
+*/
+gitem_t *BG_FindItemForPerk( perk_t perk ) {
+	int i;
+
+	for ( i = 0 ; i < bg_numItems ; i++ ) {
+		if ( bg_itemlist[i].giType == IT_PERK && bg_itemlist[i].giTag == perk ) {
+			return &bg_itemlist[i];
+		}
+	}
 
 	return NULL;
 }
@@ -3007,7 +3100,30 @@ weapon_t BG_FindAmmoForWeapon( weapon_t weapon ) {
 	const int NUM_TABLE_ELEMENTS = WP_NUM_WEAPONS;
 	static weapon_t lookupTable[WP_NUM_WEAPONS];
 	static qboolean lookupTableInit = qtrue;
+	qboolean survival = qfalse;
 
+    #ifdef GAMEDLL
+	    if (g_gametype.integer == GT_COOP_SURVIVAL)
+    #endif
+    #ifdef CGAMEDLL
+		if (cg_gameType.integer == GT_COOP_SURVIVAL)
+    #endif
+			survival = qtrue;
+
+    if (survival) {
+	if ( lookupTableInit ) {
+		for ( i = 0; i < NUM_TABLE_ELEMENTS; i++ ) {
+			lookupTable[i] = 0; // default value for no match found
+			for ( it = bg_itemlist + 1 ; it->classname ; it++ ) {
+				if ( it->giType == IT_WEAPON && it->giTag == i ) {
+					lookupTable[i] = it->giAmmoIndexSurv;
+				}
+			}
+		}
+		// table is created
+		lookupTableInit = qfalse;
+	}
+	} else {
 	if ( lookupTableInit ) {
 		for ( i = 0; i < NUM_TABLE_ELEMENTS; i++ ) {
 			lookupTable[i] = 0; // default value for no match found
@@ -3019,6 +3135,7 @@ weapon_t BG_FindAmmoForWeapon( weapon_t weapon ) {
 		}
 		// table is created
 		lookupTableInit = qfalse;
+	}
 	}
 
 	if ( weapon > NUM_TABLE_ELEMENTS ) {
@@ -3098,11 +3215,28 @@ BG_FindItemForAmmo
 */
 gitem_t *BG_FindItemForAmmo( int ammo ) {
 	int i = 0;
+	qboolean survival = qfalse;
+
+	#ifdef GAMEDLL
+		if (g_gametype.integer == GT_COOP_SURVIVAL)
+	#endif
+	#ifdef CGAMEDLL
+		if (cg_gameType.integer == GT_COOP_SURVIVAL)
+	#endif
+			survival = qtrue;
 
 	for (; i < bg_numItems; i++ )
 	{
-		if ( bg_itemlist[i].giType == IT_AMMO && bg_itemlist[i].giAmmoIndex == ammo ) {
-			return &bg_itemlist[i];
+		if ( bg_itemlist[i].giType == IT_AMMO ) {
+			if (survival) {
+				if ( bg_itemlist[i].giAmmoIndexSurv == ammo ) {
+					return &bg_itemlist[i];
+				}
+			} else {
+				if ( bg_itemlist[i].giAmmoIndex == ammo ) {
+					return &bg_itemlist[i];
+				}
+			}
 		}
 	}
 	Com_Error( ERR_DROP, "Item not found for ammo: %d", ammo );
@@ -3277,9 +3411,20 @@ qboolean isClipOnly( int weap ) {
 qboolean    BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *ps ) {
 	gitem_t *item;
 	int ammoweap;
+	qboolean multiplayer = qfalse;
+	qboolean survival = qfalse;
 
-	if ( ent->modelindex < 1 || ent->modelindex >= bg_numItems ) {
-		Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: index out of range" );
+		#ifdef GAMEDLL
+			if (g_gametype.integer == GT_COOP_SURVIVAL)
+		#endif
+		#ifdef CGAMEDLL
+			if (cg_gameType.integer == GT_COOP_SURVIVAL)
+		#endif
+			survival = qtrue;
+
+	if (ent->modelindex < 1 || ent->modelindex >= bg_numItems)
+	{
+		Com_Error(ERR_DROP, "BG_CanItemBeGrabbed: index out of range");
 	}
 
 	item = &bg_itemlist[ent->modelindex];
@@ -3287,48 +3432,83 @@ qboolean    BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *
 	switch ( item->giType ) {
 
 	case IT_WEAPON:
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
-		if ( COM_BitCheck( ps->weapons, item->giTag ) ) {               // you have the weap
-			if ( isClipOnly( item->giTag ) ) {
-				if ( ps->ammoclip[item->giAmmoIndex] >= ammoTable[item->giAmmoIndex].maxclip ) {
-					return qfalse;
-				}
-			} else {
-				if ( ps->ammo[item->giAmmoIndex] >= ammoTable[item->giAmmoIndex].maxammo ) { // you are loaded with the ammo
+		if (multiplayer)
+		{
+			if ((ps->stats[STAT_PLAYER_CLASS] == PC_MEDIC) || (ps->stats[STAT_PLAYER_CLASS] == PC_ENGINEER))
+			{
+				if (!COM_BitCheck(ps->weapons, item->giTag))
+				{
 					return qfalse;
 				}
 			}
 		}
-		// JPW
+		else
+		{
+			if (COM_BitCheck(ps->weapons, item->giTag))
+			{
+				if (isClipOnly(item->giTag))
+				{
+					int maxclip = BG_GetMaxClip(ps, item->giTag);
+
+					if (survival)
+					{
+						if (ps->ammoclip[item->giAmmoIndexSurv] >= maxclip)
+						{
+							return qfalse;
+						}
+					}
+					else
+					{
+						if (ps->ammoclip[item->giAmmoIndex] >= maxclip)
+						{
+							return qfalse;
+						}
+					}
+				}
+				else
+				{
+					int maxammo = BG_GetMaxAmmo(ps, item->giTag, 1.5f);
+
+					if (survival)
+					{
+						if (ps->ammo[item->giAmmoIndexSurv] >= maxammo)
+						{
+							return qfalse;
+						}
+					}
+					else
+					{
+						if (ps->ammo[item->giAmmoIndex] >= maxammo)
+						{
+							return qfalse;
+						}
+					}
+				}
+			}
+		}
 		return qtrue;
 
 	case IT_AMMO:
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
-		ammoweap = BG_FindAmmoForWeapon( item->giTag );
+		ammoweap = BG_FindAmmoForWeapon(item->giTag);
 
-		if ( isClipOnly( ammoweap ) ) {
-			if ( ps->ammoclip[ammoweap] >= ammoTable[ammoweap].maxclip ) {
+		if (isClipOnly(ammoweap))
+		{
+			int maxclip = BG_GetMaxClip(ps, ammoweap);
+
+			if (ps->ammoclip[ammoweap] >= maxclip)
+			{
 				return qfalse;
 			}
 		}
 
-		if ( ps->ammo[ammoweap] >= ammoTable[ammoweap].maxammo ) {
+		int maxammo = BG_GetMaxAmmo(ps, ammoweap, 1.5f);
+		if (ps->ammo[ammoweap] >= maxammo)
+		{
 			return qfalse;
 		}
 
 		return qtrue;
-
 	case IT_ARMOR:
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
 		// we also clamp armor to the maxhealth for handicapping
 //			if ( ps->stats[STAT_ARMOR] >= ps->stats[STAT_MAX_HEALTH] * 2 ) {
 		if ( ps->stats[STAT_ARMOR] >= 100 ) {
@@ -3337,10 +3517,6 @@ qboolean    BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *
 		return qtrue;
 
 	case IT_HEALTH:
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
 		if ( ent->density == ( 1 << 9 ) ) { // density tracks how many uses left
 			return qfalse;
 		}
@@ -3351,10 +3527,6 @@ qboolean    BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *
 		return qtrue;
 
 	case IT_POWERUP:
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
 		if ( ent->density == ( 1 << 9 ) ) { // density tracks how many uses left
 			return qfalse;
 		}
@@ -3367,40 +3539,20 @@ qboolean    BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *
 
 	case IT_TEAM:     // team items, such as flags
 
-		// DHM - Nerve :: otherEntity2 is now used instead of modelindex2
-		// ent->modelindex2 is non-zero on items if they are dropped
-		// we need to know this because we can pick up our dropped flag (and return it)
-		// but we can't pick up our flag at base
 		return qfalse;
 
 
 	case IT_HOLDABLE:
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
 		return qtrue;
 
 	case IT_TREASURE:       // treasure always picked up
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
 		return qtrue;
 
 	case IT_CLIPBOARD:      // clipboards always picked up
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
 		return qtrue;
 
 		//---- (SA) Wolf keys
 	case IT_KEY:
-		// axis players can only pickup dropped items
-		if ( ps->persistant[PERS_TEAM] == TEAM_RED && !( item->spawnflags & FL_DROPPED ) ) {
-			return qfalse;
-		}
 		return qtrue;       // keys are always picked up
 
 	case IT_BAD:
@@ -3408,15 +3560,14 @@ qboolean    BG_CanItemBeGrabbed( const entityState_t *ent, const playerState_t *
 	default:
 #ifndef Q3_VM
 #ifndef NDEBUG
-		Com_Printf("BG_CanItemBeGrabbed: unknown enum %d\n", item->giType );
+          Com_Printf("BG_CanItemBeGrabbed: unknown enum %d\n", item->giType );
 #endif
 #endif
-	break;
+         break;
 	}
 
 	return qfalse;
 }
-
 //======================================================================
 
 /*

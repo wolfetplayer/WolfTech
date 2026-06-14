@@ -253,6 +253,10 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_PLAYER_WEAPON_STABILITY  81  // shows aimSpreadScale value
 #define CG_NEWMESSAGE               82  // 'you got mail!'	//----(SA)	added
 
+#define CG_PLAYER_PERKS             86
+#define CG_PLAYER_KILLS             87
+#define CG_PLAYER_WAVES             88
+
 #define UI_OWNERDRAW_BASE           200
 #define UI_HANDICAP                 200
 #define UI_EFFECTS                  201

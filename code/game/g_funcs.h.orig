@@ -1110,6 +1110,7 @@ If you have questions concerning this license or the applicable additional terms
 {"BG_FindClipForWeapon", (byte *)BG_FindClipForWeapon},
 {"BG_FindItemForWeapon", (byte *)BG_FindItemForWeapon},
 {"BG_FindItemForHoldable", (byte *)BG_FindItemForHoldable},
+{"BG_FindItemForPerk", (byte *)BG_FindItemForPerk},
 {"BG_FindItemForPowerup", (byte *)BG_FindItemForPowerup},
 {"Svcmd_GameMem_f", (byte *)Svcmd_GameMem_f},
 {"G_InitMemory", (byte *)G_InitMemory},

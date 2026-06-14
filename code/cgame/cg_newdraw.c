@@ -900,6 +900,53 @@ static void CG_DrawHoldableItem( rectDef_t *rect, int font, float scale, qboolea
 	}
 }
 
+static void CG_DrawPerks( rectDef_t *rect, int font, float scale, qboolean draw2D ) {
+    int i, numPerks = 0;
+    gitem_t *item;
+    float x, y = 20; // Top part of the screen
+    qhandle_t icon;
+
+	if (cg_gameType.integer != GT_COOP_SURVIVAL)
+	{
+		return;
+	}
+
+	// Count the number of active perks
+    for ( i = 0; i < MAX_PERKS; i++ ) {
+        if ( cg.snap->ps.perks[i] > 0 || (cg.snap->ps.stats[STAT_PERK] & (1 << i)) ) {
+            numPerks++;
+        }
+    }
+
+    // Calculate the starting x position to center the perks
+    x = 220 - (numPerks * (rect->w + 5) - 5) / 2;
+
+    if ( cg_fixedAspect.integer == 2 ) {
+        CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+    }
+
+    for ( i = 0; i < MAX_PERKS; i++ ) {
+        if ( cg.snap->ps.perks[i] > 0 || (cg.snap->ps.stats[STAT_PERK] & (1 << i)) ) {
+            item = BG_FindItemForPerk( i );
+
+            if ( item ) {
+                CG_RegisterItemVisuals( item - bg_itemlist );
+
+                icon = cg_items[item - bg_itemlist].icons[0];
+
+				// PRO icon replacement
+				if ( cg.snap->ps.perks[i] >= 2 && cgs.media.perkProIcons[i] ) {
+					icon = cgs.media.perkProIcons[i];
+				}
+
+                CG_DrawPic( x, y, rect->w, rect->h, icon );
+
+				x += rect->w + 5; // 5 is the space between icons
+            }
+        }
+    }
+}
+
 void flubfoo( void ) {
 	int value;
 	gitem_t *item;
@@ -2268,6 +2315,9 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_HOLDABLE:
 		CG_DrawHoldableItem( &rect, font, scale, ownerDrawFlags & CG_SHOW_2DONLY );
+		break;
+	case CG_PLAYER_PERKS:
+		CG_DrawPerks( &rect, font, scale, ownerDrawFlags & CG_SHOW_2DONLY );
 		break;
 	case CG_PLAYER_ITEM:
 		CG_DrawPlayerItem( &rect, font, scale, ownerDrawFlags & CG_SHOW_2DONLY );

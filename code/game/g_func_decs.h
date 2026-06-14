@@ -1335,6 +1335,7 @@ extern weapon_t BG_FindClipForWeapon ( weapon_t weapon ) ;
 extern gitem_t * BG_FindItemForWeapon ( weapon_t weapon ) ;
 extern gitem_t * BG_FindItemForHoldable ( holdable_t pw ) ;
 extern gitem_t * BG_FindItemForPowerup ( powerup_t pw ) ;
+extern gitem_t *BG_FindItemForPerk( perk_t perk );
 extern float BG_AnimGetFootstepGap ( playerState_t * ps , float xyspeed ) ;
 extern void BG_AnimUpdatePlayerStateConditions ( pmove_t * pmove ) ;
 extern animation_t * BG_GetAnimationForIndex ( int client , int index ) ;

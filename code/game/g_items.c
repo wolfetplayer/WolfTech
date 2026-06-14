@@ -745,11 +745,6 @@ void Touch_Item( gentity_t *entity, gentity_t *activator, trace_t *trace ) {
 			respawn = Pickup_Weapon_New_Inventory(entity, activator);
 		} else {
 		respawn = Pickup_Weapon( entity, activator );
-#ifdef MONEY
-		if ( g_gametype.integer == GT_COOP_BATTLE ) {
-			entity->wait = -1;
-		}
-#endif
 		}
 		break;
 	case IT_AMMO:

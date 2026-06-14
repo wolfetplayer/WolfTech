@@ -1509,6 +1509,8 @@ typedef struct {
 	qhandle_t sizeCursor;
 
 	qhandle_t rtt;
+
+	qhandle_t perkProIcons[MAX_PERKS];
 } cgMedia_t;
 
 

@@ -1325,6 +1325,7 @@ typedef struct gitem_s {
 	int giTag;
 
 	int giAmmoIndex;            // type of weapon ammo this uses.  (ex. WP_MP40 and WP_LUGER share 9mm ammo, so they both have WP_LUGER for giAmmoIndex)
+	int giAmmoIndexSurv;        // no ammo sharing in Survival
 	int giClipIndex;            // which clip this weapon uses.  this allows the sniper rifle to use the same clip as the garand, etc.
 
 	char        *precaches;     // string of all models and images this item will use
@@ -1356,6 +1357,7 @@ gitem_t *BG_FindItemForAmmo( int ammo );        //----(SA)	modified
 gitem_t *BG_FindItemForKey( wkey_t k, int *index );
 weapon_t BG_FindAmmoForWeapon( weapon_t weapon );
 weapon_t BG_FindClipForWeapon( weapon_t weapon );
+gitem_t *BG_FindItemForPerk( perk_t perk );
 
 qboolean BG_AkimboFireSequence( int weapon, int akimboClip, int coltClip );
 //qboolean BG_AkimboFireSequence	( playerState_t *ps );	//----(SA)	added
