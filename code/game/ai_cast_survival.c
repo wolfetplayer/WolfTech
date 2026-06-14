@@ -53,7 +53,56 @@ If you have questions concerning this license or the applicable additional terms
 
 
 #define PREPARE_TIME 15
+#define INTERMISSION_TIME 15
 #define INITIAL_KILLCOUNT_REQ 5
+#define FRIENDLY_SPAWN_TIME 15
+
+#define WAVE_EG 3
+#define WAVE_BG 5
+#define WAVE_VENOM 7
+#define WAVE_PROTO 9
+#define WAVE_WARRIORS 3
+#define WAVE_HELGA 10
+#define WAVE_HEINRICH 15
+#define WAVE_LOPERS 5
+
+#define MAX_SOLDIERS_SURVIVAL 10
+#define SOLDIERS_INCREASE 1
+
+#define MAX_ZOMBIES_SURVIVAL 20
+#define ZOMBIES_INCREASE 1
+
+#define MAX_WARRIORS_SURVIVAL 5
+#define WARRIORS_INCREASE 1
+
+#define MAX_ELITES_SURVIVAL 4
+#define ELITES_INCREASE 1
+
+#define MAX_BLACKGUARDS_SURVIVAL 4
+#define BLACKGUARDS_INCREASE 1
+
+#define MAX_HELGAS_SURVIVAL 1
+#define HELGAS_INCREASE 1
+
+#define MAX_HEINRICHS_SURVIVAL 1
+#define HEINRICHS_INCREASE 1
+
+#define MAX_LOPERS_SURVIVAL 3
+#define LOPERS_INCREASE 1
+
+#define MAX_VENOMS_SURVIVAL 4
+#define VENOMS_INCREASE 1
+
+#define MAX_PROTOS_SURVIVAL 2
+#define PROTOS_INCREASE 1
+
+#define SPECIAL_WAVE_CHANCE 30
+#define SPECIAL_WAVE_MIN_START 4
+#define SPECIAL_WAVE_MIN_GAP 2
+#define SPECIAL_WAVE_MAX_GAP 5
+#define SPECIAL_WAVE_LOPERS_INITIAL 3
+#define SPECIAL_WAVE_LOPERS_INCREASE 1
+#define SPECIAL_WAVE_LOPERS_MAX 8
 
 /*
 ============
@@ -73,17 +122,17 @@ void AICast_InitSurvival(void) {
     svParams.specialWaveActive    = qfalse;
     svParams.lastSpecialWave      = 0;
 
-	svParams.maxActiveAI[AICHAR_SOLDIER] = svParams.initialSoldiersCount;
-	svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = svParams.initialZombiesCount;
-	svParams.maxActiveAI[AICHAR_WARZOMBIE] = svParams.initialWarriorsCount;
-	svParams.maxActiveAI[AICHAR_PROTOSOLDIER] = svParams.initialProtosCount;
-	svParams.maxActiveAI[AICHAR_PARTISAN] = svParams.initialPartisansCount;
-	svParams.maxActiveAI[AICHAR_ELITEGUARD] = svParams.initialEliteGuardsCount;
-	svParams.maxActiveAI[AICHAR_BLACKGUARD] = svParams.initialBlackGuardsCount;
-	svParams.maxActiveAI[AICHAR_VENOM] = svParams.initialVenomsCount;
-	svParams.maxActiveAI[AICHAR_LOPER] = svParams.initialLopersCount;
-	svParams.maxActiveAI[AICHAR_HELGA] = svParams.initialHelgaCount;
-	svParams.maxActiveAI[AICHAR_HEINRICH] = svParams.initialheinCount;
+	svParams.maxActiveAI[AICHAR_SOLDIER] = 5;
+	svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = 5;
+	svParams.maxActiveAI[AICHAR_WARZOMBIE] = 0;
+	svParams.maxActiveAI[AICHAR_PROTOSOLDIER] = 0;
+	svParams.maxActiveAI[AICHAR_PARTISAN] = 2;
+	svParams.maxActiveAI[AICHAR_ELITEGUARD] = 0;
+	svParams.maxActiveAI[AICHAR_BLACKGUARD] = 0;
+	svParams.maxActiveAI[AICHAR_VENOM] = 0;
+	svParams.maxActiveAI[AICHAR_LOPER] = 0;
+	svParams.maxActiveAI[AICHAR_HELGA] = 0;
+	svParams.maxActiveAI[AICHAR_HEINRICH] = 0;
 }
 
 
@@ -307,7 +356,7 @@ void AICast_SetRebirthTimeSurvival(gentity_t *ent, cast_state_t *cs) {
 			cs->respawnsleft--;
 		}
 		svParams.spawnedThisWaveFriendly--;
-		cs->rebirthTime = level.time + (svParams.friendlySpawnTime * 1000) + rand() % 2000;
+		cs->rebirthTime = level.time + (FRIENDLY_SPAWN_TIME * 1000) + rand() % 2000;
 		return;
 	}
 
@@ -321,31 +370,31 @@ void AICast_SetRebirthTimeSurvival(gentity_t *ent, cast_state_t *cs) {
 
 		switch (ent->aiCharacter) {
 			case AICHAR_ELITEGUARD:
-				baseTime = svParams.egSpawnTime * 1000;
+				baseTime = 5 * 1000;
 				break;
 			case AICHAR_HELGA:
-			    baseTime = svParams.helgaSpawnTime * 1000;
+			    baseTime = 350 * 1000;
 				break;
 			case AICHAR_HEINRICH:
-			    baseTime = svParams.heinSpawnTime * 1000;
+			    baseTime = 500 * 1000;
 				break;
 			case AICHAR_BLACKGUARD:
-				baseTime = svParams.bgSpawnTime * 1000;
+				baseTime = 5 * 1000;
 				break;
 			case AICHAR_VENOM:
-				baseTime = svParams.vSpawnTime * 1000;
+				baseTime = 60 * 1000;
 				break;
 			case AICHAR_PROTOSOLDIER:
-				baseTime = svParams.protoSpawnTime * 1000;
+				baseTime = 120 * 1000;
 				break;
 			case AICHAR_WARZOMBIE:
-				baseTime = svParams.warzSpawnTime * 1000;
+				baseTime = 5 * 1000;
 				break;
 			case AICHAR_LOPER:
-				baseTime = svParams.loperSpawnTime * 1000;
+				baseTime = 5 * 1000;
 				break;
 			default: // Regular soldiers and zombies
-				baseTime = svParams.defaultSpawnTime * 1000;
+				baseTime = 5 * 1000;
 				break;
 		}
 
@@ -366,10 +415,6 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 	cast_state_t    *cs;
 	qboolean nogib = qtrue;
 
-	// Achievements related stuff! 
-	qboolean modPanzerfaust = (meansOfDeath == MOD_ROCKET || meansOfDeath == MOD_ROCKET_SPLASH);
-	qboolean modKicked = (meansOfDeath == MOD_KICKED);
-	qboolean modKnife = (meansOfDeath == MOD_KNIFE);
 	qboolean killerPlayer	 = attacker && attacker->client && !( attacker->aiCharacter );
 	
 	
@@ -582,81 +627,81 @@ AICast_UpdateMaxActiveAI
 void AICast_UpdateMaxActiveAI(void)
 {
     // Normal soldiers
-    svParams.maxActiveAI[AICHAR_SOLDIER] += svParams.soldiersIncrease;
-    if (svParams.maxActiveAI[AICHAR_SOLDIER] > svParams.maxSoldiers) {
-        svParams.maxActiveAI[AICHAR_SOLDIER] = svParams.maxSoldiers;
+    svParams.maxActiveAI[AICHAR_SOLDIER] += SOLDIERS_INCREASE;
+    if (svParams.maxActiveAI[AICHAR_SOLDIER] > MAX_SOLDIERS_SURVIVAL) {
+        svParams.maxActiveAI[AICHAR_SOLDIER] = MAX_SOLDIERS_SURVIVAL;
     }
 
     // Elite Guards
-    if (svParams.waveCount >= svParams.waveEg) {
-        svParams.maxActiveAI[AICHAR_ELITEGUARD] += svParams.eliteGuardsIncrease;
-        if (svParams.maxActiveAI[AICHAR_ELITEGUARD] > svParams.maxEliteGuards) {
-            svParams.maxActiveAI[AICHAR_ELITEGUARD] = svParams.maxEliteGuards;
+    if (svParams.waveCount >= WAVE_EG) {
+        svParams.maxActiveAI[AICHAR_ELITEGUARD] += ELITES_INCREASE;
+        if (svParams.maxActiveAI[AICHAR_ELITEGUARD] > MAX_ELITES_SURVIVAL) {
+            svParams.maxActiveAI[AICHAR_ELITEGUARD] = MAX_ELITES_SURVIVAL;
         }
 
 	}
 
-	if (svParams.waveCount >= svParams.waveHelga)
+	if (svParams.waveCount >= WAVE_HELGA)
 	{
-		svParams.maxActiveAI[AICHAR_HELGA] += svParams.helgaIncrease;
-		if (svParams.maxActiveAI[AICHAR_HELGA] > svParams.maxHelga)
+		svParams.maxActiveAI[AICHAR_HELGA] += HELGAS_INCREASE;
+		if (svParams.maxActiveAI[AICHAR_HELGA] > MAX_HELGAS_SURVIVAL)
 		{
-			svParams.maxActiveAI[AICHAR_HELGA] = svParams.maxHelga;
+			svParams.maxActiveAI[AICHAR_HELGA] = MAX_HELGAS_SURVIVAL;
 		}
 	}
 
-	if (svParams.waveCount >= svParams.wavehein)
+	if (svParams.waveCount >= WAVE_HEINRICH)
 	{
-		svParams.maxActiveAI[AICHAR_HEINRICH] += svParams.heinIncrease;
-		if (svParams.maxActiveAI[AICHAR_HEINRICH] > svParams.maxhein)
+		svParams.maxActiveAI[AICHAR_HEINRICH] += HEINRICHS_INCREASE;
+		if (svParams.maxActiveAI[AICHAR_HEINRICH] > MAX_HEINRICHS_SURVIVAL)
 		{
-			svParams.maxActiveAI[AICHAR_HEINRICH] = svParams.maxhein;
+			svParams.maxActiveAI[AICHAR_HEINRICH] = MAX_HEINRICHS_SURVIVAL;
 		}
 	}
 
 	// Black Guards
-    if (svParams.waveCount >= svParams.waveBg) {
-        svParams.maxActiveAI[AICHAR_BLACKGUARD] += svParams.blackGuardsIncrease;
-        if (svParams.maxActiveAI[AICHAR_BLACKGUARD] > svParams.maxBlackGuards) {
-            svParams.maxActiveAI[AICHAR_BLACKGUARD] = svParams.maxBlackGuards;
+    if (svParams.waveCount >= WAVE_BG) {
+        svParams.maxActiveAI[AICHAR_BLACKGUARD] += BLACKGUARDS_INCREASE;
+        if (svParams.maxActiveAI[AICHAR_BLACKGUARD] > MAX_BLACKGUARDS_SURVIVAL) {
+            svParams.maxActiveAI[AICHAR_BLACKGUARD] = MAX_BLACKGUARDS_SURVIVAL;
         }
     }
 
     // Venoms
-    if (svParams.waveCount >= svParams.waveV) {
-        svParams.maxActiveAI[AICHAR_VENOM] += svParams.venomsIncrease;
-        if (svParams.maxActiveAI[AICHAR_VENOM] > svParams.maxVenoms) {
-            svParams.maxActiveAI[AICHAR_VENOM] = svParams.maxVenoms;
+    if (svParams.waveCount >= WAVE_VENOM) {
+        svParams.maxActiveAI[AICHAR_VENOM] += VENOMS_INCREASE;
+        if (svParams.maxActiveAI[AICHAR_VENOM] > MAX_VENOMS_SURVIVAL) {
+            svParams.maxActiveAI[AICHAR_VENOM] = MAX_VENOMS_SURVIVAL;
         }
     }
 
     // Default Zombies
-    svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] += svParams.zombiesIncrease;
-    if (svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] > svParams.maxZombies) {
-        svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = svParams.maxZombies;
+    svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] += ZOMBIES_INCREASE;
+    if (svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] > MAX_ZOMBIES_SURVIVAL) {
+        svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = MAX_ZOMBIES_SURVIVAL;
     }
 
 
     // Warriors
-    if (svParams.waveCount >= svParams.waveWarz) {
-        svParams.maxActiveAI[AICHAR_WARZOMBIE] += svParams.warriorsIncrease;
-        if (svParams.maxActiveAI[AICHAR_WARZOMBIE] > svParams.maxWarriors) {
-            svParams.maxActiveAI[AICHAR_WARZOMBIE] = svParams.maxWarriors;
+    if (svParams.waveCount >= WAVE_WARRIORS) {
+        svParams.maxActiveAI[AICHAR_WARZOMBIE] += WARRIORS_INCREASE;
+        if (svParams.maxActiveAI[AICHAR_WARZOMBIE] > MAX_WARRIORS_SURVIVAL) {
+            svParams.maxActiveAI[AICHAR_WARZOMBIE] = MAX_WARRIORS_SURVIVAL;
         }
     }
 
     // Protos
-    if (svParams.waveCount >= svParams.waveProtos) {
-        svParams.maxActiveAI[AICHAR_PROTOSOLDIER] += svParams.protosIncrease;
-        if (svParams.maxActiveAI[AICHAR_PROTOSOLDIER] > svParams.maxProtos) {
-            svParams.maxActiveAI[AICHAR_PROTOSOLDIER] = svParams.maxProtos;
+    if (svParams.waveCount >= WAVE_PROTO) {
+        svParams.maxActiveAI[AICHAR_PROTOSOLDIER] += PROTOS_INCREASE;
+        if (svParams.maxActiveAI[AICHAR_PROTOSOLDIER] > MAX_PROTOS_SURVIVAL) {
+            svParams.maxActiveAI[AICHAR_PROTOSOLDIER] = MAX_PROTOS_SURVIVAL;
         }
     }
 
-	if (svParams.waveCount >= svParams.waveLopers) {
-        svParams.maxActiveAI[AICHAR_LOPER] += svParams.lopersIncrease;
-        if (svParams.maxActiveAI[AICHAR_LOPER] > svParams.maxLopers) {
-            svParams.maxActiveAI[AICHAR_LOPER] = svParams.maxLopers;
+	if (svParams.waveCount >= WAVE_LOPERS) {
+        svParams.maxActiveAI[AICHAR_LOPER] += LOPERS_INCREASE;
+        if (svParams.maxActiveAI[AICHAR_LOPER] > MAX_LOPERS_SURVIVAL) {
+            svParams.maxActiveAI[AICHAR_LOPER] = MAX_LOPERS_SURVIVAL;
         }
     }
 }
@@ -676,28 +721,28 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 	switch (cs->aiCharacter)
 	{
 	case AICHAR_ELITEGUARD:
-		waveAppeared = svParams.waveEg;
+		waveAppeared = WAVE_EG;
 		break;
 	case AICHAR_HEINRICH:
-		waveAppeared = svParams.wavehein;
+		waveAppeared = WAVE_HEINRICH;
 		break;
 	case AICHAR_HELGA:
-		waveAppeared = svParams.waveHelga;
+		waveAppeared = WAVE_HELGA;
 		break;
 	case AICHAR_BLACKGUARD:
-		waveAppeared = svParams.waveBg;
+		waveAppeared = WAVE_BG;
 		break;
 	case AICHAR_VENOM:
-		waveAppeared = svParams.waveV;
+		waveAppeared = WAVE_VENOM;
 		break;
 	case AICHAR_WARZOMBIE:
-		waveAppeared = svParams.waveWarz;
+		waveAppeared = WAVE_WARRIORS;
 		break;
 	case AICHAR_PROTOSOLDIER:
-		waveAppeared = svParams.waveProtos;
+		waveAppeared = WAVE_PROTO;
 		break;
 	case AICHAR_LOPER:
-		waveAppeared = svParams.waveLopers;
+		waveAppeared = WAVE_LOPERS;
 		break;
 	case AICHAR_SOLDIER:
 	case AICHAR_ZOMBIE_SURV:
@@ -956,10 +1001,10 @@ BG_SetBehaviorForSurvival
 void BG_SetBehaviorForSurvival(AICharacters_t characterNum) {
 	int waveAppeared = 1;
 	switch (characterNum) {
-		case AICHAR_ELITEGUARD:   waveAppeared = svParams.waveEg; break;
-		case AICHAR_BLACKGUARD:   waveAppeared = svParams.waveBg; break;
-		case AICHAR_VENOM:        waveAppeared = svParams.waveV; break;
-		case AICHAR_PROTOSOLDIER: waveAppeared = svParams.waveProtos; break;
+		case AICHAR_ELITEGUARD:   waveAppeared = WAVE_EG; break;
+		case AICHAR_BLACKGUARD:   waveAppeared = WAVE_BG; break;
+		case AICHAR_VENOM:        waveAppeared = WAVE_VENOM; break;
+		case AICHAR_PROTOSOLDIER: waveAppeared = WAVE_PROTO; break;
 		case AICHAR_SOLDIER: waveAppeared = 1; break;
 		default:  waveAppeared = 0; break;
 	}
@@ -1083,19 +1128,19 @@ void BG_SetBehaviorForSurvival(AICharacters_t characterNum) {
 
 static qboolean AICast_ShouldStartSpecialWave(void) {
     // 0 = disabled → never start special waves
-    if (g_specialWaves.integer == 0 || svParams.specialWaveChance <= 0) 
+    if (g_specialWaves.integer == 0 || SPECIAL_WAVE_CHANCE <= 0) 
         return qfalse;
 
     int wave = svParams.waveCount; // wave we’re starting now
 
     // Too early
-    if (wave < svParams.specialWaveMinStart)
+    if (wave < SPECIAL_WAVE_MIN_START)
         return qfalse;
 
     // Enforce minimal gap after a special (cooldown)
     if (svParams.lastSpecialWave > 0) {
         int delta = wave - svParams.lastSpecialWave; // distance to previous special
-        if (delta <= svParams.specialMinGap)
+        if (delta <= SPECIAL_WAVE_MIN_GAP)
             return qfalse; // still cooling down
     }
 
@@ -1103,15 +1148,15 @@ static qboolean AICast_ShouldStartSpecialWave(void) {
     // If none yet, count since first eligible (specialWaveMinStart).
     int gapSince = (svParams.lastSpecialWave > 0)
         ? (wave - svParams.lastSpecialWave - 1)
-        : (wave - svParams.specialWaveMinStart);
+        : (wave - SPECIAL_WAVE_MIN_START);
 
     // Hard guarantee: if we waited long enough, force a special
-    if (gapSince >= svParams.specialMaxGap)
+    if (gapSince >= SPECIAL_WAVE_MAX_GAP)
         return qtrue;
 
     // Otherwise randomized
     int roll = rand() % 100; // 0..99
-    return (roll < svParams.specialWaveChance) ? qtrue : qfalse;
+    return (roll < SPECIAL_WAVE_CHANCE) ? qtrue : qfalse;
 }
 
 void AICast_CheckSurvivalProgression(gentity_t *attacker) {
@@ -1150,7 +1195,7 @@ void AICast_CheckSurvivalProgression(gentity_t *attacker) {
         //Com_Printf("^1[AI_SURVIVE] Wave %d complete! Triggering intermission and progression.^7\n", svParams.waveCount);
 
         svParams.wavePending = qtrue;
-        svParams.waveChangeTime = level.time + svParams.intermissionTime * 1000;
+        svParams.waveChangeTime = level.time + INTERMISSION_TIME * 1000;
 
 		char endEvtBuf[32];
 		Q_strncpyz(
@@ -1183,7 +1228,7 @@ void AICast_TickSurvivalWave(void) {
 	if (wave == 1) {
 		AICast_ScriptEvent( AICast_GetCastState( player->s.number ), "start_survival", "" );
 		// Explicitly use user-defined value for wave 1
-		killReq = svParams.initialKillCountRequirement;
+		killReq = INITIAL_KILLCOUNT_REQ;
 	} else {
 		// quadratic formula:
 		killReq = (int)(0.15f * wave * wave + 3.0f * wave + 10.0f);
@@ -1196,13 +1241,13 @@ void AICast_TickSurvivalWave(void) {
         svParams.lastSpecialWave   = wave;
 
         // Scale LOPER count a bit with wave number, but keep it simple
-        int lopers = svParams.specialLopersInitialCount + svParams.specialLopersIncrease * (wave - svParams.specialWaveMinStart);
-        if (lopers < svParams.specialLopersInitialCount) lopers = svParams.specialLopersInitialCount;
+        int lopers = SPECIAL_WAVE_LOPERS_INITIAL + SPECIAL_WAVE_LOPERS_INCREASE * (wave - SPECIAL_WAVE_MIN_START);
+        if (lopers < SPECIAL_WAVE_LOPERS_INITIAL) lopers = SPECIAL_WAVE_LOPERS_INITIAL;
 
         // On special wave the kill requirement is exactly the number of LOPERs
         svParams.killCountRequirement = lopers;
 
-        svParams.maxActiveAI[AICHAR_LOPER_SPECIAL] = (lopers < svParams.specialLopersMax) ? lopers : svParams.specialLopersMax;
+        svParams.maxActiveAI[AICHAR_LOPER_SPECIAL] = (lopers < SPECIAL_WAVE_LOPERS_MAX) ? lopers : SPECIAL_WAVE_LOPERS_MAX;
 
         // (Optional) You can mute growth of other classes this wave by skipping UpdateMaxActiveAI
     } else {
