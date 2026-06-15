@@ -1042,22 +1042,7 @@ qboolean AICast_ScriptAction_SetAmmo( cast_state_t *cs, char *params ) {
 	char *pString, *token;
 	int weapon;
 	int i;
-	gentity_t   *ent = &g_entities[cs->entityNum];
 
-#ifdef MONEY
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
-
-	// existing players don't receive
-	// the weapons and ammo from the ai scripts on a mapchange
-	// on a mapchange we give everyone at least one point, so we can identify new players
-	if ( g_gametype.integer <= GT_COOP && g_gametype.integer != GT_COOP_BATTLE )
-	{
-		if ( ent->inuse && !( ent->r.svFlags & SVF_CASTAI ) && ent->client->ps.persistant[PERS_SCORE] != 0 )
-			return qtrue;
-	}
 	pString = params;
 
 	token = COM_ParseExt( &pString, qfalse );
@@ -1092,11 +1077,15 @@ qboolean AICast_ScriptAction_SetAmmo( cast_state_t *cs, char *params ) {
         // Set the ammo amount to the maximum ammo size for the weapon
         int amt = ammoTable[BG_FindAmmoForWeapon( weapon )].maxammo;
         Add_Ammo( &g_entities[cs->entityNum], weapon, amt, qtrue );
-		} else if ( atoi( token ) ) {
+    } else if ( atoi( token ) ) {
 			int amt;
 			amt = atoi( token );
 			if ( amt > 50 + ammoTable[BG_FindAmmoForWeapon( weapon )].maxammo ) {
+				if ( cs->aiCharacter ) { 
 				amt = 999;  // unlimited
+				} else {
+					amt = ammoTable[BG_FindAmmoForWeapon( weapon )].maxammo;
+				}
 			}
 			Add_Ammo( &g_entities[cs->entityNum], weapon, amt, qtrue );
 		} else {
@@ -1128,14 +1117,6 @@ qboolean AICast_ScriptAction_SetClip( cast_state_t *cs, char *params ) {
 	int weapon;
 	int i;
 
-#ifdef MONEY
-	gentity_t   *ent = &g_entities[cs->entityNum];
-
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
-
 	pString = params;
 
 	token = COM_ParseExt( &pString, qfalse );
@@ -1165,20 +1146,22 @@ qboolean AICast_ScriptAction_SetClip( cast_state_t *cs, char *params ) {
 	}
 
 	if ( weapon != WP_NONE ) {
-
-		int spillover = atoi( token ) - ammoTable[weapon].maxclip;
-
 		if (Q_strcasecmp(token, "full") == 0) {
         // Set the clip amount to the maximum clip size for the weapon
         g_entities[cs->entityNum].client->ps.ammoclip[BG_FindClipForWeapon( weapon )] = ammoTable[weapon].maxclip;
-	    } else if ( spillover > 0 ) {
-		// there was excess, put it in storage and fill the clip
+    } else {
+
+		int spillover = atoi( token ) - ammoTable[weapon].maxclip;
+
+		if ( spillover > 0 ) {
+			// there was excess, put it in storage and fill the clip
 			g_entities[cs->entityNum].client->ps.ammo[BG_FindAmmoForWeapon( weapon )] += spillover;
 			g_entities[cs->entityNum].client->ps.ammoclip[BG_FindClipForWeapon( weapon )] = ammoTable[weapon].maxclip;
 		} else {
 			// set the clip amount to the exact specified value
 			g_entities[cs->entityNum].client->ps.ammoclip[weapon] = atoi( token );
 		}
+	}
 
 	} else {
 //		G_Printf( "--SCRIPTER WARNING-- AI Scripting: setclip: unknown weapon \"%s\"\n", params );
@@ -1443,20 +1426,6 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 	gentity_t   *ent = &g_entities[cs->entityNum];
 	int slotId = G_GetFreeWeaponSlot( ent );
 
-#ifdef MONEY
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) )
-		return qtrue;
-#endif
-
-	// existing players don't receive
-	// the weapons and ammo from the ai scripts on a mapchange
-	// on a mapchange we give everyone at least one point, so we can identify new players
-	if ( g_gametype.integer <= GT_COOP && g_gametype.integer != GT_COOP_BATTLE )
-	{
-		if ( ent->inuse && !( ent->r.svFlags & SVF_CASTAI ) && ent->client->ps.persistant[PERS_SCORE] != 0 )
-			return qtrue;
-	}
-
 	weapon = WP_NONE;
 
 	for ( i = 1; bg_itemlist[i].classname; i++ )
@@ -1641,7 +1610,6 @@ qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params ) {
 		if ( weapon == WP_SNIPERRIFLE ) {
 			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_MAUSER );
 		}
-//----(SA)	end
 
 		// giveweaponfull gives you max ammo and fills your clip for all weapons
         g_entities[cs->entityNum].client->ps.ammo[BG_FindAmmoForWeapon( weapon )] = 999;
