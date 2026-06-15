@@ -3202,7 +3202,6 @@ void G_RunFrame( int levelTime ) {
 		AICast_TickSurvivalWave();
 	}
 
-
 	// perform final fixups on the players
 	ent = &g_entities[0];
 	for ( i = 0 ; i < level.maxclients ; i++, ent++ ) {
@@ -3218,9 +3217,12 @@ void G_RunFrame( int levelTime ) {
 	CheckGameState();
 
 	// NERVE - SMF - check game state
-	if ( g_gametype.integer == GT_COOP || g_gametype.integer == GT_COOP_SPEEDRUN ) {
+	if (g_gametype.integer == GT_COOP || g_gametype.integer == GT_COOP_SPEEDRUN || g_gametype.integer == GT_COOP_SURVIVAL )
+	{
 		CheckCoop();
-	} else if ( g_gametype.integer == GT_COOP_BATTLE ) {
+	}
+	else if (g_gametype.integer == GT_COOP_BATTLE)
+	{
 		// wait for 2 players
 		CheckCoopBattle();
 	}

@@ -146,7 +146,6 @@ g_script_stack_action_t gScriptActions[] =
 	{"mu_queue",             G_ScriptAction_MusicQueue}, // (char *new_music)				// music that will start when previous fades to 0
 	{"objectivesneeded",    G_ScriptAction_ObjectivesNeeded},
 	{"numsecrets",  G_ScriptAction_NumSecrets},
-
 	{NULL,                      0}
 };
 
@@ -162,6 +161,11 @@ g_script_event_define_t gScriptEvents[] =
 	{"death",            0},          // RIP
 	{"activate",     G_Script_EventMatch_StringEqual},   // something has triggered us (always followed by an identifier)
 	{"stopcam",          0},
+	{"wave_start",          0},
+	{"wave_end",          0},
+	{"start_survival",          0},
+	{"specialwave_start",            0},
+	{"specialwave_end",          0},
 
 	{NULL,              0}
 };

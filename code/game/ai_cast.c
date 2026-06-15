@@ -531,6 +531,10 @@ void AICast_Init( void ) {
 	numSpawningCast = 0;
 	saveGamePending = qtrue;
 
+	if (g_gametype.integer == GT_COOP_SURVIVAL) {
+		AICast_InitSurvival();
+	}
+
 	trap_Cvar_Register( &aicast_debug, "aicast_debug", "0", 0 );
 	trap_Cvar_Register( &aicast_debugname, "aicast_debugname", "", 0 );
 	trap_Cvar_Register( &aicast_scripts, "aicast_scripts", "1", 0 );

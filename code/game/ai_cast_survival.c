@@ -1126,6 +1126,25 @@ void BG_SetBehaviorForSurvival(AICharacters_t characterNum) {
 	aiDefaults[characterNum].attributes[REACTION_TIME] = reactionTime;
 }
 
+static void Survival_GameManagerEvent( const char *event ) {
+	gentity_t *gm;
+	char eventBuffer[MAX_QPATH];
+	char emptyParams[] = "";
+
+	gm = G_Find( NULL, FOFS( scriptName ), "game_manager" );
+	if ( !gm ) {
+		G_Printf( "Survival: ERROR no game_manager found for event '%s'\n", event );
+		return;
+	}
+
+	Q_strncpyz( eventBuffer, event, sizeof( eventBuffer ) );
+
+	G_Printf( "Survival: game_manager event -> %s\n", eventBuffer );
+
+	G_Script_ScriptEvent( gm, eventBuffer, emptyParams );
+}
+
+
 static qboolean AICast_ShouldStartSpecialWave(void) {
     // 0 = disabled → never start special waves
     if (g_specialWaves.integer == 0 || SPECIAL_WAVE_CHANCE <= 0) 
@@ -1159,121 +1178,155 @@ static qboolean AICast_ShouldStartSpecialWave(void) {
     return (roll < SPECIAL_WAVE_CHANCE) ? qtrue : qfalse;
 }
 
-void AICast_CheckSurvivalProgression(gentity_t *attacker) {
+void AICast_CheckSurvivalProgression( gentity_t *attacker ) {
+	int enemiesAlive;
+	int i;
 
-	gentity_t *player;
-	player = AICast_FindEntityForName("player");
-    // DEBUG: log current kill progress
-   // Com_Printf("^2[AI_SURVIVE] waveKillCount = %d, killCountRequirement = %d, wavePending = %d^7\n",
-      //  svParams.waveKillCount, svParams.killCountRequirement, svParams.wavePending);
+	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
+		return;
+	}
 
-	if (svParams.waveKillCount < svParams.killCountRequirement)
-	{
-		int enemiesAlive = 0;
-		for (int i = 0; i < level.num_entities; i++)
-		{
+	if ( !svParams.waveInProgress ) {
+		return;
+	}
+
+	if ( svParams.wavePending ) {
+		return;
+	}
+
+	if ( svParams.waveKillCount < svParams.killCountRequirement ) {
+		enemiesAlive = 0;
+
+		for ( i = 0; i < level.num_entities; i++ ) {
 			gentity_t *ent = &g_entities[i];
-			if (!ent->inuse || !ent->client || ent->aiTeam == 1)
+
+			if ( !ent->inuse || !ent->client ) {
 				continue;
-			if (!(ent->client->ps.eFlags & EF_DEAD))
-			{
-				enemiesAlive++;
 			}
+
+			if ( ent->aiTeam == AITEAM_ALLIES ) {
+				continue;
+			}
+
+			if ( ent->client->ps.eFlags & EF_DEAD ) {
+				continue;
+			}
+
+			// Optional, but safer if some non-survival AI exists on map
+			if ( !( ent->r.svFlags & SVF_CASTAI ) ) {
+				continue;
+			}
+
+			enemiesAlive++;
 		}
 
-		if (enemiesAlive == 0)
-		{
-			Com_Printf("^1[AI_SURVIVE] ERROR: No enemies alive but wave not complete (%d/%d kills)\n",
-					   svParams.waveKillCount, svParams.killCountRequirement);
-			// Failsafe: push wave forward or increment kill count manually
+		if ( enemiesAlive == 0 ) {
+			G_Printf( "^1[AI_SURVIVE] ERROR: No enemies alive but wave not complete (%d/%d kills)\n",
+				svParams.waveKillCount,
+				svParams.killCountRequirement );
+
 			svParams.waveKillCount = svParams.killCountRequirement;
 		}
 	}
 
-	if (svParams.waveKillCount == svParams.killCountRequirement && !svParams.wavePending) {
-        //  DEBUG: progression triggered
-        //Com_Printf("^1[AI_SURVIVE] Wave %d complete! Triggering intermission and progression.^7\n", svParams.waveCount);
+	if ( svParams.waveKillCount >= svParams.killCountRequirement ) {
+		const char *endEvent;
 
-        svParams.wavePending = qtrue;
-        svParams.waveChangeTime = level.time + INTERMISSION_TIME * 1000;
+		G_Printf( "^2[AI_SURVIVE] Wave %d complete (%d/%d)^7\n",
+			svParams.waveCount,
+			svParams.waveKillCount,
+			svParams.killCountRequirement );
 
-		char endEvtBuf[32];
-		Q_strncpyz(
-			endEvtBuf,
-			svParams.specialWaveActive ? "specialwave_end" : "wave_end",
-			sizeof(endEvtBuf));
-		AICast_ScriptEvent(AICast_GetCastState(player->s.number), endEvtBuf, "");
+		svParams.wavePending = qtrue;
+		svParams.waveInProgress = qfalse;
+		svParams.waveChangeTime = level.time + INTERMISSION_TIME * 1000;
+
+		endEvent = svParams.specialWaveActive ? "specialwave_end" : "wave_end";
+
+		Survival_GameManagerEvent( endEvent );
 	}
 }
 
-void AICast_TickSurvivalWave(void) {
+void AICast_TickSurvivalWave( void ) {
+	int i;
+	int wave;
+	int killReq;
 
-	gentity_t *player;
-	player = AICast_FindEntityForName("player");
-
-	if (!svParams.wavePending)
-        return;
-    if (level.time < svParams.waveChangeTime)
-        return;
-
-    svParams.wavePending = qfalse;
-    svParams.waveInProgress = qtrue;
-    svParams.waveCount++;
-    svParams.waveKillCount = 0;
-    svParams.spawnedThisWave = 0;
-
-	int wave = svParams.waveCount;
-	int killReq = 0;
-
-	if (wave == 1) {
-		AICast_ScriptEvent( AICast_GetCastState( player->s.number ), "start_survival", "" );
-		// Explicitly use user-defined value for wave 1
-		killReq = INITIAL_KILLCOUNT_REQ;
-	} else {
-		// quadratic formula:
-		killReq = (int)(0.15f * wave * wave + 3.0f * wave + 10.0f);
+	if ( !svParams.wavePending ) {
+		return;
 	}
 
-    // special waves logic
-    svParams.specialWaveActive = qfalse;
-    if (AICast_ShouldStartSpecialWave()) {
-        svParams.specialWaveActive = qtrue;
-        svParams.lastSpecialWave   = wave;
+	if ( level.time < svParams.waveChangeTime ) {
+		return;
+	}
 
-        // Scale LOPER count a bit with wave number, but keep it simple
-        int lopers = SPECIAL_WAVE_LOPERS_INITIAL + SPECIAL_WAVE_LOPERS_INCREASE * (wave - SPECIAL_WAVE_MIN_START);
-        if (lopers < SPECIAL_WAVE_LOPERS_INITIAL) lopers = SPECIAL_WAVE_LOPERS_INITIAL;
+	G_Printf( "Survival: starting wave %i\n", svParams.waveCount + 1 );
 
-        // On special wave the kill requirement is exactly the number of LOPERs
-        svParams.killCountRequirement = lopers;
+	svParams.wavePending = qfalse;
+	svParams.waveInProgress = qtrue;
+	svParams.waveCount++;
+	svParams.waveKillCount = 0;
+	svParams.spawnedThisWave = 0;
 
-        svParams.maxActiveAI[AICHAR_LOPER_SPECIAL] = (lopers < SPECIAL_WAVE_LOPERS_MAX) ? lopers : SPECIAL_WAVE_LOPERS_MAX;
+	wave = svParams.waveCount;
+	killReq = 0;
 
-        // (Optional) You can mute growth of other classes this wave by skipping UpdateMaxActiveAI
-    } else {
-        // Normal wave
-        svParams.killCountRequirement = killReq;
+if ( wave == 1 ) {
+	G_Printf( "Survival: wave 1 before start_survival script\n" );
+	Survival_GameManagerEvent( "start_survival" );
+	G_Printf( "Survival: wave 1 after start_survival script\n" );
 
-        if (wave > 1) {
-            AICast_UpdateMaxActiveAI();
-        }
-    }
-    // --- END SPECIAL WAVE DECISION ---
+	killReq = INITIAL_KILLCOUNT_REQ;
+} else {
+		killReq = (int)( 0.15f * wave * wave + 3.0f * wave + 10.0f );
+	}
 
-    // Track wave count per player
-    for (int i = 0; i < g_maxclients.integer; i++) {
-        gentity_t *cl = &g_entities[i];
-        if (!cl->inuse || !cl->client) continue;
+	svParams.specialWaveActive = qfalse;
 
-        cl->client->ps.persistant[PERS_WAVES]++;
-    }
+	if ( AICast_ShouldStartSpecialWave() ) {
+		int lopers;
 
-    if (svParams.specialWaveActive) {
-        AICast_ScriptEvent(AICast_GetCastState(player->s.number), "specialwave_start", "");
-    } else {
-        AICast_ScriptEvent(AICast_GetCastState(player->s.number), "wave_start", "");
-    }
+		svParams.specialWaveActive = qtrue;
+		svParams.lastSpecialWave = wave;
 
+		lopers = SPECIAL_WAVE_LOPERS_INITIAL +
+			SPECIAL_WAVE_LOPERS_INCREASE * ( wave - SPECIAL_WAVE_MIN_START );
+
+		if ( lopers < SPECIAL_WAVE_LOPERS_INITIAL ) {
+			lopers = SPECIAL_WAVE_LOPERS_INITIAL;
+		}
+
+		svParams.killCountRequirement = lopers;
+
+		svParams.maxActiveAI[AICHAR_LOPER_SPECIAL] =
+			( lopers < SPECIAL_WAVE_LOPERS_MAX ) ? lopers : SPECIAL_WAVE_LOPERS_MAX;
+	} else {
+		svParams.killCountRequirement = killReq;
+
+		if ( wave > 1 ) {
+			AICast_UpdateMaxActiveAI();
+		}
+	}
+
+	for ( i = 0; i < g_maxclients.integer; i++ ) {
+		gentity_t *cl = &g_entities[i];
+
+		if ( !cl->inuse || !cl->client ) {
+			continue;
+		}
+
+		if ( cl->client->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+
+		cl->client->ps.persistant[PERS_WAVES]++;
+	}
+
+	if ( svParams.specialWaveActive ) {
+		Survival_GameManagerEvent( "specialwave_start" );
+	} else {
+		Survival_GameManagerEvent( "wave_start" );
+	}
 }
 
 
