@@ -641,7 +641,7 @@ int BotAISetupClient( int client, struct bot_settings_s *settings ) {
 	}
 
 	if ( !trap_AAS_Initialized() ) {
-		BotAI_Print( PRT_FATAL, "AAS not initialized\n" );
+		//BotAI_Print( PRT_FATAL, "AAS not initialized\n" );
 		return qfalse;
 	}
 
