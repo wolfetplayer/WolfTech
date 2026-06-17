@@ -45,7 +45,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "l_mem.h"
 
 //#define	BOGUS_RANGE	8192
-#define BOGUS_RANGE ( 128 * 1024 )
+#define BOGUS_RANGE ( ( 128 * 1024 ) + 128 )
 
 extern int numthreads;
 

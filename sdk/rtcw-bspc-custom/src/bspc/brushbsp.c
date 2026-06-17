@@ -1218,11 +1218,21 @@ void SplitBrush( bspbrush_t *brush, int planenum,
 	plane_t     *plane, *plane2;
 	side_t      *s, *cs;
 	float d, d_front, d_back;
+	vec_t v1;
+
+#define SIDE_TEST_EPSILON      0.2f
+#define WINDING_CLIP_EPSILON   PLANESIDE_EPSILON
 
 	*front = *back = NULL;
+
+	if ( !brush || brush->numsides <= 0 ) {
+		Log_Write( "SplitBrush: NULL or empty brush\r\n" );
+		return;
+	}
+
 	plane = &mapplanes[planenum];
 
-	// check all points
+	// check all points against the split plane
 	d_front = d_back = 0;
 	for ( i = 0 ; i < brush->numsides ; i++ )
 	{
@@ -1230,63 +1240,77 @@ void SplitBrush( bspbrush_t *brush, int planenum,
 		if ( !w ) {
 			continue;
 		}
+
 		for ( j = 0 ; j < w->numpoints ; j++ )
 		{
 			d = DotProduct( w->p[j], plane->normal ) - plane->dist;
-			if ( d > 0 && d > d_front ) {
+
+			if ( d > d_front ) {
 				d_front = d;
 			}
-			if ( d < 0 && d < d_back ) {
+			if ( d < d_back ) {
 				d_back = d;
 			}
 		}
 	}
 
-	if ( d_front < 0.2 ) { // PLANESIDE_EPSILON)
+	if ( d_front < SIDE_TEST_EPSILON ) {
 		// only on back
 		*back = CopyBrush( brush );
 		return;
 	}
-	if ( d_back > -0.2 ) { // PLANESIDE_EPSILON)
+
+	if ( d_back > -SIDE_TEST_EPSILON ) {
 		// only on front
 		*front = CopyBrush( brush );
 		return;
 	}
 
 	// create a new winding from the split plane
-
 	w = BaseWindingForPlane( plane->normal, plane->dist );
+
 	for ( i = 0 ; i < brush->numsides && w ; i++ )
 	{
 		plane2 = &mapplanes[brush->sides[i].planenum ^ 1];
-		ChopWindingInPlace( &w, plane2->normal, plane2->dist, 0 ); // PLANESIDE_EPSILON);
+
+		// Do not use 0 or 0.2f here.
+		// PLANESIDE_EPSILON is the safer clip epsilon for winding operations.
+		ChopWindingInPlace( &w, plane2->normal, plane2->dist, WINDING_CLIP_EPSILON );
 	}
 
-	if ( !w || WindingIsTiny( w ) ) { // the brush isn't really split
+	if ( !w || WindingIsTiny( w ) ) {
 		int side;
 
+		// the brush isn't really split
 		side = BrushMostlyOnSide( brush, plane );
+
 		if ( side == PSIDE_FRONT ) {
 			*front = CopyBrush( brush );
-		}
-		if ( side == PSIDE_BACK ) {
+		} else if ( side == PSIDE_BACK ) {
 			*back = CopyBrush( brush );
+		} else {
+			// Borderline precision case: do not delete the brush.
+			if ( d_front >= -d_back ) {
+				*front = CopyBrush( brush );
+			} else {
+				*back = CopyBrush( brush );
+			}
 		}
-		//free a possible winding
+
 		if ( w ) {
 			FreeWinding( w );
 		}
+
 		return;
 	}
 
 	if ( WindingIsHuge( w ) ) {
-		Log_Write( "WARNING: huge winding\n" );
+		Log_Write( "WARNING: huge winding\r\n" );
 	}
 
 	midwinding = w;
 
 	// split it for real
-
 	for ( i = 0 ; i < 2 ; i++ )
 	{
 		b[i] = AllocBrush( brush->numsides + 1 );
@@ -1294,53 +1318,66 @@ void SplitBrush( bspbrush_t *brush, int planenum,
 	}
 
 	// split all the current windings
-
 	for ( i = 0 ; i < brush->numsides ; i++ )
 	{
 		s = &brush->sides[i];
 		w = s->winding;
+
 		if ( !w ) {
 			continue;
 		}
+
+		cw[0] = cw[1] = NULL;
+
 		ClipWindingEpsilon( w, plane->normal, plane->dist,
-							0 /*PLANESIDE_EPSILON*/, &cw[0], &cw[1] );
+							 WINDING_CLIP_EPSILON, &cw[0], &cw[1] );
+
 		for ( j = 0 ; j < 2 ; j++ )
 		{
 			if ( !cw[j] ) {
 				continue;
 			}
-#if 0
+
+			// Avoid keeping invalid sliver polygons.
 			if ( WindingIsTiny( cw[j] ) ) {
 				FreeWinding( cw[j] );
 				continue;
 			}
-#endif
+
 			cs = &b[j]->sides[b[j]->numsides];
 			b[j]->numsides++;
+
 			*cs = *s;
-//			cs->planenum = s->planenum;
-//			cs->texinfo = s->texinfo;
-//			cs->original = s->original;
 			cs->winding = cw[j];
 			cs->flags &= ~SFL_TESTED;
 		}
 	}
 
-
 	// see if we have valid polygons on both sides
-
 	for ( i = 0 ; i < 2 ; i++ )
 	{
+		qboolean bogus = qfalse;
+
 		BoundBrush( b[i] );
+
 		for ( j = 0 ; j < 3 ; j++ )
 		{
-			if ( b[i]->mins[j] < -MAX_MAP_BOUNDS || b[i]->maxs[j] > MAX_MAP_BOUNDS ) {
-				Log_Write( "bogus brush after clip" );
+			if ( b[i]->mins[j] < -BOGUS_RANGE ||
+				 b[i]->maxs[j] > BOGUS_RANGE ) {
+				Log_Write( "bogus brush after clip: outside MAX_MAP_BOUNDS\r\n" );
+				Log_Print( " side=%d numsides=%d planenum=%d d_front=%f d_back=%f\r\n",
+					i, b[i]->numsides, planenum, d_front, d_back );
+				Log_Print( " bounds mins=(%f %f %f) maxs=(%f %f %f) MAX_MAP_BOUNDS=%d\r\n",
+					b[i]->mins[0], b[i]->mins[1], b[i]->mins[2],
+					b[i]->maxs[0], b[i]->maxs[1], b[i]->maxs[2],
+					BOGUS_RANGE );
+
+				bogus = qtrue;
 				break;
 			}
 		}
 
-		if ( b[i]->numsides < 3 || j < 3 ) {
+		if ( b[i]->numsides < 3 || bogus ) {
 			FreeBrush( b[i] );
 			b[i] = NULL;
 		}
@@ -1352,14 +1389,28 @@ void SplitBrush( bspbrush_t *brush, int planenum,
 		} else {
 			Log_Write( "split not on both sides\r\n" );
 		}
+
 		if ( b[0] ) {
 			FreeBrush( b[0] );
-			*front = CopyBrush( brush );
+			b[0] = NULL;
 		}
+
 		if ( b[1] ) {
 			FreeBrush( b[1] );
+			b[1] = NULL;
+		}
+
+		// Free split plane winding because we are not using this failed split.
+		FreeWinding( midwinding );
+
+		// Safe fallback: keep the original brush on the side it mostly belongs to.
+		// This prevents failed precision splits from deleting world geometry.
+		if ( d_front >= -d_back ) {
+			*front = CopyBrush( brush );
+		} else {
 			*back = CopyBrush( brush );
 		}
+
 		return;
 	}
 
@@ -1369,10 +1420,17 @@ void SplitBrush( bspbrush_t *brush, int planenum,
 		cs = &b[i]->sides[b[i]->numsides];
 		b[i]->numsides++;
 
+		/*
+		New side slot. Clear it before writing fields.
+		This avoids garbage flags/texinfo/etc if AllocBrush does not zero sides.
+		*/
+		memset( cs, 0, sizeof( *cs ) );
+
 		cs->planenum = planenum ^ i ^ 1;
-		cs->texinfo = TEXINFO_NODE; //never use these sides as splitters
+		cs->texinfo = TEXINFO_NODE; // never use these sides as splitters
 		cs->flags &= ~SFL_VISIBLE;
 		cs->flags &= ~SFL_TESTED;
+
 		if ( i == 0 ) {
 			cs->winding = CopyWinding( midwinding );
 		} else {
@@ -1380,27 +1438,39 @@ void SplitBrush( bspbrush_t *brush, int planenum,
 		}
 	}
 
+	// check brush volume
+	for ( i = 0; i < 2; i++ )
 	{
-		vec_t v1;
-		int i;
-
-		for ( i = 0; i < 2; i++ )
-		{
-			v1 = BrushVolume( b[i] );
-			if ( v1 < 1.0 ) {
-				FreeBrush( b[i] );
-				b[i] = NULL;
-				//Log_Write("tiny volume after clip");
-			}
+		if ( !b[i] ) {
+			continue;
 		}
-		if ( !b[0] && !b[1] ) {
-			Log_Write( "two tiny brushes\r\n" );
-		} //end if
+
+		v1 = BrushVolume( b[i] );
+		if ( v1 < 1.0 ) {
+			FreeBrush( b[i] );
+			b[i] = NULL;
+		}
+	}
+
+	if ( !b[0] && !b[1] ) {
+		Log_Write( "two tiny brushes\r\n" );
+
+		// Again, do not let a bad split delete the original brush.
+		if ( d_front >= -d_back ) {
+			*front = CopyBrush( brush );
+		} else {
+			*back = CopyBrush( brush );
+		}
+
+		return;
 	}
 
 	*front = b[0];
 	*back = b[1];
-} //end of the function SplitBrush
+
+#undef SIDE_TEST_EPSILON
+#undef WINDING_CLIP_EPSILON
+}
 //===========================================================================
 //
 // Parameter:				-
