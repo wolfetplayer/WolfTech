@@ -475,7 +475,13 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 			cs->attributes[ATTACK_SKILL] = 1.0;
 		}
 
+	// Unlimited respawn in Survival mode (unless entity is oneshot)
+	if ( g_gametype.integer == GT_COOP_SURVIVAL && !ent->oneshot ) {
+		AICast_ApplySurvivalAttributes( newent, cs );
+		AICast_CreateCharacter_Survival( newent, cs );
+	} else {
 		cs->respawnsleft = g_airespawn.integer;
+	}
 	}
 
 	// Unlimited respawn in Survival mode (unless entity is oneshot)

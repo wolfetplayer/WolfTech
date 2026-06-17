@@ -167,6 +167,12 @@ AICast_Die
 ============
 */
 void AICast_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
+
+	if (g_gametype.integer == GT_COOP_SURVIVAL && !self->oneshot) {
+		AICast_Die_Survival(self, inflictor, attacker, damage, meansOfDeath);
+		return;
+	}
+	
 	int contents;
 	int killer;
 	cast_state_t    *cs;
@@ -174,10 +180,6 @@ void AICast_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	char mapname[MAX_QPATH];
 	qboolean respawn = qfalse;
 
-	if (g_gametype.integer == GT_COOP_SURVIVAL && !self->oneshot) {
-		AICast_Die_Survival(self, inflictor, attacker, damage, meansOfDeath);
-		return;
-	}
 
 	// print debugging message
 	if ( aicast_debug.integer == 2 && attacker->s.number == 0 ) {
