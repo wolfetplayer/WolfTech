@@ -884,7 +884,10 @@ qboolean FloodEntities( tree_t *tree ) {
 //		Log_Print("flooding from entity %d: %s\n", i, cl);
 		//nudge playerstart around if needed so clipping hulls allways
 		//have a valid point
-		if ( !strcmp( cl, "info_player_start" ) ) {
+		if (!strcmp(cl, "info_player_start") ||
+			!strcmp(cl, "coop_spawnpoint") ||
+			!strcmp(cl, "info_ai_respawn"))
+		{
 			for ( x = -16; x <= 16; x += 16 )
 			{
 				for ( y = -16; y <= 16; y += 16 )
