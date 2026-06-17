@@ -435,46 +435,6 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 		newent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] = cs->attributes[STARTING_HEALTH];
 	}
 
-	if ( g_gametype.integer <= GT_COOP ) {
-		
-#if 0
-		if ( newent->health < 125 ) {
-			if ( g_gameskill.integer == GSKILL_EASY ) {
-				newent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] = 75;
-			} else if ( g_gameskill.integer == GSKILL_MEDIUM ) {
-				newent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] = 100;
-			} else if ( g_gameskill.integer == GSKILL_HARD ) {
-				newent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] = 125;
-			} else if ( g_gameskill.integer == GSKILL_MAX ) {
-				newent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] = 225;
-			}
-		} else
-		{
-			if ( g_gameskill.integer == GSKILL_MEDIUM ) {
-				newent->health *= 1.25;
-			} else if ( g_gameskill.integer == GSKILL_HARD ) {
-				newent->health *= 1.5;
-			} else if ( g_gameskill.integer == GSKILL_MAX ) {
-				newent->health *= 2;
-			}
-		}
-#endif
-
-		if ( g_gameskill.integer == GSKILL_EASY ) {
-			newent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] = 1;
-			cs->attributes[AIM_SKILL] = 0.6;
-			cs->attributes[ATTACK_SKILL] = 0.6;
-		} else if ( g_gameskill.integer == GSKILL_MEDIUM ) {
-			cs->attributes[AIM_SKILL] = 0.75;
-			cs->attributes[ATTACK_SKILL] = 0.75;
-		} else if ( g_gameskill.integer == GSKILL_HARD ) {
-			cs->attributes[AIM_SKILL] = 0.9;
-			cs->attributes[ATTACK_SKILL] = 0.9;
-		} else if ( g_gameskill.integer == GSKILL_MAX ) {
-			cs->attributes[AIM_SKILL] = 1.0;
-			cs->attributes[ATTACK_SKILL] = 1.0;
-		}
-
 	// Unlimited respawn in Survival mode (unless entity is oneshot)
 	if ( g_gametype.integer == GT_COOP_SURVIVAL && !ent->oneshot ) {
 		AICast_ApplySurvivalAttributes( newent, cs );
@@ -482,13 +442,6 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	} else {
 		cs->respawnsleft = g_airespawn.integer;
 	}
-	}
-
-	// Unlimited respawn in Survival mode (unless entity is oneshot)
-	if ( g_gametype.integer == GT_COOP_SURVIVAL && !ent->oneshot ) {
-		AICast_ApplySurvivalAttributes( newent, cs );
-		AICast_CreateCharacter_Survival( newent, cs );
-	} 
 	//
 	cs->weaponInfo = weaponInfo;
 	//
@@ -644,14 +597,16 @@ AIChar_AIScript_AlertEntity
 ============
 */
 void AIChar_AIScript_AlertEntity( gentity_t *ent ) {
-	vec3_t mins, maxs;
-	int numTouch, touch[10], i;
-	cast_state_t    *cs;
 
 	if (g_gametype.integer == GT_COOP_SURVIVAL  && !ent->oneshot) {
 		AIChar_AIScript_AlertEntity_Survival(ent);
 		return;
 	}
+
+	vec3_t mins, maxs;
+	int numTouch, touch[10], i;
+	cast_state_t    *cs;
+
 
 	if ( !ent->aiInactive ) {
 		return;
