@@ -40,6 +40,22 @@ endif
 ifndef BUILD_ARCHIVE
   BUILD_ARCHIVE = 0
 endif
+ifndef BUILD_BSPC
+  BUILD_BSPC = 0
+endif
+ifndef ONLY_BSPC
+  ONLY_BSPC = 0
+endif
+
+ifneq ($(ONLY_BSPC),0)
+  BUILD_STANDALONE = 0
+  BUILD_CLIENT = 0
+  BUILD_SERVER = 0
+  BUILD_GAME_SO = 0
+  BUILD_GAME_QVM = 0
+  BUILD_BASEGAME = 0
+  BUILD_BSPC = 0
+endif
 
 #############################################################################
 #
@@ -134,6 +150,14 @@ ifndef CLIENTBIN
     CLIENTBIN=WolfTech
   else
     CLIENTBIN=wolftech
+  endif
+endif
+
+ifndef BSPCBIN
+ ifdef MINGW
+    BSPCBIN=bspc
+  else
+    BSPCBIN=bspc
   endif
 endif
 
@@ -339,6 +363,9 @@ Q3LCCETCDIR=$(MOUNT_DIR)/tools/lcc/etc
 Q3LCCSRCDIR=$(MOUNT_DIR)/tools/lcc/src
 SDLHDIR=$(MOUNT_DIR)/SDL3
 LIBSDIR=$(MOUNT_DIR)/libs
+BSPCDIR=$(MOUNT_DIR)/../sdk/rtcw-bspc-custom/src/bspc
+BSPCBLIBDIR=$(MOUNT_DIR)/../sdk/rtcw-bspc-custom/src/botlib
+BSPCCMDIR=$(MOUNT_DIR)/../sdk/rtcw-bspc-custom/src/qcommon
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -1039,6 +1066,16 @@ ifneq ($(BUILD_GAME_QVM),0)
   endif
 endif
 
+ifneq ($(BUILD_BSPC),0)
+    TARGETS += $(B)/$(BSPCBIN)$(FULLBINEXT)
+    BSPC_CFLAGS += -DBSPC
+endif
+
+ifneq ($(ONLY_BSPC),0)
+    TARGETS = $(B)/$(BSPCBIN)$(FULLBINEXT)
+    BSPC_CFLAGS += -DBSPC
+endif
+
 ifeq ($(USE_OPENAL),1)
   CLIENT_CFLAGS += -DUSE_OPENAL
   ifeq ($(USE_OPENAL_DLOPEN),1)
@@ -1314,6 +1351,11 @@ $(echo_cmd) "SPLINE_CXX $<"
 $(Q)$(CXX) $(NOTSHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
+define DO_BSPC_CC
+$(echo_cmd) "CC $<"
+$(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(BSPC_CFLAGS) $(OPTIMIZE) -o $@ -c $<
+endef
+
 
 #############################################################################
 # STEAMWORKS INTEGRATION
@@ -1454,6 +1496,7 @@ makedirs:
 	@$(MKDIR) $(B)/rend2
 	@$(MKDIR) $(B)/rend2/glsl
 	@$(MKDIR) $(B)/ded
+	@$(MKDIR) $(B)/bspc
 	@$(MKDIR) $(B)/$(BASEGAME)/cgame
 	@$(MKDIR) $(B)/$(BASEGAME)/game
 	@$(MKDIR) $(B)/$(BASEGAME)/ui
@@ -1464,6 +1507,101 @@ makedirs:
 	@$(MKDIR) $(B)/tools/rcc
 	@$(MKDIR) $(B)/tools/cpp
 	@$(MKDIR) $(B)/tools/lburg
+
+
+  #############################################################################
+# BSPC CLIENT
+#############################################################################
+
+ifneq ($(BUILD_BSPC), 0)
+  BSPC = 
+endif
+
+Q3BSPCOBJ = \
+  $(B)/bspc/_files.o \
+  $(B)/bspc/aas_areamerging.o \
+  $(B)/bspc/aas_cfg.o \
+  $(B)/bspc/aas_create.o \
+  $(B)/bspc/aas_edgemelting.o \
+  $(B)/bspc/aas_facemerging.o \
+  $(B)/bspc/aas_file.o \
+  $(B)/bspc/aas_gsubdiv.o \
+  $(B)/bspc/aas_map.o \
+  $(B)/bspc/aas_prunenodes.o \
+  $(B)/bspc/aas_store.o \
+  $(B)/bspc/be_aas_bspc.o \
+  $(B)/bspc/brushbsp.o \
+  $(B)/bspc/bspc.o \
+  $(B)/bspc/csg.o \
+  $(B)/bspc/faces.o \
+  $(B)/bspc/glfile.o \
+  $(B)/bspc/l_bsp_ent.o \
+  $(B)/bspc/l_bsp_hl.o \
+  $(B)/bspc/l_bsp_q1.o \
+  $(B)/bspc/l_bsp_q2.o \
+  $(B)/bspc/l_bsp_q3.o \
+  $(B)/bspc/l_bsp_sin.o \
+  $(B)/bspc/l_cmd.o \
+  $(B)/bspc/l_log.o \
+  $(B)/bspc/l_math.o \
+  $(B)/bspc/l_mem.o \
+  $(B)/bspc/l_poly.o \
+  $(B)/bspc/l_qfiles.o \
+  $(B)/bspc/l_threads.o \
+  $(B)/bspc/l_utils.o \
+  $(B)/bspc/leakfile.o \
+  $(B)/bspc/map.o \
+  $(B)/bspc/map_hl.o \
+  $(B)/bspc/map_q1.o \
+  $(B)/bspc/map_q2.o \
+  $(B)/bspc/map_q3.o \
+  $(B)/bspc/map_sin.o \
+  $(B)/bspc/nodraw.o \
+  $(B)/bspc/portals.o \
+  $(B)/bspc/prtfile.o \
+  $(B)/bspc/textures.o \
+  $(B)/bspc/tree.o \
+  $(B)/bspc/writebsp.o \
+  \
+  $(B)/bspc/l_precomp.o \
+  $(B)/bspc/l_struct.o \
+  $(B)/bspc/l_libvar.o \
+  $(B)/bspc/l_script.o \
+  $(B)/bspc/be_aas_cluster.o \
+  $(B)/bspc/be_aas_optimize.o \
+  $(B)/bspc/be_aas_reach.o \
+  $(B)/bspc/be_aas_sample.o \
+  $(B)/bspc/be_aas_bspq3.o \
+  $(B)/bspc/be_aas_move.o \
+  $(B)/bspc/be_aas_routealt.o \
+  $(B)/bspc/be_ai_char.o \
+  $(B)/bspc/be_ai_gen.o \
+  $(B)/bspc/be_ai_weap.o \
+  $(B)/bspc/be_ai_weight.o \
+  \
+  $(B)/bspc/cm_load.o \
+  $(B)/bspc/cm_patch.o \
+  $(B)/bspc/cm_test.o \
+  $(B)/bspc/cm_trace.o \
+  $(B)/bspc/md4.o \
+  $(B)/bspc/unzip.o
+
+#ifeq ($(USE_INTERNAL_ZLIB),1)
+#Q3BSPCOBJ += \
+  $(B)/client/adler32.o \
+  $(B)/client/crc32.o \
+  $(B)/client/inffast.o \
+  $(B)/client/inflate.o \
+  $(B)/client/inftrees.o \
+  $(B)/client/zutil.o
+#endif
+
+$(B)/$(BSPCBIN)$(FULLBINEXT): $(Q3BSPCOBJ)# $(ZLIB_LIBS)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CXX) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
+		-o $@ $(Q3BSPCOBJ) # $(ZLIB_LIBS)
+
+    # add $(ZLIB_CFLAGS) if you want
 
 #############################################################################
 # QVM BUILD TOOLS
@@ -2590,6 +2728,18 @@ $(B)/$(BASEGAME)/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm
 
+
+#############################################################################
+## BSPC
+#############################################################################
+$(B)/bspc/%.o: $(BSPCDIR)/%.c
+	$(DO_BSPC_CC)
+
+$(B)/bspc/%.o: $(BSPCBLIBDIR)/%.c
+	$(DO_BSPC_CC)
+
+$(B)/bspc/%.o: $(BSPCCMDIR)/%.c
+	$(DO_BSPC_CC)
 
 #############################################################################
 ## STEAM INTEGRATION
