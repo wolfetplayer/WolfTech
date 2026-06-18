@@ -279,24 +279,7 @@ static void SV_Map_f( void ) {
 			cheat = qfalse;
 		}
 	} else if ( Q_stricmpn( cmd, "coop", 4 ) == 0 ) {
-		//Cvar_SetValue( "g_gametype", GT_SINGLE_PLAYER );
-		//Cvar_SetValue( "g_coop", GV_COOP );
-		if ( sv_gametype->integer > GT_COOP ) {
-			Cvar_SetValue( "g_gametype", GT_COOP );
-		}
-		//Cvar_SetValue( "g_doWarmup", 0 );
-		// may not set sv_maxclients directly, always set latched
-		Cvar_SetLatched( "sv_maxclients", va( "%d", MAX_CLIENTS ) ); // Ridah, modified this
-		cmd += 4;
-		killBots = qtrue;
-		if ( !Q_stricmp( cmd, "devmap" ) ) {
-			cheat = qtrue;
-		} else {
-			cheat = qfalse;
-		}
-	}  else if ( Q_stricmpn( cmd, "sv", 2 ) == 0 ) {
-		Cvar_SetValue( "g_gametype", GT_COOP_SURVIVAL );
-		// may not set sv_maxclients directly, always set latched
+		Cvar_SetValue( "g_gametype", GT_COOP );
 		Cvar_SetLatched( "sv_maxclients", va( "%d", MAX_CLIENTS ) ); // Ridah, modified this
 		cmd += 4;
 		killBots = qtrue;
@@ -306,7 +289,14 @@ static void SV_Map_f( void ) {
 			cheat = qfalse;
 		}
 	}
-
+	else if (Q_stricmpn(cmd, "sv", 2) == 0)
+	{
+		Cvar_SetValue("g_gametype", GT_COOP_SURVIVAL);
+		Cvar_SetLatched("sv_maxclients", va("%d", MAX_CLIENTS));
+		cmd += 2;
+		killBots = qtrue;
+		cheat = !Q_stricmp(cmd, "devmap");
+	}
 
 	// save the map name here cause on a map restart we reload the wolfconfig_server.cfg
 	// and thus nuke the arguments of the map command

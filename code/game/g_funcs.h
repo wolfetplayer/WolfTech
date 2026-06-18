@@ -1073,6 +1073,7 @@ If you have questions concerning this license or the applicable additional terms
 {"CheckReloadStatus", (byte *)CheckReloadStatus},
 {"CheckVote", (byte *)CheckVote},
 {"CheckCoop", (byte *)CheckCoop},
+{"CheckCoopSurvival", (byte *)CheckCoopSurvival},
 {"CheckGameState", (byte *)CheckGameState},
 {"CheckCoopBattle", (byte *)CheckCoopBattle},
 {"SetBattleScore", (byte *)SetBattleScore},

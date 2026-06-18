@@ -1073,6 +1073,7 @@ extern void MOTD ( void ) ;
 extern void CheckReloadStatus ( void ) ;
 extern void CheckVote ( void ) ;
 extern void CheckCoop ( void ) ;
+extern void CheckCoopSurvival (void);
 extern void CheckGameState ( void ) ;
 extern void CheckCoopBattle ( void ) ;
 extern void SetBattleScore ( void ) ;

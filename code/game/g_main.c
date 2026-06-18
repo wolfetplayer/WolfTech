@@ -2787,6 +2787,27 @@ void CheckCoop( void ) {
 	}
 }
 
+void CheckCoopSurvival( void ) {
+	// check because we run 3 game frames before calling Connect and/or ClientBegin
+	// for clients on a map_restart
+	if ( g_gametype.integer > GT_COOP_SURVIVAL ) {
+		return;
+	}
+
+	if ( level.warmupTime == 0 ) {
+		return;
+	}
+
+	// if the warmup time has counted down, restart
+	if ( level.time > level.warmupTime ) {
+		level.warmupTime += 10000;
+		trap_Cvar_Set( "g_restarted", "1" );
+		trap_SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
+		level.restarted = qtrue;
+		return;
+	}
+}
+
 /*
 ==================
 CheckVote
@@ -3217,7 +3238,7 @@ void G_RunFrame( int levelTime ) {
 	CheckGameState();
 
 	// NERVE - SMF - check game state
-	if (g_gametype.integer == GT_COOP || g_gametype.integer == GT_COOP_SPEEDRUN || g_gametype.integer == GT_COOP_SURVIVAL )
+	if (g_gametype.integer == GT_COOP || g_gametype.integer == GT_COOP_SPEEDRUN )
 	{
 		CheckCoop();
 	}
@@ -3225,7 +3246,11 @@ void G_RunFrame( int levelTime ) {
 	{
 		// wait for 2 players
 		CheckCoopBattle();
+	} else if (g_gametype.integer == GT_COOP_SURVIVAL)
+	{
+		CheckCoopSurvival();
 	}
+
 
 	SetBattleScore();
 

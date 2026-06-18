@@ -4562,38 +4562,63 @@ static void UI_RunMenuScript( char **args ) {
 	const char *name, *name2;
 	char buff[1024];
 
-	if ( String_Parse( args, &name ) ) {
-		if ( Q_stricmp( name, "StartServer" ) == 0 ) {
+	if (String_Parse(args, &name))
+	{
+		if (Q_stricmp(name, "StartServer") == 0)
+		{
 			int i, clients;
-			trap_Cvar_Set( "cg_thirdPerson", "0" );
-			trap_Cvar_Set( "cg_cameraOrbit", "0" );
-			//trap_Cvar_Set( "ui_singlePlayerActive", "0" );
+			int gt;
+			const char *mapName;
+
+			trap_Cvar_Set("cg_thirdPerson", "0");
+			trap_Cvar_Set("cg_cameraOrbit", "0");
+
 #ifdef __APPLE__
-			// currently its not possible to spawn a dedicated server on mac through the menus
-			// You need to use Terminal.app to execute the dedicated binary
-			trap_Cvar_SetValue( "dedicated", 0 );
+			trap_Cvar_SetValue("dedicated", 0);
 #else
-			trap_Cvar_SetValue( "dedicated", Com_Clamp( 0, 2, ui_dedicated.integer ) );
+			trap_Cvar_SetValue("dedicated", Com_Clamp(0, 2, ui_dedicated.integer));
 #endif
-			trap_Cvar_SetValue( "g_gametype", Com_Clamp( 0, 2, uiInfo.gameTypes[ui_netGameType.integer].gtEnum ) );
-			trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; coopmap %s\n", uiInfo.mapList[ui_currentNetMap.integer].mapLoadName ) );
+
+			gt = uiInfo.gameTypes[ui_netGameType.integer].gtEnum;
+			trap_Cvar_SetValue("g_gametype", gt);
+
+			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
+
 			// set max clients based on spots
 			clients = 0;
-			for ( i = 0; i < PLAYERS_PER_TEAM; i++ ) {
-				int bot = trap_Cvar_VariableValue( va( "ui_blueteam%i", i + 1 ) );
-				if ( bot >= 0 ) {
+			for (i = 0; i < PLAYERS_PER_TEAM; i++)
+			{
+				int bot = trap_Cvar_VariableValue(va("ui_blueteam%i", i + 1));
+				if (bot >= 0)
+				{
 					clients++;
 				}
-				bot = trap_Cvar_VariableValue( va( "ui_redteam%i", i + 1 ) );
-				if ( bot >= 0 ) {
+
+				bot = trap_Cvar_VariableValue(va("ui_redteam%i", i + 1));
+				if (bot >= 0)
+				{
 					clients++;
 				}
 			}
-			if ( clients == 0 ) {
+
+			if (clients == 0)
+			{
 				clients = 8;
 			}
-			trap_Cvar_Set( "sv_maxClients", va( "%d",clients ) );
-		} else if ( Q_stricmp( name, "updateSPMenu" ) == 0 ) {
+
+			trap_Cvar_Set("sv_maxClients", va("%d", clients));
+
+			if (gt == GT_COOP_SURVIVAL)
+			{
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; svmap %s\n", mapName));
+			}
+			else
+			{
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; coopmap %s\n", mapName));
+			}
+		}
+		else if (Q_stricmp(name, "updateSPMenu") == 0)
+		{
 			UI_SetCapFragLimits( qtrue );
 			UI_MapCountByGameType( qtrue );
 			ui_mapIndex.integer = UI_GetIndexFromSelection( ui_currentMap.integer );
@@ -4601,7 +4626,9 @@ static void UI_RunMenuScript( char **args ) {
 			Menu_SetFeederSelection( NULL, FEEDER_MAPS, ui_mapIndex.integer, "skirmish" );
 			UI_GameType_HandleKey( 0, NULL, K_MOUSE1, qfalse );
 			UI_GameType_HandleKey( 0, NULL, K_MOUSE2, qfalse );
-		} else if ( Q_stricmp( name, "resetDefaults" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "resetDefaults") == 0)
+		{
 // SP was like...
 //			trap_Cmd_ExecuteText( EXEC_APPEND, "exec default.cfg\n");
 //			trap_Cmd_ExecuteText( EXEC_APPEND, "cvar_restart\n");
@@ -4623,7 +4650,9 @@ static void UI_RunMenuScript( char **args ) {
 			trap_Cvar_Set( "com_recommendedSet", "1" );                   // NERVE - SMF
 			trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 // end from MP
-		} else if ( Q_stricmp( name, "getCDKey" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "getCDKey") == 0)
+		{
 			char out[17];
 			trap_GetCDKey( buff, 17 );
 			trap_Cvar_Set( "cdkey1", "" );
@@ -4641,8 +4670,9 @@ static void UI_RunMenuScript( char **args ) {
 				Q_strncpyz( out, buff + 12, 5 );
 				trap_Cvar_Set( "cdkey4", out );
 			}
-
-		} else if ( Q_stricmp( name, "verifyCDKey" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "verifyCDKey") == 0)
+		{
 			buff[0] = '\0';
 			Q_strcat( buff, 1024, UI_Cvar_VariableString( "cdkey1" ) );
 			Q_strcat( buff, 1024, UI_Cvar_VariableString( "cdkey2" ) );
@@ -4655,56 +4685,90 @@ static void UI_RunMenuScript( char **args ) {
 			} else {
 				trap_Cvar_Set( "ui_cdkeyvalid", "CD Key does not appear to be valid." );
 			}
-		} else if ( Q_stricmp( name, "loadArenas" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "loadArenas") == 0)
+		{
 			UI_LoadArenasIntoMapList();
 			UI_MapCountByGameType( qfalse );
 			Menu_SetFeederSelection( NULL, FEEDER_ALLMAPS, 0, "createserver" );
-		} else if ( Q_stricmp( name, "saveControls" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "saveControls") == 0)
+		{
 			Controls_SetConfig( qtrue );
-		} else if ( Q_stricmp( name, "loadControls" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "loadControls") == 0)
+		{
 			Controls_GetConfig();
-		} else if ( Q_stricmp( name, "clearError" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "clearError") == 0)
+		{
 			trap_Cvar_Set( "com_errorMessage", "" );
-		} else if ( Q_stricmp( name, "skilleasy" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "skilleasy") == 0)
+		{
 			trap_Cvar_Set( "g_gameskill", "1" );
 			trap_Cvar_Set( "g_reinforce", "0" );
 			trap_Cvar_Set( "g_airespawn", "0" );
-		} else if ( Q_stricmp( name, "skillnormal" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "skillnormal") == 0)
+		{
 			trap_Cvar_Set( "g_gameskill", "2" );
 			trap_Cvar_Set( "g_reinforce", "1" );
 			trap_Cvar_Set( "g_airespawn", "0" );
-		} else if ( Q_stricmp( name, "skillhard" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "skillhard") == 0)
+		{
 			trap_Cvar_Set( "g_gameskill", "3" );
 			trap_Cvar_Set( "g_reinforce", "2" );
 			trap_Cvar_Set( "g_airespawn", "0" );
-		} else if ( Q_stricmp( name, "skillnightmare" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "skillnightmare") == 0)
+		{
 			trap_Cvar_Set( "g_gameskill", "3" );
 			trap_Cvar_Set( "g_reinforce", "2" );
 			trap_Cvar_Set( "g_airespawn", "-1" );  // unlimited
-		} else if ( Q_stricmp( name, "loadGameInfo" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "loadGameInfo") == 0)
+		{
 			UI_ParseGameInfo( "coopgameinfo.txt.txt" );
 			UI_LoadBestScores( uiInfo.mapList[ui_currentMap.integer].mapLoadName, uiInfo.gameTypes[ui_gameType.integer].gtEnum );
-		} else if ( Q_stricmp( name, "resetScores" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "resetScores") == 0)
+		{
 			UI_ClearScores();
-		} else if ( Q_stricmp( name, "RefreshServers" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "RefreshServers") == 0)
+		{
 			UI_StartServerRefresh( qtrue, qtrue );
 			UI_BuildServerDisplayList( qtrue );
-		} else if ( Q_stricmp( name, "RefreshFilter" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "RefreshFilter") == 0)
+		{
 			UI_StartServerRefresh( qfalse, qtrue );
 			UI_BuildServerDisplayList( qtrue );
-		} else if ( Q_stricmp( name, "RunSPDemo" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "RunSPDemo") == 0)
+		{
 			if ( uiInfo.demoAvailable ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "demo %s_%i", uiInfo.mapList[ui_currentMap.integer].mapLoadName, uiInfo.gameTypes[ui_gameType.integer].gtEnum ) );
 			}
-		} else if ( Q_stricmp( name, "LoadDemos" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "LoadDemos") == 0)
+		{
 			UI_LoadDemos();
-		} else if ( Q_stricmp( name, "LoadMovies" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "LoadMovies") == 0)
+		{
 			UI_LoadMovies();
 
 			//----(SA)	added
-		} else if ( Q_stricmp( name, "LoadSaveGames" ) == 0 ) {  // get the list
+		}
+		else if (Q_stricmp(name, "LoadSaveGames") == 0)
+		{ // get the list
 			UI_LoadSavegames( NULL );
-		} else if ( Q_stricmp( name, "Loadgame" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "Loadgame") == 0)
+		{
 			int i = UI_SavegameIndexFromName2( ui_savegameName.string );
 			// in developer, don't actually load the game
 			if ( DC->getCVarValue( "developer" ) ) {
@@ -4714,7 +4778,9 @@ static void UI_RunMenuScript( char **args ) {
 			}
 
 			// save.  throw dialog box if file exists
-		} else if ( Q_stricmp( name, "Savegame" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "Savegame") == 0)
+		{
 			int i;
 			char name[MAX_NAME_LENGTH];
 
@@ -4738,21 +4804,27 @@ static void UI_RunMenuScript( char **args ) {
 				}
 			}
 			// save with no confirm for overwrite
-		} else if ( Q_stricmp( name, "Savegame2" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "Savegame2") == 0)
+		{
 			if ( !strlen( name ) ) {
 				Menus_OpenByName( "save_name_popmenu" );
 			} else {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "savegame %s\n", UI_Cvar_VariableString( "ui_savegame" ) ) );
 				Menus_CloseAll();
 			}
-		} else if ( Q_stricmp( name, "DelSavegame" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "DelSavegame") == 0)
+		{
 			int i = UI_SavegameIndexFromName2( ui_savegameName.string );
 			if ( DC->getCVarValue( "developer" ) ) {
 				Com_Printf( "would delete game (developer 0):\n   %s\n", uiInfo.savegameList[i].savegameFile );
 			} else {
 				UI_DelSavegame();
 			}
-		} else if ( Q_stricmp( name, "SavegameSort" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "SavegameSort") == 0)
+		{
 			int sortColumn;
 			if ( Int_Parse( args, &sortColumn ) ) {
 				// if same column we're already sorting on then flip the direction
@@ -4765,7 +4837,9 @@ static void UI_RunMenuScript( char **args ) {
 			//----(SA)	end
 
 			//----(SA)	added
-		} else if ( Q_stricmp( name, "playerstart" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "playerstart") == 0)
+		{
 			trap_Cvar_Set( "_pregame", "0" );             // prevents the pregame menu popping up twice
 
 			if ( trap_Cvar_VariableValue( "g_gametype" ) <= GT_COOP ) {
@@ -4778,23 +4852,34 @@ static void UI_RunMenuScript( char **args ) {
 			}
 			Menus_CloseAll();
 			//----(SA)	end
-
-		} else if ( Q_stricmp( name, "LoadMods" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "LoadMods") == 0)
+		{
 			UI_LoadMods();
-		} else if ( Q_stricmp( name, "playMovie" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "playMovie") == 0)
+		{
 			if ( uiInfo.previewMovie >= 0 ) {
 				trap_CIN_StopCinematic( uiInfo.previewMovie );
 			}
 			trap_Cmd_ExecuteText( EXEC_APPEND, va( "cinematic %s.roq 2\n", uiInfo.movieList[uiInfo.movieIndex] ) );
-		} else if ( Q_stricmp( name, "RunMod" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "RunMod") == 0)
+		{
 			trap_Cvar_Set( "fs_game", uiInfo.modList[uiInfo.modIndex].modName );
 			trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
-		} else if ( Q_stricmp( name, "RunDemo" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "RunDemo") == 0)
+		{
 			trap_Cmd_ExecuteText( EXEC_APPEND, va( "demo %s\n", uiInfo.demoList[uiInfo.demoIndex] ) );
-		} else if ( Q_stricmp( name, "Wolf" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "Wolf") == 0)
+		{
 			trap_Cvar_Set( "fs_game", "" );
 			trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
-		} else if ( Q_stricmp( name, "closeJoin" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "closeJoin") == 0)
+		{
 			if ( uiInfo.serverStatus.refreshActive ) {
 				UI_StopServerRefresh();
 				uiInfo.serverStatus.nextDisplayRefresh = 0;
@@ -4806,29 +4891,41 @@ static void UI_RunMenuScript( char **args ) {
 				Menus_OpenByName( "main" );
 			}
 			//#endif
-		} else if ( Q_stricmp( name, "StopRefresh" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "StopRefresh") == 0)
+		{
 			UI_StopServerRefresh();
 			uiInfo.serverStatus.nextDisplayRefresh = 0;
 			uiInfo.nextServerStatusRefresh = 0;
 			uiInfo.nextFindPlayerRefresh = 0;
-		} else if ( Q_stricmp( name, "UpdateFilter" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "UpdateFilter") == 0)
+		{
 			// UpdateFilter is called when server broser menu is opened and when a favorite server is deleted.
 			UI_StartServerRefresh(qtrue, qfalse);
 			UI_BuildServerDisplayList( qtrue );
 			UI_FeederSelection( FEEDER_SERVERS, 0 );
-		} else if ( Q_stricmp( name, "ServerStatus" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "ServerStatus") == 0)
+		{
 			trap_LAN_GetServerAddressString( ui_netSource.integer, uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], uiInfo.serverStatusAddress, sizeof( uiInfo.serverStatusAddress ) );
 			UI_BuildServerStatus( qtrue );
-		} else if ( Q_stricmp( name, "FoundPlayerServerStatus" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "FoundPlayerServerStatus") == 0)
+		{
 			Q_strncpyz( uiInfo.serverStatusAddress, uiInfo.foundPlayerServerAddresses[uiInfo.currentFoundPlayerServer], sizeof( uiInfo.serverStatusAddress ) );
 			UI_BuildServerStatus( qtrue );
 			Menu_SetFeederSelection( NULL, FEEDER_FINDPLAYER, 0, NULL );
-		} else if ( Q_stricmp( name, "FindPlayer" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "FindPlayer") == 0)
+		{
 			UI_BuildFindPlayerList( qtrue );
 			// clear the displayed server status info
 			uiInfo.serverStatusInfo.numLines = 0;
 			Menu_SetFeederSelection( NULL, FEEDER_FINDPLAYER, 0, NULL );
-		} else if ( Q_stricmp( name, "JoinServer" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "JoinServer") == 0)
+		{
 			trap_Cvar_Set( "cg_thirdPerson", "0" );
 			trap_Cvar_Set( "cg_cameraOrbit", "0" );
 			trap_Cvar_Set( "ui_singlePlayerActive", "0" );
@@ -4836,25 +4933,35 @@ static void UI_RunMenuScript( char **args ) {
 				trap_LAN_GetServerAddressString(UI_SourceForLAN(), uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], buff, 1024);
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "connect %s\n", buff ) );
 			}
-		} else if ( Q_stricmp( name, "FoundPlayerJoinServer" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "FoundPlayerJoinServer") == 0)
+		{
 			trap_Cvar_Set( "ui_singlePlayerActive", "0" );
 			if ( uiInfo.currentFoundPlayerServer >= 0 && uiInfo.currentFoundPlayerServer < uiInfo.numFoundPlayerServers ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "connect %s\n", uiInfo.foundPlayerServerAddresses[uiInfo.currentFoundPlayerServer] ) );
 			}
-		} else if ( Q_stricmp( name, "Quit" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "Quit") == 0)
+		{
 			trap_Cvar_Set( "ui_singlePlayerActive", "0" );
 			trap_Cmd_ExecuteText( EXEC_NOW, "quit" );
-		} else if ( Q_stricmp( name, "Controls" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "Controls") == 0)
+		{
 			trap_Cvar_Set( "cl_paused", "1" );
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
 			Menus_ActivateByName( "setup_menu2", qtrue );
-		} else if ( Q_stricmp( name, "Leave" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "Leave") == 0)
+		{
 			trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
 			Menus_ActivateByName( "main", qtrue );
-		} else if ( Q_stricmp( name, "ServerSort" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "ServerSort") == 0)
+		{
 			int sortColumn;
 			if ( Int_Parse( args, &sortColumn ) ) {
 				// if same column we're already sorting on then flip the direction
@@ -4864,41 +4971,61 @@ static void UI_RunMenuScript( char **args ) {
 				// make sure we sort again
 				UI_ServersSort( sortColumn, qtrue );
 			}
-		} else if ( Q_stricmp( name, "closeingame" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "closeingame") == 0)
+		{
 			trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
 			trap_Key_ClearStates();
 			trap_Cvar_Set( "cl_paused", "0" );
 			Menus_CloseAll();
-		} else if ( Q_stricmp( name, "voteMap" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voteMap") == 0)
+		{
 			if ( ui_currentNetMap.integer >= 0 && ui_currentNetMap.integer < uiInfo.mapCount ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "callvote map %s\n",uiInfo.mapList[ui_currentNetMap.integer].mapLoadName ) );
 			}
-		} else if ( Q_stricmp( name, "voteKick" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voteKick") == 0)
+		{
 			if ( uiInfo.playerIndex >= 0 && uiInfo.playerIndex < uiInfo.playerCount ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "callvote kick %s\n",uiInfo.playerNames[uiInfo.playerIndex] ) );
 			}
-		} else if ( Q_stricmp( name, "voteGame" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voteGame") == 0)
+		{
 			if ( ui_netGameType.integer >= 0 && ui_netGameType.integer < uiInfo.numGameTypes ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "callvote g_gametype %i\n",uiInfo.gameTypes[ui_netGameType.integer].gtEnum ) );
 			}
-		} else if ( Q_stricmp( name, "voteSkill" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voteSkill") == 0)
+		{
 			if ( ui_skill.integer >= 1 && ui_skill.integer <= 3 ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "callvote g_gameskill %i\n", ui_skill.integer ) );
 			}
-		} else if ( Q_stricmp( name, "voteReinforce" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voteReinforce") == 0)
+		{
 			if ( ui_reinforce.integer >= 0 && ui_reinforce.integer <= 2 ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "callvote g_reinforce %i\n", ui_reinforce.integer ) );
 			}
-		} else if ( Q_stricmp( name, "voteFreeze" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voteFreeze") == 0)
+		{
 			if ( ui_freeze.integer >= 0 && ui_freeze.integer <= 1 ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "callvote g_freeze %i\n", ui_freeze.integer ) );
 			}
-		} else if ( Q_stricmp( name, "voteLeader" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voteLeader") == 0)
+		{
 			if ( uiInfo.teamIndex >= 0 && uiInfo.teamIndex < uiInfo.myTeamCount ) {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "callteamvote leader %s\n",uiInfo.teamNames[uiInfo.teamIndex] ) );
 			}
-		} else if ( Q_stricmp( name, "addBot" ) == 0 ) {
-		} else if ( Q_stricmp( name, "addFavorite" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "addBot") == 0)
+		{
+		}
+		else if (Q_stricmp(name, "addFavorite") == 0)
+		{
 			if ( ui_netSource.integer != UIAS_FAVORITES ) {
 				char name[MAX_NAME_LENGTH];
 				char addr[MAX_ADDRESSLENGTH];
@@ -4922,7 +5049,9 @@ static void UI_RunMenuScript( char **args ) {
 					}
 				}
 			}
-		} else if ( Q_stricmp( name, "deleteFavorite" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "deleteFavorite") == 0)
+		{
 			if ( ui_netSource.integer == UIAS_FAVORITES ) {
 				char addr[MAX_ADDRESSLENGTH];
 				trap_LAN_GetServerInfo( AS_FAVORITES, uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], buff, MAX_STRING_CHARS );
@@ -4932,7 +5061,9 @@ static void UI_RunMenuScript( char **args ) {
 					trap_LAN_RemoveServer( AS_FAVORITES, addr );
 				}
 			}
-		} else if ( Q_stricmp( name, "createFavorite" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "createFavorite") == 0)
+		{
 			char name[MAX_NAME_LENGTH];
 			char addr[MAX_ADDRESSLENGTH];
 			int res;
@@ -4953,7 +5084,9 @@ static void UI_RunMenuScript( char **args ) {
 					Com_Printf( "Added favorite server %s\n", addr );
 				}
 			}
-		} else if ( Q_stricmp( name, "orders" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "orders") == 0)
+		{
 			const char *orders;
 			if ( String_Parse( args, &orders ) ) {
 				int selectedPlayer = trap_Cvar_VariableValue( "cg_selectedPlayer" );
@@ -4977,7 +5110,9 @@ static void UI_RunMenuScript( char **args ) {
 				trap_Cvar_Set( "cl_paused", "0" );
 				Menus_CloseAll();
 			}
-		} else if ( Q_stricmp( name, "voiceOrdersTeam" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voiceOrdersTeam") == 0)
+		{
 			const char *orders;
 			if ( String_Parse( args, &orders ) ) {
 				int selectedPlayer = trap_Cvar_VariableValue( "cg_selectedPlayer" );
@@ -4990,7 +5125,9 @@ static void UI_RunMenuScript( char **args ) {
 				trap_Cvar_Set( "cl_paused", "0" );
 				Menus_CloseAll();
 			}
-		} else if ( Q_stricmp( name, "voiceOrders" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voiceOrders") == 0)
+		{
 			const char *orders;
 			if ( String_Parse( args, &orders ) ) {
 				int selectedPlayer = trap_Cvar_VariableValue( "cg_selectedPlayer" );
@@ -5004,32 +5141,52 @@ static void UI_RunMenuScript( char **args ) {
 				trap_Cvar_Set( "cl_paused", "0" );
 				Menus_CloseAll();
 			}
-		} else if ( Q_stricmp( name, "glCustom" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "glCustom") == 0)
+		{
 			trap_Cvar_Set( "ui_glCustom", "4" );
-		} else if ( Q_stricmp( name, "update" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "update") == 0)
+		{
 			if ( String_Parse( args, &name2 ) ) {
 				UI_Update( name2 );
 			}
 			// NERVE - SMF
 //----(SA)	// start other .exe
-		} else if ( Q_stricmp( name, "startSingleplayer" ) == 0 ) {  // so it doesn't barf if it gets a mp menu
+		}
+		else if (Q_stricmp(name, "startSingleplayer") == 0)
+		{ // so it doesn't barf if it gets a mp menu
 			trap_Cmd_ExecuteText( EXEC_APPEND, "startMultiplayer\n" );
-		} else if ( Q_stricmp( name, "startMultiplayer" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "startMultiplayer") == 0)
+		{
 			trap_Cmd_ExecuteText( EXEC_APPEND, "startMultiplayer\n" );
 //----(SA)
-		} else if ( Q_stricmp( name, "wm_showPickPlayer" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "wm_showPickPlayer") == 0)
+		{
 			Menus_CloseAll();
 			Menus_OpenByName( "wm_pickplayer" );
-		} else if ( Q_stricmp( name, "wm_showPickTeam" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "wm_showPickTeam") == 0)
+		{
 			Menus_CloseAll();
 			Menus_OpenByName( "wm_pickteam" );
-		} else if ( Q_stricmp( name, "changePlayerType" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "changePlayerType") == 0)
+		{
 			WM_ChangePlayerType();
-		} else if ( Q_stricmp( name, "getSpawnPoints" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "getSpawnPoints") == 0)
+		{
 			WM_GetSpawnPoints();
-		} else if ( Q_stricmp( name, "wm_sayPlayerClass" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "wm_sayPlayerClass") == 0)
+		{
 			trap_Cmd_ExecuteText( EXEC_APPEND, va( "VoiceTeamChat IamSoldier\n" ) );
-		} else if ( Q_stricmp( name, "wm_pickitem2" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "wm_pickitem2") == 0)
+		{
 			const char *param, *param2;
 			int selectType = 0, itemIndex = 0;
 
@@ -5038,7 +5195,9 @@ static void UI_RunMenuScript( char **args ) {
 				itemIndex = atoi( param2 );
 				WM_PickItem( selectType, itemIndex );
 			}
-		} else if ( Q_stricmp( name, "startMultiplayer" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "startMultiplayer") == 0)
+		{
 			int team, playerType, weapon, pistol, item1, i;
 			const char *teamStr, *classStr, *weapStr;
 
@@ -5089,15 +5248,22 @@ static void UI_RunMenuScript( char **args ) {
 			} else {
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "team %s %i %i %i %i 1\n", "s", playerType, weapon, pistol, item1 ) );
 			}
-
-		} else if ( Q_stricmp( name, "limboChat" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "limboChat") == 0)
+		{
 			WM_LimboChat();
-		} else if ( Q_stricmp( name, "activateLimboChat" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "activateLimboChat") == 0)
+		{
 			WM_ActivateLimboChat();
 			// -NERVE - SMF
-		} else if ( Q_stricmp( name, "setrecommended" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "setrecommended") == 0)
+		{
 			trap_Cmd_ExecuteText( EXEC_APPEND, "setRecommended 1\n" );
-		} else if ( Q_stricmp( name, "update_voteFlags" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "update_voteFlags") == 0)
+		{
 			// update g_voteFlags according to g_allowVote value change
 			if ( trap_Cvar_VariableValue( "g_allowVote" ) != 0 ) {
 				trap_Cvar_SetValue( "g_voteFlags", 255 );
@@ -5105,7 +5271,9 @@ static void UI_RunMenuScript( char **args ) {
 				trap_Cvar_SetValue( "g_voteFlags", 0 );
 			}
 			UI_UpdateVoteFlags( qtrue );
-		} else if ( Q_stricmp( name, "voteFlags" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "voteFlags") == 0)
+		{
 			// createserver.menu, settings allowed / not allowed votes
 			if ( String_Parse( args, &name ) ) {
 				if ( Q_stricmp( name, "open" ) == 0 ) {
@@ -5114,7 +5282,9 @@ static void UI_RunMenuScript( char **args ) {
 					UI_UpdateVoteFlags( qfalse );
 				}
 			}
-		} else if ( Q_stricmp( name, "clientCheckVote" ) == 0 ) {
+		}
+		else if (Q_stricmp(name, "clientCheckVote") == 0)
+		{
 			int flags;
 			flags = trap_Cvar_VariableValue( "cg_ui_voteFlags" );
 			if ( ( flags | VOTEFLAGS_RESTART ) == VOTEFLAGS_RESTART ) {
@@ -5122,7 +5292,9 @@ static void UI_RunMenuScript( char **args ) {
 			} else {
 				trap_Cvar_SetValue( "cg_ui_novote", 0 );
 			}
-		} else {
+		}
+		else
+		{
 			Com_Printf( "unknown UI script %s\n", name );
 		}
 	}
