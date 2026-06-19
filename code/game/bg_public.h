@@ -760,6 +760,7 @@ typedef enum {
 	EV_GLOBAL_ITEM_PICKUP,  // powerup / team sounds are broadcast to everyone
 	EV_NOITEM,
 	EV_NOAMMO,
+	EV_NOQUICKGRENAMMO,
 	EV_EMPTYCLIP,
 	EV_FILL_CLIP,
 	EV_WEAP_OVERHEAT,
@@ -767,7 +768,8 @@ typedef enum {
 	EV_FIRE_WEAPON,
 	EV_FIRE_WEAPONB,
 	EV_FIRE_WEAPON_LASTSHOT,
-	EV_FIRE_QUICKGREN,  // "Quickgrenade"
+	EV_FIRE_QUICKGREN, 
+	EV_FIRE_QUICKGREN2, 
 	EV_NOFIRE_UNDERWATER,
 	EV_FIRE_WEAPON_MG42,
 	EV_SUGGESTWEAP,     //----(SA)	added
@@ -869,6 +871,7 @@ typedef enum {
 	EV_GIVEPAGE,    //----(SA)	added
 	EV_SPAWN_SPIRIT,
 	EV_PLAYER_DIED, // Why was this never included?
+	EV_QUICKGRENS,
 
 	// debug rendering
 	EV_DBG_AABB,

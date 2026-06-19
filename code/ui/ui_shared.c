@@ -110,6 +110,7 @@ translateString_t translateStrings[] = {
 	{"drankwine"},               //	"You drank the wine"
 	{"noitem"},                  //	"No item to use"
 	{"gamesaved"},               //	"Game Saved"
+	{"noquickgrenammo"},         //	"No grenades left"
 
 	{"missionfail1"},            //	"Mission Failed\nYou Killed a Civilian"
 	{"missionfail2"},            //	"Mission Failed\nYou Killed a Kreisau Agent"
@@ -3840,7 +3841,8 @@ static bind_t g_bindings[] =
 	{"teleport",  -1,             -1, -1, -1},
 	{"vote yes",     -1,             -1, -1, -1},
 	{"vote no",          -1,             -1, -1, -1},
-	{ "+vstr", -1, -1, -1, -1 }
+	{ "+vstr", -1, -1, -1, -1 },
+	{"+quickgren",       -1,             -1, -1, -1},
 };
 
 

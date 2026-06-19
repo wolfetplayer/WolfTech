@@ -2063,6 +2063,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 		}
 		break;
+	case EV_NOQUICKGRENAMMO:
+		CG_CenterPrint( "noquickgrenammo", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
+	    break;
 	case EV_CHANGE_WEAPON:
 	{
 
@@ -2118,18 +2121,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME( "EV_FIRE_WEAPON_LASTSHOT" );
 		CG_FireWeapon( cent );
 		break;
-//----(SA)	added
 	case EV_GRENADE_SUICIDE:
 		DEBUGNAME( "EV_GRENADE_SUICIDE" );
 		CG_MissileHitWall( WP_GRENADE_LAUNCHER, 0, position, dir, 0 );  // (SA) modified to send missilehitwall surface parameters
 		break;
-//----(SA)	end
-//----(SA)	added
-	case EV_FIRE_QUICKGREN:
-		// testing.  no client side effect yet
-		break;
-//----(SA)	end
-//----(SA)	added
+
 	case EV_NOFIRE_UNDERWATER:
 		DEBUGNAME( "EV_NOFIRE_UNDERWATER" );
 		if ( es->number == cg.snap->ps.clientNum ) {   // reset client-side weapon animation
@@ -2322,6 +2318,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME( "EV_WOLFKICK_MISS" );
 		trap_S_StartSound( NULL, es->number, CHAN_AUTO, cgs.media.fkickmiss );
 		break;
+	case EV_QUICKGRENS:
+			trap_S_StartSound( NULL, es->number, CHAN_AUTO, cgs.media.quickgrenSound );
+			break;
 	case EV_POPUP_BOOK:
 		DEBUGNAME( "EV_POPUP_BOOK" );
 		trap_UI_Popup( va( "hbook%d", es->eventParm ) );
@@ -2589,6 +2588,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_DUST:
 		CG_ParticleDust( cent, cent->currentState.origin, cent->currentState.angles );
 		break;
+	case EV_FIRE_QUICKGREN:
+	case EV_FIRE_QUICKGREN2:
+	    break;
 	case EV_RUMBLE_EFX:
 	{
 		float pitch, yaw;

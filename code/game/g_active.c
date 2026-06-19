@@ -714,21 +714,28 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			player_die( ent, ent, ent, 100000, MOD_SUICIDE );
 			break;
 
-//----(SA)	added (testing)
 		case EV_FIRE_QUICKGREN:
-#if 0 // quickgren gone
-			{
-				// don't fire if on mounted weapon
-				if ( ent->client->ps.persistant[PERS_HWEAPON_USE] && ent->active ) {
+
+			// don't fire if on mounted weapon
+			if ( ent->client->ps.persistant[PERS_HWEAPON_USE] && ent->active ) {
 					break;
-				}
+			}
 
 				CalcMuzzlePoints( ent, WP_GRENADE_LAUNCHER );
-				weapon_grenadelauncher_fire( ent, WP_GRENADE_LAUNCHER );
-			}
-#endif
+				quickgren_fire( ent, WP_GRENADE_LAUNCHER );
+		
+
 			break;
-//----(SA)	end
+		case EV_FIRE_QUICKGREN2:
+			// don't fire if on mounted weapon
+			if ( ent->client->ps.persistant[PERS_HWEAPON_USE] && ent->active ) {
+					break;
+			}
+
+				CalcMuzzlePoints( ent, WP_GRENADE_PINEAPPLE );
+				quickgren_fire( ent, WP_GRENADE_PINEAPPLE );
+			
+			break;
 
 //----(SA)	modified
 		case EV_USE_ITEM1:      // ( HI_MEDKIT )	medkit

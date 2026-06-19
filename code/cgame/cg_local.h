@@ -1448,6 +1448,8 @@ typedef struct {
 	sfxHandle_t grenadePulseSound1;
 	//----(SA)
 
+	sfxHandle_t quickgrenSound;
+
 //----(SA)	added
 	sfxHandle_t sparkSounds[2];
 //----(SA)

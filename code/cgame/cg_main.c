@@ -1034,6 +1034,8 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.grenadePulseSound3 = trap_S_RegisterSound( "sound/weapons/grenade/grenpulse3.wav" );
 	cgs.media.grenadePulseSound2 = trap_S_RegisterSound( "sound/weapons/grenade/grenpulse2.wav" );
 	cgs.media.grenadePulseSound1 = trap_S_RegisterSound( "sound/weapons/grenade/grenpulse1.wav" );
+
+	cgs.media.quickgrenSound = trap_S_RegisterSound( "sound/weapons/grenade/grenlf1a.wav" );
 	//----(SA)	end
 
 	//----(SA) added

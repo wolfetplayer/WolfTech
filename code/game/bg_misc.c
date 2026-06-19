@@ -3812,7 +3812,8 @@ char *eventnames[] = {
 	"EV_FIRE_WEAPON",
 	"EV_FIRE_WEAPONB",
 	"EV_FIRE_WEAPON_LASTSHOT",
-	"EV_FIRE_QUICKGREN", // "Quickgrenade"
+	"EV_FIRE_QUICKGREN",
+	"EV_FIRE_QUICKGREN2", 
 	"EV_NOFIRE_UNDERWATER",
 	"EV_FIRE_WEAPON_MG42",
 	"EV_SUGGESTWEAP",        //----(SA)	added
@@ -3912,6 +3913,7 @@ char *eventnames[] = {
 	"EV_POPUPBOOK",
 	"EV_GIVEPAGE",
 	"EV_CLOSEMENU",
+	"EV_QUICKGRENS",
 
 	"EV_MAX_EVENTS"
 };
