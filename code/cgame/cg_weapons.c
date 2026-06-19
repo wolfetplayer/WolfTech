@@ -2037,71 +2037,64 @@ CG_AddWeaponWithPowerups
 ========================
 */
 static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerState_t *ps, centity_t *cent ) {
+	qhandle_t savedCustomShader;
+
+		// IMPORTANT: this function is called for weapon sub-parts (barrels/bolts/hands/etc.)
+	// in RTCW. Those refEntity_t structs are often re-used in a loop, so if we set
+	// customShader and don't restore it, the next part will inherit it and "lose" its base skin.
+	savedCustomShader = gun->customShader;
 
 	// add powerup effects
 	if ( powerups & ( 1 << PW_INVIS ) ) {
+
 		gun->customShader = cgs.media.invisShader;
 		trap_R_AddRefEntityToScene( gun );
+
+		// restore and bail (invis usually replaces base draw)
+		gun->customShader = savedCustomShader;
+
 	} else {
+
+		// always draw base weapon normally (no shader override)
+		gun->customShader = 0;
 		trap_R_AddRefEntityToScene( gun );
 
-		if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
-			gun->customShader = cgs.media.battleWeaponShader;
-			trap_R_AddRefEntityToScene( gun );
-		}
-		if ( powerups & ( 1 << PW_QUAD ) ) {
-			gun->customShader = cgs.media.quadWeaponShader;
-			trap_R_AddRefEntityToScene( gun );
-		}
-	}
-/*
-	if (ps && ps->clientNum == cg.snap->ps.clientNum) {
-		float	alpha, adjust;
-		weaponInfo_t	*weapon;
-
-		weapon = &cg_weapons[ps->weapon];
-		//if (gun->hModel == weapon->handsModel)
-//		if (cg.snap->ps.onFireStart)
-		{
-
-			// add the flames if on fire
-//			alpha = 2.0 * (float)(FIRE_FLASH_TIME - (cg.time - cg.snap->ps.onFireStart))/FIRE_FLASH_TIME;
-alpha = 1;
-			if (alpha > 0) {
-				if (alpha >= 1.0) {
-					alpha = 1.0;
-				}
-				gun->shaderRGBA[3] = (unsigned char)(255.0*alpha);
-				// calc the fireRiseDir from the velocity
-				VectorNegate( cg.snap->ps.velocity, gun->fireRiseDir );
-				VectorNormalize( gun->fireRiseDir );
-				gun->fireRiseDir[2] += 1;
-				if (VectorNormalize( gun->fireRiseDir ) < 1) {
-					VectorClear( gun->fireRiseDir );
-					gun->fireRiseDir[2] = 1;
-				}
-				// now move towards the newDir
-				adjust = 5.0*(0.001*cg.frametime);
-				VectorMA( cg.v_fireRiseDir, adjust, gun->fireRiseDir, cg.v_fireRiseDir );
-				if (VectorNormalize( cg.v_fireRiseDir ) <= 0.1) {
-					VectorCopy( gun->fireRiseDir, cg.v_fireRiseDir );
-				}
-				VectorCopy( cg.v_fireRiseDir, gun->fireRiseDir );
-
-//				gun->reFlags |= REFLAG_ONLYHAND;
-gun->customShader = cgs.media.dripWetShader2;
-//				gun->customShader = cgs.media.onFireShader;
+		// blink if time left < 5s, toggling every 200ms for battlesuit
+		if ( powerups & ( 1 << PW_BATTLESUIT_SURV ) ) {
+			int timeLeft = ps->powerups[PW_BATTLESUIT_SURV] - cg.time;
+			if ( ( timeLeft < 5000 ) && ( ( cg.time / 200 ) % 2 ) ) {
+				// skip rendering to blink
+			} else {
+				gun->customShader = cgs.media.battleWeaponShader;
 				trap_R_AddRefEntityToScene( gun );
-//				gun->shaderTime = 500;
-//				trap_R_AddRefEntityToScene( gun );
-gun->customShader = cgs.media.dripWetShader;
-//				gun->customShader = cgs.media.onFireShader2;
-				trap_R_AddRefEntityToScene( gun );
-//				gun->reFlags &= ~REFLAG_ONLYHAND;
+				gun->customShader = 0;
 			}
 		}
-	}
-*/
+
+		// blink for quad powerup
+		if ( powerups & ( 1 << PW_QUAD ) ) {
+			int timeLeft = ps->powerups[PW_QUAD] - cg.time;
+			if ( ( timeLeft < 5000 ) && ( ( cg.time / 200 ) % 2 ) ) {
+				// skip rendering to blink
+			} else {
+				gun->customShader = cgs.media.quadWeaponShader;
+				trap_R_AddRefEntityToScene( gun );
+				gun->customShader = 0;
+			}
+		}
+
+		// blink for vampire powerup
+		if ( powerups & ( 1 << PW_VAMPIRE ) ) {
+			int timeLeft = ps->powerups[PW_VAMPIRE] - cg.time;
+			if ( ( timeLeft < 5000 ) && ( ( cg.time / 200 ) % 2 ) ) {
+				// skip rendering to blink
+			} else {
+				gun->customShader = cgs.media.redQuadShader;
+				trap_R_AddRefEntityToScene( gun );
+				gun->customShader = 0;
+			}
+		}
+}
 }
 
 /*

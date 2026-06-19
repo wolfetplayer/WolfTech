@@ -917,8 +917,13 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity, int ownerN
 
 	dropped->classname = item->classname;
 	dropped->item = item;
-	VectorSet( dropped->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, 0 );            //----(SA)	so items sit on the ground
-	VectorSet( dropped->r.maxs, ITEM_RADIUS, ITEM_RADIUS, 2 * ITEM_RADIUS );  //----(SA)	so items sit on the ground
+	if (item->giType == IT_POWERUP) {
+		VectorSet( dropped->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS );
+		VectorSet( dropped->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
+	} else {
+	   VectorSet( dropped->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, 0 );            //----(SA)	so items sit on the ground
+	   VectorSet( dropped->r.maxs, ITEM_RADIUS, ITEM_RADIUS, 2 * ITEM_RADIUS );  //----(SA)	so items sit on the ground
+	}
 	dropped->r.contents = CONTENTS_TRIGGER | CONTENTS_ITEM;
 
 	dropped->clipmask = CONTENTS_SOLID | CONTENTS_MISSILECLIP;      // NERVE - SMF - fix for items falling through grates
@@ -942,11 +947,32 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity, int ownerN
 	}
 
 	G_SetOrigin( dropped, origin );
-	dropped->s.pos.trType = TR_GRAVITY;
+	if (item->giType == IT_POWERUP)
+	{
+		dropped->s.pos.trType = TR_GRAVITY_PAUSED;
+	}
+	else
+	{
+		dropped->s.pos.trType = TR_GRAVITY;
+	}
+
 	dropped->s.pos.trTime = level.time;
 	VectorCopy( velocity, dropped->s.pos.trDelta );
 
 	dropped->s.eFlags |= EF_BOUNCE_HALF;
+
+	if (item->giType == IT_POWERUP)
+	{
+		dropped->s.eFlags |= EF_SPINNING; // spin the weapon as it flies from the dead player.  it will stop when it hits the ground
+		// Add dynamic light to the dropped powerup
+		//dropped->s.constantLight = 50;	
+		//dropped->s.constantLight |= (255 << 8);	 
+		//dropped->s.constantLight |= (255 << 16); 
+		//dropped->s.constantLight |= (255 << 24);	
+
+		// Play a sound at the location of the dropped item
+		dropped->s.loopSound = G_SoundIndex("sound/misc/powerup_ambience.wav");
+	}
 
 	if ( item->giType == IT_TEAM ) { // Special case for CTF flags
 		dropped->think = Team_DroppedFlagThink;
