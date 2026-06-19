@@ -199,9 +199,29 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 
 	//AICHAR_ZOMBIE_SURV
 	{
-		"Zombie Surv",
-		{ // Default
-			0
+		"zombie_surv",
+		{
+			200,        // running speed		//----(SA)	DK requested change
+			60,         // walking speed		//----(SA)	DK requested change
+			80,         // crouching speed
+			90,         // Field of View
+			350,        // Yaw Speed
+			0.0,        // leader
+			0.70,       // aim skill
+			0.70,       // aim accuracy
+			0.75,       // attack skill
+			0.1,        // reaction time
+			0.0,        // attack crouch
+			0.0,        // idle crouch
+			1.0,        // aggression
+			0.0,        // tactical
+			0.0,        // camper
+			16000,      // alertness
+			180,        // starting health
+			1.0,        // hearing scale
+			0.9,        // not in pvs hearing scale
+			512,        // relaxed detection radius
+			1.0,        // pain threshold multiplier
 		},
 		{
 			"zombieSightPlayer",
@@ -378,8 +398,28 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 	//AICHAR_LOPER_SPECIAL
 	{
 		"Loper Special",
-		{ // Default
-			0
+		{
+			220,        // running speed
+			70,         // walking speed
+			220,        // crouching speed
+			90,         // Field of View
+			200,        // Yaw Speed
+			0.0,        // leader
+			0.70,       // aim skill
+			0.70,       // aim accuracy
+			0.75,       // attack skill
+			0.8,        // reaction time
+			0.05,       // attack crouch
+			0.0,        // idle crouch
+			1.0,        // aggression
+			0.1,        // tactical
+			0.0,        // camper
+			16000,      // alertness
+			500,        // starting health
+			1.0,        // hearing scale
+			0.9,        // not in pvs hearing scale
+			512,        // relaxed detection radius
+			1.0,        // pain threshold multiplier
 		},
 		{
 			"loperSightPlayer",
@@ -595,55 +635,6 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 		NULL,
 		AISTATE_ALERT
 	},
-
-	// AICHAR_FROGMAN
-	{
-		"Frogman",
-		{
-			170,        // running speed
-			100,        // walking speed
-			90,         // crouching speed
-			90,         // Field of View
-			150,        // Yaw Speed
-			0.0,        // leader
-			0.7,        // aim skill
-			1.0,        // aim accuracy
-			0.9,        // attack skill
-			0.6,        // reaction time
-			0.05,       // attack crouch
-			0.0,        // idle crouch
-			0.9,        // aggression
-			0.1,        // tactical
-			0.0,        // camper
-			16000,      // alertness
-			200,        // starting health
-			1.0,        // hearing scale
-			0.9,        // not in pvs hearing scale
-			512,        // relaxed detection radius
-			1.0,        // pain threshold multiplier
-		},
-		{
-			"frogmanSightPlayer",
-			"frogmanAttackPlayer",
-			"frogmanOrders",
-			"frogmanDeath",
-			"frogmanSilentDeath",	//----(SA)	added
-			"frogmanFlameDeath",	//----(SA)	added
-			"frogmanPain",
-			"frogmanStay",			// stay - you're told to stay put
-			"frogmanFollow",		// follow - go with ordering player ("i'm with you" rather than "yes sir!")
-			"frogmanOrdersDeny",	// deny - refuse orders (doing something else)
-		},
-		AITEAM_NAZI,
-		"frogman/default",
-		{0},
-		BBOX_SMALL, {32,48},    // bbox, crouch/stand height
-		0,
-		0, 0, 0,
-		NULL,
-		AISTATE_RELAXED
-	},
-
 	//AICHAR_HELGA
 	{
 		"Helga",

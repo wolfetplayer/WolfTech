@@ -447,6 +447,7 @@ void AICast_SpecialFunc( cast_state_t *cs ) {
 		}
 		break;
 	case AICHAR_ZOMBIE:
+	case AICHAR_ZOMBIE_SURV:
 		if ( COM_BitCheck( cs->bs->cur_ps.weapons, WP_MONSTER_ATTACK1 ) ) { // flaming zombie, run
 			BG_UpdateConditionValue( cs->entityNum, ANIM_COND_CHARGING, 1, qfalse );
 		}
@@ -4998,6 +4999,7 @@ char *AIFunc_DefaultStart( cast_state_t *cs ) {
 	//
 	switch ( cs->aiCharacter ) {
 	case AICHAR_ZOMBIE:
+	case AICHAR_ZOMBIE_SURV:
 		// portal zombie, requires spawning effect
 		if ( first && ( g_entities[cs->entityNum].spawnflags & 4 ) ) {
 			return AIFunc_FlameZombie_PortalStart( cs );
