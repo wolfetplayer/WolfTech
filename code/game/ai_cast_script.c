@@ -244,7 +244,7 @@ cast_script_stack_action_t scriptActions[] =
 	{"catchfire",        AICast_ScriptAction_CatchFire},
 	{"givescore", AICast_ScriptAction_GiveScore},
 
-	{"applyloadout", AICast_ScriptAction_ApplyLoadout, NULL},
+	{"applyloadout", AICast_ScriptAction_ApplyLoadout},
 
 	{NULL,              0}
 };

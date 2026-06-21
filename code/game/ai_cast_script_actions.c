@@ -1408,7 +1408,6 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 	}
 
 	if ( g_gametype.integer == GT_COOP_SURVIVAL || g_gametype.integer == GT_COOP ) {
-		// apply to every connected, in-game client
 		for ( i = 0; i < MAX_CLIENTS; i++ ) {
 			player = &g_entities[i];
 
@@ -1417,6 +1416,9 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 			}
 			if ( player->client->pers.connected != CON_CONNECTED ) {
 				continue;
+			}
+			if ( player->aiCharacter ) {
+				continue;   // skip bots/AI-controlled entities
 			}
 
 			if ( AICast_Loadouts_ApplyToEnt( cs, player, params ) ) {
@@ -1427,7 +1429,6 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 		return appliedAny;
 	}
 
-	// non-coop fallback: original single-player behaviour
 	player = AICast_FindEntityForName( "player" );
 	if ( !player ) {
 		return qfalse;
