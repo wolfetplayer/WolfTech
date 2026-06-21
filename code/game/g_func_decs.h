@@ -1112,6 +1112,7 @@ extern void QDECL G_DPrintf ( const char * fmt , ... ) ;
 extern void QDECL G_Printf ( const char * fmt , ... ) ;
 extern void G_RunItem ( gentity_t * ent ) ;
 extern void G_RunItemProp ( gentity_t * ent , vec3_t origin ) ;
+extern gentity_t *G_DropSpecifiedItem( gentity_t *ent, gitem_t *item, int lifetimeMs, int dropChance );
 extern void G_BounceItem ( gentity_t * ent , trace_t * trace ) ;
 extern void G_SpawnItem ( gentity_t * ent , gitem_t * item ) ;
 extern void SaveRegisteredItems ( void ) ;
@@ -1474,6 +1475,7 @@ extern qboolean AICast_ScriptAction_NoRespawn ( cast_state_t * cs , char * param
 extern qboolean AICast_ScriptAction_RandomRespawn ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_TakeWeapon ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_GiveWeapon ( cast_state_t * cs , char * params ) ;
+extern qboolean AICast_ScriptAction_DropItem( cast_state_t *cs, char *params ) ;
 extern qboolean AICast_ScriptAction_GiveWeaponFull ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_GiveArmor ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_GiveScore ( cast_state_t * cs , char * params ) ;

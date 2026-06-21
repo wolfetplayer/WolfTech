@@ -1710,3 +1710,32 @@ qboolean Give_Weapon_New_Inventory( gentity_t *other, weapon_t weapon, qboolean 
 
 	return qfalse;
 }
+
+
+/*
+=================
+G_DropSpecifiedItem
+
+Drops any item specified by gitem_t*.
+- lifetimeMs: 0 means "forever" (like SP weapon drops).
+- dropChance: the probability of dropping items (0 to 100).
+=================
+*/
+gentity_t *G_DropSpecifiedItem( gentity_t *ent, gitem_t *item, int lifetimeMs, int dropChance ) {
+	gentity_t *drop;
+
+	if ( !ent || !ent->client || !item || rand() % 100 >= dropChance ) {
+		return NULL;
+	}
+
+	drop = Drop_Item( ent, item, 0, qfalse );
+	if ( drop ) {
+		if ( lifetimeMs > 0 ) {
+			drop->nextthink = level.time + lifetimeMs;
+		} else {
+			drop->nextthink = 0;
+		}
+	}
+
+	return drop;
+}

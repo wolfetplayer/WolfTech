@@ -1734,6 +1734,74 @@ qboolean AICast_ScriptAction_TakeWeapon( cast_state_t *cs, char *params ) {
 }
 
 /*
+==============
+AICast_ScriptAction_DropItem
+
+syntax:
+  dropitem <classnameOrPickupName>
+  dropitem <classnameOrPickupName> <lifetimeMs>
+  dropitem <classnameOrPickupName> <lifetimeMs> <dropChance>
+
+examples:
+  dropitem item_armor_head
+  dropitem weapon_mp40 30000
+  dropitem item_treasure 45000
+  dropitem weapon_colt 0 20
+==============
+*/
+qboolean AICast_ScriptAction_DropItem( cast_state_t *cs, char *params ) {
+	gentity_t *ent;
+	gitem_t *item;
+	char name[MAX_QPATH];
+	char lifeStr[32];
+	char probStr[4];
+	int lifetimeMs = 0;
+	int dropChance = 100;
+	int num;
+
+	if ( !cs ) {
+		return qfalse;
+	}
+
+	ent = &g_entities[cs->entityNum];
+	if ( !ent->inuse || !ent->client ) {
+		return qfalse;
+	}
+
+	// Parse: <name> [lifetimeMs] [dropChance]
+	name[0] = '\0';
+	lifeStr[0] = '\0';
+	probStr[0] = '\0';
+
+	num = sscanf( params, "%s %31s %3s", name, lifeStr, probStr );
+	if ( num < 1 || !name[0] ) {
+		G_Error( "AI Scripting: dropitem - missing item name" );
+		return qfalse;
+	}
+
+	if ( num == 2 && lifeStr[0] ) {
+		lifetimeMs = atoi( lifeStr );
+		if ( lifetimeMs < 0 ) lifetimeMs = 0;
+	}
+
+	if ( num >= 3 && probStr[0] ) {
+		dropChance = atoi( probStr );
+		if ( dropChance < 0 ) dropChance = 0;
+		if ( dropChance > 100 ) dropChance = 100;
+	}
+
+	item = BG_FindItem2( name );
+	if ( !item ) {
+		G_Error( "AI Scripting: dropitem %s, unknown item", name );
+		return qfalse;
+	}
+
+	G_DropSpecifiedItem( ent, item, lifetimeMs, dropChance );
+	return qtrue;
+}
+
+
+/*
 =================
 AICast_ScriptAction_RandomRespawn
 
