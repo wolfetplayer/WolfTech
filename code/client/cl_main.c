@@ -2108,7 +2108,18 @@ void CL_SteamLobbyList_f(void)
 
 void CL_SteamJoin_f(void)
 {
-	steamLobbyJoin(109775243153417783ULL);
+	if (Cmd_Argc() < 2) {
+		Com_Printf("usage: steamjoin <lobbyID>\n");
+		return;
+	}
+
+	uint64_t lobbyID = strtoull(Cmd_Argv(1), NULL, 10);
+	if (lobbyID == 0) {
+		Com_Printf("steamjoin: invalid lobby id '%s'\n", Cmd_Argv(1));
+		return;
+	}
+
+	steamLobbyJoin(lobbyID);
 }
 
 /*
@@ -4314,6 +4325,8 @@ void CL_Init( void ) {
 	Cmd_AddCommand("steam_create", CL_SteamLobbyCreate_f);
 
 	Cmd_AddCommand("steam_list", CL_SteamLobbyList_f);
+
+	Cmd_AddCommand("steam_join", CL_SteamJoin_f);
 
 	CL_InitRef();
 
