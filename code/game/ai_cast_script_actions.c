@@ -1399,18 +1399,41 @@ qboolean AICast_ScriptAction_GiveArmor( cast_state_t *cs, char *params ) {
 //----(SA)	end
 
 qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
-    gentity_t *player;
+	gentity_t *player;
+	qboolean appliedAny = qfalse;
+	int i;
 
-    if ( !params || !params[0] ) {
-        G_Error( "AI Scripting: applyloadout requires loadout name\n" );
-    }
+	if ( !params || !params[0] ) {
+		G_Error( "AI Scripting: applyloadout requires loadout name\n" );
+	}
 
-    player = AICast_FindEntityForName( "player" );
-    if ( !player ) {
-        return qfalse;
-    }
+	if ( g_gametype.integer == GT_COOP_SURVIVAL || g_gametype.integer == GT_COOP ) {
+		// apply to every connected, in-game client
+		for ( i = 0; i < MAX_CLIENTS; i++ ) {
+			player = &g_entities[i];
 
-    return AICast_Loadouts_ApplyToEnt( cs, player, params );
+			if ( !player->inuse || !player->client ) {
+				continue;
+			}
+			if ( player->client->pers.connected != CON_CONNECTED ) {
+				continue;
+			}
+
+			if ( AICast_Loadouts_ApplyToEnt( cs, player, params ) ) {
+				appliedAny = qtrue;
+			}
+		}
+
+		return appliedAny;
+	}
+
+	// non-coop fallback: original single-player behaviour
+	player = AICast_FindEntityForName( "player" );
+	if ( !player ) {
+		return qfalse;
+	}
+
+	return AICast_Loadouts_ApplyToEnt( cs, player, params );
 }
 
 /*
