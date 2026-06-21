@@ -1040,6 +1040,9 @@ typedef struct {
 
 	pmoveExt_t pmext;
 
+	qboolean simpleZoomed;
+	int simpleZoomTime;
+
 } cg_t;
 
 #define NUM_FUNNEL_SPRITES  21
@@ -1499,6 +1502,8 @@ typedef struct {
 	sfxHandle_t fkickflesh;
 	sfxHandle_t fkickmiss;
 
+    sfxHandle_t nullSound;
+
 	int bulletHitFleshScript;
 	int bulletHitFleshMetalScript;
 
@@ -1513,6 +1518,7 @@ typedef struct {
 	qhandle_t rtt;
 
 	qhandle_t perkProIcons[MAX_PERKS];
+
 } cgMedia_t;
 
 
@@ -1863,6 +1869,9 @@ extern vmCvar_t cg_atm_effects;
 extern vmCvar_t cg_atm_effects_low;
 extern vmCvar_t cg_atm_effects_force;
 
+extern vmCvar_t cg_simpleZoomFov;
+extern vmCvar_t cg_simpleZoomTimeMs;
+
 //
 // cg_main.c
 //
@@ -2095,6 +2104,7 @@ void CG_PrevWeapon_f( void );
 void CG_Weapon_f( void );
 void CG_WeaponBank_f( void );
 void CG_WeaponSuggest( int weap );
+void CG_ResetSimpleZoom(void);
 
 void CG_FinishWeaponChange( int lastweap, int newweap );
 

@@ -2048,12 +2048,18 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 	case EV_FILL_CLIP:
 		DEBUGNAME( "EV_FILL_CLIP" );
+		CG_ResetSimpleZoom();
 		if ( cg_weapons[es->weapon].reloadSound ) {
 			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadSound ); // JPW NERVE following sherman's SP fix, should allow killing reload sound when player dies
 		}
 		break;
+	case EV_RESET_ZOOM:
+	    DEBUGNAME( "EV_RESET_ZOOM" );
+		CG_ResetSimpleZoom();
+		break;
 	case EV_NOAMMO:
 		DEBUGNAME( "EV_NOAMMO" );
+		CG_ResetSimpleZoom();
 		if ( ( es->weapon != WP_GRENADE_LAUNCHER ) && ( es->weapon != WP_GRENADE_PINEAPPLE ) && ( es->weapon != WP_DYNAMITE ) ) {
 			trap_S_StartSound( NULL, es->number, CHAN_AUTO, cgs.media.noAmmoSound );
 		}
@@ -2072,6 +2078,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		int newweap = 0;
 
 		DEBUGNAME( "EV_CHANGE_WEAPON" );
+
+		CG_ResetSimpleZoom();
 
 		// client will get this message if reloading while using an alternate weapon
 		// client should voluntarily switch back to primary at that point

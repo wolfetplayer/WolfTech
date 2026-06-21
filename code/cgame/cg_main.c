@@ -293,6 +293,9 @@ vmCvar_t cg_atm_effects;
 vmCvar_t cg_atm_effects_low;
 vmCvar_t cg_atm_effects_force;
 
+vmCvar_t cg_simpleZoomFov;
+vmCvar_t cg_simpleZoomTimeMs;
+
 typedef struct {
 	vmCvar_t    *vmCvar;
 	char        *cvarName;
@@ -506,6 +509,10 @@ cvarTable_t cvarTable[] = {
 	{&cg_atm_effects_force, "cg_atm_effects_force", "0", CVAR_LATCH},
 
 	{&cg_showAIState, "cg_showAIState", "0", CVAR_CHEAT},
+
+	{&cg_simpleZoomFov, "cg_simpleZoomFov", "60", CVAR_ARCHIVE},
+	{&cg_simpleZoomTimeMs, "cg_simpleZoomTimeMs", "120", CVAR_ARCHIVE},
+
 };
 int cvarTableSize = ARRAY_LEN( cvarTable );
 
@@ -957,6 +964,8 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.watrUnSound = trap_S_RegisterSound( "sound/player/watr_un.wav" );
 
 	cgs.media.underWaterSound = trap_S_RegisterSound( "sound/world/underwater03.wav" );
+
+	cgs.media.nullSound = trap_S_RegisterSound( "sound/misc/null.wav");
 
 	for ( i = 0 ; i < 4 ; i++ ) {
 		Com_sprintf( name, sizeof( name ), "sound/player/footsteps/step%i.wav", i + 1 );

@@ -773,6 +773,63 @@ void CG_Zoom( void ) {
 }
 
 
+float CG_ApplySimpleZoomFov( float currentFovX ) {
+	float baseFovX, targetFovX, f, out;
+
+	// feature disabled / not set up
+	if ( cg_simpleZoomFov.value <= 0 ) {
+		return currentFovX;
+	}
+
+	// don't interfere with real zoom systems
+	if ( cg.zoomedBinoc || cg.zoomval || ( cg.predictedPlayerState.eFlags & EF_ZOOMING ) ) {
+		return currentFovX;
+	}
+
+	if ( cg.predictedPlayerState.eFlags & EF_DEAD  ) {
+		return currentFovX;
+	}
+
+	// don't allow while using heavy weapon
+	if ( cg.snap && cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
+		return currentFovX;
+	}
+
+	baseFovX = currentFovX;
+	targetFovX = cg.simpleZoomed ? cg_simpleZoomFov.value : baseFovX;
+
+	// clamp target
+	if ( targetFovX < 1 ) targetFovX = 1;
+	if ( targetFovX > 160 ) targetFovX = 160;
+
+	// lerp time
+	{
+		int t = cg_simpleZoomTimeMs.integer;
+		int dt = cg.time - cg.simpleZoomTime;
+
+		if ( t <= 0 ) {
+			return targetFovX;
+		}
+		if ( dt < 0 ) dt = 0;
+
+		f = (float)dt / (float)t;
+		if ( f > 1.0f ) f = 1.0f;
+	}
+
+	if ( cg.simpleZoomed ) {
+		// zooming in: base -> target
+		out = baseFovX + f * ( targetFovX - baseFovX );
+	} else {
+		// zooming out: from zoomFov -> base
+		float from = cg_simpleZoomFov.value;
+		if ( from < 1 ) from = 1;
+		if ( from > 160 ) from = 160;
+		out = from + f * ( baseFovX - from );
+	}
+
+	return out;
+}
+
 /*
 ====================
 CG_CalcFov
@@ -867,6 +924,9 @@ static int CG_CalcFov( void ) {
 	if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
 		fov_x = 55;
 	}
+
+    // Simple (CS-style) zoom: client-only FOV tweak, no scope overlay
+	fov_x = CG_ApplySimpleZoomFov(fov_x);
 
 	if ( cg_fixedAspect.integer ) {
 		// Based on LordHavoc's code for Darkplaces
@@ -1380,6 +1440,8 @@ void CG_DrawSkyBoxPortal( void ) {
 		if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
 			fov_x = 55;
 		}
+
+		fov_x = CG_ApplySimpleZoomFov(fov_x);
 
 		if ( cg_fixedAspect.integer ) {
 			// Based on LordHavoc's code for Darkplaces

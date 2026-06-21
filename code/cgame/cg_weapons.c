@@ -3688,6 +3688,48 @@ void CG_FinishWeaponChange( int lastweap, int newweap ) {
 	cg.weaponSelect     = newweap;
 }
 
+
+qboolean CG_WeaponSupportsSimpleZoom( int weap ) {
+    switch ( weap ) {
+        // Disallow: already-scoped / special zoom weapons
+        case WP_SNIPERRIFLE:
+        case WP_SNOOPERSCOPE:
+        case WP_FG42SCOPE:
+            return qfalse;
+
+        // Disallow: binocs / mounted / explosives / melee etc (adjust to your mod)
+        case WP_GRENADE_LAUNCHER:
+        case WP_GRENADE_PINEAPPLE:
+        case WP_DYNAMITE:
+        case WP_KNIFE:
+            return qfalse;
+
+        default:
+            break;
+    }
+
+    // Also don’t allow while on MG42
+    if ( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) {
+        return qfalse;
+    }
+
+    return qtrue;
+}
+
+void CG_ToggleSimpleZoom( void ) {
+    cg.simpleZoomed = !cg.simpleZoomed;
+    cg.simpleZoomTime = cg.time;
+}
+
+
+void CG_ResetSimpleZoom( void ) {
+    if ( cg.simpleZoomed ) {
+        cg.simpleZoomed = qfalse;
+        cg.simpleZoomTime = cg.time;
+    }
+}
+
+
 /*
 ==============
 CG_AltfireWeapon_f
@@ -3721,6 +3763,20 @@ void CG_AltWeapon_f( void ) {
 
 	num = getAltWeapon( original );
 
+		if (num == WP_NONE || num == original || !CG_WeaponSelectable(num))
+	{
+		if (CG_WeaponSupportsSimpleZoom(original))
+		{
+
+			if (cg.snap->ps.weaponstate == WEAPON_RELOADING || cg.snap->ps.weaponstate == WEAPON_DROPPING  || cg.snap->ps.weaponstate == WEAPON_RAISING )
+			{
+				return;
+			}
+			CG_ToggleSimpleZoom();
+		}
+		return;
+	}
+
 	if ( CG_WeaponSelectable( num ) ) {   // new weapon is valid
 
 		switch ( original ) {
@@ -3745,7 +3801,7 @@ void CG_AltWeapon_f( void ) {
 			break;
 		}
 
-//----(SA)	end
+        trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
 		CG_FinishWeaponChange( original, num );
 	}
 }
