@@ -752,6 +752,12 @@ void AICast_Think( int client, float thinktime ) {
 			trap_EA_Crouch( cs->bs->client );
 		}
 	}
+
+
+	if (g_gametype.integer == GT_COOP_SURVIVAL)
+	{
+		AICast_SurvivalUpdateAwareness(cs);
+	}
 	//
 	//if (cs->enemyNum >= 0) {
 	//update the attack inventory values
@@ -1403,9 +1409,13 @@ qboolean AICast_GetAvoid( cast_state_t *cs, bot_goal_t *goal, vec3_t outpos, qbo
 //G_Printf("GetAvoid: %i ms\n", -pretime + Sys_MilliSeconds() );
 }
 
+
 /*
 ============
 AICast_Blocked
+
+Handles short-term obstacle avoidance when AI movement prediction hits something.
+Can ask blocking AI to move, fire a "blocked" script event, or steer around the blocker.
 ============
 */
 void AICast_Blocked( cast_state_t *cs, bot_moveresult_t *moveresult, int activate, bot_goal_t *goal ) {
@@ -1414,152 +1424,186 @@ void AICast_Blocked( cast_state_t *cs, bot_moveresult_t *moveresult, int activat
 	usercmd_t ucmd;
 	bot_input_t bi;
 	cast_state_t *ocs;
-	int i, blockEnt = -1;
 	bot_goal_t ogoal;
+	int i;
+	int blockEnt = -1;
 
-	if ( cs->blockedAvoidTime < level.time ) {
-		if ( cs->blockedAvoidTime < level.time - 300 ) {
-			if ( VectorCompare( cs->bs->cur_ps.velocity, vec3_origin ) && !cs->lastucmd.forwardmove && !cs->lastucmd.rightmove ) {
-				// not moving, don't bother checking
+	if ( cs->blockedAvoidTime >= level.time ) {
+		goto move_around_blocker;
+	}
+
+	if ( cs->blockedAvoidTime >= level.time - 300 ) {
+		return;
+	}
+
+	if ( VectorCompare( cs->bs->cur_ps.velocity, vec3_origin ) &&
+		 !cs->lastucmd.forwardmove &&
+		 !cs->lastucmd.rightmove ) {
+		// Not moving, so there is no useful block check to perform
+		cs->blockedAvoidTime = level.time - 1;
+		return;
+	}
+
+	// Predict whether our current movement will hit something soon
+	trap_EA_GetInput( cs->entityNum, (float) level.time / 1000, &bi );
+	AICast_InputToUserCommand( cs, &bi, &ucmd, cs->bs->cur_ps.delta_angles );
+	AICast_PredictMovement( cs, 1, 0.6, &move, &ucmd,
+							 ( goal && goal->entitynum > -1 ) ? goal->entitynum : cs->entityNum );
+
+	// Only this stop type means we hit a client or non-stationary mover
+	if ( move.stopevent != PREDICTSTOP_HITCLIENT ) {
+		cs->blockedAvoidTime = level.time - 1;
+		return;
+	}
+
+	// If prediction stopped beyond the goal, assume the goal is reachable
+	if ( goal ) {
+		if ( VectorDistance( cs->bs->origin, goal->origin ) <
+			 VectorDistance( cs->bs->origin, move.endpos ) ) {
+			vec3_t v1, v2;
+
+			VectorSubtract( goal->origin, cs->bs->origin, v1 );
+			VectorSubtract( goal->origin, move.endpos, v2 );
+			VectorNormalize( v1 );
+			VectorNormalize( v2 );
+
+			if ( DotProduct( v1, v2 ) < 0 ) {
 				cs->blockedAvoidTime = level.time - 1;
 				return;
 			}
-			// are we going to hit someone soon?
-			trap_EA_GetInput( cs->entityNum, (float) level.time / 1000, &bi );
-			AICast_InputToUserCommand( cs, &bi, &ucmd, cs->bs->cur_ps.delta_angles );
-			AICast_PredictMovement( cs, 1, 0.6, &move, &ucmd, ( goal && goal->entitynum > -1 ) ? goal->entitynum : cs->entityNum );
+		}
+	}
 
-			// blocked if we hit a client (or non-stationary mover) other than our enemy or goal
-			if ( move.stopevent != PREDICTSTOP_HITCLIENT ) {
-				// not blocked
-				cs->blockedAvoidTime = level.time - 1;
-				return;
+	// Identify the entity worth avoiding, and try to make AI blockers move first
+	for ( i = 0; i < move.numtouch; i++ ) {
+		// Check against coop clients.
+		if ( move.touchents[i] >= MAX_COOP_CLIENTS ) {
+			if ( !Q_stricmp( g_entities[move.touchents[i]].classname, "script_mover" ) ) {
+				blockEnt = move.touchents[i];
+			} else if ( VectorDistance( cs->bs->origin, move.endpos ) < 10 ) {
+				blockEnt = move.touchents[i];
 			}
 
-			// if we stopped passed our goal, ignore it
-			if ( goal ) {
-				if ( VectorDistance( cs->bs->origin, goal->origin ) < VectorDistance( cs->bs->origin, move.endpos ) ) {
-					vec3_t v1, v2;
-					VectorSubtract( goal->origin, cs->bs->origin, v1 );
-					VectorSubtract( goal->origin, move.endpos, v2 );
-					VectorNormalize( v1 );
-					VectorNormalize( v2 );
-					if ( DotProduct( v1, v2 ) < 0 ) {
-						// we went passed the goal, so assume we can reach it
-						cs->blockedAvoidTime = level.time - 1;
-						return;
-					}
-				}
-			}
+			continue;
+		}
 
-			// try and get them to move, in case we can't get around them
-			blockEnt = -1;
-			for ( i = 0; i < move.numtouch; i++ ) {
-				// Check against coop clients.
-				if ( move.touchents[i] >= MAX_COOP_CLIENTS ) {
-					if ( !Q_stricmp( g_entities[move.touchents[i]].classname, "script_mover" ) ) {
-						// avoid script_mover's
-						blockEnt = move.touchents[i];
-					}
-					// if we are close to the impact point, then avoid this entity
-					else if ( VectorDistance( cs->bs->origin, move.endpos ) < 10 ) {
-						//G_Printf("AI (%s) avoiding %s\n", g_entities[cs->entityNum].aiName, g_entities[move.touchents[i]].classname );
-						blockEnt = move.touchents[i];
-					}
-					continue;
-				}
-				//
-				ocs = AICast_GetCastState( move.touchents[i] );
-				if ( !ocs->bs ) {
+		ocs = AICast_GetCastState( move.touchents[i] );
+
+		if ( !ocs->bs ) {
+			blockEnt = move.touchents[i];
+			continue;
+		}
+
+		// Do not reject blockers we are following or moving toward
+		if ( cs->followEntity == ocs->entityNum ) {
+			continue;
+		}
+
+		// If the blocker is already moving away from us, let them go
+		if ( VectorLength( ocs->bs->cur_ps.velocity ) > 10 ) {
+			vec3_t v1, v2;
+
+			VectorSubtract( ocs->bs->origin, cs->bs->origin, v2 );
+			VectorNormalize( v2 );
+			VectorNormalize2( ocs->bs->cur_ps.velocity, v1 );
+
+			if ( DotProduct( v1, v2 ) > 0.0 ) {
+				continue;
+			}
+		}
+
+		// Recently asked blockers may be stuck or ignoring avoidance
+		if ( ocs->obstructingTime > level.time - 500 ) {
+			blockEnt = move.touchents[i];
+		}
+
+		// If the blocker is stationary and actively attacking, they may hold position
+		// forever while another friendly AI keeps pushing into them.
+		{
+			qboolean blockerIsStationary;
+			qboolean blockerIsAttacking;
+
+			blockerIsStationary = ( VectorLength( ocs->bs->cur_ps.velocity ) <= 10 );
+			blockerIsAttacking = ( ocs->bFlags & BFL_ATTACKED );
+
+			if ( blockerIsStationary && blockerIsAttacking ) {
+				if ( AICast_GetAvoid( ocs, NULL, ocs->obstructingPos, qfalse, cs->entityNum ) ) {
+					ocs->obstructingTime = level.time + 800;
+				} else {
+					ocs->obstructingTime = level.time - 1;
 					blockEnt = move.touchents[i];
 				}
-				// reject this blocker if we are following or going to them
-				else if ( cs->followEntity != ocs->entityNum ) {
-					// if they are moving away from us already, let them go
-					if ( VectorLength( ocs->bs->cur_ps.velocity ) > 10 ) {
-						vec3_t v1, v2;
 
-						VectorSubtract( ocs->bs->origin, cs->bs->origin, v2 );
-						VectorNormalize( v2 );
-						VectorNormalize2( ocs->bs->cur_ps.velocity, v1 );
-
-						if ( DotProduct( v1, v2 ) > 0.0 ) {
-							continue;
-						}
-					}
-					//
-					// if they recently were asked to avoid us, then they're probably not listening
-					if ( ocs->obstructingTime > level.time - 500 ) {
-						blockEnt = move.touchents[i];
-					}
-					//
-					// if they are not avoiding, ignore
-					if ( !( ocs->aiFlags & AIFL_NOAVOID ) ) {
-						continue;
-					}
-					//
-					// they should avoid us
-					if ( ocs->leaderNum >= 0 ) {
-						ogoal.entitynum = ocs->leaderNum;
-						VectorCopy( g_entities[ocs->leaderNum].r.currentOrigin, ogoal.origin );
-						if ( AICast_GetAvoid( ocs, &ogoal, ocs->obstructingPos, qfalse, cs->entityNum ) ) {
-							// give them time to move somewhere else
-							ocs->obstructingTime = level.time + 1000;
-						} else {
-							// make sure they don't call GetAvoid() for another few frames to let others avoid also
-							ocs->obstructingTime = level.time - 1;
-							blockEnt = move.touchents[i];
-						}
-					} else {
-						if ( AICast_GetAvoid( ocs, NULL, ocs->obstructingPos, qfalse, cs->entityNum ) ) {
-							// give them time to move somewhere else
-							ocs->obstructingTime = level.time + 1000;
-						} else {
-							// make sure they don't call GetAvoid() for another few frames to let others avoid also
-							ocs->obstructingTime = level.time - 1;
-							blockEnt = move.touchents[i];
-						}
-					}
-				}
-			}
-
-		} else {
-			return;
-		}
-
-		if ( blockEnt < 0 ) {
-			// nothing found to be worth avoding
-			cs->blockedAvoidTime = level.time - 1;
-			return;
-		}
-
-		// something is blocking our path
-		if ( g_entities[blockEnt].aiName && g_entities[blockEnt].client && cs->bs
-			 && VectorDistance( cs->bs->origin, g_entities[blockEnt].r.currentOrigin ) < 128 ) {
-			int oldId = cs->castScriptStatus.scriptId;
-			AICast_ScriptEvent( cs, "blocked", g_entities[blockEnt].aiName );
-			if ( ( oldId != cs->castScriptStatus.scriptId ) || ( cs->aiFlags & AIFL_DENYACTION ) ) {
-				// the script has changed, so assume the scripting is handling the avoidance
-				return;
+				continue;
 			}
 		}
 
-		// avoid geometry and props, but assume clients will get out the way
-		if ( /*blockEnt > MAX_CLIENTS &&*/ AICast_GetAvoid( cs, goal, pos, qfalse, blockEnt ) ) {
-			VectorSubtract( pos, cs->bs->cur_ps.origin, dir );
-			VectorNormalize( dir );
-			cs->blockedAvoidYaw = vectoyaw( dir );
-			// Check against coop clients.
-			if ( blockEnt >= MAX_COOP_CLIENTS ) {
-				cs->blockedAvoidTime = level.time + 100 + rand() % 200;
+		// Original logic only asks AI marked with AIFL_NOAVOID to move
+		if ( !( ocs->aiFlags & AIFL_NOAVOID ) ) {
+			continue;
+		}
+
+		// Ask the blocking AI to step away from us
+		if ( ocs->leaderNum >= 0 ) {
+			ogoal.entitynum = ocs->leaderNum;
+			VectorCopy( g_entities[ocs->leaderNum].r.currentOrigin, ogoal.origin );
+
+			if ( AICast_GetAvoid( ocs, &ogoal, ocs->obstructingPos, qfalse, cs->entityNum ) ) {
+				ocs->obstructingTime = level.time + 1000;
 			} else {
-				cs->blockedAvoidTime = level.time + 300 + rand() % 400;
+				ocs->obstructingTime = level.time - 1;
+				blockEnt = move.touchents[i];
 			}
 		} else {
-			cs->blockedAvoidTime = level.time - 1;    // don't look again for another few frames
+			if ( AICast_GetAvoid( ocs, NULL, ocs->obstructingPos, qfalse, cs->entityNum ) ) {
+				ocs->obstructingTime = level.time + 1000;
+			} else {
+				ocs->obstructingTime = level.time - 1;
+				blockEnt = move.touchents[i];
+			}
+		}
+	}
+
+	if ( blockEnt < 0 ) {
+		// Nothing found worth avoiding
+		cs->blockedAvoidTime = level.time - 1;
+		return;
+	}
+
+	// Give scripts first chance to handle nearby named AI blockers
+	if ( g_entities[blockEnt].aiName &&
+		 g_entities[blockEnt].client &&
+		 cs->bs &&
+		 VectorDistance( cs->bs->origin, g_entities[blockEnt].r.currentOrigin ) < 128 ) {
+		int oldId;
+
+		oldId = cs->castScriptStatus.scriptId;
+		AICast_ScriptEvent( cs, "blocked", g_entities[blockEnt].aiName );
+
+		if ( oldId != cs->castScriptStatus.scriptId || ( cs->aiFlags & AIFL_DENYACTION ) ) {
 			return;
 		}
 	}
+
+	// Avoid geometry and props, while assuming clients may move out of the way
+	if ( AICast_GetAvoid( cs, goal, pos, qfalse, blockEnt ) ) {
+		VectorSubtract( pos, cs->bs->cur_ps.origin, dir );
+		VectorNormalize( dir );
+
+		cs->blockedAvoidYaw = vectoyaw( dir );
+
+		// Check against coop clients.
+		if ( blockEnt >= MAX_COOP_CLIENTS ) {
+			cs->blockedAvoidTime = level.time + 100 + rand() % 200;
+		} else {
+			cs->blockedAvoidTime = level.time + 300 + rand() % 400;
+		}
+	} else {
+		cs->blockedAvoidTime = level.time - 1;
+		return;
+	}
+
+move_around_blocker:
 
 	VectorClear( pos );
 	pos[YAW] = cs->blockedAvoidYaw;
@@ -1569,13 +1613,13 @@ void AICast_Blocked( cast_state_t *cs, bot_moveresult_t *moveresult, int activat
 		trap_EA_Jump( cs->bs->entitynum );
 	}
 
-	trap_EA_Move( cs->bs->entitynum, dir, 200 ); //400);
+	trap_EA_Move( cs->bs->entitynum, dir, 200 );
 
 	vectoangles( dir, cs->ideal_viewangles );
 	cs->ideal_viewangles[2] *= 0.5;
 
 	// This mildly improves AI from getting trapped in one another. Could be better.
-	if ( cs->blockedAvoidTime > 5000 ) {
+	if ( cs->blockedAvoidTime > 5000 && blockEnt >= 0 ) {
 		if ( g_entities[blockEnt].aiCharacter != AICHAR_NONE ) {
 			trap_EA_MoveBack( blockEnt );
 		}

@@ -864,6 +864,13 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		}
 	}
 
+	if ( ent->targetname && *ent->targetname ) {
+		ent->targetnamehash = BG_StringHashValue( ent->targetname );
+	} else {
+		ent->targetnamehash = -1;
+	}
+
+
 	// move editor origin to pos
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );
 	VectorCopy( ent->s.origin, ent->r.currentOrigin );

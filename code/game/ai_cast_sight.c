@@ -777,3 +777,151 @@ escape:
 	}
 	lastdest = dest;
 }
+
+
+
+/*
+==============
+AICast_SurvivalUpdateAwareness
+
+Updates Survival-only hunting knowledge.
+
+This does not mean the AI can see the player.
+This must not call AICast_UpdateVisibility().
+This must not call AICast_Sight().
+This must not set real_visible_timestamp.
+==============
+*/
+void AICast_SurvivalUpdateAwareness( cast_state_t *cs ) {
+	gentity_t *self;
+	gentity_t *player;
+	gentity_t *bestPlayer;
+	vec3_t dir;
+	float dist;
+	float bestDist;
+	float error;
+	int i;
+
+	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
+		return;
+	}
+
+	if ( !cs || cs->entityNum < 0 ) {
+		return;
+	}
+
+	self = &g_entities[cs->entityNum];
+
+	if ( !self->inuse || self->health <= 0 ) {
+		return;
+	}
+
+	if ( !( self->r.svFlags & SVF_CASTAI ) ) {
+		return;
+	}
+
+	if ( cs->castScriptStatus.scriptNoSightTime >= level.time ) {
+		return;
+	}
+
+	// Do not update every frame. This prevents function/state spam.
+	if ( cs->survivalAwarenessNextUpdate > level.time ) {
+		return;
+	}
+
+	cs->survivalAwarenessNextUpdate = level.time + 500 + rand() % 500;
+
+	bestPlayer = NULL;
+	bestDist = 999999.0f;
+
+	for ( i = 0; i < MAX_COOP_CLIENTS; i++ ) {
+		player = &g_entities[i];
+
+		if ( !player->inuse || !player->client || player->health <= 0 ) {
+			continue;
+		}
+
+		if ( player->flags & FL_NOTARGET ) {
+			continue;
+		}
+
+		if ( AICast_SameTeam( cs, player->s.number ) ) {
+			continue;
+		}
+
+		dist = VectorDistance( self->r.currentOrigin, player->r.currentOrigin );
+
+		// Optional limit. Keep very far AI from receiving perfect global knowledge.
+		// Tune this or expose it as a cvar/surv param.
+		if ( dist > 4096.0f ) {
+			continue;
+		}
+
+		if ( dist < bestDist ) {
+			bestDist = dist;
+			bestPlayer = player;
+		}
+	}
+
+	if ( !bestPlayer ) {
+		cs->survivalAwarenessEnt = -1;
+		return;
+	}
+
+	cs->survivalAwarenessEnt = bestPlayer->s.number;
+	cs->survivalAwarenessTime = level.time;
+	cs->survivalAwarenessExpireTime = level.time + 3000;
+
+	// Give AI an approximate player location, not perfect wallhack precision.
+	VectorCopy( bestPlayer->r.currentOrigin, cs->survivalAwarenessPos );
+
+	// Add positional error when far away.
+	// Close AI get better knowledge, distant AI get rougher knowledge.
+	error = bestDist * 0.10f;
+
+	if ( error < 64.0f ) {
+		error = 64.0f;
+	}
+
+	if ( error > 384.0f ) {
+		error = 384.0f;
+	}
+
+	cs->survivalAwarenessPos[0] += crandom() * error;
+	cs->survivalAwarenessPos[1] += crandom() * error;
+
+	// Keep Z sane.
+	cs->survivalAwarenessPos[2] = bestPlayer->r.currentOrigin[2];
+
+	// Optional: if the AI is completely idle, make it alert but not combat.
+	if ( cs->aiState < AISTATE_ALERT ) {
+		AICast_StateChange( cs, AISTATE_ALERT );
+	}
+}
+
+
+/*
+==============
+AICast_SurvivalHasAwarenessTarget
+==============
+*/
+qboolean AICast_SurvivalHasAwarenessTarget( cast_state_t *cs, vec3_t out ) {
+	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
+		return qfalse;
+	}
+
+	if ( !cs ) {
+		return qfalse;
+	}
+
+	if ( cs->survivalAwarenessEnt < 0 ) {
+		return qfalse;
+	}
+
+	if ( cs->survivalAwarenessExpireTime < level.time ) {
+		return qfalse;
+	}
+
+	VectorCopy( cs->survivalAwarenessPos, out );
+	return qtrue;
+}

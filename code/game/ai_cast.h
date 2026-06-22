@@ -560,6 +560,25 @@ typedef struct cast_state_s
 	qboolean norespawn;
 	int respawnsleft;
 	qboolean registeredSurvivalKill;
+
+
+	// Survival-only hunting knowledge.
+	// This is NOT visual contact.
+	int survivalAwarenessEnt;
+	int survivalAwarenessTime;
+	int survivalAwarenessExpireTime;
+	int survivalAwarenessNextUpdate;
+	vec3_t survivalAwarenessPos;
+
+	qboolean defendActive;
+	qboolean defendReturning; 
+	vec3_t defendOrigin;
+	float defendRadius;	 
+	float defendLeash;	
+	int defendExpireTime; 
+	int defendRepathTime;
+
+
 } cast_state_t;
 //
 #define CSFOFS( x ) ( (size_t)&( ( (cast_state_t *)0 )->x ) )
@@ -648,6 +667,12 @@ char    *AIFunc_InspectBulletImpactStart( cast_state_t *cs );
 char    *AIFunc_InspectAudibleEventStart( cast_state_t *cs, int entnum );
 char    *AIFunc_BattleAmbushStart( cast_state_t *cs );
 char    *AIFunc_BattleHuntStart( cast_state_t *cs );
+
+//   Survival
+char *AIFunc_SurvivalHunt( cast_state_t *cs );
+char *AIFunc_SurvivalHuntStart( cast_state_t *cs );
+qboolean AICast_SurvivalResolveCrowdBlock( cast_state_t *cs );
+
 //
 // ai_cast_func_attack.c
 char    *AIFunc_ZombieFlameAttackStart( cast_state_t *cs );
@@ -701,6 +726,7 @@ qboolean AICast_QueryEnemy( cast_state_t *cs, int enemynum );
 void AICast_AudibleEvent( int srcnum, vec3_t pos, float range );
 qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum );
 float AICast_WeaponRange( cast_state_t *cs, int weaponnum );
+qboolean AICast_Defend_Update( cast_state_t *cs );
 
 //
 // ai_cast_events.c
@@ -759,3 +785,6 @@ typedef struct
 } cast_achievementDef_t;
 
 qboolean AICast_Loadouts_ApplyToEnt( cast_state_t *cs, gentity_t *target, const char *loadoutName );
+
+void AICast_SurvivalUpdateAwareness( cast_state_t *cs );
+qboolean AICast_SurvivalHasAwarenessTarget( cast_state_t *cs, vec3_t out ) ;

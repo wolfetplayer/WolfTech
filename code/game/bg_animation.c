@@ -288,7 +288,7 @@ static animConditionTable_t animConditionsTable[NUM_ANIM_CONDITIONS] =
 return a hash value for the given string
 ================
 */
-static long BG_StringHashValue( const char *fname ) {
+long BG_StringHashValue( const char *fname ) {
 	int i;
 	long hash;
 	char letter;
@@ -301,6 +301,24 @@ static long BG_StringHashValue( const char *fname ) {
 		i++;
 	}
 	if ( hash == -1 ) {
+		hash = 0;   // never return -1
+	}
+	return hash;
+}
+
+
+long BG_StringHashValue_Lwr(const char *fname)
+{
+	int  i    = 0;
+	long hash = 0;
+
+	while (fname[i] != '\0')
+	{
+		hash += (long)(fname[i]) * (i + 119);
+		i++;
+	}
+	if (hash == -1)
+	{
 		hash = 0;   // never return -1
 	}
 	return hash;

@@ -1866,6 +1866,9 @@ float BG_AnimGetFootstepGap( playerState_t *ps, float xyspeed );
 extern animStringItem_t animStateStr[];
 extern animStringItem_t animBodyPartsStr[];
 
+long BG_StringHashValue(const char *fname);
+long BG_StringHashValue_Lwr(const char *fname);
+
 int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus);
 int BG_GetMaxClip(const playerState_t *ps, int weapon);
 void BG_SetBehaviorForSurvival(AICharacters_t characterNum);

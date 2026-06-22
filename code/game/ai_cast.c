@@ -422,6 +422,15 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	//VectorCopy( maxs, client->ps.maxs );
 	AIChar_SetBBox( newent, cs, qfalse );
 	client->ps.friction = cs->attributes[RUNNING_SPEED] / 300.0;
+
+	if (g_gametype.integer == GT_COOP_SURVIVAL)
+	{
+		cs->survivalAwarenessEnt = -1;
+		cs->survivalAwarenessTime = 0;
+		cs->survivalAwarenessExpireTime = 0;
+		cs->survivalAwarenessNextUpdate = 0;
+		VectorClear(cs->survivalAwarenessPos);
+	}
 	//
 	// clear weapons/ammo
 	client->ps.weapon = 0;

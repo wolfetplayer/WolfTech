@@ -1427,7 +1427,22 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 
 				// Activate respawn scripts for AI
 				AICast_ScriptEvent(cs, "respawn", "");
-                
+
+				// Clear leftover vanilla/script movement state after respawn script.
+				cs->castScriptStatus.scriptGotoId = -1;
+				cs->castScriptStatus.scriptGotoEnt = -1;
+				cs->followEntity = -1;
+				cs->enemyNum = -1;
+				cs->lastEnemy = -1;
+				cs->combatGoalTime = 0;
+				cs->battleHuntPauseTime = 0;
+				cs->battleHuntViewTime = 0;
+				cs->takeCoverTime = 0;
+				cs->obstructingTime = 0;
+				cs->grenadeFlushFiring = qfalse;
+				cs->grenadeFlushEndTime = -1;
+				cs->lockViewAnglesTime = -1;
+
 				// Turn off Headshot flag and reattach hat
 				ent->client->ps.eFlags &= ~EF_HEADSHOT;
 				G_AddEvent( ent, EV_REATTACH_HAT, 0 );
@@ -1444,15 +1459,23 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				// play the revive animation
 				cs->revivingTime = level.time + BG_AnimScriptEvent( &ent->client->ps, ANIM_ET_REVIVE, qfalse, qtrue );
 
-				AICast_StateChange( cs, AISTATE_RELAXED );
-				cs->enemyNum = -1;
+				if (ent->aiTeam == 1)
+				{
+					AICast_StateChange(cs, AISTATE_RELAXED);
+					AIFunc_IdleStart(cs);
 
-				if (ent->aiTeam == 1) { 
 					svParams.spawnedThisWaveFriendly++;
-				} else { 
+				}
+				else
+				{
+					VectorCopy(player->r.currentOrigin, cs->survivalAwarenessPos);
+					cs->survivalAwarenessEnt = player->s.number;
+					cs->survivalAwarenessExpireTime = level.time + 30000;
+
+					AIFunc_SurvivalHuntStart(cs);
+
 					svParams.spawnedThisWave++;
 				}
-
 			} else {
 				// can't spawn yet, so set bbox back, and wait
 				ent->r.maxs[2] = oldmaxZ;

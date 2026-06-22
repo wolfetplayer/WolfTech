@@ -145,6 +145,9 @@ qboolean AICast_ScriptAction_CatchFire( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_AchievementGeneric( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params );
 
+qboolean AICast_ScriptAction_Defend( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_DefendStop( cast_state_t *cs, char *params ) ;
+
 // these are the actions that each event can call
 cast_script_stack_action_t scriptActions[] =
 {
@@ -245,6 +248,9 @@ cast_script_stack_action_t scriptActions[] =
 	{"givescore", AICast_ScriptAction_GiveScore},
 
 	{"applyloadout", AICast_ScriptAction_ApplyLoadout},
+
+	{"defend", AICast_ScriptAction_Defend},
+	{"defend_stop", AICast_ScriptAction_DefendStop},
 
 	{NULL,              0}
 };
