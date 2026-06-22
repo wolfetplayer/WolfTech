@@ -3096,11 +3096,17 @@ static void PM_Weapon( void ) {
 
 	// fire weapon
 
-	// add weapon heat
-	if ( ammoTable[pm->ps->weapon].maxHeat ) {
-		pm->ps->weapHeat[pm->ps->weapon] += ammoTable[pm->ps->weapon].nextShotTime;
-	}
+	// Add weapon heat (unless player has Rifling perk)
+	if (!pm->ps->perks[PERK_RIFLING])
+	{
+		const ammotable_t *wt = &ammoTable[pm->ps->weapon];
 
+		if (wt->maxHeat)
+		{
+			int heatToAdd = ammoTable[pm->ps->weapon].nextShotTime;
+			pm->ps->weapHeat[pm->ps->weapon] += heatToAdd;
+		}
+	}
 	// first person weapon animations
 
 	// if this was the last round in the clip, play the 'lastshot' animation
@@ -3177,6 +3183,10 @@ static void PM_Weapon( void ) {
 			break;
 		}
 		break;
+	}
+
+	if ( pm->ps->perks[PERK_RIFLING] && pm->ps->weapon != WP_KNIFE ) {
+		addTime /= 1.25;
 	}
 
 	if (GetWeaponTableData(pm->ps->weapon)->weaponClass &
