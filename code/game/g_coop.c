@@ -399,11 +399,16 @@ void Coop_DeleteStats( int clientnum ) {
 void Coop_AddStats( gentity_t *targ, gentity_t *attacker, int dmg_ref, int mod ) {
 	int dmg;
 
+	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		return;
+	}
+
 
 	if ( !targ->client && attacker && attacker->client ) {
 		attacker->client->sess.prop_damage += dmg_ref;
 		return;
 	}
+
 
 	// Keep track of only active player-to-player interactions in a real game
 	if ( !targ || !targ->client ||
