@@ -1285,9 +1285,43 @@ int AICast_WantsToChase( cast_state_t *cs ) {
 	return qfalse;
 }
 
+
+qboolean AICast_ShouldHoldRiflePosition( cast_state_t *cs ) {
+	float dist;
+
+	if (cs->weaponNum != WP_MAUSER && cs->weaponNum != WP_SNIPERRIFLE)
+	{
+		return qfalse;
+	}
+
+	if ( cs->enemyNum < 0 ) {
+		return qfalse;
+	}
+
+	if ( cs->vislist[cs->enemyNum].visible_timestamp < level.time - 500 ) {
+		return qfalse;
+	}
+
+	dist = Distance( cs->bs->origin, cs->vislist[cs->enemyNum].real_visible_pos );
+
+	// Only allow retreat when the player is basically in melee range.
+	if ( dist < 48 ) {
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
 /*
 ==================
 AICast_WantsToTakeCover
+
+  Checks whether this AI wants to seek cover.
+
+  AI may want cover if it has no weapon, lacks ammo, is not aggressive
+  enough to keep fighting, or notices that the enemy is aiming directly at it.
+
+  The attacking flag makes AI slightly more willing to stay in the fight.
 ==================
 */
 int AICast_WantsToTakeCover( cast_state_t *cs, qboolean attacking ) {
@@ -1297,45 +1331,59 @@ int AICast_WantsToTakeCover( cast_state_t *cs, qboolean attacking ) {
 		if ( !cs->weaponNum ) {
 			return qtrue;
 		}
+
 		if ( !AICast_GotEnoughAmmoForWeapon( cs, cs->weaponNum ) ) {
 			return qtrue;
 		}
 	}
-	if ( cs->attributes[AGGRESSION] == 1.0 ) {
+
+	if ( cs->attributes[AGGRESSION] == 1.0f ) {
 		return qfalse;
 	}
-	// if currently attacking, we should stick around if not getting hurt
-	if ( attacking ) {
-		aggrScale = 1.2;
-	} else { aggrScale = 0.8 /*+ 0.4 * random()*/;}
-	//
-	// if currently following someone, we should be more aggressive
-	if ( cs->leaderNum >= 0 ) {
-		aggrScale *= 3;
+
+	if (attacking && AICast_ShouldHoldRiflePosition(cs))
+	{
+		return qfalse;
 	}
-	//
-	// Dodge enemy aim?
-	if ( cs->attributes[AGGRESSION] < 1.0 && attacking && ( cs->enemyNum >= 0 ) && ( g_entities[cs->enemyNum].client->ps.weapon ) && ( cs->attributes[TACTICAL] > 0.5 ) && ( cs->aiFlags & AIFL_ROLL_ANIM ) && ( VectorLength( cs->bs->cur_ps.velocity ) < 1 ) ) {
-		vec3_t aim, enemyVec;
-		// are they aiming at us?
+
+	// If currently attacking, stay around a bit longer unless pressure is high.
+	if ( attacking ) {
+		aggrScale = 1.2f;
+	} else {
+		aggrScale = 0.8f;
+	}
+
+	// Followers should be less likely to break away and hide.
+	if ( cs->leaderNum >= 0 ) {
+		aggrScale *= 3.0f;
+	}
+
+	// Tactical AI may dodge/take cover if the enemy is aiming right at them.
+	if ( cs->attributes[AGGRESSION] < 1.0f &&
+		 attacking &&
+		 cs->enemyNum >= 0 &&
+		 g_entities[cs->enemyNum].client->ps.weapon &&
+		 cs->attributes[TACTICAL] > 0.5f &&
+		 ( cs->aiFlags & AIFL_ROLL_ANIM ) &&
+		 VectorLength( cs->bs->cur_ps.velocity ) < 1.0f ) {
+		vec3_t aim;
+		vec3_t enemyVec;
+
 		AngleVectors( g_entities[cs->enemyNum].client->ps.viewangles, aim, NULL, NULL );
 		VectorSubtract( cs->bs->origin, g_entities[cs->enemyNum].r.currentOrigin, enemyVec );
 		VectorNormalize( enemyVec );
-		// if they are looking at us, we should avoid them
-		if ( DotProduct( aim, enemyVec ) > 0.97 ) {
-			//G_Printf("%s: I'm in danger, I should probably avoid\n", g_entities[cs->entityNum].aiName);
-			aggrScale *= 0.6;
+
+		// If the enemy is looking almost directly at us, reduce confidence.
+		if ( DotProduct( aim, enemyVec ) > 0.97f ) {
+			aggrScale *= 0.6f;
 		}
 	}
-	//
-	// FIXME: instead of a constant, call a "attack danger"
-	// function, so we only attack if our aggression is greater than
-	// the danger
-	if ( AICast_Aggression( cs ) * aggrScale < 0.4 ) {
-		//G_Printf("%s: run for your life!\n", g_entities[cs->entityNum].aiName);
+
+	// FIXME: replace this constant with an attack-danger evaluation.
+	if ( AICast_Aggression( cs ) * aggrScale < 0.4f ) {
 		return qtrue;
 	}
-	//
+
 	return qfalse;
 }
 
@@ -1926,17 +1974,40 @@ float AICast_GetAccuracy( int entnum ) {
 	return ( acc );
 }
 
+static qboolean AICast_WeaponPrefersHoldPosition( int weapon ) {
+	switch ( weapon ) {
+	case WP_MAUSER:
+	case WP_SNIPERRIFLE:
+		return qtrue;
+	default:
+		return qfalse;
+	}
+}
+
+
 /*
 ==============
 AICast_WantToRetreat
+
+  Checks whether this AI should retreat from combat.
+
+  AI may retreat if it has no weapon, lacks ammo, is vulnerable while
+  attacking/reloading, or wants to take cover.
+
+  Highly aggressive non-tactical AI, large special characters, monsters,
+  and AI following a leader usually keep fighting instead.
 ==============
 */
 qboolean AICast_WantToRetreat( cast_state_t *cs ) {
+	gentity_t *ent;
 
-	if ( g_entities[cs->entityNum].aiTeam != AITEAM_MONSTER ) {
+	ent = &g_entities[cs->entityNum];
+
+	if ( ent->aiTeam != AITEAM_MONSTER ) {
 		if ( !cs->weaponNum ) {
 			return qtrue;
 		}
+
 		if ( !AICast_GotEnoughAmmoForWeapon( cs, cs->weaponNum ) ) {
 			return qtrue;
 		}
@@ -1946,23 +2017,37 @@ qboolean AICast_WantToRetreat( cast_state_t *cs ) {
 		return qfalse;
 	}
 
-	// RF, (Last Minute Hack) big dudes should never retreat
+	// Big/special characters should never retreat.
 	if ( cs->aasWorldIndex != 0 ) {
 		return qfalse;
 	}
 
-	if  ( cs->leaderNum < 0 ) {
-		if  (   ( cs->attributes[TACTICAL] > 0.11 + random() * 0.5 ) &&
-				(   ( cs->bs->cur_ps.weaponTime > 500 ) ||
-					(   ( cs->takeCoverTime < level.time - 100 ) &&
-					( AICast_WantsToTakeCover( cs, qtrue ) ) ) ) ) {
-			return qtrue;
-		}
+	if ( cs->leaderNum >= 0 ) {
+		return qfalse;
 	}
-	//
+
+	if ( cs->attributes[TACTICAL] <= 0.11 + random() * 0.5 ) {
+		return qfalse;
+	}
+
+	if (cs->bs->cur_ps.weaponTime > 500)
+	{
+		if (AICast_WeaponPrefersHoldPosition(cs->weaponNum) &&
+			cs->enemyNum >= 0 &&
+			cs->vislist[cs->enemyNum].visible_timestamp > level.time - 500)
+		{
+			return qfalse;
+		}
+
+		return qtrue;
+	}
+
+	if ( cs->takeCoverTime < level.time - 100 && AICast_WantsToTakeCover( cs, qtrue ) ) {
+		return qtrue;
+	}
+
 	return qfalse;
 }
-
 /*
 ==============
 AICast_SafeMissileFire
