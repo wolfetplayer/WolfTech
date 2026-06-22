@@ -179,6 +179,10 @@ vmCvar_t cg_fov;
 vmCvar_t cg_fixedAspect;
 vmCvar_t cg_fixedAspectFOV;
 vmCvar_t cg_oldWolfUI;
+vmCvar_t cg_hudWeapIcon;
+vmCvar_t cg_hudStamina;
+vmCvar_t cg_hudAmmoClip;
+vmCvar_t cg_hudStatus;
 vmCvar_t cg_drawStatusHead;
 vmCvar_t cg_zoomFov;
 vmCvar_t cg_zoomStepBinoc;
@@ -242,6 +246,12 @@ vmCvar_t cg_gameSkill;
 // done
 
 vmCvar_t cg_reloading;      //----(SA)	added
+
+// JPW NERVE
+vmCvar_t cg_medicChargeTime;
+vmCvar_t cg_engineerChargeTime;
+vmCvar_t cg_LTChargeTime;
+vmCvar_t cg_soldierChargeTime;
 
 vmCvar_t cg_hunkUsed;
 vmCvar_t cg_soundAdjust;
@@ -325,6 +335,10 @@ cvarTable_t cvarTable[] = {
 	{&cg_fixedAspect, "cg_fixedAspect", "0", CVAR_ARCHIVE | CVAR_LATCH}, // Essentially the same as setting DF_FIXED_FOV for widescreen aspects
 	{&cg_fixedAspectFOV, "cg_fixedAspectFOV", "1", CVAR_ARCHIVE},
 	{&cg_oldWolfUI, "cg_oldWolfUI", "0", CVAR_ARCHIVE},
+	{&cg_hudWeapIcon, "cg_hudWeapIcon", "1", CVAR_ARCHIVE},
+	{&cg_hudStamina, "cg_hudStamina", "1", CVAR_ARCHIVE},
+	{&cg_hudAmmoClip, "cg_hudAmmoClip", "1", CVAR_ARCHIVE},
+	{&cg_hudStatus, "cg_hudStatus", "4", CVAR_ARCHIVE},
 	{&cg_drawStatusHead, "cg_drawStatusHead", "0", CVAR_ARCHIVE},
 	{&cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE},
 	{&cg_letterbox, "cg_letterbox", "0", CVAR_TEMP}, //----(SA)	added
@@ -470,6 +484,12 @@ cvarTable_t cvarTable[] = {
 	{&cg_gameSkill, "g_gameskill", "2", 0}, // communicated by systeminfo	// (SA) new default '2' (was '1')
 
 	{&cg_reloading, "g_reloading", "0", 0}, //----(SA)	added
+
+		// JPW NERVE
+	{&cg_medicChargeTime, "g_medicChargeTime", "30000", 0},		  // communicated by systeminfo
+	{&cg_LTChargeTime, "g_LTChargeTime", "30000", 0},			  // communicated by systeminfo
+	{&cg_engineerChargeTime, "g_engineerChargeTime", "30000", 0}, // communicated by systeminfo
+	{&cg_soldierChargeTime, "g_soldierChargeTime", "30000", 0},	  // communicated by systeminfo
 
 	{&cg_notebook, "cl_notebook", "0", CVAR_ROM},
 	{&cg_notebookpages, "cg_notebookpages", "0", CVAR_ROM},

@@ -61,6 +61,38 @@ static void CG_DrawPlayerArmorValue( rectDef_t *rect, int font, float scale, vec
 	}
 }
 
+
+static void CG_DrawPlayerArmorValueBar( rectDef_t *rect, vec4_t color, int align ) {
+	float frac; 
+	int flags = 0;
+
+	playerState_t   *ps;
+
+	ps = &cg.snap->ps;
+
+	//color[3] = 0.5f;
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+	}
+
+	if ( align != HUD_HORIZONTAL ) {
+		flags |= 4;   // BAR_VERT
+		flags |= 1;   // BAR_LEFT (left, when vertical means grow 'up')
+	}
+	frac = ps->stats[STAT_ARMOR] / (float) 100;
+
+	if ( frac > 1.0 ) 
+	{
+	frac = 1.0;
+	}
+
+	CG_FilledBar( rect->x, rect->y, rect->w, rect->h, color, NULL, NULL, frac, flags );
+
+	trap_R_SetColor( NULL );
+// jpw
+}
+
 /*
 ==============
 weapIconDrawSize
@@ -742,6 +774,36 @@ static void CG_DrawPlayerHealth( rectDef_t *rect, int font, float scale, vec4_t 
 	}
 }
 
+static void CG_DrawPlayerHealthBar( rectDef_t *rect, vec4_t color, int align ) {
+	float frac; 
+	int flags = 0;
+
+    frac = cg.snap->ps.stats[STAT_HEALTH] / (float) cg.snap->ps.stats[STAT_MAX_HEALTH];
+
+	if ( frac > 1.0 ) 
+	{
+	frac = 1.0;
+	}
+
+	CG_ColorForHealth( color );
+	//color[3] = 0.5f;
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+	}
+
+	if ( align != HUD_HORIZONTAL ) {
+		flags |= 4;   // BAR_VERT
+		flags |= 1;   // BAR_LEFT (left, when vertical means grow 'up')
+	}
+	CG_FilledBar( rect->x,  rect->y, rect->w, rect->h, color, NULL, NULL, frac, flags );
+
+	
+
+	trap_R_SetColor( NULL );
+// jpw
+}
+
 
 static void CG_DrawRedScore( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
 	int value;
@@ -1390,7 +1452,62 @@ static void CG_DrawCompass( void ) {
 }
 // -NERVE - SMF
 
+static void CG_DrawWeapRecharge( rectDef_t *rect, vec4_t color, int align ) {
+	float barFrac;
+	float chargeTime;
+	int flags = 0;
+	//qboolean fade = qfalse;
+	vec4_t bgcolor = {1.0f, 1.0f, 1.0f, 0.25f};
 
+	if ( align != HUD_HORIZONTAL) {
+		flags |= 4;   // BAR_VERT
+		flags |= 1;   // BAR_LEFT (left, when vertical means grow 'up')
+	}
+	flags |= 16;
+
+		
+		// Determine charge time based on class
+		switch (cg.snap->ps.stats[STAT_PLAYER_CLASS])
+		{
+		case PC_MEDIC:
+			chargeTime = cg_medicChargeTime.value;
+			break;
+		case PC_ENGINEER:
+			chargeTime = cg_engineerChargeTime.value;
+			break;
+		case PC_SOLDIER:
+			chargeTime = cg_soldierChargeTime.value;
+			break;
+		case PC_LT:
+			chargeTime = cg_LTChargeTime.value;
+			break;
+		default:
+		    chargeTime = 30000;
+			break;
+		}
+
+		barFrac = (float)( cg.time - cg.snap->ps.classWeaponTime ) / chargeTime;
+
+		if ( barFrac > 1.0 ) {
+			barFrac = 1.0;
+		}
+
+		color[0] = 1.0f;
+		color[1] = color[2] = barFrac;
+		color[3] = 0.25 + barFrac * 0.5;
+
+		/*if ( fade ) {
+			bgcolor[3] *= 0.4f;
+			color[3] *= 0.4;
+		}*/
+
+		CG_FilledBar( rect->x, rect->y + 6, rect->w, rect->h * 0.84f, color, NULL, bgcolor, barFrac, flags );
+
+		color[1] = color[2] = 1.0f;
+		color[3] = cg_hudAlpha.value;
+		trap_R_SetColor( color );
+
+}
 
 /*
 ==============
@@ -1422,6 +1539,9 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_ARMOR_VALUE:
 		CG_DrawPlayerArmorValue( &rect, font, scale, color, shader, textStyle );
+		break;
+	case CG_PLAYER_ARMOR_VALUE_BAR:
+		CG_DrawPlayerArmorValueBar( &rect, color, align );
 		break;
 	case CG_PLAYER_AMMO_ICON:
 		CG_DrawPlayerAmmoIcon( &rect, ownerDrawFlags & CG_SHOW_2DONLY );
@@ -1481,6 +1601,12 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_HEALTH:
 		CG_DrawPlayerHealth( &rect, font, scale, color, shader, textStyle );
+		break;
+	case CG_PLAYER_HEALTH_BAR:
+		CG_DrawPlayerHealthBar( &rect, color, align );
+		break;
+	case CG_PLAYER_WEAPON_RECHARGE:
+		CG_DrawWeapRecharge( &rect, color, align );
 		break;
 	case CG_RED_SCORE:
 		CG_DrawRedScore( &rect, font, scale, color, shader, textStyle );
