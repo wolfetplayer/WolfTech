@@ -256,6 +256,9 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_PLAYER_PERKS             86
 #define CG_PLAYER_KILLS             87
 #define CG_PLAYER_WAVES             88
+#define CG_PLAYER_ARMOR_VALUE_BAR   89
+#define CG_PLAYER_HEALTH_BAR        90
+#define CG_PLAYER_WEAPON_RECHARGE   91
 
 #define UI_OWNERDRAW_BASE           200
 #define UI_HANDICAP                 200
