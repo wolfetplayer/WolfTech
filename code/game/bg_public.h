@@ -58,13 +58,22 @@ If you have questions concerning this license or the applicable additional terms
 // RF, zombie getup
 #define TIMER_RESPAWN   ( 38 * ( 1000 / 15 ) + 100 )
 
+
+// Weapon range
+#define AI_WEAPON_RANGE_NORMAL         3000.0f
+#define AI_WEAPON_RANGE_LONG           8000.0f
+#define AI_WEAPON_RANGE_GRENADE        800.0f
+#define AI_WEAPON_RANGE_MELEE          80.0f
+#define AI_WEAPON_RANGE_FLAMETHROWER   -1.0f
+#define AI_WEAPON_RANGE_TESLA          -2.0f
+
 #define LIGHTNING_RANGE     600
 #define TESLA_RANGE         800
 #define TESLA_SUPERSOLDIER_RANGE    2000
 // JPW NERVE -- make flamethrower range variable with single/multiplayer -- actual routine is in bg_pmove.c
 float Com_GetFlamethrowerRange( void );
 #define FLAMETHROWER_RANGE Com_GetFlamethrowerRange()
-//#define	FLAMETHROWER_RANGE	850
+#define	FLAMETHROWER_BASE_RANGE	2000  // HACK! Must match Com_GetFlamethrowerRange
 // jpw
 #define ZOMBIE_FLAME_SCALE  0.3
 #define ZOMBIE_FLAME_RADIUS ( FLAMETHROWER_RANGE * ZOMBIE_FLAME_SCALE )
@@ -637,7 +646,8 @@ typedef struct ammotable_s {
 	float weapRecoilPitch[2];       
 	float weapRecoilYaw[2];
 
-	int soundRange; 
+	int soundRange;
+	float aiRange; 
 
 	int mod;              
 	qboolean rndTriggerRelease;
@@ -1872,3 +1882,4 @@ long BG_StringHashValue_Lwr(const char *fname);
 int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus);
 int BG_GetMaxClip(const playerState_t *ps, int weapon);
 void BG_SetBehaviorForSurvival(AICharacters_t characterNum);
+float BG_GetWeaponAIRange( int weaponnum ) ;

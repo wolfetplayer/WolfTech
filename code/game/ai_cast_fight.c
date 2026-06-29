@@ -475,19 +475,14 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 		switch ( cs->aiCharacter ) {
 		case AICHAR_SUPERSOLDIER:   // BOSS2
 			// if they have a panzer, give this weapon a shorter range
-			if ( !COM_BitCheck( cs->bs->cur_ps.weapons, WP_PANZERFAUST ) ) {
+			if ( cs->bs &&
+				 !COM_BitCheck( cs->bs->cur_ps.weapons, WP_PANZERFAUST ) ) {
 				return TESLA_SUPERSOLDIER_RANGE;
 			}
+			break;
 		}
-		return ( TESLA_RANGE * 0.9 ) - 50;  // allow for bounding box
-	case WP_FLAMETHROWER:
-		return ( FLAMETHROWER_RANGE * 0.5 ) - 50;   // allow for bounding box
-	case WP_PANZERFAUST:
-		return 8000;
+		break;  // normal Tesla range comes from ammotable
 
-	case WP_GRENADE_LAUNCHER:
-	case WP_GRENADE_PINEAPPLE:
-		return 800;
 	case WP_MONSTER_ATTACK1:
 		switch ( cs->aiCharacter ) {
 		case AICHAR_HEINRICH:
@@ -496,61 +491,65 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 			} else {
 				return 120;     // come in real close
 			}
+
 		case AICHAR_HELGA:  // helga BOSS1 melee
 			return 80;
+
 		case AICHAR_WARZOMBIE:
 			return 80;      // make it larger so we can start swinging early, and move in while swinging
+
 		case AICHAR_LOPER:
-		 case AICHAR_LOPER_SPECIAL: 
-		  // close attack, head-butt, fist
+		case AICHAR_LOPER_SPECIAL:
+			// close attack, head-butt, fist
 			return 60;
+
 		case AICHAR_BLACKGUARD:
 			return BLACKGUARD_MELEE_RANGE;
+
 		case AICHAR_ZOMBIE: // zombie flaming attack
 			return ZOMBIE_FLAME_RADIUS - 50;      // get well within range before starting
 		}
 		break;
+
 	case WP_MONSTER_ATTACK2:
 		switch ( cs->aiCharacter ) {
 		case AICHAR_HEINRICH:
 			return 8000;
+
 		case AICHAR_ZOMBIE: // zombie spirit attack
 		case AICHAR_ZOMBIE_SURV:
 			return 1000;
+
 		case AICHAR_HELGA:  // zombie spirit attack
 			return 1900;
-		case AICHAR_LOPER: 
+
+		case AICHAR_LOPER:
 		case AICHAR_LOPER_SPECIAL:  // loper leap attack
 			return 8000;    // use it to gain on them also
 		}
 		break;
+
 	case WP_MONSTER_ATTACK3:
 		switch ( cs->aiCharacter ) {
 		case AICHAR_HEINRICH:   // spirits
 			return 50000;
-		case AICHAR_LOPER:  // loper ground attack
-		 case AICHAR_LOPER_SPECIAL: 
+
+		case AICHAR_LOPER:      // loper ground attack
+		case AICHAR_LOPER_SPECIAL:
 			return LOPER_GROUND_RANGE;
+
 		case AICHAR_WARZOMBIE:  // warzombie defense
 			return 2000;
+
 		case AICHAR_ZOMBIE:
 		case AICHAR_ZOMBIE_SURV:
 			return 44;
 		}
 		break;
-
-		// Rafael added these changes as per Mikes request
-	case WP_MAUSER:
-	case WP_GARAND:
-	case WP_SNIPERRIFLE:
-	case WP_SNOOPERSCOPE:
-		return 8000;
-		break;
-
-
 	}
-	// default range
-	return 3000;
+
+	// Normal weapon ranges come from the ammotable.
+	return BG_GetWeaponAIRange( weaponnum );
 }
 
 /*
@@ -1288,9 +1287,15 @@ int AICast_WantsToChase( cast_state_t *cs ) {
 
 qboolean AICast_ShouldHoldRiflePosition( cast_state_t *cs ) {
 	float dist;
+	int wc;
 
-	if (cs->weaponNum != WP_MAUSER && cs->weaponNum != WP_SNIPERRIFLE)
-	{
+	if ( !cs ) {
+		return qfalse;
+	}
+
+	wc = GetWeaponTableData( cs->weaponNum )->weaponClass;
+
+	if ( !( wc & WEAPON_CLASS_RIFLE_BOLTACTION ) ) {
 		return qfalse;
 	}
 
@@ -1311,7 +1316,6 @@ qboolean AICast_ShouldHoldRiflePosition( cast_state_t *cs ) {
 
 	return qtrue;
 }
-
 /*
 ==================
 AICast_WantsToTakeCover
@@ -1975,13 +1979,13 @@ float AICast_GetAccuracy( int entnum ) {
 }
 
 static qboolean AICast_WeaponPrefersHoldPosition( int weapon ) {
-	switch ( weapon ) {
-	case WP_MAUSER:
-	case WP_SNIPERRIFLE:
+	int wc = GetWeaponTableData( weapon )->weaponClass;
+
+	if ( wc & WEAPON_CLASS_RIFLE_BOLTACTION ) {
 		return qtrue;
-	default:
-		return qfalse;
 	}
+
+	return qfalse;
 }
 
 

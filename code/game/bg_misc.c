@@ -102,6 +102,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
+		.aiRange            = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_HIDE,
@@ -129,6 +130,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 64,
+		.aiRange            = AI_WEAPON_RANGE_MELEE,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -156,6 +158,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.2f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 700,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_LUGER,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -183,6 +186,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.2f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 64,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_SILENCER,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -210,6 +214,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.2f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 700,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_COLT,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,	
@@ -237,6 +242,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.2f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 700,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_AKIMBO,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,	
@@ -264,6 +270,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_MP40,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
@@ -291,6 +298,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.2f, 0.2f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_THOMPSON,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
@@ -318,6 +326,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 64,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_STEN,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,	
@@ -345,6 +354,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_MP34,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
@@ -373,6 +383,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 1.0f, 1.0f },
         .weapRecoilYaw      = { 0.1f, 0.1f },
 		.soundRange         = 2000,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
         .mod                = MOD_MAUSER,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
@@ -400,6 +411,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.4f, 0.0f },
         .weapRecoilYaw      = { 0.2f, 0.0f },
 		.soundRange         = 2000,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
         .mod                = MOD_SNIPERRIFLE,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
@@ -427,6 +439,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 1.0f, 1.0f },
         .weapRecoilYaw      = { 0.1f, 0.1f },
 		.soundRange         = 128,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
         .mod                = MOD_GARAND,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
@@ -454,6 +467,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.7f, 0.0f },
         .weapRecoilYaw      = { 0.4f, 0.0f },
 		.soundRange         = 128,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
         .mod                = MOD_SNOOPERSCOPE,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
@@ -481,6 +495,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_FG42,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
@@ -508,6 +523,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.2f, 0.0f },
         .weapRecoilYaw      = { 0.1f, 0.0f },
 		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_FG42SCOPE,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
@@ -535,6 +551,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_GRENADE,
         .mod                = MOD_GRENADE_LAUNCHER,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -562,6 +579,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_GRENADE,
         .mod                = MOD_GRENADE_PINEAPPLE,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -588,6 +606,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 64,
+		.aiRange            = AI_WEAPON_RANGE_GRENADE,
         .mod                = MOD_DYNAMITE,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -615,6 +634,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
         .mod                = MOD_PANZERFAUST,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
@@ -642,6 +662,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.1f, 0.1f },
         .weapRecoilYaw      = { 0.1f, 0.1f },
 		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
         .mod                = MOD_VENOM,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
@@ -669,6 +690,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_FLAMETHROWER,
         .mod                = MOD_FLAMETHROWER,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
@@ -696,6 +718,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_TESLA,
         .mod                = MOD_TESLA,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,	
@@ -723,6 +746,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
+		.aiRange            = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -750,6 +774,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
+		.aiRange            = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -777,6 +802,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
+		.aiRange            = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -804,6 +830,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
+		.aiRange            = 0,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -831,6 +858,7 @@ ammotable_t ammoTable[] = {
         .weapRecoilPitch    = { 0.0f, 0.0f },
         .weapRecoilYaw      = { 0.0f, 0.0f },
 		.soundRange         = 0,
+		.aiRange            = AI_WEAPON_RANGE_MELEE,
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
@@ -4235,4 +4263,25 @@ int BG_GetMaxClip(const playerState_t *ps, int weapon) {
 	}
 
 	return wt->maxclip;
+}
+
+
+float BG_GetWeaponAIRange( int weaponnum ) {
+	float range;
+
+	range = GetWeaponTableData( weaponnum )->aiRange;
+
+	if ( range == AI_WEAPON_RANGE_FLAMETHROWER ) {
+		return ( FLAMETHROWER_BASE_RANGE * 0.5f ) - 50.0f;
+	}
+
+	if ( range == AI_WEAPON_RANGE_TESLA ) {
+		return ( TESLA_RANGE * 0.9 ) - 50;
+	}
+
+	if ( range > 0.0f ) {
+		return range;
+	}
+
+	return AI_WEAPON_RANGE_NORMAL;
 }
