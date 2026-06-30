@@ -48,6 +48,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../steam/steam.h"
 
+#include <stdlib.h> // for rand()
+
 /*
 Contains the code to handle the various commands available with an event script.
 
