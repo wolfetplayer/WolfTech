@@ -37,6 +37,15 @@ This is updated when lobby create/join event arrives.
 uint64_t steamLobbyCurrent(void);
 
 /*
+Returns the steamID of the current lobby's owner, or 0 if unknown.
+The shim automatically starts listening (if this is our own steamID) or
+connecting out via Steam P2P (otherwise) as soon as this is known, so
+game code doesn't need to call steamNetListen()/steamNetConnect() itself
+for the common join-a-lobby case.
+*/
+uint64_t steamLobbyOwner(void);
+
+/*
 ===============
 Steam P2P net transport (used by NA_STEAM_P2P in qcommon/net_ip.c)
 ===============

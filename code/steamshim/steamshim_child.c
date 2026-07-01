@@ -377,6 +377,7 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
     PRINTGOTEVENT(SHIMEVENT_LOBBY_DATA);
     PRINTGOTEVENT(SHIMEVENT_LOBBY_CHAT);
     PRINTGOTEVENT(SHIMEVENT_LOBBY_INVITE);
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_OWNER);
     PRINTGOTEVENT(SHIMEVENT_NET_CONNECTED);
     PRINTGOTEVENT(SHIMEVENT_NET_DISCONNECTED);
     /* NET_DATA happens every frame; too noisy to log here. */
@@ -469,6 +470,7 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
             break;
         }
 
+        case SHIMEVENT_LOBBY_OWNER:
         case SHIMEVENT_NET_CONNECTED:
         case SHIMEVENT_NET_DISCONNECTED:
             if (buflen < sizeof (uint64_t)) return NULL;

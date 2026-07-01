@@ -535,6 +535,7 @@ typedef enum ShimEvent
 	SHIMEVENT_LOBBY_DATA,
 	SHIMEVENT_LOBBY_CHAT,
 	SHIMEVENT_LOBBY_INVITE,
+	SHIMEVENT_LOBBY_OWNER,	// uvalue = owning steamID of the current lobby
 
 	// Steam P2P net transport (per-frame game traffic).
 	SHIMEVENT_NET_CONNECTED,
@@ -912,6 +913,36 @@ void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 		GCurrentLobby.ConvertToUint64(),
 		connect ? connect : ""
 	);
+
+	// Let the child know who owns this lobby, and automatically start
+	// listening (if we're the owner/host) or connecting out (if we're a
+	// joining client) - for the common case, game code doesn't need to
+	// call steamNetListen()/steamNetConnect() itself at all.
+	if (GSteamMatchmaking && GCurrentLobby.IsValid() && GSteamNetworkingSockets)
+	{
+		const CSteamID ownerID = GSteamMatchmaking->GetLobbyOwner(GCurrentLobby);
+		const uint64 ownerSteamID = ownerID.ConvertToUint64();
+
+		writeNetConnEvent(fd, SHIMEVENT_LOBBY_OWNER, ownerSteamID);
+
+		if (ownerSteamID == GUserID)
+		{
+			if (GP2PListenSocket == k_HSteamListenSocket_Invalid)
+			{
+				GP2PListenSocket = GSteamNetworkingSockets->CreateListenSocketP2P(0, 0, NULL);
+				dbgpipe("OnLobbyEnter: we own this lobby, listening (socket=%u)\n",
+					(unsigned int) GP2PListenSocket);
+			}
+		}
+		else if (P2P_FindConnBySteamID(ownerSteamID) == k_HSteamNetConnection_Invalid)
+		{
+			SteamNetworkingIdentity identity;
+			identity.SetSteamID64(ownerSteamID);
+			const HSteamNetConnection conn = GSteamNetworkingSockets->ConnectP2P(identity, 0, 0, NULL);
+			dbgpipe("OnLobbyEnter: connecting to lobby owner %llu (conn=%u)\n",
+				(unsigned long long) ownerSteamID, (unsigned int) conn);
+		}
+	}
 }
 
 void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)

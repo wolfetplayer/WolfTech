@@ -11,6 +11,7 @@
 #ifdef STEAM
 
 static uint64_t s_steamCurrentLobby = 0;
+static uint64_t s_steamCurrentLobbyOwner = 0;
 
 /*
 ===============
@@ -176,6 +177,11 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 		steamNetQueuePacket(ev->uvalue, ev->data, ev->datalen);
 		break;
 
+	case SHIMEVENT_LOBBY_OWNER:
+		s_steamCurrentLobbyOwner = ev->uvalue;
+		printf("Steam lobby owner: %llu\n", (unsigned long long)s_steamCurrentLobbyOwner);
+		break;
+
 	case SHIMEVENT_LOBBY_CREATED:
 		if (ev->okay) {
 			s_steamCurrentLobby = ev->uvalue;
@@ -233,6 +239,7 @@ static const char *SteamEventName(STEAMSHIM_EventType type)
 	case SHIMEVENT_LOBBY_LIST:        return "LOBBY_LIST";
 	case SHIMEVENT_LOBBY_JOINED:      return "LOBBY_JOINED";
 	case SHIMEVENT_LOBBY_DATA:        return "LOBBY_DATA";
+	case SHIMEVENT_LOBBY_OWNER:       return "LOBBY_OWNER";
 	case SHIMEVENT_NET_CONNECTED:     return "NET_CONNECTED";
 	case SHIMEVENT_NET_DISCONNECTED:  return "NET_DISCONNECTED";
 	case SHIMEVENT_NET_DATA:          return "NET_DATA";
@@ -313,6 +320,8 @@ void steamLobbyLeave(void)
 {
 	STEAMSHIM_lobbyLeave();
 	s_steamCurrentLobby = 0;
+	s_steamCurrentLobbyOwner = 0;
+	steamNetClose(0);
 }
 
 void steamLobbySetData(const char *key, const char *value)
@@ -330,6 +339,11 @@ void steamLobbyInvite(void)
 uint64_t steamLobbyCurrent(void)
 {
 	return s_steamCurrentLobby;
+}
+
+uint64_t steamLobbyOwner(void)
+{
+	return s_steamCurrentLobbyOwner;
 }
 
 #else
@@ -383,6 +397,11 @@ void steamLobbyJoin(uint64_t lobbyID)
 void steamLobbyLeave(void)
 {
 	s_steamCurrentLobby = 0;
+}
+
+uint64_t steamLobbyOwner(void)
+{
+	return 0;
 }
 
 void steamLobbySetData(const char *key, const char *value)
