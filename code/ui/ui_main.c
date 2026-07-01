@@ -4608,6 +4608,8 @@ static void UI_RunMenuScript( char **args ) {
 
 			trap_Cvar_Set("sv_maxClients", va("%d", clients));
 
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_host %d\n", clients));
+
 			if (gt == GT_COOP_SURVIVAL)
 			{
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; svmap %s\n", mapName));

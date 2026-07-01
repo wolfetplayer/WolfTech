@@ -2119,6 +2119,24 @@ void CL_SteamLobbyList_f(void)
 	steamLobbyList();
 }
 
+void CL_SteamHost_f(void)
+{
+	int maxPlayers = 8;
+
+	if (!steamAlive()) {
+		return;
+	}
+
+	if (Cmd_Argc() >= 2) {
+		maxPlayers = atoi(Cmd_Argv(1));
+		if (maxPlayers < 1) {
+			maxPlayers = 8;
+		}
+	}
+
+	steamLobbyCreate(maxPlayers);
+}
+
 void CL_SteamJoin_f(void)
 {
 	if (Cmd_Argc() < 2) {
@@ -2129,6 +2147,36 @@ void CL_SteamJoin_f(void)
 	uint64_t lobbyID = strtoull(Cmd_Argv(1), NULL, 10);
 	if (lobbyID == 0) {
 		Com_Printf("steamjoin: invalid lobby id '%s'\n", Cmd_Argv(1));
+		return;
+	}
+
+	steamLobbyJoin(lobbyID);
+}
+
+/*
+Registered as "connect_lobby". Steam relaunches the game with
+"+connect_lobby <lobbyID>" on the command line when a friend accepts a
+game invite - the engine's generic "+cmd args" startup mechanism
+(Com_AddStartupCommands) turns that into this command automatically, the
+same way "+connect <ip>" already works.
+*/
+void CL_ConnectLobby_f(void)
+{
+	uint64_t lobbyID;
+
+	if (Cmd_Argc() < 2) {
+		Com_Printf("usage: connect_lobby <lobbyID>\n");
+		return;
+	}
+
+	if (!steamAlive()) {
+		Com_Printf("connect_lobby: steam not available\n");
+		return;
+	}
+
+	lobbyID = strtoull(Cmd_Argv(1), NULL, 10);
+	if (lobbyID == 0) {
+		Com_Printf("connect_lobby: invalid lobby id '%s'\n", Cmd_Argv(1));
 		return;
 	}
 
@@ -4365,6 +4413,10 @@ void CL_Init( void ) {
 	Cmd_AddCommand("steam_list", CL_SteamLobbyList_f);
 
 	Cmd_AddCommand("steam_join", CL_SteamJoin_f);
+
+	Cmd_AddCommand("steam_host", CL_SteamHost_f);
+
+	Cmd_AddCommand("connect_lobby", CL_ConnectLobby_f);
 
 	CL_InitRef();
 
