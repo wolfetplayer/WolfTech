@@ -37,7 +37,7 @@ static ISteamMatchmaking *GSteamMatchmaking = NULL;
 static CSteamID GCurrentLobby;
 static ISteamFriends *GSteamFriends = NULL;
 
-static const uint32_t steam_app_id = 1379630u;
+static const uint32_t steam_app_id = 4909280u;
 
 #define DEBUGPIPE 1
 #if DEBUGPIPE
