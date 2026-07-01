@@ -507,7 +507,7 @@ void AICast_Think( int client, float thinktime ) {
 		}
 
 		//
-		if ( cs->rebirthTime && cs->rebirthTime < level.time ) {
+		if ( !( g_gametype.integer == GT_COOP_SURVIVAL && !ent->oneshot ) && cs->rebirthTime && cs->rebirthTime < level.time ) {
 			vec3_t mins, maxs;
 			int touch[10], numTouch;
 			float oldmaxZ;
