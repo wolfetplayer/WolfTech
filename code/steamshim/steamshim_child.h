@@ -78,11 +78,14 @@ void STEAMSHIM_lobbyLeave(void);
 void STEAMSHIM_lobbySetData(const char *key, const char *value);
 void STEAMSHIM_lobbyInvite(uint64_t lobbyID);
 
-/* Steam P2P net transport, used by NA_STEAM_P2P in qcommon/net_ip.c. */
+/* Steam P2P net transport, used by NA_STEAM_P2P in qcommon/net_ip.c.
+   The host can have multiple simultaneous peers, so send/close are
+   addressed by steamID; passing 0 to STEAMSHIM_netClose closes all of
+   them (e.g. on shutdown). */
 void STEAMSHIM_netListen(void);
 void STEAMSHIM_netConnect(uint64_t steamID);
-int STEAMSHIM_netSend(const void *data, int len);
-void STEAMSHIM_netClose(void);
+int STEAMSHIM_netSend(uint64_t steamID, const void *data, int len);
+void STEAMSHIM_netClose(uint64_t steamID);
 
 #ifdef __cplusplus
 }

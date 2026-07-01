@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
+#include "../steam/steam.h"
 
 #ifdef _WIN32
 #	include <winsock2.h>
@@ -404,6 +405,9 @@ qboolean NET_CompareBaseAdrMask(netadr_t a, netadr_t b, int netmask)
 	if (a.type == NA_LOOPBACK)
 		return qtrue;
 
+	if (a.type == NA_STEAM_P2P)
+		return (a.steamID == b.steamID) ? qtrue : qfalse;
+
 	if(a.type == NA_IP)
 	{
 		addra = (byte *) &a.ip;
@@ -467,10 +471,12 @@ const char	*NET_AdrToString (netadr_t a)
 		Com_sprintf (s, sizeof(s), "loopback");
 	else if (a.type == NA_BOT)
 		Com_sprintf (s, sizeof(s), "bot");
+	else if (a.type == NA_STEAM_P2P)
+		Com_sprintf (s, sizeof(s), "steam:%llu", (unsigned long long) a.steamID);
 	else if (a.type == NA_IP || a.type == NA_IP6)
 	{
 		struct sockaddr_storage sadr;
-	
+
 		memset(&sadr, 0, sizeof(sadr));
 		NetadrToSockadr(&a, (struct sockaddr *) &sadr);
 		Sys_SockaddrToString(s, sizeof(s), (struct sockaddr *) &sadr);
@@ -487,6 +493,8 @@ const char	*NET_AdrToStringwPort (netadr_t a)
 		Com_sprintf (s, sizeof(s), "loopback");
 	else if (a.type == NA_BOT)
 		Com_sprintf (s, sizeof(s), "bot");
+	else if (a.type == NA_STEAM_P2P)
+		Com_sprintf (s, sizeof(s), "%s", NET_AdrToString(a));
 	else if(a.type == NA_IP)
 		Com_sprintf(s, sizeof(s), "%s:%hu", NET_AdrToString(a), ntohs(a.port));
 	else if(a.type == NA_IP6)
@@ -532,7 +540,23 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 	struct sockaddr_storage from;
 	socklen_t	fromlen;
 	int		err;
-	
+
+	/* Steam P2P packets arrive over the shim's pipe, not a selectable OS
+	   socket, so this is independent of fdr - steamRun() (called once per
+	   frame) already queued them, we're just draining the queue here. */
+	{
+		uint64_t steamID = 0;
+		int len = steamNetPollPacket(&steamID, net_message->data, net_message->maxsize);
+
+		if (len > 0) {
+			net_from->type = NA_STEAM_P2P;
+			net_from->steamID = steamID;
+			net_message->readcount = 0;
+			net_message->cursize = len;
+			return qtrue;
+		}
+	}
+
 	if(ip_socket != INVALID_SOCKET && FD_ISSET(ip_socket, fdr))
 	{
 		fromlen = sizeof(from);
@@ -649,6 +673,11 @@ Sys_SendPacket
 void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	int				ret = SOCKET_ERROR;
 	struct sockaddr_storage	addr;
+
+	if ( to.type == NA_STEAM_P2P ) {
+		steamNetSend( to.steamID, data, length );
+		return;
+	}
 
 	if( to.type != NA_BROADCAST && to.type != NA_IP && to.type != NA_IP6 && to.type != NA_MULTICAST6)
 	{
@@ -1697,6 +1726,7 @@ void NET_Sleep(int msec)
 	{
 		// windows ain't happy when select is called without valid FDs
 		SleepEx(msec, 0);
+		NET_Event(&fdr);  // still drain any queued Steam P2P packets
 		return;
 	}
 #endif
@@ -1708,7 +1738,12 @@ void NET_Sleep(int msec)
 
 	if(retval == SOCKET_ERROR)
 		Com_Printf("Warning: select() syscall failed: %s\n", NET_ErrorString());
-	else if(retval > 0)
+	else
+		/* Always drain NET_Event, even on a select() timeout (retval==0):
+		   Steam P2P packets arrive over the shim pipe, not a selectable
+		   fd, so they can be queued and waiting here with no real socket
+		   activity at all. NET_GetPacket's fd_set checks are harmless
+		   no-ops when fdr came back empty. */
 		NET_Event(&fdr);
 }
 

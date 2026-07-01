@@ -817,11 +817,12 @@ void STEAMSHIM_netConnect(uint64_t steamID)
     writePipe(GPipeWrite, buf, buf[0] + 1);
 }
 
-int STEAMSHIM_netSend(const void *data, int len)
+int STEAMSHIM_netSend(uint64_t steamID, const void *data, int len)
 {
-    /* header (1 or 3 bytes) + cmd byte + payload. */
-    static uint8 buf[3 + 1 + STEAMSHIM_MAX_NET_PACKET];
-    const int totalLen = 1 + len;  /* cmd byte + payload */
+    /* header (1 or 3 bytes) + cmd byte + steamID + payload. */
+    static uint8 buf[3 + 1 + sizeof (uint64_t) + STEAMSHIM_MAX_NET_PACKET];
+    const int totalLen = 1 + (int) sizeof (uint64_t) + len;  /* cmd byte + steamID + payload */
+    uint8 *ptr;
     int hdrlen;
 
     if (isDead()) return 0;
@@ -830,28 +831,38 @@ int STEAMSHIM_netSend(const void *data, int len)
     if (totalLen < SHIM_LEN_ESCAPE)
     {
         buf[0] = (uint8) totalLen;
-        buf[1] = (uint8) SHIMCMD_NET_SEND;
-        memcpy(buf + 2, data, len);
-        hdrlen = 2;
+        hdrlen = 1;
     }
     else
     {
         buf[0] = SHIM_LEN_ESCAPE;
         buf[1] = (uint8) (totalLen & 0xFF);
         buf[2] = (uint8) ((totalLen >> 8) & 0xFF);
-        buf[3] = (uint8) SHIMCMD_NET_SEND;
-        memcpy(buf + 4, data, len);
-        hdrlen = 4;
+        hdrlen = 3;
     }
 
-    return writePipe(GPipeWrite, buf, hdrlen + len);
+    ptr = buf + hdrlen;
+    *(ptr++) = (uint8) SHIMCMD_NET_SEND;
+    memcpy(ptr, &steamID, sizeof (steamID));
+    ptr += sizeof (steamID);
+    memcpy(ptr, data, len);
+    ptr += len;
+
+    return writePipe(GPipeWrite, buf, (unsigned int) (ptr - buf));
 } /* STEAMSHIM_netSend */
 
-void STEAMSHIM_netClose(void)
+void STEAMSHIM_netClose(uint64_t steamID)
 {
+    uint8 buf[1 + 1 + sizeof (uint64_t)];
+    uint8 *ptr = buf + 1;
+
     if (isDead()) return;
-    dbgpipe("Child sending SHIMCMD_NET_CLOSE().\n");
-    write1ByteCmd(SHIMCMD_NET_CLOSE);
+    dbgpipe("Child sending SHIMCMD_NET_CLOSE(%llu).\n", (unsigned long long) steamID);
+    *(ptr++) = (uint8) SHIMCMD_NET_CLOSE;
+    memcpy(ptr, &steamID, sizeof (steamID));
+    ptr += sizeof (steamID);
+    buf[0] = (uint8) ((ptr - 1) - buf);
+    writePipe(GPipeWrite, buf, buf[0] + 1);
 }
 
 /* end of steamshim_child.c ... */

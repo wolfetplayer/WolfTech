@@ -1195,10 +1195,13 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
             break;
 
         case SHIMCMD_NET_SEND:
-            // Silently dropped until task 6 lands; no response expected for sends even in the real implementation (fire-and-forget,same as UDP).
+            // Payload is steamID (8 bytes) + raw packet. Silently dropped
+            // until task 6 lands; no response expected for sends even in
+            // the real implementation (fire-and-forget, same as UDP).
             break;
 
         case SHIMCMD_NET_CLOSE:
+            // Payload is steamID (8 bytes); 0 means "close everything".
             dbgpipe("SHIMCMD_NET_CLOSE: not implemented yet.\n");
             break;
     } // switch

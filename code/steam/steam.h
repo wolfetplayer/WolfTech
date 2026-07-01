@@ -35,3 +35,36 @@ Returns latest lobby id known by game wrapper.
 This is updated when lobby create/join event arrives.
 */
 uint64_t steamLobbyCurrent(void);
+
+/*
+===============
+Steam P2P net transport (used by NA_STEAM_P2P in qcommon/net_ip.c)
+===============
+*/
+
+/* Host: start accepting P2P connections. */
+void steamNetListen(void);
+
+/* Client: connect out to a host's steamID (e.g. the lobby owner). */
+void steamNetConnect(uint64_t steamID);
+
+/* Send a packet to a connected peer. Returns 1 if queued, 0 otherwise
+   (peer not connected, packet too big, or shim not alive). */
+int steamNetSend(uint64_t steamID, const void *data, int len);
+
+/* Close a specific peer connection, or 0 to close all of them. */
+void steamNetClose(uint64_t steamID);
+
+/*
+Pulls one queued inbound packet, if any.
+outSteamID receives the sender, buf receives up to maxLen bytes, and the
+return value is the packet length, or 0 if no packet is pending.
+*/
+int steamNetPollPacket(uint64_t *outSteamID, void *buf, int maxLen);
+
+/*
+Pulls one queued connect/disconnect event, if any.
+outSteamID receives the peer, outConnected is set to 1 for a new
+connection or 0 for a disconnect. Returns 1 if an event was pulled.
+*/
+int steamNetPollConnEvent(uint64_t *outSteamID, int *outConnected);
