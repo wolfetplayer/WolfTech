@@ -470,6 +470,7 @@ public:
     STEAM_CALLBACK(SteamBridge, OnLobbyEnter, LobbyEnter_t, m_CallbackLobbyEnter);
     STEAM_CALLBACK(SteamBridge, OnLobbyDataUpdate, LobbyDataUpdate_t, m_CallbackLobbyDataUpdate);
     STEAM_CALLBACK(SteamBridge, OnNetConnectionStatusChanged, SteamNetConnectionStatusChangedCallback_t, m_CallbackNetConnStatusChanged);
+    STEAM_CALLBACK(SteamBridge, OnGameLobbyJoinRequested, GameLobbyJoinRequested_t, m_CallbackGameLobbyJoinRequested);
 
     void OnLobbyCreated(LobbyCreated_t *pCallback, bool bIOFailure);
     void OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure);
@@ -788,6 +789,7 @@ SteamBridge::SteamBridge(PipeType _fd)
     , m_CallbackLobbyEnter(this, &SteamBridge::OnLobbyEnter)
     , m_CallbackLobbyDataUpdate(this, &SteamBridge::OnLobbyDataUpdate)
     , m_CallbackNetConnStatusChanged(this, &SteamBridge::OnNetConnectionStatusChanged)
+    , m_CallbackGameLobbyJoinRequested(this, &SteamBridge::OnGameLobbyJoinRequested)
     , fd(_fd)
 {
 }
@@ -890,6 +892,19 @@ void SteamBridge::OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure)
 	Game side can treat lobbyID 0 as "list finished".
 	*/
 	writeLobbyEvent(fd, SHIMEVENT_LOBBY_LIST, true, 0, "DONE");
+}
+
+// Fired when the user accepts a Steam friend invite (or clicks "join game")
+// while this process is already running - Steam signals us directly instead
+// of relaunching with "+connect_lobby <id>" on the command line.
+void SteamBridge::OnGameLobbyJoinRequested(GameLobbyJoinRequested_t *pCallback)
+{
+	if (!GSteamMatchmaking) return;
+
+	dbgpipe("OnGameLobbyJoinRequested: joining lobby %llu\n",
+		(unsigned long long) pCallback->m_steamIDLobby.ConvertToUint64());
+
+	GSteamMatchmaking->JoinLobby(pCallback->m_steamIDLobby);
 }
 
 void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
