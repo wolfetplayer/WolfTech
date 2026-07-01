@@ -2420,6 +2420,8 @@ endif
 #############################################################################
 
 Q3DOBJ = \
+  $(B)/ded/steam.o \
+  $(B)/ded/steamshim_child.o \
   $(B)/ded/sv_bot.o \
   $(B)/ded/sv_client.o \
   $(B)/ded/sv_ccmds.o \
@@ -2750,6 +2752,12 @@ $(B)/client/%.o: $(STEAMDIR)/%.c
 
 $(B)/client/%.o: $(STEAMSHIMDIR)/%.c
 	$(DO_CC)
+
+$(B)/ded/%.o: $(STEAMDIR)/%.c
+	$(DO_DED_CC)
+
+$(B)/ded/%.o: $(STEAMSHIMDIR)/%.c
+	$(DO_DED_CC)
 
 
 ## $(B)/$(BASEGAME)/game/%.o: $(STEAMSHIMDIR)/%.c 
