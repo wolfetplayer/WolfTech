@@ -1267,7 +1267,28 @@ void SV_Frame( int msec ) {
 
 	if (steamAlive())
 	{
+		uint64_t peerSteamID;
+		int peerConnected;
+
 		steamRun();
+
+		while ( steamNetPollConnEvent( &peerSteamID, &peerConnected ) ) {
+			if ( !peerConnected ) {
+				int i;
+				client_t *cl;
+
+				for ( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ ) {
+					if ( cl->state == CS_FREE ) {
+						continue;
+					}
+					if ( cl->netchan.remoteAddress.type == NA_STEAM_P2P &&
+						 cl->netchan.remoteAddress.steamID == peerSteamID ) {
+						SV_DropClient( cl, "Steam P2P connection lost" );
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	// allow pause if only the local client is connected

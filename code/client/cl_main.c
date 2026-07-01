@@ -1806,12 +1806,25 @@ void CL_Connect_f( void ) {
 
 	Q_strncpyz( clc.servername, server, sizeof(clc.servername) );
 
-	if (!NET_StringToAdr(clc.servername, &clc.serverAddress, family) ) {
+	if ( !Q_strncmp( server, "steam:", 6 ) ) {
+		uint64_t steamID = strtoull( server + 6, NULL, 10 );
+
+		if ( steamID == 0 ) {
+			Com_Printf( "Bad server address\n" );
+			clc.state = CA_DISCONNECTED;
+			return;
+		}
+
+		Com_Memset( &clc.serverAddress, 0, sizeof( clc.serverAddress ) );
+		clc.serverAddress.type = NA_STEAM_P2P;
+		clc.serverAddress.steamID = steamID;
+	}
+	else if (!NET_StringToAdr(clc.servername, &clc.serverAddress, family) ) {
 		Com_Printf( "Bad server address\n" );
 		clc.state = CA_DISCONNECTED;
 		return;
 	}
-	if ( clc.serverAddress.port == 0 ) {
+	if ( clc.serverAddress.type != NA_STEAM_P2P && clc.serverAddress.port == 0 ) {
 		clc.serverAddress.port = BigShort( PORT_SERVER );
 	}
 
@@ -3174,7 +3187,32 @@ void CL_Frame( int msec ) {
 
 	if (steamAlive())
 	{
+		static uint64_t lastAutoConnectOwner = 0;
+		uint64_t owner;
+		uint64_t peerSteamID;
+		int peerConnected;
+
 		steamRun();
+
+		// Once we've joined someone else's lobby, the shim already starts
+		// the Steam P2P handshake to the owner on its own (see
+		// SteamBridge::OnLobbyEnter) - this just triggers the matching
+		// "connect steam:<id>" on the engine side, once per lobby.
+		owner = steamLobbyOwner();
+		if ( owner != 0 && owner != lastAutoConnectOwner && clc.state == CA_DISCONNECTED ) {
+			lastAutoConnectOwner = owner;
+			Cbuf_AddText( va( "connect steam:%llu\n", (unsigned long long) owner ) );
+		} else if ( owner == 0 ) {
+			lastAutoConnectOwner = 0;
+		}
+
+		while ( steamNetPollConnEvent( &peerSteamID, &peerConnected ) ) {
+			if ( !peerConnected && clc.serverAddress.type == NA_STEAM_P2P &&
+				 clc.serverAddress.steamID == peerSteamID ) {
+				Com_Printf( "Steam P2P connection to server lost.\n" );
+				CL_Disconnect( qtrue );
+			}
+		}
 	}
 
 

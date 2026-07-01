@@ -923,10 +923,12 @@ void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 		const CSteamID ownerID = GSteamMatchmaking->GetLobbyOwner(GCurrentLobby);
 		const uint64 ownerSteamID = ownerID.ConvertToUint64();
 
-		writeNetConnEvent(fd, SHIMEVENT_LOBBY_OWNER, ownerSteamID);
-
 		if (ownerSteamID == GUserID)
 		{
+			// We're the host. The client side of the engine reaches its
+			// own listen server over loopback like it always has, so it
+			// has no use for the owner steamID here - only report it (and
+			// auto-connect) to joining clients below.
 			if (GP2PListenSocket == k_HSteamListenSocket_Invalid)
 			{
 				GP2PListenSocket = GSteamNetworkingSockets->CreateListenSocketP2P(0, 0, NULL);
@@ -934,13 +936,18 @@ void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 					(unsigned int) GP2PListenSocket);
 			}
 		}
-		else if (P2P_FindConnBySteamID(ownerSteamID) == k_HSteamNetConnection_Invalid)
+		else
 		{
-			SteamNetworkingIdentity identity;
-			identity.SetSteamID64(ownerSteamID);
-			const HSteamNetConnection conn = GSteamNetworkingSockets->ConnectP2P(identity, 0, 0, NULL);
-			dbgpipe("OnLobbyEnter: connecting to lobby owner %llu (conn=%u)\n",
-				(unsigned long long) ownerSteamID, (unsigned int) conn);
+			writeNetConnEvent(fd, SHIMEVENT_LOBBY_OWNER, ownerSteamID);
+
+			if (P2P_FindConnBySteamID(ownerSteamID) == k_HSteamNetConnection_Invalid)
+			{
+				SteamNetworkingIdentity identity;
+				identity.SetSteamID64(ownerSteamID);
+				const HSteamNetConnection conn = GSteamNetworkingSockets->ConnectP2P(identity, 0, 0, NULL);
+				dbgpipe("OnLobbyEnter: connecting to lobby owner %llu (conn=%u)\n",
+					(unsigned long long) ownerSteamID, (unsigned int) conn);
+			}
 		}
 	}
 }
