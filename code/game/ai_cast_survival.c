@@ -1268,11 +1268,7 @@ void AICast_TickSurvivalWave( void ) {
 	svParams.waveKillCount = 0;
 	svParams.spawnedThisWave = 0;
 
-	// Some map-placed AI never go through AIChar_AIScript_AlertEntity_Survival (only
-	// entities with the TriggerSpawn spawnflag do), so they never incremented
-	// spawnedThisWave when they entered play. Without this, the wave's spawn quota
-	// doesn't know about them, and AICast_SurvivalRespawn will happily respawn them
-	// again after their first death even though the wave already started at quota.
+	// Some map-placed AI never go through AIChar_AIScript_AlertEntity_Survival
 	for ( i = 0; i < level.num_entities; i++ ) {
 		gentity_t *ent = &g_entities[i];
 
