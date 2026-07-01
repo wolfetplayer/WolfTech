@@ -167,7 +167,8 @@ typedef enum {
 	NA_IP,
 	NA_IP6,
 	NA_MULTICAST6,
-	NA_UNSPEC
+	NA_UNSPEC,
+	NA_STEAM_P2P	// Steam Networking Sockets P2P connection, keyed by steamID
 } netadrtype_t;
 
 typedef enum {
@@ -184,6 +185,8 @@ typedef struct {
 
 	unsigned short port;
 	unsigned long	scope_id;	// Needed for IPv6 link-local addresses
+
+	uint64_t	steamID;	// valid only when type == NA_STEAM_P2P
 } netadr_t;
 
 void        NET_Init( void );

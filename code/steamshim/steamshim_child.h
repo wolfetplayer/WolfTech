@@ -29,7 +29,15 @@ typedef enum STEAMSHIM_EventType
 	SHIMEVENT_LOBBY_DATA,
 	SHIMEVENT_LOBBY_CHAT,
 	SHIMEVENT_LOBBY_INVITE,
+
+	/* Steam P2P net transport (per-frame game traffic). */
+	SHIMEVENT_NET_CONNECTED,
+	SHIMEVENT_NET_DISCONNECTED,
+	SHIMEVENT_NET_DATA,
 } STEAMSHIM_EventType;
+
+/* must match qcommon's MAX_PACKETLEN (net_chan.c). Raise both together. */
+#define STEAMSHIM_MAX_NET_PACKET 2048
 
     /* not all of these fields make sense in a given event. */
 typedef struct STEAMSHIM_Event
@@ -38,9 +46,12 @@ typedef struct STEAMSHIM_Event
 	int okay;
 	int ivalue;
 	float fvalue;
-	uint64_t uvalue;
+	uint64_t uvalue;	/* also holds the peer steamID for NET_* events */
 	unsigned long long epochsecs;
 	char name[256];
+
+	unsigned char data[STEAMSHIM_MAX_NET_PACKET];	/* raw payload for SHIMEVENT_NET_DATA */
+	int datalen;
 } STEAMSHIM_Event;
 
 int STEAMSHIM_init(void);
@@ -66,6 +77,12 @@ void STEAMSHIM_lobbyJoin(uint64_t lobbyID);
 void STEAMSHIM_lobbyLeave(void);
 void STEAMSHIM_lobbySetData(const char *key, const char *value);
 void STEAMSHIM_lobbyInvite(uint64_t lobbyID);
+
+/* Steam P2P net transport, used by NA_STEAM_P2P in qcommon/net_ip.c. */
+void STEAMSHIM_netListen(void);
+void STEAMSHIM_netConnect(uint64_t steamID);
+int STEAMSHIM_netSend(const void *data, int len);
+void STEAMSHIM_netClose(void);
 
 #ifdef __cplusplus
 }

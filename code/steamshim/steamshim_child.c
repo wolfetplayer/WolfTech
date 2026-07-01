@@ -211,7 +211,20 @@ typedef enum ShimCmd
     SHIMCMD_LOBBY_LEAVE,
     SHIMCMD_LOBBY_SETDATA,
     SHIMCMD_LOBBY_INVITE,
+
+    /* Steam P2P net transport (per-frame game traffic). */
+    SHIMCMD_NET_LISTEN,
+    SHIMCMD_NET_CONNECT,
+    SHIMCMD_NET_SEND,
+    SHIMCMD_NET_CLOSE,
 } ShimCmd;
+
+/* Pipe framing: buf[0] is normally the payload length (cmd byte + data).
+ * A value of 0xFF is a sentinel meaning "real length follows as a
+ * little-endian uint16 in buf[1..2]" so game packets (up to
+ * STEAMSHIM_MAX_NET_PACKET) can be carried without disturbing the existing
+ * 1-byte-length messages, which never come close to 0xFF bytes. */
+#define SHIM_LEN_ESCAPE 0xFF
 
 static int write1ByteCmd(const uint8 b1)
 {
@@ -364,6 +377,9 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
     PRINTGOTEVENT(SHIMEVENT_LOBBY_DATA);
     PRINTGOTEVENT(SHIMEVENT_LOBBY_CHAT);
     PRINTGOTEVENT(SHIMEVENT_LOBBY_INVITE);
+    PRINTGOTEVENT(SHIMEVENT_NET_CONNECTED);
+    PRINTGOTEVENT(SHIMEVENT_NET_DISCONNECTED);
+    /* NET_DATA happens every frame; too noisy to log here. */
 #undef PRINTGOTEVENT
     else printf("Child got unknown shimevent %d.\n", (int) type);
     #endif
@@ -453,6 +469,30 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
             break;
         }
 
+        case SHIMEVENT_NET_CONNECTED:
+        case SHIMEVENT_NET_DISCONNECTED:
+            if (buflen < sizeof (uint64_t)) return NULL;
+            memcpy(&event.uvalue, buf, sizeof (uint64_t));
+            buf += sizeof (uint64_t);
+            break;
+
+        case SHIMEVENT_NET_DATA:
+        {
+            size_t datalen;
+
+            if (buflen < sizeof (uint64_t)) return NULL;
+            memcpy(&event.uvalue, buf, sizeof (uint64_t));
+            buf += sizeof (uint64_t);
+            datalen = buflen - sizeof (uint64_t);
+
+            if (datalen > sizeof (event.data))
+                datalen = sizeof (event.data);
+
+            memcpy(event.data, buf, datalen);
+            event.datalen = (int) datalen;
+            break;
+        }
+
         default:  /* uh oh */
             return NULL;
     } /* switch */
@@ -460,16 +500,40 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
     return &event;
 } /* processEvent */
 
+/* Figure out how many header bytes we have and how long the payload is,
+ * given what's currently buffered. Returns hdrlen==0 if we don't have
+ * enough bytes yet to know. */
+static int parseShimHeader(const uint8 *buf, const int br, int *outEvlen)
+{
+    if (br < 1)
+        return 0;
+
+    if (buf[0] != SHIM_LEN_ESCAPE)
+    {
+        *outEvlen = (int) buf[0];
+        return 1;
+    }
+
+    if (br < 3)
+        return 0;  /* escape seen, but the 2-byte length isn't here yet. */
+
+    *outEvlen = ((int) buf[1]) | (((int) buf[2]) << 8);
+    return 3;
+} /* parseShimHeader */
+
+/* header(3) + event type(1) + steamID(8) + payload, largest event is
+ * SHIMEVENT_NET_DATA. */
 const STEAMSHIM_Event *STEAMSHIM_pump(void)
 {
-    static uint8 buf[256];
+    static uint8 buf[3 + 1 + sizeof (uint64_t) + STEAMSHIM_MAX_NET_PACKET];
     static int br = 0;
-    int evlen = (br > 0) ? ((int) buf[0]) : 0;
+    int evlen = 0;
+    int hdrlen = parseShimHeader(buf, br, &evlen);
 
     if (isDead())
         return NULL;
 
-    if (br <= evlen)  /* we have an incomplete commmand. Try to read more. */
+    if (!hdrlen || (br < hdrlen + evlen))  /* incomplete command. Try to read more. */
     {
         if (pipeReady(GPipeRead))
         {
@@ -482,14 +546,17 @@ const STEAMSHIM_Event *STEAMSHIM_pump(void)
                 STEAMSHIM_deinit();   /* kill it all. */
             } /* else */
         } /* if */
+
+        hdrlen = parseShimHeader(buf, br, &evlen);
     } /* if */
 
-    if (evlen && (br > evlen))
+    if (hdrlen && (br >= hdrlen + evlen))
     {
-        const STEAMSHIM_Event *retval = processEvent(buf+1, evlen);
-        br -= evlen + 1;
+        const STEAMSHIM_Event *retval = processEvent(buf+hdrlen, evlen);
+        const int consumed = hdrlen + evlen;
+        br -= consumed;
         if (br > 0)
-            memmove(buf, buf+evlen+1, br);
+            memmove(buf, buf+consumed, br);
         return retval;
     } /* if */
 
@@ -728,6 +795,63 @@ void STEAMSHIM_lobbyInvite(uint64_t lobbyID)
 
 	buf[0] = (uint8)((ptr - 1) - buf);
 	writePipe(GPipeWrite, buf, buf[0] + 1);
+}
+
+void STEAMSHIM_netListen(void)
+{
+    if (isDead()) return;
+    dbgpipe("Child sending SHIMCMD_NET_LISTEN().\n");
+    write1ByteCmd(SHIMCMD_NET_LISTEN);
+}
+
+void STEAMSHIM_netConnect(uint64_t steamID)
+{
+    uint8 buf[16];
+    uint8 *ptr = buf + 1;
+    if (isDead()) return;
+    dbgpipe("Child sending SHIMCMD_NET_CONNECT(%llu).\n", (unsigned long long) steamID);
+    *(ptr++) = (uint8) SHIMCMD_NET_CONNECT;
+    memcpy(ptr, &steamID, sizeof (steamID));
+    ptr += sizeof (steamID);
+    buf[0] = (uint8) ((ptr - 1) - buf);
+    writePipe(GPipeWrite, buf, buf[0] + 1);
+}
+
+int STEAMSHIM_netSend(const void *data, int len)
+{
+    /* header (1 or 3 bytes) + cmd byte + payload. */
+    static uint8 buf[3 + 1 + STEAMSHIM_MAX_NET_PACKET];
+    const int totalLen = 1 + len;  /* cmd byte + payload */
+    int hdrlen;
+
+    if (isDead()) return 0;
+    if (len < 0 || len > STEAMSHIM_MAX_NET_PACKET) return 0;
+
+    if (totalLen < SHIM_LEN_ESCAPE)
+    {
+        buf[0] = (uint8) totalLen;
+        buf[1] = (uint8) SHIMCMD_NET_SEND;
+        memcpy(buf + 2, data, len);
+        hdrlen = 2;
+    }
+    else
+    {
+        buf[0] = SHIM_LEN_ESCAPE;
+        buf[1] = (uint8) (totalLen & 0xFF);
+        buf[2] = (uint8) ((totalLen >> 8) & 0xFF);
+        buf[3] = (uint8) SHIMCMD_NET_SEND;
+        memcpy(buf + 4, data, len);
+        hdrlen = 4;
+    }
+
+    return writePipe(GPipeWrite, buf, hdrlen + len);
+} /* STEAMSHIM_netSend */
+
+void STEAMSHIM_netClose(void)
+{
+    if (isDead()) return;
+    dbgpipe("Child sending SHIMCMD_NET_CLOSE().\n");
+    write1ByteCmd(SHIMCMD_NET_CLOSE);
 }
 
 /* end of steamshim_child.c ... */
