@@ -400,6 +400,65 @@ static AppId_t GAppID = 0;
 static uint64 GUserID = 0;
 static SteamBridge *GSteamBridge = NULL;
 
+static ISteamNetworkingSockets *GSteamNetworkingSockets = NULL;
+static HSteamListenSocket GP2PListenSocket = k_HSteamListenSocket_Invalid;
+
+// Multi-peer P2P connection tracking: a dedicated/listen server can have
+// several clients connected at once, each its own HSteamNetConnection.
+#define MAX_P2P_CONNECTIONS 32
+
+struct P2PConnEntry
+{
+	uint64 steamID;
+	HSteamNetConnection conn;
+	bool inUse;
+};
+
+static P2PConnEntry GP2PConns[MAX_P2P_CONNECTIONS];
+
+static HSteamNetConnection P2P_FindConnBySteamID(uint64 steamID)
+{
+	for (int i = 0; i < MAX_P2P_CONNECTIONS; i++)
+	{
+		if (GP2PConns[i].inUse && GP2PConns[i].steamID == steamID)
+			return GP2PConns[i].conn;
+	}
+	return k_HSteamNetConnection_Invalid;
+}
+
+static int P2P_FindIndexByHandle(HSteamNetConnection conn)
+{
+	for (int i = 0; i < MAX_P2P_CONNECTIONS; i++)
+	{
+		if (GP2PConns[i].inUse && GP2PConns[i].conn == conn)
+			return i;
+	}
+	return -1;
+}
+
+// Returns false if the table is full; caller should close the connection.
+static bool P2P_TrackConn(uint64 steamID, HSteamNetConnection conn)
+{
+	for (int i = 0; i < MAX_P2P_CONNECTIONS; i++)
+	{
+		if (!GP2PConns[i].inUse)
+		{
+			GP2PConns[i].steamID = steamID;
+			GP2PConns[i].conn = conn;
+			GP2PConns[i].inUse = true;
+			return true;
+		}
+	}
+	return false;
+}
+
+static void P2P_UntrackByHandle(HSteamNetConnection conn)
+{
+	int idx = P2P_FindIndexByHandle(conn);
+	if (idx >= 0)
+		GP2PConns[idx].inUse = false;
+}
+
 class SteamBridge
 {
 public:
@@ -410,6 +469,7 @@ public:
 
     STEAM_CALLBACK(SteamBridge, OnLobbyEnter, LobbyEnter_t, m_CallbackLobbyEnter);
     STEAM_CALLBACK(SteamBridge, OnLobbyDataUpdate, LobbyDataUpdate_t, m_CallbackLobbyDataUpdate);
+    STEAM_CALLBACK(SteamBridge, OnNetConnectionStatusChanged, SteamNetConnectionStatusChangedCallback_t, m_CallbackNetConnStatusChanged);
 
     void OnLobbyCreated(LobbyCreated_t *pCallback, bool bIOFailure);
     void OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure);
@@ -726,6 +786,7 @@ SteamBridge::SteamBridge(PipeType _fd)
     , m_CallbackUserStatsStored(this, &SteamBridge::OnUserStatsStored)
     , m_CallbackLobbyEnter(this, &SteamBridge::OnLobbyEnter)
     , m_CallbackLobbyDataUpdate(this, &SteamBridge::OnLobbyDataUpdate)
+    , m_CallbackNetConnStatusChanged(this, &SteamBridge::OnNetConnectionStatusChanged)
     , fd(_fd)
 {
 }
@@ -868,6 +929,100 @@ void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
 	);
 }
 
+void SteamBridge::OnNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t *pCallback)
+{
+	const uint64 peerSteamID = pCallback->m_info.m_identityRemote.GetSteamID64();
+
+	switch (pCallback->m_info.m_eState)
+	{
+		case k_ESteamNetworkingConnectionState_Connecting:
+		{
+			// Only auto-accept inbound connections on our listen socket
+			// (i.e. we're the host). Outbound connections we initiated
+			// via ConnectP2P go through FindingRoute -> Connected instead.
+			if (pCallback->m_info.m_hListenSocket != k_HSteamListenSocket_Invalid)
+			{
+				if (GSteamNetworkingSockets->AcceptConnection(pCallback->m_hConn) != k_EResultOK)
+				{
+					dbgpipe("Failed to accept incoming P2P connection from %llu\n",
+						(unsigned long long) peerSteamID);
+					GSteamNetworkingSockets->CloseConnection(pCallback->m_hConn, 0, "accept failed", false);
+				}
+			}
+			break;
+		}
+
+		case k_ESteamNetworkingConnectionState_Connected:
+		{
+			if (!P2P_TrackConn(peerSteamID, pCallback->m_hConn))
+			{
+				dbgpipe("P2P connection table full, rejecting %llu\n",
+					(unsigned long long) peerSteamID);
+				GSteamNetworkingSockets->CloseConnection(pCallback->m_hConn, 0, "server full", false);
+				break;
+			}
+
+			dbgpipe("P2P connected: %llu\n", (unsigned long long) peerSteamID);
+			writeNetConnEvent(fd, SHIMEVENT_NET_CONNECTED, peerSteamID);
+			break;
+		}
+
+		case k_ESteamNetworkingConnectionState_ClosedByPeer:
+		case k_ESteamNetworkingConnectionState_ProblemDetectedLocally:
+		{
+			// Only report+untrack if we'd actually gotten to Connected;
+			// a failed outbound ConnectP2P attempt never got tracked.
+			const bool wasTracked = (P2P_FindIndexByHandle(pCallback->m_hConn) >= 0);
+
+			P2P_UntrackByHandle(pCallback->m_hConn);
+			GSteamNetworkingSockets->CloseConnection(pCallback->m_hConn, 0, NULL, false);
+
+			dbgpipe("P2P disconnected: %llu (wasTracked=%d)\n",
+				(unsigned long long) peerSteamID, wasTracked ? 1 : 0);
+			writeNetConnEvent(fd, SHIMEVENT_NET_DISCONNECTED, peerSteamID);
+			break;
+		}
+
+		default:
+			break;
+	}
+}
+
+
+// Called once per SHIMCMD_PUMP, right alongside SteamAPI_RunCallbacks():
+// drains inbound game packets on every tracked P2P connection and forwards
+// each one to the child as a SHIMEVENT_NET_DATA.
+static void PumpP2PMessages(PipeType fd)
+{
+	SteamNetworkingMessage_t *msgs[8];
+
+	if (!GSteamNetworkingSockets)
+		return;
+
+	for (int i = 0; i < MAX_P2P_CONNECTIONS; i++)
+	{
+		if (!GP2PConns[i].inUse)
+			continue;
+
+		for (;;)
+		{
+			const int n = GSteamNetworkingSockets->ReceiveMessagesOnConnection(
+				GP2PConns[i].conn, msgs, 8);
+
+			if (n <= 0)
+				break;
+
+			for (int j = 0; j < n; j++)
+			{
+				writeNetDataEvent(fd, GP2PConns[i].steamID, msgs[j]->m_pData, msgs[j]->m_cbSize);
+				msgs[j]->Release();
+			}
+
+			if (n < 8)
+				break;  // fewer than requested: nothing more queued right now.
+		}
+	}
+}
 
 static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
 {
@@ -911,6 +1066,7 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
     {
         case SHIMCMD_PUMP:
             SteamAPI_RunCallbacks();
+            PumpP2PMessages(fd);
             break;
 
         case SHIMCMD_BYE:
@@ -1181,29 +1337,117 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
             break;
         }
         case SHIMCMD_NET_LISTEN:
-            dbgpipe("SHIMCMD_NET_LISTEN: not implemented yet.\n");
+        {
+            if (!GSteamNetworkingSockets)
+            {
+                dbgpipe("SHIMCMD_NET_LISTEN: no ISteamNetworkingSockets.\n");
+                break;
+            }
+
+            if (GP2PListenSocket != k_HSteamListenSocket_Invalid)
+            {
+                dbgpipe("SHIMCMD_NET_LISTEN: already listening.\n");
+                break;
+            }
+
+            GP2PListenSocket = GSteamNetworkingSockets->CreateListenSocketP2P(0, 0, NULL);
+            dbgpipe("SHIMCMD_NET_LISTEN: listen socket = %u\n", (unsigned int) GP2PListenSocket);
             break;
+        }
 
         case SHIMCMD_NET_CONNECT:
-            dbgpipe("SHIMCMD_NET_CONNECT: not implemented yet.\n");
-            if (buflen >= sizeof(uint64))
+        {
+            uint64 steamID = 0;
+
+            if (!GSteamNetworkingSockets || buflen < sizeof(uint64))
             {
-                uint64 steamID = 0;
-                memcpy(&steamID, buf, sizeof(steamID));
+                writeNetConnEvent(fd, SHIMEVENT_NET_DISCONNECTED, 0);
+                break;
+            }
+
+            memcpy(&steamID, buf, sizeof(steamID));
+
+            if (P2P_FindConnBySteamID(steamID) != k_HSteamNetConnection_Invalid)
+            {
+                dbgpipe("SHIMCMD_NET_CONNECT: already have a connection to %llu\n",
+                    (unsigned long long) steamID);
+                break;
+            }
+
+            SteamNetworkingIdentity identity;
+            identity.SetSteamID64(steamID);
+
+            const HSteamNetConnection conn = GSteamNetworkingSockets->ConnectP2P(identity, 0, 0, NULL);
+            if (conn == k_HSteamNetConnection_Invalid)
+            {
+                dbgpipe("SHIMCMD_NET_CONNECT: ConnectP2P failed for %llu\n",
+                    (unsigned long long) steamID);
                 writeNetConnEvent(fd, SHIMEVENT_NET_DISCONNECTED, steamID);
             }
+            // On success we don't report NET_CONNECTED yet - that happens
+            // once OnNetConnectionStatusChanged sees k_ESteamNetworkingConnectionState_Connected.
             break;
+        }
 
         case SHIMCMD_NET_SEND:
-            // Payload is steamID (8 bytes) + raw packet. Silently dropped
-            // until task 6 lands; no response expected for sends even in
-            // the real implementation (fire-and-forget, same as UDP).
+        {
+            uint64 steamID = 0;
+
+            if (!GSteamNetworkingSockets || buflen < sizeof(uint64))
+                break;
+
+            memcpy(&steamID, buf, sizeof(steamID));
+            buf += sizeof(uint64);
+            buflen -= (unsigned int) sizeof(uint64);
+
+            const HSteamNetConnection conn = P2P_FindConnBySteamID(steamID);
+            if (conn == k_HSteamNetConnection_Invalid)
+                break;  // peer not connected (yet, or anymore) - drop, same as a lost UDP packet.
+
+            GSteamNetworkingSockets->SendMessageToConnection(
+                conn, buf, buflen, k_nSteamNetworkingSend_UnreliableNoNagle, NULL);
             break;
+        }
 
         case SHIMCMD_NET_CLOSE:
-            // Payload is steamID (8 bytes); 0 means "close everything".
-            dbgpipe("SHIMCMD_NET_CLOSE: not implemented yet.\n");
+        {
+            uint64 steamID = 0;
+
+            if (buflen >= sizeof(uint64))
+                memcpy(&steamID, buf, sizeof(steamID));
+
+            if (!GSteamNetworkingSockets)
+                break;
+
+            if (steamID == 0)
+            {
+                // Close everything, e.g. on shutdown.
+                for (int i = 0; i < MAX_P2P_CONNECTIONS; i++)
+                {
+                    if (GP2PConns[i].inUse)
+                    {
+                        GSteamNetworkingSockets->CloseConnection(GP2PConns[i].conn, 0, NULL, false);
+                        GP2PConns[i].inUse = false;
+                    }
+                }
+
+                if (GP2PListenSocket != k_HSteamListenSocket_Invalid)
+                {
+                    GSteamNetworkingSockets->CloseListenSocket(GP2PListenSocket);
+                    GP2PListenSocket = k_HSteamListenSocket_Invalid;
+                }
+            }
+            else
+            {
+                const HSteamNetConnection conn = P2P_FindConnBySteamID(steamID);
+                if (conn != k_HSteamNetConnection_Invalid)
+                {
+                    GSteamNetworkingSockets->CloseConnection(conn, 0, NULL, false);
+                    P2P_UntrackByHandle(conn);
+                }
+            }
             break;
+        }
     } // switch
 
     return true;  // keep going.
@@ -1314,12 +1558,31 @@ static bool initSteamworks(PipeType fd)
 
     SteamFriends()->SetRichPresence("steam_display", "#status_mainmenu");
     GSteamMatchmaking = SteamMatchmaking();
+    GSteamNetworkingSockets = SteamNetworkingSockets();
 
     return 1;
 } // initSteamworks
 
 static void deinitSteamworks(void)
 {
+    if (GSteamNetworkingSockets)
+    {
+        for (int i = 0; i < MAX_P2P_CONNECTIONS; i++)
+        {
+            if (GP2PConns[i].inUse)
+            {
+                GSteamNetworkingSockets->CloseConnection(GP2PConns[i].conn, 0, NULL, false);
+                GP2PConns[i].inUse = false;
+            }
+        }
+
+        if (GP2PListenSocket != k_HSteamListenSocket_Invalid)
+        {
+            GSteamNetworkingSockets->CloseListenSocket(GP2PListenSocket);
+            GP2PListenSocket = k_HSteamListenSocket_Invalid;
+        }
+    }
+
     SteamAPI_Shutdown();
     delete GSteamBridge;
     GSteamBridge = NULL;
@@ -1327,6 +1590,7 @@ static void deinitSteamworks(void)
     GSteamUtils= NULL;
     GSteamUser = NULL;
     GSteamMatchmaking = NULL;
+    GSteamNetworkingSockets = NULL;
     GCurrentLobby.Clear();
 } // deinitSteamworks
 

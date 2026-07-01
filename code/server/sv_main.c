@@ -28,6 +28,7 @@ If you have questions concerning this license or the applicable additional terms
 
 
 #include "server.h"
+#include "../steam/steam.h"
 
 #ifdef __APPLE__
 #include <stdarg.h>
@@ -1254,6 +1255,11 @@ void SV_Frame( int msec ) {
 		Sys_Sleep(-1);
 #endif
 		return;
+	}
+
+	if (steamAlive())
+	{
+		steamRun();
 	}
 
 	// allow pause if only the local client is connected
