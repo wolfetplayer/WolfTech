@@ -167,7 +167,8 @@ int AICast_ScanForEnemies( cast_state_t *cs, int *enemies ) {
 	if ( cs->castScriptStatus.scriptAttackEnt >= 0 ) {
 		if ( g_entities[cs->castScriptStatus.scriptAttackEnt].health <= 0 ) {
 			cs->castScriptStatus.scriptAttackEnt = -1;
-		} else {
+		} else if ( g_gametype.integer != GT_COOP_SURVIVAL ||
+					AICast_EntityVisible( cs, cs->castScriptStatus.scriptAttackEnt, qtrue ) ) {
 			// if we are not in combat mode, then an enemy should trigger a state change straight to combat mode
 			if ( cs->aiState < AISTATE_COMBAT ) {
 				AICast_StateChange( cs, AISTATE_COMBAT );   // just go straight to combat mode
@@ -175,6 +176,7 @@ int AICast_ScanForEnemies( cast_state_t *cs, int *enemies ) {
 			enemies[0] = cs->castScriptStatus.scriptAttackEnt;
 			return 1;
 		}
+		// Survival: don't force combat blind when out of real sight - let SurvivalHunt handle the approach instead.
 	}
 
 	if ( cs->castScriptStatus.scriptNoAttackTime >= level.time ) {

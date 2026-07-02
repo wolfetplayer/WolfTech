@@ -2362,10 +2362,10 @@ char *AIFunc_BattleHunt( cast_state_t *cs ) {
 
 		dist = Distance( destorg, cs->bs->origin );
 
-		// Survival: if we lost real visual contact, stop vanilla battle chase/ambush.
-		// Switch to lightweight awareness hunting instead.
+		// Survival: drop to lightweight hunting once sight's really been lost for a bit, not just this frame.
 		if (g_gametype.integer == GT_COOP_SURVIVAL &&
 			cs->enemyNum >= 0 &&
+			cs->vislist[cs->enemyNum].real_visible_timestamp < level.time - 500 &&
 			!AICast_EntityVisible(cs, cs->enemyNum, qtrue))
 		{
 			vec3_t huntPos;
@@ -2845,10 +2845,10 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 	if ( followent->client ) {
 		VectorCopy( cs->vislist[cs->enemyNum].visible_pos, destorg );
 
-		// Survival: if we lost real visual contact, stop vanilla battle chase/ambush.
-		// Switch to lightweight awareness hunting instead.
+		// Survival: drop to lightweight hunting once sight's really been lost for a bit, not just this frame.
 		if (g_gametype.integer == GT_COOP_SURVIVAL &&
 			cs->enemyNum >= 0 &&
+			cs->vislist[cs->enemyNum].real_visible_timestamp < level.time - 500 &&
 			!AICast_EntityVisible(cs, cs->enemyNum, qtrue))
 		{
 			vec3_t huntPos;
@@ -2862,18 +2862,6 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 			}
 		}
 		dist = Distance( destorg, cs->bs->origin );
-
-		if (g_gametype.integer == GT_COOP_SURVIVAL)
-		{
-			vec3_t huntPos;
-
-			if (AICast_SurvivalHasAwarenessTarget(cs, huntPos))
-			{
-				cs->lastEnemy = cs->enemyNum;
-				cs->enemyNum = -1;
-				return AIFunc_SurvivalHuntStart(cs);
-			}
-		}
 
 		// Reached last known position, switch to hunt/ambush behavior
 		if ( dist < chaseDist ) {
@@ -5610,7 +5598,8 @@ char *AIFunc_SurvivalHuntStart( cast_state_t *cs ) {
 		return NULL;
 	}
 
-	if (cs->aiState != AISTATE_ALERT)
+	// Raise to ALERT only - never downgrade out of COMBAT (ScanForEnemies may have already forced it).
+	if ( cs->aiState < AISTATE_ALERT )
 	{
 		AICast_StateChange(cs, AISTATE_ALERT);
 	}

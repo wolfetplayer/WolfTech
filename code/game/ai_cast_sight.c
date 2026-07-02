@@ -44,6 +44,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "../botlib/be_ai_move.h"
 #include "../botlib/botai.h"          //bot ai interface
 
+int BotPointAreaNum( vec3_t origin );  // ai_dmq3.c - handles floor-edge cases raw trap_AAS_PointAreaNum misses
+
 #include "ai_cast.h"
 
 /*
@@ -887,11 +889,19 @@ void AICast_SurvivalUpdateAwareness( cast_state_t *cs ) {
 		error = 384.0f;
 	}
 
-	cs->survivalAwarenessPos[0] += crandom() * error;
-	cs->survivalAwarenessPos[1] += crandom() * error;
+	{
+		vec3_t jittered;
 
-	// Keep Z sane.
-	cs->survivalAwarenessPos[2] = bestPlayer->r.currentOrigin[2];
+		VectorCopy( cs->survivalAwarenessPos, jittered );
+		jittered[0] += crandom() * error;
+		jittered[1] += crandom() * error;
+		jittered[2] = bestPlayer->r.currentOrigin[2];
+
+		// Only use the jitter if it still lands somewhere real, else keep the exact player position.
+		if ( BotPointAreaNum( jittered ) ) {
+			VectorCopy( jittered, cs->survivalAwarenessPos );
+		}
+	}
 
 	// Optional: if the AI is completely idle, make it alert but not combat.
 	if ( cs->aiState < AISTATE_ALERT ) {

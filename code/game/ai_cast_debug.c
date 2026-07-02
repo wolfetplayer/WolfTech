@@ -45,6 +45,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "ai_cast.h"
 
+int BotPointAreaNum( vec3_t origin );  // ai_dmq3.c - handles floor-edge cases raw trap_AAS_PointAreaNum misses
+
 static int numaifuncs;
 static char     *aifuncs[MAX_AIFUNCS];
 
@@ -114,6 +116,7 @@ AICast_DBG_RouteTable_f
 */
 void AICast_DBG_RouteTable_f( vec3_t org, char *param ) {
 	static int srcarea = 0, dstarea = 0;
+	static vec3_t srcorg;
 //	extern botlib_export_t botlib;
 
 	if ( !param || strlen( param ) < 1 ) {
@@ -129,13 +132,21 @@ void AICast_DBG_RouteTable_f( vec3_t org, char *param ) {
 	}
 
 	if ( Q_stricmp( param, "src" ) == 0 ) { // set the src
-		srcarea = 1 + trap_AAS_PointAreaNum( org );
+		srcarea = 1 + BotPointAreaNum( org );  // BotPointAreaNum handles floor-edge points, raw trap call doesn't
+		VectorCopy( org, srcorg );
+		trap_Print( va( "dbg_routetable: src area=%i\n", srcarea - 1 ) );
 		return;
 	} else if ( Q_stricmp( param, "dest" ) == 0 )        {
-		dstarea = 1 + trap_AAS_PointAreaNum( org );
+		dstarea = 1 + BotPointAreaNum( org );
+		trap_Print( va( "dbg_routetable: dest area=%i\n", dstarea - 1 ) );
 	}
 
 	if ( srcarea && dstarea ) { // show the path
+		int traveltime = trap_AAS_AreaTravelTimeToGoalArea( srcarea - 1, srcorg, dstarea - 1, AICAST_TFL_DEFAULT );
+
+		trap_Print( va( "dbg_routetable: srcarea=%i dstarea=%i traveltime=%i (0 = unreachable)\n",
+						 srcarea - 1, dstarea - 1, traveltime ) );
+
 		trap_AAS_RT_ShowRoute( org, srcarea - 1, dstarea - 1 );
 	} else
 	{
