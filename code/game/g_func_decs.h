@@ -1541,6 +1541,8 @@ extern char * AIFunc_DoorMarkerStart ( cast_state_t * cs , int doornum , int mar
 extern char * AIFunc_DoorMarker ( cast_state_t * cs ) ;
 extern char * AIFunc_ChaseGoalStart ( cast_state_t * cs , int entitynum , float reachdist , qboolean slowApproach ) ;
 extern char * AIFunc_ChaseGoal ( cast_state_t * cs ) ;
+extern char * AIFunc_RushStart ( cast_state_t * cs , int entitynum , int timeoutTime ) ;
+extern char * AIFunc_Rush ( cast_state_t * cs ) ;
 extern char * AIFunc_ChaseGoalIdleStart ( cast_state_t * cs , int entitynum , float reachdist ) ;
 extern char * AIFunc_ChaseGoalIdle ( cast_state_t * cs ) ;
 extern char * AIFunc_InspectAudibleEventStart ( cast_state_t * cs , int entnum ) ;

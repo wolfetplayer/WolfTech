@@ -1541,6 +1541,8 @@ If you have questions concerning this license or the applicable additional terms
 {"AIFunc_DoorMarker", (byte *)AIFunc_DoorMarker},
 {"AIFunc_ChaseGoalStart", (byte *)AIFunc_ChaseGoalStart},
 {"AIFunc_ChaseGoal", (byte *)AIFunc_ChaseGoal},
+{"AIFunc_RushStart", (byte *)AIFunc_RushStart},
+{"AIFunc_Rush", (byte *)AIFunc_Rush},
 {"AIFunc_ChaseGoalIdleStart", (byte *)AIFunc_ChaseGoalIdleStart},
 {"AIFunc_ChaseGoalIdle", (byte *)AIFunc_ChaseGoalIdle},
 {"AIFunc_InspectAudibleEventStart", (byte *)AIFunc_InspectAudibleEventStart},

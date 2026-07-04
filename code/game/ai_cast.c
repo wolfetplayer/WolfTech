@@ -402,6 +402,7 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	cs->lastEnemy = -1;
 	cs->enemyNum = -1;
 	cs->leaderNum = -1;
+	cs->rushGoalEnt = -1;
 	cs->castScriptStatus.scriptGotoEnt = -1;
 	//
 	newent->aiName = ent->aiName;

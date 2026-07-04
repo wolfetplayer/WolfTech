@@ -182,11 +182,16 @@ int AAS_BestReachableArea( vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t goalo
 	//vec3_t bbmins, bbmaxs;
 	vec3_t start, end;
 	aas_trace_t trace;
+	static qboolean warned = qfalse;
 
 	if ( !( *aasworld ).loaded ) {
-		//botimport.Print( PRT_ERROR, "AAS_BestReachableArea: aas not loaded\n" );
+		if ( !warned ) {
+			botimport.Print( PRT_ERROR, "AAS_BestReachableArea: aas not loaded\n" );
+			warned = qtrue;
+		}
 		return 0;
 	} //end if
+	warned = qfalse;
 	  //find a point in an area
 	VectorCopy( origin, start );
 	areanum = AAS_PointAreaNum( start );

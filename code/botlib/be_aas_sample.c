@@ -211,11 +211,16 @@ int AAS_PointAreaNum( vec3_t point ) {
 	vec_t dist;
 	aas_node_t *node;
 	aas_plane_t *plane;
+	static qboolean warned = qfalse;
 
 	if ( !( *aasworld ).loaded ) {
-		//botimport.Print( PRT_ERROR, "AAS_PointAreaNum: aas not loaded\n" );
+		if ( !warned ) {
+			botimport.Print( PRT_ERROR, "AAS_PointAreaNum: aas not loaded\n" );
+			warned = qtrue;
+		}
 		return 0;
 	} //end if
+	warned = qfalse;
 
 	//start with node 1 because node zero is a dummy used for solid leafs
 	nodenum = 1;
@@ -1131,11 +1136,16 @@ aas_link_t *AAS_AASLinkEntity( vec3_t absmins, vec3_t absmaxs, int entnum ) {
 	aas_node_t *aasnode;
 	aas_plane_t *plane;
 	aas_link_t *link, *areas;
+	static qboolean warned = qfalse;
 
 	if ( !( *aasworld ).loaded ) {
-		//botimport.Print( PRT_ERROR, "AAS_LinkEntity: aas not loaded\n" );
+		if ( !warned ) {
+			botimport.Print( PRT_ERROR, "AAS_LinkEntity: aas not loaded\n" );
+			warned = qtrue;
+		}
 		return NULL;
 	} //end if
+	warned = qfalse;
 
 	areas = NULL;
 	//

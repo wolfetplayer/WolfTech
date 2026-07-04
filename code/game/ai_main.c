@@ -641,7 +641,7 @@ int BotAISetupClient( int client, struct bot_settings_s *settings ) {
 	}
 
 	if ( !trap_AAS_Initialized() ) {
-		//BotAI_Print( PRT_FATAL, "AAS not initialized\n" );
+		BotAI_Print( PRT_FATAL, "BotAISetupClient: AAS not initialized (client %d)\n", client );
 		return qfalse;
 	}
 
@@ -863,6 +863,7 @@ int BotAIStartFrame( int time ) {
 	static int local_time;
 	static int botlib_residual;
 	static int lastbotthink_time;
+	static qboolean aasWarned;
 
 	trap_Cvar_Update( &bot_rocketjump );
 	trap_Cvar_Update( &bot_grapple );
@@ -904,8 +905,13 @@ int BotAIStartFrame( int time ) {
 		trap_AAS_SetCurrentWorld( 0 );
 
 		if ( !trap_AAS_Initialized() ) {
+			if ( !aasWarned ) {
+				BotAI_Print( PRT_FATAL, "BotAIStartFrame: AAS not initialized, bot entity updates frozen\n" );
+				aasWarned = qtrue;
+			}
 			return BLERR_NOERROR;
 		}
+		aasWarned = qfalse;
 
 		//update entities in the botlib
 		for ( i = 0; i < MAX_GENTITIES; i++ ) {

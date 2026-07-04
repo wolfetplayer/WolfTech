@@ -163,11 +163,12 @@ AIChar_AIScript_AlertEntity_Survival
 ============
 */
 void AIChar_AIScript_AlertEntity_Survival( gentity_t *ent ) {
-	
+
 	vec3_t mins, maxs;
 	int numTouch, touch[10], i;
 	cast_state_t    *cs;
 	vec3_t spawn_origin, spawn_angles;
+	gentity_t *spot, *rushGoal;
 
 	gentity_t *player = AICast_FindEntityForName( "player" );
 
@@ -229,7 +230,7 @@ void AIChar_AIScript_AlertEntity_Survival( gentity_t *ent ) {
 		}
 
 	// Selecting the spawn point for the AI
-				SelectSpawnPoint_AI( player, ent, spawn_origin, spawn_angles );
+				spot = SelectSpawnPoint_AI( player, ent, spawn_origin, spawn_angles );
 				G_SetOrigin( ent, spawn_origin );
 				VectorCopy( spawn_origin, ent->client->ps.origin );
 				SetClientViewAngle( ent, spawn_angles );
@@ -244,6 +245,25 @@ void AIChar_AIScript_AlertEntity_Survival( gentity_t *ent ) {
 
 	// trigger a spawn script event
 	AICast_ScriptEvent( AICast_GetCastState( ent->s.number ), "respawn", "" );
+
+	// rush goal on this spawn's "target": self-contained AIFunc_Rush, ignores player en route
+	cs->aiFlags &= ~( AIFL_RUSHING | AIFL_EXPLICIT_ROUTING );
+	if ( spot && spot->target && spot->target[0] ) {
+		rushGoal = G_Find( NULL, FOFS( targetname ), spot->target );
+		if ( rushGoal ) {
+			if ( Q_stricmp( rushGoal->classname, "ai_marker" ) ) {
+				G_Printf( "WARNING: rush goal \"%s\" is a %s, not an ai_marker - explicit routing needs ai_marker\n", spot->target, rushGoal->classname );
+			}
+			AIFunc_RushStart( cs, rushGoal->s.number, level.time + AICAST_RUSH_TIMEOUT_MS );
+			if ( aicast_debug.integer ) {
+				G_Printf( "RUSH: %s spawned at %s, goal \"%s\" (#%d) at %s, aasWorldIndex=%d aasInit=%d\n",
+					ent->aiName, vtos( spot->s.origin ), spot->target, rushGoal->s.number, vtos( rushGoal->r.currentOrigin ),
+					cs->aasWorldIndex, trap_AAS_Initialized() );
+			}
+		} else {
+			G_Printf( "WARNING: info_ai_respawn target \"%s\" not found (rush goal) at %s\n", spot->target, vtos( spot->s.origin ) );
+		}
+	}
 
 	// Increment spawned counters based on aiTeam
 	if (ent->aiTeam == 1) { 
@@ -1362,6 +1382,7 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
    float oldmaxZ;
    int i;
    gentity_t *player;
+   gentity_t *spot, *rushGoal;
    vec3_t spawn_origin, spawn_angles;
 
    if (ent->aiTeam != 1 && (svParams.spawnedThisWave >= svParams.killCountRequirement || !svParams.waveInProgress))
@@ -1440,7 +1461,7 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				player = AICast_FindEntityForName( "player" );
 
                 // Selecting the spawn point for the AI
-				SelectSpawnPoint_AI( player, ent, spawn_origin, spawn_angles );
+				spot = SelectSpawnPoint_AI( player, ent, spawn_origin, spawn_angles );
 				G_SetOrigin( ent, spawn_origin );
 				VectorCopy( spawn_origin, ent->client->ps.origin );
 				SetClientViewAngle( ent, spawn_angles );
@@ -1495,6 +1516,25 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 					AIFunc_SurvivalHuntStart(cs);
 
 					svParams.spawnedThisWave++;
+				}
+
+				// rush goal on this spawn's "target": self-contained AIFunc_Rush, ignores player en route
+				cs->aiFlags &= ~( AIFL_RUSHING | AIFL_EXPLICIT_ROUTING );
+				if ( spot && spot->target && spot->target[0] ) {
+					rushGoal = G_Find( NULL, FOFS( targetname ), spot->target );
+					if ( rushGoal ) {
+						if ( Q_stricmp( rushGoal->classname, "ai_marker" ) ) {
+							G_Printf( "WARNING: rush goal \"%s\" is a %s, not an ai_marker - explicit routing needs ai_marker\n", spot->target, rushGoal->classname );
+						}
+						AIFunc_RushStart( cs, rushGoal->s.number, level.time + AICAST_RUSH_TIMEOUT_MS );
+						if ( aicast_debug.integer ) {
+							G_Printf( "RUSH: %s spawned at %s, goal \"%s\" (#%d) at %s, aasWorldIndex=%d aasInit=%d\n",
+								ent->aiName, vtos( spot->s.origin ), spot->target, rushGoal->s.number, vtos( rushGoal->r.currentOrigin ),
+								cs->aasWorldIndex, trap_AAS_Initialized() );
+						}
+					} else {
+						G_Printf( "WARNING: info_ai_respawn target \"%s\" not found (rush goal) at %s\n", spot->target, vtos( spot->s.origin ) );
+					}
 				}
 			} else {
 				// can't spawn yet, so set bbox back, and wait

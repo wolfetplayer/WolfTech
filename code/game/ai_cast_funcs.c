@@ -722,6 +722,19 @@ char *AIFunc_IdleStart( cast_state_t *cs ) {
 
 	ent = &g_entities[cs->entityNum];
 
+	// rush goal reached (or timed out): restore sight/routing and activate
+	if ( cs->aiFlags & AIFL_RUSHING ) {
+		cs->aiFlags &= ~( AIFL_RUSHING | AIFL_EXPLICIT_ROUTING );
+		cs->castScriptStatus.scriptNoSightTime = 0;
+		cs->rushGoalEnt = -1;
+		if ( aicast_debug.integer ) {
+			G_Printf( "RUSH: %s arrived/timed out at %s\n", ent->aiName, vtos( ent->r.currentOrigin ) );
+		}
+		if ( ent->aiTeam != 1 ) {
+			return AIFunc_SurvivalHuntStart( cs );
+		}
+	}
+
 	// Leaving active behavior, so clear temporary combat/action flags.
 	ent->flags &= ~FL_AI_GRENADE_KICK;
 
@@ -1919,6 +1932,54 @@ char *AIFunc_ChaseGoalStart( cast_state_t *cs, int entitynum, float reachdist, q
 
 	cs->aifunc = AIFunc_ChaseGoal;
 	return "AIFunc_ChaseGoal";
+}
+
+/*
+============
+AIFunc_RushStart
+
+Self-contained rush toward a goal entity. Uses its own state (rushGoalEnt),
+not followEntity/scriptGotoEnt, so scripting (e.g. "resetscript" on a
+respawn event) can't interrupt it mid-rush.
+============
+*/
+char *AIFunc_RushStart( cast_state_t *cs, int entitynum, int timeoutTime ) {
+	cs->rushGoalEnt = entitynum;
+	cs->rushTimeoutTime = timeoutTime;
+	cs->aiFlags |= AIFL_RUSHING | AIFL_EXPLICIT_ROUTING;
+	cs->castScriptStatus.scriptNoSightTime = timeoutTime + 1000;
+
+	cs->aifunc = AIFunc_Rush;
+	return "AIFunc_Rush";
+}
+
+/*
+============
+AIFunc_Rush
+
+Mindlessly moves toward cs->rushGoalEnt, ignoring everything else, until
+arrival or timeout, then hands off to normal AI via AIFunc_IdleStart.
+============
+*/
+char *AIFunc_Rush( cast_state_t *cs ) {
+	gentity_t *ent, *goalent;
+
+	ent = &g_entities[cs->entityNum];
+
+	if ( !( cs->aiFlags & AIFL_RUSHING ) || cs->rushGoalEnt < 0 || !g_entities[cs->rushGoalEnt].inuse ) {
+		return AIFunc_IdleStart( cs );
+	}
+
+	goalent = &g_entities[cs->rushGoalEnt];
+
+	if ( Distance( ent->r.currentOrigin, goalent->r.currentOrigin ) < AICAST_RUSH_REACH_DIST ||
+		 level.time > cs->rushTimeoutTime ) {
+		return AIFunc_IdleStart( cs );
+	}
+
+	AICast_MoveToPos( cs, goalent->r.currentOrigin, cs->rushGoalEnt );
+
+	return NULL;
 }
 
 /*
