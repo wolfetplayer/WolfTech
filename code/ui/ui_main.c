@@ -58,7 +58,10 @@ static const char *skillLevels[] = {
 };
 
 static const int numSkillLevels = ARRAY_LEN( skillLevels );
- 
+
+extern char* translateTable[MAX_COUNT_TRANSLATE_TABLE_ELEMENTS][2];
+extern int countTranslate;
+
 #define UIAS_LOCAL			0
 #define UIAS_GLOBAL0			1
 #define UIAS_GLOBAL1			2
@@ -760,6 +763,7 @@ _UI_Shutdown
 */
 void _UI_Shutdown( void ) {
 	trap_LAN_SaveCachedServers();
+	UI_FreeTranslateTable();
 }
 
 char *defaultMenu = NULL;
@@ -1203,6 +1207,95 @@ static void UI_LoadTranslationStrings( void ) {
 	}
 }
 #endif
+
+/*
+==============
+UI_LoadTranslateTable
+
+Loads "@key" -> "value" associative pairs used by ItemParse_text and the
+cvar list parsers to resolve menu text of the form "@key" into the actual
+string. Kept resident for the life of the UI module (freed in
+UI_FreeTranslateTable, called from _UI_Shutdown) since menus can be
+re-parsed at runtime (e.g. UI_LoadNonIngame) after the initial load.
+==============
+*/
+void UI_FreeTranslateTable() {
+	while ( countTranslate ) {
+		free( translateTable[countTranslate - 1][0] );
+		free( translateTable[countTranslate - 1][1] );
+		countTranslate--;
+	}
+}
+
+qboolean ParsePairs( int handle ) {
+	pc_token_t token;
+
+	while ( 1 ) {
+		if ( countTranslate == MAX_COUNT_TRANSLATE_TABLE_ELEMENTS ) {
+			break;
+		}
+
+		if ( !trap_PC_ReadToken( handle, &token ) ) {
+			return qfalse;
+		}
+
+		if ( token.string[0] == 0 ) {
+			return qfalse;
+		}
+
+		if ( token.string[0] == '}' ) {
+			break;
+		}
+
+		translateTable[countTranslate][0] = malloc( strlen( token.string ) + 1 );
+		Q_strncpyz( translateTable[countTranslate][0], token.string, strlen( token.string ) + 1 );
+
+		if ( !trap_PC_ReadToken( handle, &token ) ) {
+			return qfalse;
+		}
+
+		translateTable[countTranslate][1] = malloc( strlen( token.string ) + 1 );
+		Q_strncpyz( translateTable[countTranslate][1], token.string, strlen( token.string ) + 1 );
+
+		countTranslate++;
+	}
+
+	return qtrue;
+}
+
+static void UI_LoadTranslateFile( const char *filename ) {
+	pc_token_t token;
+	int handle;
+
+	handle = trap_PC_LoadSource( filename );
+
+	if ( !handle ) {
+		return;
+	}
+
+	if ( !trap_PC_ReadToken( handle, &token ) ) {
+		trap_PC_FreeSource( handle );
+		return;
+	}
+
+	if ( token.string[0] != '{' ) {
+		Com_Printf( S_COLOR_YELLOW "expected {: %s\n", filename );
+	} else if ( !ParsePairs( handle ) ) {
+		Com_Printf( S_COLOR_YELLOW "translate parse error: %s\n", filename );
+	}
+
+	trap_PC_FreeSource( handle );
+}
+
+static void UI_LoadTranslateTable( void ) {
+	UI_LoadTranslateFile( "text/text.txt" );
+
+	for ( int i = 1; i < 10; i++ ) {
+		char filename[MAX_QPATH];
+		Com_sprintf( filename, sizeof( filename ), "text/text_%d.txt", i );
+		UI_LoadTranslateFile( filename );
+	}
+}
 
 
 void UI_Load( void ) {
@@ -7046,6 +7139,9 @@ void _UI_Init( qboolean inGameLoad ) {
 #ifndef LOCALISATION
 	UI_LoadTranslationStrings();
 #endif
+
+	// load "@key" translate table used by menu text/cvarStrList/cvarFloatList
+	UI_LoadTranslateTable();
 
 //	uiInfo.uiDC.cursor	= trap_R_RegisterShaderNoMip( "menu/art/3_cursor3" );
 	uiInfo.uiDC.whiteShader = trap_R_RegisterShaderNoMip( "white" );

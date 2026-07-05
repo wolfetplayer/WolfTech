@@ -38,6 +38,8 @@ If you have questions concerning this license or the applicable additional terms
 // after every release we have to change this
 #include "../../media/sp_pak_coop1/ui/menudef.h"
 
+#define MAX_COUNT_TRANSLATE_TABLE_ELEMENTS 1000
+
 #define MAX_MENUNAME 32
 #define MAX_ITEMTEXT 64
 #define MAX_ITEMACTION 64

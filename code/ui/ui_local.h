@@ -379,6 +379,7 @@ extern sfxHandle_t  MenuField_Key( menufield_s* m, int* key );
 void            UI_Report( void );
 void            UI_Load( void );
 void            UI_LoadMenus( const char *menuFile, qboolean reset );
+void            UI_FreeTranslateTable( void );
 void            _UI_SetActiveMenu( uiMenuCommand_t menu );
 uiMenuCommand_t _UI_GetActiveMenu( void );
 int             UI_AdjustTimeByGame( int time );
