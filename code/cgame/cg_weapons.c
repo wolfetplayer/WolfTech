@@ -2060,8 +2060,11 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 		trap_R_AddRefEntityToScene( gun );
 
 		// blink if time left < 5s, toggling every 200ms for battlesuit
+		// NOTE: ps is NULL when drawing third-person weapons for other entities
+		// (see the !ps branches above), so only consult ps->powerups when we
+		// actually have a playerState_t to read the remaining time from.
 		if ( powerups & ( 1 << PW_BATTLESUIT_SURV ) ) {
-			int timeLeft = ps->powerups[PW_BATTLESUIT_SURV] - cg.time;
+			int timeLeft = ps ? ps->powerups[PW_BATTLESUIT_SURV] - cg.time : 5000;
 			if ( ( timeLeft < 5000 ) && ( ( cg.time / 200 ) % 2 ) ) {
 				// skip rendering to blink
 			} else {
@@ -2073,7 +2076,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 
 		// blink for quad powerup
 		if ( powerups & ( 1 << PW_QUAD ) ) {
-			int timeLeft = ps->powerups[PW_QUAD] - cg.time;
+			int timeLeft = ps ? ps->powerups[PW_QUAD] - cg.time : 5000;
 			if ( ( timeLeft < 5000 ) && ( ( cg.time / 200 ) % 2 ) ) {
 				// skip rendering to blink
 			} else {
@@ -2085,7 +2088,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 
 		// blink for vampire powerup
 		if ( powerups & ( 1 << PW_VAMPIRE ) ) {
-			int timeLeft = ps->powerups[PW_VAMPIRE] - cg.time;
+			int timeLeft = ps ? ps->powerups[PW_VAMPIRE] - cg.time : 5000;
 			if ( ( timeLeft < 5000 ) && ( ( cg.time / 200 ) % 2 ) ) {
 				// skip rendering to blink
 			} else {
