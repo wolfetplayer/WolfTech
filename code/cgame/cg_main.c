@@ -1351,14 +1351,15 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.noammoShader = trap_R_RegisterShader( "icons/noammo" );
 
 	// powerup shaders
-//	cgs.media.quadShader = trap_R_RegisterShader("powerups/quad" );
-//	cgs.media.quadWeaponShader = trap_R_RegisterShader("powerups/quadWeapon" );
-//	cgs.media.battleSuitShader = trap_R_RegisterShader("powerups/battleSuit" );
-//	cgs.media.battleWeaponShader = trap_R_RegisterShader("powerups/battleWeapon" );
-//	cgs.media.invisShader = trap_R_RegisterShader("powerups/invisibility" );
+	cgs.media.quadShader = trap_R_RegisterShader("powerups/quad" );
+	cgs.media.quadWeaponShader = trap_R_RegisterShader("powerups/quadWeapon" );
+	cgs.media.battleSuitShader = trap_R_RegisterShader("powerups/enviro" );
+	cgs.media.battleWeaponShader = trap_R_RegisterShader("powerups/battleWeapon" );
+	cgs.media.invisShader = trap_R_RegisterShader("powerups/invisibility" );
 //	cgs.media.regenShader = trap_R_RegisterShader("powerups/regen" );
-//	cgs.media.hastePuffShader = trap_R_RegisterShader("hasteSmokePuff" );
-
+	cgs.media.hastePuffShader = trap_R_RegisterShader("hasteSmokePuff" );
+	cgs.media.redQuadShader = trap_R_RegisterShader("powerups/vampire" );
+	
 	// DHM - Nerve :: Allow flags again, will change later to more appropriate models
 	if ( cg_buildScript.integer ) {
 		cgs.media.redFlagModel = trap_R_RegisterModel( "models/flags/r_flag.md3" );
