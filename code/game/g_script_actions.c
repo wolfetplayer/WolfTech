@@ -456,16 +456,32 @@ AICast_ScriptAction_MusicQueue
 */
 qboolean G_ScriptAction_MusicQueue( gentity_t *ent, char *params ) {
 	char    *pString, *token;
-	char cvarName[MAX_QPATH];
+	char cvarNameArray[16][MAX_INFO_STRING];
+	int fileCount = 0;
 
 	pString = params;
-	token = COM_ParseExt( &pString, qfalse );
-	if ( !token[0] ) {
-		G_Error( "G_Scripting: syntax: mu_queue <musicfile>" );
+	while ( 1 ) {
+		token = COM_ParseExt( &pString, qfalse );
+		if ( !token[0] ) {
+			break;
+		}
+		Q_strncpyz( cvarNameArray[fileCount], token, sizeof( cvarNameArray[fileCount] ) );
+		fileCount++;
+		if ( fileCount >= 16 ) {
+			break;
+		}
 	}
-	Q_strncpyz( cvarName, token, sizeof( cvarName ) );
 
-	trap_SetConfigstring( CS_MUSIC_QUEUE, cvarName );
+	if ( fileCount == 0 ) {
+		G_Error( "G_Scripting: syntax: mu_queue <musicfile> [musicfile2] ..." );
+	}
+
+	if ( fileCount == 1 ) {
+		trap_SetConfigstring( CS_MUSIC_QUEUE, cvarNameArray[0] );
+	} else {
+		int randomIndex = rand() % fileCount;
+		trap_SetConfigstring( CS_MUSIC_QUEUE, cvarNameArray[randomIndex] );
+	}
 
 	return qtrue;
 }
