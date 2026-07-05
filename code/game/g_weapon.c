@@ -55,7 +55,7 @@ int G_GetWeaponDamage( int weapon, gentity_t *ent ); // JPW
 /*
 ======================================================================
 
-KNIFE/GAUNTLET (NOTE: gauntlet is now the Zombie melee)
+KNIFE
 
 ======================================================================
 */
@@ -453,20 +453,6 @@ void Weapon_Class_Special( gentity_t *ent ) {
 // jpw
 
 /*
-==============
-Weapon_Gauntlet
-==============
-*/
-void Weapon_Gauntlet( gentity_t *ent ) {
-	trace_t *tr;
-	tr = CheckMeleeAttack( ent, 32, qfalse );
-	if ( tr ) {
-		G_Damage( &g_entities[tr->entityNum], ent, ent, vec3_origin, tr->endpos,
-				  ( 10 + rand() % 5 ) * s_quadFactor, 0, MOD_GAUNTLET );
-	}
-}
-
-/*
 ===============
 CheckMeleeAttack
 	using 'isTest' to return hits to world surfaces
@@ -481,7 +467,7 @@ trace_t *CheckMeleeAttack( gentity_t *ent, float dist, qboolean isTest ) {
 	// set aiming directions
 	AngleVectors( ent->client->ps.viewangles, forward, right, up );
 
-	CalcMuzzlePoint( ent, WP_GAUNTLET, forward, right, up, muzzleTrace );
+	CalcMuzzlePoint( ent, WP_KNIFE, forward, right, up, muzzleTrace );
 
 	VectorMA( muzzleTrace, dist, forward, end );
 

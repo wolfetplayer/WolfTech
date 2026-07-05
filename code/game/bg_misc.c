@@ -828,34 +828,6 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qfalse,	
 		.underwaterFire     = qfalse,
     },
-    [WP_GAUNTLET] = {
-		.weaponindex        = WP_GAUNTLET,
-		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_MELEE, 		
-        .maxammo            = 999,
-        .uses               = 0,
-        .maxclip            = 999,
-        .reloadTime         = 0,
-        .fireDelayTime      = 50,
-        .nextShotTime       = 0,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 0,
-		.weaponSpread       = 0,
-		.spreadScaleAdd     = 0,
-		.spreadScale        = 0.0f,
-        .weapRecoilDuration = 0,
-        .weapRecoilPitch    = { 0.0f, 0.0f },
-        .weapRecoilYaw      = { 0.0f, 0.0f },
-		.soundRange         = 0,
-		.aiRange            = AI_WEAPON_RANGE_MELEE,
-        .mod                = 0,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,
-		.bulletBased        = qfalse,	
-		.hasMuzzle          = qfalse,	
-		.underwaterFire     = qfalse,
-    },
 };
 
 
@@ -1485,28 +1457,6 @@ gitem_t bg_itemlist[] =
 	//
 	// WEAPONS
 	//
-
-
-	{
-		"weapon_gauntlet",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons2/gauntlet/gauntlet.md3",
-			0, 0, 0,    0 },
-		"",  // icon
-		"icons/ammo1",           // ammo icon
-		"Gauntlet",              // pickup
-		0,
-		IT_WEAPON,
-		WP_GAUNTLET,
-		WP_GAUNTLET,
-		WP_GAUNTLET,
-		WP_GAUNTLET,
-		WP_GAUNTLET,
-		"",                      // precache
-		"",                      // sounds
-		{0,0,0,0}
-	},
-
 
 
 	{

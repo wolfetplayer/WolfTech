@@ -197,7 +197,6 @@ If you have questions concerning this license or the applicable additional terms
 {"G_GetWeaponDamage", (byte *)G_GetWeaponDamage},
 {"SnapVectorTowards", (byte *)SnapVectorTowards},
 {"CheckMeleeAttack", (byte *)CheckMeleeAttack},
-{"Weapon_Gauntlet", (byte *)Weapon_Gauntlet},
 {"Weapon_Class_Special", (byte *)Weapon_Class_Special},
 {"weapon_callAirStrike", (byte *)weapon_callAirStrike},
 {"Weapon_Engineer", (byte *)Weapon_Engineer},

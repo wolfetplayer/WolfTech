@@ -2074,7 +2074,6 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 
 	switch ( newweapon ) {
 
-	case WP_GAUNTLET:
 	case WP_MONSTER_ATTACK1:
 	case WP_MONSTER_ATTACK2:
 	case WP_MONSTER_ATTACK3:
@@ -3043,7 +3042,6 @@ static void PM_Weapon( void ) {
 
 			switch ( pm->ps->weapon ) {
 				// Ridah, only play if using a triggered weapon
-			case WP_GAUNTLET:
 			case WP_MONSTER_ATTACK1:
 			case WP_DYNAMITE:
 			case WP_GRENADE_LAUNCHER:
@@ -3170,17 +3168,6 @@ static void PM_Weapon( void ) {
 			if ( ( !pm->ps->ammoclip[WP_AKIMBO] && !akimboFire ) || ( !pm->ps->ammoclip[WP_COLT] && akimboFire ) ) {
 				addTime = 2 * ammoTable[pm->ps->weapon].nextShotTime;
 			}
-		}
-		break;
-	case WP_GAUNTLET:
-		switch ( pm->ps->aiChar )
-		{
-		case AICHAR_LOPER:              // delay 'til next attack
-			addTime = 1000;
-			break;
-		default:
-			addTime = 250;
-			break;
 		}
 		break;
 	}

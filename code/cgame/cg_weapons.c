@@ -1049,7 +1049,6 @@ void CG_RegisterWeapon( int weaponNum ) {
 	case WP_MONSTER_ATTACK1:
 	case WP_MONSTER_ATTACK2:
 	case WP_MONSTER_ATTACK3:
-	case WP_GAUNTLET:
 	case WP_SNIPER:
 	case WP_MORTAR:
 
@@ -1424,11 +1423,6 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/tesla/teslaf1.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/tesla/tesla_reload.wav" );
 		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/tesla/tesla_overheat.wav" );
-		break;
-
-	case WP_GAUNTLET:
-		MAKERGB( weaponInfo->flashDlightColor, 0.6, 0.6, 1 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/melee/fstatck.wav" );
 		break;
 
 	default:
@@ -2513,13 +2507,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	if ( !gun.hModel ) {
 		if ( debuggingweapon ) {
 			CG_Printf( "returning due to: !gun.hModel\n" );
-		}
-		return;
-	}
-
-	if ( weaponNum == WP_GAUNTLET ) {  // (SA) this is the 'knife'.  no model yet, so we can give it to the zombie and have him visually 'unarmed'
-		if ( debuggingweapon ) {
-			CG_Printf( "returning due to: weaponNum == WP_GAUNTLET\n" );
 		}
 		return;
 	}
