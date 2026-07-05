@@ -103,6 +103,10 @@ float Com_GetFlamethrowerRange( void );
 #define CROUCH_VIEWHEIGHT   16
 #define DEAD_VIEWHEIGHT     -16
 
+#define DEFAULT_RUN_SPEED_SCALE     0.8
+#define DEFAULT_SPRINT_SPEED_SCALE  1.1
+#define DEFAULT_CROUCH_SPEED_SCALE  0.25
+
 // RF, temp only, use infantryss so we can test new anim system
 //#define	DEFAULT_MODEL		"american"
 #define DEFAULT_MODEL       "bj2"

@@ -1520,6 +1520,52 @@ qboolean AICast_ScriptAction_SelectWeapon( cast_state_t *cs, char *params ) {
 }
 
 
+/*
+==============
+AICast_ScriptAction_SetMoveSpeed
+	syntax: setmovespeed <value>
+==============
+*/
+qboolean AICast_ScriptAction_SetMoveSpeed( cast_state_t *cs, char *params ) {
+	gentity_t *ent;
+
+	ent = &g_entities[cs->entityNum];
+
+#ifdef MONEY
+	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
+		return qtrue;
+	}
+#endif
+
+	if ( !params || !params[0] ) {
+		G_Error( "AI Scripting: setmovespeed requires a movespeed value" );
+	}
+
+	if ( !Q_stricmp( params, "veryfast" ) ) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 1.5;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 1.5;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 1.5;
+	} else if ( !Q_stricmp ( params, "fast" )) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 1.3;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 1.3;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 1.3;
+	} else if ( !Q_stricmp ( params, "default" )) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 1.0;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 1.0;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 1.0;
+	} else if ( !Q_stricmp ( params, "slow" )) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 0.7;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 0.7;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 0.9;
+	} else if ( !Q_stricmp ( params, "veryslow" )) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 0.5;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 0.5;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 0.9;
+	}
+
+	return qtrue;
+}
+
 
 //----(SA)	added
 /*
