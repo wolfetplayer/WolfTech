@@ -189,6 +189,8 @@ field_t fields[] = {
 	{"oneshot",          FOFS( oneshot ),                F_INT},
 	{"wave",             FOFS( wave ),                F_INT},
 
+	{"stringname",       FOFS( translation ),          F_STRING},
+
 	{NULL}
 };
 
