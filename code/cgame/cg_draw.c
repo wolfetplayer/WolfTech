@@ -1963,6 +1963,78 @@ void CG_PriorityCenterPrint( const char *str, int y, int charWidth, int priority
 // -NERVE - SMF
 
 /*
+==============
+CG_BuyPrint
+
+Called for buy-tooltip messages that should stay in the center of the screen
+for a few moments. Translates each alphanumeric word individually so dynamic
+strings (weapon name + price) can be built server-side and still localize.
+==============
+*/
+void CG_BuyPrint( const char *str, int y, int charWidth ) {
+	const char *s, *p;
+	char *c = (char *)cg.buyPrint;
+	char   token[64];
+	const char *trToken;
+	int    lenTrToken;
+	int    destSizeBuyPrint = sizeof( cg.buyPrint );
+
+	s = p = str;
+	while ( 1 ) {
+		if ( Q_isalphanumeric( *s ) ) {
+			if ( !Q_isforfilename( *p ) || *p == '\r' || *p == '\n' || *p == '\0' ) {
+				// copy translation key
+				Q_strncpyz( token, s, p - s + 1 );
+
+				// get translation
+				trToken = CG_translateString( token );
+
+				lenTrToken = strlen( trToken );
+
+				// append translation
+				Q_strncpyz( c, trToken, destSizeBuyPrint );
+				destSizeBuyPrint -= lenTrToken;
+				c += lenTrToken;
+
+				// copy separator
+				Q_strncpyz( token, p, 2 );
+
+				// append separator
+				Q_strncpyz( c, token, destSizeBuyPrint );
+				destSizeBuyPrint -= 1;
+				c += 1;
+
+				s = p + 1;
+			}
+		} else {
+			s = p;
+		}
+
+		if ( !( *p++ ) ) {
+			break;
+		}
+	}
+
+	cg.buyPrintTime = cg.time;
+	cg.buyPrintY = y;
+	cg.buyPrintCharWidth = charWidth;
+
+	// count the number of lines for centering
+	cg.buyPrintLines = 1;
+	s = cg.buyPrint;
+	while ( *s ) {
+		if ( *s == '\n' ) {
+			cg.buyPrintLines++;
+		}
+		if ( !Q_strncmp( s, "\\n", 1 ) ) {
+			cg.buyPrintLines++;
+			s++;
+		}
+		s++;
+	}
+}
+
+/*
 ===================
 CG_DrawCenterString
 ===================
@@ -2014,6 +2086,72 @@ static void CG_DrawCenterString( void ) {
 		y += cg.centerPrintCharWidth * 2;
 
 		while ( *start && ( *start != '\n' ) ) {
+			start++;
+		}
+		if ( !*start ) {
+			break;
+		}
+		start++;
+	}
+
+	trap_R_SetColor( NULL );
+}
+
+/*
+===================
+CG_DrawBuyString
+===================
+*/
+static void CG_DrawBuyString( void ) {
+	char    *start;
+	int l;
+	int x, y, w;
+	float   *color;
+
+	if ( !cg.buyPrintTime ) {
+		return;
+	}
+
+	color = CG_FadeColor( cg.buyPrintTime, 1000 * cg_buyprinttime.value );
+	if ( !color ) {
+		cg.buyPrintTime = 0;
+		return;
+	}
+
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
+	trap_R_SetColor( color );
+
+	start = (char *)cg.buyPrint;
+
+	y = cg.buyPrintY - cg.buyPrintLines * BIGCHAR_HEIGHT / 2;
+
+	while ( 1 ) {
+		char linebuffer[1024];
+
+		for ( l = 0; l < 40; l++ ) {
+			if ( !start[l] || start[l] == '\n' || !Q_strncmp( &start[l], "\\n", 1 ) ) {
+				break;
+			}
+			linebuffer[l] = start[l];
+		}
+		linebuffer[l] = 0;
+
+		w = cg.buyPrintCharWidth * CG_DrawStrlen( linebuffer );
+
+		x = ( SCREEN_WIDTH - w ) / 2;
+
+		CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, cg.buyPrintCharWidth, (int)( cg.buyPrintCharWidth * 1.5 ), 0 );
+
+		y += cg.buyPrintCharWidth * 2;
+
+		while ( *start && ( *start != '\n' ) ) {
+			if ( !Q_strncmp( start, "\\n", 1 ) ) {
+				start++;
+				break;
+			}
 			start++;
 		}
 		if ( !*start ) {
@@ -3095,6 +3233,7 @@ CG_DrawIntermission
 static void CG_DrawIntermission( void ) {
 	if ( cgs.gametype == GT_SINGLE_PLAYER ) {
 		CG_DrawCenterString();
+		CG_DrawBuyString();
 		return;
 	}
 
@@ -4009,6 +4148,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 		CG_DrawNotify();
 
 		CG_DrawCenterString();
+		CG_DrawBuyString();
 
 		CG_DrawObjectiveInfo();     // NERVE - SMF
 	}

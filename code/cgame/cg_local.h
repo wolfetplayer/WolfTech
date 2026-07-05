@@ -862,6 +862,12 @@ typedef struct {
 	int centerPrintLines;
 	int centerPrintPriority;                    // NERVE - SMF
 
+	int buyPrintTime;
+	int buyPrintCharWidth;
+	int buyPrintY;
+	char buyPrint[1024];
+	int buyPrintLines;
+
 	// fade in/out
 	int fadeTime;
 	float fadeRate;
@@ -1686,6 +1692,7 @@ extern itemInfo_t cg_items[MAX_ITEMS];
 extern markPoly_t cg_markPolys[MAX_MARK_POLYS];
 
 extern vmCvar_t cg_centertime;
+extern vmCvar_t cg_buyprinttime;
 extern vmCvar_t cg_noVoiceChats;           // NERVE - SMF
 extern vmCvar_t cg_noVoiceText;            // NERVE - SMF
 extern vmCvar_t cg_noTaunt;                // NERVE - SMF
@@ -2010,6 +2017,7 @@ void CG_AddLagometerFrameInfo( void );
 void CG_AddLagometerSnapshotInfo( snapshot_t *snap );
 void CG_CenterPrint( const char *str, int y, int charWidth );
 void CG_PriorityCenterPrint( const char *str, int y, int charWidth, int priority );     // NERVE - SMF
+void CG_BuyPrint( const char *str, int y, int charWidth );
 void CG_ObjectivePrint( const char *str, int charWidth, int team );     // NERVE - SMF
 void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t headAngles );
 void CG_DrawActive( stereoFrame_t stereoView );

@@ -1217,6 +1217,7 @@ static void CG_MapRestart( void ) {
 	memset( &cg.lastWeapSelInBank[0], 0, MAX_WEAP_BANKS * sizeof( int ) );  // clear weapon bank selections
 
 	cg.centerPrintTime = 0; // reset centerprint counter so previous messages don't re-appear
+	cg.buyPrintTime = 0; // reset buyprint counter so previous messages don't re-appear
 	cg.itemPickupTime = 0;  // reset item pickup counter so previous messages don't re-appear
 	cg.cursorHintFade = 0;  // reset cursor hint timer
 	cg.yougotmailTime = 0;  // reset
@@ -1497,6 +1498,11 @@ static void CG_ServerCommand( void ) {
 		} else {
 			CG_CenterPrint( CG_LocalizeServerCommand( CG_Argv( 1 ) ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );  //----(SA)	modified
 		}
+		return;
+	}
+
+	if ( !strcmp( cmd, "cpbuy" ) ) {
+		CG_BuyPrint( CG_Argv( 1 ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
 		return;
 	}
 
