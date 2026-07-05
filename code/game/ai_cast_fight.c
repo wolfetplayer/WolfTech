@@ -509,6 +509,7 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 			return BLACKGUARD_MELEE_RANGE;
 
 		case AICHAR_ZOMBIE: // zombie flaming attack
+		case AICHAR_ZOMBIE_FLAME:
 			return ZOMBIE_FLAME_RADIUS - 50;      // get well within range before starting
 		}
 		break;
@@ -947,6 +948,7 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 		switch ( g_entities[cs->entityNum].aiCharacter ) {
 		case AICHAR_ZOMBIE: // zombie flaming attack
 		case AICHAR_ZOMBIE_SURV:
+		case AICHAR_ZOMBIE_FLAME:
 			delay = 4000;
 			if ( dist < 0 ) { // || dist < 128) {
 				return qfalse;
@@ -1475,7 +1477,7 @@ void AICast_WeaponSway( cast_state_t *cs, vec3_t ofs ) {
 	VectorClear( ofs );
 	switch ( cs->weaponNum ) {
 	case WP_MONSTER_ATTACK1:
-		if ( cs->aiCharacter != AICHAR_ZOMBIE ) {
+		if ( cs->aiCharacter != AICHAR_ZOMBIE && cs->aiCharacter != AICHAR_ZOMBIE_FLAME ) {
 			break;      // only allow flaming zombie beyond here
 		}
 	case WP_FLAMETHROWER:

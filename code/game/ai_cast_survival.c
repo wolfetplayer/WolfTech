@@ -65,12 +65,16 @@ If you have questions concerning this license or the applicable additional terms
 #define WAVE_HELGA 10
 #define WAVE_HEINRICH 15
 #define WAVE_LOPERS 5
+#define WAVE_FLAMERS 4
 
 #define MAX_SOLDIERS_SURVIVAL 10
 #define SOLDIERS_INCREASE 1
 
 #define MAX_ZOMBIES_SURVIVAL 20
 #define ZOMBIES_INCREASE 1
+
+#define MAX_FLAMERS_SURVIVAL 3
+#define FLAMERS_INCREASE 1
 
 #define MAX_WARRIORS_SURVIVAL 5
 #define WARRIORS_INCREASE 1
@@ -124,6 +128,7 @@ void AICast_InitSurvival(void) {
 
 	svParams.maxActiveAI[AICHAR_SOLDIER] = 5;
 	svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = 5;
+	svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] = 0;
 	svParams.maxActiveAI[AICHAR_WARZOMBIE] = 0;
 	svParams.maxActiveAI[AICHAR_PROTOSOLDIER] = 0;
 	svParams.maxActiveAI[AICHAR_PARTISAN] = 2;
@@ -480,7 +485,7 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 	if ( self->client->ps.pm_type == PM_DEAD ) {
 		// already dead
 		if ( self->health < GIB_HEALTH ) {
-			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV  ) {
+			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV || self->aiCharacter == AICHAR_ZOMBIE_FLAME  ) {
 				// RF, changed this so Zombies always gib now
 				GibEntity( self, killer );
 				nogib = qfalse;
@@ -545,7 +550,7 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 
 		// never gib in a nodrop
 		if ( self->health <= GIB_HEALTH ) {
-			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV  ) {
+			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV || self->aiCharacter == AICHAR_ZOMBIE_FLAME  ) {
 				// RF, changed this so Zombies always gib now
 				GibEntity( self, killer );
 				nogib = qfalse;
@@ -701,6 +706,14 @@ void AICast_UpdateMaxActiveAI(void)
         svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = MAX_ZOMBIES_SURVIVAL;
     }
 
+    // Flamer Zombies
+    if (svParams.waveCount >= WAVE_FLAMERS) {
+        svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] += FLAMERS_INCREASE;
+        if (svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] > MAX_FLAMERS_SURVIVAL) {
+            svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] = MAX_FLAMERS_SURVIVAL;
+        }
+    }
+
 
     // Warriors
     if (svParams.waveCount >= WAVE_WARRIORS) {
@@ -757,6 +770,9 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 		break;
 	case AICHAR_WARZOMBIE:
 		waveAppeared = WAVE_WARRIORS;
+		break;
+	case AICHAR_ZOMBIE_FLAME:
+		waveAppeared = WAVE_FLAMERS;
 		break;
 	case AICHAR_PROTOSOLDIER:
 		waveAppeared = WAVE_PROTO;
@@ -894,6 +910,7 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 			break;
 
 		case AICHAR_ZOMBIE_SURV:
+		case AICHAR_ZOMBIE_FLAME:
 			if (svParams.waveCount < 10)
 			{
 				newHealth = 20 + rawSteps * 10;
@@ -1124,6 +1141,7 @@ void BG_SetBehaviorForSurvival(AICharacters_t characterNum) {
 			reactionTime = 0.1f;
 			break;
 		case AICHAR_ZOMBIE_SURV:
+		case AICHAR_ZOMBIE_FLAME:
 		case AICHAR_WARZOMBIE:
 		case AICHAR_LOPER:
 		case AICHAR_LOPER_SPECIAL:

@@ -245,6 +245,54 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 		AISTATE_ALERT
 	},
 
+	//AICHAR_ZOMBIE_FLAME
+	{
+		"Zombie Flame",
+		{
+			200,        // running speed
+			60,         // walking speed
+			80,         // crouching speed
+			90,         // Field of View
+			350,        // Yaw Speed
+			0.0,        // leader
+			0.70,       // aim skill
+			0.70,       // aim accuracy
+			0.75,       // attack skill
+			0.1,        // reaction time
+			0.0,        // attack crouch
+			0.0,        // idle crouch
+			1.0,        // aggression
+			0.0,        // tactical
+			0.0,        // camper
+			16000,      // alertness
+			180,        // starting health
+			1.0,        // hearing scale
+			0.9,        // not in pvs hearing scale
+			512,        // relaxed detection radius
+			1.0,        // pain threshold multiplier
+		},
+		{
+			"zombieSightPlayer",
+			"zombieAttackPlayer",
+			"zombieOrders",
+			"zombieDeath",
+			"zombieSilentDeath",				//----(SA)	added
+			"zombieFlameDeath",					//----(SA)	added
+			"zombiePain",
+			"sound/weapons/melee/fstatck.wav",	// stay - you're told to stay put
+			"sound/weapons/melee/fstmiss.wav",	// follow - go with ordering player ("i'm with you" rather than "yes sir!")
+			"zombieOrdersDeny",					// deny - refuse orders (doing something else)
+		},
+		AITEAM_MONSTER,
+		"zombie/default",
+		{WP_MONSTER_ATTACK1},
+		BBOX_SMALL, {32,48},
+		/*AIFL_NOPAIN|AIFL_WALKFORWARD|*/ AIFL_NO_RELOAD,
+		AIFunc_ZombieFlameAttackStart, AIFunc_ZombieAttack2Start, AIFunc_ZombieMeleeStart,
+		NULL,
+		AISTATE_ALERT
+	},
+
 //----(SA)	added
 	//AICHAR_WARZOMBIE
 	{
@@ -1741,6 +1789,16 @@ SP_ai_zombie_surv
 void SP_ai_zombie_surv( gentity_t *ent ) {
 	ent->r.svFlags |= SVF_NOFOOTSTEPS;
 	AICast_DelayedSpawnCast( ent, AICHAR_ZOMBIE_SURV );
+}
+
+/*
+============
+SP_ai_zombie_flame
+============
+*/
+void SP_ai_zombie_flame( gentity_t *ent ) {
+	ent->r.svFlags |= SVF_NOFOOTSTEPS;
+	AICast_DelayedSpawnCast( ent, AICHAR_ZOMBIE_FLAME );
 }
 
 /*

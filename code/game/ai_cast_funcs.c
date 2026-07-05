@@ -489,6 +489,7 @@ void AICast_SpecialFunc( cast_state_t *cs ) {
 		break;
 	case AICHAR_ZOMBIE:
 	case AICHAR_ZOMBIE_SURV:
+	case AICHAR_ZOMBIE_FLAME:
 		if ( COM_BitCheck( cs->bs->cur_ps.weapons, WP_MONSTER_ATTACK1 ) ) { // flaming zombie, run
 			BG_UpdateConditionValue( cs->entityNum, ANIM_COND_CHARGING, 1, qfalse );
 		}
@@ -3015,7 +3016,8 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 
 	// Flaming zombies can emit flame while chasing and facing target direction
 	if ( ( cs->aiCharacter == AICHAR_ZOMBIE ||
-		   cs->aiCharacter == AICHAR_ZOMBIE_SURV ) &&
+		   cs->aiCharacter == AICHAR_ZOMBIE_SURV ||
+		   cs->aiCharacter == AICHAR_ZOMBIE_FLAME ) &&
 		 IS_FLAMING_ZOMBIE( ent->s ) &&
 		 fabs( cs->ideal_viewangles[YAW] - cs->viewangles[YAW] ) < 5 ) {
 		if ( fabs( sin( ( level.time + cs->entityNum * 314 ) / 1000 ) *
@@ -5255,6 +5257,7 @@ char *AIFunc_DefaultStart( cast_state_t *cs ) {
 	switch ( cs->aiCharacter ) {
 	case AICHAR_ZOMBIE:
 	case AICHAR_ZOMBIE_SURV:
+	case AICHAR_ZOMBIE_FLAME:
 		if ( first && ( g_entities[cs->entityNum].spawnflags & 4 ) ) {
 			return AIFunc_FlameZombie_PortalStart( cs );
 		}

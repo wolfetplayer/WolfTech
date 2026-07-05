@@ -398,7 +398,7 @@ static float PM_CmdScale( usercmd_t *cmd ) {
 	scale = (float)pm->ps->speed * max / ( 127.0 * total );
 
 
-	if ( pm->ps->aiChar == AICHAR_ZOMBIE || pm->ps->aiChar == AICHAR_WARZOMBIE) {
+	if ( pm->ps->aiChar == AICHAR_ZOMBIE || pm->ps->aiChar == AICHAR_WARZOMBIE || pm->ps->aiChar == AICHAR_ZOMBIE_FLAME) {
 		scale *= 1.1;
 	}
 

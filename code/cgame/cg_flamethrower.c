@@ -230,7 +230,7 @@ void CG_FireFlameChunks( centity_t *cent, vec3_t origin, vec3_t angles, float sp
 //----(SA)	end
 
 	// only do one ignition flame for zombie
-	if ( cent->currentState.aiChar == AICHAR_ZOMBIE && !firing ) {
+	if ( ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME ) && !firing ) {
 		if ( !centInfo->lastFiring ) {
 			return;
 		}
@@ -1500,7 +1500,7 @@ void CG_UpdateFlamethrowerSounds( void ) {
 			}
 
 			if ( centFlameStatus[f->ownerCent].streamVolume ) {
-				if ( cg_entities[f->ownerCent].currentState.aiChar != AICHAR_ZOMBIE ) {
+				if ( cg_entities[f->ownerCent].currentState.aiChar != AICHAR_ZOMBIE && cg_entities[f->ownerCent].currentState.aiChar != AICHAR_ZOMBIE_FLAME ) {
 					CG_S_AddLoopingSound( f->ownerCent, f->org, vec3_origin, cgs.media.flameStreamSound, (int)( 255.0 ) );
 				} else {
 					CG_S_AddLoopingSound( f->ownerCent, f->org, vec3_origin, cgs.media.flameCrackSound, (int)( 255.0 * centFlameStatus[f->ownerCent].streamVolume ) );
