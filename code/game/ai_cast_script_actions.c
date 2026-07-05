@@ -860,6 +860,35 @@ qboolean AICast_ScriptAction_FollowCast( cast_state_t *cs, char *params ) {
 	return qtrue;
 }
 
+
+#define SUBTITLE_HEAR_RANGE 1250
+/*
+================
+AICast_SendSubtitleInRange
+
+  Sends a "cpst" subtitle only to clients within audible range of the speaker,
+  so players elsewhere on the map don't get dialogue they couldn't have heard.
+================
+*/
+static void AICast_SendSubtitleInRange( vec3_t speakerOrigin, const char *params ) {
+	int i;
+	gentity_t *player;
+
+	for ( i = 0; i < level.maxclients; i++ ) {
+		player = &g_entities[i];
+
+		if ( !player->inuse || !player->client || player->client->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+
+		if ( Distance( speakerOrigin, player->client->ps.origin ) > SUBTITLE_HEAR_RANGE ) {
+			continue;
+		}
+
+		trap_SendServerCommand( i, va( "cpst %s", params ) );
+	}
+}
+
 /*
 ================
 AICast_ScriptAction_PlaySound
@@ -874,7 +903,7 @@ qboolean AICast_ScriptAction_PlaySound( cast_state_t *cs, char *params ) {
 		G_Error( "AI Scripting: syntax error\n\nplaysound <soundname OR scriptname>\n" );
 	}
 
-	trap_SendServerCommand( -1, va( "cpst %s", params ) );
+	AICast_SendSubtitleInRange( cs->bs->origin, params );
 	G_AddEvent( &g_entities[cs->bs->entitynum], EV_GENERAL_SOUND, G_SoundIndex( params ) );
 
 	// assume we are talking
