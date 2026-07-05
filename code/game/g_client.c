@@ -1860,7 +1860,9 @@ void ClientSpawn( gentity_t *ent ) {
 	ent->watertype = 0;
 	ent->flags = 0;
 
-	client->ps.persistant[PERS_WAVES] = 0;
+	if ( !ent->client->pers.initialSpawn ) {
+		client->ps.persistant[PERS_WAVES] = 0;
+	}
 
 	// freeze the players if needed
 	if ( g_freeze.integer && g_gametype.integer <= GT_COOP && !( ent->r.svFlags & SVF_CASTAI ) ) {
