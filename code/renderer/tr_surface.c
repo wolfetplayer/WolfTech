@@ -228,7 +228,10 @@ static void RB_SurfacePolychain( srfPoly_t *p ) {
 		tess.texCoords[numv][0][0] = p->verts[i].st[0];
 		tess.texCoords[numv][0][1] = p->verts[i].st[1];
 
-		*(int *)&tess.vertexColors[numv] = *(int *)p->verts[i].modulate;
+		tess.vertexColors[numv][0] = R_GammaByte(p->verts[i].modulate[0]);
+		tess.vertexColors[numv][1] = R_GammaByte(p->verts[i].modulate[1]);
+		tess.vertexColors[numv][2] = R_GammaByte(p->verts[i].modulate[2]);
+		tess.vertexColors[numv][3] = p->verts[i].modulate[3];
 		numv++;
 	}
 
