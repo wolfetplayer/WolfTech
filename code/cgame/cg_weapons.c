@@ -1045,7 +1045,6 @@ void CG_RegisterWeapon( int weaponNum ) {
 	// don't bother trying
 	switch ( weaponNum ) {
 	case WP_NONE:
-	case WP_CLASS_SPECIAL:
 	case WP_MONSTER_ATTACK1:
 	case WP_MONSTER_ATTACK2:
 	case WP_MONSTER_ATTACK3:
@@ -1377,7 +1376,6 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->trailRadius         = 256;
 		break;
 
-	case WP_CLASS_SPECIAL:
 	case WP_MEDIC_HEAL:
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash1.wav" );
 		weaponInfo->flashSound[1] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash2.wav" );

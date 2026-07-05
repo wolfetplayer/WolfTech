@@ -599,8 +599,7 @@ typedef enum {
 	
 	WP_MP34,
 
-	WP_CLASS_SPECIAL,       
-	WP_DYNAMITE,            
+	WP_DYNAMITE,
 
 	WP_MONSTER_ATTACK1,
 	WP_MONSTER_ATTACK2,
