@@ -868,6 +868,12 @@ typedef struct {
 	char buyPrint[1024];
 	int buyPrintLines;
 
+	int subtitlePrintTime;
+	int subtitlePrintCharWidth;
+	int subtitlePrintY;
+	char subtitlePrint[1024];
+	int subtitlePrintLines;
+
 	// fade in/out
 	int fadeTime;
 	float fadeRate;
@@ -1652,6 +1658,8 @@ typedef struct {
 
 	char itemPrintNames[MAX_ITEMS][32];             //----(SA)	added
 
+	char ignoredSubtitles[255][255];
+
 	// New notify mechanism for obits
 	char notifyMsgs[NOTIFY_HEIGHT][NOTIFY_WIDTH * 3 + 1];
 	int notifyMsgTimes[NOTIFY_HEIGHT];
@@ -1693,6 +1701,9 @@ extern markPoly_t cg_markPolys[MAX_MARK_POLYS];
 
 extern vmCvar_t cg_centertime;
 extern vmCvar_t cg_buyprinttime;
+extern vmCvar_t cg_drawSubtitles;
+extern vmCvar_t cg_subtitleSize;
+extern vmCvar_t cg_subtitleShadow;
 extern vmCvar_t cg_noVoiceChats;           // NERVE - SMF
 extern vmCvar_t cg_noVoiceText;            // NERVE - SMF
 extern vmCvar_t cg_noTaunt;                // NERVE - SMF
@@ -2018,6 +2029,7 @@ void CG_AddLagometerSnapshotInfo( snapshot_t *snap );
 void CG_CenterPrint( const char *str, int y, int charWidth );
 void CG_PriorityCenterPrint( const char *str, int y, int charWidth, int priority );     // NERVE - SMF
 void CG_BuyPrint( const char *str, int y, int charWidth );
+void CG_SubtitlePrint( const char *str, int y, int charWidth );
 void CG_ObjectivePrint( const char *str, int charWidth, int team );     // NERVE - SMF
 void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t headAngles );
 void CG_DrawActive( stereoFrame_t stereoView );
@@ -2319,6 +2331,8 @@ void CG_LoadingString( const char *s );
 void CG_DrawExitStats( void );
 void CG_DrawInformation( void );
 const char *CG_translateString( const char *str );
+const char *CG_translateTextString( const char *str );
+const char *CG_translateTextString2( const char *str );
 
 //
 // cg_scoreboard.c

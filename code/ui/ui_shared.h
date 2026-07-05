@@ -452,6 +452,15 @@ typedef struct {
 #define MAX_TRANSLATESTRINGS 64
 extern translateString_t translateStrings[MAX_TRANSLATESTRINGS];
 
+// added by Eugeny Panikarowsky
+typedef struct {
+	char *stringname;
+	char *stringtext;
+} translateTextString_t;
+
+#define MAX_TRANSLATETEXTSTRINGS 2048
+extern translateTextString_t translateTextStrings[MAX_TRANSLATETEXTSTRINGS];
+
 //----(SA)	end
 
 

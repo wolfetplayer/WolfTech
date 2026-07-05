@@ -2035,6 +2035,54 @@ void CG_BuyPrint( const char *str, int y, int charWidth ) {
 }
 
 /*
+==============
+CG_SubtitlePrint
+
+Called for important messages that should stay in the center of the screen
+==============
+*/
+void CG_SubtitlePrint( const char *str, int y, int charWidth ) {
+	char   *s;
+	int len;
+
+	const char *translated = CG_translateTextString( str );
+
+	// Check if the translated string is "IGNORED_SUBTITLE", indicating an ignored subtitle
+	if ( strcmp( translated, "IGNORED_SUBTITLE" ) == 0 ) {
+		// If it is, return immediately to prevent the subtitle from being displayed
+		return;
+	}
+
+	// Copy the translated string to cg.subtitlePrint
+	Q_strncpyz( cg.subtitlePrint, translated, sizeof( cg.subtitlePrint ) );
+
+	cg.subtitlePrintY = y;
+	cg.subtitlePrintCharWidth = charWidth;
+
+	// count the number of lines for centering
+	cg.subtitlePrintLines = 1;
+	s = cg.subtitlePrint;
+	while ( *s ) {
+		if ( *s == '\n' ) {
+			cg.subtitlePrintLines++;
+		}
+		if ( !Q_strncmp( s, "\\n", 1 ) ) {
+			cg.subtitlePrintLines++;
+			s++;
+		}
+		s++;
+	}
+
+	// Calculate the number of characters in the message
+	len = CG_DrawStrlen( cg.subtitlePrint );
+	// Calculate the display time based on an average reading speed of 17 characters per second
+	int displayTime = (int)( ( len / 17.0f ) * 1000 ); // Convert to milliseconds
+
+	// Set the time at which the message should disappear
+	cg.subtitlePrintTime = cg.time + displayTime;
+}
+
+/*
 ===================
 CG_DrawCenterString
 ===================
@@ -2163,7 +2211,78 @@ static void CG_DrawBuyString( void ) {
 	trap_R_SetColor( NULL );
 }
 
+/*
+===================
+CG_DrawSubtitleString
+===================
+*/
+static void CG_DrawSubtitleString( void ) {
+	char    *start;
+	int l;
+	int x, y, w;
+	float   *color;
 
+	if ( !cg.subtitlePrintTime ) {
+		return;
+	}
+
+	color = CG_FadeColor( cg.subtitlePrintTime, 1000 * cg_centertime.value );
+	if ( !color ) {
+		cg.subtitlePrintTime = 0;
+		return;
+	}
+
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
+	trap_R_SetColor( color );
+
+	start = cg.subtitlePrint;
+
+	y = cg.subtitlePrintY - cg.subtitlePrintLines * BIGCHAR_HEIGHT / 2;
+
+	while ( 1 ) {
+		char linebuffer[1024];
+
+		for ( l = 0; l < 50; l++ ) { // Line length limit
+			if ( !start[l] || start[l] == '\n' || !Q_strncmp( &start[l], "\\n", 1 ) ) {
+				break;
+			}
+			linebuffer[l] = start[l];
+			if ( l >= 49 && start[l+1] != ' ' && start[l+1] != '\0' ) { // Check if the next character is a space or end of string
+				while ( l > 0 && linebuffer[l] != ' ' ) { // Move back to the last space
+					l--;
+				}
+				break;
+			}
+		}
+		linebuffer[l] = 0;
+
+		w = cg.subtitlePrintCharWidth * CG_DrawStrlen( linebuffer );
+
+		x = ( SCREEN_WIDTH - w ) / 2;
+
+		if ( cg_subtitleShadow.integer ) {
+			CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, cg.subtitlePrintCharWidth, (int)( cg.subtitlePrintCharWidth * 1.5 ), 0 );
+		} else {
+			CG_DrawStringExt( x, y, linebuffer, color, qfalse, qfalse, cg.subtitlePrintCharWidth, (int)( cg.subtitlePrintCharWidth * 1.5 ), 0 );
+		}
+
+		y += cg.subtitlePrintCharWidth * 2;
+
+		// Skip processed characters and newline characters
+		start += l;
+		while ( *start && ( *start == '\n' || !Q_strncmp( start, "\\n", 1 ) ) ) {
+			start++;
+		}
+		if ( !*start ) {
+			break;
+		}
+	}
+
+	trap_R_SetColor( NULL );
+}
 
 /*
 ================================================================================
@@ -3234,6 +3353,7 @@ static void CG_DrawIntermission( void ) {
 	if ( cgs.gametype == GT_SINGLE_PLAYER ) {
 		CG_DrawCenterString();
 		CG_DrawBuyString();
+		CG_DrawSubtitleString();
 		return;
 	}
 
@@ -4149,6 +4269,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 
 		CG_DrawCenterString();
 		CG_DrawBuyString();
+		CG_DrawSubtitleString();
 
 		CG_DrawObjectiveInfo();     // NERVE - SMF
 	}

@@ -156,6 +156,10 @@ translateString_t translateStrings[] = {
 	{"or"}                       //
 };
 
+// map-specific subtitle translations, populated at runtime from text/EnglishUSA/maps/<mapname>.txt
+translateTextString_t translateTextStrings[MAX_TRANSLATETEXTSTRINGS] = {
+};
+
 vmCvar_t ui_fixedAspect;
 vmCvar_t ui_fixedAspectFOV;
 

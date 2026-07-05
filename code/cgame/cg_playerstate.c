@@ -228,6 +228,7 @@ void CG_Respawn( void ) {
 	cg.holdableSelectTime = 0;  //----(SA) reset holdable timer
 
 	cg.centerPrintTime = 0;     //----(SA)	reset centerprint counter so previous messages don't re-appear
+	cg.subtitlePrintTime = 0;     //----(SA)	reset subtitleprint counter so previous messages don't re-appear
 	cg.cursorHintIcon = 0;
 	cg.cursorHintTime = 0;
 	cg.yougotmailTime = 0;

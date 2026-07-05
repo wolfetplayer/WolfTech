@@ -111,6 +111,9 @@ vmCvar_t cg_quickMessageAlt;
 vmCvar_t cg_railTrailTime;
 vmCvar_t cg_centertime;
 vmCvar_t cg_buyprinttime;
+vmCvar_t cg_drawSubtitles;
+vmCvar_t cg_subtitleSize;
+vmCvar_t cg_subtitleShadow;
 vmCvar_t cg_runpitch;
 vmCvar_t cg_runroll;
 vmCvar_t cg_bobup;
@@ -384,6 +387,9 @@ cvarTable_t cvarTable[] = {
 	{&cg_gun_z, "cg_gunZ", "0", CVAR_CHEAT},
 	{&cg_centertime, "cg_centertime", "3", CVAR_CHEAT},
 	{&cg_buyprinttime, "cg_buyprinttime", "1", CVAR_CHEAT},
+	{&cg_drawSubtitles, "cg_drawSubtitles", "0", CVAR_ARCHIVE},
+	{&cg_subtitleSize, "cg_subtitleSize", "7", CVAR_ARCHIVE},
+	{&cg_subtitleShadow, "cg_subtitleShadow", "1", CVAR_ARCHIVE},
 	{&cg_runpitch, "cg_runpitch", "0.002", CVAR_ARCHIVE},
 	{&cg_runroll, "cg_runroll", "0.005", CVAR_ARCHIVE},
 	{&cg_bobup, "cg_bobup", "0.005", CVAR_ARCHIVE},
@@ -907,9 +913,157 @@ static void CG_LoadTranslationStrings( void ) {
 }
 
 
+static void CG_LoadTranslationTextStrings( const char *file ) {
+	char buffer[MAX_BUFFER];
+	char *text;
+	char filename[MAX_QPATH];
+	fileHandle_t f;
+	int len, i;
+	char *token;
+
+	Q_strncpyz( filename, file, sizeof( filename ) );
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( len <= 0 ) {
+		CG_Printf( S_COLOR_RED "WARNING: string translation file (main/%s)\n", filename );
+		return;
+	}
+	if ( len > MAX_BUFFER ) {
+		CG_Printf( "%s is too big, make it smaller (max = %i bytes)\n", filename, MAX_BUFFER );
+	}
+
+	// load the file into memory
+	trap_FS_Read( buffer, len, f );
+	buffer[len] = 0;
+	trap_FS_FCloseFile( f );
+	// parse the list
+	text = buffer;
+	token = COM_ParseExt( &text, qtrue );
+	if ( token[0] != '{' ) {
+		CG_Printf( "^1WARNING: expecting '{', found '%s' instead in translation file \"text/translate.txt\"\n", token );
+		return;
+	}
+	i = 0;
+	while ( 1 )
+	{
+		token = COM_ParseExt( &text, qtrue );
+		if ( !token[0] ) {
+			CG_Printf( "^1WARNING: no concluding '}' in translation file \"text/translate.txt\"\n" );
+			break;
+		}
+		// end of shader definition
+		if ( token[0] == '}' ) {
+			break;
+		}
+		translateTextStrings[i].stringname = malloc( strlen( token ) + 1 );
+		strcpy( translateTextStrings[i].stringname, token );
+		token = COM_ParseExt( &text, qfalse );
+		translateTextStrings[i].stringtext = malloc( strlen( token ) + 1 );
+		strcpy( translateTextStrings[i].stringtext, token );
+		i++;
+	}
+}
+
+static void CG_LoadIgnoredTranslationTextStrings( void ) {
+	char buffer[MAX_BUFFER];
+	char *text;
+	char filename[MAX_QPATH];
+	fileHandle_t f;
+	int len, i;
+	char *token;
+
+	Com_sprintf( filename, MAX_QPATH, "text/ignoredstitles.txt" );
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( len <= 0 ) {
+		CG_Printf( S_COLOR_RED "WARNING: ignored name file (ignoredstitles.txt not found in main/text)\n" );
+		return;
+	}
+	if ( len > MAX_BUFFER ) {
+		CG_Error( "%s is too big, make it smaller (max = %i bytes)\n", filename, MAX_BUFFER );
+	}
+
+	// load the file into memory
+	trap_FS_Read( buffer, len, f );
+	buffer[len] = 0;
+	trap_FS_FCloseFile( f );
+	// parse the list
+	text = buffer;
+
+	for ( i = 0; i < 255; i++ ) {
+		token = COM_ParseExt( &text, qtrue );
+		if ( !token[0] ) {
+			break;
+		}
+		Com_sprintf( cgs.ignoredSubtitles[i], MAX_QPATH, "%s", token );
+	}
+}
+
 static void CG_LoadTranslateStrings( void ) {
+	const char  *info;
+	char    *mapname;
+
+	info = CG_ConfigString( CS_SERVERINFO );
+	mapname = Info_ValueForKey( info, "mapname" );
+
 	CG_LoadPickupNames();
 	CG_LoadTranslationStrings();    // right now just centerprint
+	CG_LoadTranslationTextStrings( va( "text/EnglishUSA/maps/%s.txt", mapname ) );
+	CG_LoadIgnoredTranslationTextStrings();
+}
+
+////////
+/// Added by Eugeny Panikarowsky
+////////
+const char *CG_translateTextString( const char *str ) {
+	int i, numStrings;
+
+	numStrings = sizeof( cgs.ignoredSubtitles ) / sizeof( cgs.ignoredSubtitles[0] ) - 1;
+	for ( i = 0; i < numStrings; i++ ) {
+		if ( !strcmp( str, cgs.ignoredSubtitles[i] ) ) {
+			// Return a special string to indicate an ignored subtitle
+			return "IGNORED_SUBTITLE";
+		}
+	}
+	numStrings = sizeof( translateTextStrings ) / sizeof( translateTextStrings[0] ) - 1;
+	i = 0;
+
+	for ( i = 0; i < numStrings; i++ ) {
+		if ( !translateTextStrings[i].stringname || !strlen( translateTextStrings[i].stringname ) ) {
+			return str;
+		}
+		if ( !strcmp( str, translateTextStrings[i].stringname ) ) {
+			if ( translateTextStrings[i].stringtext && strlen( translateTextStrings[i].stringtext ) ) {
+				return translateTextStrings[i].stringtext;
+			}
+			break;
+		}
+	}
+	return str;
+}
+
+const char *CG_translateTextString2( const char *str ) {
+	int i, numStrings;
+
+	numStrings = sizeof( cgs.ignoredSubtitles ) / sizeof( cgs.ignoredSubtitles[0] ) - 1;
+	for ( i = 0; i < numStrings; i++ ) {
+		if ( !strcmp( str, cgs.ignoredSubtitles[i] ) ) {
+			return "";
+		}
+	}
+	numStrings = sizeof( translateTextStrings ) / sizeof( translateTextStrings[0] ) - 1;
+	i = 0;
+
+	for ( i = 0; i < numStrings; i++ ) {
+		if ( !translateTextStrings[i].stringname || !strlen( translateTextStrings[i].stringname ) ) {
+			return str;
+		}
+		if ( !strcmp( str, translateTextStrings[i].stringname ) ) {
+			if ( translateTextStrings[i].stringtext && strlen( translateTextStrings[i].stringtext ) ) {
+				return translateTextStrings[i].stringtext;
+			}
+			break;
+		}
+	}
+	return str;
 }
 
 //----(SA)	end
