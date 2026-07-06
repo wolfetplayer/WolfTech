@@ -293,6 +293,7 @@ typedef struct
 	int scriptAttackEnt;            // we should always attack this AI if they are alive
 	vec3_t playanim_viewangles;
 	const cast_script_stack_action_t *currentAction;
+	qboolean scriptGotoIsGroup;     // scriptGotoEnt was chosen from a "prefix*" marker group, not an exact targetname
 } cast_script_status_t;
 //
 typedef struct

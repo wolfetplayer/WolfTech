@@ -91,9 +91,38 @@ void AICast_NoAttackIfNotHurtSinceLastScriptAction( cast_state_t *cs ) {
 
 /*
 ===============
+AICast_TravelTimeToPoint
+
+  Used by the "gotomarker" prefix/group support to rank candidate markers.
+  Uses cs->bs->areanum (already resolved via BotPointAreaNum() this frame)
+  and BotPointAreaNum() for the goal, rather than raw trap_AAS_PointAreaNum(),
+  since a marker sitting right on a floor edge/ledge can fail the raw lookup
+  and would otherwise look unreachable even when it's the closest one.
+===============
+*/
+int AICast_TravelTimeToPoint( cast_state_t *cs, const vec3_t goalOrg ) {
+	int toArea = BotPointAreaNum( (float *)goalOrg );
+
+	if ( !cs->bs->areanum || !toArea ) {
+		return 0;
+	}
+
+	return trap_AAS_AreaTravelTimeToGoalArea(
+		cs->bs->areanum,
+		cs->bs->origin,
+		toArea,
+		cs->travelflags
+	);
+}
+
+/*
+===============
 AICast_ScriptAction_GotoMarker
 
-  syntax: gotomarker <targetname> [firetarget [noattack]] [nostop] OR runtomarker <targetname> [firetarget [noattack]] [nostop]
+  syntax: gotomarker <targetname|prefix*> [firetarget [noattack]] [nostop] OR runtomarker <targetname|prefix*> [firetarget [noattack]] [nostop]
+
+  a trailing '*' treats the name as a prefix and picks the closest reachable
+  ai_marker sharing it (once per command - see the cache check below)
 ===============
 */
 qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
@@ -103,6 +132,9 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 	vec3_t vec, org;
 	int i, diff;
 	qboolean slowApproach;
+	qboolean groupMode = qfalse;
+	char prefix[64];
+	int prefixLen;
 
 	ent = NULL;
 
@@ -121,88 +153,161 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 		G_Error( "AI Scripting: gotomarker must have an targetname\n" );
 	}
 
-	// if we already are going to the marker, just use that, and check if we're in range
-	if ( cs->castScriptStatus.scriptGotoEnt >= 0 && cs->castScriptStatus.scriptGotoId == cs->thinkFuncChangeTime ) {
-		ent = &g_entities[cs->castScriptStatus.scriptGotoEnt];
-		if ( ent->targetname && !Q_strcasecmp( ent->targetname, token ) ) {
-			// if we're not slowing down, then check for passing the marker, otherwise check distance only
-			VectorSubtract( ent->r.currentOrigin, cs->bs->origin, vec );
-			//
-			if ( cs->followSlowApproach && VectorLength( vec ) < cs->followDist ) {
-				cs->followTime = 0;
-				AIFunc_IdleStart( cs );   // resume normal AI
-				return qtrue;
-			} else if ( !cs->followSlowApproach && VectorLength( vec ) < 64 /*&& DotProduct(cs->bs->cur_ps.velocity, vec) < 0*/ )       {
-				cs->followTime = 0;
-				AIFunc_IdleStart( cs );   // resume normal AI
-				return qtrue;
-			} else
-			{
-				// do we have a firetarget ?
-				token = COM_ParseExt( &pString, qfalse );
-				if ( !token[0] || !Q_stricmp( token,"nostop" ) ) {
-					AICast_NoAttackIfNotHurtSinceLastScriptAction( cs );
-				} else {    // yes we do
-					// find this targetname
-					ent = G_Find( NULL, FOFS( targetname ), token );
+	// if we've already picked a marker for this command, stick with that same entity,
+	// even if we get interrupted (eg. by combat) in between calls. This matters most
+	// for "prefix*" markers: re-deriving "closest" from our CURRENT position could
+	// otherwise send us to a completely different (and much further) marker in the
+	// group after we've moved away from where we started. scriptGotoEnt is only reset
+	// to -1 when the script advances to a new command, so finding it still set here
+	// reliably means this command already chose a marker.
+	if ( cs->castScriptStatus.scriptGotoEnt >= 0 ) {
+		gentity_t *cached = &g_entities[cs->castScriptStatus.scriptGotoEnt];
+		if ( cs->castScriptStatus.scriptGotoIsGroup ||
+			 ( cached->targetname && !Q_strcasecmp( cached->targetname, token ) ) ) {
+			ent = cached;
+		}
+	}
+
+	// if that marker is still being chased without interruption, just check proximity /
+	// firetarget handling - the chase itself is already running, nothing more to set up
+	if ( ent && cs->castScriptStatus.scriptGotoId == cs->thinkFuncChangeTime )
+	{
+		// if we're not slowing down, then check for passing the marker, otherwise check distance only
+		VectorSubtract( ent->r.currentOrigin, cs->bs->origin, vec );
+		//
+		if ( cs->followSlowApproach && VectorLength( vec ) < cs->followDist ) {
+			cs->followTime = 0;
+			AIFunc_IdleStart( cs );   // resume normal AI
+			return qtrue;
+		} else if ( !cs->followSlowApproach && VectorLength( vec ) < 64 /*&& DotProduct(cs->bs->cur_ps.velocity, vec) < 0*/ )       {
+			cs->followTime = 0;
+			AIFunc_IdleStart( cs );   // resume normal AI
+			return qtrue;
+		} else
+		{
+			// do we have a firetarget ?
+			token = COM_ParseExt( &pString, qfalse );
+			if ( !token[0] || !Q_stricmp( token,"nostop" ) ) {
+				AICast_NoAttackIfNotHurtSinceLastScriptAction( cs );
+			} else {    // yes we do
+				// find this targetname
+				ent = G_Find( NULL, FOFS( targetname ), token );
+				if ( !ent ) {
+					ent = AICast_FindEntityForName( token );
 					if ( !ent ) {
-						ent = AICast_FindEntityForName( token );
-						if ( !ent ) {
-							G_Error( "AI Scripting: gotomarker cannot find targetname \"%s\"\n", token );
+						G_Error( "AI Scripting: gotomarker cannot find targetname \"%s\"\n", token );
+					}
+				}
+				// set the view angle manually
+				BG_EvaluateTrajectory( &ent->s.pos, level.time, org );
+				VectorSubtract( org, cs->bs->origin, vec );
+				VectorNormalize( vec );
+				vectoangles( vec, cs->ideal_viewangles );
+				// noattack?
+				token = COM_ParseExt( &pString, qfalse );
+				if ( !token[0] || Q_stricmp( token,"noattack" ) ) {
+					qboolean fire = qtrue;
+					// if it's an AI, and they aren't visible, dont shoot
+					if ( ent->r.svFlags & SVF_CASTAI ) {
+						if ( cs->vislist[ent->s.number].real_visible_timestamp != cs->vislist[ent->s.number].lastcheck_timestamp ) {
+							fire = qfalse;
 						}
 					}
-					// set the view angle manually
-					BG_EvaluateTrajectory( &ent->s.pos, level.time, org );
-					VectorSubtract( org, cs->bs->origin, vec );
-					VectorNormalize( vec );
-					vectoangles( vec, cs->ideal_viewangles );
-					// noattack?
-					token = COM_ParseExt( &pString, qfalse );
-					if ( !token[0] || Q_stricmp( token,"noattack" ) ) {
-						qboolean fire = qtrue;
-						// if it's an AI, and they aren't visible, dont shoot
-						if ( ent->r.svFlags & SVF_CASTAI ) {
-							if ( cs->vislist[ent->s.number].real_visible_timestamp != cs->vislist[ent->s.number].lastcheck_timestamp ) {
-								fire = qfalse;
-							}
-						}
-						if ( fire ) {
-							for ( i = 0; i < 2; i++ ) {
-								diff = fabs( AngleDifference( cs->viewangles[i], cs->ideal_viewangles[i] ) );
-								if ( diff < 20 ) {
-									// dont reload prematurely
-									cs->noReloadTime = level.time + 1000;
-									// force fire
-									trap_EA_Attack( cs->bs->client );
-									//
-									cs->bFlags |= BFL_ATTACKED;
-									// dont reload prematurely
-									cs->noReloadTime = level.time + 200;
-								}
+					if ( fire ) {
+						for ( i = 0; i < 2; i++ ) {
+							diff = fabs( AngleDifference( cs->viewangles[i], cs->ideal_viewangles[i] ) );
+							if ( diff < 20 ) {
+								// dont reload prematurely
+								cs->noReloadTime = level.time + 1000;
+								// force fire
+								trap_EA_Attack( cs->bs->client );
+								//
+								cs->bFlags |= BFL_ATTACKED;
+								// dont reload prematurely
+								cs->noReloadTime = level.time + 200;
 							}
 						}
 					}
 				}
-				cs->followTime = level.time + 500;
-				return qfalse;
 			}
-		} else
-		{
-			ent = NULL;
-		}
-	}
-
-	// find the ai_marker with the given "targetname"
-
-	while ( ( ent = G_Find( ent, FOFS( classname ), "ai_marker" ) ) )
-	{
-		if ( ent->targetname && !Q_strcasecmp( ent->targetname, token ) ) {
-			break;
+			cs->followTime = level.time + 500;
+			return qfalse;
 		}
 	}
 
 	if ( !ent ) {
-		G_Error( "AI Scripting: gotomarker can't find ai_marker with \"targetname\" = \"%s\"\n", token );
+		// find the ai_marker with the given "targetname", or if it ends in '*', treat it
+		// as a prefix and pick the closest reachable marker sharing that prefix, once,
+		// for the life of this command (see the cache check above)
+
+		Q_strncpyz( prefix, token, sizeof( prefix ) );
+
+		prefixLen = strlen( prefix );
+		if ( prefixLen > 0 && prefix[prefixLen - 1] == '*' ) {
+			groupMode = qtrue;
+			prefix[prefixLen - 1] = '\0'; // strip trailing '*'
+			prefixLen--;
+		}
+
+		if ( !groupMode ) {
+			// original exact-match behaviour
+			while ( ( ent = G_Find( ent, FOFS( classname ), "ai_marker" ) ) ) {
+				if ( ent->targetname && !Q_strcasecmp( ent->targetname, prefix ) ) {
+					break;
+				}
+			}
+		} else {
+			// group/prefix mode: pick the closest reachable marker sharing the prefix
+			gentity_t *best = NULL;
+			int bestTT = 0x7fffffff;
+			float bestDistSq = 0.0f;
+			qboolean haveTT = qfalse;
+
+			while ( ( ent = G_Find( ent, FOFS( classname ), "ai_marker" ) ) ) {
+				vec3_t d;
+				float distSq;
+				int tt;
+
+				if ( !ent->targetname ) {
+					continue;
+				}
+				if ( Q_stricmpn( ent->targetname, prefix, prefixLen ) ) {
+					continue;
+				}
+
+				tt = AICast_TravelTimeToPoint( cs, ent->r.currentOrigin );
+				if ( tt > 0 ) {
+					// prefer real travel time (AAS) when the marker is reachable
+					if ( tt < bestTT ) {
+						bestTT = tt;
+						best = ent;
+						haveTT = qtrue;
+					}
+				} else if ( !haveTT ) {
+					// no reachable candidate found yet, fall back to straight-line distance
+					VectorSubtract( ent->r.currentOrigin, cs->bs->origin, d );
+					distSq = VectorLengthSquared( d );
+					if ( !best || distSq < bestDistSq ) {
+						bestDistSq = distSq;
+						best = ent;
+					}
+				}
+			}
+
+			ent = best;
+		}
+
+		if ( !ent ) {
+			if ( !groupMode ) {
+				G_Error( "AI Scripting: gotomarker can't find ai_marker with \"targetname\" = \"%s\"\n", prefix );
+			} else {
+				G_Error( "AI Scripting: gotomarker can't find ai_marker with prefix \"%s*\"\n", prefix );
+			}
+		}
+
+		// remember which mode picked this marker, so the cache check above knows whether
+		// to trust it outright (group) or re-verify the exact targetname (non-group)
+		cs->castScriptStatus.scriptGotoIsGroup = groupMode;
 	}
 
 	if ( Distance( cs->bs->origin, ent->r.currentOrigin ) < SCRIPT_REACHGOAL_DIST ) { // we made it
