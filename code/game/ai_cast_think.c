@@ -435,7 +435,6 @@ void AICast_Think( int client, float thinktime ) {
 	int i;
 	int animIndex;
 	animation_t     *anim;
-	static qboolean aasWarned = qfalse;
 
 //	if (saveGamePending || (strlen( g_missionStats.string ) > 2 )) {
 //		return;
@@ -453,13 +452,8 @@ void AICast_Think( int client, float thinktime ) {
 	// make sure we have a valid navigation system
 	//
 	if ( !trap_AAS_Initialized() ) {
-		if ( !aasWarned ) {
-			G_Printf( "WARNING: AICast_Think: AAS not initialized for %s (aasWorldIndex=%d), AI frozen\n", ent->aiName, cs->aasWorldIndex );
-			aasWarned = qtrue;
-		}
 		return;
 	}
-	aasWarned = qfalse;
 	//
 	trap_EA_ResetInput( client, NULL );
 	cs->aiFlags &= ~AIFL_VIEWLOCKED;

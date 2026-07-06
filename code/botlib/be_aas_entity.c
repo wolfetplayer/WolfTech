@@ -75,16 +75,11 @@ int AAS_UpdateEntity( int entnum, bot_entitystate_t *state ) {
 	int relink;
 	aas_entity_t *ent;
 	vec3_t absmins, absmaxs;
-	static qboolean warned = qfalse;
 
 	if ( !( *defaultaasworld ).loaded ) {
-		if ( !warned ) {
-			botimport.Print( PRT_MESSAGE, "AAS_UpdateEntity: not loaded\n" );
-			warned = qtrue;
-		}
+		botimport.Print( PRT_MESSAGE, "AAS_UpdateEntity: not loaded\n" );
 		return BLERR_NOAASFILE;
 	} //end if
-	warned = qfalse;
 
 	ent = &( *defaultaasworld ).entities[entnum];
 

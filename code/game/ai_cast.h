@@ -96,7 +96,6 @@ If you have questions concerning this license or the applicable additional terms
 #define AIFL_EXPLICIT_ROUTING   0x2000000   // direct routing towards ai_markers, rather than using AAS
 #define AIFL_DISMOUNTING        0x4000000
 #define AIFL_SPECIAL_FUNC       0x8000000   // prevent external interuption of current think func
-#define AIFL_RUSHING            0x10000000  // chasing rush goal, ignore player until arrival
 
 //
 // predict events
@@ -402,9 +401,6 @@ typedef struct cast_state_s
 	int followTime;             // if this runs out, the scripting has probably been interupted
 	qboolean followSlowApproach;
 
-	int rushGoalEnt;            // AIFL_RUSHING target entity, isolated from followEntity so scripting can't clobber it
-	int rushTimeoutTime;
-
 	int leaderNum;              // entnum of player we are following
 
 	float speedScale;           // so we can vary movement speed
@@ -658,12 +654,6 @@ char    *AIFunc_IdleStart( cast_state_t *cs );
 char    *AIFunc_ChaseGoalIdleStart( cast_state_t *cs, int entitynum, float reachdist );
 char    *AIFunc_ChaseGoalStart( cast_state_t *cs, int entitynum, float reachdist, qboolean slowApproach );
 char    *AIFunc_BattleChaseStart( cast_state_t *cs );
-
-// self-contained rush-to-goal state, isolated from scripting/follow state
-#define AICAST_RUSH_REACH_DIST  8
-#define AICAST_RUSH_TIMEOUT_MS  20000
-char    *AIFunc_RushStart( cast_state_t *cs, int entitynum, int timeoutTime );
-char    *AIFunc_Rush( cast_state_t *cs );
 char    *AIFunc_BattleStart( cast_state_t *cs );
 char    *AIFunc_DoorMarkerStart( cast_state_t *cs, int doornum, int markernum );
 char    *AIFunc_DoorMarker( cast_state_t *cs );
