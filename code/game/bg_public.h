@@ -632,9 +632,10 @@ typedef struct ammotable_s {
 	
 	int maxammo;            
 	int uses;               
-	int maxclip;            
-	int reloadTime;         
-	int fireDelayTime;      
+	int maxclip;
+	int reloadTime;
+	int reloadTimeFull;     // full (empty clip) reload duration; falls back to reloadTime if unset
+	int fireDelayTime;
 	int nextShotTime;       
 	int maxHeat;            
 	int coolRate;
@@ -775,6 +776,9 @@ typedef enum {
 	EV_NOQUICKGRENAMMO,
 	EV_EMPTYCLIP,
 	EV_FILL_CLIP,
+	EV_FILL_CLIP_FULL,      // empty-clip (full) reload, distinct from a partial/tactical reload
+	EV_FILL_CLIP_AI,        // AI reload, uses reloadSoundAi
+	EV_STOP_RELOADING_SOUND, // weapon switch interrupted an in-progress reload
 	EV_RESET_ZOOM,
 	EV_WEAP_OVERHEAT,
 	EV_CHANGE_WEAPON,
@@ -1115,6 +1119,9 @@ typedef enum {
 	WEAP_RELOAD3,
 	WEAP_ALTSWITCHFROM, // switch from alt fire mode weap (scoped/silencer/etc)
 	WEAP_ALTSWITCHTO,   // switch to alt fire mode weap
+	WEAP_RELOAD1_FAST,  // PERK_WEAPONHANDLING: faster partial (tactical) reload
+	WEAP_RELOAD2_FAST,  // PERK_WEAPONHANDLING: faster full (empty clip) reload
+	WEAP_RELOAD3_FAST,
 	MAX_WP_ANIMATIONS
 } weapAnimNumber_t;
 

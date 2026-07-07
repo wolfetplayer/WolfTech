@@ -2056,8 +2056,33 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME( "EV_FILL_CLIP" );
 		CG_ResetSimpleZoom();
 		if ( cg_weapons[es->weapon].reloadSound ) {
-			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadSound ); // JPW NERVE following sherman's SP fix, should allow killing reload sound when player dies
+			if ( cg.predictedPlayerState.perks[PERK_WEAPONHANDLING] ) {
+				trap_S_StartSoundEx( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadSoundFast, SND_REQUESTCUT );
+			} else {
+				trap_S_StartSoundEx( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadSound, SND_REQUESTCUT ); // JPW NERVE following sherman's SP fix, should allow killing reload sound when player dies
+			}
 		}
+		break;
+	case EV_FILL_CLIP_FULL:
+		DEBUGNAME( "EV_FILL_CLIP_FULL" );
+		CG_ResetSimpleZoom();
+		if ( cg_weapons[es->weapon].reloadFullSound ) {
+			if ( cg.predictedPlayerState.perks[PERK_WEAPONHANDLING] ) {
+				trap_S_StartSoundEx( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadFullSoundFast, SND_REQUESTCUT );
+			} else {
+				trap_S_StartSoundEx( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadFullSound, SND_REQUESTCUT );
+			}
+		}
+		break;
+	case EV_FILL_CLIP_AI:
+		DEBUGNAME( "EV_FILL_CLIP_AI" );
+		if ( cg_weapons[es->weapon].reloadSoundAi ) {
+			trap_S_StartSoundEx( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadSoundAi, SND_REQUESTCUT );
+		}
+		break;
+	case EV_STOP_RELOADING_SOUND:
+		DEBUGNAME( "EV_STOP_RELOADING_SOUND" );
+		trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
 		break;
 	case EV_RESET_ZOOM:
 	    DEBUGNAME( "EV_RESET_ZOOM" );

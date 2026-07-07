@@ -954,6 +954,13 @@ static qboolean CG_ParseWeaponConfig( const char *filename, weaponInfo_t *wi, in
 					Com_Memcpy( &wi->weapAnimations[i], &wi->weapAnimations[WEAP_IDLE1], sizeof( wi->weapAnimations[0] ) );
 				}
 			}
+			// older weapon.cfg files lack the fast-reload entries -- fall back to the matching normal-speed reload anim until real frame data is authored.
+			else if ( i >= WEAP_RELOAD1_FAST && i < MAX_WP_ANIMATIONS ) {
+				for ( ; i < MAX_WP_ANIMATIONS ; i++ ) {
+					int srcAnim = WEAP_RELOAD1 + ( i - WEAP_RELOAD1_FAST );
+					Com_Memcpy( &wi->weapAnimations[i], &wi->weapAnimations[srcAnim], sizeof( wi->weapAnimations[0] ) );
+				}
+			}
 			break;
 		}
 		wi->weapAnimations[i].firstFrame = atoi( token );
@@ -1309,6 +1316,8 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson_fire.wav" );
 		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
 		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/thompson/thompson_overheat.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
@@ -1429,6 +1438,20 @@ void CG_RegisterWeapon( int weaponNum ) {
 		MAKERGB( weaponInfo->flashDlightColor, 1, 1, 1 );
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/rocket/rocklf1a.wav" );
 		break;
+	}
+
+	// default fast/full/AI reload sounds to the base reload sound when no distinct asset is registered
+	if ( !weaponInfo->reloadSoundFast ) {
+		weaponInfo->reloadSoundFast = weaponInfo->reloadSound;
+	}
+	if ( !weaponInfo->reloadFullSound ) {
+		weaponInfo->reloadFullSound = weaponInfo->reloadSound;
+	}
+	if ( !weaponInfo->reloadFullSoundFast ) {
+		weaponInfo->reloadFullSoundFast = weaponInfo->reloadSoundFast;
+	}
+	if ( !weaponInfo->reloadSoundAi ) {
+		weaponInfo->reloadSoundAi = weaponInfo->reloadSound;
 	}
 }
 
@@ -3733,6 +3756,9 @@ void CG_AltWeapon_f( void ) {
 	if ( !cg.snap ) {
 		return;
 	}
+
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
 		return;
 	}
@@ -3744,10 +3770,6 @@ void CG_AltWeapon_f( void ) {
 	if ( cg.time - cg.weaponSelectTime < cg_weaponCycleDelay.integer ) {
 		return; // force pause so holding it down won't go too fast
 
-	}
-	// Don't try to switch when in the middle of reloading.
-	if ( cg.snap->ps.weaponstate == WEAPON_RELOADING ) {
-		return;
 	}
 
 	original = cg.weaponSelect;
@@ -4010,12 +4032,10 @@ void CG_LastWeaponUsed_f( void ) {
 		return; // force pause so holding it down won't go too fast
 
 	}
-	cg.weaponSelectTime = cg.time;  // flash the current weapon icon
 
-	// don't switchback if reloading (it nullifies the reload)
-	if ( cg.snap->ps.weaponstate == WEAPON_RELOADING ) {
-		return;
-	}
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
+	cg.weaponSelectTime = cg.time;  // flash the current weapon icon
 
 	if ( !cg.switchbackWeapon ) {
 		cg.switchbackWeapon = cg.weaponSelect;
@@ -4041,6 +4061,9 @@ void CG_NextWeaponInBank_f( void ) {
 		return; // force pause so holding it down won't go too fast
 
 	}
+
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
 	// this cvar is an option that lets the player use his weapon switching keys (probably the mousewheel)
 	// for zooming (binocs/snooper/sniper/etc.)
 	if ( cg.zoomval ) {
@@ -4069,6 +4092,9 @@ void CG_PrevWeaponInBank_f( void ) {
 		return; // force pause so holding it down won't go too fast
 
 	}
+
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
 	// this cvar is an option that lets the player use his weapon switching keys (probably the mousewheel)
 	// for zooming (binocs/snooper/sniper/etc.)
 	if ( cg.zoomval ) {
@@ -4097,6 +4123,9 @@ void CG_NextWeapon_f( void ) {
 	if ( !cg.snap ) {
 		return;
 	}
+
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
 		return;
 	}
@@ -4118,18 +4147,6 @@ void CG_NextWeapon_f( void ) {
 
 	}
 	cg.weaponSelectTime = cg.time;  // flash the current weapon icon
-
-	// Don't try to switch when in the middle of reloading.
-	// cheatinfo:	The server actually would let you switch if this check were not
-	//				present, but would discard the reload.  So the when you switched
-	//				back you'd have to start the reload over.  This seems bad, however
-	//				the delay for the current reload is already in effect, so you'd lose
-	//				the reload time twice.  (the first pause for the current weapon reload,
-	//				and the pause when you have to reload again 'cause you canceled this one)
-
-	if ( cg.snap->ps.weaponstate == WEAPON_RELOADING ) {
-		return;
-	}
 
 	CG_NextWeap( qtrue );
 }
@@ -4144,6 +4161,9 @@ void CG_PrevWeapon_f( void ) {
 	if ( !cg.snap ) {
 		return;
 	}
+
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
 		return;
 	}
@@ -4165,11 +4185,6 @@ void CG_PrevWeapon_f( void ) {
 
 	}
 	cg.weaponSelectTime = cg.time;  // flash the current weapon icon
-
-	// Don't try to switch when in the middle of reloading.
-	if ( cg.snap->ps.weaponstate == WEAPON_RELOADING ) {
-		return;
-	}
 
 	CG_PrevWeap( qtrue );
 }
@@ -4190,6 +4205,8 @@ void CG_WeaponBank_f( void ) {
 		return;
 	}
 
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
 		return;
 	}
@@ -4199,11 +4216,6 @@ void CG_WeaponBank_f( void ) {
 
 	}
 	cg.weaponSelectTime = cg.time;  // flash the current weapon icon
-
-	// Don't try to switch when in the middle of reloading.
-	if ( cg.snap->ps.weaponstate == WEAPON_RELOADING ) {
-		return;
-	}
 
 	bank = atoi( CG_Argv( 1 ) );
 
@@ -4258,6 +4270,8 @@ void CG_Weapon_f( void ) {
 		return;
 	}
 
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
 		return;
 	}
@@ -4265,12 +4279,6 @@ void CG_Weapon_f( void ) {
 	num = atoi( CG_Argv( 1 ) );
 
 	cg.weaponSelectTime = cg.time;  // flash the current weapon icon
-
-	// Don't try to switch when in the middle of reloading.
-	if ( cg.snap->ps.weaponstate == WEAPON_RELOADING ) {
-		return;
-	}
-
 
 	if ( num <= WP_NONE || num > WP_NUM_WEAPONS ) {
 		return;

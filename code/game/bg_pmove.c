@@ -1971,6 +1971,9 @@ PM_BeginWeaponReload
 ==============
 */
 static void PM_BeginWeaponReload( int weapon ) {
+	int reloadTime, reloadTimeFull;
+	qboolean fastReload;
+
 	// only allow reload if the weapon isn't already occupied (firing is okay)
 	if ( pm->ps->weaponstate != WEAPON_READY && pm->ps->weaponstate != WEAPON_FIRING ) {
 		return;
@@ -2002,20 +2005,48 @@ static void PM_BeginWeaponReload( int weapon ) {
 		break;
 	}
 
+	reloadTime = ammoTable[weapon].reloadTime;
+	reloadTimeFull = ammoTable[weapon].reloadTimeFull ? ammoTable[weapon].reloadTimeFull : ammoTable[weapon].reloadTime;
 
-	PM_ContinueWeaponAnim( WEAP_RELOAD1 );
+	// PERK_WEAPONHANDLING halves both partial and full reload times
+	fastReload = (qboolean)( pm->ps->perks[PERK_WEAPONHANDLING] != 0 );
+	if ( fastReload ) {
+		reloadTime *= 0.5;
+		reloadTimeFull *= 0.5;
+	}
 
-
-	// okay to reload while overheating without tacking the reload time onto the end of the
-	// current weaponTime (the reload time is partially absorbed into the overheat time)
-	if ( pm->ps->weaponstate == WEAPON_READY ) {                  // set wait to the reload duration
-		pm->ps->weaponTime += ammoTable[weapon].reloadTime;
-	} else if ( pm->ps->weaponTime < ammoTable[weapon].reloadTime ) {
-		pm->ps->weaponTime += ( ammoTable[weapon].reloadTime - pm->ps->weaponTime );
+	if ( !pm->ps->aiChar ) {
+		if ( pm->ps->ammoclip[BG_FindClipForWeapon( weapon )] == 0 ) {
+			// clip is empty: full (dump) reload
+			PM_ContinueWeaponAnim( fastReload ? WEAP_RELOAD2_FAST : WEAP_RELOAD2 );
+			if ( pm->ps->weaponstate == WEAPON_READY ) {
+				pm->ps->weaponTime += reloadTimeFull;
+			} else if ( pm->ps->weaponTime < reloadTimeFull ) {
+				pm->ps->weaponTime += ( reloadTimeFull - pm->ps->weaponTime );
+			}
+			PM_AddEvent( EV_FILL_CLIP_FULL );
+		} else {
+			// clip still has rounds: partial (tactical) reload
+			PM_ContinueWeaponAnim( fastReload ? WEAP_RELOAD1_FAST : WEAP_RELOAD1 );
+			if ( pm->ps->weaponstate == WEAPON_READY ) {
+				pm->ps->weaponTime += reloadTime;
+			} else if ( pm->ps->weaponTime < reloadTime ) {
+				pm->ps->weaponTime += ( reloadTime - pm->ps->weaponTime );
+			}
+			PM_AddEvent( EV_FILL_CLIP );    // play reload sound
+		}
+	} else {
+		// AI always uses the partial reload anim, but gets its own reload sound event
+		PM_ContinueWeaponAnim( fastReload ? WEAP_RELOAD1_FAST : WEAP_RELOAD1 );
+		if ( pm->ps->weaponstate == WEAPON_READY ) {
+			pm->ps->weaponTime += reloadTime;
+		} else if ( pm->ps->weaponTime < reloadTime ) {
+			pm->ps->weaponTime += ( reloadTime - pm->ps->weaponTime );
+		}
+		PM_AddEvent( EV_FILL_CLIP_AI );
 	}
 
 	pm->ps->weaponstate = WEAPON_RELOADING;
-	PM_AddEvent( EV_FILL_CLIP );    // play reload sound
 }
 
 
@@ -2040,6 +2071,13 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 
 	if ( newweapon != WP_NONE && !( COM_BitCheck( pm->ps->weapons, newweapon ) ) ) {
 		return;
+	}
+
+	// allow weapon switch even while reloading -- interrupt the reload
+	if ( pm->ps->weaponstate == WEAPON_RELOADING ) {
+		PM_AddEvent( EV_STOP_RELOADING_SOUND );
+		pm->ps->weaponstate = WEAPON_READY;
+		pm->ps->weaponTime = 0;
 	}
 
 	if ( pm->ps->weaponstate == WEAPON_DROPPING || pm->ps->weaponstate == WEAPON_DROPPING_TORELOAD ) {   //----(SA)	added
@@ -2139,6 +2177,11 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 //			break;
 	}
 
+	// PERK_WEAPONHANDLING pro: faster weapon switch
+	if ( pm->ps->perks[PERK_WEAPONHANDLING] >= 2 ) {
+		switchtime = 100;
+	}
+
 	pm->ps->weaponTime += switchtime;
 }
 
@@ -2210,6 +2253,11 @@ static void PM_FinishWeaponChange( void ) {
 			switchtime = 50;        // fast
 		}
 		break;
+	}
+
+	// PERK_WEAPONHANDLING pro: faster weapon switch
+	if ( pm->ps->perks[PERK_WEAPONHANDLING] >= 2 ) {
+		switchtime = 100;
 	}
 
 	pm->ps->weaponTime += switchtime;
@@ -3174,6 +3222,11 @@ static void PM_Weapon( void ) {
 
 	if ( pm->ps->perks[PERK_RIFLING] && pm->ps->weapon != WP_KNIFE ) {
 		addTime /= 1.25;
+	}
+
+	// PERK_WEAPONHANDLING pro: faster knife attacks
+	if ( pm->ps->perks[PERK_WEAPONHANDLING] >= 2 && pm->ps->weapon == WP_KNIFE ) {
+		addTime /= 1.5;
 	}
 
 	if (GetWeaponTableData(pm->ps->weapon)->weaponClass &
