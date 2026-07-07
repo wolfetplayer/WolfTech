@@ -109,7 +109,7 @@ ammotable_t ammoTable[] = {
         .maxclip            = 999,
         .reloadTime         = 0,
         .fireDelayTime      = 50,
-        .nextShotTime       = 200,
+        .nextShotTime       = 300,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 10,
@@ -277,7 +277,7 @@ ammotable_t ammoTable[] = {
         .maxclip            = 30,
         .reloadTime         = 2400,
         .fireDelayTime      = DELAY_LOW,
-        .nextShotTime       = 120,
+        .nextShotTime       = 90,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 9,
@@ -295,6 +295,7 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,	
 		.underwaterFire     = qfalse,
+		.gunOffset          = { -2.0f, 0.0f, -1.0f },
     },
     [WP_STEN] = {
 		.weaponindex        = WP_STEN,
@@ -1434,10 +1435,12 @@ gitem_t bg_itemlist[] =
 	{
 		"weapon_knife",
 		"sound/misc/w_pkup.wav",
-		{   "models/multiplayer/knife/knife.md3",
-		"models/multiplayer/knife/v_knife.md3",
+		{   
+			
+		"models/weapons/melee/knife/knife_pickup.md3",
+		"models/weapons/melee/knife/v_knife.md3",
+		"models/weapons/melee/knife/knife_pickup.md3",
 			0,
-			"models/multiplayer/knife/v_knife_axis.md3",
 			0},
 
 		"icons/iconw_knife_1",   // icon
@@ -1504,9 +1507,9 @@ gitem_t bg_itemlist[] =
 	{
 		"weapon_thompson",
 		"sound/misc/w_pkup.wav",
-		{   "models/weapons2/thompson/thompson.md3",
-			"models/weapons2/thompson/v_thompson.md3",
-			"models/weapons2/thompson/pu_thompson.md3",
+		{   "models/weapons/smgs/thompson/thompson_3rd.md3",
+			"models/weapons/smgs/thompson/v_thompson.md3",
+			"models/weapons/smgs/thompson/thompson_3rd.md3",
 			0, 0 },
 
 		"icons/iconw_thompson_1",    // icon

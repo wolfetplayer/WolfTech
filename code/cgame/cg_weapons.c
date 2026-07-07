@@ -1252,6 +1252,8 @@ void CG_RegisterWeapon( int weaponNum ) {
 	case WP_KNIFE:
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash1.wav" );
 		weaponInfo->flashSound[1] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash2.wav" );
+		weaponInfo->flashSound[2] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash2.wav" );
+		weaponInfo->switchSound[0] = trap_S_RegisterSound( "sound/weapons/knife/knife_ready.wav" );
 		break;
 
 	case WP_LUGER:
@@ -1304,8 +1306,8 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 	case WP_THOMPSON:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40e1.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload.wav" );
 		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/thompson/thompson_overheat.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
