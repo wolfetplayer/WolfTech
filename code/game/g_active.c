@@ -651,6 +651,10 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 //----(SA)	FIXME: TODO:  hmm, going through here adding surfaceparms it seems that the value for ent->client->ps.pm_time was weird.  (1000 for all but dmg_25 which has 250?)
 			if ( event == EV_FALL_NDIE ) {
 				damage = 9999;
+			} else if ( ent->client && ent->client->ps.perks[PERK_RUNNER] > 0 ) {
+				// PERK_RUNNER: no fall damage or stun
+				damage = 0;
+				stunTime = 0;
 			} else if ( event == EV_FALL_DMG_50 ) {
 				damage = 50;
 				stunTime = 1000;

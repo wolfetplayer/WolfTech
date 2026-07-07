@@ -966,6 +966,11 @@ static void PM_WalkMove( void ) {
 				stamtake = g_realistic_movement.integer ? 3000 : 2000;    // amount to take for jump
 #endif
 
+				// PERK_RUNNER: jumping costs no stamina
+				if ( pm->ps->perks[PERK_RUNNER] > 0 ) {
+					stamtake = 0;
+				}
+
 				// take time from powerup before taking it from sprintTime
 				if ( pm->ps->powerups[PW_NOFATIGUE] ) {
 					if ( pm->ps->powerups[PW_NOFATIGUE] > stamtake ) {
@@ -3983,7 +3988,9 @@ void PM_Sprint( void ) {
 
 		pm->ps->pm_flags |= PMF_SPRINTING; // g_realistic_movement: track active sprint for weapon-lock
 
-		if ( pm->ps->powerups[PW_NOFATIGUE] ) {    // take time from powerup before taking it from sprintTime
+		if ( pm->ps->perks[PERK_RUNNER] > 0 ) {
+			// PERK_RUNNER: sprinting costs no stamina
+		} else if ( pm->ps->powerups[PW_NOFATIGUE] ) {    // take time from powerup before taking it from sprintTime
 			pm->ps->powerups[PW_NOFATIGUE] -= 50;
 
 			pm->ps->sprintTime += 10;           // (SA) go ahead and continue to recharge stamina at double rate with stamina powerup even when exerting
