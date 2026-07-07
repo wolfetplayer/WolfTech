@@ -51,6 +51,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../steam/steam.h"
 
+int BotPointAreaNum( vec3_t origin );  // ai_dmq3.c - handles floor-edge cases raw trap_AAS_PointAreaNum misses
 
 #define PREPARE_TIME 15
 #define INTERMISSION_TIME 15
@@ -1462,6 +1463,16 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				G_SetOrigin( ent, spawn_origin );
 				VectorCopy( spawn_origin, ent->client->ps.origin );
 				SetClientViewAngle( ent, spawn_angles );
+
+		        // Refresh now so script actions that read our position this frame see where we actually are
+				VectorCopy( ent->client->ps.origin, cs->bs->origin );
+				VectorCopy( ent->client->ps.origin, cs->bs->eye );
+				cs->bs->eye[2] += ent->client->ps.viewheight;
+				cs->bs->areanum = BotPointAreaNum( cs->bs->origin );
+				if ( cs->bs->areanum ) {
+					cs->lastValidAreaNum[cs->aasWorldIndex] = cs->bs->areanum;
+					cs->lastValidAreaTime[cs->aasWorldIndex] = level.time;
+				}
 
 				// Activate respawn scripts for AI
 				AICast_ScriptEvent(cs, "respawn", "");
