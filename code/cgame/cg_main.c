@@ -250,6 +250,7 @@ vmCvar_t cg_gameSkill;
 // done
 
 vmCvar_t cg_reloading;      //----(SA)	added
+vmCvar_t cg_realistic_movement;
 
 // JPW NERVE
 vmCvar_t cg_medicChargeTime;
@@ -492,6 +493,8 @@ cvarTable_t cvarTable[] = {
 	{&cg_gameSkill, "g_gameskill", "2", 0}, // communicated by systeminfo	// (SA) new default '2' (was '1')
 
 	{&cg_reloading, "g_reloading", "0", 0}, //----(SA)	added
+
+	{&cg_realistic_movement, "g_realistic_movement", "0", CVAR_ARCHIVE},
 
 		// JPW NERVE
 	{&cg_medicChargeTime, "g_medicChargeTime", "30000", 0},		  // communicated by systeminfo

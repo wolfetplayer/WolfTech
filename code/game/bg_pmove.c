@@ -42,9 +42,11 @@ int bg_pmove_gameskill_integer;
 // JPW NERVE -- added because I need to check single/multiplayer instances and branch accordingly
 #ifdef CGAMEDLL
 extern vmCvar_t cg_gameType;
+extern vmCvar_t cg_realistic_movement;
 #endif
 #ifdef GAMEDLL
 extern vmCvar_t g_gametype;
+extern vmCvar_t g_realistic_movement;
 #endif
 
 // JPW NERVE -- stuck this here so it can be seen client & server side
@@ -79,6 +81,8 @@ float pm_slagfriction     = 1;
 float pm_flightfriction   = 3;
 float pm_ladderfriction   = 14;
 float pm_spectatorfriction = 5.0f;
+
+float pm_realismSlowScale = 0.80;
 
 //----(SA)	end
 
@@ -425,6 +429,28 @@ static float PM_CmdScale( usercmd_t *cmd ) {
 		scale *= 3;
 	}
 
+	// g_realistic_movement: weapon weight slows movement, more so while realism is enabled
+	if ( !pm->ps->aiChar ) {
+		float weaponMoveSpeed = GetWeaponTableData( pm->ps->weapon )->moveSpeed;
+		if ( weaponMoveSpeed <= 0.0f ) {
+			weaponMoveSpeed = 1.0f;
+		}
+#ifdef GAMEDLL
+		if ( g_realistic_movement.integer ) {
+			scale *= ( pm_realismSlowScale * weaponMoveSpeed );
+		} else {
+			scale *= weaponMoveSpeed;
+		}
+#endif
+#ifdef CGAMEDLL
+		if ( cg_realistic_movement.integer ) {
+			scale *= ( pm_realismSlowScale * weaponMoveSpeed );
+		} else {
+			scale *= weaponMoveSpeed;
+		}
+#endif
+	}
+
 	return scale;
 }
 
@@ -542,7 +568,26 @@ static qboolean PM_CheckJump( void ) {
 	pm->ps->pm_flags |= PMF_JUMP_HELD;
 
 	pm->ps->groundEntityNum = ENTITYNUM_NONE;
-	pm->ps->velocity[2] = JUMP_VELOCITY;
+
+	// g_realistic_movement: jump height tapers off with stamina instead of staying constant
+#ifdef GAMEDLL
+	if ( g_realistic_movement.integer )
+#elif defined( CGAMEDLL )
+	if ( cg_realistic_movement.integer )
+#endif
+	{
+		if ( pm->ps->sprintTime > 10000 && pm->ps->sprintTime < 15000 ) {
+			pm->ps->velocity[2] = 260;
+		} else if ( pm->ps->sprintTime > 5000 && pm->ps->sprintTime < 10000 ) {
+			pm->ps->velocity[2] = 250;
+		} else if ( pm->ps->sprintTime >= 0 && pm->ps->sprintTime < 5000 ) {
+			pm->ps->velocity[2] = 230;
+		} else {
+			pm->ps->velocity[2] = JUMP_VELOCITY; // basically first jump
+		}
+	} else {
+		pm->ps->velocity[2] = JUMP_VELOCITY;
+	}
 	PM_AddEvent( EV_JUMP );
 
 	if ( pm->cmd.forwardmove >= 0 ) {
@@ -914,7 +959,12 @@ static void PM_WalkMove( void ) {
 			{
 				pm->ps->jumpTime = pm->cmd.serverTime;
 
-				stamtake = 2000;    // amount to take for jump
+				// g_realistic_movement: jumping costs more stamina
+#if defined ( CGAMEDLL )
+				stamtake = cg_realistic_movement.integer ? 3000 : 2000;    // amount to take for jump
+#elif defined ( GAMEDLL )
+				stamtake = g_realistic_movement.integer ? 3000 : 2000;    // amount to take for jump
+#endif
 
 				// take time from powerup before taking it from sprintTime
 				if ( pm->ps->powerups[PW_NOFATIGUE] ) {
@@ -1821,7 +1871,20 @@ static void PM_Footsteps( void ) {
 		pm->ps->bobCycle = (int)( pm->ps->bobCycle + bobmove * pml.msec ) & 255;
 
 		// now footsteps
-		pm->ps->footstepCount += pm->xyspeed * pml.frametime;
+		// g_realistic_movement: footstep rate follows the same slowdown as movement speed
+#ifdef GAMEDLL
+		if ( !pm->ps->aiChar && g_realistic_movement.integer ) {
+			pm->ps->footstepCount += pm_realismSlowScale * ( pm->xyspeed * pml.frametime );
+		} else
+#endif
+#ifdef CGAMEDLL
+		if ( !pm->ps->aiChar && cg_realistic_movement.integer ) {
+			pm->ps->footstepCount += pm_realismSlowScale * ( pm->xyspeed * pml.frametime );
+		} else
+#endif
+		{
+			pm->ps->footstepCount += pm->xyspeed * pml.frametime;
+		}
 
 		if ( pm->ps->footstepCount > animGap ) {
 
@@ -2967,6 +3030,94 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
+	// g_realistic_movement: can't use the weapon while climbing a ladder or sprinting
+#ifdef GAMEDLL
+	if ( !delayedFire && g_realistic_movement.integer ) {
+		if ( pm->ps->pm_flags & PMF_LADDER ) {
+			if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN ) {
+				pm->ps->weaponstate = WEAPON_HOLSTER_IN;
+				PM_StartWeaponAnim( WEAP_DROP );
+				pm->ps->weaponTime += 300;
+			} else {
+				pm->ps->weaponTime += 50;
+			}
+			return;
+		} else if ( pm->ps->weaponstate == WEAPON_HOLSTER_IN ) {
+			pm->ps->weaponstate = WEAPON_HOLSTER_OUT;
+			PM_StartWeaponAnim( WEAP_RAISE );
+			pm->ps->weaponTime += 300;
+			return;
+		} else if ( pm->ps->weaponstate == WEAPON_HOLSTER_OUT ) {
+			pm->ps->weaponstate = WEAPON_READY;
+			PM_StartWeaponAnim( WEAP_IDLE1 );
+			return;
+		}
+
+		if ( ( pm->ps->pm_flags & PMF_SPRINTING ) && pm->ps->sprintTime > 0 ) {
+			if ( pm->ps->weaponstate != WEAPON_SPRINT_IN ) {
+				pm->ps->weaponstate = WEAPON_SPRINT_IN;
+				PM_StartWeaponAnim( WEAP_SPRINTIN );
+				pm->ps->weaponTime += 300;
+			} else {
+				pm->ps->weaponTime += 50;
+			}
+			return;
+		} else if ( pm->ps->weaponstate == WEAPON_SPRINT_IN ) {
+			pm->ps->weaponstate = WEAPON_SPRINT_OUT;
+			PM_StartWeaponAnim( WEAP_SPRINTOUT );
+			pm->ps->weaponTime += 300;
+			return;
+		} else if ( pm->ps->weaponstate == WEAPON_SPRINT_OUT ) {
+			pm->ps->weaponstate = WEAPON_READY;
+			PM_StartWeaponAnim( WEAP_IDLE1 );
+			return;
+		}
+	}
+#endif
+#ifdef CGAMEDLL
+	if ( !delayedFire && cg_realistic_movement.integer ) {
+		if ( pm->ps->pm_flags & PMF_LADDER ) {
+			if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN ) {
+				pm->ps->weaponstate = WEAPON_HOLSTER_IN;
+				PM_StartWeaponAnim( WEAP_DROP );
+				pm->ps->weaponTime += 300;
+			} else {
+				pm->ps->weaponTime += 50;
+			}
+			return;
+		} else if ( pm->ps->weaponstate == WEAPON_HOLSTER_IN ) {
+			pm->ps->weaponstate = WEAPON_HOLSTER_OUT;
+			PM_StartWeaponAnim( WEAP_RAISE );
+			pm->ps->weaponTime += 300;
+			return;
+		} else if ( pm->ps->weaponstate == WEAPON_HOLSTER_OUT ) {
+			pm->ps->weaponstate = WEAPON_READY;
+			PM_StartWeaponAnim( WEAP_IDLE1 );
+			return;
+		}
+
+		if ( ( pm->ps->pm_flags & PMF_SPRINTING ) && pm->ps->sprintTime > 0 ) {
+			if ( pm->ps->weaponstate != WEAPON_SPRINT_IN ) {
+				pm->ps->weaponstate = WEAPON_SPRINT_IN;
+				PM_StartWeaponAnim( WEAP_SPRINTIN );
+				pm->ps->weaponTime += 300;
+			} else {
+				pm->ps->weaponTime += 50;
+			}
+			return;
+		} else if ( pm->ps->weaponstate == WEAPON_SPRINT_IN ) {
+			pm->ps->weaponstate = WEAPON_SPRINT_OUT;
+			PM_StartWeaponAnim( WEAP_SPRINTOUT );
+			pm->ps->weaponTime += 300;
+			return;
+		} else if ( pm->ps->weaponstate == WEAPON_SPRINT_OUT ) {
+			pm->ps->weaponstate = WEAPON_READY;
+			PM_StartWeaponAnim( WEAP_IDLE1 );
+			return;
+		}
+	}
+#endif
+
 
 	if ( pm->ps->weapon == WP_NONE ) {  // this is possible since the player starts with nothing
 		return;
@@ -3755,7 +3906,21 @@ void PM_LadderMove( void ) {
 		if ( pm->ps->aiChar ) {
 			wishvel[2] = 0.5 * upscale * scale * (float)pm->cmd.forwardmove;
 		} else { // player speed
-			wishvel[2] = 0.9 * upscale * scale * (float)pm->cmd.forwardmove;
+			// g_realistic_movement: slower, more deliberate ladder climb
+#ifdef GAMEDLL
+			if ( g_realistic_movement.integer ) {
+				wishvel[2] = 0.8 * upscale * scale * (float)pm->cmd.forwardmove;
+			} else {
+				wishvel[2] = 0.9 * upscale * scale * (float)pm->cmd.forwardmove;
+			}
+#endif
+#ifdef CGAMEDLL
+			if ( cg_realistic_movement.integer ) {
+				wishvel[2] = 0.8 * upscale * scale * (float)pm->cmd.forwardmove;
+			} else {
+				wishvel[2] = 0.9 * upscale * scale * (float)pm->cmd.forwardmove;
+			}
+#endif
 		}
 	}
 //Com_Printf("wishvel[2] = %i, fwdmove = %i\n", (int)wishvel[2], (int)pm->cmd.forwardmove );
@@ -3816,6 +3981,8 @@ void PM_Sprint( void ) {
 			!( pm->ps->pm_flags & PMF_DUCKED )
 			) {
 
+		pm->ps->pm_flags |= PMF_SPRINTING; // g_realistic_movement: track active sprint for weapon-lock
+
 		if ( pm->ps->powerups[PW_NOFATIGUE] ) {    // take time from powerup before taking it from sprintTime
 			pm->ps->powerups[PW_NOFATIGUE] -= 50;
 
@@ -3863,6 +4030,7 @@ void PM_Sprint( void ) {
 		}
 
 		pm->ps->sprintExertTime = 0;
+		pm->ps->pm_flags &= ~PMF_SPRINTING; // g_realistic_movement: no longer sprinting
 	}
 }
 

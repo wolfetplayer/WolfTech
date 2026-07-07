@@ -275,7 +275,11 @@ typedef enum {
 	WEAPON_FIRING,
 	WEAPON_FIRINGALT,
 	WEAPON_WAITING,     //----(SA)	added.  player allowed to switch/reload, but not fire
-	WEAPON_RELOADING    //----(SA)	added
+	WEAPON_RELOADING,   //----(SA)	added
+	WEAPON_HOLSTER_IN,  // g_realistic_movement: lowering weapon to climb a ladder
+	WEAPON_HOLSTER_OUT, // g_realistic_movement: raising weapon after leaving a ladder
+	WEAPON_SPRINT_IN,   // g_realistic_movement: lowering weapon to sprint
+	WEAPON_SPRINT_OUT   // g_realistic_movement: raising weapon after sprinting
 } weaponstate_t;
 
 // pmove->pm_flags	(sent as max 16 bits in msg.c)
@@ -286,6 +290,7 @@ typedef enum {
 #define PMF_BACKWARDS_RUN   16      // coast down to backwards run
 #define PMF_TIME_LAND       32      // pm_time is time before rejump
 #define PMF_TIME_KNOCKBACK  64      // pm_time is an air-accelerate only time
+#define PMF_SPRINTING       128     // player is actively sprinting (g_realistic_movement)
 #define PMF_TIME_WATERJUMP  256     // pm_time is waterjump
 #define PMF_RESPAWNED       512     // clear after attack and jump buttons come up
 #define PMF_USE_ITEM_HELD   1024
@@ -650,9 +655,11 @@ typedef struct ammotable_s {
 	float weapRecoilYaw[2];
 
 	int soundRange;
-	float aiRange; 
+	float aiRange;
 
-	int mod;              
+	float moveSpeed;       // g_realistic_movement: movement speed scale while this weapon is equipped
+
+	int mod;
 	qboolean rndTriggerRelease;
 	int iconDrawSize;
 	qboolean bulletBased;
@@ -1122,6 +1129,8 @@ typedef enum {
 	WEAP_RELOAD1_FAST,  // PERK_WEAPONHANDLING: faster partial (tactical) reload
 	WEAP_RELOAD2_FAST,  // PERK_WEAPONHANDLING: faster full (empty clip) reload
 	WEAP_RELOAD3_FAST,
+	WEAP_SPRINTIN,      // g_realistic_movement: lowering weapon to sprint
+	WEAP_SPRINTOUT,     // g_realistic_movement: raising weapon after sprinting
 	MAX_WP_ANIMATIONS
 } weapAnimNumber_t;
 

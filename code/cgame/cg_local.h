@@ -1892,6 +1892,7 @@ extern vmCvar_t cg_gameSkill;
 // done
 
 extern vmCvar_t cg_reloading;           //----(SA)	added
+extern vmCvar_t cg_realistic_movement;
 
 // JPW NERVE
 extern vmCvar_t cg_medicChargeTime;

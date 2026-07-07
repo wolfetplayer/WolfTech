@@ -1234,6 +1234,7 @@ extern vmCvar_t g_maxlives;
 extern vmCvar_t g_enforcemaxlives;
 extern vmCvar_t g_voiceChatsAllowed;
 extern vmCvar_t g_airespawn;
+extern vmCvar_t g_realistic_movement;
 extern vmCvar_t g_sharedlives;
 extern vmCvar_t g_limbotime;
 extern vmCvar_t g_reinforce;

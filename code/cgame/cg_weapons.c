@@ -954,10 +954,16 @@ static qboolean CG_ParseWeaponConfig( const char *filename, weaponInfo_t *wi, in
 					Com_Memcpy( &wi->weapAnimations[i], &wi->weapAnimations[WEAP_IDLE1], sizeof( wi->weapAnimations[0] ) );
 				}
 			}
-			// older weapon.cfg files lack the fast-reload entries -- fall back to the matching normal-speed reload anim until real frame data is authored.
+			// older weapon.cfg files lack the fast-reload and/or sprint-lock entries -- fall back to the
+			// matching normal-speed reload anim, or the drop/raise anim, until real frame data is authored.
 			else if ( i >= WEAP_RELOAD1_FAST && i < MAX_WP_ANIMATIONS ) {
 				for ( ; i < MAX_WP_ANIMATIONS ; i++ ) {
-					int srcAnim = WEAP_RELOAD1 + ( i - WEAP_RELOAD1_FAST );
+					int srcAnim;
+					if ( i >= WEAP_SPRINTIN ) {
+						srcAnim = ( i == WEAP_SPRINTIN ) ? WEAP_DROP : WEAP_RAISE;
+					} else {
+						srcAnim = WEAP_RELOAD1 + ( i - WEAP_RELOAD1_FAST );
+					}
 					Com_Memcpy( &wi->weapAnimations[i], &wi->weapAnimations[srcAnim], sizeof( wi->weapAnimations[0] ) );
 				}
 			}
@@ -1627,6 +1633,7 @@ static void CG_RunWeapLerpFrame( clientInfo_t *ci, weaponInfo_t *wi, lerpFrame_t
 		CG_ClearWeapLerpFrame( wi, lf, newAnimation );
 	} else if ( newAnimation != lf->animationNumber )   {
 		if ( ( newAnimation & ~ANIM_TOGGLEBIT ) == WEAP_RAISE ||
+			 ( newAnimation & ~ANIM_TOGGLEBIT ) == WEAP_SPRINTOUT ||
 			 ( newAnimation & ~ANIM_TOGGLEBIT ) == WEAP_ALTSWITCHFROM ||
 			 ( newAnimation & ~ANIM_TOGGLEBIT ) == WEAP_ALTSWITCHTO ) {
 			CG_ClearWeapLerpFrame( wi, lf, newAnimation );   // clear when switching to raise (since it should be out of view anyway)
