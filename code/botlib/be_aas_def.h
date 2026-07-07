@@ -181,6 +181,7 @@ typedef struct aas_s
 	int loaded;                                 //true when an AAS file is loaded
 	int initialized;                            //true when AAS has been initialized
 	int savefile;                               //set true when file should be saved
+	int notloadedwarned;                        //true once the "aas not loaded" warning has been printed for this world
 	int bspchecksum;
 	//current time
 	float time;

@@ -62,6 +62,8 @@ If you have questions concerning this license or the applicable additional terms
 bot_state_t *botstates[MAX_CLIENTS];
 //number of bots
 int numbots;
+//true once the "AAS not initialized" warning has been printed for this map
+qboolean aasNotInitWarned = qfalse;
 //time to do a regular update
 float regularupdate_time;
 //
@@ -641,7 +643,10 @@ int BotAISetupClient( int client, struct bot_settings_s *settings ) {
 	}
 
 	if ( !trap_AAS_Initialized() ) {
-		//BotAI_Print( PRT_FATAL, "AAS not initialized\n" );
+		if ( !aasNotInitWarned ) {
+			BotAI_Print( PRT_FATAL, "AAS not initialized\n" );
+			aasNotInitWarned = qtrue;
+		}
 		return qfalse;
 	}
 
@@ -1126,6 +1131,7 @@ int BotAISetup( int restart ) {
 
 	//initialize the bot states
 	memset( botstates, 0, sizeof( botstates ) );
+	aasNotInitWarned = qfalse;
 
 	trap_Cvar_Register( &bot_thinktime, "bot_thinktime", "100", 0 );
 

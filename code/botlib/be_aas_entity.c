@@ -77,7 +77,10 @@ int AAS_UpdateEntity( int entnum, bot_entitystate_t *state ) {
 	vec3_t absmins, absmaxs;
 
 	if ( !( *defaultaasworld ).loaded ) {
-		botimport.Print( PRT_MESSAGE, "AAS_UpdateEntity: not loaded\n" );
+		if ( !( *defaultaasworld ).notloadedwarned ) {
+			botimport.Print( PRT_MESSAGE, "AAS_UpdateEntity: not loaded\n" );
+			( *defaultaasworld ).notloadedwarned = qtrue;
+		}
 		return BLERR_NOAASFILE;
 	} //end if
 

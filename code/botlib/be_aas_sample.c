@@ -213,7 +213,10 @@ int AAS_PointAreaNum( vec3_t point ) {
 	aas_plane_t *plane;
 
 	if ( !( *aasworld ).loaded ) {
-		//botimport.Print( PRT_ERROR, "AAS_PointAreaNum: aas not loaded\n" );
+		if ( !( *aasworld ).notloadedwarned ) {
+			botimport.Print( PRT_ERROR, "AAS_PointAreaNum: aas not loaded\n" );
+			( *aasworld ).notloadedwarned = qtrue;
+		}
 		return 0;
 	} //end if
 
@@ -1133,7 +1136,10 @@ aas_link_t *AAS_AASLinkEntity( vec3_t absmins, vec3_t absmaxs, int entnum ) {
 	aas_link_t *link, *areas;
 
 	if ( !( *aasworld ).loaded ) {
-		//botimport.Print( PRT_ERROR, "AAS_LinkEntity: aas not loaded\n" );
+		if ( !( *aasworld ).notloadedwarned ) {
+			botimport.Print( PRT_ERROR, "AAS_LinkEntity: aas not loaded\n" );
+			( *aasworld ).notloadedwarned = qtrue;
+		}
 		return NULL;
 	} //end if
 
