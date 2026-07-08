@@ -4,7 +4,7 @@
     {
       "label": "build-steam-debug",
       "type": "shell",
-      "command": "ARCH=x86_64 STEAM=1 mingw32-make debug",
+      "command": "ARCH=x86_64 BUILD_STANDALONE=1 STEAM=1 mingw32-make debug",
       "group": "build",
       "problemMatcher": ["$gcc"],
       "detail": "Builds the Steam version of RealRTCW with debug configuration.",
@@ -18,7 +18,7 @@
     {
       "label": "build-nonsteam-debug",
       "type": "shell",
-      "command": "ARCH=x86_64 mingw32-make debug",
+      "command": "ARCH=x86_64 BUILD_STANDALONE=1 mingw32-make debug",
       "group": "build",
       "problemMatcher": ["$gcc"],
       "detail": "Builds the standalone (non-Steam) version of RealRTCW with debug configuration.",
