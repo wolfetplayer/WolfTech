@@ -7327,31 +7327,12 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 
 			return;
 		case UIMENU_MAIN:
-			/*
-			    //trap_Cvar_Set( "sv_killserver", "1" );
-			    trap_Key_SetCatcher( KEYCATCH_UI );
-			    //trap_S_StartLocalSound( trap_S_RegisterSound("sound/misc/menu_background.wav", qfalse) , CHAN_LOCAL_SOUND );
-			    //trap_S_StartBackgroundTrack("sound/misc/menu_background.wav", NULL);
-			    if ( uiInfo.inGameLoad ) {
-			        UI_LoadNonIngame();
-			    }
-			    Menus_CloseAll();
-			    Menus_ActivateByName( "main", qtrue );
-			    trap_Cvar_VariableStringBuffer( "com_errorMessage", buf, sizeof( buf ) );
-			    if ( strlen( buf ) ) {
-			        Menus_ActivateByName( "error_popmenu", qtrue );
-			    }
-			    // ensure sound is there for the menu
-			    trap_S_FadeAllSound( 1.0f, 1000 );    // make sure sound fades up
-
-			    // ensure savegames are loadable
-			    trap_Cvar_Set( "g_reloading", "0" );
-			*/
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			if ( uiInfo.inGameLoad ) {
 				UI_LoadNonIngame();
 			}
 			Menus_CloseAll();
+			Menus_ActivateByName("backgroundmusic", qtrue); // not nice, but best way to do it - putting the music in it's own menudef
 			Menus_ActivateByName( "main", qtrue );
 			trap_Cvar_VariableStringBuffer( "com_errorMessage", buf, sizeof( buf ) );
 			// JPW NERVE stricmp() is silly but works, take a look at error.menu to see why.  I think this is bustified in q3ta                        // NOTE TTimo - I'm not sure Q_stricmp is useful to anything anymore
