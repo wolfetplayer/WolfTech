@@ -231,11 +231,11 @@ AIFunc_ZombieMelee
 */
 
 int zombieHitDamage[5] = {
-	16,
-	16,
-	16,
-	12,
-	20
+    60,
+    50,
+    40,
+    40,
+    30
 };
 
 #define NUM_ZOMBIE_ANIMS    5
@@ -920,11 +920,11 @@ char *AIFunc_RejectAttack1Start( cast_state_t *cs ) {
 //=================================================================================
 
 int warriorHitDamage[5] = {
-	16,
-	16,
-	16,
-	12,
-	20
+    70,
+    60,
+    50,
+    45,
+    40
 };
 
 #define NUM_WARRIOR_ANIMS   5
