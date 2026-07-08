@@ -698,8 +698,13 @@ static void CG_DrawStatusBar( void ) {
 					}
 				}
 
-				scale = (float)( ( ps->grenadeTimeLeft ) % 1000 ) / 100.0f;
-				halfScale = scale * 0.5f;
+				// only grow the icon when it's actually the grenade being cooked, not the equipped weapon
+				if ( ps->weapon == WP_GRENADE_LAUNCHER || ps->weapon == WP_GRENADE_PINEAPPLE || ps->weapon == WP_DYNAMITE ) {
+					scale = (float)( ( ps->grenadeTimeLeft ) % 1000 ) / 100.0f;
+					halfScale = scale * 0.5f;
+				} else {
+					scale = halfScale = 0;
+				}
 
 				cg.grenLastTime = ps->grenadeTimeLeft;
 			} else {
@@ -2720,6 +2725,18 @@ static void CG_DrawCrosshair( void ) {
 		h *= ( 1 + f * 2.0 );
 	}
 
+	// pulse (grow + redden) while cooking a grenade - quick-grenade or an equipped grenade weapon
+	if ( cg.predictedPlayerState.grenadeTimeLeft > 0 ) {
+		float pulse = 1.0f - ( (float)( cg.predictedPlayerState.grenadeTimeLeft % 1000 ) / 1000.0f );
+
+		w *= 1.0f + 0.5f * pulse;
+		h *= 1.0f + 0.5f * pulse;
+
+		hcolor[0] = 1.0f;
+		hcolor[1] = hcolor[2] = 1.0f - pulse;
+		trap_R_SetColor( hcolor );
+	}
+
 	x = cg_crosshairX.integer;
 	y = cg_crosshairY.integer;
 	if ( !cg_fixedAspect.integer ) {
@@ -2975,6 +2992,73 @@ static void CG_ScanForCrosshairEntity( void ) {
 }
 
 
+
+/*
+==============
+CG_DrawGrenadeCount
+
+Always-visible grenade ammo readout, regardless of equipped weapon.
+==============
+*/
+static void CG_DrawGrenadeCount( void ) {
+	playerState_t *ps;
+	int wp;
+	int value;
+	qhandle_t icon;
+	float grow, pulse;
+
+	// modern HUD draws its own copy via the CG_PLAYER_GRENADE_COUNT ownerdraw in cg_hud.c
+	if ( !cg_oldWolfUI.integer ) {
+		return;
+	}
+
+	if ( cg.snap->ps.stats[STAT_HEALTH] <= 0 ) {
+		return;
+	}
+
+	ps = &cg.snap->ps;
+
+	if ( COM_BitCheck( ps->weapons, WP_GRENADE_LAUNCHER ) ) {
+		wp = WP_GRENADE_LAUNCHER;
+	} else if ( COM_BitCheck( ps->weapons, WP_GRENADE_PINEAPPLE ) ) {
+		wp = WP_GRENADE_PINEAPPLE;
+	} else {
+		return;
+	}
+
+	if ( cgs.dmflags & DF_NO_WEAPRELOAD ) {
+		value = ps->ammo[ BG_FindAmmoForWeapon( wp ) ];
+	} else {
+		value = ps->ammoclip[ BG_FindClipForWeapon( wp ) ];
+	}
+
+	if ( value <= 0 ) {
+		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement( PLACE_RIGHT, PLACE_BOTTOM );
+	}
+
+	// icons are normally only registered lazily when their bank shows in the weapon-select strip
+	CG_RegisterWeapon( wp );
+
+	icon = cg_weapons[ wp ].weaponIcon[0];
+
+	// pulse while actually cooking (quick-grenade or held grenade weapon)
+	pulse = 0.0f;
+	if ( cg.predictedPlayerState.grenadeTimeLeft > 0 ) {
+		pulse = 1.0f - ( (float)( cg.predictedPlayerState.grenadeTimeLeft % 1000 ) / 1000.0f );
+	}
+	grow = 0.3f * pulse * 24;
+
+	if ( icon ) {
+		trap_R_SetColor( NULL );
+		CG_DrawPic( 555 - 0.5f * grow, 436 - 0.5f * grow, 24 + grow, 24 + grow, icon );
+	}
+
+	CG_DrawBigString2( 555 + 28, 436, va( "%d", value ), cg_hudAlpha.value );
+}
 
 /*
 ==============
@@ -4243,6 +4327,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			}
 			CG_DrawAmmoWarning();
 			CG_DrawDynamiteStatus();
+			CG_DrawGrenadeCount();
 			CG_DrawCoopCrosshairNames();
 			CG_DrawWeaponSelect();
 			CG_DrawHoldableSelect();

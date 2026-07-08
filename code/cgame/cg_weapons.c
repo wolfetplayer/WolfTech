@@ -3280,6 +3280,11 @@ CG_WeaponSelectable
 */
 static qboolean CG_WeaponSelectable( int i ) {
 
+	// grenades are only thrown via quickgrenade now - never selectable as the active weapon
+	if ( i == WP_GRENADE_LAUNCHER || i == WP_GRENADE_PINEAPPLE ) {
+		return qfalse;
+	}
+
 	// allow the player to unselect all weapons
 //	if(i == WP_NONE)
 //		return qtrue;

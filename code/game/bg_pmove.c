@@ -2141,6 +2141,11 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 		return;
 	}
 
+	// grenades are quickgrenade-only now - block players from selecting them (AI still can, for their own attacks).
+	if ( !pm->ps->aiChar && ( newweapon == WP_GRENADE_LAUNCHER || newweapon == WP_GRENADE_PINEAPPLE ) ) {
+		return;
+	}
+
 	// allow weapon switch even while reloading -- interrupt the reload
 	if ( pm->ps->weaponstate == WEAPON_RELOADING ) {
 		PM_AddEvent( EV_STOP_RELOADING_SOUND );
@@ -2927,6 +2932,31 @@ static void PM_Weapon( void ) {
 		pm->ps->pm_flags &= ~PMF_USE_ITEM_HELD;
 	}
 
+	// busy cooking a quick grenade - holster the weapon (drop/raise), gated on weapAnimTimer so re-predicted frames can't retrigger the anim.
+	if ( pm->ps->grenadeTimeLeft > 0 &&
+		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE ) {
+		if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN && pm->ps->weapAnimTimer <= 0 ) {
+			pm->ps->weaponstate = WEAPON_HOLSTER_IN;
+			PM_StartWeaponAnim( WEAP_DROP );
+			pm->ps->weapAnimTimer = 250;
+		}
+		return;
+	}
+
+	if ( pm->ps->weaponstate == WEAPON_HOLSTER_IN || pm->ps->weaponstate == WEAPON_HOLSTER_OUT ) {
+		// done cooking - raise back up a stage at a time, deferred while on a ladder so this can't steal that transition.
+		if ( !( pm->ps->pm_flags & PMF_LADDER ) && pm->ps->weapAnimTimer <= 0 ) {
+			if ( pm->ps->weaponstate == WEAPON_HOLSTER_IN ) {
+				pm->ps->weaponstate = WEAPON_HOLSTER_OUT;
+				PM_StartWeaponAnim( WEAP_RAISE );
+				pm->ps->weapAnimTimer = 250;
+			} else {
+				pm->ps->weaponstate = WEAPON_READY;
+				PM_StartWeaponAnim( WEAP_IDLE1 );
+			}
+		}
+		return;
+	}
 
 	delayedFire = qfalse;
 
@@ -3450,6 +3480,8 @@ static void PM_Weapon( void ) {
 }
 
 
+#define QUICKGREN_FUSE_TIME     4000    // same fuse length as a held grenade weapon
+
 /*
 ==============
 PM_QuickGrenade
@@ -3457,21 +3489,57 @@ PM_QuickGrenade
 */
 static void PM_QuickGrenade( void ) {
 
-	if ( pm->ps->quickGrenTime > 0 ) 
+	if ( pm->ps->quickGrenTime > 0 )
 	{
 		pm->ps->quickGrenTime -= pml.msec;
 	}
 
-	if ( pm->ps->quickGrenTime < 0 ) 
+	if ( pm->ps->quickGrenTime < 0 )
 	{
 		pm->ps->quickGrenTime = 0;
 	}
 
-	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE || pm->ps->weapon == WP_SNOOPERSCOPE )
+	// already cooking - keep ticking regardless of the gates below, same as a held grenade weapon.
+	if ( pm->ps->grenadeTimeLeft > 0 &&
+		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE )
+	{
+		pm->ps->grenadeTimeLeft -= pml.msec;
+
+		if ( pm->ps->grenadeTimeLeft <= 0 )
+		{
+			// held on to it too long
+			pm->ps->grenadeTimeLeft = 0;
+			pm->ps->weaponDelay = 0;
+			PM_AddEvent( EV_GRENADE_SUICIDE );
+			return;
+		}
+
+		if ( !( pm->cmd.wbuttons & WBUTTON_QUICKGREN ) )
+		{
+			// released - throw with whatever fuse is left.  type/ammo were already locked in at cook start (weaponDelay holds the choice), no re-check here.
+			// fuse passed as the event parm since grenadeTimeLeft is zeroed below; g_active.c restores it from the parm before calling quickgren_fire().
+			int fuseLeft = pm->ps->grenadeTimeLeft;
+
+			if ( pm->ps->weaponDelay == WP_GRENADE_PINEAPPLE ) {
+				BG_AddPredictableEventToPlayerstate( EV_FIRE_QUICKGREN2, fuseLeft, pm->ps );
+			} else {
+				BG_AddPredictableEventToPlayerstate( EV_FIRE_QUICKGREN, fuseLeft, pm->ps );
+			}
+
+			pm->ps->grenadeTimeLeft = 0;
+			pm->ps->weaponDelay = 0;
+			pm->ps->quickGrenTime = 2500;
+		}
+
+		return;
+	}
+
+	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE ||
+		pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE || pm->ps->weapon == WP_SNOOPERSCOPE )
 	{
 		return;
 	}
-	
+
 	if ( pm->ps->pm_flags & PMF_RESPAWNED )
 	{
 		return;
@@ -3497,22 +3565,24 @@ static void PM_QuickGrenade( void ) {
 	    return;
 	}
 
-    if ( pm->cmd.wbuttons & WBUTTON_QUICKGREN ) 
+    if ( pm->cmd.wbuttons & WBUTTON_QUICKGREN )
     {
-		 pm->ps->quickGrenTime = 2500;
-           
-	     if ( PM_WeaponAmmoAvailable( WP_GRENADE_LAUNCHER ) )  // ammo check
-	     { 
-		 PM_AddEvent( EV_FIRE_QUICKGREN );
-	     PM_WeaponUseAmmo( WP_GRENADE_LAUNCHER, 1 );
-	     } else if ( PM_WeaponAmmoAvailable( WP_GRENADE_PINEAPPLE ) ) // ammo check 2
-		 {
-		 PM_AddEvent( EV_FIRE_QUICKGREN2 );
-		 PM_WeaponUseAmmo( WP_GRENADE_PINEAPPLE, 1 );
+		 int grenType;
+
+		 if ( PM_WeaponAmmoAvailable( WP_GRENADE_LAUNCHER ) ) {
+			 grenType = WP_GRENADE_LAUNCHER;
+		 } else if ( PM_WeaponAmmoAvailable( WP_GRENADE_PINEAPPLE ) ) {
+			 grenType = WP_GRENADE_PINEAPPLE;
 		 } else {
-		 PM_AddEvent( EV_NOQUICKGRENAMMO ); // no ammo
+			 PM_AddEvent( EV_NOQUICKGRENAMMO ); // no ammo
+			 pm->ps->quickGrenTime = 2500;  // throttle repeat attempts
+			 return;
 		 }
-        return;
+
+		 // pull the pin - lock in type/ammo now instead of re-checking at throw time, stash the type in weaponDelay until then.
+		 PM_WeaponUseAmmo( grenType, 1 );
+		 pm->ps->weaponDelay = grenType;
+		 pm->ps->grenadeTimeLeft = QUICKGREN_FUSE_TIME;
 	}
 }
 

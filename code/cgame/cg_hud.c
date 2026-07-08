@@ -142,7 +142,7 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 	// pulsing grenade icon to help the player 'count' in their head
 	if ( cg.predictedPlayerState.grenadeTimeLeft ) {   // grenades and dynamite set this
 
-		// these time differently
+		// tick sound plays regardless of which weapon icon is shown - still relevant while quick-cooking
 		if ( realweap == WP_DYNAMITE ) {
 			if ( ( ( cg.grenLastTime ) % 1000 ) > ( ( cg.predictedPlayerState.grenadeTimeLeft ) % 1000 ) ) {
 				trap_S_StartLocalSound( cgs.media.grenadePulseSound4, CHAN_LOCAL_SOUND );
@@ -166,8 +166,13 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 			}
 		}
 
-		scale = (float)( ( cg.predictedPlayerState.grenadeTimeLeft ) % 1000 ) / 100.0f;
-		halfScale = scale * 0.5f;
+		// but only grow the icon when it's actually the grenade being cooked, not the equipped weapon
+		if ( realweap == WP_GRENADE_LAUNCHER || realweap == WP_GRENADE_PINEAPPLE || realweap == WP_DYNAMITE ) {
+			scale = (float)( ( cg.predictedPlayerState.grenadeTimeLeft ) % 1000 ) / 100.0f;
+			halfScale = scale * 0.5f;
+		} else {
+			scale = halfScale = 0;
+		}
 
 		cg.grenLastTime = cg.predictedPlayerState.grenadeTimeLeft;
 	} else {
@@ -490,6 +495,69 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 			}
 		}
 	}
+}
+
+/*
+==============
+CG_DrawGrenadeCount
+
+Always-visible grenade ammo readout, regardless of equipped weapon.
+==============
+*/
+static void CG_DrawGrenadeCount( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	playerState_t *ps;
+	int wp;
+	int value;
+	qhandle_t icon;
+	char num[16];
+	float pulse, grow;
+
+	ps = &cg.snap->ps;
+
+	if ( ps->stats[STAT_HEALTH] <= 0 ) {
+		return;
+	}
+
+	if ( COM_BitCheck( ps->weapons, WP_GRENADE_LAUNCHER ) ) {
+		wp = WP_GRENADE_LAUNCHER;
+	} else if ( COM_BitCheck( ps->weapons, WP_GRENADE_PINEAPPLE ) ) {
+		wp = WP_GRENADE_PINEAPPLE;
+	} else {
+		return;
+	}
+
+	if ( cgs.dmflags & DF_NO_WEAPRELOAD ) {
+		value = ps->ammo[ BG_FindAmmoForWeapon( wp ) ];
+	} else {
+		value = ps->ammoclip[ BG_FindClipForWeapon( wp ) ];
+	}
+
+	if ( value <= 0 ) {
+		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement( PLACE_RIGHT, PLACE_BOTTOM );
+	}
+
+	// icons are normally only registered lazily when their bank shows in the weapon-select strip
+	CG_RegisterWeapon( wp );
+	icon = cg_weapons[ wp ].weaponIcon[0];
+
+	// pulse while actually cooking (quick-grenade or held grenade weapon)
+	pulse = 0.0f;
+	if ( cg.predictedPlayerState.grenadeTimeLeft > 0 ) {
+		pulse = 1.0f - ( (float)( cg.predictedPlayerState.grenadeTimeLeft % 1000 ) / 1000.0f );
+	}
+	grow = 0.3f * pulse * rect->h;
+
+	if ( icon ) {
+		trap_R_SetColor( NULL );
+		CG_DrawPic( rect->x - 0.5f * grow, rect->y - 0.5f * grow, rect->h + grow, rect->h + grow, icon );
+	}
+
+	Com_sprintf( num, sizeof( num ), "%d", value );
+	CG_Text_Paint( rect->x + rect->h + 6, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
 }
 
 static void CG_DrawPlayerHead( rectDef_t *rect, qboolean draw2D ) {
@@ -1559,6 +1627,9 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 	//----(SA)	end
 	case CG_PLAYER_AMMOCLIP_VALUE:
 		CG_DrawPlayerAmmoValue( &rect, font, scale, color, shader, textStyle, 1 );
+		break;
+	case CG_PLAYER_GRENADE_COUNT:
+		CG_DrawGrenadeCount( &rect, font, scale, color, textStyle );
 		break;
 	case CG_PLAYER_WEAPON_HEAT:
 		CG_DrawWeapHeat( &rect, align );

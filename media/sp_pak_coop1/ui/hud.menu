@@ -385,7 +385,26 @@
 			visible 1
 			decoration
 		}
-		
+
+}
+
+//	GRENADE COUNT	//	always visible, regardless of equipped weapon
+	menuDef {
+    	name "GrenadeCount"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect 452 425 54 28
+
+		itemDef {
+			name "grencount"
+			ownerdraw CG_PLAYER_GRENADE_COUNT
+			rect 0 0 54 28
+			visible MENU_TRUE
+			decoration
+			textstyle ITEM_TEXTSTYLE_SHADOWEDMORE
+			textscale .42
+			forecolor .63 .59 .57 1	// grey
+		}
 }
 
 	//	HOLDABLE	//

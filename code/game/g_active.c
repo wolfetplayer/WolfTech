@@ -725,9 +725,13 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 					break;
 			}
 
+				// restore the cooked fuse from the event parm (bg_pmove.c already zeroed ps.grenadeTimeLeft) so fire_grenade() uses the real value.
+				if ( eventParm > 0 ) {
+					ent->client->ps.grenadeTimeLeft = eventParm;
+				}
 				CalcMuzzlePoints( ent, WP_GRENADE_LAUNCHER );
 				quickgren_fire( ent, WP_GRENADE_LAUNCHER );
-		
+
 
 			break;
 		case EV_FIRE_QUICKGREN2:
@@ -736,9 +740,12 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 					break;
 			}
 
+				if ( eventParm > 0 ) {
+					ent->client->ps.grenadeTimeLeft = eventParm;
+				}
 				CalcMuzzlePoints( ent, WP_GRENADE_PINEAPPLE );
 				quickgren_fire( ent, WP_GRENADE_PINEAPPLE );
-			
+
 			break;
 
 //----(SA)	modified
