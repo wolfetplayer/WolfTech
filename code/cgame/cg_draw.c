@@ -3432,7 +3432,13 @@ static qboolean CG_DrawFollow( void ) {
 	if ( cg.snap->ps.pm_flags & PMF_LIMBO ) {
 		color[1] = 0.0;
 		color[2] = 0.0;
-		if ( cg.snap->ps.persistant[PERS_RESPAWNS_LEFT] == 0 ) {
+		if ( cgs.gametype == GT_COOP_SURVIVAL ) {
+#ifdef LOCALISATION
+			Q_strncpyz( deploytime, CG_TranslateString( "Waiting for next wave..." ), sizeof(deploytime) );
+#else
+			Q_strncpyz( deploytime, "Waiting for next wave...", sizeof(deploytime) );
+#endif
+		} else if ( cg.snap->ps.persistant[PERS_RESPAWNS_LEFT] == 0 ) {
 #ifdef LOCALISATION
 			Q_strncpyz( deploytime, CG_TranslateString( "No more deployments this round" ), sizeof(deploytime) );
 #else

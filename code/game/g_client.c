@@ -527,7 +527,7 @@ void limbo( gentity_t *ent, qboolean makeCorpse ) {
 	//int startclient = ent->client->sess.spectatorClient;
 	int startclient = ent->client->ps.clientNum;
 
-	if ( g_gametype.integer != GT_COOP_SPEEDRUN && g_spawnpoints.integer != 2 ) {
+	if ( g_gametype.integer != GT_COOP_SPEEDRUN && g_gametype.integer != GT_COOP_SURVIVAL && g_spawnpoints.integer != 2 ) {
 		G_Printf( "FIXME: limbo called from wrong gametype. Shouldn't see this\n" );
 		return;
 	}
@@ -608,7 +608,7 @@ void reinforce( gentity_t *ent ) {
 	int i = 0;
 	gclient_t *rclient;
 
-	if ( g_gametype.integer != GT_COOP_SPEEDRUN && g_spawnpoints.integer != 2 ) {
+	if ( g_gametype.integer != GT_COOP_SPEEDRUN && g_gametype.integer != GT_COOP_SURVIVAL && g_spawnpoints.integer != 2 ) {
 		G_Printf( "FIXME: reinforce called from wrong gametype. Shouldn't see this\n" );
 		return;
 	}
@@ -706,7 +706,7 @@ void ClientRespawn( gentity_t *ent ) {
 	}
 
 	// DHM - Nerve :: Already handled in 'limbo()'
-	if ( g_gametype.integer != GT_COOP_SPEEDRUN ) {
+	if ( g_gametype.integer != GT_COOP_SPEEDRUN && g_gametype.integer != GT_COOP_SURVIVAL ) {
 		CopyToBodyQue( ent );
 	}
 
@@ -1716,7 +1716,7 @@ void ClientSpawn( gentity_t *ent ) {
 							spawnPoint = SelectSpawnPoint( client->ps.origin, spawn_origin, spawn_angles );
 						}
 					} else {
-						if ( g_gametype.integer <= GT_COOP && ent->client->hasCoopSpawn ) {
+						if ( g_gametype.integer <= GT_COOP && g_gametype.integer != GT_COOP_SURVIVAL && ent->client->hasCoopSpawn ) {
 							// TODO: select random spot from friends
 							VectorCopy( client->coopSpawnPointOrigin, spawn_origin );
 							VectorCopy( client->coopSpawnPointAngles, spawn_angles );

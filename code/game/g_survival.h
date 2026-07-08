@@ -58,6 +58,7 @@ void TossClientItems_Survival(gentity_t *self, gentity_t *attacker);
 void TossClientPowerups(gentity_t *self, gentity_t *attacker);
 gentity_t *SelectSpawnPoint_AI ( gentity_t *player, gentity_t *ent, vec3_t origin, vec3_t angles ) ;
 void AICast_TickSurvivalWave( void );
+void Survival_CheckWipe( void );
 
 
 // Survival parameters
@@ -79,6 +80,8 @@ typedef struct svParams_s
 
 	qboolean specialWaveActive;
 	int lastSpecialWave;
+
+	qboolean waveGameOver;              // all players died mid-wave, game over triggered
 
 	// loaded from .surv file
 	int   aliveFriendliestoCallReinforce;

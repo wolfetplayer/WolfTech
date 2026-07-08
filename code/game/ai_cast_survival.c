@@ -52,6 +52,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../steam/steam.h"
 
 int BotPointAreaNum( vec3_t origin );  // ai_dmq3.c - handles floor-edge cases raw trap_AAS_PointAreaNum misses
+void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client back into the game
 
 #define PREPARE_TIME 15
 #define INTERMISSION_TIME 15
@@ -122,6 +123,7 @@ void AICast_InitSurvival(void) {
 	svParams.waveInProgress = qfalse;
 	svParams.wavePending = qtrue;
 	svParams.waveChangeTime = level.time + PREPARE_TIME * 1000;
+	svParams.waveGameOver = qfalse;
 
     // Special wave defaults
     svParams.specialWaveActive    = qfalse;
@@ -1197,6 +1199,52 @@ static qboolean AICast_ShouldStartSpecialWave(void) {
     return (roll < SPECIAL_WAVE_CHANCE) ? qtrue : qfalse;
 }
 
+/*
+============
+Survival_CheckWipe
+============
+*/
+void Survival_CheckWipe( void ) {
+	int i;
+	int playing = 0;
+
+	if ( svParams.waveGameOver ) {
+		return;
+	}
+
+	for ( i = 0; i < level.maxclients; i++ ) {
+		gentity_t *cl = &g_entities[i];
+
+		if ( !cl->inuse || !cl->client ) {
+			continue;
+		}
+		if ( cl->client->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+		if ( cl->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+			continue;
+		}
+		if ( cl->r.svFlags & SVF_BOT ) {
+			continue;
+		}
+
+		playing++;
+
+		if ( cl->health > 0 ) {
+			return; // someone's still standing
+		}
+	}
+
+	if ( playing == 0 ) {
+		return;
+	}
+
+	svParams.waveGameOver = qtrue;
+
+	trap_SendServerCommand( -1, "cp \"^1GAME OVER\n^7All players have fallen\n\"" );
+	trap_SendConsoleCommand( EXEC_APPEND, "map_restart 5\n" );
+}
+
 void AICast_CheckSurvivalProgression( gentity_t *attacker ) {
 	int enemiesAlive;
 	int i;
@@ -1263,6 +1311,21 @@ void AICast_CheckSurvivalProgression( gentity_t *attacker ) {
 		endEvent = svParams.specialWaveActive ? "specialwave_end" : "wave_end";
 
 		Survival_GameManagerEvent( endEvent );
+
+		// revive everyone who died this wave, once, at the start of intermission
+		for ( i = 0; i < level.maxclients; i++ ) {
+			gentity_t *cl = &g_entities[i];
+
+			if ( !cl->inuse || !cl->client ) {
+				continue;
+			}
+			if ( cl->client->pers.connected != CON_CONNECTED ) {
+				continue;
+			}
+			if ( cl->client->ps.pm_flags & PMF_LIMBO ) {
+				reinforce( cl );
+			}
+		}
 	}
 }
 

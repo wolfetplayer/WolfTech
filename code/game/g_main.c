@@ -2136,7 +2136,10 @@ void FindIntermissionPoint( void ) {
 	// find the intermission spot
 	ent = G_Find( NULL, FOFS( classname ), "info_player_intermission" );
 	if ( !ent ) {   // the map creator forgot to put in an intermission point...
-		SelectSpawnPoint( vec3_origin, level.intermission_origin, level.intermission_angle );
+		// coop/survival maps rarely have info_player_deathmatch spots, try coop_spawnpoint first
+		if ( g_gametype.integer > GT_COOP || !SelectRandomCoopSpawnPoint( level.intermission_origin, level.intermission_angle ) ) {
+			SelectSpawnPoint( vec3_origin, level.intermission_origin, level.intermission_angle );
+		}
 	} else {
 		VectorCopy( ent->s.origin, level.intermission_origin );
 		VectorCopy( ent->s.angles, level.intermission_angle );
@@ -3082,7 +3085,7 @@ void G_RunFrame( int levelTime ) {
 	// get any cvar changes
 	G_UpdateCvars();
 
-	if ( level.lastSpawnSave <= level.time && g_spawnpoints.integer == 0 && g_gametype.integer <= GT_COOP ) {
+	if ( level.lastSpawnSave <= level.time && g_spawnpoints.integer == 0 && g_gametype.integer <= GT_COOP && g_gametype.integer != GT_COOP_SURVIVAL ) {
 		level.lastSpawnSave = level.time + 30000;
 		newSpawns = qtrue;
 		//trap_SendServerCommand( -1, va( "cp \"Saved current position as \nthe next spawnpoint\n\"" ) );
@@ -3234,6 +3237,7 @@ void G_RunFrame( int levelTime ) {
 	if (g_gametype.integer == GT_COOP_SURVIVAL)
 	{
 		AICast_TickSurvivalWave();
+		Survival_CheckWipe();
 	}
 
 	// perform final fixups on the players

@@ -1490,9 +1490,15 @@ void ClientThink_real( gentity_t *ent ) {
 		if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
 			// wait for the attack button to be pressed
 			if ( level.time > client->respawnTime ) {
+				// Survival: wait in limbo until next wave's intermission revives everyone
+				if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+					if ( !( ent->client->ps.pm_flags & PMF_LIMBO ) ) {
+						limbo( ent, qtrue );
+					}
+				}
 				// DHM - Nerve :: Single player game respawns immediately as before,
 				//				  but in multiplayer, require button press before respawn
-				if ( ( g_gametype.integer == GT_COOP_SPEEDRUN || g_spawnpoints.integer == 2 ) && g_limbotime.integer > 0 ) {
+				else if ( ( g_gametype.integer == GT_COOP_SPEEDRUN || g_spawnpoints.integer == 2 ) && g_limbotime.integer > 0 ) {
 					limbo( ent, qtrue );
 				} else if ( g_gametype.integer <= GT_SINGLE_PLAYER ) {
 					ClientRespawn( ent );
