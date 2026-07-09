@@ -927,7 +927,7 @@ void SV_Init (void)
 	Cvar_Get( "sv_keywords", "", CVAR_SERVERINFO );
 	sv_mapname = Cvar_Get( "mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM );
 	sv_privateClients = Cvar_Get( "sv_privateClients", "0", CVAR_SERVERINFO );
-	sv_hostname = Cvar_Get( "sv_hostname", "RTCW Coop", CVAR_SERVERINFO | CVAR_ARCHIVE );
+	sv_hostname = Cvar_Get( "sv_hostname", "WULF Lobby", CVAR_SERVERINFO | CVAR_ARCHIVE );
 	sv_maxclients = Cvar_Get( "sv_maxclients", "128", CVAR_SERVERINFO | CVAR_LATCH );
 	sv_maxcoopclients = Cvar_Get( "sv_maxcoopclients", "4", CVAR_SERVERINFO | CVAR_LATCH );
 
@@ -946,7 +946,7 @@ void SV_Init (void)
 	// systeminfo
 	Cvar_Get( "sv_cheats", "1", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
-	sv_pure = Cvar_Get( "sv_pure", "1", CVAR_SYSTEMINFO );
+	sv_pure = Cvar_Get( "sv_pure", "0", CVAR_SYSTEMINFO );
 #ifdef USE_VOIP
 	sv_voip = Cvar_Get("sv_voip", "1", CVAR_LATCH);
 	Cvar_CheckRange(sv_voip, 0, 1, qtrue);
