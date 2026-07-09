@@ -2932,7 +2932,8 @@ static void PM_Weapon( void ) {
 		pm->ps->pm_flags &= ~PMF_USE_ITEM_HELD;
 	}
 
-	// busy cooking a quick grenade - holster the weapon (drop/raise), gated on weapAnimTimer so re-predicted frames can't retrigger the anim.
+	// busy cooking a quick grenade - holster the weapon (drop/raise), gated on weaponTime (networked, same field the ladder-holster
+	// below uses) instead of weapAnimTimer (not networked) so client and server can't desync on when the transition can happen.
 	if ( pm->ps->grenadeTimeLeft > 0 &&
 		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE ) {
 		if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN && pm->ps->weapAnimTimer <= 0 ) {
