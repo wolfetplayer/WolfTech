@@ -69,7 +69,8 @@ extern int countTranslate;
 #define UIAS_GLOBAL3			4
 #define UIAS_GLOBAL4			5
 #define UIAS_GLOBAL5			6
-#define UIAS_FAVORITES			7
+#define UIAS_STEAM			7
+#define UIAS_FAVORITES			8
 
 static const char *netSources[] = {
 	"Local",
@@ -78,7 +79,8 @@ static const char *netSources[] = {
 	"Master2",
 	"Master3",
 	"Master4",
-	"Master5"
+	"Master5",
+	"Steam"
 	//"Favorites"
 };
 static const int numNetSources = ARRAY_LEN( netSources );
@@ -1342,6 +1344,8 @@ int UI_SourceForLAN(void) {
 		case UIAS_GLOBAL4:
 		case UIAS_GLOBAL5:
 			return AS_GLOBAL;
+		case UIAS_STEAM:
+			return AS_STEAM;
 		case UIAS_FAVORITES:
 			return AS_FAVORITES;
 	}
@@ -2509,7 +2513,7 @@ static int UI_OwnerDrawWidth( int ownerDraw, int font, float scale ) {
 			ui_netSource.integer = 0;
 		}
 		// fretn - print master server hostname instead of Internet1, Internet2, its confusing
-		if (ui_netSource.integer != 0) { 
+		if (ui_netSource.integer >= UIAS_GLOBAL0 && ui_netSource.integer <= UIAS_GLOBAL5) {
 			char command[1024];
 			char masteraddress[1024];
 
@@ -2518,7 +2522,7 @@ static int UI_OwnerDrawWidth( int ownerDraw, int font, float scale ) {
 			s = va( "Source: %s", masteraddress );
 		} else {
 			s = va( "Source: %s", netSources[ui_netSource.integer] );
-		} 
+		}
 		break;
 	case UI_NETFILTER:
 		if ( ui_serverFilterType.integer < 0 || ui_serverFilterType.integer >= numServerFilters ) {
@@ -4659,9 +4663,10 @@ static void UI_RunMenuScript( char **args ) {
 	{
 		if (Q_stricmp(name, "StartServer") == 0)
 		{
-			int i, clients;
+			int clients;
 			int gt;
 			const char *mapName;
+			char hostName[MAX_NAME_LENGTH];
 
 			trap_Cvar_Set("cg_thirdPerson", "0");
 			trap_Cvar_Set("cg_cameraOrbit", "0");
@@ -4677,31 +4682,20 @@ static void UI_RunMenuScript( char **args ) {
 
 			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
 
-			// set max clients based on spots
-			clients = 0;
-			for (i = 0; i < PLAYERS_PER_TEAM; i++)
-			{
-				int bot = trap_Cvar_VariableValue(va("ui_blueteam%i", i + 1));
-				if (bot >= 0)
-				{
-					clients++;
-				}
-
-				bot = trap_Cvar_VariableValue(va("ui_redteam%i", i + 1));
-				if (bot >= 0)
-				{
-					clients++;
-				}
-			}
-
-			if (clients == 0)
-			{
-				clients = 8;
-			}
+			// sv_maxcoopclients is what create.menu's "Max Players" field and the real server both use.
+			clients = (int)Com_Clamp( 1, MAX_COOP_CLIENTS, trap_Cvar_VariableValue( "sv_maxcoopclients" ) );
 
 			trap_Cvar_Set("sv_maxClients", va("%d", clients));
 
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_host %d\n", clients));
+
+			// push name/map/gametype to the lobby; steam_setdata queues until it's ready
+			trap_Cvar_VariableStringBuffer( "sv_hostname", hostName, sizeof( hostName ) );
+			if ( hostName[0] ) {
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata name \"%s\"\n", hostName));
+			}
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
 
 			if (gt == GT_COOP_SURVIVAL)
 			{
@@ -5026,7 +5020,12 @@ static void UI_RunMenuScript( char **args ) {
 			trap_Cvar_Set( "ui_singlePlayerActive", "0" );
 			if ( uiInfo.serverStatus.currentServer >= 0 && uiInfo.serverStatus.currentServer < uiInfo.serverStatus.numDisplayServers ) {
 				trap_LAN_GetServerAddressString(UI_SourceForLAN(), uiInfo.serverStatus.displayServers[uiInfo.serverStatus.currentServer], buff, 1024);
-				trap_Cmd_ExecuteText( EXEC_APPEND, va( "connect %s\n", buff ) );
+				if ( !Q_strncmp( buff, "steam:", 6 ) ) {
+					// buff is the lobby's SteamID, not the host's - join via matchmaking, let CL_Frame auto-connect.
+					trap_Cmd_ExecuteText( EXEC_APPEND, va( "steam_join %s\n", buff + 6 ) );
+				} else {
+					trap_Cmd_ExecuteText( EXEC_APPEND, va( "connect %s\n", buff ) );
+				}
 			}
 		}
 		else if (Q_stricmp(name, "FoundPlayerJoinServer") == 0)
@@ -7901,7 +7900,7 @@ cvarTable_t cvarTable[] = {
 	{ &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM },
 	{ &ui_selectedPlayer, "cg_selectedPlayer", "0", CVAR_ARCHIVE},
 	{ &ui_selectedPlayerName, "cg_selectedPlayerName", "", CVAR_ARCHIVE},
-	{ &ui_netSource, "ui_netSource", "1", CVAR_ARCHIVE },
+	{ &ui_netSource, "ui_netSource", "7", CVAR_ARCHIVE },
 #ifdef WOLF_SP_DEMO
 	{ &ui_menuFiles, "ui_menuFiles", "ui/demomenus.txt", CVAR_ARCHIVE },
 #else
@@ -8027,6 +8026,10 @@ static void UI_DoServerRefresh( void ) {
 			if (!trap_LAN_GetServerCount(AS_LOCAL)) {
 				wait = qtrue;
 			}
+		} else if (ui_netSource.integer == UIAS_STEAM) {
+			if (trap_LAN_GetServerCount(AS_STEAM) < 0) {
+				wait = qtrue;
+			}
 		} else {
 			if (trap_LAN_GetServerCount(AS_GLOBAL) < 0) {
 				wait = qtrue;
@@ -8111,6 +8114,8 @@ static void UI_StartServerRefresh( qboolean full, qboolean force ) {
 		} else {
 			trap_Cmd_ExecuteText( EXEC_NOW, va( "globalservers %d %d full empty\n", ui_netSource.integer - UIAS_GLOBAL0, (int)trap_Cvar_VariableValue( "protocol" ) ) );
 		}
+	} else if ( ui_netSource.integer == UIAS_STEAM ) {
+		trap_Cmd_ExecuteText( EXEC_NOW, "steam_list\n" );
 	}
 }
 // -NERVE - SMF

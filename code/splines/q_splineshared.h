@@ -1779,6 +1779,7 @@ typedef struct qtime_s {
 #define AS_MPLAYER      1
 #define AS_GLOBAL           2
 #define AS_FAVORITES    3
+#define AS_STEAM        4
 
 
 // cinematic states
@@ -1804,6 +1805,7 @@ typedef enum _flag_status {
 
 #define MAX_GLOBAL_SERVERS          2048
 #define MAX_OTHER_SERVERS           128
+#define MAX_STEAM_SERVERS           128
 #define MAX_PINGREQUESTS            32
 #define MAX_SERVERSTATUSREQUESTS    16
 

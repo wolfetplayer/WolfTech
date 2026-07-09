@@ -36,6 +36,28 @@ This is updated when lobby create/join event arrives.
 */
 uint64_t steamLobbyCurrent(void);
 
+// Steam lobby list (server browser)
+typedef struct {
+	uint64_t lobbyID;
+	char name[128];
+	char map[64];
+	int members;
+	int maxMembers;
+	int gameType;
+} steamLobbyInfo_t;
+
+/* Number of lobbies currently cached from the last steamLobbyList() request. */
+int steamLobbyListCount(void);
+
+/* Returns the cached lobby at index, or NULL if out of range. */
+const steamLobbyInfo_t *steamLobbyListGet(int index);
+
+/* True if the cache changed (new results or list finished) since the last steamLobbyListClearDirty(). */
+int steamLobbyListDirty(void);
+
+/* Acknowledge the current cache contents; clears the dirty flag. */
+void steamLobbyListClearDirty(void);
+
 /*
 Returns the steamID of the current lobby's owner, or 0 if unknown.
 The shim automatically starts listening (if this is our own steamID) or

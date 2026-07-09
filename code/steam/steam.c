@@ -13,6 +13,68 @@
 static uint64_t s_steamCurrentLobby = 0;
 static uint64_t s_steamCurrentLobbyOwner = 0;
 
+// Steam lobby list cache for the server browser; filled in from SHIMEVENT_LOBBY_LIST events, polled via steamLobbyListDirty().
+#define STEAM_LOBBYLIST_MAX 128
+
+static steamLobbyInfo_t s_lobbyList[STEAM_LOBBYLIST_MAX];
+static int s_lobbyListCount = 0;
+static int s_lobbyListDirty = 0;
+
+// Splits "name\x01map\x01members\x01maxMembers\x01gametype" from steamshim_parent.cpp into a steamLobbyInfo_t.
+static void steamLobbyListParseEntry(const char *text, steamLobbyInfo_t *out)
+{
+	char buf[256];
+	char *fields[5];
+	int fieldCount = 0;
+	char *p, *start;
+
+	memset(out, 0, sizeof(*out));
+
+	Q_strncpyz(buf, text, sizeof(buf));
+
+	start = buf;
+	for (p = buf; *p && fieldCount < 4; p++) {
+		if (*p == '\x01') {
+			*p = '\0';
+			fields[fieldCount++] = start;
+			start = p + 1;
+		}
+	}
+	fields[fieldCount++] = start;
+	while (fieldCount < 5) {
+		fields[fieldCount++] = "";
+	}
+
+	Q_strncpyz(out->name, fields[0], sizeof(out->name));
+	Q_strncpyz(out->map, fields[1], sizeof(out->map));
+	out->members = atoi(fields[2]);
+	out->maxMembers = atoi(fields[3]);
+	out->gameType = atoi(fields[4]);
+}
+
+int steamLobbyListCount(void)
+{
+	return s_lobbyListCount;
+}
+
+const steamLobbyInfo_t *steamLobbyListGet(int index)
+{
+	if (index < 0 || index >= s_lobbyListCount) {
+		return NULL;
+	}
+	return &s_lobbyList[index];
+}
+
+int steamLobbyListDirty(void)
+{
+	return s_lobbyListDirty;
+}
+
+void steamLobbyListClearDirty(void)
+{
+	s_lobbyListDirty = 0;
+}
+
 /*
 ===============
 Steam P2P net transport queues
@@ -203,20 +265,23 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 		break;
 
 	case SHIMEVENT_LOBBY_LIST:
-		/*
-		ev->uvalue == 0 means list finished.
-		ev->name contains lobby name/map/connect/etc depending on parent.
-		*/
+		// ev->uvalue == 0 means list finished; ev->name is "name\x01map\x01members\x01maxMembers\x01gametype".
 		if (ev->okay) {
 			if (ev->uvalue == 0) {
 				printf("Steam lobby list finished\n");
-			} else {
+				s_lobbyListDirty = 1;
+			} else if (s_lobbyListCount < STEAM_LOBBYLIST_MAX) {
+				steamLobbyInfo_t *entry = &s_lobbyList[s_lobbyListCount++];
+				steamLobbyListParseEntry(ev->name, entry);
+				entry->lobbyID = ev->uvalue;
 				printf("Steam lobby found: %llu '%s'\n",
 					(unsigned long long)ev->uvalue,
-					ev->name);
+					entry->name);
+				s_lobbyListDirty = 1;
 			}
 		} else {
 			printf("Steam lobby list failed\n");
+			s_lobbyListDirty = 1;
 		}
 		break;
 
@@ -308,6 +373,8 @@ void steamLobbyCreate(int maxPlayers)
 
 void steamLobbyList(void)
 {
+	s_lobbyListCount = 0;
+	s_lobbyListDirty = 0;
 	STEAMSHIM_lobbyList();
 }
 
@@ -397,6 +464,26 @@ void steamLobbyJoin(uint64_t lobbyID)
 void steamLobbyLeave(void)
 {
 	s_steamCurrentLobby = 0;
+}
+
+int steamLobbyListCount(void)
+{
+	return 0;
+}
+
+const steamLobbyInfo_t *steamLobbyListGet(int index)
+{
+	(void)index;
+	return NULL;
+}
+
+int steamLobbyListDirty(void)
+{
+	return 0;
+}
+
+void steamLobbyListClearDirty(void)
+{
 }
 
 uint64_t steamLobbyOwner(void)

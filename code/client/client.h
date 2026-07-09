@@ -390,6 +390,9 @@ typedef struct {
 	int numfavoriteservers;
 	serverInfo_t favoriteServers[MAX_OTHER_SERVERS];
 
+	int numsteamservers;
+	serverInfo_t steamServers[MAX_STEAM_SERVERS];
+
 	int pingUpdateSource;       // source currently pinging or updating
 
 	// update server info

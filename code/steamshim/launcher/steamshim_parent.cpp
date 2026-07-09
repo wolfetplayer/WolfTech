@@ -862,28 +862,35 @@ void SteamBridge::OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure)
 
 		const char *name = GSteamMatchmaking->GetLobbyData(lobby, "name");
 		const char *map = GSteamMatchmaking->GetLobbyData(lobby, "map");
+		const char *gametype = GSteamMatchmaking->GetLobbyData(lobby, "gametype");
+		int members = GSteamMatchmaking->GetNumLobbyMembers(lobby);
+		int maxMembers = GSteamMatchmaking->GetLobbyMemberLimit(lobby);
 
-		char display[128];
-
-		if (name && name[0] && map && map[0]) {
-			snprintf(display, sizeof(display), "%s [%s]", name, map);
-		} else if (name && name[0]) {
-			snprintf(display, sizeof(display), "%s", name);
-		} else {
-			snprintf(display, sizeof(display), "WolfTech Lobby");
+		if (!name || !name[0]) {
+			name = "WolfTech Lobby";
+		}
+		if (!map) {
+			map = "";
+		}
+		if (!gametype || !gametype[0]) {
+			gametype = "0";
 		}
 
-		dbgpipe("Lobby %u: %llu %s\n",
+		// steamLobbyListParseEntry() in code/steam/steam.c splits this back apart.
+		char payload[256];
+		snprintf(payload, sizeof(payload), "%s\x01%s\x01%d\x01%d\x01%s", name, map, members, maxMembers, gametype);
+
+		dbgpipe("Lobby %u: %llu '%s' map='%s' %d/%d gt=%s\n",
 			i,
 			lobby.ConvertToUint64(),
-			display);
+			name, map, members, maxMembers, gametype);
 
 		writeLobbyEvent(
 			fd,
 			SHIMEVENT_LOBBY_LIST,
 			true,
 			lobby.ConvertToUint64(),
-			display
+			payload
 		);
 	}
 

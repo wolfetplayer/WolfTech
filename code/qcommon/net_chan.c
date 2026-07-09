@@ -653,6 +653,13 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 		return 1;
 	}
 
+	if ( !Q_strncmp( s, "steam:", 6 ) ) {
+		memset( a, 0, sizeof( *a ) );
+		a->type = NA_STEAM_P2P;
+		a->steamID = strtoull( s + 6, NULL, 10 );
+		return 1;
+	}
+
 	Q_strncpyz( base, s, sizeof( base ) );
 
 	if(*base == '[' || Q_CountChar(base, ':') > 1)

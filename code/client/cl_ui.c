@@ -119,6 +119,10 @@ static void LAN_ResetPings( int source ) {
 		servers = &cls.favoriteServers[0];
 		count = MAX_OTHER_SERVERS;
 		break;
+	case AS_STEAM:
+		servers = &cls.steamServers[0];
+		count = MAX_STEAM_SERVERS;
+		break;
 	}
 	if ( servers ) {
 		for ( i = 0; i < count; i++ ) {
@@ -233,6 +237,9 @@ static int LAN_GetServerCount( int source ) {
 	case AS_FAVORITES:
 		return cls.numfavoriteservers;
 		break;
+	case AS_STEAM:
+		return cls.numsteamservers;
+		break;
 	}
 	return 0;
 }
@@ -260,6 +267,12 @@ static void LAN_GetServerAddressString( int source, int n, char *buf, int buflen
 	case AS_FAVORITES:
 		if ( n >= 0 && n < MAX_OTHER_SERVERS ) {
 			Q_strncpyz(buf, NET_AdrToStringwPort( cls.favoriteServers[n].adr) , buflen );
+			return;
+		}
+		break;
+	case AS_STEAM:
+		if ( n >= 0 && n < MAX_STEAM_SERVERS ) {
+			Q_strncpyz(buf, NET_AdrToStringwPort( cls.steamServers[n].adr) , buflen );
 			return;
 		}
 		break;
@@ -291,6 +304,11 @@ static void LAN_GetServerInfo( int source, int n, char *buf, int buflen ) {
 	case AS_FAVORITES:
 		if ( n >= 0 && n < MAX_OTHER_SERVERS ) {
 			server = &cls.favoriteServers[n];
+		}
+		break;
+	case AS_STEAM:
+		if ( n >= 0 && n < MAX_STEAM_SERVERS ) {
+			server = &cls.steamServers[n];
 		}
 		break;
 	}
@@ -347,6 +365,11 @@ static int LAN_GetServerPing( int source, int n ) {
 			server = &cls.favoriteServers[n];
 		}
 		break;
+	case AS_STEAM:
+		if ( n >= 0 && n < MAX_STEAM_SERVERS ) {
+			server = &cls.steamServers[n];
+		}
+		break;
 	}
 	if ( server ) {
 		return server->ping;
@@ -375,6 +398,11 @@ static serverInfo_t *LAN_GetServerPtr( int source, int n ) {
 	case AS_FAVORITES:
 		if ( n >= 0 && n < MAX_OTHER_SERVERS ) {
 			return &cls.favoriteServers[n];
+		}
+		break;
+	case AS_STEAM:
+		if ( n >= 0 && n < MAX_STEAM_SERVERS ) {
+			return &cls.steamServers[n];
 		}
 		break;
 	}
@@ -512,6 +540,10 @@ static void LAN_MarkServerVisible( int source, int n, qboolean visible ) {
 		case AS_FAVORITES:
 			server = &cls.favoriteServers[0];
 			break;
+		case AS_STEAM:
+			server = &cls.steamServers[0];
+			count = MAX_STEAM_SERVERS;
+			break;
 		}
 		if ( server ) {
 			for ( n = 0; n < count; n++ ) {
@@ -535,6 +567,11 @@ static void LAN_MarkServerVisible( int source, int n, qboolean visible ) {
 		case AS_FAVORITES:
 			if ( n >= 0 && n < MAX_OTHER_SERVERS ) {
 				cls.favoriteServers[n].visible = visible;
+			}
+			break;
+		case AS_STEAM:
+			if ( n >= 0 && n < MAX_STEAM_SERVERS ) {
+				cls.steamServers[n].visible = visible;
 			}
 			break;
 		}
@@ -563,6 +600,11 @@ static int LAN_ServerIsVisible( int source, int n ) {
 	case AS_FAVORITES:
 		if ( n >= 0 && n < MAX_OTHER_SERVERS ) {
 			return cls.favoriteServers[n].visible;
+		}
+		break;
+	case AS_STEAM:
+		if ( n >= 0 && n < MAX_STEAM_SERVERS ) {
+			return cls.steamServers[n].visible;
 		}
 		break;
 	}

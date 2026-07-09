@@ -1436,6 +1436,11 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		return;
 	}
 
+	// Leave any Steam lobby we were part of; safe no-op if we weren't in one.
+	if ( steamAlive() ) {
+		steamLobbyLeave();
+	}
+
 	// shutting down the client so enter full screen ui mode
 	Cvar_Set( "r_uiFullScreen", "0" );
 
@@ -2117,7 +2122,45 @@ void CL_SteamLobbyCreate_f(void)
 
 void CL_SteamLobbyList_f(void)
 {
+	cls.numsteamservers = -1;
 	steamLobbyList();
+}
+
+// Copies steam.c's lobby list cache into cls.steamServers[] for AS_STEAM; no-op unless steamLobbyListDirty().
+void CL_UpdateSteamServers(void) {
+	int i, count;
+
+	if ( !steamLobbyListDirty() ) {
+		return;
+	}
+
+	count = steamLobbyListCount();
+	if ( count > MAX_STEAM_SERVERS ) {
+		count = MAX_STEAM_SERVERS;
+	}
+
+	for ( i = 0; i < count; i++ ) {
+		const steamLobbyInfo_t *lobby = steamLobbyListGet( i );
+		serverInfo_t *server = &cls.steamServers[i];
+
+		if ( !lobby ) {
+			break;
+		}
+
+		Com_Memset( server, 0, sizeof( *server ) );
+		server->adr.type = NA_STEAM_P2P;
+		server->adr.steamID = lobby->lobbyID;
+		Q_strncpyz( server->hostName, lobby->name, sizeof( server->hostName ) );
+		Q_strncpyz( server->mapName, lobby->map, sizeof( server->mapName ) );
+		server->clients = lobby->members;
+		server->maxClients = lobby->maxMembers;
+		server->gameType = lobby->gameType;
+		server->ping = 1;      // no live RTT probe for Steam lobbies
+		server->visible = qtrue;
+	}
+
+	cls.numsteamservers = count;
+	steamLobbyListClearDirty();
 }
 
 void CL_SteamHost_f(void)
@@ -2135,23 +2178,81 @@ void CL_SteamHost_f(void)
 		}
 	}
 
+	// Leave any stale lobby first so steamLobbyCurrent() can't fool the readiness check below.
+	if (steamLobbyCurrent() != 0) {
+		steamLobbyLeave();
+	}
+
 	steamLobbyCreate(maxPlayers);
 }
 
 void CL_SteamJoin_f(void)
 {
 	if (Cmd_Argc() < 2) {
-		Com_Printf("usage: steamjoin <lobbyID>\n");
+		Com_Printf("usage: steam_join <lobbyID>\n");
 		return;
 	}
 
 	uint64_t lobbyID = strtoull(Cmd_Argv(1), NULL, 10);
 	if (lobbyID == 0) {
-		Com_Printf("steamjoin: invalid lobby id '%s'\n", Cmd_Argv(1));
+		Com_Printf("steam_join: invalid lobby id '%s'\n", Cmd_Argv(1));
 		return;
 	}
 
 	steamLobbyJoin(lobbyID);
+}
+
+// "steam_setdata <key> <value>": queues until the lobby is ready (CreateLobby is async) and flushes from CL_Frame.
+#define MAX_PENDING_STEAM_LOBBY_DATA 8
+typedef struct {
+	char key[32];
+	char value[128];
+} pendingSteamLobbyData_t;
+
+static pendingSteamLobbyData_t cl_pendingSteamLobbyData[MAX_PENDING_STEAM_LOBBY_DATA];
+static int cl_numPendingSteamLobbyData = 0;
+
+void CL_SteamSetData_f(void)
+{
+	if (Cmd_Argc() < 3) {
+		Com_Printf("usage: steam_setdata <key> <value>\n");
+		return;
+	}
+
+	if (steamLobbyCurrent() == 0) {
+		if (cl_numPendingSteamLobbyData < MAX_PENDING_STEAM_LOBBY_DATA) {
+			pendingSteamLobbyData_t *pending = &cl_pendingSteamLobbyData[cl_numPendingSteamLobbyData++];
+			Q_strncpyz( pending->key, Cmd_Argv( 1 ), sizeof( pending->key ) );
+			Q_strncpyz( pending->value, Cmd_Argv( 2 ), sizeof( pending->value ) );
+			Com_Printf("steam_setdata: lobby not ready yet, queued %s = '%s'\n", Cmd_Argv(1), Cmd_Argv(2));
+		} else {
+			Com_Printf("steam_setdata: pending queue full, dropped %s = '%s'\n", Cmd_Argv(1), Cmd_Argv(2));
+		}
+		return;
+	}
+
+	Com_Printf("steam_setdata: %s = '%s' (lobby %llu)\n",
+		Cmd_Argv(1), Cmd_Argv(2), (unsigned long long) steamLobbyCurrent());
+
+	steamLobbySetData(Cmd_Argv(1), Cmd_Argv(2));
+}
+
+// Sends anything steam_setdata queued once steamLobbyCurrent() confirms the lobby is ready; called from CL_Frame.
+void CL_FlushPendingSteamLobbyData(void) {
+	int i;
+
+	if ( !cl_numPendingSteamLobbyData || steamLobbyCurrent() == 0 ) {
+		return;
+	}
+
+	for ( i = 0; i < cl_numPendingSteamLobbyData; i++ ) {
+		Com_Printf("steam_setdata: %s = '%s' (lobby %llu)\n",
+			cl_pendingSteamLobbyData[i].key, cl_pendingSteamLobbyData[i].value,
+			(unsigned long long) steamLobbyCurrent());
+		steamLobbySetData( cl_pendingSteamLobbyData[i].key, cl_pendingSteamLobbyData[i].value );
+	}
+
+	cl_numPendingSteamLobbyData = 0;
 }
 
 /*
@@ -3237,11 +3338,22 @@ void CL_Frame( int msec ) {
 	if (steamAlive())
 	{
 		static uint64_t lastAutoConnectOwner = 0;
+		static qboolean wasHostingServer = qfalse;
+		qboolean isHostingServer;
 		uint64_t owner;
 		uint64_t peerSteamID;
 		int peerConnected;
 
 		steamRun();
+		CL_UpdateSteamServers();
+		CL_FlushPendingSteamLobbyData();
+
+		// Leave the lobby when the local server actually stops (not on map changes - those don't call SV_Shutdown).
+		isHostingServer = com_sv_running->integer ? qtrue : qfalse;
+		if ( wasHostingServer && !isHostingServer ) {
+			steamLobbyLeave();
+		}
+		wasHostingServer = isHostingServer;
 
 		// Once we've joined someone else's lobby, the shim already starts
 		// the Steam P2P handshake to the owner on its own (see
@@ -4418,6 +4530,8 @@ void CL_Init( void ) {
 	Cmd_AddCommand("steam_join", CL_SteamJoin_f);
 
 	Cmd_AddCommand("steam_host", CL_SteamHost_f);
+
+	Cmd_AddCommand("steam_setdata", CL_SteamSetData_f);
 
 	Cmd_AddCommand("connect_lobby", CL_ConnectLobby_f);
 
