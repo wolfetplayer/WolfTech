@@ -2936,21 +2936,33 @@ static void PM_Weapon( void ) {
 	// below uses) instead of weapAnimTimer (not networked) so client and server can't desync on when the transition can happen.
 	if ( pm->ps->grenadeTimeLeft > 0 &&
 		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE ) {
-		if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN && pm->ps->weapAnimTimer <= 0 ) {
+		if ( pm->ps->weaponTime > 0 ) {
+			pm->ps->weaponTime -= pml.msec;
+			if ( pm->ps->weaponTime < 0 ) {
+				pm->ps->weaponTime = 0;
+			}
+		}
+		if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN && pm->ps->weaponTime <= 0 ) {
 			pm->ps->weaponstate = WEAPON_HOLSTER_IN;
 			PM_StartWeaponAnim( WEAP_DROP );
-			pm->ps->weapAnimTimer = 250;
+			pm->ps->weaponTime = 250;
 		}
 		return;
 	}
 
 	if ( pm->ps->weaponstate == WEAPON_HOLSTER_IN || pm->ps->weaponstate == WEAPON_HOLSTER_OUT ) {
+		if ( pm->ps->weaponTime > 0 ) {
+			pm->ps->weaponTime -= pml.msec;
+			if ( pm->ps->weaponTime < 0 ) {
+				pm->ps->weaponTime = 0;
+			}
+		}
 		// done cooking - raise back up a stage at a time, deferred while on a ladder so this can't steal that transition.
-		if ( !( pm->ps->pm_flags & PMF_LADDER ) && pm->ps->weapAnimTimer <= 0 ) {
+		if ( !( pm->ps->pm_flags & PMF_LADDER ) && pm->ps->weaponTime <= 0 ) {
 			if ( pm->ps->weaponstate == WEAPON_HOLSTER_IN ) {
 				pm->ps->weaponstate = WEAPON_HOLSTER_OUT;
 				PM_StartWeaponAnim( WEAP_RAISE );
-				pm->ps->weapAnimTimer = 250;
+				pm->ps->weaponTime = 250;
 			} else {
 				pm->ps->weaponstate = WEAPON_READY;
 				PM_StartWeaponAnim( WEAP_IDLE1 );
@@ -3566,6 +3578,12 @@ static void PM_QuickGrenade( void ) {
 	    return;
 	}
 
+	// previous throw's holster/raise cycle hasn't finished yet - don't let a new cook stomp on it.
+	if ( pm->ps->weaponstate != WEAPON_READY )
+	{
+		return;
+	}
+
     if ( pm->cmd.wbuttons & WBUTTON_QUICKGREN )
     {
 		 int grenType;
@@ -3584,6 +3602,7 @@ static void PM_QuickGrenade( void ) {
 		 PM_WeaponUseAmmo( grenType, 1 );
 		 pm->ps->weaponDelay = grenType;
 		 pm->ps->grenadeTimeLeft = QUICKGREN_FUSE_TIME;
+		 pm->ps->weaponTime = 0;    // force the holster-in transition to fire on the very next frame, no leftover fire-delay to wait out
 	}
 }
 
