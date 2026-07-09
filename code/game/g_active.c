@@ -1620,7 +1620,7 @@ void SpectatorClientEndFrame( gentity_t *ent ) {
 		*/
 
 
-		if ( ( g_gametype.integer == GT_COOP_SPEEDRUN || g_spawnpoints.integer == 2 ) && g_limbotime.integer > 0 )
+		if ( g_gametype.integer != GT_COOP_SURVIVAL && ( g_gametype.integer == GT_COOP_SPEEDRUN || g_spawnpoints.integer == 2 ) && g_limbotime.integer > 0 )
 		{
 			testtime = level.time % g_limbotime.integer;
 			if ( testtime < ent->client->pers.lastReinforceTime ) {
