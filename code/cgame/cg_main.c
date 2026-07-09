@@ -494,7 +494,7 @@ cvarTable_t cvarTable[] = {
 
 	{&cg_reloading, "g_reloading", "0", 0}, //----(SA)	added
 
-	{&cg_realistic_movement, "g_realistic_movement", "0", CVAR_ARCHIVE},
+	{&cg_realistic_movement, "g_realistic_movement", "0", 0}, // host-controlled, communicated by serverinfo
 
 		// JPW NERVE
 	{&cg_medicChargeTime, "g_medicChargeTime", "30000", 0},		  // communicated by systeminfo

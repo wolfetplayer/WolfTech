@@ -182,6 +182,9 @@ void CG_ParseServerinfo( void ) {
 	info = CG_ConfigString( CS_SERVERINFO );
 	cgs.gametype = atoi( Info_ValueForKey( info, "g_gametype" ) );
 	trap_Cvar_Set( "g_gametype", va( "%i", cgs.gametype ) );
+
+	// g_realistic_movement is host-authoritative
+	trap_Cvar_Set( "g_realistic_movement", Info_ValueForKey( info, "g_realistic_movement" ) );
 	cgs.dmflags = atoi( Info_ValueForKey( info, "dmflags" ) );
 	cgs.teamflags = atoi( Info_ValueForKey( info, "teamflags" ) );
 	cgs.fraglimit = atoi( Info_ValueForKey( info, "fraglimit" ) );

@@ -226,7 +226,7 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_enforcemaxlives, "g_enforcemaxlives", "1", CVAR_ARCHIVE, 0, qtrue},
 	{ &g_voiceChatsAllowed, "g_voiceChatsAllowed", "4", CVAR_ARCHIVE, 0, qfalse},
 	{ &g_airespawn, "g_airespawn", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qfalse},
-	{ &g_realistic_movement, "g_realistic_movement", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse},
+	{ &g_realistic_movement, "g_realistic_movement", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qfalse},
 	{ &g_sharedlives, "g_sharedlives", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qtrue},
 	{ &g_playerStart, "g_playerStart", "0", CVAR_ROM, 0, qfalse  },
 	{ &g_limbotime, "g_limbotime", "10000", CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse },
