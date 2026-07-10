@@ -253,7 +253,7 @@ ammotable_t ammoTable[] = {
         .maxammo            = 192,
         .uses               = 1,
         .maxclip            = 32,
-        .reloadTime         = 2600,
+        .reloadTime         = 2500,
         .fireDelayTime      = DELAY_LOW,
         .nextShotTime       = 110,
         .maxHeat            = 0,
@@ -274,6 +274,7 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
+		.gunOffset          = { -3.0f, 2.0f, 0.0f },
     },
     [WP_THOMPSON] = {
 		.weaponindex        = WP_THOMPSON,		
@@ -313,9 +314,9 @@ ammotable_t ammoTable[] = {
         .maxammo            = 220,
         .uses               = 1,
         .maxclip            = 32,
-        .reloadTime         = 3100,
+        .reloadTime         = 2500,
         .fireDelayTime      = DELAY_LOW,
-        .nextShotTime       = 110,
+        .nextShotTime       = 115,
         .maxHeat            = 700,
         .coolRate           = 300,
 		.weaponDamage       = 7,
@@ -1557,9 +1558,9 @@ gitem_t bg_itemlist[] =
 	{
 		"weapon_sten",
 		"sound/misc/w_pkup.wav",
-		{   "models/weapons2/sten/sten.md3",
-			"models/weapons2/sten/v_sten.md3",
-			"models/weapons2/sten/pu_sten.md3",
+		{   "models/weapons/smgs/sten/sten_3rd.md3",
+			"models/weapons/smgs/sten/v_sten.md3",
+			"models/weapons/smgs/sten/sten_3rd.md3",
 			0,0 },
 		"icons/iconw_sten_1",    // icon
 		"icons/ammo2",           // ammo icon
@@ -1651,9 +1652,9 @@ gitem_t bg_itemlist[] =
     "weapon_mp40",
     "sound/misc/w_pkup.wav",
     {
-        "models/weapons2/mp40/mp40.md3",
-        "models/weapons2/mp40/v_mp40.md3",
-        "models/weapons2/mp40/pu_mp40.md3",
+        "models/weapons/smgs/mp40/mp40_3rd.md3",
+        "models/weapons/smgs/mp40/v_mp40.md3",
+        "models/weapons/smgs/mp40/mp40_3rd.md3",
         0, 0
     },
     "icons/iconw_mp40_1",

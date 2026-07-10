@@ -1324,16 +1324,16 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload.wav" );
 		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload_fast.wav" );
 		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
-		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/thompson/thompson_overheat.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
 
 	case WP_MP40:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40f1.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40e1.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mp40/mp40_reload.wav" );
-		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/mp40/mp40_overheat.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mp40/mp40_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
 
@@ -1342,13 +1342,16 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mp34/mp34_fire.wav" );
 		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp34/mp34_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mp34/mp34_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mp34/mp34_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
 
 	case WP_STEN:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/sten/stenf1.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/sten/sten_fire.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/sten/sten_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/sten/sten_reload_fast.wav" );
 		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/sten/sten_overheat.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
