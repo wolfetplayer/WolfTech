@@ -1564,11 +1564,11 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		return;
 	}
 
-	if (GetWeaponTableData( cg.weaponSelect )->weaponClass & WEAPON_CLASS_SCOPED) {
+	if (GetWeaponTableData( cg.snap->ps.weapon )->weaponClass & WEAPON_CLASS_SCOPED) {
 		float spd;
 		spd = VectorLength( cg.snap->ps.velocity );
 		if ( spd > 180.0f ) {
-			switch ( cg.weaponSelect ) {
+			switch ( cg.snap->ps.weapon ) {
 			case WP_FG42SCOPE:
 				CG_FinishWeaponChange( cg.weaponSelect, WP_FG42 );
 				break;

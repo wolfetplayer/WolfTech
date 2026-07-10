@@ -1932,7 +1932,7 @@ gitem_t bg_itemlist[] =
 		WP_SNIPERRIFLE,
 		WP_SNIPERRIFLE,
 		WP_MAUSER,
-		WP_SNIPERRIFLE,
+		WP_MAUSER,
 		WP_MAUSER,
 		"",                          // precache
 		"",                          // sounds
@@ -1955,7 +1955,7 @@ gitem_t bg_itemlist[] =
 		WP_SNOOPERSCOPE,
 		WP_SNOOPERSCOPE,
 		WP_GARAND,
-		WP_SNOOPERSCOPE,
+		WP_GARAND,
 		WP_GARAND,
 		"",                          // precache
 		"",                          // sounds
@@ -1978,7 +1978,7 @@ gitem_t bg_itemlist[] =
 		WP_FG42SCOPE,
 		WP_FG42SCOPE,   // this weap
 		WP_MAUSER,      // shares ammo w/
-		WP_FG42SCOPE,   // this weap
+		WP_FG42,        // shares ammo w/ (survival)
 		WP_FG42,        // shares clip w/
 		"",                          // precache
 		"",                          // sounds
