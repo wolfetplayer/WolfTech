@@ -58,7 +58,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{0,                     0,                      0           },  //	0 (empty)
 
 	{WP_KNIFE,              0,                      0           },  //	1
-	{WP_LUGER,              WP_COLT,                0           },  //	2	// WP_AKIMBO
+	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO   },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
 	{WP_MAUSER,             WP_GARAND,              0           },  //	4
 	{WP_FG42,               0,                      0           },  //	5
@@ -132,7 +132,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_LUGER] = {
 		.weaponindex        = WP_LUGER,
-		.weapAlts           = WP_SILENCER,
+		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_PISTOL,
         .maxammo            = 64,
         .uses               = 1,
@@ -161,7 +161,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_SILENCER] = {
 		.weaponindex        = WP_SILENCER,
-		.weapAlts           = WP_LUGER,
+		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_PISTOL,	
         .maxammo            = 64,
         .uses               = 1,
@@ -190,7 +190,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_COLT] = {
 		.weaponindex        = WP_COLT,
-		.weapAlts           = WP_AKIMBO,
+		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_PISTOL,
         .maxammo            = 56,
         .uses               = 1,
@@ -219,11 +219,11 @@ ammotable_t ammoTable[] = {
     },
     [WP_AKIMBO] = {
 		.weaponindex        = WP_AKIMBO,		
-		.weapAlts           = WP_COLT,
-		.weaponClass        = WEAPON_CLASS_PISTOL,	
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_PISTOL,
         .maxammo            = 112,
         .uses               = 1,
-        .maxclip            = 7,
+        .maxclip            = 14,
         .reloadTime         = 2700,
         .fireDelayTime      = DELAY_PISTOL,
         .nextShotTime       = 200,
@@ -1737,7 +1737,7 @@ gitem_t bg_itemlist[] =
 		WP_SILENCER,
 		WP_LUGER,
 		WP_SILENCER,
-		WP_LUGER,
+		WP_SILENCER,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
@@ -3124,30 +3124,14 @@ BG_AkimboFireSequence
 ==============
 */
 //qboolean BG_AkimboFireSequence( playerState_t *ps ) {
-qboolean BG_AkimboFireSequence( int weapon, int akimboClip, int coltClip ) {
+qboolean BG_AkimboFireSequence( int weapon, int akimboClip ) {
 	// NOTE: this doesn't work when clips are turned off (dmflags 64)
 
 	if ( weapon != WP_AKIMBO ) {
 		return qfalse;
 	}
 
-	if ( !akimboClip ) {
-		return qfalse;
-	}
-
-	// no ammo in colt, must be akimbo turn
-	if ( !coltClip ) {
-		return qtrue;
-	}
-
-	// at this point, both have ammo
-
-	// now check 'cycle'   // (removed old method 11/5/2001)
-	if ( ( akimboClip + coltClip ) & 1 ) {
-		return qfalse;
-	}
-
-	return qtrue;
+	return (qboolean)( akimboClip & 1 );
 }
 
 //----(SA) end

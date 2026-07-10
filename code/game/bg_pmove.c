@@ -2224,16 +2224,6 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 	switchtime = 250;   // dropping/raising usually takes 1/4 sec.
 	// sometimes different switch times for alt weapons
 	switch ( oldweapon ) {
-	case WP_LUGER:
-		if ( altswitch ) {
-			switchtime = 50;
-		}
-		break;
-	case WP_SILENCER:
-		if ( altswitch ) {
-			switchtime = 1200;
-		}
-		break;
 	case WP_FG42:
 	case WP_FG42SCOPE:
 		if ( altswitch ) {
@@ -2310,16 +2300,6 @@ static void PM_FinishWeaponChange( void ) {
 
 	// sometimes different switch times for alt weapons
 	switch ( newweapon ) {
-	case WP_LUGER:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
-			switchtime = 50;
-		}
-		break;
-	case WP_SILENCER:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
-			switchtime = 1190;
-		}
-		break;
 	case WP_FG42:
 	case WP_FG42SCOPE:
 		if ( newweapon == ammoTable[oldweapon].weapAlts) {
@@ -2371,10 +2351,6 @@ static void PM_ReloadClip( int weapon ) {
 	if ( ammomove ) {
 		pm->ps->ammo[ BG_FindAmmoForWeapon( weapon )] -= ammomove;
 		pm->ps->ammoclip[BG_FindClipForWeapon( weapon )] += ammomove;
-	}
-
-	if ( weapon == WP_AKIMBO ) { // reload colt too
-		PM_ReloadClip( WP_COLT );
 	}
 }
 
@@ -2454,33 +2430,12 @@ void PM_CheckForReload( int weapon ) {
 			if ( pm->ps->ammoclip[clipWeap] < ammoTable[weapon].maxclip ) {
 				doReload = qtrue;
 			}
-			if ( weapon == WP_AKIMBO ) {
-				// akimbo should also check Colt status
-				if ( pm->ps->ammoclip[BG_FindClipForWeapon( WP_COLT )] < ammoTable[BG_FindClipForWeapon( WP_COLT )].maxclip ) {
-					doReload = qtrue;
-				}
-			}
 		}
 	}
 	// clip is empty, but you have reserves.  (auto reload)
 	else if ( !( pm->ps->ammoclip[clipWeap] ) ) {   // clip is empty...
 		if ( pm->ps->ammo[ammoWeap] ) {         // and you have reserves
-			if ( weapon == WP_AKIMBO ) {    // if colt's got ammo, don't force reload yet (you know you've got it 'out' since you've got the akimbo selected
-				if ( !( pm->ps->ammoclip[WP_COLT] ) ) {
-					doReload = qtrue;
-				}
-				// likewise.  however, you need to check if you've got the akimbo selected, since you could have the colt alone
-			} else if ( weapon == WP_COLT ) {   // weapon checking for reload is colt...
-				if ( pm->ps->weapon == WP_AKIMBO ) {    // you've got the akimbo selected...
-					if ( !( pm->ps->ammoclip[WP_AKIMBO] ) ) {   // and it's got no ammo either
-						doReload = qtrue;       // so reload
-					}
-				} else {     // single colt selected
-					doReload = qtrue;       // so reload
-				}
-			} else {
-				doReload = qtrue;
-			}
+			doReload = qtrue;
 		}
 	}
 
@@ -2554,12 +2509,6 @@ void PM_WeaponUseAmmo( int wp, int amount ) {
 		pm->ps->ammo[ BG_FindAmmoForWeapon( wp )] -= amount;
 	} else {
 		takeweapon = BG_FindClipForWeapon( wp );
-		if ( wp == WP_AKIMBO ) {
-			if ( !BG_AkimboFireSequence( wp, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT] ) ) {
-				takeweapon = WP_COLT;
-			}
-		}
-
 		pm->ps->ammoclip[takeweapon] -= amount;
 	}
 }
@@ -2579,12 +2528,6 @@ int PM_WeaponAmmoAvailable( int wp ) {
 	} else {
 //		return pm->ps->ammoclip[BG_FindClipForWeapon( wp )];
 		takeweapon = BG_FindClipForWeapon( wp );
-		if ( wp == WP_AKIMBO ) {
-			if ( !BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT] ) ) {
-				takeweapon = WP_COLT;
-			}
-		}
-
 		return pm->ps->ammoclip[takeweapon];
 	}
 }
@@ -2848,7 +2791,7 @@ static void PM_Weapon( void ) {
 	// RF, remoed this, was preventing lava from hurting player
 	//pm->watertype = 0;
 
-	akimboFire = BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT] );
+	akimboFire = BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_AKIMBO] );
 
 	if ( 0 ) {
 		switch ( pm->ps->weaponstate ) {
@@ -3408,16 +3351,6 @@ static void PM_Weapon( void ) {
 
 	addTime = GetWeaponTableData(pm->ps->weapon)->nextShotTime;
 	aimSpreadScaleAdd = GetWeaponTableData(pm->ps->weapon)->spreadScaleAdd;
-
-	switch ( pm->ps->weapon ) {
-	case WP_AKIMBO:
-		if ( !pm->ps->ammoclip[WP_AKIMBO] || !pm->ps->ammoclip[WP_COLT] ) {
-			if ( ( !pm->ps->ammoclip[WP_AKIMBO] && !akimboFire ) || ( !pm->ps->ammoclip[WP_COLT] && akimboFire ) ) {
-				addTime = 2 * ammoTable[pm->ps->weapon].nextShotTime;
-			}
-		}
-		break;
-	}
 
 	if ( pm->ps->perks[PERK_RIFLING] && pm->ps->weapon != WP_KNIFE ) {
 		addTime /= 1.25;

@@ -584,11 +584,10 @@ CG_DrawPlayerAmmoValue
 */
 static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle, int type ) {
 	char num[16];
-	int value, value2 = 0;
+	int value;
 	centity_t   *cent;
 	playerState_t   *ps;
 	int weap;
-	qboolean special = qfalse;
 
 	cent = &cg_entities[cg.snap->ps.clientNum];
 	ps = &cg.snap->ps;
@@ -612,10 +611,6 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 	case WP_CLASS_SPECIAL:              // DHM - Nerve
 		return;
 
-	case WP_AKIMBO:
-		special = qtrue;
-		break;
-
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
@@ -635,13 +630,6 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 		value = cg.snap->ps.ammo[BG_FindAmmoForWeapon( weap )];
 	} else {        // clip
 		value = ps->ammoclip[BG_FindClipForWeapon( weap )];
-		if ( special ) {
-			value2 = value;
-			if ( ammoTable[weap].weapAlts ) {
-				value = ps->ammoclip[ammoTable[weap].weapAlts];
-			}
-//				value2 = ps->ammoclip[weapAlts[weap]];
-		}
 	}
 
 	if ( value > -1 ) {
@@ -657,13 +645,6 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 				CG_Text_Paint( -12 + rect->x + ( rect->w - value ) / 2, -15 + rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
 			} else {
 				CG_Text_Paint( -12 + rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
-			}
-
-//			if(special) {	// draw '0' for akimbo guns
-			if ( value2 || ( special && type == 1 ) ) {
-				Com_sprintf( num, sizeof( num ), "%i /", value2 );
-				value = CG_Text_Width( num, font, scale, 0 );
-				CG_Text_Paint( -42 + rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
 			}
 		}
 	}

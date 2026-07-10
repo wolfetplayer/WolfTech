@@ -2507,9 +2507,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	weapon = &cg_weapons[weaponNum];
 
 	if ( isPlayer ) {
-		akimboFire = BG_AkimboFireSequence( weaponNum, cg.predictedPlayerState.ammoclip[WP_AKIMBO], cg.predictedPlayerState.ammoclip[WP_COLT] );
+		akimboFire = BG_AkimboFireSequence( weaponNum, cg.predictedPlayerState.ammoclip[WP_AKIMBO] );
 	} else if ( ps ) {
-		akimboFire = BG_AkimboFireSequence( weaponNum, ps->ammoclip[WP_AKIMBO], ps->ammoclip[WP_AKIMBO] );
+		akimboFire = BG_AkimboFireSequence( weaponNum, ps->ammoclip[WP_AKIMBO] );
 	}
 
 	// add the weapon
@@ -3654,17 +3654,6 @@ void CG_PlaySwitchSound( int lastweap, int newweap ) {
 
 	switchsound = cgs.media.selectSound;
 
-	if ( getAltWeapon( lastweap ) == newweap ) { // alt switch
-		switch ( newweap ) {
-		case WP_SILENCER:
-		case WP_LUGER:
-			switchsound = cg_weapons[newweap].switchSound[0];
-			break;
-		default:
-			break;
-		}
-	}
-
 	trap_S_StartSound( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, switchsound );
 }
 
@@ -3806,29 +3795,6 @@ void CG_AltWeapon_f( void ) {
 	}
 
 	if ( CG_WeaponSelectable( num ) ) {   // new weapon is valid
-
-		switch ( original ) {
-		case WP_LUGER:
-			if ( cg.snap->ps.eFlags & EF_MELEE_ACTIVE ) {   // if you're holding a chair, you can't screw on the silencer
-				return;
-			}
-			weapBanks[2][0] = WP_SILENCER;
-			break;
-		case WP_SILENCER:
-			if ( cg.snap->ps.eFlags & EF_MELEE_ACTIVE ) {   // if you're holding a chair, you can't remove the silencer
-				return;
-			}
-			weapBanks[2][0] = WP_LUGER;
-			break;
-
-		case WP_AKIMBO:
-			weapBanks[2][1] = WP_COLT;
-			break;
-		case WP_COLT:
-			weapBanks[2][1] = WP_AKIMBO;
-			break;
-		}
-
         trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
 		CG_FinishWeaponChange( original, num );
 	}
