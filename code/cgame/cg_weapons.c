@@ -1248,17 +1248,20 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 	case WP_AKIMBO:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/colt/coltf1.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40e1.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/colt/colt_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/colt/colt_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/colt/colt_reload2.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/colt/colt_reload2_fast.wav" );
+		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
 
 	case WP_COLT:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/colt/coltf1.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40e1.wav" ); 
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/colt/colt_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/colt/colt_far.wav" ); 
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/colt/colt_reload.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/pistol_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/colt/colt_reload_fast.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
 
@@ -1271,18 +1274,24 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 	case WP_LUGER:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->switchSound[0] = trap_S_RegisterSound( "sound/weapons/luger/silencerremove.wav" ); 
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/luger/lugerf1.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40e1.wav" ); 
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/luger/luger_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/luger/luger_far.wav" ); 
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload.wav" );
+		weaponInfo->reloadFullSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_full.wav" );
+		weaponInfo->reloadFullSoundFast = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_full_fast.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/pistol_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
 
 	case WP_SILENCER:   
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->switchSound[0] = trap_S_RegisterSound( "sound/weapons/luger/silencerattatch.wav" ); 
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/luger/silencerf1.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/luger/silencer_fire.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload.wav" );
+		weaponInfo->reloadFullSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_full.wav" );
+		weaponInfo->reloadFullSoundFast = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_full_fast.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/pistol_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
 

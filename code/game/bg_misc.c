@@ -137,9 +137,10 @@ ammotable_t ammoTable[] = {
         .maxammo            = 64,
         .uses               = 1,
         .maxclip            = 8,
-        .reloadTime         = 1500,
+        .reloadTime         = 1850,
+        .reloadTimeFull     = 2650,
         .fireDelayTime      = DELAY_PISTOL,
-        .nextShotTime       = 400,
+        .nextShotTime       = 300,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 6,
@@ -158,6 +159,7 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
     },
     [WP_SILENCER] = {
 		.weaponindex        = WP_SILENCER,
@@ -166,9 +168,10 @@ ammotable_t ammoTable[] = {
         .maxammo            = 64,
         .uses               = 1,
         .maxclip            = 8,
-        .reloadTime         = 1500,
+        .reloadTime         = 1850,
+        .reloadTimeFull     = 2650,
         .fireDelayTime      = DELAY_PISTOL,
-        .nextShotTime       = 400,
+        .nextShotTime       = 300,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 6,
@@ -187,6 +190,7 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qfalse,		
 		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
     },
     [WP_COLT] = {
 		.weaponindex        = WP_COLT,
@@ -195,9 +199,9 @@ ammotable_t ammoTable[] = {
         .maxammo            = 56,
         .uses               = 1,
         .maxclip            = 7,
-        .reloadTime         = 1500,
+        .reloadTime         = 1650,
         .fireDelayTime      = DELAY_PISTOL,
-        .nextShotTime       = 400,
+        .nextShotTime       = 300,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 9,
@@ -216,6 +220,7 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,	
 		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, -1.0f },
     },
     [WP_AKIMBO] = {
 		.weaponindex        = WP_AKIMBO,		
@@ -224,9 +229,9 @@ ammotable_t ammoTable[] = {
         .maxammo            = 112,
         .uses               = 1,
         .maxclip            = 14,
-        .reloadTime         = 2700,
+        .reloadTime         = 2000,
         .fireDelayTime      = DELAY_PISTOL,
-        .nextShotTime       = 200,
+        .nextShotTime       = 220,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 9,
@@ -245,6 +250,7 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,	
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
     },
     [WP_MP40] = {
 		.weaponindex        = WP_MP40,		
@@ -317,8 +323,8 @@ ammotable_t ammoTable[] = {
         .reloadTime         = 2500,
         .fireDelayTime      = DELAY_LOW,
         .nextShotTime       = 115,
-        .maxHeat            = 700,
-        .coolRate           = 300,
+        .maxHeat            = 900,
+        .coolRate           = 500,
 		.weaponDamage       = 7,
 		.weaponSpread       = 900,
 		.spreadScale        = 0.6f,		
@@ -334,7 +340,8 @@ ammotable_t ammoTable[] = {
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,	
 		.bulletBased        = qtrue,
 		.hasMuzzle          = qfalse,
-		.underwaterFire     = qfalse,	
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -6.0f, -1.0f, -2.0f },	
     },
     [WP_MP34] = {
 		.weaponindex        = WP_MP34,
@@ -1489,10 +1496,11 @@ gitem_t bg_itemlist[] =
 	{
 		"weapon_luger",
 		"sound/misc/w_pkup.wav",
-		{   "models/weapons2/luger/luger.md3",
-			"models/weapons2/luger/v_luger.md3",
-			0, 0,
-			"models/weapons2/luger/ss_luger.md3"},
+		{   "models/weapons/pistols/luger/luger_3rd.md3",
+			"models/weapons/pistols/luger/v_luger.md3",
+			"models/weapons/pistols/luger/luger_3rd.md3", 
+			0,
+			0},
 
 		"icons/iconw_luger_1",   // icon
 		"icons/ammo2",           // ammo icon
@@ -1581,9 +1589,9 @@ gitem_t bg_itemlist[] =
 	{
 		"weapon_akimbo",
 		"sound/misc/w_pkup.wav",
-		{   "models/weapons2/colt2/colt2.md3",
-			"models/weapons2/colt2/v_colt2.md3",
-			"models/weapons2/colt2/pu_colt2.md3",
+		{   "models/weapons/pistols/colt/colt_3rd.md3",
+			"models/weapons/pistols/colt2/v_colt2.md3",
+			"models/weapons/pistols/colt/colt_3rd.md3",
 			0, 0 },
 
 		"icons/iconw_colt_1",    // icon
@@ -1604,9 +1612,9 @@ gitem_t bg_itemlist[] =
 	{
 		"weapon_colt",
 		"sound/misc/w_pkup.wav",
-		{   "models/weapons2/colt/colt.md3",
-			"models/weapons2/colt/v_colt.md3",
-			"models/weapons2/colt/pu_colt.md3",
+		{   "models/weapons/pistols/colt/colt_3rd.md3",
+			"models/weapons/pistols/colt/v_colt.md3",
+			"models/weapons/pistols/colt/colt_3rd.md3",
 			0, 0 },
 
 		"icons/iconw_colt_1",    // icon
@@ -1722,14 +1730,13 @@ gitem_t bg_itemlist[] =
 	{
 		"weapon_silencer",
 		"sound/misc/w_pkup.wav",
-		{   "models/weapons2/silencer/silencer.md3", //----(SA)	changed 10/25
-			"models/weapons2/silencer/v_silencer.md3",
-			"models/weapons2/silencer/pu_silencer.md3",
+		{   "models/weapons/pistols/luger_silenced/lugers_3rd.md3", 
+			"models/weapons/pistols/luger_silenced/v_lugers.md3",
+			"models/weapons/pistols/luger_silenced/lugers_3rd.md3",
 			0, 0},
 
 		"icons/iconw_silencer_1",    // icon
 		"icons/ammo5",       // ammo icon
-//		"Silencer",		// pickup
 		"sp5 pistol",
 		10,
 		IT_WEAPON,
