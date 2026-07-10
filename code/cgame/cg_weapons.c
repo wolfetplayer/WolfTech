@@ -1362,15 +1362,18 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/sten/sten_reload.wav" );
 		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/sten/sten_reload_fast.wav" );
 		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/sten/sten_overheat.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;
 
 	case WP_FG42:
 	case WP_FG42SCOPE:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/fg42/fg42f1.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/fg42/fg42e1.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/fg42/fg42_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/fg42/fg42_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/fg42/fg42_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/fg42/fg42_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/ar_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
