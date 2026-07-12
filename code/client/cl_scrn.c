@@ -196,12 +196,14 @@ static void SCR_DrawCharExt( int x, int y, float size, int ch, int font ) {
 
 /*
 ** SCR_DrawSmallChar
-** small chars are drawn at native screen resolution
+** small chars are drawn at 640x480 virtual screen size, like everything else,
+** so they scale with resolution instead of staying pinned to a fixed pixel size
 */
 void SCR_DrawSmallChar( int x, int y, int ch ) {
 	int row, col;
 	float frow, fcol;
 	float size;
+	float ax, ay, aw, ah;
 
 	ch &= 255;
 
@@ -213,6 +215,12 @@ void SCR_DrawSmallChar( int x, int y, int ch ) {
 		return;
 	}
 
+	ax = x;
+	ay = y;
+	aw = SMALLCHAR_WIDTH;
+	ah = SMALLCHAR_HEIGHT;
+	SCR_AdjustFrom640( &ax, &ay, &aw, &ah );
+
 	row = ch >> 4;
 	col = ch & 15;
 
@@ -220,7 +228,7 @@ void SCR_DrawSmallChar( int x, int y, int ch ) {
 	fcol = col * 0.0625;
 	size = 0.0625;
 
-	re.DrawStretchPic( x, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT,
+	re.DrawStretchPic( ax, ay, aw, ah,
 					   fcol, frow,
 					   fcol + size, frow + size,
 					   cls.charSetShader );

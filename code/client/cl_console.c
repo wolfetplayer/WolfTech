@@ -56,7 +56,7 @@ typedef struct {
 	float displayFrac;      // aproaches finalFrac at scr_conspeed
 	float finalFrac;        // 0.0 to 1.0 lines of console to display
 
-	int vislines;           // in scanlines
+	int vislines;           // in 640x480 virtual scanlines
 
 	int times[NUM_CON_TIMES];       // cls.realtime time the line was generated
 	// for transparent notify lines
@@ -733,13 +733,13 @@ void Con_DrawSolidConsole( float frac ) {
 	int currentColor;
 	vec4_t color;
 
-	lines = cls.glconfig.vidHeight * frac;
+	lines = SCREEN_HEIGHT * frac;
 	if ( lines <= 0 ) {
 		return;
 	}
 
-	if ( lines > cls.glconfig.vidHeight ) {
-		lines = cls.glconfig.vidHeight;
+	if ( lines > SCREEN_HEIGHT ) {
+		lines = SCREEN_HEIGHT;
 	}
 
 	// on wide screens, we will center the text
@@ -777,7 +777,7 @@ void Con_DrawSolidConsole( float frac ) {
 	i = strlen( Q3_VERSION );
 
 	for ( x = 0 ; x < i ; x++ ) {
-		SCR_DrawSmallChar( cls.glconfig.vidWidth - ( i - x + 1 ) * SMALLCHAR_WIDTH, lines - SMALLCHAR_HEIGHT, Q3_VERSION[x] );
+		SCR_DrawSmallChar( SCREEN_WIDTH - ( i - x + 1 ) * SMALLCHAR_WIDTH, lines - SMALLCHAR_HEIGHT, Q3_VERSION[x] );
 	}
 
 
