@@ -1297,32 +1297,38 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 	case WP_MAUSER:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauserf1.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mausere1.wav" );
-		weaponInfo->lastShotSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauserf1_last.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_far.wav" );
+		weaponInfo->lastShotSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire_last.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/rifle_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
 	case WP_SNIPERRIFLE:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/sniperf1.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mausere1.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mauser/sniper_reload.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_far.wav" );
+		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload_fast.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
 	case WP_GARAND:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/garand/garandf1.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/garand/garand_fire.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/garand/garand_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/garand/garand_reload_fast.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
 	case WP_SNOOPERSCOPE:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/garand/snooperf1.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/garand/snooper_fire.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/garand/snooper_reload.wav" );
+		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/garand/garand_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/garand/garand_reload_fast.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
@@ -1439,8 +1445,10 @@ void CG_RegisterWeapon( int weaponNum ) {
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
 		weaponInfo->spinupSound = trap_S_RegisterSound( "sound/weapons/venom/venomsu1.wav" );
 		weaponInfo->spindownSound = trap_S_RegisterSound( "sound/weapons/venom/venomsd1.wav" ); 
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/venom/venomf1.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/venom/venom_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/venom/venom_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/venom/venom_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/venom/venom_reload_fast.wav" );
 		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/venom/venom_overheat.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
@@ -2711,7 +2719,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_SNIPERRIFLE ) ) {
 				barrel.hModel = weapon->modModel[0];
 				if ( barrel.hModel ) {
-					CG_PositionEntityOnTag( &barrel, &gun, "tag_scope", 0, NULL );
+					CG_PositionEntityOnTag(&barrel, parent, "tag_scope", 0, NULL);
 					CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups, ps, cent );
 				}
 			}
