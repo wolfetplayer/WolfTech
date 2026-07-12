@@ -7252,19 +7252,34 @@ UI_MouseEvent
 =================
 */
 void _UI_MouseEvent( int dx, int dy ) {
+	float minX, maxX, minY, maxY;
+
+	// widen clamp so cursor can reach real screen edges past the pillarboxed menu area
+	if ( ui_fixedAspect.integer && uiInfo.uiDC.xscale > 0 && uiInfo.uiDC.yscale > 0 ) {
+		minX = -uiInfo.uiDC.xBias / uiInfo.uiDC.xscale;
+		maxX = SCREEN_WIDTH - minX;
+		minY = -uiInfo.uiDC.yBias / uiInfo.uiDC.yscale;
+		maxY = SCREEN_HEIGHT - minY;
+	} else {
+		minX = 0;
+		maxX = SCREEN_WIDTH;
+		minY = 0;
+		maxY = SCREEN_HEIGHT;
+	}
+
 	// update mouse screen position
 	uiInfo.uiDC.cursorx += dx;
-	if ( uiInfo.uiDC.cursorx < 0 ) {
-		uiInfo.uiDC.cursorx = 0;
-	} else if ( uiInfo.uiDC.cursorx > SCREEN_WIDTH ) {
-		uiInfo.uiDC.cursorx = SCREEN_WIDTH;
+	if ( uiInfo.uiDC.cursorx < minX ) {
+		uiInfo.uiDC.cursorx = minX;
+	} else if ( uiInfo.uiDC.cursorx > maxX ) {
+		uiInfo.uiDC.cursorx = maxX;
 	}
 
 	uiInfo.uiDC.cursory += dy;
-	if ( uiInfo.uiDC.cursory < 0 ) {
-		uiInfo.uiDC.cursory = 0;
-	} else if ( uiInfo.uiDC.cursory > SCREEN_HEIGHT ) {
-		uiInfo.uiDC.cursory = SCREEN_HEIGHT;
+	if ( uiInfo.uiDC.cursory < minY ) {
+		uiInfo.uiDC.cursory = minY;
+	} else if ( uiInfo.uiDC.cursory > maxY ) {
+		uiInfo.uiDC.cursory = maxY;
 	}
 
 	if ( Menu_Count() > 0 ) {

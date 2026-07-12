@@ -1745,24 +1745,38 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 
 void CG_MouseEvent( int x, int y ) {
 	int n;
+	float minX, maxX, minY, maxY;
 
 	if ( ( cg.predictedPlayerState.pm_type == PM_NORMAL || cg.predictedPlayerState.pm_type == PM_SPECTATOR ) && cg.showScores == qfalse ) {
 		trap_Key_SetCatcher( 0 );
 		return;
 	}
 
+	// widen clamp so cursor can reach real screen edges past the pillarboxed menu area
+	if ( cg_fixedAspect.integer && cgs.screenXScale > 0 && cgs.screenYScale > 0 ) {
+		minX = -cgs.screenXBias / cgs.screenXScale;
+		maxX = 640 - minX;
+		minY = -cgs.screenYBias / cgs.screenYScale;
+		maxY = 480 - minY;
+	} else {
+		minX = 0;
+		maxX = 640;
+		minY = 0;
+		maxY = 480;
+	}
+
 	cgs.cursorX += x;
-	if ( cgs.cursorX < 0 ) {
-		cgs.cursorX = 0;
-	} else if ( cgs.cursorX > 640 ) {
-		cgs.cursorX = 640;
+	if ( cgs.cursorX < minX ) {
+		cgs.cursorX = minX;
+	} else if ( cgs.cursorX > maxX ) {
+		cgs.cursorX = maxX;
 	}
 
 	cgs.cursorY += y;
-	if ( cgs.cursorY < 0 ) {
-		cgs.cursorY = 0;
-	} else if ( cgs.cursorY > 480 ) {
-		cgs.cursorY = 480;
+	if ( cgs.cursorY < minY ) {
+		cgs.cursorY = minY;
+	} else if ( cgs.cursorY > maxY ) {
+		cgs.cursorY = maxY;
 	}
 
 	n = Display_CursorType( cgs.cursorX, cgs.cursorY );
