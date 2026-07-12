@@ -909,6 +909,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	int asave;
 	int knockback;
 	qboolean attackerpain = qfalse;
+	hitEvent_t hitEventType = HIT_NONE;
+	qboolean tookHeadshot = qfalse;
+	int oldHealth;
+	int i;
 
 	if ( !targ->takedamage ) {
 		return;
@@ -1232,6 +1236,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 
 	if ( IsHeadShot( targ, attacker, dir, point, mod ) ) {
+		tookHeadshot = qtrue;
 		// JPW NERVE -- different headshot behavior in multiplayer
 		if ( g_gametype.integer <= GT_SINGLE_PLAYER ) {
 			// by default, a headshot means damage x2
@@ -1300,6 +1305,13 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		}
 	}
 
+	// classify the hit for feedback; dispatch happens later, gated on whether damage actually lands
+	if ( attacker->client && !attacker->aiCharacter && targ->client && targ != attacker ) {
+		qboolean isTeamShot = !( attacker->r.svFlags & SVF_CASTAI ) && !( targ->r.svFlags & SVF_CASTAI )
+			&& attacker->client->sess.sessionTeam == targ->client->sess.sessionTeam;
+		hitEventType = isTeamShot ? HIT_TEAMSHOT : ( tookHeadshot ? HIT_HEADSHOT : HIT_BODYSHOT );
+	}
+	oldHealth = targ->health;
 
 	if ( g_debugDamage.integer ) {
 		G_Printf( "client:%i health:%i damage:%i armor:%i\n", targ->s.number,
@@ -1453,6 +1465,23 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 					} else {
 						targ->health = targ->health - take;
 					}
+				}
+			}
+		}
+
+		// only fires if damage actually landed, so blocked friendly-fire/ally-protection returns above stay silent
+		if ( hitEventType != HIT_NONE && targ->health < oldHealth ) {
+			if ( targ->health <= 0 ) {
+				hitEventType = HIT_DEATHSHOT;
+			}
+			trap_SendServerCommand( attacker - g_entities, va( "hitFeedback %d", hitEventType ) );
+
+			// relay to anyone spectating/following the attacker
+			for ( i = 0 ; i < level.maxclients ; i++ ) {
+				if ( level.clients[i].sess.sessionTeam == TEAM_SPECTATOR
+					&& level.clients[i].sess.spectatorState == SPECTATOR_FOLLOW
+					&& level.clients[i].sess.spectatorClient == attacker->s.number ) {
+					trap_SendServerCommand( i, va( "hitFeedback %d", hitEventType ) );
 				}
 			}
 		}

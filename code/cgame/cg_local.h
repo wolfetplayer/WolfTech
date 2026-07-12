@@ -92,6 +92,23 @@ If you have questions concerning this license or the applicable additional terms
 
 #define NUM_CROSSHAIRS      10
 
+// cg_hitSounds bitmask
+typedef enum {
+	HITSOUNDS_ON         = 1,
+	HITSOUNDS_NOBODYSHOT = 2,
+	HITSOUNDS_NOHEADSHOT = 4,
+	HITSOUNDS_NOTEAMSHOT = 8
+} hitSoundFlags_t;
+
+#define HITMARKER_DURATION             300 // msec
+#define HITMARKER_HIGHPRI_MIN_DURATION 90
+
+typedef struct {
+	qboolean active;
+	int startTime;
+	hitEvent_t hitType;
+} cg_hitMarker_t;
+
 // Ridah, trails
 #define STYPE_STRETCH   0
 #define STYPE_REPEAT    1
@@ -785,6 +802,8 @@ typedef struct {
 
 	qboolean renderingThirdPerson;          // during deaths, chasecams, etc
 
+	cg_hitMarker_t hitMarker;
+
 	// prediction state
 	qboolean hyperspace;                // true if prediction has hit a trigger_teleport
 	playerState_t predictedPlayerState;
@@ -1135,6 +1154,7 @@ typedef struct {
 	qhandle_t spawnInvincibleShader;
 	qhandle_t crosshairShader[NUM_CROSSHAIRS];
 	qhandle_t crosshairFriendly;    //----(SA)	added
+	qhandle_t hitMarkerShader;
 	qhandle_t lagometerShader;
 	qhandle_t backTileShader;
 	qhandle_t noammoShader;
@@ -1397,6 +1417,9 @@ typedef struct {
 	sfxHandle_t noAmmoSound;
 	sfxHandle_t respawnSound;
 	sfxHandle_t talkSound;
+	sfxHandle_t bodyShot;
+	sfxHandle_t headShot;
+	sfxHandle_t teamShot;
 	sfxHandle_t landSound;
 	sfxHandle_t fallSound;
 	sfxHandle_t jumpPadSound;
@@ -1778,6 +1801,11 @@ extern vmCvar_t cg_crosshairY;
 extern vmCvar_t cg_crosshairSize;
 extern vmCvar_t cg_crosshairAlpha;          //----(SA)	added
 extern vmCvar_t cg_crosshairHealth;
+extern vmCvar_t cg_hitSounds;
+extern vmCvar_t cg_drawHitMarker;
+extern vmCvar_t cg_hitMarkerSize;
+extern vmCvar_t cg_hitMarkerAlpha;
+extern vmCvar_t cg_solidHitMarker;
 extern vmCvar_t cg_drawStatus;
 extern vmCvar_t cg_draw2D;
 extern vmCvar_t cg_drawFrags;
@@ -1993,6 +2021,9 @@ void CG_ZoomUp_f( void );
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback );
 
 void CG_Concussive( centity_t *cent );
+
+void CG_PlayHitSound( hitEvent_t hitType );
+void CG_HitMarker( hitEvent_t hitType );
 
 // cg_atmospheric
 void CG_EffectParse(const char *effectstr);

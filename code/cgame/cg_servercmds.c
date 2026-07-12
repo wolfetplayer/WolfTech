@@ -1486,6 +1486,16 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	if ( !strcmp( cmd, "hitFeedback" ) ) {
+		int hitType = atoi( CG_Argv( 1 ) );
+
+		if ( hitType > HIT_NONE && hitType < HIT_MAX_NUM ) {
+			CG_PlayHitSound( (hitEvent_t)hitType );
+			CG_HitMarker( (hitEvent_t)hitType );
+		}
+		return;
+	}
+
 	if ( !strcmp( cmd, "cp" ) ) {
 		// NERVE - SMF
 		int args = trap_Argc();

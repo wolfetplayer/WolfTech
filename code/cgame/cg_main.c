@@ -145,6 +145,11 @@ vmCvar_t cg_crosshairAlpha;     //----(SA)	added
 vmCvar_t cg_crosshairX;
 vmCvar_t cg_crosshairY;
 vmCvar_t cg_crosshairHealth;
+vmCvar_t cg_hitSounds;
+vmCvar_t cg_drawHitMarker;
+vmCvar_t cg_hitMarkerSize;
+vmCvar_t cg_hitMarkerAlpha;
+vmCvar_t cg_solidHitMarker;
 vmCvar_t cg_draw2D;
 vmCvar_t cg_drawFrags;
 vmCvar_t cg_teamChatsOnly;
@@ -376,6 +381,11 @@ cvarTable_t cvarTable[] = {
 	{&cg_crosshairHealth, "cg_crosshairHealth", "1", CVAR_ARCHIVE},
 	{&cg_crosshairX, "cg_crosshairX", "0", CVAR_ARCHIVE},
 	{&cg_crosshairY, "cg_crosshairY", "0", CVAR_ARCHIVE},
+	{&cg_hitSounds, "cg_hitSounds", "0", CVAR_ARCHIVE},
+	{&cg_drawHitMarker, "cg_drawHitMarker", "0", CVAR_ARCHIVE},
+	{&cg_hitMarkerSize, "cg_hitMarkerSize", "24", CVAR_ARCHIVE},
+	{&cg_hitMarkerAlpha, "cg_hitMarkerAlpha", "0.75", CVAR_ARCHIVE},
+	{&cg_solidHitMarker, "cg_solidHitMarker", "0", CVAR_ARCHIVE},
 	{&cg_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE},
 	{&cg_simpleItems, "cg_simpleItems", "0", CVAR_ARCHIVE},
 	{&cg_reticles, "cg_reticles", "1", CVAR_CHEAT},
@@ -1140,6 +1150,9 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.noAmmoSound = trap_S_RegisterSound( "sound/weapons/noammo.wav" );
 
 	cgs.media.talkSound = trap_S_RegisterSound( "sound/player/talk.wav" );
+	cgs.media.bodyShot = trap_S_RegisterSound( "sound/hitsounds/hit.wav" );
+	cgs.media.headShot = trap_S_RegisterSound( "sound/hitsounds/hithead.wav" );
+	cgs.media.teamShot = trap_S_RegisterSound( "sound/hitsounds/hitteam.wav" );
 	cgs.media.landSound = trap_S_RegisterSound( "sound/player/land1.wav" );
 
 	cgs.media.watrInSound = trap_S_RegisterSound( "sound/player/watr_in.wav" );
@@ -1509,6 +1522,7 @@ static void CG_RegisterGraphics( void ) {
 	}
 
 	cgs.media.crosshairFriendly =  trap_R_RegisterShader( "gfx/2d/friendlycross" );  //----(SA)	added
+	cgs.media.hitMarkerShader = trap_R_RegisterShaderNoMip( "gfx/2d/hitmarker1" );
 
 	cgs.media.backTileShader = trap_R_RegisterShader( "gfx/2d/backtile" );
 	cgs.media.noammoShader = trap_R_RegisterShader( "icons/noammo" );

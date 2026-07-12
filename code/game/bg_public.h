@@ -1293,6 +1293,16 @@ typedef enum {
 
 } meansOfDeath_t;
 
+// hit feedback classification, sent to the attacking client only
+typedef enum {
+	HIT_NONE = 0,
+	HIT_BODYSHOT,
+	HIT_HEADSHOT,
+	HIT_TEAMSHOT,
+	HIT_DEATHSHOT,
+	HIT_MAX_NUM
+} hitEvent_t;
+
 typedef enum {
 	WEAPON_CLASS_NONE               = 0,
 	WEAPON_CLASS_MELEE              = (1 << 0),
