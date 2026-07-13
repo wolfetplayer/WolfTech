@@ -790,41 +790,39 @@ float CG_ApplySimpleZoomFov( float currentFovX ) {
 		return currentFovX;
 	}
 
-	// don't allow while using heavy weapon
-	if ( cg.snap && cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
-		return currentFovX;
-	}
-
 	baseFovX = currentFovX;
-	targetFovX = cg.simpleZoomed ? cg_simpleZoomFov.value : baseFovX;
 
-	// clamp target
-	if ( targetFovX < 1 ) targetFovX = 1;
-	if ( targetFovX > 160 ) targetFovX = 160;
-
-	// lerp time
+	// scale relative to the current base fov, not an absolute target, so zoom stays noticeable even when base fov is already reduced (e.g. mounted mg42)
 	{
-		int t = cg_simpleZoomTimeMs.integer;
-		int dt = cg.time - cg.simpleZoomTime;
+		float zoomRatio = ( cg_fov.value > 0 ) ? ( cg_simpleZoomFov.value / cg_fov.value ) : 1.0f;
+		float zoomedFovX = baseFovX * zoomRatio;
 
-		if ( t <= 0 ) {
-			return targetFovX;
+		if ( zoomedFovX < 1 ) zoomedFovX = 1;
+		if ( zoomedFovX > 160 ) zoomedFovX = 160;
+
+		targetFovX = cg.simpleZoomed ? zoomedFovX : baseFovX;
+
+		// lerp time
+		{
+			int t = cg_simpleZoomTimeMs.integer;
+			int dt = cg.time - cg.simpleZoomTime;
+
+			if ( t <= 0 ) {
+				return targetFovX;
+			}
+			if ( dt < 0 ) dt = 0;
+
+			f = (float)dt / (float)t;
+			if ( f > 1.0f ) f = 1.0f;
 		}
-		if ( dt < 0 ) dt = 0;
 
-		f = (float)dt / (float)t;
-		if ( f > 1.0f ) f = 1.0f;
-	}
-
-	if ( cg.simpleZoomed ) {
-		// zooming in: base -> target
-		out = baseFovX + f * ( targetFovX - baseFovX );
-	} else {
-		// zooming out: from zoomFov -> base
-		float from = cg_simpleZoomFov.value;
-		if ( from < 1 ) from = 1;
-		if ( from > 160 ) from = 160;
-		out = from + f * ( baseFovX - from );
+		if ( cg.simpleZoomed ) {
+			// zooming in: base -> target
+			out = baseFovX + f * ( targetFovX - baseFovX );
+		} else {
+			// zooming out: from zoomFov -> base
+			out = zoomedFovX + f * ( baseFovX - zoomedFovX );
+		}
 	}
 
 	return out;

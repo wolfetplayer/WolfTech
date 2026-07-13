@@ -75,7 +75,7 @@ void Survival_AddKillScore(gentity_t *attacker, gentity_t *victim, int meansOfDe
 		score += SCORE_KNIFE_BONUS;
 	}
 
-	if (meansOfDeath == MOD_MACHINEGUN || meansOfDeath == MOD_FLAMETRAP) {
+	if (meansOfDeath == MOD_FLAMETRAP) {
 		score = 0;
 	}
 

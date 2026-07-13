@@ -2575,7 +2575,8 @@ void PM_CoolWeapons( void ) {
 	}
 
 	// a weapon is currently selected, convert current heat value to 0-255 range for client transmission
-	if ( pm->ps->weapon ) {
+	// (skip while mounted on a static gun - g_misc.c drives curWeapHeat directly from the gun's own heat then)
+	if ( pm->ps->weapon && !pm->ps->persistant[PERS_HWEAPON_USE] ) {
 		pm->ps->curWeapHeat = ( ( (float)pm->ps->weapHeat[pm->ps->weapon] / (float)ammoTable[pm->ps->weapon].maxHeat ) ) * 255.0f;
 
 //		if(pm->ps->weapHeat[pm->ps->weapon])

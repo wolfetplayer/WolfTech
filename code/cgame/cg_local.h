@@ -128,6 +128,9 @@ typedef struct {
 #define LIMBO_3D_H  330
 // -NERVE - SMF
 
+#define SOUND_FAR_ECHO_DISTANCE 512
+#define SOUND_MAX_WEAPON_DISTANCE 8192
+
 //=================================================
 
 // player entities need to track more information
@@ -1333,6 +1336,7 @@ typedef struct {
 	qhandle_t lightningWaveShader;
 	qhandle_t bulletParticleTrailShader;
 	qhandle_t smokeParticleShader;
+	qhandle_t mg42WeaponIcon;   // dedicated HUD icon shown while mounted on a static mg42 (no WP_* slot to hang a cg_weapons[] icon off of)
 
 	// DHM - Nerve :: bullet hitting dirt
 	qhandle_t dirtParticle1Shader;

@@ -1645,6 +1645,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.lightningWaveShader = trap_R_RegisterShader( "lightningWave" );
 	cgs.media.bulletParticleTrailShader = trap_R_RegisterShader( "bulletParticleTrail" );
 	cgs.media.smokeParticleShader = trap_R_RegisterShader( "smokeParticle" );
+	cgs.media.mg42WeaponIcon = trap_R_RegisterShader( "icons/iconw_mg42_1" );
 
 	// DHM - Nerve :: bullet hitting dirt
 	cgs.media.dirtParticle1Shader = trap_R_RegisterShader( "dirt_splash" );

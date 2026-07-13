@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../ui/ui_shared.h" // for Menus_CloseAll()
 
 extern int hWeaponSnd;
+extern int hWeaponEchoSnd;
 
 extern void CG_Tracer( vec3_t source, vec3_t dest, int sparks );
 //==========================================================================
@@ -2143,6 +2144,19 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		// shake the camera a bit
 		CG_StartShakeCamera( 0.05, 100, cent->lerpOrigin, 100 );
 		trap_S_StartSound( NULL, cent->currentState.number, CHAN_WEAPON, hWeaponSnd );
+		{
+			vec3_t porg, gorg, norm;   // player/gun origin, ported from RealRTCW for a distant-echo layer on far-off mg42 fire
+			float gdist;
+
+			VectorCopy( cent->currentState.pos.trBase, gorg );
+			VectorCopy( cg.refdef.vieworg, porg );
+			VectorSubtract( gorg, porg, norm );
+			gdist = VectorNormalize( norm );
+			if ( gdist > SOUND_FAR_ECHO_DISTANCE && gdist < SOUND_MAX_WEAPON_DISTANCE ) {
+				VectorMA( cg.refdef.vieworg, 64, norm, gorg );
+				trap_S_StartSoundEx( gorg, cent->currentState.number, CHAN_WEAPON, hWeaponEchoSnd, SND_NOCUT );
+			}
+		}
 		DEBUGNAME( "EV_FIRE_WEAPON" );
 		CG_FireWeapon( cent );
 		break;

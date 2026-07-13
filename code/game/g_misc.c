@@ -40,6 +40,7 @@ extern void AimAtTarget( gentity_t * self );
 
 int sniper_sound;
 int snd_noammo;
+int snd_mg42_overheat;
 
 /*QUAKED func_group (0 0 0) ?
 Used to group brushes together just for editor convenience.  They are turned into normal brushes by the utilities.
@@ -1709,8 +1710,8 @@ void Fire_Lead( gentity_t *ent, gentity_t *activator, float spread, int damage, 
 		tent->s.eventParm = traceEnt->s.number;
 		tent->s.otherEntityNum = ent->s.number;
 
-		if ( LogAccuracyHit( traceEnt, ent ) ) {
-			ent->client->ps.persistant[PERS_ACCURACY_HITS]++;
+		if ( LogAccuracyHit( traceEnt, activator ) ) {
+			activator->client->ps.persistant[PERS_ACCURACY_HITS]++;
 		}
 
 	} else {
@@ -1733,7 +1734,7 @@ void Fire_Lead( gentity_t *ent, gentity_t *activator, float spread, int damage, 
 	}
 
 	if ( traceEnt->takedamage ) {
-		G_Damage( traceEnt, ent, ent, forward, tr.endpos,
+		G_Damage( traceEnt, ent, activator, forward, tr.endpos,
 				  damage, 0, MOD_MACHINEGUN );
 	}
 
@@ -1905,9 +1906,29 @@ void clamp_playerbehindgun( gentity_t *self, gentity_t *other, vec3_t dang ) {
 	trap_LinkEntity( other );
 }
 
-#define MG42_SPREAD 200
-#define MG42_DAMAGE 18
-#define MG42_DAMAGE_AI  9
+// static mg42 tuning, kept separate from ammoTable/weapon_t since this gun is never a carried inventory item
+typedef struct {
+	int damage;             // damage per bullet, player-controlled
+	int damageAI;            // damage per bullet, AI-controlled default (overridable per-entity via "damage" spawn key)
+	float spread;
+	int fireInterval;        // msec between shots
+	int heatPerShot;          // heat units added per shot (independent of fireInterval, so fire rate and time-to-overheat can be tuned separately)
+	int maxHeat;              // heat units of sustained fire before the gun jams
+	int coolRate;             // heat units drained per second while not firing
+	int jamTime;              // msec the gun refuses to fire once it overheats
+} mg42Config_t;
+
+static const mg42Config_t mg42Config = {
+	.damage       = 18,
+	.damageAI     = 9,
+	.spread       = 200,
+	.fireInterval = 50,     // 20 rounds/sec - a clean multiple of the 50ms think tick below, so shots land on schedule instead of drifting
+	.heatPerShot  = 50,
+	.maxHeat      = 3000,   // net gain while firing is heatPerShot/fireInterval - coolRate = 1000 - 250 = 750/sec, so ~4s sustained fire before jamming
+	.coolRate     = 250,
+	.jamTime      = 2000,
+};
+
 #define FIREARC         120
 
 #define FLAK_SPREAD 100
@@ -1970,7 +1991,7 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 	}
 
 	if ( other->active ) {
-		if ( ( !( level.time % 100 ) ) && ( other->client ) && ( other->client->buttons & BUTTON_ATTACK ) ) {
+		if ( ( other->client ) && ( other->client->buttons & BUTTON_ATTACK ) ) {
 			other->client->ps.viewlocked = 1;
 
 			if ( self->s.frame && !is_flak ) {
@@ -1985,7 +2006,11 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 				if ( !Q_stricmp( self->classname, "misc_mg42" ) ) {
 					VectorMA( muzzle, 16, forward, muzzle );
 					VectorMA( muzzle, 16, up, muzzle );
-					validshot = qtrue;
+
+					// jammed from overheating, or still waiting on the fire-rate gate
+					if ( self->mg42JamTime <= level.time && self->mg42NextFireTime <= level.time ) {
+						validshot = qtrue;
+					}
 				} else if ( !Q_stricmp( self->classname, "misc_flak" ) )       {
 					if ( self->delay < level.time ) {
 						self->delay = level.time + 250;
@@ -2028,16 +2053,27 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 							Fire_Lead( self, other, FLAK_SPREAD, FLAK_DAMAGE, muzzle, self->s.apos.trBase );
 						} else
 						{
-							Fire_Lead( self, other, MG42_SPREAD, MG42_DAMAGE, muzzle, self->s.apos.trBase );
+							Fire_Lead( self, other, mg42Config.spread, mg42Config.damage, muzzle, self->s.apos.trBase );
 						}
 					} else
 					{
 						if ( self->damage ) {
-							Fire_Lead( self, other, MG42_SPREAD / self->accuracy, self->damage, muzzle, self->s.apos.trBase );
+							Fire_Lead( self, other, mg42Config.spread / self->accuracy, self->damage, muzzle, self->s.apos.trBase );
 						} else {
-							Fire_Lead( self, other, MG42_SPREAD / self->accuracy, MG42_DAMAGE_AI, muzzle, self->s.apos.trBase );
+							Fire_Lead( self, other, mg42Config.spread / self->accuracy, mg42Config.damageAI, muzzle, self->s.apos.trBase );
 						}
 
+					}
+
+					if ( !is_flak ) {
+						self->mg42NextFireTime = level.time + mg42Config.fireInterval;
+
+						self->mg42Heat += mg42Config.heatPerShot;
+						if ( self->mg42Heat >= mg42Config.maxHeat ) {
+							self->mg42Heat = mg42Config.maxHeat;
+							self->mg42JamTime = level.time + mg42Config.jamTime;
+							G_AddEvent( self, EV_GENERAL_SOUND, snd_mg42_overheat );
+						}
 					}
 
 					// play character anim
@@ -2124,6 +2160,31 @@ void mg42_think( gentity_t *self ) {
 	VectorClear( vec );
 
 	owner = &g_entities[self->r.ownerNum];
+
+	if ( !is_flak ) {
+		int dt = level.time - self->mg42LastThink;
+
+		self->mg42LastThink = level.time;
+
+		if ( self->mg42Heat > 0 && dt > 0 ) {
+			self->mg42Heat -= mg42Config.coolRate * ( (float)dt / 1000.0f );
+			if ( self->mg42Heat < 0 ) {
+				self->mg42Heat = 0;
+			}
+		}
+
+		// drive the existing weapon-heat HUD bar with the shared gun's heat while mounted
+		if ( owner->client ) {
+			owner->client->ps.curWeapHeat = (int)( ( self->mg42Heat / (float)mg42Config.maxHeat ) * 255 );
+		}
+
+		// broadcast jam state on the gun entity so any client can render barrel smoke, not just the mounted player
+		if ( self->mg42JamTime > level.time ) {
+			self->s.eFlags |= EF_MG42_OVERHEATING;
+		} else {
+			self->s.eFlags &= ~EF_MG42_OVERHEATING;
+		}
+	}
 
 	// move to the current angles
 	BG_EvaluateTrajectory( &self->s.apos, level.time, self->s.apos.trBase );
@@ -2326,6 +2387,7 @@ void mg42_spawn( gentity_t *ent ) {
 
 	gun->think = mg42_think;
 	gun->nextthink = level.time + FRAMETIME;
+	gun->mg42LastThink = level.time;
 	gun->s.number = gun - g_entities;
 	gun->harc = ent->harc;
 	gun->varc = ent->varc;
@@ -2396,6 +2458,7 @@ void SP_mg42( gentity_t *self ) {
 	self->nextthink = level.time + FRAMETIME;
 
 	snd_noammo = G_SoundIndex( "sound/weapons/noammo.wav" );
+	snd_mg42_overheat = G_SoundIndex( "sound/weapons/mg42/mg42_overheat.wav" );
 
 	G_SpawnFloat( "grabarc", "0", &grabarc );   // half arc, so actually activatable over 120 deg
 	self->activateArc = grabarc;

@@ -2417,6 +2417,19 @@ static void CG_ProcessEntity( centity_t *cent ) {
 					CG_ParticleImpactSmokePuffExtended( cgs.media.smokeParticleShader, cent->lerpOrigin, tv( 0,0,1 ), 6, 2000, 4, 10, 16, 0.2f );
 				}
 			}
+		} else if ( cent->currentState.eFlags & EF_MG42_OVERHEATING ) {
+			if ( !cg_paused.integer ) {    // don't add while paused
+				if ( !( rand() % 5 ) ) {
+					vec3_t forward, right, up, muzzle;
+
+					AngleVectors( cent->lerpAngles, forward, right, up );
+					VectorCopy( cent->lerpOrigin, muzzle );
+					VectorMA( muzzle, 16, forward, muzzle );
+					VectorMA( muzzle, 16, up, muzzle );
+
+					CG_ParticleImpactSmokePuffExtended( cgs.media.smokeParticleShader, muzzle, tv( 0,0,1 ), 8, 1000, 8, 20, 30, 0.2f );
+				}
+			}
 		}
 	case ET_FOOTLOCKER:
 	case ET_GENERAL:

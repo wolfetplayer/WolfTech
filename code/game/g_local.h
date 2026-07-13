@@ -387,6 +387,12 @@ struct gentity_s {
 
 	int mg42ClampTime;              // time to wait before an AI decides to ditch the mg42
 
+	// static mg42 overheat/fire-rate control (see mg42Config in g_misc.c)
+	float mg42Heat;                 // current heat, 0..mg42Config.maxHeat
+	int mg42JamTime;                // level.time until which the gun refuses to fire (0 = not jammed)
+	int mg42NextFireTime;           // level.time of the next allowed shot
+	int mg42LastThink;              // last level.time heat was decayed, for delta-time cooldown
+
 	char        *track;
 
 	// entity scripting system

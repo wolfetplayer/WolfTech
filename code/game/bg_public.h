@@ -459,6 +459,7 @@ typedef enum {
 #define EF_MOVER_ANIMATE    0x20000000      // interpolate animation
 #define EF_DEATH_FRAME      EF_MOVER_ANIMATE    // hijack to stick death at last frame after vid_restart
 #define EF_RECENTLY_FIRING  0x40000000      // fired recently, lock torso angles, etc
+#define EF_MG42_OVERHEATING 0x80000000      // static mg42 gun entity: currently jammed from overheat, spawn barrel smoke
 
 typedef enum {
 	PW_NONE,

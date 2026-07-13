@@ -37,6 +37,7 @@ If you have questions concerning this license or the applicable additional terms
 
 int wolfkickModel;
 int hWeaponSnd;
+int hWeaponEchoSnd;
 int hflakWeaponSnd;
 int notebookModel;
 int propellerModel;
@@ -1524,6 +1525,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
 
 	wolfkickModel = trap_R_RegisterModel( "models/weapons2/foot/v_wolfoot_10f.md3" );
 	hWeaponSnd = trap_S_RegisterSound( "sound/weapons/mg42/37mm.wav" );
+	hWeaponEchoSnd = trap_S_RegisterSound( "sound/weapons/mg42/37mm_far.wav" );
 
 	hflakWeaponSnd = trap_S_RegisterSound( "sound/weapons/flak/flak.wav" );
 
@@ -3746,11 +3748,6 @@ qboolean CG_WeaponSupportsSimpleZoom( int weap ) {
             break;
     }
 
-    // Also don’t allow while on MG42
-    if ( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) {
-        return qfalse;
-    }
-
     return qtrue;
 }
 
@@ -3787,7 +3784,11 @@ void CG_AltWeapon_f( void ) {
 		return;
 	}
 
-	if ( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) { // no alt-switching when on mg42
+	if ( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) { // no weapon-switching while mounted, but simple zoom still works
+		if ( cg.snap->ps.weaponstate == WEAPON_RELOADING || cg.snap->ps.weaponstate == WEAPON_DROPPING || cg.snap->ps.weaponstate == WEAPON_RAISING ) {
+			return;
+		}
+		CG_ToggleSimpleZoom();
 		return;
 	}
 

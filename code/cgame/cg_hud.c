@@ -223,16 +223,21 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 
 	realweap = cg.predictedPlayerState.weapon;
 
-	size = weapIconDrawSize( realweap );
-
-	if ( !size ) {
-		return;
-	}
-
-	if ( drawHighlighted ) {
-		icon = cg_weapons[ realweap ].weaponIcon[1];
+	if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
+		icon = cgs.media.mg42WeaponIcon;
+		size = WEAPON_ICON_NORMAL;
 	} else {
-		icon = cg_weapons[ realweap ].weaponIcon[0];
+		size = weapIconDrawSize( realweap );
+
+		if ( !size ) {
+			return;
+		}
+
+		if ( drawHighlighted ) {
+			icon = cg_weapons[ realweap ].weaponIcon[1];
+		} else {
+			icon = cg_weapons[ realweap ].weaponIcon[0];
+		}
 	}
 
 

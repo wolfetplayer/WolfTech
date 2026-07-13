@@ -292,30 +292,35 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 
 	realweap = cg.predictedPlayerState.weapon;
 
-	if ( cgs.gametype == GT_WOLF && realweap == WP_CLASS_SPECIAL ) {
-		switch ( cg.predictedPlayerState.stats[ STAT_PLAYER_CLASS ] ) {
-		case PC_MEDIC:
-			realweap = WP_MEDIC_HEAL;
-			break;
-		case PC_LT:
-			realweap = WP_GRENADE_SMOKE;
-			break;
-		default:
-			break;
-		}
-	}
-	// dhm
-
-	size = weapIconDrawSize( realweap );
-
-	if ( !size ) {
-		return;
-	}
-
-	if ( drawHighlighted ) {
-		icon = cg_weapons[ realweap ].weaponIcon[1];
+	if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
+		icon = cgs.media.mg42WeaponIcon;
+		size = WEAPON_ICON_NORMAL;
 	} else {
-		icon = cg_weapons[ realweap ].weaponIcon[0];
+		if ( cgs.gametype == GT_WOLF && realweap == WP_CLASS_SPECIAL ) {
+			switch ( cg.predictedPlayerState.stats[ STAT_PLAYER_CLASS ] ) {
+			case PC_MEDIC:
+				realweap = WP_MEDIC_HEAL;
+				break;
+			case PC_LT:
+				realweap = WP_GRENADE_SMOKE;
+				break;
+			default:
+				break;
+			}
+		}
+		// dhm
+
+		size = weapIconDrawSize( realweap );
+
+		if ( !size ) {
+			return;
+		}
+
+		if ( drawHighlighted ) {
+			icon = cg_weapons[ realweap ].weaponIcon[1];
+		} else {
+			icon = cg_weapons[ realweap ].weaponIcon[0];
+		}
 	}
 
 
