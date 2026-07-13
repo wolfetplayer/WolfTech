@@ -161,7 +161,7 @@ qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, ch
 		activator->client->ps.weaponstate = WEAPON_READY;
 
 		// Deduct points
-		activator->client->ps.persistant[PERS_SCORE] -= price;
+		Survival_AwardScore(activator, -price);
 
 		// SFX & confirmation
 		G_AddPredictableEvent(activator, EV_ITEM_PICKUP, item - bg_itemlist);
@@ -235,7 +235,7 @@ qboolean Survival_HandleRandomPerkBox(gentity_t *ent, gentity_t *activator, char
 				}
 
 				activator->client->ps.stats[STAT_PERK] |= (1 << perk);
-				activator->client->ps.persistant[PERS_SCORE] -= price;
+				Survival_AwardScore(activator, -price);
 
 				G_AddPredictableEvent(activator, EV_ITEM_PICKUP, perkItem - bg_itemlist);
 				trap_SendServerCommand(-1, "mu_play sound/misc/buy_perk.wav 0\n");
@@ -305,7 +305,7 @@ qboolean Survival_HandleAmmoPurchase(gentity_t *ent, gentity_t *activator, int p
 	Add_Ammo(activator, heldWeap, maxAmmo, qfalse);
 
 	// Deduct score
-	activator->client->ps.persistant[PERS_SCORE] -= ammoPrice;
+	Survival_AwardScore(activator, -ammoPrice);
 
 	trap_SendServerCommand(-1, "mu_play sound/misc/buy.wav 0\n");
 	return qtrue;
@@ -372,7 +372,7 @@ qboolean Survival_HandleWeaponUpgrade(gentity_t *ent, gentity_t *activator, int 
 	if (weap == WP_FG42)
 		ps->weaponUpgraded[WP_FG42SCOPE] = ps->weaponUpgraded[weap];
 
-	activator->client->ps.persistant[PERS_SCORE] -= upgradePrice;
+	Survival_AwardScore(activator, -upgradePrice);
 
 	// Refill ammo
 	Add_Ammo(activator, weap, BG_GetMaxAmmo(&activator->client->ps, weap, LT_AMMO_BONUS_MULTIPLIER), qtrue);
@@ -428,7 +428,7 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 			return qfalse;
 		}
 
-		activator->client->ps.persistant[PERS_SCORE] -= price;
+		Survival_AwardScore(activator, -price);
 		Add_Ammo(activator, weapon, maxAmmo, qtrue);
 		Add_Ammo(activator, weapon, maxAmmo, qfalse);
 
@@ -458,7 +458,7 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 			return qfalse; // Already full
 		}
 
-		activator->client->ps.persistant[PERS_SCORE] -= price;
+		Survival_AwardScore(activator, -price);
 
 		Add_Ammo(activator, weapon, maxAmmo, qtrue);
 		Add_Ammo(activator, weapon, maxAmmo, qfalse);
@@ -475,7 +475,7 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 		return qfalse;
 	}
 
-	activator->client->ps.persistant[PERS_SCORE] -= price;
+	Survival_AwardScore(activator, -price);
 
 	Give_Weapon_New_Inventory(activator, weapon, qfalse);
 
@@ -510,7 +510,7 @@ qboolean Survival_HandleArmorPurchase(gentity_t *activator, gitem_t *item, int p
 	}
 
 	// Deduct, apply, and notify
-	activator->client->ps.persistant[PERS_SCORE] -= price;
+	Survival_AwardScore(activator, -price);
 	activator->client->ps.stats[STAT_ARMOR] = 200;
 
 	G_AddPredictableEvent(activator, EV_ITEM_PICKUP, item - bg_itemlist);
@@ -596,7 +596,7 @@ qboolean Survival_HandlePerkPurchase(gentity_t *activator, gitem_t *item, int pr
     // Grant / upgrade perk
     activator->client->ps.perks[perk] = targetLevel;
     activator->client->ps.stats[STAT_PERK] |= (1 << perk);
-    activator->client->ps.persistant[PERS_SCORE] -= price;
+    Survival_AwardScore(activator, -price);
 
     G_AddPredictableEvent(activator, EV_ITEM_PICKUP, item - bg_itemlist);
     trap_SendServerCommand(-1, "mu_play sound/misc/buy_perk.wav 0\n");
@@ -621,7 +621,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 	// Special case: ammo
 	if (!Q_stricmp(itemName, "ammo")) {
 		if (Survival_HandleAmmoPurchase(ent, activator, price)) {
-			activator->client->ps.persistant[PERS_SCORE] -= price;
+			// Survival_HandleAmmoPurchase already deducts its own (upgrade-aware) price internally
 			ClientUserinfoChanged(clientNum);
 		}
 		return;

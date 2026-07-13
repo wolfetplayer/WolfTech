@@ -37,6 +37,104 @@ extern displayContextDef_t cgDC;
 
 int drawTeamOverlayModificationCount = -1;
 
+// floating "+N"/"-N" popups shown next to the score HUD element
+#define SCOREPOP_DURATION   1200    // msec
+#define SCOREPOP_RISE       24      // pixels risen over the popup's lifetime
+#define SCOREPOP_STACK_GAP  14      // vertical spacing between concurrent popups
+#define MAX_SCORE_POPS      5
+
+typedef struct {
+	qboolean active;
+	int amount;
+	int startTime;
+} scorePop_t;
+
+static scorePop_t scorePops[MAX_SCORE_POPS];
+
+/*
+============
+CG_AddScorePop
+
+Queues a floating score popup next to the score HUD element. Called from
+cg_servercmds.c when the server reports a PERS_SCORE change.
+============
+*/
+void CG_AddScorePop( int amount ) {
+	int i, oldest, oldestTime;
+
+	if ( !amount ) {
+		return;
+	}
+
+	oldest = 0;
+	oldestTime = trap_Milliseconds() + 1;
+	for ( i = 0; i < MAX_SCORE_POPS; i++ ) {
+		if ( !scorePops[i].active ) {
+			oldest = i;
+			break;
+		}
+		if ( scorePops[i].startTime < oldestTime ) {
+			oldestTime = scorePops[i].startTime;
+			oldest = i;
+		}
+	}
+
+	scorePops[oldest].active = qtrue;
+	scorePops[oldest].amount = amount;
+	scorePops[oldest].startTime = trap_Milliseconds();
+}
+
+/*
+============
+CG_DrawScorePops
+
+Draws any active score popups stacked above the given score HUD rect.
+============
+*/
+static void CG_DrawScorePops( rectDef_t *rect, int font, float scale ) {
+	int i, currentTime, count;
+	float progress, alpha, y, width;
+	vec4_t color;
+	char str[16];
+
+	if ( !cg_drawScorePop.integer ) {
+		return;
+	}
+
+	currentTime = trap_Milliseconds();
+	count = 0;
+
+	for ( i = 0; i < MAX_SCORE_POPS; i++ ) {
+		if ( !scorePops[i].active ) {
+			continue;
+		}
+
+		progress = (float)( currentTime - scorePops[i].startTime ) / (float)SCOREPOP_DURATION;
+		if ( progress >= 1.0f ) {
+			scorePops[i].active = qfalse;
+			continue;
+		}
+
+		alpha = ( progress < 0.6f ) ? 1.0f : 1.0f - ( progress - 0.6f ) / 0.4f;
+
+		if ( scorePops[i].amount > 0 ) {
+			color[0] = 0.2f; color[1] = 1.0f; color[2] = 0.2f;
+		} else {
+			color[0] = 1.0f; color[1] = 0.2f; color[2] = 0.2f;
+		}
+		color[3] = alpha;
+
+		Com_sprintf( str, sizeof( str ), "%s%i", scorePops[i].amount > 0 ? "+" : "", scorePops[i].amount );
+
+		width = CG_Text_Width( str, font, scale, 0 );
+		y = rect->y - SCOREPOP_RISE * progress - ( count * SCOREPOP_STACK_GAP );
+
+		CG_Text_Paint( rect->x + ( rect->w - width ) / 2, y, font, scale, color, str, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE );
+
+		count++;
+	}
+}
+
 static void CG_DrawPlayerArmorValue( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
 	char num[16];
 	int value;
@@ -652,6 +750,8 @@ static void CG_DrawPlayerScore( rectDef_t *rect, int font, float scale, vec4_t c
 		value = CG_Text_Width( num, font, scale, 0 );
 		CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
 	}
+
+	CG_DrawScorePops( rect, font, scale );
 }
 
 

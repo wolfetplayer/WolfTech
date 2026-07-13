@@ -4705,7 +4705,7 @@ void use_invisible_user( gentity_t *ent, gentity_t *other, gentity_t *activator 
 
 	if (g_gametype.integer == GT_COOP_SURVIVAL)
 	{
-		activator->client->ps.persistant[PERS_SCORE] -= price;
+		Survival_AwardScore(activator, -price);
 
 		if (price > 0)
 		{

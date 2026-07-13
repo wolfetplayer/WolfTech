@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #define __G_SURVIVAL_H__
 
 // Everything related to the score system
+void Survival_AwardScore(gentity_t *player, int amount);
 void Survival_AddKillScore(gentity_t *attacker, gentity_t *victim, int meansOfDeath);
 void Survival_AddHeadshotBonus(gentity_t *attacker, gentity_t *victim);
 void Survival_AddPainScore(gentity_t *attacker, gentity_t *victim, int damage);

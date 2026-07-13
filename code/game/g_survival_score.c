@@ -43,6 +43,22 @@ If you have questions concerning this license or the applicable additional terms
 
 /*
 ============
+Survival_AwardScore
+
+Adds score to a player and notifies their client so the HUD can
+show a "+N" popup next to the score counter.
+============
+*/
+void Survival_AwardScore(gentity_t *player, int amount) {
+	if (!player || !player->client || !amount)
+		return;
+
+	player->client->ps.persistant[PERS_SCORE] += amount;
+	trap_SendServerCommand(player - g_entities, va("scorePop %d", amount));
+}
+
+/*
+============
 Survival_AddKillScore
 ============
 */
@@ -77,7 +93,7 @@ void Survival_AddKillScore(gentity_t *attacker, gentity_t *victim, int meansOfDe
 		}
 	}
 
-	attacker->client->ps.persistant[PERS_SCORE] += score;
+	Survival_AwardScore(attacker, score);
 	attacker->client->ps.persistant[PERS_KILLS]++;
 }
 
@@ -90,7 +106,7 @@ void Survival_AddHeadshotBonus(gentity_t *attacker, gentity_t *victim) {
 	if (!attacker || !victim || !attacker->client || attacker->aiTeam == victim->aiTeam)
 		return;
 
-	attacker->client->ps.persistant[PERS_SCORE] += SCORE_HEADSHOT_KILL;
+	Survival_AwardScore(attacker, SCORE_HEADSHOT_KILL);
 }
 
 /*
@@ -113,7 +129,7 @@ void Survival_AddPainScore(gentity_t *attacker, gentity_t *victim, int damage) {
 		}
 	}
 
-	attacker->client->ps.persistant[PERS_SCORE] += SCORE_HIT;
+	Survival_AwardScore(attacker, SCORE_HIT);
 }
 
 /*
@@ -127,7 +143,7 @@ void Survival_PickupTreasure(gentity_t *other) {
 
 	// Generate a random score between 50 and 100
 	int randomScore = 50 + rand() % 51;
-	other->client->ps.persistant[PERS_SCORE] += randomScore;
+	Survival_AwardScore(other, randomScore);
 }
 
 /*

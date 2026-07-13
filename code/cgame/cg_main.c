@@ -150,6 +150,7 @@ vmCvar_t cg_drawHitMarker;
 vmCvar_t cg_hitMarkerSize;
 vmCvar_t cg_hitMarkerAlpha;
 vmCvar_t cg_solidHitMarker;
+vmCvar_t cg_drawScorePop;
 vmCvar_t cg_draw2D;
 vmCvar_t cg_drawFrags;
 vmCvar_t cg_teamChatsOnly;
@@ -386,6 +387,7 @@ cvarTable_t cvarTable[] = {
 	{&cg_hitMarkerSize, "cg_hitMarkerSize", "24", CVAR_ARCHIVE},
 	{&cg_hitMarkerAlpha, "cg_hitMarkerAlpha", "0.75", CVAR_ARCHIVE},
 	{&cg_solidHitMarker, "cg_solidHitMarker", "0", CVAR_ARCHIVE},
+	{&cg_drawScorePop, "cg_drawScorePop", "1", CVAR_ARCHIVE},
 	{&cg_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE},
 	{&cg_simpleItems, "cg_simpleItems", "0", CVAR_ARCHIVE},
 	{&cg_reticles, "cg_reticles", "1", CVAR_CHEAT},

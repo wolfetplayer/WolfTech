@@ -1496,6 +1496,11 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	if ( !strcmp( cmd, "scorePop" ) ) {
+		CG_AddScorePop( atoi( CG_Argv( 1 ) ) );
+		return;
+	}
+
 	if ( !strcmp( cmd, "cp" ) ) {
 		// NERVE - SMF
 		int args = trap_Argc();

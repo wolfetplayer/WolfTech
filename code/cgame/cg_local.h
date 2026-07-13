@@ -1806,6 +1806,7 @@ extern vmCvar_t cg_drawHitMarker;
 extern vmCvar_t cg_hitMarkerSize;
 extern vmCvar_t cg_hitMarkerAlpha;
 extern vmCvar_t cg_solidHitMarker;
+extern vmCvar_t cg_drawScorePop;
 extern vmCvar_t cg_drawStatus;
 extern vmCvar_t cg_draw2D;
 extern vmCvar_t cg_drawFrags;
@@ -2024,6 +2025,7 @@ void CG_Concussive( centity_t *cent );
 
 void CG_PlayHitSound( hitEvent_t hitType );
 void CG_HitMarker( hitEvent_t hitType );
+void CG_AddScorePop( int amount );
 
 // cg_atmospheric
 void CG_EffectParse(const char *effectstr);
