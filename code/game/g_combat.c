@@ -1469,8 +1469,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			}
 		}
 
-		// only fires if damage actually landed, so blocked friendly-fire/ally-protection returns above stay silent
-		if ( hitEventType != HIT_NONE && targ->health < oldHealth ) {
+		// only fires if the target was alive and damage actually landed
+		if ( hitEventType != HIT_NONE && oldHealth > 0 && targ->health < oldHealth ) {
 			if ( targ->health <= 0 ) {
 				hitEventType = HIT_DEATHSHOT;
 			}
