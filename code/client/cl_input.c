@@ -318,9 +318,9 @@ void IN_LeanRightUp( void )   { IN_KeyUp( &kb[KB_WBUTTONS5] );  }
 void IN_DropWeaponDown( void ) { IN_KeyDown( &kb[KB_WBUTTONS6] ); }
 void IN_DropWeaponUp( void )   { IN_KeyUp( &kb[KB_WBUTTONS6] ); }
 
-// unused
-void IN_Wbutton7Down( void )  { IN_KeyDown( &kb[KB_WBUTTONS7] );    }
-void IN_Wbutton7Up( void )    { IN_KeyUp( &kb[KB_WBUTTONS7] );  }
+// toggle semi/full-auto fire mode
+void IN_FireModeDown( void )  { IN_KeyDown( &kb[KB_WBUTTONS7] );    }
+void IN_FireModeUp( void )    { IN_KeyUp( &kb[KB_WBUTTONS7] );  }
 
 void IN_CenterView( void ) {
 /*
@@ -650,7 +650,7 @@ void CL_CmdButtons( usercmd_t *cmd ) {
 		kb[KB_BUTTONS0 + i].wasPressed = qfalse;
 	}
 
-	for ( i = 0 ; i < 7 ; i++ ) {
+	for ( i = 0 ; i < 8 ; i++ ) {
 		if ( kb[KB_WBUTTONS0 + i].active || kb[KB_WBUTTONS0 + i].wasPressed ) {
 			cmd->wbuttons |= 1 << i;
 		}
@@ -1144,8 +1144,8 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand( "+dropweapon",   IN_DropWeaponDown );
 	Cmd_AddCommand( "-dropweapon",   IN_DropWeaponUp );
 
-	Cmd_AddCommand( "+wbutton7", IN_Wbutton7Down );   //
-	Cmd_AddCommand( "-wbutton7", IN_Wbutton7Up );
+	Cmd_AddCommand( "+firemode", IN_FireModeDown );   //
+	Cmd_AddCommand( "-firemode", IN_FireModeUp );
 //----(SA) end
 
 	Cmd_AddCommand( "+mlook", IN_MLookDown );
@@ -1236,8 +1236,8 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-leanright");
 	Cmd_RemoveCommand("+wbutton6");
 	Cmd_RemoveCommand("-wbutton6");
-	Cmd_RemoveCommand("+wbutton7");
-	Cmd_RemoveCommand("-wbutton7");
+	Cmd_RemoveCommand("+firemode");
+	Cmd_RemoveCommand("-firemode");
 
 	Cmd_RemoveCommand("+mlook");
 	Cmd_RemoveCommand("-mlook");

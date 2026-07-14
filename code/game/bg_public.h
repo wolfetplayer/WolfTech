@@ -669,7 +669,13 @@ typedef struct ammotable_s {
 	qboolean hasMuzzle;
 	qboolean underwaterFire;
 	vec3_t gunOffset;
+
+	int fireModeSwitchTime; // 0 = no selectable fire modes; otherwise ms for each of the drop/raise phases of the switch
 } ammotable_t;
+
+// weaponFireMode[] selector positions
+#define WEAPON_FIREMODE_AUTO    0
+#define WEAPON_FIREMODE_SEMI    1
 
 #define WEAPON_ICON_HIDE    0
 #define WEAPON_ICON_NORMAL  1
@@ -902,6 +908,8 @@ typedef enum {
 
 	// debug rendering
 	EV_DBG_AABB,
+
+	EV_FIREMODE_SWITCH, // player toggled semi/full-auto fire mode
 
 	EV_MAX_EVENTS   // just added as an 'endcap'
 

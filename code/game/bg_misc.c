@@ -560,7 +560,7 @@ ammotable_t ammoTable[] = {
         .maxclip            = 20,
         .reloadTime         = 2400,
         .fireDelayTime      = 0,
-        .nextShotTime       = 190,
+        .nextShotTime       = 120,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 12,
@@ -580,17 +580,18 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, -1.0f },
+		.fireModeSwitchTime = 250,
     },
     [WP_FG42SCOPE] = {
 		.weaponindex        = WP_FG42SCOPE,
 		.weapAlts           = WP_FG42,
 		.weaponClass        = WEAPON_CLASS_SCOPED | WEAPON_CLASS_ASSAULT_RIFLE,
-        .maxammo            = 150,
+        .maxammo            = 120,
         .uses               = 1,
         .maxclip            = 20,
         .reloadTime         = 2400,
         .fireDelayTime      = 0,
-        .nextShotTime       = 100,
+        .nextShotTime       = 150,
         .maxHeat            = 0,
         .coolRate           = 0,
 		.weaponDamage       = 12,
@@ -606,9 +607,10 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_FG42SCOPE,
 		.rndTriggerRelease  = qtrue,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
-		.bulletBased        = qtrue,		
+		.bulletBased        = qtrue,
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
+		.fireModeSwitchTime = 250,
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -3993,6 +3995,8 @@ char *eventnames[] = {
 	"EV_GIVEPAGE",
 	"EV_CLOSEMENU",
 	"EV_QUICKGRENS",
+
+	"EV_FIREMODE_SWITCH",
 
 	"EV_MAX_EVENTS"
 };

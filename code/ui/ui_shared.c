@@ -3851,6 +3851,7 @@ static bind_t g_bindings[] =
 	{"vote no",          -1,             -1, -1, -1},
 	{ "+vstr", -1, -1, -1, -1 },
 	{"+quickgren",       -1,             -1, -1, -1},
+	{"+firemode",        -1,             -1, -1, -1},
 };
 
 

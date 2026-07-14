@@ -727,6 +727,8 @@ typedef struct weaponInfo_s {
 
 	sfxHandle_t spinupSound;        //----(SA)	added // sound started when fire button goes down, and stepped on when the first fire event happens
 	sfxHandle_t spindownSound;      //----(SA)	added // sound called if the above is running but player doesn't follow through and fire
+
+	sfxHandle_t fireModeSwitchSound;    // played when the player toggles semi/full-auto
 } weaponInfo_t;
 
 

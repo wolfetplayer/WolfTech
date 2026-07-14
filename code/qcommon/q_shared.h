@@ -1561,6 +1561,12 @@ typedef struct playerState_s {
 
 	int weaponUpgraded[MAX_WEAPONS]; // 0 = not upgraded, 1 = upgraded
 
+	int weaponFireMode[MAX_WEAPONS];    // per-weapon selector position, see WEAPON_FIREMODE_*
+	int fireModeSwitchTime;             // >0 while busy switching fire mode (drop, then raise); weapon can't be used
+	qboolean fireModeSwitchRaising;     // qfalse while dropping, qtrue while raising back up
+	qboolean fireModeWbuttonDown;       // previous-frame state of WBUTTON_FIREMODE, for edge detection
+	qboolean semiAutoTriggerHeld;       // in semi-auto, blocks refire until the attack button is released
+
 } playerState_t;
 
 
@@ -1598,10 +1604,10 @@ typedef struct playerState_s {
 #define WBUTTON_LEANLEFT    16
 #define WBUTTON_LEANRIGHT   32
 #define WBUTTON_DROP        64 // JPW NERVE
+#define WBUTTON_FIREMODE    128 // toggle semi/full-auto on weapons that support it
 
 // unused
 #define WBUTTON_EXTRA6      64
-#define WBUTTON_EXTRA7      128
 //----(SA) end
 
 #define MOVE_RUN            120         // if forwardmove or rightmove are >= MOVE_RUN,

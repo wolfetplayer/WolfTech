@@ -2739,6 +2739,14 @@ extern vmCvar_t g_reloading;
 #endif
 
 
+// the scoped FG42 shares its fire mode selector with the base FG42
+static int PM_FireModeIndex( int weapon ) {
+	if ( weapon == WP_FG42SCOPE ) {
+		return WP_FG42;
+	}
+	return weapon;
+}
+
 /*
 ==============
 PM_Weapon
@@ -2783,6 +2791,26 @@ static void PM_Weapon( void ) {
 
 	// don't allow any weapon stuff if using the mg42
 	if ( pm->ps->persistant[PERS_HWEAPON_USE] ) {
+		return;
+	}
+
+	// busy switching fire mode - blocks firing, reload, and weapon change until it finishes
+	if ( pm->ps->fireModeSwitchTime > 0 ) {
+		pm->ps->fireModeSwitchTime -= pml.msec;
+		if ( pm->ps->fireModeSwitchTime > 0 ) {
+			return;
+		}
+		pm->ps->fireModeSwitchTime = 0;
+
+		if ( !pm->ps->fireModeSwitchRaising ) {
+			// finished dropping - toggle already happened when the switch was requested; raise back up
+			pm->ps->fireModeSwitchRaising = qtrue;
+			PM_StartWeaponAnim( WEAP_SPRINTOUT );
+			pm->ps->fireModeSwitchTime = GetWeaponTableData( pm->ps->weapon )->fireModeSwitchTime;
+		} else {
+			// finished raising - weapon is usable again
+			PM_StartWeaponAnim( WEAP_IDLE1 );
+		}
 		return;
 	}
 
@@ -3112,12 +3140,53 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
+	// fire mode switch requested (edge-triggered so holding the bind doesn't retrigger)
+	{
+		qboolean fmDown = (qboolean)( ( pm->cmd.wbuttons & WBUTTON_FIREMODE ) != 0 );
+		qboolean fmPressed = (qboolean)( fmDown && !pm->ps->fireModeWbuttonDown );
+
+		pm->ps->fireModeWbuttonDown = fmDown;
+
+		if ( fmPressed && !pm->ps->aiChar &&
+			 ( pm->ps->weaponstate == WEAPON_READY || pm->ps->weaponstate == WEAPON_FIRING ) ) {
+			const ammotable_t *wt = GetWeaponTableData( pm->ps->weapon );
+
+			if ( wt->fireModeSwitchTime > 0 ) {
+				int fmIndex = PM_FireModeIndex( pm->ps->weapon );
+				pm->ps->weaponFireMode[fmIndex] = !pm->ps->weaponFireMode[fmIndex];
+
+				PM_AddEvent( EV_FIREMODE_SWITCH );
+				PM_StartWeaponAnim( WEAP_SPRINTIN );
+
+				pm->ps->fireModeSwitchRaising = qfalse;
+				pm->ps->fireModeSwitchTime = wt->fireModeSwitchTime;
+				pm->ps->semiAutoTriggerHeld = qfalse;
+
+				return;
+			}
+		}
+	}
+
 	// check for fire
 	if ( !( pm->cmd.buttons & ( BUTTON_ATTACK | WBUTTON_ATTACK2 ) ) && !delayedFire ) { // if not on fire button and there's not a delayed shot this frame...
 		pm->ps->weaponTime  = 0;
 		pm->ps->weaponDelay = 0;
+		pm->ps->semiAutoTriggerHeld = qfalse;
 
 		if ( weaponstateFiring ) { // you were just firing, time to relax
+			PM_ContinueWeaponAnim( WEAP_IDLE1 );
+		}
+
+		pm->ps->weaponstate = WEAPON_READY;
+		return;
+	}
+
+	// semi-auto: one shot per trigger pull - settle back to idle until the button is released
+	if ( pm->ps->semiAutoTriggerHeld && pm->ps->weaponFireMode[PM_FireModeIndex( pm->ps->weapon )] == WEAPON_FIREMODE_SEMI ) {
+		pm->ps->weaponTime  = 0;
+		pm->ps->weaponDelay = 0;
+
+		if ( weaponstateFiring ) {
 			PM_ContinueWeaponAnim( WEAP_IDLE1 );
 		}
 
@@ -3343,6 +3412,10 @@ static void PM_Weapon( void ) {
 	// RF
 	pm->ps->releasedFire = qfalse;
 	pm->ps->lastFireTime = pm->cmd.serverTime;
+
+	if ( pm->ps->weaponFireMode[PM_FireModeIndex( pm->ps->weapon )] == WEAPON_FIREMODE_SEMI ) {
+		pm->ps->semiAutoTriggerHeld = qtrue;
+	}
 
 
 	aimSpreadScaleAdd = 0;

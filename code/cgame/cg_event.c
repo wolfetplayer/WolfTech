@@ -2093,6 +2093,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME( "EV_STOP_RELOADING_SOUND" );
 		trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
 		break;
+	case EV_FIREMODE_SWITCH:
+		DEBUGNAME( "EV_FIREMODE_SWITCH" );
+		if ( cg_weapons[es->weapon].fireModeSwitchSound ) {
+			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].fireModeSwitchSound );
+		}
+		break;
 	case EV_RESET_ZOOM:
 	    DEBUGNAME( "EV_RESET_ZOOM" );
 		CG_ResetSimpleZoom();

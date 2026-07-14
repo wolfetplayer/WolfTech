@@ -1404,6 +1404,10 @@ netField_t playerStateFields[] =
 	{ PSF( serverCursorHintVal ), 8}, //----(SA)	added
 	{ PSF( classWeaponTime ), 32}, // JPW NERVE
 	{ PSF( footstepCount ), 0},
+	{ PSF( fireModeSwitchTime ), -16 },
+	{ PSF( fireModeSwitchRaising ), 1 },
+	{ PSF( fireModeWbuttonDown ), 1 },
+	{ PSF( semiAutoTriggerHeld ), 1 },
 };
 
 /*
@@ -1781,6 +1785,51 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 		MSG_WriteBits(msg, 0, 1); // no upgrade flags changed
 	}
 
+	int fireModeBits[4] = {0};
+
+	for (int j = 0; j < 4; j++)
+	{
+		for (int i = 0; i < 16; i++)
+		{
+			int index = i + j * 16;
+			if (to->weaponFireMode[index] != from->weaponFireMode[index])
+			{
+				fireModeBits[j] |= 1 << i;
+			}
+		}
+	}
+
+	if (fireModeBits[0] || fireModeBits[1] || fireModeBits[2] || fireModeBits[3])
+	{
+		MSG_WriteBits(msg, 1, 1); // something changed
+
+		for (int j = 0; j < 4; j++)
+		{
+			if (fireModeBits[j])
+			{
+				MSG_WriteBits(msg, 1, 1);
+				MSG_WriteShort(msg, fireModeBits[j]);
+
+				for (int i = 0; i < 16; i++)
+				{
+					if (fireModeBits[j] & (1 << i))
+					{
+						int index = i + j * 16;
+						MSG_WriteShort(msg, to->weaponFireMode[index]);
+					}
+				}
+			}
+			else
+			{
+				MSG_WriteBits(msg, 0, 1); // no change in this block
+			}
+		}
+	}
+	else
+	{
+		MSG_WriteBits(msg, 0, 1); // no fire mode flags changed
+	}
+
 #endif
 
 
@@ -2003,6 +2052,26 @@ void MSG_ReadDeltaPlayerstate( msg_t *msg, playerState_t *from, playerState_t *t
 					{
 						int index = i + j * 16;
 						to->weaponUpgraded[index] = MSG_ReadShort(msg);
+					}
+				}
+			}
+		}
+	}
+
+	if (MSG_ReadBits(msg, 1))
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			if (MSG_ReadBits(msg, 1))
+			{
+				int bits = MSG_ReadShort(msg);
+
+				for (int i = 0; i < 16; i++)
+				{
+					if (bits & (1 << i))
+					{
+						int index = i + j * 16;
+						to->weaponFireMode[index] = MSG_ReadShort(msg);
 					}
 				}
 			}

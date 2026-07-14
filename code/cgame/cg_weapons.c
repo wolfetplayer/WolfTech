@@ -1401,6 +1401,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/fg42/fg42_reload.wav" );
 		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/fg42/fg42_reload_fast.wav" );
 		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/ar_reload.wav" );
+		weaponInfo->fireModeSwitchSound = trap_S_RegisterSound( "sound/weapons/fg42/fg42_firemode.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
