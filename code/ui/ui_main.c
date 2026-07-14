@@ -4124,7 +4124,7 @@ static weaponType_t weaponTypes[] = {
 	{ WP_STEN,              "Sten submachinegun",        PT_LIGHTONLY | PT_RIFLE,    "mp_weapon", 5, "ui/assets/weapon_sten.tga",          "relaxed_idle_2h_1", "relaxed_idle_2h_1" },
 
 	{ WP_MAUSER,            "Mauser sniper rifle",       PT_RIFLE,                   "mp_weapon", 6, "ui/assets/weapon_mauser.tga",        "stand_rifle",           "stand_rifle" },
-	{ WP_GARAND,            "Garand rifle",              PT_RIFLE,                   "mp_weapon", 7, "ui/assets/weapon_mauser.tga",        "stand_rifle",           "stand_rifle" },
+	{ WP_SNOOPER,            "Snooper rifle",             PT_RIFLE,                   "mp_weapon", 7, "ui/assets/weapon_mauser.tga",        "stand_rifle",           "stand_rifle" },
 	{ WP_PANZERFAUST,       "Panzerfaust",               PT_RIFLE,                   "mp_weapon", 8, "ui/assets/weapon_panzerfaust.tga",   "stand_machinegun",      "stand_machinegun" },
 	{ WP_VENOM,             "Minigun",                   PT_RIFLE,                   "mp_weapon", 9, "ui/assets/weapon_venom.tga",     "stand_machinegun",      "stand_machinegun" },
 	{ WP_FLAMETHROWER,      "Flamethrower",              PT_RIFLE,                   "mp_weapon", 10, "ui/assets/weapon_flamethrower.tga","stand_machinegun",       "stand_machinegun" },

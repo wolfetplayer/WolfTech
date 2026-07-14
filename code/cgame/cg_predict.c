@@ -401,8 +401,8 @@ static void CG_TouchItem( centity_t *cent ) {
 
 //----(SA)	added
 		if ( weapon == WP_SNOOPERSCOPE ) {
-			COM_BitSet( cg.predictedPlayerState.weapons, WP_GARAND );
-		} else if ( weapon == WP_GARAND ) {
+			COM_BitSet( cg.predictedPlayerState.weapons, WP_SNOOPER );
+		} else if ( weapon == WP_SNOOPER ) {
 			COM_BitSet( cg.predictedPlayerState.weapons, WP_SNOOPERSCOPE );
 		} else if ( weapon == WP_FG42 ) {
 			COM_BitSet( cg.predictedPlayerState.weapons, WP_FG42SCOPE );

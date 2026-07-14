@@ -1571,7 +1571,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 				CG_FinishWeaponChange( cg.weaponSelect, WP_FG42 );
 				break;
 			case WP_SNOOPERSCOPE:
-				CG_FinishWeaponChange( cg.weaponSelect, WP_GARAND );
+				CG_FinishWeaponChange( cg.weaponSelect, WP_SNOOPER );
 				break;
 			case WP_SNIPERRIFLE:
 				CG_FinishWeaponChange( cg.weaponSelect, WP_MAUSER );

@@ -48,7 +48,7 @@ extern vmCvar_t g_gametype;
 
 // these defines are matched with the character torso animations
 #define DELAY_LOW       100 // machineguns, tesla, spear, flame
-#define DELAY_HIGH      100 // mauser, garand
+#define DELAY_HIGH      100 // mauser, snooper
 #define DELAY_PISTOL    100 // colt, luger, sp5, cross
 #define DELAY_SHOULDER  50  // rl
 #define DELAY_THROW     250 // grenades, dynamite
@@ -60,7 +60,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_KNIFE,              0,                      0           },  //	1
 	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO   },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
-	{WP_MAUSER,             WP_GARAND,              0           },  //	4
+	{WP_MAUSER,             WP_SNOOPER,              0           },  //	4
 	{WP_FG42,               0,                      0           },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        0,                      0           },  //	7
@@ -432,8 +432,8 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
     },
-    [WP_GARAND] = {
-		.weaponindex        = WP_GARAND,
+    [WP_SNOOPER] = {
+		.weaponindex        = WP_SNOOPER,
 		.weapAlts           = WP_SNOOPERSCOPE,
 		.weaponClass        = WEAPON_CLASS_RIFLE_AUTO | WEAPON_CLASS_SCOPABLE,
         .maxammo            = 30,
@@ -454,7 +454,7 @@ ammotable_t ammoTable[] = {
 		.soundRange         = 128,
 		.aiRange            = AI_WEAPON_RANGE_LONG,
         .moveSpeed          = 0.95f,
-        .mod                = MOD_GARAND,
+        .mod                = MOD_SNOOPER,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
 		.bulletBased        = qtrue,		
@@ -464,7 +464,7 @@ ammotable_t ammoTable[] = {
     },
     [WP_SNOOPERSCOPE] = {
 		.weaponindex        = WP_SNOOPERSCOPE,
-		.weapAlts           = WP_GARAND,
+		.weapAlts           = WP_SNOOPER,
 		.weaponClass        = WEAPON_CLASS_SCOPED,
         .maxammo            = 30,
         .uses               = 1,
@@ -1653,11 +1653,11 @@ gitem_t bg_itemlist[] =
 		"Snooper Rifle",             // pickup		//----(SA)	modified
 		20,
 		IT_WEAPON,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
 		"",                          // precache
 		"",                          // sounds
 		{0,0,0,0}
@@ -1960,9 +1960,9 @@ gitem_t bg_itemlist[] =
 		IT_WEAPON,
 		WP_SNOOPERSCOPE,
 		WP_SNOOPERSCOPE,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
 		"",                          // precache
 		"",                          // sounds
 		{0,0,0,0}
@@ -2280,10 +2280,10 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		50,
 		IT_AMMO,
 		WP_NONE,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
 		"",                          // precache
 		"",                          // sounds
 		{5,2,2,2}
@@ -2300,10 +2300,10 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		50,
 		IT_AMMO,
 		WP_NONE,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
 		"",                          // precache
 		"",                          // sounds
 		{5,5,5,5    }
@@ -2320,10 +2320,10 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		50,
 		IT_AMMO,
 		WP_NONE,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
-		WP_GARAND,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
+		WP_SNOOPER,
 		"",                          // precache
 		"",                          // sounds
 		{10,10,10,5}

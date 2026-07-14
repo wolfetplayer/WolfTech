@@ -2638,7 +2638,7 @@ static void CG_DrawCrosshair( void ) {
 
 		// weapons that get no reticle
 	case WP_NONE:       // no weapon, no crosshair
-	case WP_GARAND:
+	case WP_SNOOPER:
 		if (cg.zoomedBinoc)
 		{
 			CG_DrawBinocReticle();
@@ -3003,7 +3003,7 @@ static void CG_DrawCrosshair3D( void ) {
 
 		// weapons that get no reticle
 	case WP_NONE:       // no weapon, no crosshair
-	case WP_GARAND:
+	case WP_SNOOPER:
 		if ( cg.zoomedBinoc ) 
 		{
 			CG_DrawBinocReticle();

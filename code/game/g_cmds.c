@@ -540,7 +540,7 @@ void Cmd_Buy_f( gentity_t *ent ) {
 			}
 
 			if ( products[i].weapon == WP_SNOOPERSCOPE ) {
-				COM_BitSet( ent->client->ps.weapons, WP_GARAND );
+				COM_BitSet( ent->client->ps.weapons, WP_SNOOPER );
 				COM_BitSet( ent->client->ps.weapons, WP_SNOOPERSCOPE );
 				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_SNOOPERSCOPE )] += 0;
 				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_SNOOPERSCOPE )] += 3;

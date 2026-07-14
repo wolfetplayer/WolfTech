@@ -597,7 +597,7 @@ typedef enum {
 
 	WP_COLT,                
 	WP_THOMPSON,            
-	WP_GARAND,             
+	WP_SNOOPER,             
 	WP_GRENADE_PINEAPPLE,   
 	WP_SNIPERRIFLE,         
 	WP_SNOOPERSCOPE,        
@@ -1231,7 +1231,7 @@ typedef enum {
 	MOD_STEN,
 	MOD_MAUSER,
 	MOD_SNIPERRIFLE,
-	MOD_GARAND,
+	MOD_SNOOPER,
 	MOD_SNOOPERSCOPE,
 	MOD_SILENCER,   //----(SA)
 	MOD_AKIMBO,     //----(SA)
@@ -1369,7 +1369,7 @@ typedef struct gitem_s {
 
 	int giAmmoIndex;            // type of weapon ammo this uses.  (ex. WP_MP40 and WP_LUGER share 9mm ammo, so they both have WP_LUGER for giAmmoIndex)
 	int giAmmoIndexSurv;        // no ammo sharing in Survival
-	int giClipIndex;            // which clip this weapon uses.  this allows the sniper rifle to use the same clip as the garand, etc.
+	int giClipIndex;            // which clip this weapon uses.  this allows the sniper rifle to use the same clip as the snooper, etc.
 
 	char        *precaches;     // string of all models and images this item will use
 	char        *sounds;        // string of all sounds this item will use

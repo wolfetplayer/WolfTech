@@ -253,7 +253,7 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s sniper rifle";
 				break;
-			case MOD_GARAND:
+			case MOD_SNOOPER:
 				message = "was killed by";
 				message2 = "'s sniper rifle";
 				break;
@@ -2117,7 +2117,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		// client should voluntarily switch back to primary at that point
 		switch ( es->weapon ) {
 		case WP_SNOOPERSCOPE:
-			newweap = WP_GARAND;
+			newweap = WP_SNOOPER;
 			break;
 		case WP_SNIPERRIFLE:
 			newweap = WP_MAUSER;

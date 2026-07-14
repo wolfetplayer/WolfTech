@@ -129,7 +129,7 @@ void TossClientWeapons( gentity_t *self )
 	//----(SA)	added
 	if (weapon == WP_SNOOPERSCOPE)
 	{
-		weapon = WP_GARAND;
+		weapon = WP_SNOOPER;
 	}
 	if (weapon == WP_FG42SCOPE)
 	{
@@ -269,7 +269,7 @@ char    *modNames[] = {
 	"MOD_STEN",
 	"MOD_MAUSER",
 	"MOD_SNIPERRIFLE",
-	"MOD_GARAND",
+	"MOD_SNOOPER",
 	"MOD_SNOOPERSCOPE",
 	"MOD_SILENCER", //----(SA)
 	"MOD_AKIMBO",    //----(SA)
@@ -637,7 +637,7 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_BAR:
 	case MOD_FG42:
 	case MOD_MAUSER:
-	case MOD_GARAND:
+	case MOD_SNOOPER:
 	case MOD_SILENCER:
 	case MOD_FG42SCOPE:
 	case MOD_SNOOPERSCOPE:
@@ -1288,7 +1288,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 		if ( !( dflags & DAMAGE_PASSTHRU ) ) {     // ignore headshot 2x damage and snooper-instant-death if the bullet passed through something.  just do reg damage.
 			// snooper kills these types in one shot with any contact
-			if ( ( mod == MOD_SNOOPERSCOPE || mod == MOD_GARAND ) && !( attacker->aiCharacter ) ) {
+			if ( ( mod == MOD_SNOOPERSCOPE || mod == MOD_SNOOPER ) && !( attacker->aiCharacter ) ) {
 				switch ( targ->aiCharacter ) {
 				case AICHAR_SOLDIER:
 				case AICHAR_AMERICAN:

@@ -1862,11 +1862,11 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		}
 
 //----(SA)	some weapons always go together (and they share a clip, so this is okay)
-		if ( weapon == WP_GARAND ) {
+		if ( weapon == WP_SNOOPER ) {
 			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_SNOOPERSCOPE );
 		}
 		if ( weapon == WP_SNOOPERSCOPE ) {
-			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_GARAND );
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_SNOOPER );
 		}
 		if ( weapon == WP_FG42 ) {
 			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_FG42SCOPE );
@@ -1969,11 +1969,11 @@ qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params ) {
 		COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, weapon );
 
 //----(SA)	some weapons always go together (and they share a clip, so this is okay)
-		if ( weapon == WP_GARAND ) {
+		if ( weapon == WP_SNOOPER ) {
 			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_SNOOPERSCOPE );
 		}
 		if ( weapon == WP_SNOOPERSCOPE ) {
-			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_GARAND );
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_SNOOPER );
 		}
         if ( weapon == WP_FG42 ) {
          // Only grant FG42SCOPE if the entity is not an AI

@@ -2230,7 +2230,7 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 
 //		case WP_MAUSER:
 //		case WP_SNIPERRIFLE:
-//		case WP_GARAND:
+//		case WP_SNOOPER:
 //		case WP_SNOOPERSCOPE:
 //			if(altswitch)
 //				switchtime  = 100;

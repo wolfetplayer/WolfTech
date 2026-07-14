@@ -1205,7 +1205,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 
 	// sniper scope model
-	if ( weaponNum == WP_MAUSER || weaponNum == WP_GARAND ) {
+	if ( weaponNum == WP_MAUSER || weaponNum == WP_SNOOPER ) {
 
 		if ( !item->world_model[W_FP_MODEL] ) {
 			Q_strncpyz( path, comppath, sizeof(path) );
@@ -1316,7 +1316,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
-	case WP_GARAND:
+	case WP_SNOOPER:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/garand/garand_fire.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/garand/garand_reload.wav" );
@@ -1778,7 +1778,7 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles ) {
 		leanscale = 1.0f;
 
 		switch ( cg.predictedPlayerState.weapon ) {
-		case WP_GARAND:
+		case WP_SNOOPER:
 			leanscale = 3.0f;
 			break;
 		case WP_FLAMETHROWER:
@@ -3325,7 +3325,7 @@ static qboolean CG_WeaponSelectable( int i ) {
 	// and we left you in that view to see the result of the shot
 	switch ( cg.weaponSelect ) {
 	case WP_SNOOPERSCOPE:
-		if ( i == WP_GARAND ) {
+		if ( i == WP_SNOOPER ) {
 			return qtrue;
 		}
 		break;
@@ -3560,13 +3560,13 @@ int getEquivWeapon( int weapnum ) {
 	switch ( weapnum ) {
 		// going from german to american
 	case WP_LUGER:              num = WP_COLT;              break;
-	case WP_MAUSER:             num = WP_GARAND;            break;
+	case WP_MAUSER:             num = WP_SNOOPER;            break;
 	case WP_MP40:               num = WP_THOMPSON;          break;
 	case WP_GRENADE_LAUNCHER:   num = WP_GRENADE_PINEAPPLE; break;
 
 		// going from american to german
 	case WP_COLT:               num = WP_LUGER;             break;
-	case WP_GARAND:             num = WP_MAUSER;            break;
+	case WP_SNOOPER:             num = WP_MAUSER;            break;
 	case WP_THOMPSON:           num = WP_MP40;              break;
 	case WP_GRENADE_PINEAPPLE:  num = WP_GRENADE_LAUNCHER;  break;
 	}

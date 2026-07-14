@@ -446,10 +446,10 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	}
 
 //----(SA)	added
-	// snooper/garand
+	// snooper/snooperscope
 	if ( weapon == WP_SNOOPERSCOPE ) {
-		COM_BitSet( other->client->ps.weapons, WP_GARAND );
-	} else if ( weapon == WP_GARAND ) {
+		COM_BitSet( other->client->ps.weapons, WP_SNOOPER );
+	} else if ( weapon == WP_SNOOPER ) {
 		COM_BitSet( other->client->ps.weapons, WP_SNOOPERSCOPE );
 	}
 	// fg42/scope
@@ -1474,7 +1474,7 @@ qboolean IsThereEmptySlot( gentity_t *other ) {
 weapon_t GetComplexWeapon( weapon_t weapon ) {
 	switch ( weapon )
 	{
-	case WP_GARAND:
+	case WP_SNOOPER:
 	case WP_FG42:
 	case WP_COLT:
 	case WP_MAUSER:
@@ -1500,7 +1500,7 @@ qboolean IsWeaponComplex( weapon_t weapon ) {
 	switch ( weapon )
 	{
 	
-	case WP_GARAND:
+	case WP_SNOOPER:
 	case WP_FG42:
 
 	case WP_SNOOPERSCOPE:
