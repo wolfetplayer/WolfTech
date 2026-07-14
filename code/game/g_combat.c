@@ -135,6 +135,10 @@ void TossClientWeapons( gentity_t *self )
 	{
 		weapon = WP_FG42;
 	}
+	if (weapon == WP_M7)
+	{
+		weapon = WP_M1GARAND;
+	}
 
 	if (weapon > WP_NONE && weapon < WP_DYNAMITE && self->client->ps.ammo[BG_FindAmmoForWeapon(weapon)])
 	{
@@ -271,6 +275,8 @@ char    *modNames[] = {
 	"MOD_SNIPERRIFLE",
 	"MOD_SNOOPER",
 	"MOD_SNOOPERSCOPE",
+	"MOD_M1GARAND",
+	"MOD_M7",
 	"MOD_SILENCER", //----(SA)
 	"MOD_AKIMBO",    //----(SA)
 	"MOD_BAR",   //----(SA)
@@ -638,6 +644,7 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_FG42:
 	case MOD_MAUSER:
 	case MOD_SNOOPER:
+	case MOD_M1GARAND:
 	case MOD_SILENCER:
 	case MOD_FG42SCOPE:
 	case MOD_SNOOPERSCOPE:

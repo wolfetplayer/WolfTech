@@ -595,13 +595,15 @@ typedef enum {
 	WP_FLAMETHROWER,        
 	WP_TESLA,               
 
-	WP_COLT,                
-	WP_THOMPSON,            
-	WP_SNOOPER,             
-	WP_GRENADE_PINEAPPLE,   
-	WP_SNIPERRIFLE,         
-	WP_SNOOPERSCOPE,        
-	WP_FG42SCOPE,           
+	WP_COLT,
+	WP_THOMPSON,
+	WP_SNOOPER,
+	WP_M1GARAND,
+	WP_GRENADE_PINEAPPLE,
+	WP_SNIPERRIFLE,
+	WP_SNOOPERSCOPE,
+	WP_FG42SCOPE,
+	WP_M7,
 
 	// more weapons
 	WP_STEN,                
@@ -687,7 +689,7 @@ extern ammotable_t ammoTable[WP_NUM_WEAPONS];
 #define WP_BEGINAMERICAN    WP_COLT
 #define WP_LASTAMERICAN     WP_GRENADE_PINEAPPLE
 #define WP_BEGINSECONDARY   WP_SNIPERRIFLE
-#define WP_LASTSECONDARY    WP_FG42SCOPE
+#define WP_LASTSECONDARY    WP_M7
 
 #define WEAPS_ONE_HANDED    ( ( 1 << WP_KNIFE ) | ( 1 << WP_LUGER ) | ( 1 << WP_COLT ) | ( 1 << WP_SILENCER ) | ( 1 << WP_GRENADE_LAUNCHER ) | ( 1 << WP_GRENADE_PINEAPPLE ) )
 //----(SA)	end
@@ -1233,6 +1235,8 @@ typedef enum {
 	MOD_SNIPERRIFLE,
 	MOD_SNOOPER,
 	MOD_SNOOPERSCOPE,
+	MOD_M1GARAND,
+	MOD_M7,
 	MOD_SILENCER,   //----(SA)
 	MOD_AKIMBO,     //----(SA)
 	MOD_BAR,    //----(SA)

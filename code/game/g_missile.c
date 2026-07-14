@@ -1354,6 +1354,13 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 			bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
 		}
 		break;
+	case WP_M7:
+		bolt->classname             = "m7_grenade";
+		bolt->splashRadius          = 250;
+		bolt->methodOfDeath         = MOD_M7;
+		bolt->splashMethodOfDeath   = MOD_M7;
+		bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
+		break;
 // JPW NERVE
 	case WP_GRENADE_SMOKE:
 		bolt->classname             = "grenade";

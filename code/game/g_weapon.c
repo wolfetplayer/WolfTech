@@ -1033,6 +1033,43 @@ gentity_t *weapon_grenadelauncher_fire( gentity_t *ent, int grenType ) {
 }
 
 
+/*
+======================================================================
+
+RIFLE GRENADE (M7)
+
+  Unlike the hand-thrown grenades above, the M7 launches its round flat and
+  fast off the muzzle - no pitch-based arc, no cook timer, single shot.
+
+======================================================================
+*/
+gentity_t *Weapon_RifleGrenade_Fire( gentity_t *ent ) {
+	gentity_t *m;
+	vec3_t tosspos, viewpos;
+	trace_t tr;
+
+	VectorNormalize( forward );
+	VectorCopy( muzzleEffect, tosspos );
+
+	// check for valid start spot (so you don't launch through or get stuck in a wall)
+	VectorCopy( ent->s.pos.trBase, viewpos );
+	viewpos[2] += ent->client->ps.viewheight;
+
+	trap_Trace( &tr, viewpos, NULL, NULL, tosspos, ent->s.number, MASK_SHOT );
+	if ( tr.fraction < 1 ) {   // oops, bad launch spot
+		VectorCopy( tr.endpos, tosspos );
+	}
+
+	VectorScale( forward, 2000, forward );
+
+	m = fire_grenade( ent, tosspos, forward, WP_M7 );
+	m->damage = 0;      // no direct-hit bonus, splash only
+	m->splashDamage *= s_quadFactor;
+
+	return m;
+}
+
+
 gentity_t *quickgren_fire( gentity_t *ent, int grenType ) {
 	gentity_t   *m ;
 	float upangle = 0;                  //	start with level throwing and adjust based on angle
@@ -1758,6 +1795,10 @@ void FireWeapon( gentity_t *ent ) {
 		{
 			weapon_grenadelauncher_fire(ent, ent->s.weapon);
 		}
+	}
+	else if (wc & WEAPON_CLASS_RIFLENADE)
+	{
+		Weapon_RifleGrenade_Fire(ent);
 	}
 	else if (wc & (WEAPON_CLASS_PISTOL |
 				   WEAPON_CLASS_SMG |

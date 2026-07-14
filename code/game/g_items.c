@@ -460,6 +460,12 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	} else if ( weapon == WP_SNIPERRIFLE ) {
 		COM_BitSet( other->client->ps.weapons, WP_MAUSER );
 	}
+	// m1garand/m7
+	else if ( weapon == WP_M7 ) {
+		COM_BitSet( other->client->ps.weapons, WP_M1GARAND );
+	} else if ( weapon == WP_M1GARAND ) {
+		COM_BitSet( other->client->ps.weapons, WP_M7 );
+	}
 
 //----(SA)	end
 
@@ -1478,6 +1484,7 @@ weapon_t GetComplexWeapon( weapon_t weapon ) {
 	case WP_FG42:
 	case WP_COLT:
 	case WP_MAUSER:
+	case WP_M1GARAND:
 		return GetWeaponTableData( weapon )->weapAlts;
 	default:
 		return weapon;
@@ -1490,6 +1497,7 @@ weapon_t GetSimpleWeapon( weapon_t weapon ) {
 	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
 	case WP_SNIPERRIFLE:
+	case WP_M7:
 		return GetWeaponTableData( weapon )->weapAlts;
 	default:
 		return weapon;
@@ -1499,12 +1507,14 @@ weapon_t GetSimpleWeapon( weapon_t weapon ) {
 qboolean IsWeaponComplex( weapon_t weapon ) {
 	switch ( weapon )
 	{
-	
+
 	case WP_SNOOPER:
 	case WP_FG42:
+	case WP_M1GARAND:
 
 	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
+	case WP_M7:
 
 	// semi complex
 	case WP_SNIPERRIFLE:

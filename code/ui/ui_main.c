@@ -4128,6 +4128,7 @@ static weaponType_t weaponTypes[] = {
 	{ WP_PANZERFAUST,       "Panzerfaust",               PT_RIFLE,                   "mp_weapon", 8, "ui/assets/weapon_panzerfaust.tga",   "stand_machinegun",      "stand_machinegun" },
 	{ WP_VENOM,             "Minigun",                   PT_RIFLE,                   "mp_weapon", 9, "ui/assets/weapon_venom.tga",     "stand_machinegun",      "stand_machinegun" },
 	{ WP_FLAMETHROWER,      "Flamethrower",              PT_RIFLE,                   "mp_weapon", 10, "ui/assets/weapon_flamethrower.tga","stand_machinegun",       "stand_machinegun" },
+	{ WP_M1GARAND,          "M1 Garand rifle",           PT_RIFLE,                   "mp_weapon", 14, "ui/assets/weapon_mauser.tga",        "stand_rifle",           "stand_rifle" },
 
 	{ WP_GRENADE_PINEAPPLE, "Pineapple grenade",     PT_GRENADES,                "mp_item1",      11, "ui/assets/weapon_grenade.tga",      "firing_pistolB_1",      "stand_pistolB" },
 	{ WP_GRENADE_LAUNCHER,  "Stick grenade",         PT_GRENADES,                "mp_item1",      12, "ui/assets/weapon_grenade_ger.tga",  "firing_pistolB_1",      "stand_pistolB" },

@@ -61,6 +61,7 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 		case WP_MAUSER:       return 50;
 		case WP_SNIPERRIFLE:  return 100;
 		case WP_SNOOPERSCOPE: return 150;
+		case WP_M1GARAND:     return 175;
 
 		// Auto Rifles
 
@@ -95,6 +96,7 @@ qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, ch
 		WP_LUGER, WP_SILENCER, WP_COLT,
 		WP_AKIMBO, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34,
 		WP_MAUSER, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
+		WP_M1GARAND,
 		WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA
 	};
 
@@ -149,12 +151,12 @@ qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, ch
 
 
 		// Bonus: give M7 for Garand
-		/*if (chosen == WP_M1GARAND)
+		if (chosen == WP_M1GARAND)
 		{
 			Give_Weapon_New_Inventory(activator, WP_M7, qfalse);
-			int m7MaxAmmo = BG_GetMaxAmmo(&activator->client->ps, WP_M7, svParams.ltAmmoBonus);
+			int m7MaxAmmo = BG_GetMaxAmmo(&activator->client->ps, WP_M7, LT_AMMO_BONUS_MULTIPLIER);
 			Add_Ammo(activator, WP_M7, m7MaxAmmo, qfalse);
-		}*/
+		}
 
 		// Select weapon
 		activator->client->ps.weapon = chosen;

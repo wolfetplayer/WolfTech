@@ -299,6 +299,7 @@ product_t products[] =
 	{"Dual Colts",          WP_AKIMBO, 100, 2},
 	{"Colt",                WP_COLT, 50, 1},
 	{"Snooper Rifle",       WP_SNOOPERSCOPE, 200, 2},
+	{"M1 Garand",           WP_M1GARAND, 175, 2},
 	{"MP40",                WP_MP40, 100, 1},
 	{"FG42 Paratroop Rifle", WP_FG42, 150, 2},
 	{"sp5 pistol",          WP_SILENCER, 50, 2},
@@ -531,6 +532,12 @@ void Cmd_Buy_f( gentity_t *ent ) {
 				COM_BitSet( ent->client->ps.weapons, WP_MAUSER );
 				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_MAUSER )] += 0;
 				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_MAUSER )] += 3;
+			}
+
+			if ( products[i].weapon == WP_M1GARAND ) {
+				COM_BitSet( ent->client->ps.weapons, WP_M1GARAND );
+				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_M1GARAND )] += 0;
+				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_M1GARAND )] += 3;
 			}
 
 			if ( products[i].weapon == WP_FG42 ) {

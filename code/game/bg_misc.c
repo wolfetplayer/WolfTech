@@ -60,7 +60,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_KNIFE,              0,                      0           },  //	1
 	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO   },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
-	{WP_MAUSER,             WP_SNOOPER,              0           },  //	4
+	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND },  //	4
 	{WP_FG42,               0,                      0           },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        0,                      0           },  //	7
@@ -487,9 +487,69 @@ ammotable_t ammoTable[] = {
         .mod                = MOD_SNOOPERSCOPE,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_WIDE,
-		.bulletBased        = qtrue,		
+		.bulletBased        = qtrue,
 		.hasMuzzle          = qfalse,
 		.underwaterFire     = qfalse,
+    },
+    [WP_M1GARAND] = {
+		.weaponindex        = WP_M1GARAND,
+		.weapAlts           = WP_M7,
+		.weaponClass        = WEAPON_CLASS_RIFLE_AUTO,
+        .maxammo            = 48,
+        .uses               = 1,
+        .maxclip            = 8,
+        .reloadTime         = 2600,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 380,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 35,
+		.weaponSpread       = 400,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 50,
+        .weapRecoilDuration = 60,
+        .weapRecoilPitch    = { 0.6f, 0.6f },
+        .weapRecoilYaw      = { 0.15f, 0.15f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_M1GARAND,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -5.0f, -1.0f, -2.0f },
+    },
+    [WP_M7] = {
+		.weaponindex        = WP_M7,
+		.weapAlts           = WP_M1GARAND,
+		.weaponClass        = WEAPON_CLASS_RIFLENADE,
+        .maxammo            = 4,
+        .uses               = 1,
+        .maxclip            = 1,
+        .reloadTime         = 1500,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 1200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 160,
+		.weaponSpread       = 0,
+		.spreadScale        = 1.0f,
+		.spreadScaleAdd     = 0,
+        .weapRecoilDuration = 120,
+        .weapRecoilPitch    = { 1.2f, 1.0f },
+        .weapRecoilYaw      = { 0.2f, 1.0f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 0.90f,
+        .mod                = MOD_M7,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qfalse,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -5.0f, -1.0f, -2.0f },
     },
     [WP_FG42] = {
 		.weaponindex        = WP_FG42,
@@ -1660,6 +1720,52 @@ gitem_t bg_itemlist[] =
 		WP_SNOOPER,
 		"",                          // precache
 		"",                          // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_m1garand",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/rifles/m1garand/m1garand_3rd.md3",
+			"models/weapons/rifles/m1garand/v_m1garand.md3",
+			"models/weapons/rifles/m1garand/m1garand_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_m1garand_1", // icon
+		"icons/ammo10",           // ammo icon
+		"M1 Garand",              // pickup
+		20,
+		IT_WEAPON,
+		WP_M1GARAND,
+		WP_M1GARAND,
+		WP_M1GARAND,
+		WP_M1GARAND,
+		WP_M1GARAND,
+		"",                       // precache
+		"",                       // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_m7",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/rifles/m1garand/m7_3rd.md3",
+			"models/weapons/rifles/m1garand/v_m7.md3",
+			"models/weapons/rifles/m1garand/m7_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_m7_1",       // icon
+		"icons/icona_grenade",    // ammo icon
+		"M7 Grenade Launcher",    // pickup
+		4,
+		IT_WEAPON,
+		WP_M7,
+		WP_M7,
+		WP_M7,
+		WP_M7,
+		WP_M7,
+		"",                       // precache
+		"",                       // sounds
 		{0,0,0,0}
 	},
 

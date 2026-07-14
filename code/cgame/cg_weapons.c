@@ -1333,6 +1333,26 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
+	case WP_M1GARAND:
+		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/m1garand/m1garand_fire.wav" );
+		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/m1garand/m1garand_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/m1garand/m1garand_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/rifle_reload.wav" );
+		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
+		break;
+
+	case WP_M7:
+		MAKERGB( weaponInfo->flashDlightColor, 1, 0.7, 0.5 );
+		weaponInfo->missileModel = trap_R_RegisterModel( "models/ammo/grenade1.md3" );
+		weaponInfo->missileTrailFunc = CG_GrenadeTrail;
+		weaponInfo->wiTrailTime = 1000;
+		weaponInfo->trailRadius = 32;
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/m1garand/m7_fire.wav" );
+		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/m1garand/m7_reload.wav" );
+		cgs.media.grenadeExplosionShader = trap_R_RegisterShader( "grenadeExplosion" );
+		break;
+
 	case WP_THOMPSON:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson_fire.wav" );

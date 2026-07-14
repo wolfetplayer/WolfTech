@@ -261,6 +261,10 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s snooper rifle";
 				break;
+			case MOD_M1GARAND:
+				message = "was killed by";
+				message2 = "'s M1 Garand";
+				break;
 			case MOD_AKIMBO:
 				message = "was killed by";
 				message2 = "'s akimbo pistols";
@@ -283,6 +287,10 @@ static void CG_Obituary( entityState_t *ent ) {
 			case MOD_GRENADE_PINEAPPLE:
 				message = "was exploded by";
 				message2 = "'s grenade";
+				break;
+			case MOD_M7:
+				message = "was exploded by";
+				message2 = "'s rifle grenade";
 				break;
 			case MOD_VENOM:
 				message = "was ventilated by";
