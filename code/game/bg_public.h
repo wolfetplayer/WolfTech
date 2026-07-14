@@ -599,6 +599,7 @@ typedef enum {
 	WP_THOMPSON,
 	WP_SNOOPER,
 	WP_M1GARAND,
+	WP_BAR,
 	WP_GRENADE_PINEAPPLE,
 	WP_SNIPERRIFLE,
 	WP_SNOOPERSCOPE,
@@ -644,8 +645,9 @@ typedef struct ammotable_s {
 	int reloadTime;
 	int reloadTimeFull;     // full (empty clip) reload duration; falls back to reloadTime if unset
 	int fireDelayTime;
-	int nextShotTime;       
-	int maxHeat;            
+	int nextShotTime;
+	int nextShotTime2;      // alternate cyclic rate for fireModeIsRateSwitch weapons (see WEAPON_FIREMODE_SLOW/FAST)
+	int maxHeat;
 	int coolRate;
 	
 	int weaponDamage;
@@ -671,11 +673,16 @@ typedef struct ammotable_s {
 	vec3_t gunOffset;
 
 	int fireModeSwitchTime; // 0 = no selectable fire modes; otherwise ms for each of the drop/raise phases of the switch
+	qboolean fireModeIsRateSwitch; // qtrue: selector swaps nextShotTime/nextShotTime2 (e.g. BAR) instead of enforcing semi-auto
 } ammotable_t;
 
 // weaponFireMode[] selector positions
 #define WEAPON_FIREMODE_AUTO    0
 #define WEAPON_FIREMODE_SEMI    1
+
+// same underlying values, named for fireModeIsRateSwitch weapons (e.g. BAR slow/fast cyclic rate)
+#define WEAPON_FIREMODE_SLOW    0
+#define WEAPON_FIREMODE_FAST    1
 
 #define WEAPON_ICON_HIDE    0
 #define WEAPON_ICON_NORMAL  1

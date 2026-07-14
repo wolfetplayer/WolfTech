@@ -61,7 +61,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO   },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND },  //	4
-	{WP_FG42,               0,                      0           },  //	5
+	{WP_FG42,               WP_BAR,                 0           },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        0,                      0           },  //	7
 	{WP_VENOM,              0,                      0           },  //	8
@@ -581,6 +581,39 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, -1.0f },
 		.fireModeSwitchTime = 250,
+    },
+    [WP_BAR] = {
+		.weaponindex        = WP_BAR,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_ASSAULT_RIFLE,
+        .maxammo            = 300,
+        .uses               = 1,
+        .maxclip            = 20,
+        .reloadTime         = 3300,
+        .reloadTimeFull     = 3300,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 200,
+        .nextShotTime2      = 100,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 15,
+		.weaponSpread       = 700,
+		.spreadScale        = 0.6f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 40,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 0.90f,
+        .mod                = MOD_BAR,
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.fireModeSwitchTime = 250,
+		.fireModeIsRateSwitch = qtrue,
     },
     [WP_FG42SCOPE] = {
 		.weaponindex        = WP_FG42SCOPE,
@@ -1837,6 +1870,29 @@ gitem_t bg_itemlist[] =
 		WP_MAUSER,
 		WP_FG42,
 		WP_FG42,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_bar",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/assault_rifles/bar/bar_3rd.md3",
+			"models/weapons/assault_rifles/bar/v_bar.md3",
+			"models/weapons/assault_rifles/bar/bar_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_bar_1",         // icon
+		"icons/ammo10",              // ammo icon
+		"Browning Automatic Rifle",  // pickup
+		20,
+		IT_WEAPON,
+		WP_BAR,
+		WP_BAR,
+		WP_M1GARAND,
+		WP_BAR,
+		WP_BAR,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}

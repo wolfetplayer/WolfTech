@@ -1405,6 +1405,16 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
+	case WP_BAR:
+		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/bar/bar_fire.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/bar/bar_far.wav" );
+		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/bar/bar_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/bar/bar_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/ar_reload.wav" );
+		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
+		break;
+
 	case WP_PANZERFAUST:
 		weaponInfo->ejectBrassFunc      = CG_PanzerFaustEjectBrass;
 		weaponInfo->missileModel        = trap_R_RegisterModel( "models/ammo/rocket/rocket.md3" );

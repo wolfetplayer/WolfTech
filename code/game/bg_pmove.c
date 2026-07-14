@@ -3182,7 +3182,8 @@ static void PM_Weapon( void ) {
 	}
 
 	// semi-auto: one shot per trigger pull - settle back to idle until the button is released
-	if ( pm->ps->semiAutoTriggerHeld && pm->ps->weaponFireMode[PM_FireModeIndex( pm->ps->weapon )] == WEAPON_FIREMODE_SEMI ) {
+	if ( pm->ps->semiAutoTriggerHeld && !GetWeaponTableData( pm->ps->weapon )->fireModeIsRateSwitch &&
+		 pm->ps->weaponFireMode[PM_FireModeIndex( pm->ps->weapon )] == WEAPON_FIREMODE_SEMI ) {
 		pm->ps->weaponTime  = 0;
 		pm->ps->weaponDelay = 0;
 
@@ -3413,14 +3414,24 @@ static void PM_Weapon( void ) {
 	pm->ps->releasedFire = qfalse;
 	pm->ps->lastFireTime = pm->cmd.serverTime;
 
-	if ( pm->ps->weaponFireMode[PM_FireModeIndex( pm->ps->weapon )] == WEAPON_FIREMODE_SEMI ) {
+	if ( !GetWeaponTableData( pm->ps->weapon )->fireModeIsRateSwitch &&
+		 pm->ps->weaponFireMode[PM_FireModeIndex( pm->ps->weapon )] == WEAPON_FIREMODE_SEMI ) {
 		pm->ps->semiAutoTriggerHeld = qtrue;
 	}
 
 
 	aimSpreadScaleAdd = 0;
 
-	addTime = GetWeaponTableData(pm->ps->weapon)->nextShotTime;
+	{
+		const ammotable_t *wtRate = GetWeaponTableData( pm->ps->weapon );
+
+		if ( wtRate->fireModeIsRateSwitch && wtRate->nextShotTime2 &&
+			 pm->ps->weaponFireMode[PM_FireModeIndex( pm->ps->weapon )] == WEAPON_FIREMODE_FAST ) {
+			addTime = wtRate->nextShotTime2;
+		} else {
+			addTime = wtRate->nextShotTime;
+		}
+	}
 	aimSpreadScaleAdd = GetWeaponTableData(pm->ps->weapon)->spreadScaleAdd;
 
 	if ( pm->ps->perks[PERK_RIFLING] && pm->ps->weapon != WP_KNIFE ) {
