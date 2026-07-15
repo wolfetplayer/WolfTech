@@ -6,7 +6,7 @@ weaponDef
 		weaponConfig		"models/weapons/auto_rifles/m1_garand/weapon2.cfg"
 		handsModel			"models/weapons/auto_rifles/m1_garand/v_m1_hand.md3"
 
-		flashDlightColor	1.0 0.6 0.23
+		flashDlightColor	1 0.7 0.5
 		flashSound			"sound/weapons/m1_garand/m1_fire_grenade.wav"
 		flashEchoSound	    "sound/weapons/m1_garand/m1garand_far.wav"
 		//lastShotSound		"sound/weapons/m1_garand/m1garand_fire_last.wav"
@@ -18,6 +18,11 @@ weaponDef
 
 		weaponIcon            "icons/iconw_m7"
 		weaponSelectedIcon    "icons/iconw_m7_select"
+
+		missileModel		"models/weapons/auto_rifles/m1_garand/m7_projectile.md3"
+		missileTrailFunc	"GrenadeTrail"		// GrenadeTrail | RocketTrail | PyroSmokeTrail
+		missileTrailTime	1000
+		missileTrailRadius	32
 
 		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
 

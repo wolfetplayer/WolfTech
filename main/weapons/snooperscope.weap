@@ -8,7 +8,7 @@ weaponDef
 		handsModel			"models/weapons/rifles/snooper/v_snooper_hand.md3"
 
 		//flashDlightColor	1.0 0.6 0.23
-		flashSound			"sound/weapons/garand/garand_fire.wav"
+		flashSound			"sound/weapons/garand/snooper_fire.wav"
 		//flashEchoSound	"sound/weapons/garand/garand_far.wav"
 		//lastShotSound		""
 

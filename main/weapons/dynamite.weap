@@ -12,6 +12,8 @@ weaponDef
 		weaponIcon			"icons/iconw_dynamite_1"
 		weaponSelectedIcon	"icons/iconw_dynamite_1_select"
 
+		missileModel		"models/ammo/dynamite.md3"
+
 		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
 
 		firstPerson {

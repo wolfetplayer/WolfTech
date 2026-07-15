@@ -6,13 +6,14 @@ weaponDef
 		weaponConfig		"models/weapons/smgs/sten/weapon.cfg"
 		handsModel			"models/weapons/smgs/sten/v_sten_hand.mdc"
 
-		//flashDlightColor	1.0 0.6 0.23
+		flashDlightColor	1.0 0.6 0.23
 		flashSound			"sound/weapons/sten/sten_fire.wav"
 		//lastShotSound		""
 
 		reloadSound			"sound/weapons/sten/sten_reload.wav"
 		reloadSoundFast		"sound/weapons/sten/sten_reload_fast.wav"
 		reloadSoundAi	    "sound/weapons/ai/smg_reload.wav"
+		overheatSound		"sound/weapons/sten/sten_overheat.wav"
 		//switchSound		""
 		bounceSound         "sound/misc/weapon_bounce.wav"
 

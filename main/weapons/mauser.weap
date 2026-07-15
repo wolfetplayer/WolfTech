@@ -21,6 +21,7 @@ weaponDef
 		weaponSelectedIcon	"icons/iconw_mauser_1_select"
 
 		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+		modModel 0			"models/weapons/rifles/mauser/v_mauser_scope.md3"
 
 		firstPerson {
 			model			"models/weapons/rifles/mauser/v_mauser.md3"

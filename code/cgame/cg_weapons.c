@@ -1089,6 +1089,24 @@ static void ( *CG_WeapEjectBrassFuncForName( const char *name ) )( centity_t * )
 
 /*
 ======================
+CG_WeapMissileTrailFuncForName
+======================
+*/
+static void ( *CG_WeapMissileTrailFuncForName( const char *name ) )( centity_t *, const weaponInfo_t * ) {
+	if ( !Q_stricmp( name, "GrenadeTrail" ) ) {
+		return CG_GrenadeTrail;
+	}
+	if ( !Q_stricmp( name, "RocketTrail" ) ) {
+		return CG_RocketTrail;
+	}
+	if ( !Q_stricmp( name, "PyroSmokeTrail" ) ) {
+		return CG_PyroSmokeTrail;
+	}
+	return NULL;
+}
+
+/*
+======================
 CG_WeapParseError
 ======================
 */
@@ -1350,6 +1368,50 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 		} else if ( !Q_stricmp( token.string, "bounceSound" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected bounceSound filename" ); return qfalse; }
 			wi->bounceSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "overheatSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected overheatSound filename" ); return qfalse; }
+			wi->overheatSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "spinupSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected spinupSound filename" ); return qfalse; }
+			wi->spinupSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "spindownSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected spindownSound filename" ); return qfalse; }
+			wi->spindownSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "fireModeSwitchSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected fireModeSwitchSound filename" ); return qfalse; }
+			wi->fireModeSwitchSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "modModel" ) ) {
+			int modIndex;
+			if ( !PC_Int_Parse( handle, &modIndex ) ) { CG_WeapParseError( handle, filename, "expected modModel index" ); return qfalse; }
+			if ( modIndex < 0 || modIndex >= W_NUM_TYPES ) { CG_WeapParseError( handle, filename, "modModel index %d out of bounds", modIndex ); return qfalse; }
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected modModel filename" ); return qfalse; }
+			wi->modModel[modIndex] = trap_R_RegisterModel( s );
+		} else if ( !Q_stricmp( token.string, "missileModel" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected missileModel filename" ); return qfalse; }
+			wi->missileModel = trap_R_RegisterModel( s );
+		} else if ( !Q_stricmp( token.string, "missileSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected missileSound filename" ); return qfalse; }
+			wi->missileSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "missileTrailFunc" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected missileTrailFunc name" ); return qfalse; }
+			wi->missileTrailFunc = CG_WeapMissileTrailFuncForName( s );
+			if ( !wi->missileTrailFunc ) {
+				CG_WeapParseError( handle, filename, "unknown missileTrailFunc '%s'", s );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "missileDlight" ) ) {
+			if ( !PC_Float_Parse( handle, &wi->missileDlight ) ) { CG_WeapParseError( handle, filename, "expected missileDlight value" ); return qfalse; }
+		} else if ( !Q_stricmp( token.string, "missileDlightColor" ) ) {
+			if ( !PC_Float_Parse( handle, &wi->missileDlightColor[0] ) ||
+				 !PC_Float_Parse( handle, &wi->missileDlightColor[1] ) ||
+				 !PC_Float_Parse( handle, &wi->missileDlightColor[2] ) ) {
+				CG_WeapParseError( handle, filename, "expected missileDlightColor as r g b" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "missileTrailTime" ) ) {
+			if ( !PC_Float_Parse( handle, &wi->wiTrailTime ) ) { CG_WeapParseError( handle, filename, "expected missileTrailTime value" ); return qfalse; }
+		} else if ( !Q_stricmp( token.string, "missileTrailRadius" ) ) {
+			if ( !PC_Float_Parse( handle, &wi->trailRadius ) ) { CG_WeapParseError( handle, filename, "expected missileTrailRadius value" ); return qfalse; }
 		} else if ( !Q_stricmp( token.string, "ejectBrassFunc" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected ejectBrassFunc name" ); return qfalse; }
 			wi->ejectBrassFunc = CG_WeapEjectBrassFuncForName( s );
@@ -1371,15 +1433,17 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 CG_RegisterWeaponFromFile
 
 Cgame-only cosmetic registration for weapons with ammoTable[].weapFile set.
-Loads weapons/<weapFile>, expecting "weaponDef { client { ... } }". Model-path
-suffix conventions (_flash.md3/_hand.md3/_stand.md3) and the weapon.cfg
-animation loader are the same conventions the legacy switch-driven path below
-uses, just fed from parsed paths instead of bg_itemlist. The venom belt-spin
-part and the sniper scope modModel aren't implemented yet - add them when a
-weapon that needs them migrates to .weap.
+Loads weapons/<weapFile>, expecting "weaponDef { client { ... } }". This is
+now the only weapon registration path - every real weapon has a .weap file,
+so CG_RegisterWeapon errors out if one is missing rather than falling back
+to hardcoded per-weapon asset paths.
+Venom's third-person spinning belt part (previously hardcoded from a
+"_barrel6b.md3" suffix convention) still has no .weap equivalent - it needs
+the actual belt model path added as a normal "part N" entry in venom.weap
+once known.
 ======================
 */
-static qboolean CG_RegisterWeaponFromFile( int weaponNum, weaponInfo_t *weaponInfo ) {
+static qboolean CG_RegisterWeaponFromFile( int weaponNum, weaponInfo_t *weaponInfo, const gitem_t *item ) {
 	pc_token_t       token;
 	int              handle;
 	char             filename[MAX_QPATH];
@@ -1528,6 +1592,8 @@ static qboolean CG_RegisterWeaponFromFile( int weaponNum, weaponInfo_t *weaponIn
 	}
 	if ( c.ammoIcon[0] ) {
 		weaponInfo->ammoIcon = trap_R_RegisterShader( c.ammoIcon );
+	} else if ( item->ammoicon ) {
+		weaponInfo->ammoIcon = trap_R_RegisterShader( item->ammoicon );
 	}
 
 	// ammo pickup model - not weapon-specific cosmetic data, still sourced from the shared ammo item's bg_itemlist entry
@@ -1541,7 +1607,6 @@ static qboolean CG_RegisterWeaponFromFile( int weaponNum, weaponInfo_t *weaponIn
 	}
 
 	// default fast/full/AI reload sounds to the base reload sound when no distinct asset is registered
-	// (mirrors the fallback at the end of the legacy switch-driven path in CG_RegisterWeapon)
 	if ( !weaponInfo->reloadSoundFast ) {
 		weaponInfo->reloadSoundFast = weaponInfo->reloadSound;
 	}
@@ -1568,10 +1633,7 @@ The server says this item is used on this level
 */
 void CG_RegisterWeapon( int weaponNum ) {
 	weaponInfo_t    *weaponInfo;
-	gitem_t         *item, *ammo;
-	char path[MAX_QPATH], comppath[MAX_QPATH];
-	vec3_t mins, maxs;
-	int i;
+	gitem_t         *item;
 
 	weaponInfo = &cg_weapons[weaponNum];
 
@@ -1612,417 +1674,13 @@ void CG_RegisterWeapon( int weaponNum ) {
 	CG_RegisterItemVisuals( item - bg_itemlist );
 
 	if ( GetWeaponTableData( weaponNum )->weapFile ) {
-		if ( !CG_RegisterWeaponFromFile( weaponNum, weaponInfo ) ) {
+		if ( !CG_RegisterWeaponFromFile( weaponNum, weaponInfo, item ) ) {
 			CG_Printf( S_COLOR_RED "WARNING: failed to register weapon %i from %s, cosmetics may be missing\n", weaponNum, GetWeaponTableData( weaponNum )->weapFile );
 		}
 		return;
 	}
 
-	// load cmodel before model so filecache works
-
-	// alternate view weapon
-	weaponInfo->weaponModel[W_TP_MODEL] = trap_R_RegisterModel( item->world_model[W_TP_MODEL] );
-	weaponInfo->weaponModel[W_FP_MODEL] = trap_R_RegisterModel( item->world_model[W_FP_MODEL] );
-	weaponInfo->weaponModel[W_SKTP_MODEL] = trap_R_RegisterModel( item->world_model[W_SKTP_MODEL] );
-
-	if ( !weaponInfo->weaponModel[W_FP_MODEL] || !cg_drawFPGun.integer ) {
-		weaponInfo->weaponModel[W_FP_MODEL] = weaponInfo->weaponModel[W_TP_MODEL];
-	}
-
-	if ( !weaponInfo->weaponModel[W_TP_MODEL] ) {
-		// left commented out since we have level-loading optimization issues to still resolve.
-		//	ie. every weapon and it's associated effects/parts/sounds etc. are loaded for every level.
-		// This was turned off when we started (the "only load what the level calls for" thing) because when
-		// DM does a "give all" and fires, he doesn't want to wait for everything to load.  So perhaps a "cacheallweaps" or something.
-//		CG_Printf( "Couldn't register weapon model %i (unable to load view model)\n", weaponNum );
-// RF, I need to be able to run the game, I dont have the silencer weapon (19)
-#ifndef _DEBUG
-//		CG_Error( "Couldn't register weapon model %i (unable to load view model)", weaponNum );
-#endif
-		return;
-	}
-
-
-	// load weapon config
-//----(SA)	modified.  use first person model for finding weapon config name, not third
-	if ( item->world_model[W_FP_MODEL] ) {
-		COM_StripFilename( item->world_model[W_FP_MODEL], path );
-		if ( !CG_ParseWeaponConfig( va( "%sweapon.cfg", path ), weaponInfo, weaponNum ) ) {
-			CG_Error( "Couldn't register weapon %i (%s) (failed to parse weapon.cfg)", weaponNum, path );
-		}
-	}
-//----(SA)	end
-
-	// calc midpoint for rotation
-	trap_R_ModelBounds( weaponInfo->weaponModel[W_TP_MODEL], mins, maxs );
-
-	for ( i = 0 ; i < 3 ; i++ ) {
-		weaponInfo->weaponMidpoint[i] = mins[i] + 0.5 * ( maxs[i] - mins[i] );
-	}
-
-	weaponInfo->weaponIcon[0] = trap_R_RegisterShader( item->icon );
-	weaponInfo->weaponIcon[1] = trap_R_RegisterShader( va( "%s_select", item->icon ) );    // get the 'selected' icon as well
-
-	// JOSEPH 4-17-00
-	weaponInfo->ammoIcon = trap_R_RegisterShader( item->ammoicon );
-	// END JOSEPH
-
-	for ( ammo = bg_itemlist + 1 ; ammo->classname ; ammo++ ) {
-		if ( ( ammo->giType == IT_AMMO && ammo->giTag == BG_FindAmmoForWeapon( weaponNum ) ) ) {
-			break;
-		}
-	}
-	if ( ammo->classname && ammo->world_model[0] ) {
-		weaponInfo->ammoModel = trap_R_RegisterModel( ammo->world_model[0] );
-	}
-
-	if ( item->world_model[W_FP_MODEL] ) {
-		Q_strncpyz( comppath, item->world_model[W_FP_MODEL], sizeof(comppath) ); // first try the fp view weap
-	} else if ( item->world_model[W_TP_MODEL] ) {
-		Q_strncpyz( comppath, item->world_model[W_TP_MODEL], sizeof(comppath) ); // not there, use the standard view hand
-	}
-
-	if ( !cg_drawFPGun.integer && item->world_model[W_TP_MODEL] ) { // then if it didn't find the 1st person one or you are set to not use one
-		Q_strncpyz( comppath, item->world_model[W_TP_MODEL], sizeof(comppath) ); // use the standard view hand
-	}
-
-	for ( i = W_TP_MODEL; i < W_NUM_TYPES; i++ )
-	{
-		int j;
-
-		if ( !item->world_model[i] ) {
-			Q_strncpyz( path, comppath, sizeof(path) );
-		} else {
-			Q_strncpyz( path, item->world_model[i], sizeof(path) );
-		}
-
-		COM_StripExtension( path, path, sizeof(path) );
-		Q_strcat( path, sizeof(path), "_flash.md3" );
-		weaponInfo->flashModel[i] = trap_R_RegisterModel( path );
-
-
-		for ( j = 0; j < W_MAX_PARTS; j++ ) {
-			if ( !item->world_model[i] ) {
-				Q_strncpyz( path, comppath, sizeof(path) );
-			} else {
-				Q_strncpyz( path, item->world_model[i], sizeof(path) );
-			}
-			COM_StripExtension( path, path, sizeof(path) );
-			if ( j == W_PART_1 ) {
-				Q_strcat( path, sizeof(path), "_barrel.md3" );
-			} else {
-				Q_strcat( path, sizeof(path), va( "_barrel%d.md3", j + 1 ) );
-			}
-			weaponInfo->wpPartModels[i][j] = trap_R_RegisterModel( path );
-		}
-
-		// used for spinning belt on venom
-		if ( i == W_FP_MODEL ) {
-			if ( !item->world_model[2] ) {
-				Q_strncpyz( path, comppath, sizeof(path) );
-			} else {
-				Q_strncpyz( path, item->world_model[2], sizeof(path) );
-			}
-			COM_StripExtension( path, path, sizeof(path) );
-			Q_strcat( path, sizeof(path), "_barrel6b.md3" );
-			weaponInfo->wpPartModels[i][W_PART_7] = trap_R_RegisterModel( path );
-		}
-	}
-
-
-	// sniper scope model
-	if ( weaponNum == WP_MAUSER || weaponNum == WP_SNOOPER ) {
-
-		if ( !item->world_model[W_FP_MODEL] ) {
-			Q_strncpyz( path, comppath, sizeof(path) );
-		} else {
-			Q_strncpyz( path, item->world_model[W_FP_MODEL], sizeof(path) );
-		}
-		COM_StripExtension( path, path, sizeof(path) );
-		Q_strcat( path, sizeof(path), "_scope.md3" );
-		weaponInfo->modModel[0] = trap_R_RegisterModel( path );
-	}
-
-	if ( !item->world_model[W_FP_MODEL] ) {
-		Q_strncpyz( path, comppath, sizeof(path) );
-	} else {
-		Q_strncpyz( path, item->world_model[W_FP_MODEL], sizeof(path) );
-	}
-	COM_StripExtension( path, path, sizeof(path) );
-	Q_strcat( path, sizeof(path), "_hand.md3" );
-	weaponInfo->handsModel = trap_R_RegisterModel( path );
-
-	if ( !weaponInfo->handsModel ) {
-		weaponInfo->handsModel = trap_R_RegisterModel( "models/weapons2/shotgun/shotgun_hand.md3" );
-	}
-
-//----(SA)	weapon pickup 'stand'
-	if ( !item->world_model[W_TP_MODEL] ) {
-		Q_strncpyz( path, comppath, sizeof(path) );
-	} else {
-		Q_strncpyz( path, item->world_model[W_TP_MODEL], sizeof(path) );
-	}
-	COM_StripExtension( path, path, sizeof(path) );
-	Q_strcat( path, sizeof(path), "_stand.md3" );
-	weaponInfo->standModel = trap_R_RegisterModel( path );
-//----(SA)	end
-
-	switch ( weaponNum ) {
-	case WP_MONSTER_ATTACK1:
-	case WP_MONSTER_ATTACK2:
-	case WP_MONSTER_ATTACK3:
-		break;
-
-	case WP_AKIMBO:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/colt/colt_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/colt/colt_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/colt/colt_reload2.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/colt/colt_reload2_fast.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
-		break;
-
-	case WP_COLT:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/colt/colt_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/colt/colt_far.wav" ); 
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/colt/colt_reload.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/pistol_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/colt/colt_reload_fast.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
-		break;
-
-	case WP_KNIFE:
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash1.wav" );
-		weaponInfo->flashSound[1] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash2.wav" );
-		weaponInfo->flashSound[2] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash2.wav" );
-		weaponInfo->switchSound[0] = trap_S_RegisterSound( "sound/weapons/knife/knife_ready.wav" );
-		break;
-
-	case WP_SILENCER:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/luger/silencer_fire.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload.wav" );
-		weaponInfo->reloadFullSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_full.wav" );
-		weaponInfo->reloadFullSoundFast = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_full_fast.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/pistol_reload.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
-		break;
-
-	case WP_MAUSER:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_far.wav" );
-		weaponInfo->lastShotSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire_last.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/rifle_reload.wav" );
-		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
-		break;
-
-	case WP_SNIPERRIFLE:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire.wav" );
-		weaponInfo->lastShotSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire_last.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload_fast.wav" );
-		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
-		break;
-
-	case WP_SNOOPER:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/garand/garand_fire.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/garand/garand_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/garand/garand_reload_fast.wav" );
-		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
-		break;
-
-	case WP_SNOOPERSCOPE:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/garand/snooper_fire.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/garand/snooper_reload.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/garand/garand_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/garand/garand_reload_fast.wav" );
-		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
-		break;
-
-	case WP_M1GARAND:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_fire.wav" );
-		weaponInfo->lastShotSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_fire_last.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/auto_rifle_reload.wav" );
-		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
-		break;
-
-	case WP_M7:
-		MAKERGB( weaponInfo->flashDlightColor, 1, 0.7, 0.5 );
-		weaponInfo->missileModel = trap_R_RegisterModel( "models/weapons/auto_rifles/m1_garand/m7_projectile.md3" );
-		weaponInfo->missileTrailFunc = CG_GrenadeTrail;
-		weaponInfo->wiTrailTime = 1000;
-		weaponInfo->trailRadius = 32;
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1_fire_grenade.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/m1_garand/m1_reload_grenade.wav" );
-		weaponInfo->switchSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1_grenade_on.wav");
-		cgs.media.grenadeExplosionShader = trap_R_RegisterShader( "grenadeExplosion" );
-		break;
-
-	case WP_THOMPSON:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
-		break;
-
-	case WP_MP34:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mp34/mp34_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp34/mp34_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mp34/mp34_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mp34/mp34_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
-		break;
-
-	case WP_STEN:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/sten/sten_fire.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/sten/sten_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/sten/sten_reload_fast.wav" );
-		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/sten/sten_overheat.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
-		break;
-
-	case WP_FG42:
-	case WP_FG42SCOPE:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/fg42/fg42_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/fg42/fg42_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/fg42/fg42_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/fg42/fg42_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/ar_reload.wav" );
-		weaponInfo->fireModeSwitchSound = trap_S_RegisterSound( "sound/weapons/misc/firemode_switch.wav" );
-		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
-		break;
-
-	case WP_BAR:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/bar/bar_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/bar/bar_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/bar/bar_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/bar/bar_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/ar_reload.wav" );
-		weaponInfo->fireModeSwitchSound = trap_S_RegisterSound( "sound/weapons/misc/firemode_switch.wav" );
-		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
-		break;
-
-	case WP_PANZERFAUST:
-		weaponInfo->ejectBrassFunc      = CG_PanzerFaustEjectBrass;
-		weaponInfo->missileModel        = trap_R_RegisterModel( "models/ammo/rocket/rocket.md3" );
-		weaponInfo->missileSound        = trap_S_RegisterSound( "sound/weapons/rocket/rockfly.wav" );
-		weaponInfo->missileTrailFunc    = CG_RocketTrail;
-		weaponInfo->missileDlight       = 200;
-		MAKERGB( weaponInfo->flashDlightColor, 0.75, 0.3, 0.0 );
-		MAKERGB( weaponInfo->missileDlightColor, 0.75, 0.3, 0.0 );
-		weaponInfo->flashSound[0]       = trap_S_RegisterSound( "sound/weapons/rocket/rocklf1a.wav" );
-		weaponInfo->reloadSound         = trap_S_RegisterSound( "sound/weapons/rocket/rocklf_reload.wav" );
-		cgs.media.rocketExplosionShader = trap_R_RegisterShader( "rocketExplosion" );
-		break;
-
-	case WP_MORTAR:
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mortar/mortarf1.wav" );
-		weaponInfo->missileTrailFunc = CG_GrenadeTrail;
-		weaponInfo->missileDlight = 400;
-		weaponInfo->missileSound = trap_S_RegisterSound( "sound/weapons/rocket/rockfly.wav" );
-		weaponInfo->wiTrailTime = 300;
-		weaponInfo->trailRadius = 32;
-		MAKERGB( weaponInfo->flashDlightColor, 1, 0.7, 0.5 );
-		break;
-
-	case WP_GRENADE_SMOKE:
-		weaponInfo->missileModel = trap_R_RegisterModel( "models/weapons2/grenade/pineapple.md3" );
-		weaponInfo->missileTrailFunc    = CG_PyroSmokeTrail;
-		weaponInfo->missileDlight       = 200;
-		weaponInfo->wiTrailTime         = 4000;
-		weaponInfo->trailRadius         = 256;
-		break;
-
-	case WP_MEDIC_HEAL:
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash1.wav" );
-		weaponInfo->flashSound[1] = trap_S_RegisterSound( "sound/weapons/knife/knife_slash2.wav" );
-		break;
-
-	case WP_GRENADE_LAUNCHER:
-	case WP_GRENADE_PINEAPPLE:
-		if ( weaponNum == WP_GRENADE_LAUNCHER ) {
-			weaponInfo->missileModel = trap_R_RegisterModel( "models/ammo/grenade1.md3" );
-		} else {
-			weaponInfo->missileModel = trap_R_RegisterModel( "models/weapons2/grenade/pineapple.md3" );
-		}
-		weaponInfo->missileTrailFunc = CG_GrenadeTrail;
-		weaponInfo->wiTrailTime = 700;
-		weaponInfo->wiTrailTime = 1000;
-		weaponInfo->trailRadius = 32;
-		MAKERGB( weaponInfo->flashDlightColor, 1, 0.7, 0.5 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/grenade/grenlf1a.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/grenade/grenlf_reload.wav" );
-		cgs.media.grenadeExplosionShader = trap_R_RegisterShader( "grenadeExplosion" );
-		break;
-
-	case WP_DYNAMITE:
-		weaponInfo->missileModel = trap_R_RegisterModel( "models/ammo/dynamite.md3" );
-		cgs.media.grenadeExplosionShader = trap_R_RegisterShader( "grenadeExplosion" );
-		break;
-
-	case WP_VENOM:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->spinupSound = trap_S_RegisterSound( "sound/weapons/venom/venomsu1.wav" );
-		weaponInfo->spindownSound = trap_S_RegisterSound( "sound/weapons/venom/venomsd1.wav" ); 
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/venom/venom_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/venom/venom_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/venom/venom_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/venom/venom_reload_fast.wav" );
-		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/venom/venom_overheat.wav" );
-		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
-		break;
-
-	case WP_FLAMETHROWER:
-		break;
-
-	case WP_TESLA:
-		MAKERGB( weaponInfo->flashDlightColor, 0.2, 0.6, 1 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/tesla/teslaf1.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/tesla/tesla_reload.wav" );
-		weaponInfo->overheatSound = trap_S_RegisterSound( "sound/weapons/tesla/tesla_overheat.wav" );
-		break;
-
-	default:
-		MAKERGB( weaponInfo->flashDlightColor, 1, 1, 1 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/rocket/rocklf1a.wav" );
-		break;
-	}
-
-	// default fast/full/AI reload sounds to the base reload sound when no distinct asset is registered
-	if ( !weaponInfo->reloadSoundFast ) {
-		weaponInfo->reloadSoundFast = weaponInfo->reloadSound;
-	}
-	if ( !weaponInfo->reloadFullSound ) {
-		weaponInfo->reloadFullSound = weaponInfo->reloadSound;
-	}
-	if ( !weaponInfo->reloadFullSoundFast ) {
-		weaponInfo->reloadFullSoundFast = weaponInfo->reloadSoundFast;
-	}
-	if ( !weaponInfo->reloadSoundAi ) {
-		weaponInfo->reloadSoundAi = weaponInfo->reloadSound;
-	}
+	CG_Error( "Weapon %i (%s) has no .weap file assigned", weaponNum, item->classname );
 }
 
 /*

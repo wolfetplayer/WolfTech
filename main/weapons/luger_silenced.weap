@@ -6,7 +6,7 @@ weaponDef
 		weaponConfig		"models/weapons/pistols/luger_silenced/weapon.cfg"
 		handsModel			"models/weapons/pistols/luger_silenced/v_lugers_hand.mdc"
 
-		//flashDlightColor	1.0 0.6 0.23
+		flashDlightColor	1.0 0.6 0.23
 		flashSound			"sound/weapons/luger/silencer_fire.wav"
 		//lastShotSound		""
 

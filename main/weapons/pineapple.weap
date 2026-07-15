@@ -9,10 +9,16 @@ weaponDef
 		flashDlightColor	1 0.7 0.5
 		flashSound			"sound/weapons/grenade/grenlf1a.wav"
 		//lastShotSound		""
+		reloadSound			"sound/weapons/grenade/grenlf_reload.wav"
 		//switchSound		""
 
 		weaponIcon			"icons/iconw_pineapple_1"
 		weaponSelectedIcon	"icons/iconw_pineapple_1_select"
+
+		missileModel		"models/weapons2/grenade/pineapple.md3"
+		missileTrailFunc	"GrenadeTrail"		// GrenadeTrail | RocketTrail | PyroSmokeTrail
+		missileTrailTime	1000
+		missileTrailRadius	32
 
 		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
 

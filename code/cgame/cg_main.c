@@ -1667,8 +1667,11 @@ static void CG_RegisterGraphics( void ) {
 
 	// RF, not used anymore
 	//cgs.media.targetEffectExplosionShader	= trap_R_RegisterShader( "targetEffectExplode" );
-	//cgs.media.rocketExplosionShader			= trap_R_RegisterShader( "rocketExplosion" );
-	//cgs.media.grenadeExplosionShader		= trap_R_RegisterShader( "grenadeExplosion" );
+	// shared explosion FX for all grenade/rocket/dynamite-class weapons - previously duplicated
+	// per-weapon in CG_RegisterWeapon's hardcoded switch, now registered once here since every
+	// weapon is .weap-driven and .weap has no notion of this shared, non-weapon-specific resource
+	cgs.media.rocketExplosionShader			= trap_R_RegisterShader( "rocketExplosion" );
+	cgs.media.grenadeExplosionShader		= trap_R_RegisterShader( "grenadeExplosion" );
 
 	// zombie shot
 	//cgs.media.zombieLoogie = trap_R_RegisterModel( "models/mapobjects/bodyparts/zom_loog.md3" );

@@ -13,6 +13,9 @@ weaponDef
 
 		reloadSound			"sound/weapons/venom/venom_reload.wav"
 		reloadSoundFast		"sound/weapons/venom/venom_reload_fast.wav"
+		overheatSound		"sound/weapons/venom/venom_overheat.wav"
+		spinupSound		    "sound/weapons/venom/venomsu1.wav"
+		spindownSound		"sound/weapons/venom/venomsd1.wav"
 		//switchSound		""
 		bounceSound         "sound/misc/weapon_bounce.wav"
 

@@ -13,8 +13,16 @@ weaponDef
 		//switchSound		""
 		bounceSound         "sound/misc/weapon_bounce.wav"
 
+		reloadSound			"sound/weapons/rocket/rocklf_reload.wav"
+
 		weaponIcon			"icons/iconw_panzerfaust_1"
 		weaponSelectedIcon	"icons/iconw_panzerfaust_1_select"
+
+		missileModel		"models/ammo/rocket/rocket.md3"
+		missileSound		"sound/weapons/rocket/rockfly.wav"
+		missileTrailFunc	"RocketTrail"		// GrenadeTrail | RocketTrail | PyroSmokeTrail
+		missileDlight		200
+		missileDlightColor	0.75 0.3 0.0
 
 		ejectBrassFunc		"PanzerFaustEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
 

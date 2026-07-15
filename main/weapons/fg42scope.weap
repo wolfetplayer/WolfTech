@@ -18,6 +18,7 @@ weaponDef
 		reloadSoundAi	    "sound/weapons/ai/ar_reload.wav"
 		//switchSound		""
 		bounceSound         "sound/misc/weapon_bounce.wav"
+		fireModeSwitchSound	"sound/weapons/misc/firemode_switch.wav"
 
 		weaponIcon			"icons/iconw_fg42_1"
 		weaponSelectedIcon	"icons/iconw_fg42_1_select"

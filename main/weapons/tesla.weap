@@ -7,8 +7,10 @@ weaponDef
 		handsModel			"models/weapons/secret/tesla/v_tesla_hand.mdc"
 
 		flashDlightColor	0.2 0.6 1
-		//flashSound		""
+		flashSound			"sound/weapons/tesla/teslaf1.wav"
 		//lastShotSound		""
+		reloadSound			"sound/weapons/tesla/tesla_reload.wav"
+		overheatSound		"sound/weapons/tesla/tesla_overheat.wav"
 		//switchSound		""
 		bounceSound         "sound/misc/weapon_bounce.wav"
 
