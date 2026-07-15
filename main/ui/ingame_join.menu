@@ -48,7 +48,7 @@ menuDef {
 		itemDef {
 			name			refreshSource
 			group			grpJoin
-			text			"Get New List"
+			text			"@MULTI_GETNEWLIST"
 			type			ITEM_TYPE_BUTTON
 			textscale		.28
 			style			WINDOW_STYLE_FILLED	
@@ -75,7 +75,7 @@ menuDef {
 		itemDef {
 			name			refreshFilter
 			group			grpJoin
-			text			"Refresh List"
+			text			"@MULTI_REFRESHLIST"
 			textscale		.28
 			style			WINDOW_STYLE_FILLED
 			textfont		UI_FONT_NORMAL
@@ -98,7 +98,7 @@ menuDef {
 
 		itemDef {
 			name			serverinfo
-			text			"Server Info"
+			text			"@MULTI_SERVERINFO"
 			group			grpJoin
 			type			ITEM_TYPE_BUTTON
 			textfont		UI_FONT_NORMAL
@@ -151,7 +151,7 @@ menuDef {
 
 		itemDef {
 			name back
-			text "BACK"
+			text "@GENERAL_BACK"
 			type 1
 			style 0	
 			textstyle 6
@@ -176,7 +176,7 @@ menuDef {
 
 		itemDef {
 			name back_alt
-			text "BACK"
+			text "@GENERAL_BACK"
 			type 1
 			style 0	
 			textstyle 6
@@ -202,7 +202,7 @@ menuDef {
 
 		itemDef {
 			name connect
-			text "CONNECT"
+			text "@MULTI_CONNECT"
 			group grpJoin
 			type 1
 			textfont	UI_FONT_NORMAL
@@ -233,7 +233,7 @@ menuDef {
 
 		itemDef {
 			name connect_alt
-			text "CONNECT"
+			text "@MULTI_CONNECT"
 			group grpJoin
 			type 1
 			style 0	
@@ -278,7 +278,7 @@ menuDef {
 			style			0
 			maxChars		16
 			maxpaintchars	16
-			text			"Name:"
+			text			"@MULTI_NAME_LABEL"
 			cvar			"name"
 			textscale		.25
 			textalign		ITEM_ALIGN_LEFT	
@@ -300,9 +300,9 @@ menuDef {
 			textstyle		6
 			maxChars		16
 			maxpaintchars	16
-			text			"Downloads:"
+			text			"@MULTI_DOWNLOADS_LABEL"
 			cvar			"cl_allowDownload"
-			cvarFloatList	{ "No" 0 "Yes" 1 }
+			cvarFloatList	{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 			textscale		.25
 			textalign		ITEM_ALIGN_LEFT	
 			textalignx		0
@@ -322,7 +322,7 @@ menuDef {
 			style			0
 			maxChars		32
 			maxpaintchars	32
-			text			"Password:"
+			text			"@MULTI_PASSWORD_LABEL"
 			cvar			"password"
 			textscale		.25
 			textalign		ITEM_ALIGN_LEFT	
@@ -368,9 +368,9 @@ menuDef {
 			textstyle		6
 			maxChars		16
 			maxpaintchars	16
-			text			"Model:"
+			text			"@MULTI_MODEL_LABEL"
 			cvar			"skin"
-			cvarFloatList	{ "Yankee Soldier" 1 "Afro Soldier" 2 "Euro Soldier" 3 }
+			cvarFloatList	{ "@MULTI_MODEL_YANKEE" 1 "@MULTI_MODEL_AFRO" 2 "@MULTI_MODEL_EURO" 3 }
 			textscale		.25
 			textalign		ITEM_ALIGN_LEFT	
 			textalignx		0
@@ -384,7 +384,7 @@ menuDef {
 			style			0	
 			textstyle		6
 
-			text			"Gametype:"
+			text			"@MULTI_GAMETYPE_LABEL"
 			ownerdraw		UI_JOINGAMETYPE
 			textfont		UI_FONT_NORMAL
 			rect			290 38 100 15
@@ -404,10 +404,10 @@ menuDef {
 			style			0	
 			textstyle		6
 			type			ITEM_TYPE_MULTI
-			text			"View Empty:"
+			text			"@MULTI_VIEWEMPTY_LABEL"
 			textfont		UI_FONT_NORMAL
 			cvar			"ui_browserShowEmpty"
-			cvarFloatList		{ "No" 0 "Yes" 1 }
+			cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 			rect			290 58 100 15
 			textalign		ITEM_ALIGN_LEFT
 			textalignx		0
@@ -618,7 +618,7 @@ menuDef {
 		itemDef {
 			name server
 			group grpJoin
-			text "Server Name"
+			text "@MULTI_COL_SERVERNAME"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont	UI_FONT_NORMAL
@@ -639,7 +639,7 @@ menuDef {
 			name map
 			group grpJoin
 			type ITEM_TYPE_BUTTON
-			text "Players, Map, Gametype"
+			text "@MULTI_COL_PLAYERSMAPGAMETYPE"
 			textscale .25
 			textfont	UI_FONT_NORMAL
 			style WINDOW_STYLE_FILLED	
@@ -658,7 +658,7 @@ menuDef {
 		itemDef {
 			name Respawn 
 			group grpJoin
-			text "AI Respawn"
+			text "@MULTI_COL_AIRESPAWN"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont	UI_FONT_NORMAL
@@ -678,7 +678,7 @@ menuDef {
 		itemDef {
 			name Reinforce 
 			group grpJoin
-			text "AI Reinforce"
+			text "@MULTI_COL_AIREINFORCE"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont UI_FONT_NORMAL
@@ -698,7 +698,7 @@ menuDef {
 		itemDef {
 			name Skill
 			group grpJoin
-			text "Skill"
+			text "@MULTI_COL_SKILL"
 			textfont	UI_FONT_NORMAL
 			textscale .25
 			type ITEM_TYPE_BUTTON
@@ -718,7 +718,7 @@ menuDef {
 		itemDef {
 			name Ping
 			group grpJoin
-			text "Ping"
+			text "@MULTI_COL_PING"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont	UI_FONT_NORMAL

@@ -28,7 +28,7 @@ menuDef {
 
 	itemDef {
 		name quick
-		text "Quick Settings"
+		text "@QUICK_TITLE"
 		textfont UI_FONT_NORMAL
 		textalign ITEM_ALIGN_CENTER
 		textalignx 107
@@ -56,7 +56,7 @@ menuDef {
 			style			0
 			maxChars		16
 			maxpaintchars	16
-			text			"Name:"
+			text			"@MULTI_NAME_LABEL"
 			cvar			"name"
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT	
@@ -76,9 +76,9 @@ menuDef {
 			style			0
 			maxChars		32
 			maxpaintchars	18
-			text			"Model:"
+			text			"@MULTI_MODEL_LABEL"
 			cvar			"skin"
-			cvarFloatList	{ "Yankee Soldier" 1 "Afro Soldier" 2 "Euro Soldier" 3 }
+			cvarFloatList	{ "@MULTI_MODEL_YANKEE" 1 "@MULTI_MODEL_AFRO" 2 "@MULTI_MODEL_EURO" 3 }
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT	
 			textalignx		126
@@ -88,7 +88,7 @@ menuDef {
 		itemDef {
 			name quick
 			type ITEM_TYPE_SLIDER
-			text "Brightness:"
+			text "@QUICK_BRIGHTNESS"
 			cvarfloat "r_gamma" 1 0.5 2
 			rect -30 65 220 12
 			textfont UI_FONT_NORMAL
@@ -124,9 +124,9 @@ menuDef {
 		itemDef {
 			name quick
 			type ITEM_TYPE_MULTI
-			text "Fullscreen:"
+			text "@QUICK_FULLSCREEN"
 			cvar "r_fullscreen"
-			cvarFloatList		{ "No" 0 "Yes" 1 }
+			cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 			rect -30 95 220 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
@@ -143,7 +143,7 @@ menuDef {
 		itemDef {
 			name quick
 			type ITEM_TYPE_SLIDER
-			text "Sound Volume:"
+			text "@QUICK_SOUNDVOLUME"
 			cvarfloat "s_volume" 0.7 0 1
 			rect -30 115 220 12
 			textfont UI_FONT_NORMAL
@@ -160,7 +160,7 @@ menuDef {
 		itemDef {
 			name quick
 			type ITEM_TYPE_SLIDER
-			text "Music Volume:"
+			text "@QUICK_MUSICVOLUME"
 			cvarfloat "s_musicvolume" 0.25 0 1
 			rect -30 130 220 12
 			textfont UI_FONT_NORMAL
@@ -177,7 +177,7 @@ menuDef {
 		itemDef {
 			name quick
 			type ITEM_TYPE_SLIDER
-			text "HUD Alpha:"
+			text "@OPTIONS_HUDALPHA"
 			cvarfloat "cg_hudAlpha" .6 .1 1
 			rect -30 150 220 12
 			textfont UI_FONT_NORMAL
@@ -194,7 +194,7 @@ menuDef {
 		itemDef {
 			name quick
 			type ITEM_TYPE_SLIDER
-			text "Crosshair Alpha:"
+			text "@OPTIONS_CROSSHAIRALPHA"
 			cvarfloat "cg_crosshairAlpha" .6 .1 1
 			rect -30 165 220 12
 			textfont UI_FONT_NORMAL
@@ -212,7 +212,7 @@ menuDef {
 			name quick
 			group grpControls
 			type ITEM_TYPE_SLIDER
-			text "Sensitivity:"
+			text "@QUICK_SENSITIVITY"
 			cvarfloat "sensitivity" 5 1 30
 			rect -30 180 220 12
 			textfont UI_FONT_NORMAL
@@ -228,7 +228,7 @@ menuDef {
 						
 		itemDef {
 			name quick
-			text "Crosshair:"
+			text "@OPTIONS_CROSSHAIR"
 			type 1	
 			rect 40 195 60 12
 			textfont UI_FONT_NORMAL
@@ -260,9 +260,9 @@ menuDef {
 			textfont		UI_FONT_NORMAL
 			type			ITEM_TYPE_MULTI
 			style			0
-			text			"Crosshairnames:"
+			text			"@OPTIONS_CROSSHAIRNAMES"
 			cvar			"cg_drawcrosshairnames"
-			cvarFloatList	{ "Off" 0 "On" 1}
+			cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT	
 			textalignx		126
@@ -278,9 +278,9 @@ menuDef {
 			textfont		UI_FONT_NORMAL
 			type			ITEM_TYPE_MULTI
 			style			WINDOW_STYLE_FILLED
-			text			"Team-Overlay:"
+			text			"@OPTIONS_TEAMOVERLAY"
 			cvar			"cg_drawteamoverlay"
-			cvarFloatList	{ "Off" 0 "On" 1}
+			cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT	
 			textalignx		126
@@ -296,9 +296,9 @@ menuDef {
 			textfont		UI_FONT_NORMAL
 			type			ITEM_TYPE_MULTI
 			style			WINDOW_STYLE_FILLED
-			text			"Compass:"
+			text			"@OPTIONS_COMPASS"
 			cvar			"cg_drawcompass"
-			cvarFloatList	{ "Off" 0 "On" 1}
+			cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT	
 			textalignx		126
@@ -311,7 +311,7 @@ menuDef {
 
 		itemDef {
 			name                    joingame
-			text                    "Join Game"
+			text                    "@QUICK_JOINGAME"
 			type                    ITEM_TYPE_BUTTON
 			textscale               .25 
 			style                   WINDOW_STYLE_FILLED    
@@ -330,7 +330,7 @@ menuDef {
 
 		itemDef {
 			name                    joinspec
-			text                    "Join Spectators"
+			text                    "@QUICK_JOINSPECTATORS"
 			type                    ITEM_TYPE_BUTTON
 			textscale               .25 
 			style                   WINDOW_STYLE_FILLED    

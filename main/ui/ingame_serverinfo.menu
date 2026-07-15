@@ -51,7 +51,7 @@ menuDef {
 
 	itemDef {
 		name			window_title
-		text			"Server Info"
+		text			"@MULTI_SERVERINFO"
 		style			0
 		decoration
 		textscale		.3
@@ -89,7 +89,7 @@ menuDef {
 
   itemDef {
     name      serverURL
-    text      "Go to server URL"
+    text      "@SERVERINFO_GOTOURL"
     type      ITEM_TYPE_BUTTON
     textfont  UI_FONT_NORMAL
 	textscale		GLOBAL_TEXTSCALE1
@@ -115,7 +115,7 @@ menuDef {
 
   itemDef {
     name      modURL
-    text      "Go to mod URL"
+    text      "@SERVERINFO_GOTOMODURL"
     type      ITEM_TYPE_BUTTON
     textfont  UI_FONT_NORMAL
 	textscale		GLOBAL_TEXTSCALE1
@@ -141,7 +141,7 @@ menuDef {
 
 	itemDef {
 		name			yes
-		text			"Exit"
+		text			"@SERVERINFO_EXIT"
 		type			ITEM_TYPE_BUTTON
 		textfont		UI_FONT_NORMAL
 		textscale		GLOBAL_TEXTSCALE1
@@ -167,7 +167,7 @@ menuDef {
 
 	itemDef {
 		name			refresh
-		text			"Refresh"
+		text			"@SERVERINFO_REFRESH"
 		type			ITEM_TYPE_BUTTON
 		textfont		UI_FONT_NORMAL
 		textscale		GLOBAL_TEXTSCALE1

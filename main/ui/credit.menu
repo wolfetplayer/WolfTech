@@ -74,7 +74,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "DEVELOPED BY:"
+		text "@CREDIT_DEVELOPEDBY"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -92,7 +92,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "RTCW.COOP.TEAM"
+		text "@CREDIT_TEAMNAME"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -145,7 +145,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "special thanks to"
+		text "@CREDIT_SPECIALTHANKS"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -163,7 +163,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "ronboy, TitaN655, hirko (for the levelshots), clan {WeB} (for the testing)"
+		text "@CREDIT_THANKS_LINE1"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -181,7 +181,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "clan boozze, crytiqal (for the initial master server), etpro, ioquake3"
+		text "@CREDIT_THANKS_LINE2"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -199,7 +199,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "as well as"
+		text "@CREDIT_ASWELLAS"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -217,7 +217,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "Michael Tsarouhas, Melissa Lauten, Will Doe,"
+		text "@CREDIT_VOICES_LINE1"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -235,7 +235,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "Robert Sloman, Madinah Wilson (for the character voices)"
+		text "@CREDIT_VOICES_LINE2"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -253,7 +253,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "...and of course many-many thanks"
+		text "@CREDIT_THANKS_LINE3"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -271,7 +271,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "to our girlfriends/wives/children"
+		text "@CREDIT_THANKS_LINE4"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -289,7 +289,7 @@ itemDef {
 		textstyle 6
 		textscale .2
 		textalign ITEM_ALIGN_CENTER
-		text "(for their unlimited patience with us)"
+		text "@CREDIT_THANKS_LINE5"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
 		forecolor 1 1 1 1
 		decoration 
@@ -327,7 +327,7 @@ itemDef {
         textstyle 6
         textscale .25 
         textalign ITEM_ALIGN_CENTER
-        text "THANK YOU, COME AGAIN"
+        text "@CREDIT_THANKYOU"
 		textfont UI_FONT_BIG	// RealRTCWCoop  
         forecolor 1 1 1 1 
         decoration 
@@ -370,7 +370,7 @@ itemDef {
 
 itemDef {
       name back
-      text "BACK"
+      text "@GENERAL_BACK"
  	type 1
 	textfont UI_FONT_BIG	// RealRTCWCoop  
 	style 0	
@@ -388,7 +388,7 @@ itemDef {
 
 itemDef {
      name back_alt
-     text "BACK"
+     text "@GENERAL_BACK"
  	type 1
 	textfont UI_FONT_BIG	// RealRTCWCoop  
 	style 0	
@@ -423,7 +423,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .18
-	text "EXIT TO MAIN MENU"
+	text "@GENERAL_MSG_BACK"
 	textfont UI_FONT_BIG	// RealRTCWCoop  
 	forecolor 1 1 1 1
 	decoration 
@@ -440,7 +440,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .18
-	text "ADDITIONAL CREDITS"
+	text "@CREDIT_ADDITIONAL"
 	textfont UI_FONT_BIG	// RealRTCWCoop  
 	forecolor 1 1 1 1
 	decoration 

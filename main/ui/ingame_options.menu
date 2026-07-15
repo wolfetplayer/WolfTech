@@ -35,7 +35,7 @@ itemDef
 itemDef {
 		name performance
 		group grpSystembutton
-		text "HUD Settings"
+		text "@OPTIONS_HUDSETTINGS"
 		textfont UI_FONT_BIG
 		textalign ITEM_ALIGN_CENTER
 		textalignx 145
@@ -55,7 +55,7 @@ itemDef {
 		name performance
 		group grpOptions
 		type ITEM_TYPE_SLIDER
-		text "HUD Alpha:"
+		text "@OPTIONS_HUDALPHA"
 		textfont		UI_FONT_BIG
 		cvarfloat "cg_hudAlpha" .6 0 1
 		rect 82 40 290 12
@@ -73,10 +73,10 @@ itemDef {
 		name performance				
 		type ITEM_TYPE_MULTI	
 		group grpOptions
-		text "Cursor Hints:"
+		text "@OPTIONS_CURSORHINTS"
 		textfont		UI_FONT_BIG
 		cvar "cg_cursorHints"
-		cvarFloatList { "strobe pulse" 2 "alpha pulse" 3 "solid" 4 "off" 0 "size pulse" 1 }
+		cvarFloatList { "@OPTIONS_CURSORHINTS_STROBE" 2 "@OPTIONS_CURSORHINTS_ALPHA" 3 "@OPTIONS_CURSORHINTS_SOLID" 4 "@OPTIONS_CURSORHINTS_OFF" 0 "@OPTIONS_CURSORHINTS_SIZE" 1 }
 		textalign ITEM_ALIGN_RIGHT
 		rect 82 55 290 12
 		textalign ITEM_ALIGN_RIGHT
@@ -93,10 +93,10 @@ itemDef {
 		name performance
 		group grpOptions
 		type ITEM_TYPE_MULTI				
-		text "Crosshair Size:"
+		text "@OPTIONS_CROSSHAIRSIZE"
 		textfont		UI_FONT_BIG
 		cvar "cg_crosshairsize"
-		cvarFloatList { "Tiny" 12 "Small" 18 "Medium" 24 "Large" 30 }
+		cvarFloatList { "@OPTIONS_SIZE_TINY" 12 "@OPTIONS_SIZE_SMALL" 18 "@OPTIONS_SIZE_MEDIUM" 24 "@OPTIONS_SIZE_LARGE" 30 }
 		rect 82 70 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
@@ -112,7 +112,7 @@ itemDef {
 		name performance
 		group grpOptions
 		type ITEM_TYPE_SLIDER
-		text "Crosshair Alpha:"
+		text "@OPTIONS_CROSSHAIRALPHA"
 		textfont		UI_FONT_BIG
 		cvarfloat "cg_crosshairAlpha" .6 0 1
 		rect 82 85 290 12
@@ -131,10 +131,10 @@ itemDef {
         	name performance
         	group grpOptions
        		type ITEM_TYPE_MULTI
-        	text "Solid Crosshair:"
+        	text "@OPTIONS_SOLIDCROSSHAIR"
 		textfont		UI_FONT_BIG
         	cvar "cg_solidCrosshair"
-        	cvarFloatList	{ "Off" 0 "On" 1}
+        	cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
         	rect 82 100 290 12
 			textalign ITEM_ALIGN_RIGHT
 			textalignx 142
@@ -151,10 +151,10 @@ itemDef {
     		name performance
     		group grpOptions
     		type ITEM_TYPE_MULTI
-    		text "Aspect Correction:"
+    		text "@OPTIONS_ASPECTCORRECTION"
 		textfont		UI_FONT_BIG
     		cvar "cg_fixedAspect"
-    		cvarFloatList	{ "Off" 0 "On (4:3 HUD)" 1 "On (Wide HUD)" 2 }
+    		cvarFloatList	{ "@GENERAL_OFF" 0 "@OPTIONS_ASPECT_43" 1 "@OPTIONS_ASPECT_WIDE" 2 }
     		rect 82 115 290 12
           	textalign ITEM_ALIGN_RIGHT
           	textalignx 142
@@ -170,7 +170,7 @@ itemDef {
 	itemDef {
 		name performance
 		group grpOptions
-		text "Crosshair:"
+		text "@OPTIONS_CROSSHAIR"
 		textfont		UI_FONT_BIG
  		type 1	
 		rect 197 130 60 12
@@ -202,10 +202,10 @@ itemDef {
     		name performance
     		group grpOptions
     		type ITEM_TYPE_MULTI
-    		text "Blood Hit on HUD:"
+    		text "@OPTIONS_BLOODHIT"
 		textfont		UI_FONT_BIG
     		cvar "cg_bloodBlend"
-    		cvarFloatList	{ "On" 0 "Off" 1}
+    		cvarFloatList	{ "@GENERAL_ON" 0 "@GENERAL_OFF" 1}
     		rect 82 200 290 12
           	textalign ITEM_ALIGN_RIGHT
           	textalignx 142
@@ -222,11 +222,11 @@ itemDef {
 		name performance				
 		group grpOptions
 		type ITEM_TYPE_MULTI		
-		text "Chat Icon Time:"
+		text "@OPTIONS_CHATICONTIME"
 		textfont		UI_FONT_BIG
 		rect 82 215 290 12
 		cvar "cg_voicespritetime"
-		cvarFloatList { "3 sec" 3000 "6 sec" 6000 "12 sec" 12000 "24 sec" 24000 }
+		cvarFloatList { "@OPTIONS_TIME_3S" 3000 "@OPTIONS_TIME_6S" 6000 "@OPTIONS_TIME_12S" 12000 "@OPTIONS_TIME_24S" 24000 }
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
 		textaligny 10
@@ -243,10 +243,10 @@ itemDef {
 		rect			82 230 290 12
 		type			ITEM_TYPE_MULTI
 		style			WINDOW_STYLE_FILLED
-		text			"Crosshairnames:"
+		text			"@OPTIONS_CROSSHAIRNAMES"
 		textfont		UI_FONT_BIG
 		cvar			"cg_drawcrosshairnames"
-		cvarFloatList	{ "Off" 0 "On" 1}
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 		textscale		.23
 		textalign		ITEM_ALIGN_RIGHT	
 		textalignx		142
@@ -262,10 +262,10 @@ itemDef {
 		rect			82 245 290 12
 		type			ITEM_TYPE_MULTI
 		style			WINDOW_STYLE_FILLED
-		text			"Team-Overlay:"
+		text			"@OPTIONS_TEAMOVERLAY"
 		textfont		UI_FONT_BIG
 		cvar			"cg_drawteamoverlay"
-		cvarFloatList	{ "Off" 0 "On" 1}
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 		textscale		.23
 		textalign		ITEM_ALIGN_RIGHT	
 		textalignx		142
@@ -281,10 +281,10 @@ itemDef {
 		rect			82 260 290 12
 		type			ITEM_TYPE_MULTI
 		style			WINDOW_STYLE_FILLED
-		text			"Compass:"
+		text			"@OPTIONS_COMPASS"
 		textfont		UI_FONT_BIG
 		cvar			"cg_drawcompass"
-		cvarFloatList	{ "Off" 0 "On" 1}
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 		textscale		.23
 		textalign		ITEM_ALIGN_RIGHT	
 		textalignx		142

@@ -189,7 +189,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "EXIT TO MAIN MENU"
+	text "@GENERAL_MSG_BACK"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -206,7 +206,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Refresh Video"
+	text "@SETUP_MSG_ACCEPT"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -223,7 +223,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Select to Edit Game Controls"
+	text "@SETUP_MSG_CONTROLS"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -240,7 +240,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Selection Isn't Implemented"
+	text "@GENERAL_MSG_NOWORK"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -257,7 +257,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Select to Edit View Controls"
+	text "@SETUP_MSG_LOOK"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -274,7 +274,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Select to Edit Movement Controls"
+	text "@SETUP_MSG_MOVE"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -291,7 +291,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Select to Edit Firing and Weapon Selection"
+	text "@SETUP_MSG_SHOOT"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -307,7 +307,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Select to Edit Chat and Mouse Functions"
+	text "@SETUP_MSG_MISC"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -323,7 +323,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Edit System Settings"
+	text "@SETUP_MSG_SYSTEM"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -339,7 +339,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Edit Game Options"
+	text "@SETUP_MSG_GAMEOPTIONS"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
 	decoration 
@@ -356,7 +356,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Reset to Default Settings"
+	text "@SETUP_MSG_DEFAULT"
 //	text "disabled for show build"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
@@ -374,7 +374,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "This will play the intro Cinematic"
+	text "@SETUP_MSG_CINE"
 //	text "disabled for show build"
 	textfont UI_FONT_BIG	// RealRTCWCoop
 	forecolor 1 1 1 1
@@ -393,7 +393,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "Clear High Scores to Zero"
+	text "@SETUP_MSG_SCORES"
 //	text "disabled for show build"
 	textfont UI_FONT_BIG	// RealRTCWCoop     
 	forecolor 1 1 1 1

@@ -39,7 +39,7 @@
 		origin			ORIGIN_QUICKBUY
 		forecolor		1 1 1 1
 		backcolor		0 0 0 0
-		text			"Buy"
+		text			"@QUICKBUY_BUY"
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_CENTER
@@ -56,7 +56,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"1. Pistols"
+		text			"@QUICKBUY_ALT_TAB_PISTOLS"
 		decoration
 	}
 	execKey "1" { close wm_quickbuyAlt; open altwm_buypistols }
@@ -71,7 +71,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"2. SMG"
+		text			"@QUICKBUY_ALT_TAB_SMG"
 		decoration
 	}
 	execKey "2" { close wm_quickbuyAlt; open altwm_buysmg }
@@ -86,7 +86,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"3. Rifles"
+		text			"@QUICKBUY_ALT_TAB_RIFLES"
 		decoration
 	}
 	execKey "3" { close wm_quickbuyAlt; open altwm_buyrifle }
@@ -101,7 +101,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"4. Heavy"
+		text			"@QUICKBUY_ALT_TAB_HEAVY"
 		decoration
 	}
 	execKey "4" { close wm_quickbuyAlt; open altwm_buyheavy }
@@ -116,7 +116,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"5. Explosives"
+		text			"@QUICKBUY_ALT_TAB_EXPLOSIVES"
 		decoration
 	}
 	execKey "5" { close wm_quickbuyAlt; open altwm_buyexplosives }
@@ -131,7 +131,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"6. Ammo"
+		text			"@QUICKBUY_ALT_TAB_AMMO"
 		decoration
 		group			ingamebox
 	}
@@ -147,7 +147,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"7. Health"
+		text			"@QUICKBUY_ALT_TAB_HEALTH"
 		decoration
 		group			ingamebox
 	}
@@ -163,7 +163,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"8. Stamina"
+		text			"@QUICKBUY_ALT_TAB_STAMINA"
 		decoration
 		group			ingamebox
 	}
@@ -208,7 +208,7 @@
 		origin			ORIGIN_QUICKBUY
 		forecolor		1 1 1 1
 		backcolor		0 0 0 0
-		text			"Buy Pistols"
+		text			"@QUICKBUY_BUYPISTOLS"
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_CENTER
@@ -225,7 +225,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"1. Luger"
+		text			"@QUICKBUY_ALT_ITEM_LUGER"
 		decoration
 	}
 	execKey "1" { exec "buy Luger"; close altwm_buypistols }
@@ -240,7 +240,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"2. Colt"
+		text			"@QUICKBUY_ALT_ITEM_COLT"
 		decoration
 	}
 	execKey "2" { exec "buy Colt"; close altwm_buypistols }
@@ -255,7 +255,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"3. Silencer"
+		text			"@QUICKBUY_ALT_ITEM_SILENCER"
 		decoration
 		group			ingamebox
 	}
@@ -271,7 +271,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"4. Dual Colts"
+		text			"@QUICKBUY_ALT_ITEM_DUALCOLTS"
 		decoration
 	}
 	execKey "4" { exec "buy Dual Colts"; close altwm_buypistols }
@@ -315,7 +315,7 @@
 		origin			ORIGIN_QUICKBUY
 		forecolor		1 1 1 1
 		backcolor		0 0 0 0
-		text			"Buy smg"
+		text			"@QUICKBUY_BUYSMG"
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_CENTER
@@ -332,7 +332,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"1. Thompson"
+		text			"@QUICKBUY_ALT_ITEM_THOMPSON"
 		decoration
 		group			ingamebox
 	}
@@ -348,7 +348,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"2. MP40"
+		text			"@QUICKBUY_ALT_ITEM_MP40"
 		decoration
 		group			ingamebox
 	}
@@ -364,7 +364,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"3. Sten"
+		text			"@QUICKBUY_ALT_ITEM_STEN"
 		decoration
 		group			ingamebox
 	}
@@ -409,7 +409,7 @@
 		origin			ORIGIN_QUICKBUY
 		forecolor		1 1 1 1
 		backcolor		0 0 0 0
-		text			"Buy Rifle"
+		text			"@QUICKBUY_BUYRIFLE"
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_CENTER
@@ -426,7 +426,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"1. Mauser Rifle"
+		text			"@QUICKBUY_ALT_ITEM_MAUSER"
 		decoration
 	}
 	execKey "1" { exec "buy Mauser Rifle"; close altwm_buyrifle }
@@ -441,7 +441,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"2. FG42 Paratroop Rifle"
+		text			"@QUICKBUY_ALT_ITEM_FG42PARA"
 		decoration
 	}
 	execKey "2" { exec "buy FG42 Paratroop Rifle"; close altwm_buyrifle }
@@ -456,7 +456,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"3. Snooper Rifle"
+		text			"@QUICKBUY_ALT_ITEM_SNOOPER"
 		decoration
 		group			ingamebox
 	}
@@ -472,7 +472,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"4. Sniper Scope"
+		text			"@QUICKBUY_ALT_ITEM_SNIPERSCOPE"
 		decoration
 		group			ingamebox
 	}
@@ -488,7 +488,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"5. FG42 Scope"
+		text			"@QUICKBUY_ALT_ITEM_FG42SCOPE"
 		decoration
 		group			ingamebox
 	}
@@ -535,7 +535,7 @@
 		origin			ORIGIN_QUICKBUY
 		forecolor		1 1 1 1
 		backcolor		0 0 0 0
-		text			"Buy Heavy"
+		text			"@QUICKBUY_BUYHEAVY"
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_CENTER
@@ -552,7 +552,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"1. Venom"
+		text			"@QUICKBUY_ALT_ITEM_VENOM"
 		decoration
 	}
 	execKey "1" { exec "buy Venom"; close altwm_buyheavy }
@@ -567,7 +567,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"2. Flamethrower"
+		text			"@QUICKBUY_ALT_ITEM_FLAMETHROWER"
 		decoration
 	}
 	execKey "2" { exec "buy Flamethrower"; close altwm_buyheavy }
@@ -582,7 +582,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"3. Panzerfaust"
+		text			"@QUICKBUY_ALT_ITEM_PANZERFAUST"
 		decoration
 		group			ingamebox
 	}
@@ -627,7 +627,7 @@
 		origin			ORIGIN_QUICKBUY
 		forecolor		1 1 1 1
 		backcolor		0 0 0 0
-		text			"Buy Bombs"
+		text			"@QUICKBUY_BUYBOMBS"
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_CENTER
@@ -644,7 +644,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"1. Grenade"
+		text			"@QUICKBUY_ALT_ITEM_GRENADE"
 		decoration
 	}
 	execKey "1" { exec "buy Grenade"; close altwm_buyexplosives }
@@ -659,7 +659,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"2. Pineapple"
+		text			"@QUICKBUY_ALT_ITEM_PINEAPPLE"
 		decoration
 	}
 	execKey "2" { exec "buy Pineapple"; close altwm_buyexplosives }
@@ -674,7 +674,7 @@
 		textfont	UI_FONT_NORMAL
 		textscale	.25
 		textalign		ITEM_ALIGN_LEFT
-		text			"3. Dynamite"
+		text			"@QUICKBUY_ALT_ITEM_DYNAMITE"
 		decoration
 		group			ingamebox
 	}

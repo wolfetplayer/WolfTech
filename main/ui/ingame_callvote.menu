@@ -60,7 +60,7 @@ itemDef
 // 	BUTTONS	//
 itemDef {
 	name ctr_misc
-	text "Misc"
+	text "@CALLVOTE_TAB_MISC"
 	type 1
 	textfont	UI_FONT_NORMAL
 	textscale .25
@@ -92,7 +92,7 @@ itemDef {
 
 itemDef {
 	name ctr_gametype
-	text "Game"
+	text "@CALLVOTE_TAB_GAME"
 	type 1
 	textfont	UI_FONT_NORMAL
 	textscale .25
@@ -123,7 +123,7 @@ itemDef {
 
 itemDef {
 	name ctr_kickplayer
-	text "Kick"
+	text "@CALLVOTE_TAB_KICK"
 	type 1
 	textfont	UI_FONT_NORMAL
 	textscale .25
@@ -154,7 +154,7 @@ itemDef {
 
 itemDef {
 	name ctr_changemap
-	text "Map"
+	text "@CALLVOTE_TAB_MAP"
 	type 1
 	textfont	UI_FONT_NORMAL
 	textscale .25
@@ -188,7 +188,7 @@ itemDef {
 itemDef {
 	name misc_resetmatch
 	group grpMisc
-	text "RESTART MAP"
+	text "@CALLVOTE_RESTARTMAP"
 	textscale .25
 	style	WINDOW_STYLE_FILLED
 	backcolor .3 0.5 0.2 .25
@@ -208,7 +208,7 @@ itemDef {
 itemDef {
 	name misc_nextmap
 	group grpMisc
-	text "NEXT MAP"
+	text "@CALLVOTE_NEXTMAP"
 	textscale .25
 	rect 115 90 120 20
 	border 1
@@ -231,7 +231,7 @@ itemDef {
 itemDef {
 	name gameType
 	group grpType
-	text "GAME TYPE"
+	text "@CALLVOTE_GAMETYPE"
 	textscale .25
 	style	WINDOW_STYLE_FILLED
 	backcolor .3 0.5 0.2 .25
@@ -251,7 +251,7 @@ itemDef {
 itemDef {
 	name gameSkill
 	group grpType
-	text "GAME SKILL"
+	text "@CALLVOTE_GAMESKILL"
 	textscale .25
 	rect 115 90 120 20
 	border 1
@@ -271,7 +271,7 @@ itemDef {
 itemDef {
 	name gameReinforce
 	group grpType
-	text "REINFORCE"
+	text "@CALLVOTE_REINFORCE"
 	textscale .25
 	style	WINDOW_STYLE_FILLED
 	backcolor .3 0.5 0.2 .25
@@ -291,7 +291,7 @@ itemDef {
 itemDef {
 	name gameFreeze
 	group grpType
-	text "FREEZE"
+	text "@CALLVOTE_FREEZE"
 	textscale .25
 	rect 115 150 120 20
 	border 1
@@ -313,7 +313,7 @@ itemDef {
 itemDef {
 	name vote_gametype
 	group gameType
-	text "Gametype:"
+	text "@CALLVOTE_GAMETYPE_LABEL"
 	style WINDOW_STYLE_FILLED
 	textfont	UI_FONT_NORMAL
 	textscale .25
@@ -330,7 +330,7 @@ itemDef {
 	
 itemDef {
 	name type
-	text "OK"
+	text "@GENERAL_OK"
 	type 1
 	textscale .25
 	group vote_gametype
@@ -353,7 +353,7 @@ itemDef {
 itemDef {
 	name vote_gameskill
 	group gameSkill
-	text "Game skill:"
+	text "@CALLVOTE_GAMESKILL_LABEL"
 	style WINDOW_STYLE_FILLED
 	textfont	UI_FONT_NORMAL
 	textscale .25
@@ -370,7 +370,7 @@ itemDef {
 	
 itemDef {
 	name type
-	text "OK"
+	text "@GENERAL_OK"
 	type 1
 	textscale .25
 	group vote_gameskill
@@ -393,7 +393,7 @@ itemDef {
 itemDef {
 	name vote_gamereinforce
 	group gameReinforce
-	text "Reinforce:"
+	text "@CALLVOTE_REINFORCE_LABEL"
 	style WINDOW_STYLE_FILLED
 	textfont	UI_FONT_NORMAL
 	textscale .25
@@ -410,7 +410,7 @@ itemDef {
 	
 itemDef {
 	name type
-	text "OK"
+	text "@GENERAL_OK"
 	type 1
 	textscale .25
 	group vote_gamereinforce
@@ -433,7 +433,7 @@ itemDef {
 itemDef {
 	name vote_gamefreeze
 	group gameFreeze
-	text "Freeze:"
+	text "@CALLVOTE_FREEZE_LABEL"
 	style WINDOW_STYLE_FILLED
 	textfont	UI_FONT_NORMAL
 	textscale .25
@@ -450,7 +450,7 @@ itemDef {
 	
 itemDef {
 	name type
-	text "OK"
+	text "@GENERAL_OK"
 	type 1
 	textscale .25
 	group vote_gamefreeze
@@ -474,7 +474,7 @@ itemDef {
 itemDef {
 	name kick
 	group grpKick
-	text "Kick Player:"
+	text "@CALLVOTE_KICKPLAYER_LABEL"
 	textscale .25
 //	rect 50 50 110 20
 	rect 130 25 110 20
@@ -514,7 +514,7 @@ itemDef {
 
 itemDef {
 	name kick
-	text "OK"
+	text "@GENERAL_OK"
 	type 1
 	textscale .25
 	group grpKick
@@ -540,7 +540,7 @@ itemDef {
 itemDef {
 	name map
 	group grpMap
-	text "New Map:"
+	text "@CALLVOTE_NEWMAP_LABEL"
 	ownerdraw UI_ALLMAPS_SELECTION 
 	textscale .25
 	rect 140 25 110 20
@@ -581,7 +581,7 @@ itemDef {
 
 itemDef {
 	name map
-	text "OK"
+	text "@GENERAL_OK"
 	type 1
 	textscale .25
 	group grpMap
@@ -646,7 +646,7 @@ menuDef {
 
 itemDef {
 	name confirm
-	text "MESSAGE" 
+	text "@CALLVOTE_MESSAGE_TITLE" 
 	style 0
 	textscale .25 
 	textstyle 3
@@ -662,7 +662,7 @@ itemDef {
 
 itemDef {
 	name confirm
-	text "Voting is disabled on this server" 
+	text "@CALLVOTE_MSG_DISABLED" 
 	autowrapped
 	style 0
 	textscale .25 
@@ -679,7 +679,7 @@ itemDef {
 
 itemDef {
 	name no
-	text "OK"
+	text "@GENERAL_OK"
 	type 1
 	textscale .3
 	style WINDOW_STYLE_FILLED

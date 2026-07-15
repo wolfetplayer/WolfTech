@@ -73,7 +73,7 @@ itemDef {
 
 itemDef {
 	name ctr_look
-	text "Look"
+	text "@CONTROLS_LOOK"
 	textfont		UI_FONT_BIG
 	type 1
 	textscale .23
@@ -99,10 +99,10 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_MULTI
-		text "Player View:  "
+		text "@CONTROLS_PLAYERVIEW"
 		textfont		UI_FONT_BIG
 		cvar "cg_thirdperson"
-		cvarFloatList { "First Person" 0 "Third Person" 1 }
+		cvarFloatList { "@CONTROLS_VIEW_FIRSTPERSON" 0 "@CONTROLS_VIEW_THIRDPERSON" 1 }
 		rect 82 30 290 12 
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142 
@@ -120,7 +120,7 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_SLIDER
-		text "Third Person Offset:  "
+		text "@CONTROLS_3RDPERSON_OFFSET"
 		textfont		UI_FONT_BIG
 		cvarfloat "cg_thirdpersonrange" 40 1 100
 		rect 82 45 290 12
@@ -140,7 +140,7 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Binoculars:  "
+		text "@CONTROLS_BINOCULARS"
 		textfont		UI_FONT_BIG
 		cvar "+zoom"
 		rect 82 60 290 12
@@ -160,7 +160,7 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Toggle Notebook:  "
+		text "@CONTROLS_NOTEBOOK"
 		textfont		UI_FONT_BIG
 		cvar "notebook"
 		rect 82 75 290 12
@@ -179,7 +179,7 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Zoom In:  "
+		text "@CONTROLS_ZOOMIN"
 		textfont		UI_FONT_BIG
 		cvar "zoomin"
 		rect 82 90 290 12
@@ -199,7 +199,7 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Zoom Out:  "
+		text "@CONTROLS_ZOOMOUT"
 		textfont		UI_FONT_BIG
 		cvar "zoomout"
 		rect 82 105 290 12
@@ -219,10 +219,10 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_MULTI
-		text "Invert Mouse:  "
+		text "@CONTROLS_INVERTMOUSE"
 		textfont		UI_FONT_BIG
 		cvar "ui_mousePitch"
-		cvarFloatList		{ "No" 0 "Yes" 1 }
+		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 		rect 82 120 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -241,10 +241,10 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_MULTI
-		text "Smooth Mouse:  "
+		text "@CONTROLS_SMOOTHMOUSE"
 		textfont		UI_FONT_BIG
 		cvar "m_filter"
-		cvarFloatList		{ "No" 0 "Yes" 1 }
+		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 		rect 82 135 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -262,7 +262,7 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_SLIDER
-		text "Mouse Sensitivity:  "
+		text "@CONTROLS_MOUSESENSITIVITY"
 		textfont		UI_FONT_BIG
 		cvarfloat "sensitivity" 5 1 50
 		rect 82 150 290 12
@@ -282,7 +282,7 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Screenshot:  "
+		text "@CONTROLS_SCREENSHOT"
 		textfont		UI_FONT_BIG
 		cvar "screenshotJPEG"
 		rect 82 165 290 12
@@ -302,7 +302,7 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_TEXT
-		text "Use Weapon Cycle"
+		text "@CONTROLS_WEAPONCYCLE"
 		textfont		UI_FONT_BIG
 		rect 96 195 290 12
 		textalign ITEM_ALIGN_RIGHT
@@ -318,10 +318,10 @@ itemDef {
 		name look
 		group grpControls
 		type ITEM_TYPE_MULTI
-		text "For Zooming:  "
+		text "@CONTROLS_FORZOOMING"
 		textfont		UI_FONT_BIG
 		cvar "cg_useWeapsForZoom"
-		cvarFloatList { "Off" 0 "On (normal)" 1 "On (reverse)" 2 }
+		cvarFloatList { "@GENERAL_OFF" 0 "@CONTROLS_ZOOM_ON_NORMAL" 1 "@CONTROLS_ZOOM_ON_REVERSE" 2 }
 		rect 82 210 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -343,7 +343,7 @@ itemDef {
 
 itemDef {
 	name ctr_move
-	text "Move"
+	text "@CONTROLS_MOVE"
 		textfont		UI_FONT_BIG
 	type 1
 	textscale .23
@@ -367,10 +367,10 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_MULTI
-		text "Always Run:"
+		text "@CONTROLS_ALWAYSRUN"
 		textfont		UI_FONT_BIG
 		cvar "cl_run"
-		cvarFloatList		{ "No" 0 "Yes" 1 }
+		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 		rect 82 30 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142 
@@ -387,7 +387,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Run / Walk:"
+		text "@CONTROLS_RUNWALK"
 		textfont		UI_FONT_BIG
 		cvar "+speed"
 		rect 82 45 290 12
@@ -405,7 +405,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Sprint:"
+		text "@CONTROLS_SPRINT"
 		textfont		UI_FONT_BIG
 		cvar "+sprint"
 		rect 82 60 290 12
@@ -423,7 +423,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Move Forward:"
+		text "@CONTROLS_MOVEFORWARD"
 		textfont		UI_FONT_BIG
 		cvar "+forward"
 		rect 82 75 290 12
@@ -443,7 +443,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Move Back:"
+		text "@CONTROLS_MOVEBACK"
 		textfont		UI_FONT_BIG
 		cvar "+back"
 		rect 82 90 290 12
@@ -463,7 +463,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Move Left:"
+		text "@CONTROLS_MOVELEFT"
 		textfont		UI_FONT_BIG
 		cvar "+moveleft"
 		rect 82 105 290 12
@@ -483,7 +483,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Move Right:"
+		text "@CONTROLS_MOVERIGHT"
 		textfont		UI_FONT_BIG
 		cvar "+moveright"
 		rect 82 120 290 12
@@ -503,7 +503,7 @@ itemDef {
 	name move
 	group grpControls
 	type ITEM_TYPE_BIND
-	text "Lean Left:"
+	text "@CONTROLS_LEANLEFT"
 		textfont		UI_FONT_BIG
 	cvar "+leanleft"
 		rect 82 135 290 12
@@ -523,7 +523,7 @@ itemDef {
 	name move
 	group grpControls
 	type ITEM_TYPE_BIND
-	text "Lean Right:"
+	text "@CONTROLS_LEANRIGHT"
 		textfont		UI_FONT_BIG
 	cvar "+leanright"
 		rect 82 150 290 12
@@ -545,7 +545,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Jump:"
+		text "@CONTROLS_JUMP"
 		textfont		UI_FONT_BIG
 		cvar "+moveup"
 		rect 82 165 290 12
@@ -565,7 +565,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Crouch:"
+		text "@CONTROLS_CROUCH"
 		textfont		UI_FONT_BIG
 		cvar "+movedown"
 		rect 82 180 290 12
@@ -585,7 +585,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Strafe:"
+		text "@CONTROLS_STRAFE"
 		textfont		UI_FONT_BIG
 		cvar "+strafe"
 		rect 82 195 290 12
@@ -604,7 +604,7 @@ itemDef {
 		name move
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Teleport when stuck:"
+		text "@CONTROLS_TELEPORT"
 		textfont		UI_FONT_BIG
 		cvar "teleport"
 		rect 82 210 290 12
@@ -628,7 +628,7 @@ itemDef {
 
 itemDef {
 	name ctr_shoot
-	text "Shoot"
+	text "@CONTROLS_SHOOT"
 		textfont		UI_FONT_BIG
 	type 1
 	textscale .23
@@ -655,7 +655,7 @@ itemDef {
 		name shoot				
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Attack:  "
+		text "@CONTROLS_ATTACK"
 		textfont		UI_FONT_BIG
 		cvar "+attack"
 		rect 82 30 290 12
@@ -675,7 +675,7 @@ itemDef {
 		name shoot				
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Reload Weapon:  "
+		text "@CONTROLS_RELOAD"
 		textfont		UI_FONT_BIG
 		cvar "+reload"
 		rect 82 45 290 12
@@ -695,7 +695,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Next Weapon:  "
+		text "@CONTROLS_NEXTWEAPON"
 		textfont		UI_FONT_BIG
 		cvar "weapnext"
 		rect 82 60 290 12
@@ -715,7 +715,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Previous Weapon:  "
+		text "@CONTROLS_PREVWEAPON"
 		textfont		UI_FONT_BIG
 		cvar "weapprev"
 		rect 82 75 290 12
@@ -736,7 +736,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Switch to Alternate:  "
+		text "@CONTROLS_SWITCHALT"
 		textfont		UI_FONT_BIG
 		cvar "weapalt"
 		rect 82 90 290 12
@@ -756,10 +756,10 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_MULTI
-		text "Autoswitch:  "
+		text "@CONTROLS_AUTOSWITCH"
 		textfont		UI_FONT_BIG
 		cvar "cg_autoswitch"
-		cvarFloatList { "Off" 0 "Always Switch" 1 "If New" 2 "If Better" 3 "New or Better" 4 "New and Better" 5 }
+		cvarFloatList { "@GENERAL_OFF" 0 "@CONTROLS_AUTOSWITCH_ALWAYS" 1 "@CONTROLS_AUTOSWITCH_IFNEW" 2 "@CONTROLS_AUTOSWITCH_IFBETTER" 3 "@CONTROLS_AUTOSWITCH_NEWORBETTER" 4 "@CONTROLS_AUTOSWITCH_NEWANDBETTER" 5 }
 		rect 82 105 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -775,7 +775,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Knife:  "
+		text "@CONTROLS_KNIFE"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 1"
 		rect 82 120 290 12
@@ -795,7 +795,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Pistols:  "
+		text "@CONTROLS_PISTOLS"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 2"
 		rect 82 135 290 12
@@ -815,7 +815,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Machineguns:  "
+		text "@CONTROLS_MACHINEGUNS"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 3"
 		rect 82 150 290 12
@@ -835,7 +835,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Rifles:  "
+		text "@CONTROLS_RIFLES"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 4"
 		rect 82 165 290 12
@@ -855,7 +855,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Assault Rifles:  "
+		text "@CONTROLS_ASSAULTRIFLES"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 5"
 		rect 82 180 290 12
@@ -875,7 +875,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Grenades:  "
+		text "@CONTROLS_GRENADES"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 6"
 		rect 82 195 290 12
@@ -895,7 +895,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Rockets:  "
+		text "@CONTROLS_ROCKETS"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 7"
 		rect 82 210 290 12
@@ -914,7 +914,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Venom:  "
+		text "@CONTROLS_VENOM"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 8"
 		rect 82 225 290 12
@@ -933,7 +933,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Flamethrower:  "
+		text "@CONTROLS_FLAMETHROWER"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 9"
 		rect 82 240 290 12
@@ -952,7 +952,7 @@ itemDef {
 		name shoot
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Tesla:  "
+		text "@CONTROLS_TESLA"
 		textfont		UI_FONT_BIG
 		cvar "weaponbank 10"
 		rect 82 255 290 12
@@ -979,7 +979,7 @@ itemDef {
 
 itemDef {
 	name ctr_miscellaneous
-	text "Misc"
+	text "@CONTROLS_MISC"
 		textfont		UI_FONT_BIG
 	type 1
 	textscale .23
@@ -1006,7 +1006,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Kill Player:  "
+		text "@CONTROLS_KILLPLAYER"
 		textfont		UI_FONT_BIG
 		cvar "kill"
 		rect 82 30 290 12
@@ -1026,7 +1026,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Kick:  "
+		text "@CONTROLS_KICK"
 		textfont		UI_FONT_BIG
 		cvar "+kick"
 		rect 82 45 290 12
@@ -1046,10 +1046,10 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_MULTI
-		text "Auto Item Pickup:  "
+		text "@CONTROLS_AUTOPICKUP"
 		textfont		UI_FONT_BIG
 		cvar "cg_autoactivate"
-		cvarFloatList		{ "No" 0 "Yes" 1 }
+		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 		rect 82 60 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -1067,7 +1067,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Activate:  "
+		text "@CONTROLS_ACTIVATE"
 		textfont		UI_FONT_BIG
 		cvar "+activate"
 		rect 82 75 290 12
@@ -1087,7 +1087,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Use Item:  "
+		text "@CONTROLS_USEITEM"
 		textfont		UI_FONT_BIG
 		cvar "+useitem"
 		rect 82 90 290 12
@@ -1107,7 +1107,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Next Item:  "
+		text "@CONTROLS_NEXTITEM"
 		textfont		UI_FONT_BIG
 		cvar "itemnext"
 		rect 82 105 290 12
@@ -1127,7 +1127,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Previous Item:  "
+		text "@CONTROLS_PREVITEM"
 		textfont		UI_FONT_BIG
 		cvar "itemprev"
 		rect 82 120 290 12
@@ -1147,7 +1147,7 @@ itemDef {
 		name			misc
 		group			grpControls
 		type			ITEM_TYPE_TEXT
-		text			"Cooperative"
+		text			"@CONTROLS_COOPERATIVE"
 		textfont		UI_FONT_BIG
 		textalign		ITEM_ALIGN_CENTER
 		textalignx		145
@@ -1167,7 +1167,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Drop Weapon:  "
+		text "@CONTROLS_DROPWEAPON"
 		textfont		UI_FONT_BIG
 		cvar "+dropweapon"
 		rect 82 165 290 12
@@ -1187,7 +1187,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Drop Ammo:  "
+		text "@CONTROLS_DROPAMMO"
 		textfont		UI_FONT_BIG
 		cvar "dropammo"
 		rect 82 180 290 12
@@ -1207,7 +1207,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Chat:  "
+		text "@CONTROLS_CHAT"
 		textfont		UI_FONT_BIG
 		cvar "messagemode"
 		rect 82 195 290 12
@@ -1227,7 +1227,7 @@ itemDef {
 		name misc 
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Quick Message:  "
+		text "@CONTROLS_QUICKMESSAGE"
 		textfont		UI_FONT_BIG
 		cvar "mp_quickmessage"
 		rect 82 210 290 12
@@ -1247,10 +1247,10 @@ itemDef {
 		name misc 
 		group grpControls
 		type ITEM_TYPE_MULTI
-		text "Quick Message Mode:  "
+		text "@CONTROLS_QUICKMESSAGEMODE"
 		textfont		UI_FONT_BIG
 		cvar "cg_quickMessageAlt"
-		cvarFloatList { "Alpha" 0 "Numeric" 1 }
+		cvarFloatList { "@CONTROLS_QUICKMSG_ALPHA" 0 "@CONTROLS_QUICKMSG_NUMERIC" 1 }
 		rect 82 225 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -1268,7 +1268,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Manual Save:  "
+		text "@CONTROLS_MANUALSAVE"
 		textfont		UI_FONT_BIG
 		cvar "spawnpoint"
 		rect 82 240 290 12
@@ -1288,7 +1288,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Vote Yes:  "
+		text "@CONTROLS_VOTEYES"
 		textfont		UI_FONT_BIG
 		cvar "vote yes"
 		rect 82 255 290 12
@@ -1308,7 +1308,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Vote No:  "
+		text "@CONTROLS_VOTENO"
 		textfont		UI_FONT_BIG
 		cvar "vote no"
 		rect 82 270 290 12
@@ -1328,7 +1328,7 @@ itemDef {
 		name misc
 		group grpControls
 		type ITEM_TYPE_BIND
-		text "Show Scoreboard:  "
+		text "@CONTROLS_SHOWSCOREBOARD"
 		textfont		UI_FONT_BIG
 		cvar "+scores"
 		rect 82 285 290 12
@@ -1351,7 +1351,7 @@ itemDef {
 itemDef {
       name yesno_message
       rect 0 310 300 15 
-	text "Select the Item to Toggle to Yes or No"   
+	text "@CONTROLS_MSG_TOGGLE"   
 		textfont		UI_FONT_BIG   
 	forecolor 1 .75 0 1
 	textscale .230
@@ -1365,7 +1365,7 @@ itemDef {
 itemDef {
       name slider_message
       rect 0 310 300 15 
-	text "Drag the Slider to Increase and Decrease" 
+	text "@CONTROLS_MSG_SLIDER" 
 		textfont		UI_FONT_BIG    
 	forecolor 1 .75 0 1
 	textscale .230

@@ -190,7 +190,7 @@ itemDef {
 */
 itemDef {
 	name "select a skil"
-	text "SELECT A SKILL LEVEL"
+	text "@PLAY_TITLE"
 	textscale .23
 	style 0	
 	type 1
@@ -233,7 +233,7 @@ itemDef {
 
 itemDef {
 	name wuss
-	text "Don't hurt me."
+	text "@PLAY_SKILL_EASY"
 	textscale .25
 	style 0	
 	type 1
@@ -256,7 +256,7 @@ itemDef {
 
 itemDef {
 	name "hurt me"
-	text "Bring'em on!"
+	text "@PLAY_SKILL_NORMAL"
 	textscale .25
 	style 0	
 	type 1
@@ -279,7 +279,7 @@ itemDef {
 
 itemDef {
 	name "hurt me plenty"
-	text "I am Death incarnate!"
+	text "@PLAY_SKILL_HARD"
 	textscale .25
 	style 0	
 	type 1
@@ -334,7 +334,7 @@ itemDef {
 
 itemDef {
       name back
-      text "BACK"
+      text "@GENERAL_BACK"
  	type 1
 	textfont UI_FONT_NORMAL
 	style 0	
@@ -352,7 +352,7 @@ itemDef {
 
 itemDef {
      name back_alt
-     text "BACK"
+     text "@GENERAL_BACK"
  	type 1
 	textfont UI_FONT_NORMAL
 	style 0	
@@ -382,7 +382,7 @@ itemDef {
 	textalignx 0
 	textaligny 25
 	textscale .23
-	text "EXIT TO MAIN MENU"
+	text "@GENERAL_MSG_BACK"
 	forecolor 1 1 1 1
 	decoration 
 	visible 0

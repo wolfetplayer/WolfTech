@@ -86,7 +86,7 @@ itemDef
 		itemDef {
 			name			refreshSource
 			group			grpJoin
-			text			"Get New List"
+			text			"@MULTI_GETNEWLIST"
 			type			ITEM_TYPE_BUTTON
 			textscale		.28
 			style			WINDOW_STYLE_FILLED	
@@ -113,7 +113,7 @@ itemDef
 		itemDef {
 			name			refreshFilter
 			group			grpJoin
-			text			"Refresh List"
+			text			"@MULTI_REFRESHLIST"
 			textscale		.28
 			style			WINDOW_STYLE_FILLED
 			textfont		UI_FONT_NORMAL
@@ -136,7 +136,7 @@ itemDef
 
 		itemDef {
 			name			serverinfo
-			text			"Server Info"
+			text			"@MULTI_SERVERINFO"
 			group			grpJoin
 			type			ITEM_TYPE_BUTTON
 			textfont		UI_FONT_NORMAL
@@ -179,7 +179,7 @@ itemDef
 			style			0
 			maxChars		16
 			maxpaintchars	16
-			text			"Name:"
+			text			"@MULTI_NAME_LABEL"
 			cvar			"name"
 			textscale		.25
 			textalign		ITEM_ALIGN_LEFT	
@@ -203,9 +203,9 @@ itemDef
 			textstyle		6
 			maxChars		16
 			maxpaintchars	16
-			text			"Downloads:"
+			text			"@MULTI_DOWNLOADS_LABEL"
 			cvar			"cl_allowDownload"
-			cvarFloatList	{ "No" 0 "Yes" 1 }
+			cvarFloatList	{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 			textscale		.25
 			textalign		ITEM_ALIGN_LEFT	
 			textalignx		0
@@ -227,7 +227,7 @@ itemDef
 			style			0
 			maxChars		32
 			maxpaintchars	32
-			text			"Password:"
+			text			"@MULTI_PASSWORD_LABEL"
 			cvar			"password"
 			textscale		.25
 			textalign		ITEM_ALIGN_LEFT	
@@ -275,9 +275,9 @@ itemDef
 			textstyle		6
 			maxChars		16
 			maxpaintchars	16
-			text			"Model:"
+			text			"@MULTI_MODEL_LABEL"
 			cvar			"skin"
-			cvarFloatList	{ "Yankee Soldier" 1 "Afro Soldier" 2 "Euro Soldier" 3 }
+			cvarFloatList	{ "@MULTI_MODEL_YANKEE" 1 "@MULTI_MODEL_AFRO" 2 "@MULTI_MODEL_EURO" 3 }
 			textscale		.25
 			textalign		ITEM_ALIGN_LEFT	
 			textalignx		0
@@ -292,7 +292,7 @@ itemDef
 			group			grpJoin
 			style			0	
 			textstyle		6
-			text			"Gametype:"
+			text			"@MULTI_GAMETYPE_LABEL"
 			ownerdraw		UI_JOINGAMETYPE
 			textfont		UI_FONT_NORMAL
 			rect			310 158 100 15
@@ -314,10 +314,10 @@ itemDef
 			style			0	
 			textstyle		6
 			type			ITEM_TYPE_MULTI
-			text			"View Empty:"
+			text			"@MULTI_VIEWEMPTY_LABEL"
 			textfont		UI_FONT_NORMAL
 			cvar			"ui_browserShowEmpty"
-			cvarFloatList		{ "No" 0 "Yes" 1 }
+			cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
 			rect			310 178 100 15
 			textalign		ITEM_ALIGN_LEFT
 			textalignx		0
@@ -531,7 +531,7 @@ itemDef
 		itemDef {
 			name server
 			group grpJoin
-			text "Server Name"
+			text "@MULTI_COL_SERVERNAME"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont	UI_FONT_NORMAL
@@ -552,7 +552,7 @@ itemDef
 			name map
 			group grpJoin
 			type ITEM_TYPE_BUTTON
-			text "Players, Map, Gametype"
+			text "@MULTI_COL_PLAYERSMAPGAMETYPE"
 			textscale .25
 			textfont	UI_FONT_NORMAL
 			style WINDOW_STYLE_FILLED	
@@ -571,7 +571,7 @@ itemDef
 		itemDef {
 			name Respawn 
 			group grpJoin
-			text "AI Respawns"
+			text "@MULTI_COL_AIRESPAWNS"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont	UI_FONT_NORMAL
@@ -591,7 +591,7 @@ itemDef
 		itemDef {
 			name Reinforce 
 			group grpJoin
-			text "AI Reinforce"
+			text "@MULTI_COL_AIREINFORCE"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont UI_FONT_NORMAL
@@ -611,7 +611,7 @@ itemDef
 		itemDef {
 			name Skill
 			group grpJoin
-			text "Skill"
+			text "@MULTI_COL_SKILL"
 			textfont	UI_FONT_NORMAL
 			textscale .25
 			type ITEM_TYPE_BUTTON
@@ -631,7 +631,7 @@ itemDef
 		itemDef {
 			name Ping
 			group grpJoin
-			text "Ping"
+			text "@MULTI_COL_PING"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont	UI_FONT_NORMAL
@@ -679,7 +679,7 @@ itemDef
 
 		itemDef {
 			name back
-			text "MAIN MENU"
+			text "@GENERAL_MAIN_MENU"
 			type 1
 			style 0	
 			textstyle 6
@@ -704,7 +704,7 @@ itemDef
 
 		itemDef {
 			name back_alt
-			text "MAIN MENU"
+			text "@GENERAL_MAIN_MENU"
 			type 1
 			style 0	
 			textstyle 6
@@ -731,7 +731,7 @@ itemDef
 
 		itemDef {
 			name connect
-			text "CONNECT"
+			text "@MULTI_CONNECT"
 			group grpJoin
 			type 1
 			textfont	UI_FONT_NORMAL
@@ -762,7 +762,7 @@ itemDef
 
 		itemDef {
 			name connect_alt
-			text "CONNECT"
+			text "@MULTI_CONNECT"
 			group grpJoin
 			type 1
 			style 0	
@@ -822,7 +822,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Exit to Main Menu"
+			text "@MULTI_MSG_EXIT"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -839,7 +839,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Connect to the Selected Server"
+			text "@MULTI_MSG_CONNECT"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -855,7 +855,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Set Source"
+			text "@MULTI_MSG_SOURCE"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -872,7 +872,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Set to Filter for Specific Game Mods"
+			text "@MULTI_MSG_FILTERMODS"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -888,7 +888,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Set to Filter for Specific Game Types"
+			text "@MULTI_MSG_FILTERTYPES"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -905,7 +905,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Sort Column"
+			text "@MULTI_MSG_SORTCOLUMN"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -921,7 +921,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Get Updated Server List from Current Source"
+			text "@MULTI_MSG_GETLIST"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -937,7 +937,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Refresh All Currently Filtered Servers"
+			text "@MULTI_MSG_REFRESHALL"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -953,7 +953,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Add Selected Server to Favorites"
+			text "@MULTI_MSG_ADDFAVORITE"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -969,7 +969,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Delete Selected Server from Favorites"
+			text "@MULTI_MSG_DELFAVORITE"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -985,7 +985,7 @@ itemDef {
 			textaligny 25
 			textscale .255
 			textfont	UI_FONT_NORMAL
-			text "Enter IP Address of Favorite Server"
+			text "@MULTI_MSG_ENTERIP"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -1000,7 +1000,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Enter Four Letter Filter and Description"
+			text "@MULTI_MSG_ENTERFILTER"
 			textfont	UI_FONT_NORMAL
 			forecolor 1 1 1 1
 			decoration 
@@ -1017,7 +1017,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Enter Password for Protected Servers"
+			text "@MULTI_MSG_ENTERPASSWORD"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -1034,7 +1034,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Display Server Information"
+			text "@MULTI_MSG_DISPLAYINFO"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -1051,7 +1051,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Search Current Server List for Friends"
+			text "@MULTI_MSG_SEARCHFRIENDS"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -1068,7 +1068,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Allow downloads from the server"
+			text "@MULTI_MSG_ALLOWDOWNLOADS"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -1085,7 +1085,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Set your player name"
+			text "@MULTI_MSG_SETNAME"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -1102,7 +1102,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Set your player model"
+			text "@MULTI_MSG_SETMODEL"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0
@@ -1119,7 +1119,7 @@ itemDef {
 			textalignx 0
 			textaligny 25
 			textscale .255
-			text "Show empty servers"
+			text "@MULTI_MSG_SHOWEMPTY"
 			forecolor 1 1 1 1
 			decoration 
 			visible 0

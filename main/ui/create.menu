@@ -316,7 +316,7 @@ itemDef
 					textfont		UI_FONT_NORMAL
 					text			"@CREATE_DOWNLOADS"
 					cvar			"sv_allowDownload"
-					cvarFloatList	{ "Off" 0 "On" 1 }
+					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
 					rect			295 220 290 12
 				//	origin			ORIGIN_WINDOW1
 					style			WINDOW_STYLE_FILLED
@@ -338,7 +338,7 @@ itemDef
 					textfont		UI_FONT_NORMAL
 					text			"@CREATE_PURESERVER"
 					cvar			"sv_pure"
-					cvarFloatList	{ "Off" 0 "On" 1 }
+					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
 					rect			295 235 290 12
 				//	origin			ORIGIN_WINDOW1
 					style			WINDOW_STYLE_FILLED
@@ -358,7 +358,7 @@ itemDef
 				itemDef {
 					name			window
 					group			grpCreate
-					text			"Player Options"
+					text			"@CREATE_PLAYEROPTIONS"
 					textfont		UI_FONT_NORMAL
 					textalign		ITEM_ALIGN_CENTER
 					textalignx		145
@@ -379,9 +379,9 @@ itemDef
 					group			grpCreate
 					type			ITEM_TYPE_MULTI
 					textfont		UI_FONT_NORMAL
-					text			"Friendly Fire:  "
+					text			"@CREATE_FRIENDLYFIRE"
 					cvar			"g_friendlyFire"
-					cvarFloatList	{ "Off" 0 "On" 1 "On + Health Penalty" 2 }
+					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 "@GENERAL_ONANDHEALTH" 2 }
 					rect			295 340 290 12
 				//	origin			ORIGIN_WINDOW1
 					style			WINDOW_STYLE_FILLED
@@ -401,9 +401,9 @@ itemDef
 					group			grpCreate
 					type			ITEM_TYPE_MULTI	
 					textfont		UI_FONT_NORMAL
-					text			"Shared Lives:  "
+					text			"@CREATE_SHAREDLIVES"
 					cvar			"g_sharedlives"
-					cvarFloatList	{ "yes (no bonus life!)" 1 "no" 0 }
+					cvarFloatList	{ "@CREATE_SHAREDLIVES_YES" 1 "@CREATE_SHAREDLIVES_NO" 0 }
 					rect			295 370 290 12
 				//	origin			ORIGIN_WINDOW2
 					style			WINDOW_STYLE_FILLED
@@ -507,7 +507,7 @@ itemDef
 
 		itemDef {
 			name back
-			text "MAIN MENU"
+			text "@GENERAL_MAIN_MENU"
 			type 1
 			style 0	
 			textstyle 6
@@ -532,7 +532,7 @@ itemDef
 
 		itemDef {
 			name back_alt
-			text "MAIN MENU"
+			text "@GENERAL_MAIN_MENU"
 			type 1
 			style 0	
 			textstyle 6
@@ -572,7 +572,7 @@ itemDef {
 	textaligny 25
 	textfont UI_FONT_NORMAL
 	textscale .255
-	text "Selection Isn't Implemented"
+	text "@GENERAL_MSG_NOWORK"
 	forecolor 1 1 1 1
 	decoration 
 	visible 0
@@ -604,7 +604,7 @@ itemDef {
 				textalignx 0
 				textaligny 25
 				textscale .25
-				text "Set GameType"
+				text "@CREATE_MSG_GAMETYPE"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -622,7 +622,7 @@ itemDef {
 				textalignx 0
 				textaligny 25
 				textscale .25
-				text "Select a Skill Level"
+				text "@CREATE_MSG_SKILL"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -640,7 +640,7 @@ itemDef {
 				textalignx 0
 				textaligny 25
 				textscale .25
-				text "Choose Your Map"
+				text "@CREATE_MSG_ARENA"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -658,7 +658,7 @@ itemDef {
 				textalignx 0
 				textaligny 25
 				textscale .25
-				text "Click to toggle through clan list"
+				text "@CREATE_MSG_CLAN"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -675,7 +675,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "What Happens if You Shoot Your Friends?"
+				text "@CREATE_MSG_FRIENDLYFIRE"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -692,7 +692,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "If set to Internet, Server is Broadcast over the Internet"
+				text "@CREATE_MSG_DEDICATED"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -709,7 +709,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Name of the Server"
+				text "@CREATE_MSG_HOSTNAME"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -726,7 +726,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "How Many Players can join the Server"
+				text "@CREATE_MSG_MAXPLAYERS"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -743,7 +743,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Select the Game Mode for the Server"
+				text "@CREATE_MSG_GAME_TYPE"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -760,7 +760,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Only Those With the Proper Password Can Connect"
+				text "@CREATE_MSG_REQUIRE_PASSWORD"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -777,7 +777,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Set the Password Needed to Connect to the Server"
+				text "@CREATE_MSG_PASSWORD"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -794,7 +794,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Number of Deployments. 0 = unlimited"
+				text "@CREATE_MSG_MAXLIVES"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -811,7 +811,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Start your Server!"
+				text "@CREATE_MSG_START"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -828,7 +828,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Do you want to watch the ingame cutscenes?"
+				text "@CREATE_MSG_CUTSCENES"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -845,7 +845,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Yes: The Lives will be Shared Between the Team Members"
+				text "@CREATE_MSG_COMMONLIVES"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -862,7 +862,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Choose a Respawn-system for your team!"
+				text "@CREATE_MSG_SPAWNPOINTS"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -879,7 +879,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Number of Droppable Spawnpoints on each map [ 0 = unlimited ]"
+				text "@CREATE_MSG_MAXSPAWNPOINTS"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -896,7 +896,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Do you want the AI to respawn after they die?"
+				text "@CREATE_MSG_AIRESPAWN"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -913,7 +913,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "With how many enemies do you want to meet?"
+				text "@CREATE_MSG_REINFORCE"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -930,7 +930,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Original enemies with Easy skill"
+				text "@CREATE_MSG_SKILLEASY"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -947,7 +947,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "More enemies with Normal skill"
+				text "@CREATE_MSG_SKILLNORMAL"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -965,7 +965,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Maximum enemies with Hard skill"
+				text "@CREATE_MSG_SKILLHARD"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -983,7 +983,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Maximum enemies with Hard skill, enemy Respawns!"
+				text "@CREATE_MSG_SKILLNIGHTMARE"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -1001,7 +1001,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Allow downloading files from the server"
+				text "@CREATE_MSG_DOWNLOAD"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
@@ -1018,7 +1018,7 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "Only allow use of pk3 files that are on server"
+				text "@CREATE_MSG_PURE"
 				forecolor 1 1 1 1
 				decoration 
 				visible 0
