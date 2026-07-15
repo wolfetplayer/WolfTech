@@ -3075,7 +3075,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	// weapons that don't need to go any further as they have no flash or light
 	if (!GetWeaponTableData(weaponNum)->hasMuzzle)
 	{
-		return;
+		flash.hModel = 0;
 	}
 
 	// weaps with barrel smoke
