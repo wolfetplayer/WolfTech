@@ -674,6 +674,8 @@ typedef struct ammotable_s {
 
 	int fireModeSwitchTime; // 0 = no selectable fire modes; otherwise ms for each of the drop/raise phases of the switch
 	qboolean fireModeIsRateSwitch; // qtrue: selector swaps nextShotTime/nextShotTime2 (e.g. BAR) instead of enforcing semi-auto
+
+	const char *weapFile;   // cgame-only cosmetic media (models/sounds/icons) filename under weapons/, NULL = use legacy hardcoded registration
 } ammotable_t;
 
 // weaponFireMode[] selector positions

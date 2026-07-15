@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "cg_local.h"
+#include "../ui/ui_shared.h"    // PC_Int_Parse / PC_Float_Parse / PC_String_Parse
 
 int wolfkickModel;
 int hWeaponSnd;
@@ -1041,6 +1042,521 @@ static qboolean CG_ParseWeaponConfig( const char *filename, weaponInfo_t *wi, in
 
 
 /*
+======================================================================
+.weap cosmetic media loader (cgame-only)
+
+Loads weapons/<name>.weap for weapons that have ammoTable[].weapFile set.
+Only ever writes into weaponInfo_t (models/sounds/icons/eject-brass/dlight
+color) - never touches ammoTable or anything read by game/bg_pmove.c, so a
+missing or hand-edited .weap file can only break this client's own
+rendering, never hit registration, damage, or ammo counts.
+======================================================================
+*/
+
+typedef struct {
+	char tpModel[MAX_QPATH];
+	char tpFlashModel[MAX_QPATH];
+	char fpModel[MAX_QPATH];
+	char fpFlashModel[MAX_QPATH];
+	char fpParts[W_MAX_PARTS][MAX_QPATH];  // first-person barrel/part models - WolfTech attaches these to fixed "tag_barrel"/"tag_barrelN" tags by index, third person parts aren't rendered for non-Venom weapons
+	char sktpModel[MAX_QPATH];
+	char sktpFlashModel[MAX_QPATH];
+	char configPath[MAX_QPATH];            // optional explicit weapon.cfg path; falls back to "<firstPersonModel dir>weapon.cfg" if unset
+	char handsModel[MAX_QPATH];
+	char standModel[MAX_QPATH];
+	char weaponIcon[MAX_QPATH];
+	char weaponSelectedIcon[MAX_QPATH];
+	char ammoIcon[MAX_QPATH];
+} weapFileClient_t;
+
+/*
+======================
+CG_WeapEjectBrassFuncForName
+======================
+*/
+static void ( *CG_WeapEjectBrassFuncForName( const char *name ) )( centity_t * ) {
+	if ( !Q_stricmp( name, "PistolEjectBrass" ) ) {
+		return CG_PistolEjectBrass;
+	}
+	if ( !Q_stricmp( name, "RifleEjectBrass" ) ) {
+		return CG_RifleEjectBrass;
+	}
+	if ( !Q_stricmp( name, "PanzerFaustEjectBrass" ) ) {
+		return CG_PanzerFaustEjectBrass;
+	}
+	if ( !Q_stricmp( name, "NailgunEjectBrass" ) ) {
+		return CG_NailgunEjectBrass;
+	}
+	return NULL;
+}
+
+/*
+======================
+CG_WeapParseError
+======================
+*/
+static void CG_WeapParseError( int handle, const char *filename, const char *format, ... ) {
+	va_list argptr;
+	char string[1024];
+
+	va_start( argptr, format );
+	Q_vsnprintf( string, sizeof( string ), format, argptr );
+	va_end( argptr );
+
+	CG_Printf( S_COLOR_RED "ERROR: %s: %s\n", filename, string );
+
+	trap_PC_FreeSource( handle );
+}
+
+/*
+======================
+CG_WeapAppendSound
+
+Fills the next free slot of a 4-entry random-variant sound array
+(flashSound/flashEchoSound/lastShotSound/switchSound).
+======================
+*/
+static void CG_WeapAppendSound( sfxHandle_t sounds[4], const char *filename ) {
+	int i;
+
+	for ( i = 0; i < 4; i++ ) {
+		if ( !sounds[i] ) {
+			sounds[i] = trap_S_RegisterSound( filename );
+			return;
+		}
+	}
+	CG_Printf( S_COLOR_YELLOW "WARNING: only up to 4 sounds supported per weapon sound slot (%s)\n", filename );
+}
+
+/*
+======================
+CG_RW_ParseWeaponLinkPart
+
+Parses "part <index> { tag "<name>" model "<path>" }" inside a weaponLink
+block. WolfTech's renderer attaches parts to fixed tag names by index
+("tag_barrel", "tag_barrel2", ...), not an arbitrary tag string - "tag" is
+accepted (so existing RealRTCW-style .weap assets drop in unmodified) but
+only the part index and model actually matter.
+======================
+*/
+static qboolean CG_RW_ParseWeaponLinkPart( int handle, const char *filename, weapFileClient_t *c ) {
+	pc_token_t token;
+	int part;
+	const char *s;
+
+	if ( !PC_Int_Parse( handle, &part ) ) {
+		CG_WeapParseError( handle, filename, "expected part index" );
+		return qfalse;
+	}
+	if ( part < 0 || part >= W_MAX_PARTS ) {
+		CG_WeapParseError( handle, filename, "part index %d out of bounds", part );
+		return qfalse;
+	}
+
+	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "{" ) ) {
+		CG_WeapParseError( handle, filename, "expected '{'" );
+		return qfalse;
+	}
+
+	while ( 1 ) {
+		if ( !trap_PC_ReadToken( handle, &token ) ) {
+			break;
+		}
+		if ( token.string[0] == '}' ) {
+			break;
+		}
+		if ( !Q_stricmp( token.string, "tag" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected tag name" ); return qfalse; }
+		} else if ( !Q_stricmp( token.string, "model" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected part model filename" ); return qfalse; }
+			Q_strncpyz( c->fpParts[part], s, sizeof( c->fpParts[part] ) );
+		} else {
+			CG_WeapParseError( handle, filename, "unknown token '%s'", token.string );
+			return qfalse;
+		}
+	}
+
+	return qtrue;
+}
+
+/*
+======================
+CG_RW_ParseWeaponLink
+
+Parses "weaponLink { part N { ... } part N { ... } ... }".
+======================
+*/
+static qboolean CG_RW_ParseWeaponLink( int handle, const char *filename, weapFileClient_t *c ) {
+	pc_token_t token;
+
+	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "{" ) ) {
+		CG_WeapParseError( handle, filename, "expected '{'" );
+		return qfalse;
+	}
+
+	while ( 1 ) {
+		if ( !trap_PC_ReadToken( handle, &token ) ) {
+			break;
+		}
+		if ( token.string[0] == '}' ) {
+			break;
+		}
+		if ( !Q_stricmp( token.string, "part" ) ) {
+			if ( !CG_RW_ParseWeaponLinkPart( handle, filename, c ) ) {
+				return qfalse;
+			}
+		} else {
+			CG_WeapParseError( handle, filename, "unknown token '%s'", token.string );
+			return qfalse;
+		}
+	}
+
+	return qtrue;
+}
+
+/*
+======================
+CG_RW_ParseViewType
+
+Parses "{ model "..." flashModel "..." [weaponLink {...}] }" for the
+firstPerson/thirdPerson/skeletalThirdPerson blocks. weaponLink is only
+meaningful (and only accepted) for firstPerson - WolfTech's renderer never
+reads third-person part slots for anything but WP_VENOM's hardcoded case.
+======================
+*/
+static qboolean CG_RW_ParseViewType( int handle, const char *filename, weapFileClient_t *c, char *modelPath, char *flashModelPath, size_t pathSize, qboolean allowWeaponLink ) {
+	pc_token_t token;
+	const char *s;
+
+	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "{" ) ) {
+		CG_WeapParseError( handle, filename, "expected '{'" );
+		return qfalse;
+	}
+
+	while ( 1 ) {
+		if ( !trap_PC_ReadToken( handle, &token ) ) {
+			break;
+		}
+		if ( token.string[0] == '}' ) {
+			break;
+		}
+		if ( !Q_stricmp( token.string, "model" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected model filename" ); return qfalse; }
+			Q_strncpyz( modelPath, s, pathSize );
+		} else if ( !Q_stricmp( token.string, "flashModel" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected flashModel filename" ); return qfalse; }
+			Q_strncpyz( flashModelPath, s, pathSize );
+		} else if ( allowWeaponLink && !Q_stricmp( token.string, "weaponLink" ) ) {
+			if ( !CG_RW_ParseWeaponLink( handle, filename, c ) ) {
+				return qfalse;
+			}
+		} else {
+			CG_WeapParseError( handle, filename, "unknown token '%s'", token.string );
+			return qfalse;
+		}
+	}
+
+	return qtrue;
+}
+
+/*
+======================
+CG_RW_ParseClient
+
+Parses the "client { ... }" block of a .weap file.
+======================
+*/
+static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_t *wi, weapFileClient_t *c ) {
+	pc_token_t token;
+	const char *s;
+
+	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "{" ) ) {
+		CG_WeapParseError( handle, filename, "expected '{'" );
+		return qfalse;
+	}
+
+	while ( 1 ) {
+		if ( !trap_PC_ReadToken( handle, &token ) ) {
+			break;
+		}
+		if ( token.string[0] == '}' ) {
+			break;
+		}
+
+		if ( !Q_stricmp( token.string, "firstPerson" ) ) {
+			if ( !CG_RW_ParseViewType( handle, filename, c, c->fpModel, c->fpFlashModel, sizeof( c->fpModel ), qtrue ) ) {
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "thirdPerson" ) ) {
+			if ( !CG_RW_ParseViewType( handle, filename, c, c->tpModel, c->tpFlashModel, sizeof( c->tpModel ), qfalse ) ) {
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "skeletalThirdPerson" ) ) {
+			if ( !CG_RW_ParseViewType( handle, filename, c, c->sktpModel, c->sktpFlashModel, sizeof( c->sktpModel ), qfalse ) ) {
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "weaponConfig" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected weaponConfig filename" ); return qfalse; }
+			Q_strncpyz( c->configPath, s, sizeof( c->configPath ) );
+		} else if ( !Q_stricmp( token.string, "handsModel" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected handsModel filename" ); return qfalse; }
+			Q_strncpyz( c->handsModel, s, sizeof( c->handsModel ) );
+		} else if ( !Q_stricmp( token.string, "standModel" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected standModel filename" ); return qfalse; }
+			Q_strncpyz( c->standModel, s, sizeof( c->standModel ) );
+		} else if ( !Q_stricmp( token.string, "weaponIcon" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected weaponIcon filename" ); return qfalse; }
+			Q_strncpyz( c->weaponIcon, s, sizeof( c->weaponIcon ) );
+		} else if ( !Q_stricmp( token.string, "weaponSelectedIcon" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected weaponSelectedIcon filename" ); return qfalse; }
+			Q_strncpyz( c->weaponSelectedIcon, s, sizeof( c->weaponSelectedIcon ) );
+		} else if ( !Q_stricmp( token.string, "ammoIcon" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected ammoIcon filename" ); return qfalse; }
+			Q_strncpyz( c->ammoIcon, s, sizeof( c->ammoIcon ) );
+		} else if ( !Q_stricmp( token.string, "flashDlightColor" ) ) {
+			if ( !PC_Float_Parse( handle, &wi->flashDlightColor[0] ) ||
+				 !PC_Float_Parse( handle, &wi->flashDlightColor[1] ) ||
+				 !PC_Float_Parse( handle, &wi->flashDlightColor[2] ) ) {
+				CG_WeapParseError( handle, filename, "expected flashDlightColor as r g b" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "flashSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected flashSound filename" ); return qfalse; }
+			CG_WeapAppendSound( wi->flashSound, s );
+		} else if ( !Q_stricmp( token.string, "flashEchoSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected flashEchoSound filename" ); return qfalse; }
+			CG_WeapAppendSound( wi->flashEchoSound, s );
+		} else if ( !Q_stricmp( token.string, "lastShotSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected lastShotSound filename" ); return qfalse; }
+			CG_WeapAppendSound( wi->lastShotSound, s );
+		} else if ( !Q_stricmp( token.string, "switchSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected switchSound filename" ); return qfalse; }
+			CG_WeapAppendSound( wi->switchSound, s );
+		} else if ( !Q_stricmp( token.string, "reloadSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected reloadSound filename" ); return qfalse; }
+			wi->reloadSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "reloadSoundFast" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected reloadSoundFast filename" ); return qfalse; }
+			wi->reloadSoundFast = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "reloadFullSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected reloadFullSound filename" ); return qfalse; }
+			wi->reloadFullSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "reloadFullSoundFast" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected reloadFullSoundFast filename" ); return qfalse; }
+			wi->reloadFullSoundFast = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "reloadSoundAi" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected reloadSoundAi filename" ); return qfalse; }
+			wi->reloadSoundAi = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "ejectBrassFunc" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected ejectBrassFunc name" ); return qfalse; }
+			wi->ejectBrassFunc = CG_WeapEjectBrassFuncForName( s );
+			if ( !wi->ejectBrassFunc ) {
+				CG_WeapParseError( handle, filename, "unknown ejectBrassFunc '%s'", s );
+				return qfalse;
+			}
+		} else {
+			CG_WeapParseError( handle, filename, "unknown token '%s'", token.string );
+			return qfalse;
+		}
+	}
+
+	return qtrue;
+}
+
+/*
+======================
+CG_RegisterWeaponFromFile
+
+Cgame-only cosmetic registration for weapons with ammoTable[].weapFile set.
+Loads weapons/<weapFile>, expecting "weaponDef { client { ... } }". Model-path
+suffix conventions (_flash.md3/_hand.md3/_stand.md3) and the weapon.cfg
+animation loader are the same conventions the legacy switch-driven path below
+uses, just fed from parsed paths instead of bg_itemlist. The venom belt-spin
+part and the sniper scope modModel aren't implemented yet - add them when a
+weapon that needs them migrates to .weap.
+======================
+*/
+static qboolean CG_RegisterWeaponFromFile( int weaponNum, weaponInfo_t *weaponInfo ) {
+	pc_token_t       token;
+	int              handle;
+	char             filename[MAX_QPATH];
+	char             path[MAX_QPATH];
+	weapFileClient_t c;
+	vec3_t           mins, maxs;
+	int              i;
+	gitem_t          *ammo;
+
+	Com_Memset( &c, 0, sizeof( c ) );
+
+	Com_sprintf( filename, sizeof( filename ), "weapons/%s", GetWeaponTableData( weaponNum )->weapFile );
+
+	handle = trap_PC_LoadSource( filename );
+	if ( !handle ) {
+		CG_Printf( S_COLOR_RED "WARNING: failed to load %s\n", filename );
+		return qfalse;
+	}
+
+	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "weaponDef" ) ) {
+		CG_WeapParseError( handle, filename, "expected 'weaponDef'" );
+		return qfalse;
+	}
+	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "{" ) ) {
+		CG_WeapParseError( handle, filename, "expected '{'" );
+		return qfalse;
+	}
+
+	while ( 1 ) {
+		if ( !trap_PC_ReadToken( handle, &token ) ) {
+			break;
+		}
+		if ( token.string[0] == '}' ) {
+			break;
+		}
+		if ( !Q_stricmp( token.string, "client" ) ) {
+			if ( !CG_RW_ParseClient( handle, filename, weaponInfo, &c ) ) {
+				return qfalse;
+			}
+		} else {
+			CG_WeapParseError( handle, filename, "unknown token '%s'", token.string );
+			return qfalse;
+		}
+	}
+
+	trap_PC_FreeSource( handle );
+
+	if ( !c.fpModel[0] || !c.tpModel[0] ) {
+		CG_Printf( S_COLOR_RED "WARNING: %s missing firstPersonModel/thirdPersonModel\n", filename );
+		return qfalse;
+	}
+
+	weaponInfo->weaponModel[W_TP_MODEL] = trap_R_RegisterModel( c.tpModel );
+	weaponInfo->weaponModel[W_FP_MODEL] = trap_R_RegisterModel( c.fpModel );
+	if ( c.sktpModel[0] ) {
+		weaponInfo->weaponModel[W_SKTP_MODEL] = trap_R_RegisterModel( c.sktpModel );
+	}
+
+	if ( !weaponInfo->weaponModel[W_FP_MODEL] || !cg_drawFPGun.integer ) {
+		weaponInfo->weaponModel[W_FP_MODEL] = weaponInfo->weaponModel[W_TP_MODEL];
+	}
+
+	if ( !weaponInfo->weaponModel[W_TP_MODEL] ) {
+		return qfalse;
+	}
+
+	// weapon.cfg animation frames - explicit path if given, else the same convention-based lookup as the legacy path
+	if ( c.configPath[0] ) {
+		Q_strncpyz( path, c.configPath, sizeof( path ) );
+	} else {
+		COM_StripFilename( c.fpModel, path );
+		Q_strcat( path, sizeof( path ), "weapon.cfg" );
+	}
+	if ( !CG_ParseWeaponConfig( path, weaponInfo, weaponNum ) ) {
+		CG_Error( "Couldn't register weapon %i (%s) (failed to parse weapon.cfg)", weaponNum, path );
+	}
+
+	trap_R_ModelBounds( weaponInfo->weaponModel[W_TP_MODEL], mins, maxs );
+	for ( i = 0 ; i < 3 ; i++ ) {
+		weaponInfo->weaponMidpoint[i] = mins[i] + 0.5 * ( maxs[i] - mins[i] );
+	}
+
+	// muzzle flash model - explicit path if given, else the same "_flash.md3" suffix convention as the legacy path, per view type
+	if ( c.tpFlashModel[0] ) {
+		weaponInfo->flashModel[W_TP_MODEL] = trap_R_RegisterModel( c.tpFlashModel );
+	} else {
+		COM_StripExtension( c.tpModel, path, sizeof( path ) );
+		Q_strcat( path, sizeof( path ), "_flash.md3" );
+		weaponInfo->flashModel[W_TP_MODEL] = trap_R_RegisterModel( path );
+	}
+
+	if ( c.fpFlashModel[0] ) {
+		weaponInfo->flashModel[W_FP_MODEL] = trap_R_RegisterModel( c.fpFlashModel );
+	} else {
+		COM_StripExtension( c.fpModel, path, sizeof( path ) );
+		Q_strcat( path, sizeof( path ), "_flash.md3" );
+		weaponInfo->flashModel[W_FP_MODEL] = trap_R_RegisterModel( path );
+	}
+
+	if ( c.sktpModel[0] ) {
+		if ( c.sktpFlashModel[0] ) {
+			weaponInfo->flashModel[W_SKTP_MODEL] = trap_R_RegisterModel( c.sktpFlashModel );
+		} else {
+			COM_StripExtension( c.sktpModel, path, sizeof( path ) );
+			Q_strcat( path, sizeof( path ), "_flash.md3" );
+			weaponInfo->flashModel[W_SKTP_MODEL] = trap_R_RegisterModel( path );
+		}
+	}
+
+	// first-person barrel/part models (e.g. bolt/receiver pieces) - attached at render time to fixed
+	// "tag_barrel"/"tag_barrelN" tags by index (see CG_AddPlayerWeapon), never read for third person
+	// except WP_VENOM's hardcoded belt, so only W_FP_MODEL is populated here
+	for ( i = 0; i < W_MAX_PARTS; i++ ) {
+		if ( c.fpParts[i][0] ) {
+			weaponInfo->wpPartModels[W_FP_MODEL][i] = trap_R_RegisterModel( c.fpParts[i] );
+		}
+	}
+
+	// hands model
+	if ( c.handsModel[0] ) {
+		weaponInfo->handsModel = trap_R_RegisterModel( c.handsModel );
+	} else {
+		COM_StripExtension( c.fpModel, path, sizeof( path ) );
+		Q_strcat( path, sizeof( path ), "_hand.md3" );
+		weaponInfo->handsModel = trap_R_RegisterModel( path );
+	}
+	if ( !weaponInfo->handsModel ) {
+		weaponInfo->handsModel = trap_R_RegisterModel( "models/weapons2/shotgun/shotgun_hand.md3" );
+	}
+
+	// pickup 'stand' model
+	if ( c.standModel[0] ) {
+		weaponInfo->standModel = trap_R_RegisterModel( c.standModel );
+	} else {
+		COM_StripExtension( c.tpModel, path, sizeof( path ) );
+		Q_strcat( path, sizeof( path ), "_stand.md3" );
+		weaponInfo->standModel = trap_R_RegisterModel( path );
+	}
+
+	// icons
+	if ( c.weaponIcon[0] ) {
+		weaponInfo->weaponIcon[0] = trap_R_RegisterShader( c.weaponIcon );
+		weaponInfo->weaponIcon[1] = c.weaponSelectedIcon[0] ?
+			trap_R_RegisterShader( c.weaponSelectedIcon ) :
+			trap_R_RegisterShader( va( "%s_select", c.weaponIcon ) );
+	}
+	if ( c.ammoIcon[0] ) {
+		weaponInfo->ammoIcon = trap_R_RegisterShader( c.ammoIcon );
+	}
+
+	// ammo pickup model - not weapon-specific cosmetic data, still sourced from the shared ammo item's bg_itemlist entry
+	for ( ammo = bg_itemlist + 1 ; ammo->classname ; ammo++ ) {
+		if ( ammo->giType == IT_AMMO && ammo->giTag == BG_FindAmmoForWeapon( weaponNum ) ) {
+			break;
+		}
+	}
+	if ( ammo->classname && ammo->world_model[0] ) {
+		weaponInfo->ammoModel = trap_R_RegisterModel( ammo->world_model[0] );
+	}
+
+	// default fast/full/AI reload sounds to the base reload sound when no distinct asset is registered
+	// (mirrors the fallback at the end of the legacy switch-driven path in CG_RegisterWeapon)
+	if ( !weaponInfo->reloadSoundFast ) {
+		weaponInfo->reloadSoundFast = weaponInfo->reloadSound;
+	}
+	if ( !weaponInfo->reloadFullSound ) {
+		weaponInfo->reloadFullSound = weaponInfo->reloadSound;
+	}
+	if ( !weaponInfo->reloadFullSoundFast ) {
+		weaponInfo->reloadFullSoundFast = weaponInfo->reloadSoundFast;
+	}
+	if ( !weaponInfo->reloadSoundAi ) {
+		weaponInfo->reloadSoundAi = weaponInfo->reloadSound;
+	}
+
+	return qtrue;
+}
+
+
+/*
 =================
 CG_RegisterWeapon
 
@@ -1091,6 +1607,13 @@ void CG_RegisterWeapon( int weaponNum ) {
 	}
 
 	CG_RegisterItemVisuals( item - bg_itemlist );
+
+	if ( GetWeaponTableData( weaponNum )->weapFile ) {
+		if ( !CG_RegisterWeaponFromFile( weaponNum, weaponInfo ) ) {
+			CG_Printf( S_COLOR_RED "WARNING: failed to register weapon %i from %s, cosmetics may be missing\n", weaponNum, GetWeaponTableData( weaponNum )->weapFile );
+		}
+		return;
+	}
 
 	// load cmodel before model so filecache works
 
@@ -1273,19 +1796,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->switchSound[0] = trap_S_RegisterSound( "sound/weapons/knife/knife_ready.wav" );
 		break;
 
-	case WP_LUGER:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/luger/luger_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/luger/luger_far.wav" ); 
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload.wav" );
-		weaponInfo->reloadFullSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_full.wav" );
-		weaponInfo->reloadFullSoundFast = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_full_fast.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/luger/luger_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/pistol_reload.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
-		break;
-
-	case WP_SILENCER:   
+	case WP_SILENCER:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/luger/silencer_fire.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/luger/luger_reload.wav" );
@@ -1363,16 +1874,6 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/thompson/thompson_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload.wav" );
 		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/thompson/thompson_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
-		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
-		break;
-
-	case WP_MP40:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40_fire.wav" );
-		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mp40/mp40_far.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mp40/mp40_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mp40/mp40_reload_fast.wav" );
 		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/smg_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_PistolEjectBrass;
 		break;

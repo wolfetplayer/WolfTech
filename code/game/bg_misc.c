@@ -160,6 +160,7 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, 0.0f },
+		.weapFile           = "luger.weap",
     },
     [WP_SILENCER] = {
 		.weaponindex        = WP_SILENCER,
@@ -281,6 +282,7 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
 		.gunOffset          = { -3.0f, 2.0f, 0.0f },
+		.weapFile           = "mp40.weap",
     },
     [WP_THOMPSON] = {
 		.weaponindex        = WP_THOMPSON,		
