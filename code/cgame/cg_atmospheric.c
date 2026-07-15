@@ -63,15 +63,9 @@ typedef struct cg_atmosphericEffect_s {
   	qboolean (*ParticleCheckVisible)( cg_atmosphericParticle_t *particle );
   	qboolean (*ParticleGenerate)( cg_atmosphericParticle_t *particle, vec3_t currvec, float currweight );
   	void (*ParticleRender)( cg_atmosphericParticle_t *particle );
-
-	qboolean		skyOverMe;
-	float		nearDist2;
 } cg_atmosphericEffect_t;
 
 static cg_atmosphericEffect_t cg_atmFx;
-
-static sfxHandle_t rainSFX;
-static sfxHandle_t rainSFXindoor;
 
 /*
 **  Render utility functions
@@ -283,7 +277,7 @@ tr.endpos[2] = testpoint[2] + random() * (min(tr.endpos[2] - testpoint[2], RAIN_
 static void CG_RainParticleRender( cg_atmosphericParticle_t *particle )
 {
   	// Draw a raindrop
-	vec3_t  	  	forward, right, orgW;
+	vec3_t  	  	forward, right;
   	vec2_t  	  	line;
 	float  	  		len, frac;
   	vec3_t  	  	start, finish;
@@ -328,17 +322,6 @@ start[2] = particle->minz;	/// FIXED: не допускать ухода бры�
 						CG_EffectMark(cg_atmFx.effectsplashshader, start, particle->surfacenormal, frac * 0.5, 5 - frac * 4);
 #endif
 				}
-			}
-		}
-
-		if (!cg_atmFx.skyOverMe)
-		{
-			VectorSubtract(cg.refdef.vieworg, start, orgW);
-			{
-				float d2;
-				d2 = orgW[0] * orgW[0] + orgW[1] * orgW[1] + orgW[2] * orgW[2];
-				if (cg_atmFx.nearDist2 > d2)
-					cg_atmFx.nearDist2 = d2;
 			}
 		}
 	}
@@ -688,14 +671,7 @@ void CG_EffectParse( const char *effectstr )
 		if (!(cg_atmFx.effectshader = trap_R_RegisterShader("gfx/atmosphere/raindrop")))
 			cg_atmFx.effectshader = -1;
 		if (cg_atmFx.splash)
-		{
 			cg_atmFx.effectsplashshader = trap_R_RegisterShader("gfx/atmosphere/rainsplash");
-			if (cg_atmFx.effectsplashshader)
-			{
-			rainSFX = trap_S_RegisterSound("sound/atmosphere/rain.wav");
-			rainSFXindoor = trap_S_RegisterSound("sound/atmosphere/rain_indoor.wav");
-			}
-		}
 
 		cg_atmFx.verts[0].st[0] = 1;
 		cg_atmFx.verts[0].st[1] = 0;
@@ -770,7 +746,6 @@ void CG_EffectParse( const char *effectstr )
 /*
 ** Main render loop
 */
-static qboolean rainSFXenabled;
 void CG_AddAtmosphericEffects()
 {
   	// Add atmospheric effects (e.g. rain, snow etc.) to view
@@ -780,65 +755,15 @@ void CG_AddAtmosphericEffects()
   	float currweight;
 
 	if (cg_atmFx.numDrops <= 0)
-	{
-		if (rainSFXenabled)
-			trap_S_StopLoopingSound(ENTITYNUM_NONE);
 		return;
-	}
-	else
-	{
-		if (rainSFXenabled)
-		{
-			rainSFXenabled = (qboolean)(cg_atm_effects_low.integer != 2);
-			if (!rainSFXenabled)
-				trap_S_StopLoopingSound(ENTITYNUM_NONE);
-		}
-	}
 
 	if (cg_atm_effects_low.integer == 2)
 		return;
-
-	if (cg_atmFx.ParticleRender == &CG_RainParticleRender)
-	{
-		trace_t	tr;
-		vec3_t	testpoint, testend;
-
-		testpoint[0] = testend[0] = cg.refdef.vieworg[0];
-		testpoint[1] = testend[1] = cg.refdef.vieworg[1];
-		testpoint[2] = cg.refdef.vieworg[2];
-		testend[2] = testpoint[2] + MAX_ATMOSPHERIC_HEIGHT;
-
-		while (1)
-		{
-			if (testpoint[2] >= MAX_ATMOSPHERIC_HEIGHT)
-				goto noSky;
-			if (testend[2] >= MAX_ATMOSPHERIC_HEIGHT)
-				testend[2] = MAX_ATMOSPHERIC_HEIGHT - 1;
-			CG_Trace(&tr, testpoint, NULL, NULL, testend, ENTITYNUM_NONE, MASK_SOLID | MASK_WATER);
-			if (tr.startsolid)  	  	  	// Stuck in something, skip over it.
-			{
-				testpoint[2] += 64;
-				testend[2] = testpoint[2] + MAX_ATMOSPHERIC_HEIGHT;
-			}
-			else if (tr.fraction == 1)  	  	// Didn't hit anything, we're (probably) outside the world
-				goto noSky;
-			else if ((tr.surfaceFlags & SURF_SKY) && tr.entityNum == ENTITYNUM_WORLD)  	// Hit sky, this is where we start.	BERSERKER: added check for ENTITYNUM_WORLD
-				break;
-			else
-				goto noSky;
-		}
-		cg_atmFx.skyOverMe = qtrue;
-	}
-	else
-	{
-noSky:	cg_atmFx.skyOverMe = qfalse;
-	}
 
 	max = cg_atm_effects_low.integer ? (cg_atmFx.numDrops >> 1) : cg_atmFx.numDrops;
   	if( CG_EffectGustCurrent( currvec, &currweight, &currnum ) )
   	  	CG_EffectGust();  	  	  	// Recalculate gust parameters
 
-	cg_atmFx.nearDist2 = 9999999;
   	for( curr = 0; curr < max; curr++ )
   	{
   	  	particle = &cg_atmFx.particles[curr];
@@ -865,19 +790,6 @@ noSky:	cg_atmFx.skyOverMe = qfalse;
   	}
 
 	cg_atmFx.lastRainTime = cg.time;
-
-	if (rainSFX && cg_atm_effects_low.integer != 2)
-	{
-		if (cg_atmFx.skyOverMe)
-			CG_S_AddLoopingSound (cg.snap->ps.clientNum, cg.refdef.vieworg, vec3_origin, rainSFX, 255);
-		else
-		{
-			CG_S_AddLoopingSound (cg.snap->ps.clientNum, cg.refdef.vieworg, vec3_origin, rainSFXindoor, 255);
-		}
-
-	}
-
-	rainSFXenabled = (qboolean)(cg_atm_effects_low.integer != 2);
 }
 
 
