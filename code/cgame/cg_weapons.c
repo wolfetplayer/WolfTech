@@ -1084,9 +1084,6 @@ static void ( *CG_WeapEjectBrassFuncForName( const char *name ) )( centity_t * )
 	if ( !Q_stricmp( name, "PanzerFaustEjectBrass" ) ) {
 		return CG_PanzerFaustEjectBrass;
 	}
-	if ( !Q_stricmp( name, "NailgunEjectBrass" ) ) {
-		return CG_NailgunEjectBrass;
-	}
 	return NULL;
 }
 
@@ -1347,6 +1344,9 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 		} else if ( !Q_stricmp( token.string, "reloadSoundAi" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected reloadSoundAi filename" ); return qfalse; }
 			wi->reloadSoundAi = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "bounceSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected bounceSound filename" ); return qfalse; }
+			wi->bounceSound = trap_S_RegisterSound( s );
 		} else if ( !Q_stricmp( token.string, "ejectBrassFunc" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected ejectBrassFunc name" ); return qfalse; }
 			wi->ejectBrassFunc = CG_WeapEjectBrassFuncForName( s );

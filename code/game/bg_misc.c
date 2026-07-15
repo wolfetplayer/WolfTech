@@ -4057,6 +4057,8 @@ char *eventnames[] = {
 
 	"EV_FIREMODE_SWITCH",
 
+	"EV_BOUNCE_SOUND",
+
 	"EV_MAX_EVENTS"
 };
 

@@ -920,6 +920,8 @@ typedef enum {
 
 	EV_FIREMODE_SWITCH, // player toggled semi/full-auto fire mode
 
+	EV_BOUNCE_SOUND,    // dropped weapon/ammo item bounced on the ground; eventParm 0 = weapon, 1 = ammo
+
 	EV_MAX_EVENTS   // just added as an 'endcap'
 
 } entity_event_t;

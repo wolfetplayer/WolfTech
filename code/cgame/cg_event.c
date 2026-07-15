@@ -2099,6 +2099,15 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].fireModeSwitchSound );
 		}
 		break;
+	case EV_BOUNCE_SOUND:
+		DEBUGNAME( "EV_BOUNCE_SOUND" );
+		if ( cg_weaponBounceSound.integer ) {
+			weaponInfo_t *weapon = &cg_weapons[es->weapon];
+			if ( !es->eventParm && weapon->bounceSound ) {
+				trap_S_StartSound( NULL, es->number, CHAN_WEAPON, weapon->bounceSound );
+			}
+		}
+		break;
 	case EV_RESET_ZOOM:
 	    DEBUGNAME( "EV_RESET_ZOOM" );
 		CG_ResetSimpleZoom();

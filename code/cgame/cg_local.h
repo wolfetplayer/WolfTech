@@ -724,6 +724,7 @@ typedef struct weaponInfo_s {
 	sfxHandle_t reloadFullSound;        // full (empty clip) reload sound
 	sfxHandle_t reloadFullSoundFast;    // PERK_WEAPONHANDLING full reload sound
 	sfxHandle_t reloadSoundAi;          // AI reload sound
+	sfxHandle_t bounceSound;            // played when a dropped weapon/ammo item bounces on the ground
 
 	sfxHandle_t spinupSound;        //----(SA)	added // sound started when fire button goes down, and stepped on when the first fire event happens
 	sfxHandle_t spindownSound;      //----(SA)	added // sound called if the above is running but player doesn't follow through and fire
@@ -1798,6 +1799,7 @@ extern vmCvar_t cg_drawCrosshairReticle;
 extern vmCvar_t cg_hudAlpha;
 extern vmCvar_t cg_useWeapsForZoom;
 extern vmCvar_t cg_weaponCycleDelay;            //----(SA)	added
+extern vmCvar_t cg_weaponBounceSound;
 extern vmCvar_t cg_cycleAllWeaps;
 extern vmCvar_t cg_drawAllWeaps;
 extern vmCvar_t cg_drawRewards;

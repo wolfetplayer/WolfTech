@@ -1301,6 +1301,13 @@ void G_BounceItem( gentity_t *ent, trace_t *trace ) {
 	// cut the velocity to keep from bouncing forever
 	VectorScale( ent->s.pos.trDelta, ent->physicsBounce, ent->s.pos.trDelta );
 
+	// play a weapon/ammo bounce sound if this item represents a weapon
+	if ( ent->item && ( ent->item->giType == IT_WEAPON || ent->item->giType == IT_AMMO ) &&
+		 ent->item->giTag > WP_NONE && ent->item->giTag < WP_NUM_WEAPONS ) {
+		G_AddEvent( ent, EV_BOUNCE_SOUND, ent->item->giType == IT_WEAPON ? 0 : 1 );
+		ent->s.weapon = ent->item->giTag;
+	}
+
 	// check for stop
 	if ( trace->plane.normal[2] > 0 && ent->s.pos.trDelta[2] < 40 ) {
 		trace->endpos[2] += 1.0;    // make sure it is off ground

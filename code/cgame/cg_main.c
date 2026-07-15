@@ -136,6 +136,7 @@ vmCvar_t cg_drawCrosshairPickups;
 vmCvar_t cg_drawCrosshairReticle;
 vmCvar_t cg_hudAlpha;
 vmCvar_t cg_weaponCycleDelay;       //----(SA)	added
+vmCvar_t cg_weaponBounceSound;
 vmCvar_t cg_cycleAllWeaps;
 vmCvar_t cg_useWeapsForZoom;
 vmCvar_t cg_drawAllWeaps;
@@ -375,6 +376,7 @@ cvarTable_t cvarTable[] = {
 	{&cg_hudAlpha, "cg_hudAlpha", "0.8", CVAR_ARCHIVE},
 	{&cg_useWeapsForZoom, "cg_useWeapsForZoom", "1", CVAR_ARCHIVE},
 	{&cg_weaponCycleDelay, "cg_weaponCycleDelay", "150", CVAR_ARCHIVE}, //----(SA)	added
+	{&cg_weaponBounceSound, "cg_weaponBounceSound", "1", CVAR_ARCHIVE},
 	{&cg_cycleAllWeaps, "cg_cycleAllWeaps", "1", CVAR_ARCHIVE},
 	{&cg_drawAllWeaps, "cg_drawAllWeaps", "1", CVAR_ARCHIVE},
 	{&cg_crosshairSize, "cg_crosshairSize", "24", CVAR_ARCHIVE},
