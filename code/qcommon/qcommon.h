@@ -222,6 +222,8 @@ void        NET_Sleep( int msec );
 
 #define NETCHAN_GENCHECKSUM(challenge, sequence) ((challenge) ^ ((sequence) * (challenge)))
 
+#define MAX_HELD_FRAGMENTS     8   // out-of-order fragments held while waiting for the gap ahead of them to fill
+
 
 /*
 Netchan handles packet fragmentation and out of order / duplicate suppression
@@ -242,7 +244,13 @@ typedef struct {
 	// incoming fragment assembly buffer
 	int fragmentSequence;
 	int fragmentLength;
+	int fragmentTotalLength;    // full message length, known once the terminating fragment arrives, else -1
 	byte fragmentBuffer[MAX_MSGLEN];
+
+	// fragments that arrived ahead of the gap they belong after
+	int heldFragmentCount;
+	int heldFragmentStart[MAX_HELD_FRAGMENTS];
+	int heldFragmentLength[MAX_HELD_FRAGMENTS];
 
 	// outgoing fragment buffer
 	// we need to space out the sending of large fragmented messages

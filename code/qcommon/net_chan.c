@@ -100,6 +100,7 @@ void Netchan_Setup(netsrc_t sock, netchan_t *chan, netadr_t adr, int qport, int 
 	chan->incomingSequence = 0;
 	chan->outgoingSequence = 1;
 	chan->challenge = challenge;
+	chan->fragmentTotalLength = -1;
 #ifdef LEGACY_PROTOCOL
 	chan->compat = compat;
 #endif
@@ -345,30 +346,18 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg ) {
 	// bump incoming_reliable_sequence
 	//
 	if ( fragmented ) {
-		// TTimo
-		// make sure we add the fragments in correct order
-		// either a packet was dropped, or we received this one too soon
-		// we don't reconstruct the fragments. we will wait till this fragment gets to us again
-		// (NOTE: we could probably try to rebuild by out of order chunks if needed)
+		// new message: drop anything we were holding for the previous one
 		if ( sequence != chan->fragmentSequence ) {
 			chan->fragmentSequence = sequence;
 			chan->fragmentLength = 0;
+			chan->fragmentTotalLength = -1;
+			chan->heldFragmentCount = 0;
 		}
 
-		// if we missed a fragment, dump the message
-		if ( fragmentStart != chan->fragmentLength ) {
-			if ( showdrop->integer || showpackets->integer ) {
-				Com_Printf( "%s:Dropped a message fragment\n"
-				, NET_AdrToString( chan->remoteAddress ));
-			}
-			// we can still keep the part that we have so far,
-			// so we don't need to clear chan->fragmentLength
-			return qfalse;
-		}
-
-		// copy the fragment to the fragment buffer
-		if ( fragmentLength < 0 || msg->readcount + fragmentLength > msg->cursize ||
-			 chan->fragmentLength + fragmentLength > sizeof( chan->fragmentBuffer ) ) {
+		// validate before touching the buffer with attacker-controlled offsets
+		if ( fragmentStart < 0 || fragmentLength < 0 ||
+			 msg->readcount + fragmentLength > msg->cursize ||
+			 fragmentStart + fragmentLength > sizeof( chan->fragmentBuffer ) ) {
 			if ( showdrop->integer || showpackets->integer ) {
 				Com_Printf( "%s:illegal fragment length\n"
 							, NET_AdrToString( chan->remoteAddress ) );
@@ -376,13 +365,61 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg ) {
 			return qfalse;
 		}
 
-		memcpy( chan->fragmentBuffer + chan->fragmentLength,
-				msg->data + msg->readcount, fragmentLength );
+		// a fragment shorter than FRAGMENT_SIZE terminates the message, wherever it lands
+		if ( fragmentLength != FRAGMENT_SIZE ) {
+			chan->fragmentTotalLength = fragmentStart + fragmentLength;
+		}
 
+		if ( fragmentStart < chan->fragmentLength ) {
+			return qfalse; // duplicate, already applied
+		}
+
+		if ( fragmentStart > chan->fragmentLength ) {
+			// out of order: stash the bytes now, splice them in once the gap ahead fills
+			int i;
+			for ( i = 0; i < chan->heldFragmentCount; i++ ) {
+				if ( chan->heldFragmentStart[i] == fragmentStart ) {
+					return qfalse; // already holding this one
+				}
+			}
+			if ( chan->heldFragmentCount < MAX_HELD_FRAGMENTS ) {
+				memcpy( chan->fragmentBuffer + fragmentStart, msg->data + msg->readcount, fragmentLength );
+				chan->heldFragmentStart[chan->heldFragmentCount] = fragmentStart;
+				chan->heldFragmentLength[chan->heldFragmentCount] = fragmentLength;
+				chan->heldFragmentCount++;
+			}
+			if ( showdrop->integer || showpackets->integer ) {
+				Com_Printf( "%s:Holding out of order fragment\n"
+							, NET_AdrToString( chan->remoteAddress ) );
+			}
+			return qfalse;
+		}
+
+		// fills the gap exactly, apply it
+		memcpy( chan->fragmentBuffer + chan->fragmentLength, msg->data + msg->readcount, fragmentLength );
 		chan->fragmentLength += fragmentLength;
 
-		// if this wasn't the last fragment, don't process anything
-		if ( fragmentLength == FRAGMENT_SIZE ) {
+		// pull in any held fragments that are now contiguous
+		{
+			qboolean advanced = qtrue;
+			while ( advanced ) {
+				int i;
+				advanced = qfalse;
+				for ( i = 0; i < chan->heldFragmentCount; i++ ) {
+					if ( chan->heldFragmentStart[i] == chan->fragmentLength ) {
+						chan->fragmentLength += chan->heldFragmentLength[i];
+						chan->heldFragmentCount--;
+						chan->heldFragmentStart[i] = chan->heldFragmentStart[chan->heldFragmentCount];
+						chan->heldFragmentLength[i] = chan->heldFragmentLength[chan->heldFragmentCount];
+						advanced = qtrue;
+						break;
+					}
+				}
+			}
+		}
+
+		// still missing bytes, or haven't seen the terminating fragment yet
+		if ( chan->fragmentTotalLength < 0 || chan->fragmentLength != chan->fragmentTotalLength ) {
 			return qfalse;
 		}
 
@@ -401,6 +438,8 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg ) {
 		memcpy( msg->data + 4, chan->fragmentBuffer, chan->fragmentLength );
 		msg->cursize = chan->fragmentLength + 4;
 		chan->fragmentLength = 0;
+		chan->fragmentTotalLength = -1;
+		chan->heldFragmentCount = 0;
 		msg->readcount = 4; // past the sequence number
 		msg->bit = 32;  // past the sequence number
 

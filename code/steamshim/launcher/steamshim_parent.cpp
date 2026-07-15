@@ -1464,8 +1464,12 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
             if (conn == k_HSteamNetConnection_Invalid)
                 break;  // peer not connected (yet, or anymore) - drop, same as a lost UDP packet.
 
+            // netchan's sequence long is little-endian on the wire; its top bit marks a fragment.
+            const bool isFragment = (buflen >= 4) && ((buf[3] & 0x80) != 0);
             GSteamNetworkingSockets->SendMessageToConnection(
-                conn, buf, buflen, k_nSteamNetworkingSend_UnreliableNoNagle, NULL);
+                conn, buf, buflen,
+                isFragment ? k_nSteamNetworkingSend_Reliable : k_nSteamNetworkingSend_UnreliableNoNagle,
+                NULL);
             break;
         }
 
