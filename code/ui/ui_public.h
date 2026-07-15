@@ -191,9 +191,9 @@ typedef enum {
 
 #define SORT_HOST           0
 #define SORT_MAP            1
-#define SORT_AIRESPAWN      2
-#define SORT_REINFORCE      3
-#define SORT_SKILL          4
+#define SORT_SPECIALWAVES   2
+#define SORT_REALISTICMOVEMENT 3
+#define SORT_SURVIVALDIFFICULTY 4
 #define SORT_PING           5
 #define SORT_CLIENTS        6
 #define SORT_GAME           7

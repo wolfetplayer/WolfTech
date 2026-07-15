@@ -586,6 +586,9 @@ void SV_Netchan_FreeQueue(client_t *client);
 extern cvar_t  *sv_maxlives;
 extern cvar_t  *sv_reinforce;
 extern cvar_t  *sv_airespawn;
+extern cvar_t  *sv_specialwaves;
+extern cvar_t  *sv_realisticmovement;
+extern cvar_t  *sv_survivaldifficulty;
 
 // cl->downloadnotify
 #define DLNOTIFY_REDIRECT   0x00000001  // "Redirecting client ..."

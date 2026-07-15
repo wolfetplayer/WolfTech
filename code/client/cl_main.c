@@ -4662,6 +4662,9 @@ static void CL_SetServerInfo( serverInfo_t *server, const char *info, int ping )
 			server->maxlives = atoi( Info_ValueForKey( info, "maxlives" ) );
 			server->reinforce = atoi( Info_ValueForKey( info, "reinforce" ) );
 			server->airespawn = atoi( Info_ValueForKey( info, "airespawn" ) );
+			server->specialWaves = atoi( Info_ValueForKey( info, "specialwaves" ) );
+			server->realisticMovement = atoi( Info_ValueForKey( info, "realisticmovement" ) );
+			server->survivalDifficulty = atoi( Info_ValueForKey( info, "survivaldifficulty" ) );
 			server->g_humanplayers = atoi(Info_ValueForKey(info, "g_humanplayers"));
 			server->g_needpass = atoi(Info_ValueForKey(info, "g_needpass"));
 		}

@@ -66,11 +66,11 @@ itemDef
 
 			// Start of Create Server Border
 
-				itemDef 
+				itemDef
 					{
 					name			window
 					group			grpCreate
-					rect			20 115 600 300	
+					rect			20 115 600 325
 					style			WINDOW_STYLE_FILLED
 					border 			1
 					bordercolor		.5 .5 .5 .5
@@ -352,9 +352,110 @@ itemDef
 					mouseenter		{ show message_pure }
 					mouseexit		{ hide message_pure }
 					}
-					
-					
-					
+
+				itemDef {
+					name			window
+					group			grpCreate
+					text			"@CREATE_LOBBYTUNING"
+					textfont		UI_FONT_NORMAL
+					textalign		ITEM_ALIGN_CENTER
+					textalignx		145
+					textaligny		14
+					textscale		.25
+					rect			294 255 290 20
+					style			WINDOW_STYLE_FILLED
+					border			1
+					bordercolor		.5 .5 .5 .5
+					forecolor		1 1 1 1
+					backcolor		.3 0.5 0.2 .25
+					visible			1
+					decoration
+					}
+
+				itemDef {
+					name			expert
+					group			grpCreate
+					type			ITEM_TYPE_MULTI
+					textfont		UI_FONT_NORMAL
+					text			"@CREATE_SPECIALWAVES"
+					cvar			"g_specialwaves"
+					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+					rect			295 280 290 12
+					style			WINDOW_STYLE_FILLED
+					textalign		ITEM_ALIGN_RIGHT
+					textalignx		145
+					textaligny		10
+					textscale		.25
+					backcolor		1 1 1 .07
+					forecolor		1 1 1 1
+					visible			1
+					mouseenter		{ show message_specialwaves }
+					mouseexit		{ hide message_specialwaves }
+					}
+
+				itemDef {
+					name			expert
+					group			grpCreate
+					type			ITEM_TYPE_MULTI
+					textfont		UI_FONT_NORMAL
+					text			"@CREATE_REALISTICMOVEMENT"
+					cvar			"g_realistic_movement"
+					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+					rect			295 295 290 12
+					style			WINDOW_STYLE_FILLED
+					textalign		ITEM_ALIGN_RIGHT
+					textalignx		145
+					textaligny		10
+					textscale		.25
+					backcolor		1 1 1 .07
+					forecolor		1 1 1 1
+					visible			1
+					mouseenter		{ show message_realisticmovement }
+					mouseexit		{ hide message_realisticmovement }
+					}
+
+				itemDef {
+					name			expert
+					group			grpCreate
+					type			ITEM_TYPE_MULTI
+					textfont		UI_FONT_NORMAL
+					text			"@CREATE_SURVIVALDIFFICULTY"
+					cvar			"g_survivalDifficulty"
+					cvarFloatList	{ "@CREATE_DIFFICULTY_NORMAL" 0 "@CREATE_DIFFICULTY_HARD" 1 }
+					rect			295 310 290 12
+					style			WINDOW_STYLE_FILLED
+					textalign		ITEM_ALIGN_RIGHT
+					textalignx		145
+					textaligny		10
+					textscale		.25
+					backcolor		1 1 1 .07
+					forecolor		1 1 1 1
+					visible			1
+					mouseenter		{ show message_survivaldifficulty }
+					mouseexit		{ hide message_survivaldifficulty }
+					}
+
+				itemDef {
+					name			expert
+					group			grpCreate
+					type			ITEM_TYPE_MULTI
+					textfont		UI_FONT_NORMAL
+					text			"@CREATE_SURVIVALAIHEALTHCAP"
+					cvar			"g_survivalAiHealthCap"
+					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+					rect			295 325 290 12
+					style			WINDOW_STYLE_FILLED
+					textalign		ITEM_ALIGN_RIGHT
+					textalignx		145
+					textaligny		10
+					textscale		.25
+					backcolor		1 1 1 .07
+					forecolor		1 1 1 1
+					visible			1
+					mouseenter		{ show message_survivalaihealthcap }
+					mouseexit		{ hide message_survivalaihealthcap }
+					}
+
 				itemDef {
 					name			window
 					group			grpCreate
@@ -364,7 +465,7 @@ itemDef
 					textalignx		145
 					textaligny		14
 					textscale		.25
-					rect			294 315 290 20	
+					rect			294 345 290 20
 					style			WINDOW_STYLE_FILLED
 					border			1
 					bordercolor		.5 .5 .5 .5
@@ -372,8 +473,8 @@ itemDef
 					backcolor		.3 0.5 0.2 .25
 					visible			1
 					decoration
-					}	
-					
+					}
+
 				itemDef {
 					name			normal
 					group			grpCreate
@@ -382,14 +483,14 @@ itemDef
 					text			"@CREATE_FRIENDLYFIRE"
 					cvar			"g_friendlyFire"
 					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 "@GENERAL_ONANDHEALTH" 2 }
-					rect			295 340 290 12
+					rect			295 370 290 12
 				//	origin			ORIGIN_WINDOW1
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
 					textalignx		145
 					textaligny		10
 					textscale		.25
-					backcolor		1 1 1 .07       
+					backcolor		1 1 1 .07
 					forecolor		1 1 1 1
 					visible			1
 					mouseenter		{ show message_friendly_fire }
@@ -399,28 +500,28 @@ itemDef
 				itemDef {
 					name			normal
 					group			grpCreate
-					type			ITEM_TYPE_MULTI	
+					type			ITEM_TYPE_MULTI
 					textfont		UI_FONT_NORMAL
 					text			"@CREATE_SHAREDLIVES"
 					cvar			"g_sharedlives"
 					cvarFloatList	{ "@CREATE_SHAREDLIVES_YES" 1 "@CREATE_SHAREDLIVES_NO" 0 }
-					rect			295 370 290 12
+					rect			295 400 290 12
 				//	origin			ORIGIN_WINDOW2
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
 					textalignx		145
 					textaligny		10
 					textscale		.25
-					backcolor		1 1 1 .07 		  
+					backcolor		1 1 1 .07
 					forecolor		1 1 1 1
 					visible			1
-					
+
 					cvarTest		"g_maxlives"
 					hidecvar		{ "0" }
-					
+
 					mouseenter		{ show message_commonlives }
 					mouseexit		{ hide message_commonlives }
-					}	
+					}
 									
 
 					
@@ -1010,7 +1111,7 @@ itemDef {
 			itemDef {
 				name message_pure
 				group grpmessage
-				style 0 
+				style 0
 				textfont	UI_FONT_NORMAL
 				rect 320 437 128 30
 				textalign 1
@@ -1020,7 +1121,75 @@ itemDef {
 				textscale .25
 				text "@CREATE_MSG_PURE"
 				forecolor 1 1 1 1
-				decoration 
+				decoration
+				visible 0
+				}
+
+			itemDef {
+				name message_specialwaves
+				group grpmessage
+				style 0
+				textfont	UI_FONT_NORMAL
+				rect 320 437 128 30
+				textalign 1
+				textalignx 0
+				textstyle 1
+				textaligny 25
+				textscale .25
+				text "@CREATE_MSG_SPECIALWAVES"
+				forecolor 1 1 1 1
+				decoration
+				visible 0
+				}
+
+			itemDef {
+				name message_realisticmovement
+				group grpmessage
+				style 0
+				textfont	UI_FONT_NORMAL
+				rect 320 437 128 30
+				textalign 1
+				textalignx 0
+				textstyle 1
+				textaligny 25
+				textscale .25
+				text "@CREATE_MSG_REALISTICMOVEMENT"
+				forecolor 1 1 1 1
+				decoration
+				visible 0
+				}
+
+			itemDef {
+				name message_survivaldifficulty
+				group grpmessage
+				style 0
+				textfont	UI_FONT_NORMAL
+				rect 320 437 128 30
+				textalign 1
+				textalignx 0
+				textstyle 1
+				textaligny 25
+				textscale .25
+				text "@CREATE_MSG_SURVIVALDIFFICULTY"
+				forecolor 1 1 1 1
+				decoration
+				visible 0
+				}
+
+			itemDef {
+				name message_survivalaihealthcap
+				group grpmessage
+				style 0
+				textfont	UI_FONT_NORMAL
+				rect 320 437 128 30
+				textalign 1
+				textalignx 0
+				textstyle 1
+				textaligny 25
+				textscale .25
+				text "@CREATE_MSG_SURVIVALAIHEALTHCAP"
+				forecolor 1 1 1 1
+				decoration
 				visible 0
 				}
 

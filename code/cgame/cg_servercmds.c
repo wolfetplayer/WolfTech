@@ -185,6 +185,10 @@ void CG_ParseServerinfo( void ) {
 
 	// g_realistic_movement is host-authoritative
 	trap_Cvar_Set( "g_realistic_movement", Info_ValueForKey( info, "g_realistic_movement" ) );
+	// g_specialwaves, g_survivalDifficulty and g_survivalAiHealthCap are host-authoritative
+	trap_Cvar_Set( "g_specialwaves", Info_ValueForKey( info, "g_specialwaves" ) );
+	trap_Cvar_Set( "g_survivalDifficulty", Info_ValueForKey( info, "g_survivalDifficulty" ) );
+	trap_Cvar_Set( "g_survivalAiHealthCap", Info_ValueForKey( info, "g_survivalAiHealthCap" ) );
 	cgs.dmflags = atoi( Info_ValueForKey( info, "dmflags" ) );
 	cgs.teamflags = atoi( Info_ValueForKey( info, "teamflags" ) );
 	cgs.fraglimit = atoi( Info_ValueForKey( info, "fraglimit" ) );

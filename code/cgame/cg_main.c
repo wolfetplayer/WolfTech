@@ -258,6 +258,9 @@ vmCvar_t cg_gameSkill;
 
 vmCvar_t cg_reloading;      //----(SA)	added
 vmCvar_t cg_realistic_movement;
+vmCvar_t cg_specialwaves;
+vmCvar_t cg_survivalDifficulty;
+vmCvar_t cg_survivalAiHealthCap;
 
 // JPW NERVE
 vmCvar_t cg_medicChargeTime;
@@ -509,6 +512,9 @@ cvarTable_t cvarTable[] = {
 	{&cg_reloading, "g_reloading", "0", 0}, //----(SA)	added
 
 	{&cg_realistic_movement, "g_realistic_movement", "0", 0}, // host-controlled, communicated by serverinfo
+	{&cg_specialwaves, "g_specialwaves", "1", 0}, // host-controlled, communicated by serverinfo
+	{&cg_survivalDifficulty, "g_survivalDifficulty", "0", 0}, // host-controlled, communicated by serverinfo
+	{&cg_survivalAiHealthCap, "g_survivalAiHealthCap", "0", 0}, // host-controlled, communicated by serverinfo
 
 		// JPW NERVE
 	{&cg_medicChargeTime, "g_medicChargeTime", "30000", 0},		  // communicated by systeminfo

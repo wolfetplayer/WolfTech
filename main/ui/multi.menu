@@ -569,9 +569,9 @@ itemDef
 			}
 			
 		itemDef {
-			name Respawn 
+			name Respawn
 			group grpJoin
-			text "@MULTI_COL_AIRESPAWNS"
+			text "@MULTI_COL_SPECIALWAVES"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont	UI_FONT_NORMAL
@@ -589,9 +589,9 @@ itemDef
 			}
 
 		itemDef {
-			name Reinforce 
+			name Reinforce
 			group grpJoin
-			text "@MULTI_COL_AIREINFORCE"
+			text "@MULTI_COL_REALISTICMOVEMENT"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont UI_FONT_NORMAL
@@ -611,7 +611,7 @@ itemDef
 		itemDef {
 			name Skill
 			group grpJoin
-			text "@MULTI_COL_SKILL"
+			text "@MULTI_COL_SURVIVALDIFFICULTY"
 			textfont	UI_FONT_NORMAL
 			textscale .25
 			type ITEM_TYPE_BUTTON

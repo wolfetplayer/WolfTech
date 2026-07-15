@@ -1930,6 +1930,9 @@ extern vmCvar_t cg_gameSkill;
 
 extern vmCvar_t cg_reloading;           //----(SA)	added
 extern vmCvar_t cg_realistic_movement;
+extern vmCvar_t cg_specialwaves;
+extern vmCvar_t cg_survivalDifficulty;
+extern vmCvar_t cg_survivalAiHealthCap;
 
 // JPW NERVE
 extern vmCvar_t cg_medicChargeTime;

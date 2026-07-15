@@ -6182,10 +6182,10 @@ static const char *UI_FeederItemText( float feederID, int index, int column, qha
 		return UI_SelectedMap( index, &actual );
 	} else if ( feederID == FEEDER_SERVERS ) {
 		if ( index >= 0 && index < uiInfo.serverStatus.numDisplayServers ) {
-			int ping, game, coop, skill, reinforce, airespawn;
-			static char skilltext[32];
-			static char reinforcetext[32];
-			static char airespawntext[32];
+			int ping, game, coop, survivaldifficulty, realisticmovement, specialwaves;
+			static char difficultytext[32];
+			static char movementtext[32];
+			static char specialwavestext[32];
 			if ( lastServerColumn != column || lastServerTime > uiInfo.uiDC.realTime + 5000 ) {
 				trap_LAN_GetServerInfo(UI_SourceForLAN(), uiInfo.serverStatus.displayServers[index], info, MAX_STRING_CHARS);
 				lastServerColumn = column;
@@ -6197,45 +6197,21 @@ static const char *UI_FeederItemText( float feederID, int index, int column, qha
 				// UI_UpdatePendingPings();
 			}
 			switch ( column ) {
-			case SORT_SKILL:
-				skill = atoi( Info_ValueForKey( info, "gameskill" ) );
-				if ( skill == 0 ) {
-					Com_sprintf( skilltext, sizeof( skilltext ), "* Test *" );
-				} else if ( skill == 1 ) {
-					Com_sprintf( skilltext, sizeof( skilltext ), "  Easy" );
-				} else if ( skill == 2 ) {
-					Com_sprintf( skilltext, sizeof( skilltext ), "Normal" );
-				} else if ( skill == 3 ) {
-					Com_sprintf( skilltext, sizeof( skilltext ), "  Hard" );
-				}
+			case SORT_SURVIVALDIFFICULTY:
+				survivaldifficulty = atoi( Info_ValueForKey( info, "survivaldifficulty" ) );
+				Com_sprintf( difficultytext, sizeof( difficultytext ), survivaldifficulty ? "Hard" : "Normal" );
 
-				return skilltext;
-			//       return Info_ValueForKey( info, "gameskill" );
-			case SORT_AIRESPAWN:
-				airespawn = atoi( Info_ValueForKey( info, "airespawn" ) );
+				return difficultytext;
+			case SORT_SPECIALWAVES:
+				specialwaves = atoi( Info_ValueForKey( info, "specialwaves" ) );
+				Com_sprintf( specialwavestext, sizeof( specialwavestext ), specialwaves ? "On" : "Off" );
 
-				if ( airespawn == -1 ) {
-					Com_sprintf( airespawntext, sizeof( airespawntext ), "      Yes! " );
-				} else if ( airespawn == 0 ) {
-					Com_sprintf( airespawntext, sizeof( airespawntext ), "       No " );
-				} else if ( airespawn > 0 ) {
-					Com_sprintf( airespawntext, sizeof( airespawntext ), "%i ", airespawn );
-				}
+				return specialwavestext;
+			case SORT_REALISTICMOVEMENT:
+				realisticmovement = atoi( Info_ValueForKey( info, "realisticmovement" ) );
+				Com_sprintf( movementtext, sizeof( movementtext ), realisticmovement ? "On" : "Off" );
 
-				return airespawntext;
-
-			//return atoi(Info_ValueForKey( info, "airespawn" )) ? "Yes" : "No";
-			case SORT_REINFORCE:
-				reinforce = atoi( Info_ValueForKey( info, "reinforce" ) );
-				if ( reinforce == 0 ) {
-					Com_sprintf( reinforcetext, sizeof( reinforcetext ), " Default" );
-				} else if ( reinforce == 1 ) {
-					Com_sprintf( reinforcetext, sizeof( reinforcetext ), "   More" );
-				} else if ( reinforce == 2 ) {
-					Com_sprintf( reinforcetext, sizeof( reinforcetext ), "Maximum" );
-				}
-
-				return reinforcetext;
+				return movementtext;
 			case SORT_HOST:
 				if ( ping <= 0 ) {
 					return Info_ValueForKey( info, "addr" );
