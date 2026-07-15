@@ -42,11 +42,11 @@ int bg_pmove_gameskill_integer;
 // JPW NERVE -- added because I need to check single/multiplayer instances and branch accordingly
 #ifdef CGAMEDLL
 extern vmCvar_t cg_gameType;
-extern vmCvar_t cg_realistic_movement;
+extern vmCvar_t cg_realism;
 #endif
 #ifdef GAMEDLL
 extern vmCvar_t g_gametype;
-extern vmCvar_t g_realistic_movement;
+extern vmCvar_t g_realism;
 #endif
 
 // JPW NERVE -- stuck this here so it can be seen client & server side
@@ -429,21 +429,21 @@ static float PM_CmdScale( usercmd_t *cmd ) {
 		scale *= 3;
 	}
 
-	// g_realistic_movement: weapon weight slows movement, more so while realism is enabled
+	// g_realism: weapon weight slows movement, more so while realism is enabled
 	if ( !pm->ps->aiChar ) {
 		float weaponMoveSpeed = GetWeaponTableData( pm->ps->weapon )->moveSpeed;
 		if ( weaponMoveSpeed <= 0.0f ) {
 			weaponMoveSpeed = 1.0f;
 		}
 #ifdef GAMEDLL
-		if ( g_realistic_movement.integer ) {
+		if ( g_realism.integer ) {
 			scale *= ( pm_realismSlowScale * weaponMoveSpeed );
 		} else {
 			scale *= weaponMoveSpeed;
 		}
 #endif
 #ifdef CGAMEDLL
-		if ( cg_realistic_movement.integer ) {
+		if ( cg_realism.integer ) {
 			scale *= ( pm_realismSlowScale * weaponMoveSpeed );
 		} else {
 			scale *= weaponMoveSpeed;
@@ -569,11 +569,11 @@ static qboolean PM_CheckJump( void ) {
 
 	pm->ps->groundEntityNum = ENTITYNUM_NONE;
 
-	// g_realistic_movement: jump height tapers off with stamina instead of staying constant
+	// g_realism: jump height tapers off with stamina instead of staying constant
 #ifdef GAMEDLL
-	if ( g_realistic_movement.integer )
+	if ( g_realism.integer )
 #elif defined( CGAMEDLL )
-	if ( cg_realistic_movement.integer )
+	if ( cg_realism.integer )
 #endif
 	{
 		if ( pm->ps->sprintTime > 10000 && pm->ps->sprintTime < 15000 ) {
@@ -959,11 +959,11 @@ static void PM_WalkMove( void ) {
 			{
 				pm->ps->jumpTime = pm->cmd.serverTime;
 
-				// g_realistic_movement: jumping costs more stamina
+				// g_realism: jumping costs more stamina
 #if defined ( CGAMEDLL )
-				stamtake = cg_realistic_movement.integer ? 3000 : 2000;    // amount to take for jump
+				stamtake = cg_realism.integer ? 3000 : 2000;    // amount to take for jump
 #elif defined ( GAMEDLL )
-				stamtake = g_realistic_movement.integer ? 3000 : 2000;    // amount to take for jump
+				stamtake = g_realism.integer ? 3000 : 2000;    // amount to take for jump
 #endif
 
 				// PERK_RUNNER: jumping costs no stamina
@@ -1876,14 +1876,14 @@ static void PM_Footsteps( void ) {
 		pm->ps->bobCycle = (int)( pm->ps->bobCycle + bobmove * pml.msec ) & 255;
 
 		// now footsteps
-		// g_realistic_movement: footstep rate follows the same slowdown as movement speed
+		// g_realism: footstep rate follows the same slowdown as movement speed
 #ifdef GAMEDLL
-		if ( !pm->ps->aiChar && g_realistic_movement.integer ) {
+		if ( !pm->ps->aiChar && g_realism.integer ) {
 			pm->ps->footstepCount += pm_realismSlowScale * ( pm->xyspeed * pml.frametime );
 		} else
 #endif
 #ifdef CGAMEDLL
-		if ( !pm->ps->aiChar && cg_realistic_movement.integer ) {
+		if ( !pm->ps->aiChar && cg_realism.integer ) {
 			pm->ps->footstepCount += pm_realismSlowScale * ( pm->xyspeed * pml.frametime );
 		} else
 #endif
@@ -3047,9 +3047,9 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-	// g_realistic_movement: can't use the weapon while climbing a ladder or sprinting
+	// g_realism: can't use the weapon while climbing a ladder or sprinting
 #ifdef GAMEDLL
-	if ( !delayedFire && g_realistic_movement.integer ) {
+	if ( !delayedFire && g_realism.integer ) {
 		if ( pm->ps->pm_flags & PMF_LADDER ) {
 			if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN ) {
 				pm->ps->weaponstate = WEAPON_HOLSTER_IN;
@@ -3092,7 +3092,7 @@ static void PM_Weapon( void ) {
 	}
 #endif
 #ifdef CGAMEDLL
-	if ( !delayedFire && cg_realistic_movement.integer ) {
+	if ( !delayedFire && cg_realism.integer ) {
 		if ( pm->ps->pm_flags & PMF_LADDER ) {
 			if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN ) {
 				pm->ps->weaponstate = WEAPON_HOLSTER_IN;
@@ -4016,16 +4016,16 @@ void PM_LadderMove( void ) {
 		if ( pm->ps->aiChar ) {
 			wishvel[2] = 0.5 * upscale * scale * (float)pm->cmd.forwardmove;
 		} else { // player speed
-			// g_realistic_movement: slower, more deliberate ladder climb
+			// g_realism: slower, more deliberate ladder climb
 #ifdef GAMEDLL
-			if ( g_realistic_movement.integer ) {
+			if ( g_realism.integer ) {
 				wishvel[2] = 0.8 * upscale * scale * (float)pm->cmd.forwardmove;
 			} else {
 				wishvel[2] = 0.9 * upscale * scale * (float)pm->cmd.forwardmove;
 			}
 #endif
 #ifdef CGAMEDLL
-			if ( cg_realistic_movement.integer ) {
+			if ( cg_realism.integer ) {
 				wishvel[2] = 0.8 * upscale * scale * (float)pm->cmd.forwardmove;
 			} else {
 				wishvel[2] = 0.9 * upscale * scale * (float)pm->cmd.forwardmove;
@@ -4091,7 +4091,7 @@ void PM_Sprint( void ) {
 			!( pm->ps->pm_flags & PMF_DUCKED )
 			) {
 
-		pm->ps->pm_flags |= PMF_SPRINTING; // g_realistic_movement: track active sprint for weapon-lock
+		pm->ps->pm_flags |= PMF_SPRINTING; // g_realism: track active sprint for weapon-lock
 
 		if ( pm->ps->perks[PERK_RUNNER] > 0 ) {
 			// PERK_RUNNER: sprinting costs no stamina
@@ -4142,7 +4142,7 @@ void PM_Sprint( void ) {
 		}
 
 		pm->ps->sprintExertTime = 0;
-		pm->ps->pm_flags &= ~PMF_SPRINTING; // g_realistic_movement: no longer sprinting
+		pm->ps->pm_flags &= ~PMF_SPRINTING; // g_realism: no longer sprinting
 	}
 }
 

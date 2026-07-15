@@ -97,6 +97,7 @@ static const int numServerFilters = ARRAY_LEN( serverFilters );
 static const char *coopGameTypes[] = {
 	"Battle",
 	"Speedrun",
+	"Survival",
 	"Cooperative"
 };
 static int const numCoopGameTypes = ARRAY_LEN( coopGameTypes );
@@ -6182,9 +6183,9 @@ static const char *UI_FeederItemText( float feederID, int index, int column, qha
 		return UI_SelectedMap( index, &actual );
 	} else if ( feederID == FEEDER_SERVERS ) {
 		if ( index >= 0 && index < uiInfo.serverStatus.numDisplayServers ) {
-			int ping, game, coop, survivaldifficulty, realisticmovement, specialwaves;
+			int ping, game, coop, survivaldifficulty, realism, specialwaves;
 			static char difficultytext[32];
-			static char movementtext[32];
+			static char realismtext[32];
 			static char specialwavestext[32];
 			if ( lastServerColumn != column || lastServerTime > uiInfo.uiDC.realTime + 5000 ) {
 				trap_LAN_GetServerInfo(UI_SourceForLAN(), uiInfo.serverStatus.displayServers[index], info, MAX_STRING_CHARS);
@@ -6207,11 +6208,11 @@ static const char *UI_FeederItemText( float feederID, int index, int column, qha
 				Com_sprintf( specialwavestext, sizeof( specialwavestext ), specialwaves ? "On" : "Off" );
 
 				return specialwavestext;
-			case SORT_REALISTICMOVEMENT:
-				realisticmovement = atoi( Info_ValueForKey( info, "realisticmovement" ) );
-				Com_sprintf( movementtext, sizeof( movementtext ), realisticmovement ? "On" : "Off" );
+			case SORT_REALISM:
+				realism = atoi( Info_ValueForKey( info, "realism" ) );
+				Com_sprintf( realismtext, sizeof( realismtext ), realism ? "On" : "Off" );
 
-				return movementtext;
+				return realismtext;
 			case SORT_HOST:
 				if ( ping <= 0 ) {
 					return Info_ValueForKey( info, "addr" );

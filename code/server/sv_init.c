@@ -943,7 +943,7 @@ void SV_Init (void)
 	sv_reinforce = Cvar_Get( "g_reinforce", "0", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_LATCH );
 	sv_airespawn = Cvar_Get( "g_airespawn", "0", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_LATCH );
 	sv_specialwaves = Cvar_Get( "g_specialwaves", "1", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_LATCH );
-	sv_realisticmovement = Cvar_Get( "g_realistic_movement", "0", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_LATCH );
+	sv_realism = Cvar_Get( "g_realism", "0", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_LATCH );
 	sv_survivaldifficulty = Cvar_Get( "g_survivalDifficulty", "0", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_LATCH );
 
 	// systeminfo

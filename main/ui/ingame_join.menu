@@ -678,7 +678,7 @@ menuDef {
 		itemDef {
 			name Reinforce
 			group grpJoin
-			text "@MULTI_COL_REALISTICMOVEMENT"
+			text "@MULTI_COL_REALISM"
 			type ITEM_TYPE_BUTTON
 			textscale .25
 			textfont UI_FONT_NORMAL

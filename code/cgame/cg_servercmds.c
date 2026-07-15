@@ -183,8 +183,8 @@ void CG_ParseServerinfo( void ) {
 	cgs.gametype = atoi( Info_ValueForKey( info, "g_gametype" ) );
 	trap_Cvar_Set( "g_gametype", va( "%i", cgs.gametype ) );
 
-	// g_realistic_movement is host-authoritative
-	trap_Cvar_Set( "g_realistic_movement", Info_ValueForKey( info, "g_realistic_movement" ) );
+	// g_realism is host-authoritative
+	trap_Cvar_Set( "g_realism", Info_ValueForKey( info, "g_realism" ) );
 	// g_specialwaves, g_survivalDifficulty and g_survivalAiHealthCap are host-authoritative
 	trap_Cvar_Set( "g_specialwaves", Info_ValueForKey( info, "g_specialwaves" ) );
 	trap_Cvar_Set( "g_survivalDifficulty", Info_ValueForKey( info, "g_survivalDifficulty" ) );

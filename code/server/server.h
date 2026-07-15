@@ -587,7 +587,7 @@ extern cvar_t  *sv_maxlives;
 extern cvar_t  *sv_reinforce;
 extern cvar_t  *sv_airespawn;
 extern cvar_t  *sv_specialwaves;
-extern cvar_t  *sv_realisticmovement;
+extern cvar_t  *sv_realism;
 extern cvar_t  *sv_survivaldifficulty;
 
 // cl->downloadnotify

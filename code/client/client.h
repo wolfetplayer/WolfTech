@@ -356,7 +356,7 @@ typedef struct {
 	int airespawn;
 	int reinforce;
 	int specialWaves;
-	int realisticMovement;
+	int realism;
 	int survivalDifficulty;
 	int			g_humanplayers;
 	int			g_needpass;

@@ -332,7 +332,7 @@ static void LAN_GetServerInfo( int source, int n, char *buf, int buflen ) {
 		Info_SetValueForKey( info, "reinforce", va( "%i", server->reinforce ) );
 		Info_SetValueForKey( info, "airespawn", va( "%i", server->airespawn ) );
 		Info_SetValueForKey( info, "specialwaves", va( "%i", server->specialWaves ) );
-		Info_SetValueForKey( info, "realisticmovement", va( "%i", server->realisticMovement ) );
+		Info_SetValueForKey( info, "realism", va( "%i", server->realism ) );
 		Info_SetValueForKey( info, "survivaldifficulty", va( "%i", server->survivalDifficulty ) );
 		Info_SetValueForKey( info, "g_needpass", va("%i", server->g_needpass));
 		Info_SetValueForKey( info, "g_humanplayers", va("%i", server->g_humanplayers));

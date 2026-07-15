@@ -100,7 +100,7 @@ cvar_t  *sv_showAverageBPS;     // NERVE - SMF - net debugging
 cvar_t  *sv_reinforce;
 cvar_t  *sv_airespawn;
 cvar_t  *sv_specialwaves;
-cvar_t  *sv_realisticmovement;
+cvar_t  *sv_realism;
 cvar_t  *sv_survivaldifficulty;
 cvar_t  *sv_reloading;  //----(SA)	added
 
@@ -789,7 +789,7 @@ void SVC_Info( netadr_t from ) {
 	Info_SetValueForKey( infostring, "reinforce", va( "%i", sv_reinforce->integer ) );
 	Info_SetValueForKey( infostring, "airespawn", va( "%i", sv_airespawn->integer ) );
 	Info_SetValueForKey( infostring, "specialwaves", va( "%i", sv_specialwaves->integer ) );
-	Info_SetValueForKey( infostring, "realisticmovement", va( "%i", sv_realisticmovement->integer ) );
+	Info_SetValueForKey( infostring, "realism", va( "%i", sv_realism->integer ) );
 	Info_SetValueForKey( infostring, "survivaldifficulty", va( "%i", sv_survivaldifficulty->integer ) );
 
 	// TTimo
