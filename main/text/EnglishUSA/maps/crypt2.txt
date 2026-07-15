@@ -1,0 +1,9 @@
+{
+"crypt2_swingblade_1" " "
+
+"crypt2_swingblade_2" " "
+
+"crypt2_bigwall_1" " "
+
+"crypt2_earth_rumble" " "
+}

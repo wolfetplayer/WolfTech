@@ -1,0 +1,461 @@
+#include "ui/menudef.h"
+
+{
+\\ CREDIT \\
+
+  menuDef {
+    	name "credit"
+    	visible 0
+    	fullscreen 1
+    	rect 0 0 640 480
+//    background "menuback_a"
+    	focusColor 1 .67 0 1
+    	style 1
+    	border 1
+	soundloop ""
+	onEsc { close credit ; open menu }
+	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; 	
+	fadeout fadebox ; 
+	show grpGMIcredit ; 
+	hide grpnervecredit ;
+	hide grpatvicredit ; 
+	hide grpIDcredit ;
+	hide grpQAcredit ;
+	transition programming 0 0 640 30 0 80 640 30 20 10 ; 
+	transition artist 0 0 640 30 0 110 640 30 20 10 ; 
+	transition levelDesign 0 0 640 30 0 140 640 30 20 10 ; 
+	transition gameDesign 0 0 640 30 0 170 640 30 20 10 ; 
+	transition ceo 0 0 640 30 0 200 640 30 20 10 ; 
+	transition bizdev 0 0 640 30 0 230 640 30 20 10 ; 
+	transition idMom 0 0 640 30 0 260 640 30 20 10 ; 
+	transition devAssist 0 0 640 30 0 290 640 30 20 10 ;
+	transition progAssist 0 0 640 30 0 340 640 30 20 10 ;
+	hide back_alt ;
+	show back ;
+	hide grpmessage }
+
+
+	    
+
+// Start of Menu Background
+
+itemDef
+	{
+		name realrtcw_background
+		style WINDOW_STYLE_SHADER
+		rect -120 -9.25 917 500
+		background "realrtcw_background"
+		visible 1
+		decoration
+	}
+
+itemDef
+	{
+		name realrtcw_logo
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_logo.tga"
+		visible 1
+		decoration
+	}
+	
+// End of Menu Background
+
+///////////////
+
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 114 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "DEVELOPED BY:"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 128 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "RTCW.COOP.TEAM"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+
+itemDef {
+		name win1
+		group grpgmicredit
+		style 0 
+		rect 310 89 280 200
+		textfile "text/EnglishUSA/credits_coop1.txt"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		textalign ITEM_ALIGN_RIGHT
+      	textalignx 0
+		textstyle 6
+		textscale .2
+		forecolor .9 .9 .9 1
+		visible MENU_TRUE
+		autowrapped
+		decoration
+		visible 0
+	}
+
+itemDef {
+		name win1
+		group grpgmicredit
+		style 0 
+		rect 330 96.5 280 200
+		textfile "text/EnglishUSA/credits_coop2.txt"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		textstyle 6
+		textscale .2
+		forecolor .9 .9 .9 1
+		visible MENU_TRUE
+		autowrapped
+		decoration
+		visible 0
+	}
+
+
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 228 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "special thanks to"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+	
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 241 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "ronboy, TitaN655, hirko (for the levelshots), clan {WeB} (for the testing)"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+	
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 254 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "clan boozze, crytiqal (for the initial master server), etpro, ioquake3"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}	
+
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 267 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "as well as"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+	
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 280 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "Michael Tsarouhas, Melissa Lauten, Will Doe,"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+	
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 293 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "Robert Sloman, Madinah Wilson (for the character voices)"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+	
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 319 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "...and of course many-many thanks"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+	
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 332 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "to our girlfriends/wives/children"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+	
+itemDef {
+		name GMIcredit
+		group grpGMIcredit
+		rect 0 345 300 20
+		style 1
+		textalign 1
+		textalignx 320
+		textaligny 10
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+		text "(for their unlimited patience with us)"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+		forecolor 1 1 1 1
+		decoration 
+		visible 0
+	}
+
+itemDef {
+		name win1
+		group grpgmicredit
+		style 0 
+		rect 0 383 500 200
+		textfile "text/EnglishUSA/credits_message.txt"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+
+		textstyle 6
+		textscale .2
+		textalign ITEM_ALIGN_CENTER
+      	textaligny 0
+      	textalignx 320
+		forecolor .9 .9 .9 1
+		visible MENU_TRUE
+		autowrapped
+		decoration
+		visible 0
+	}
+
+itemDef {
+        name GMIcredit
+        group grpGMIcredit
+        rect 0 418 300 20
+        style 1
+        textalign 1
+        textalignx 320 
+        textaligny 10
+        textstyle 6
+        textscale .25 
+        textalign ITEM_ALIGN_CENTER
+        text "THANK YOU, COME AGAIN"
+		textfont UI_FONT_BIG	// RealRTCWCoop  
+        forecolor 1 1 1 1 
+        decoration 
+        visible 0
+    } 
+
+// BACK BAR	//
+
+
+
+
+itemDef {
+      	name gotobar
+      	style 2
+      	rect 0 445 640 20 
+      	textscale 0.4
+      	textalign 0		// center
+      	textalignx 60        	// x alignment point for text
+      				     // use it to offset left/right text from the edge 
+    					     // or to center the text on a different point
+      	textaligny 21        
+      	style 2
+      	border 4
+      	bordercolor 0.5 0.5 0.5 0.0
+      	bordersize 2
+      	backcolor 0.5 0.5 .5 0.0
+      	visible 1 
+      	mouseEnter { setcolor backcolor .5 0.5 0.5 .5 }
+      	mouseExit { setcolor backcolor .5 .5 .5 .0 }
+      	decoration 
+    	}
+
+
+
+
+
+
+
+
+
+itemDef {
+      name back
+      text "BACK"
+ 	type 1
+	textfont UI_FONT_BIG	// RealRTCWCoop  
+	style 0	
+	textstyle 6
+	rect 30 450 40 14 
+	textalign 0
+	textscale .23		
+	textalignx 6
+	textaligny 12
+	forecolor .9 .9 .9 .9
+	visible 1 
+     	action { close credit ; open main }
+	mouseEnter { hide back ; show back_alt ; show message_back }
+    	}
+
+itemDef {
+     name back_alt
+     text "BACK"
+ 	type 1
+	textfont UI_FONT_BIG	// RealRTCWCoop  
+	style 0	
+	textstyle 6
+	rect 30 450 40 14 
+	textalign 0
+	textscale .23		
+	textalignx 6
+	textaligny 12
+	forecolor .6 .6 .6 .6
+	visible 1 
+	type ITEM_TYPE_BUTTON
+     	action { close credit ; open main }	
+     mouseExit { hide back_alt ; show back ; hide message_back }	  
+    	}
+
+
+
+
+
+//	MESSAGES	//
+
+
+
+itemDef {
+	name message_back
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textstyle 1
+	textalign 1
+	textalignx 0
+	textaligny 25
+	textscale .18
+	text "EXIT TO MAIN MENU"
+	textfont UI_FONT_BIG	// RealRTCWCoop  
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_credits
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textstyle 1
+	textalign 1
+	textalignx 0
+	textaligny 25
+	textscale .18
+	text "ADDITIONAL CREDITS"
+	textfont UI_FONT_BIG	// RealRTCWCoop  
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+
+
+
+
+
+}
+
+
+}
+
+}
+}

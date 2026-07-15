@@ -1,0 +1,41 @@
+{
+"zemph_1" "Uh, what are you planning now?"
+
+"helga_1" "I'm not planning anything, I'm doing it! I'm getting that dagger!"
+
+"zemph_2" "No! You can't do that! You'll break the inner seal!"
+
+"helga_2" "I'm prepared to take that risk!"
+
+"zemph_3" "You're prepared!? Are you completely mad!? Do you realize what will be unleashed!? It will cause the rest of this to seem like a... a minor annoyance!"
+
+"helga_3" "Ha! I don't care! I've waited my whole life for an opportunity like this! I'm not turning back now for some cowering bookworm and his pointless fears!"
+
+"zemph_4" "Frau von Bulow, I warn you! If you persist in this madness, I'll be forced to report your conduct to the SS High Court of Inquiry."
+
+"helga_4" "Get out of my way, Zemph! Your feeble threats won't stop me!"
+
+"zemph_5" "Please, come to your senses! Stop this madness, before it is too late!"
+
+"helga_5" "This is your last warning!"
+
+"zemph_6" "No, you can't...!"
+
+"zemph_7" " "
+
+"helga_6" "...At last!"
+
+"boss1_mh_static" " "
+
+"boss1_en_static" " "
+
+"boss1_mh_01" "Mother Hen to Eagle's Nest. Mother Hen to Eagle's Nest. Come in, Eagle's Nest."
+
+"boss1_en_01" "This is Eagle's Nest. We read you, Mother Hen. What is your status?"
+
+"boss1_mh_02" "Status is Mission Accomplished. We're inbound."
+
+"boss1_en_02" "Well done, Mother Hen. What is the condition of your passenger?"
+
+"boss1_mh_03" "All things considered, the passenger is doing fine. I repeat, passenger is doing fine. Mother Hen, out."
+}

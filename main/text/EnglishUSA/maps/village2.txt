@@ -1,0 +1,141 @@
+{
+"villdrunk1" " "
+
+"villdrunk2" " "
+
+"whistle1" " "
+
+"villdrunk3" " "
+
+"da_dum1" " "
+
+"da_dum2" " "
+
+"yawn1" " "
+
+"da_dum3" " "
+
+"da_dum4" " "
+
+"stonedoor1" " "
+
+"stonedoor2" " "
+
+"stonedoor3" " "
+
+"g1_vas_is_los" " "
+
+"g2_he_changed_mind" "No, he changed his mind!"
+
+"g1_ach_allright" "Ah, alright. I'm coming inside. It's cold out here."
+
+"g2_ya_ya" "Ja, ja."
+
+"hoch_come_my_dear" "Come, my dear. Surely it doesn't take all night to get dressed."
+
+"hilda_just_a_minute" "I'll be out soon!"
+
+"inge_wimp1" "No... No..."
+
+"officer1_speak" "What's going on down there?"
+
+"officer1_enemysight" "What? Who are you?"
+
+"officer1_mmm1" " "
+
+"officer1_mmm2" " "
+
+"officer1_mmm3" " "
+
+"guard1_alarm" "An intruder! Alarm! Alarm!"
+
+"blank" " "
+
+"prof_who_are_you" "What? Who are you?"
+
+"prof_another_failure" "Agh, another failure. Ah well, we try again."
+
+"prof_hmm" "Hm... No, that's not it..."
+
+"prof_yes_yes" "Yes, yes! This alchemical combination should do the trick."
+
+"officer2_alarm" "An intruder! I must raise the alarm!"
+
+"officer2_whats_happening_down_there" "What is happening down there?"
+
+"officer3_mmm1" " "
+
+"officer3_mmm2" " "
+
+"officer3_mmm3" " "
+
+"officer3_mmm4" " "
+
+"officer3_mmm5" " "
+
+"officer3_sound" " "
+
+"officer3_sight" "Was ist los?"
+
+"officer4_breath_taking" "Ah, just look at this moon tonight. Absolutely breathtaking."
+
+"officer4_where_is_latour" "Kempf! Where is my '38 Latour? I send that idiot down to the wine cellar 20 minutes ago!"
+
+"officer4_see_that_you_do" "See that you do, Kempf."
+
+"officer4_intruder" " "
+
+"officer4_sound" " "
+
+"officer3_random_mumble" " "
+
+"04_help1_respond" "Apologies, my General. I will go and investigate the delay."
+
+"g1_tasty_sb" "Mhm. That was some tasty sauerbraten."
+
+"v2_g2_not_bad" "Not bad. But my mother still makes better."
+
+"v2_g2_so_did_you_find" "So did you find out what's happening over at the chateau?"
+
+"v2_g1_no_ze_officers" "No, the officers are being very tight-lipped about it."
+
+"v2_g1_haha" "Heheh."
+
+"vill2_random_sound" " "
+
+"nazi9_can't_find_wine" "'38 Latour, '38 Latour... There is no such wine down here!"
+
+"nazi9_hopeless" "Ah... This is hopeless!"
+
+"nazi9_frustrated" " "
+
+"offduty_warm" "Just come inside and warm up for a bit."
+
+"vill2_beethoven" " "
+
+"v2_inge_please_dont" "Please, don't hurt me! I know nothing!"
+
+"v2_g1_quite_a_show" "Well, it's going to be quite a show, eh Carl?"
+
+"v2_g2_really_true" "If any of it is really true."
+
+"v2_g1_still_you_doubt" "Still you doubt. Surely you remember what Blavatsky did back in Holstein."
+
+"v2_g2_yes_I_remember" "Yes, I remember that she almost got all of us killed."
+
+"v2_g1_glorious_death" "But, what a glorious death it would've been."
+
+"v2_g2_no_glory" "There is no glory in a meaningless death, Gunter."
+
+"v2_g1lc_haha" "Heh."
+
+"v2_Gen_izzat_you" "Ja, is that you Willy?"
+
+"v2_Gen5_alarm_alarm" "Hm? Guards! Alarm! Alarm!"
+
+"v2_Gret_dont_kill_me" "Oh, please do not kill me!"
+
+"v2_g_awful_racket" "Ah, I wish Otto would stop that awful racket!"
+
+"v2_g_shut_up" "Hey! Shut up down there!"
+}

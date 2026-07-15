@@ -1,0 +1,43 @@
+{
+
+"end_cs16_hei_01" "Huh... What? I live again!"
+
+"end_cs16_hei_03" "Who are you?"
+
+"end_cs16_hei_05_4" "So much to attend to. But I sense the presence of another."
+
+"end_cs16_pri_01_1" "Yes! Yes!"
+
+"end_cs16_pri_02_6" "Yes, it is true!"
+
+"end_cs16_pri_03_7" "I serve you, my dark master!"
+
+"end_cs16_pri_04_a" " "
+
+"end_heinr127" " "
+
+"end_eg_solo_loop" " "
+
+"end_cs18_aid_01" "Herr Himmler. The plane is waiting to take you back to Berlin."
+
+"end_cs18_aid_02" "Sir, the Fuhrer is expecting your arrival!"
+
+"end_cs18_him_01" "This American. He has ruined everything."
+
+"end_cs18_him_02" "Ja ja..."
+
+"end_ss_powerup" " "
+
+"end_war_giant1" " "
+
+"end_war_giant2" " "
+
+"end_war_giant3" " "
+
+"end_war_giant_medley" " "
+
+"end_liftup" " "
+
+"end_earth_rumble" " "
+
+}

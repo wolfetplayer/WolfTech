@@ -1,0 +1,55 @@
+{
+"cs14_director_1" "How is agent Blazkowicz?"
+
+"cs14_jack_1" "A little beat up, sir, but nothing too serious. They've just finished with him in the debriefing."
+
+"cs14_director_2" "Well, he certainly came through for us this time. Remarkable. Absolutely remarkable."
+
+"cs14_director_3" "Advanced weapons, biological engineering, robotics and the occult. It all fits. Into what exactly, I'm not sure. But, it all fits."
+
+"cs14_jack_2" "I was thinking along those same lines,sir."
+
+"cs14_director_4" "Jack, call a meeting."
+
+"cs14_jack_3" "Yes, sir."
+
+"cs14_director_5" "Now, what do we got there, Jack?"
+
+"cs14_jack_4" "Two decoded dispatches. The first one is a complete itinerary for the Reichsfuhrer SS Heinrich Himmler covering the next 48 hours."
+
+"cs14_hig_1" " "
+
+"cs14_jack_5" "Wait till you see the next one. A private communique from one Wilhelm Strasse alias Deathshead to the same Reichsfuhrer SS, dated yesterday. Shall I read it?"
+
+"cs14_director_6" "Please..."
+
+"cs14_jack_6" "My Dear Reichsfuhrer SS. As you are no doubt already aware, my X-labs lie in complete ruin. Operation Uber Soldat, my life's work is now a bitter memory. I realize you still have faith in the ultimate success of Operation Ressurection. I wish I could share your confidence. But I feel you've been misled by individuals whose mental competence must be called into question. I leave you now with the word of caution. The Allies have sent the most determined and capable agent to disrupt your ceremony. Do not make the mistake of underestimating him, as I did. Yours faithfully, SS Oberfuhrer Wilhelm Strasse."
+
+"cs14_jack_6_1" "My Dear Reichsfuhrer SS. As you are no doubt already aware, my X-labs lie in complete ruin. Operation Uber Soldat, my life's work is now a bitter memory. I realize you still have faith in the ultimate success of Operation Ressurection. I wish I could share your confidence. But I feel you've been misled by individuals whose mental competence must be called into question."
+
+"cs14_jack_6_2" "I leave you now with the word of caution. The Allies have sent the most determined and capable agent to disrupt your ceremony. Do not make the mistake of underestimating him, as I did. Yours faithfully, SS Oberfuhrer Wilhelm Strasse."
+
+"cs14_director_7" "Comments, gentlemen?"
+
+"cs14_murphy_1" "Sir, may I speak freely?"
+
+"cs14_director_8" "By all means."
+
+"cs14_murphy_2" "I have to confess: I'm having a hard time taking this seriously. I mean are we really supposed to believe that all this is transpired so the Nazis can... I don't know! Summon the spirit of the thousand year old prince. To do what? Win a war for them?"
+
+"cs14_jack_7" "Now, wait just a minute..."
+
+"cs14_murphy_3" "Please, Jack, let me finish! On top of that we have what amounts to their own top scientist telling them they have all collectively blown a head gasket. What further evidence do we need?"
+
+"cs14_hig_2" "Sir, it's just occured to me that we may be looking at this the wrong way. I mean, well, if these blokes are really intent upon squandering precious time and resources on all this mystic mumbo jumbo... Oh, well then..."
+
+"cs14_director_9" "Go on..."
+
+"cs14_hig_3" "What I mean to say - if they're dead set upon sabotaging their own war effort, why do we try to stop them?"
+
+"cs14_director_10" "Jack, I'm sure you have something to add."
+
+"cs14_jack_8" "Yes, sir, I do. Gentlemen, if just two weeks ago someone had mentioned legions of undead man-made monsters and demons from hell, would any of you have taken them seriously? Of course not. And neither would I. But think of all we've learned since then. Now you're saying we should ignore the rest of it because... Why? It's too incredible? I'm not saying I believe it. I'm saying we can't afford to dismiss it. Once again it's your call, sir."
+
+"cs14_director_11" "It's settled then. Blazkowicz returns to Castle Wolfenstein."
+}

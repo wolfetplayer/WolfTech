@@ -1,0 +1,52 @@
+{
+"crypt1_cnazi1_1" "It's like a slaughterhouse in here."
+
+"crypt1_cnazi2_1" "I know, these things are everywhere."
+
+"crypt1_cnazi1_2" "What are they? Where did they all come from?"
+
+"crypt1_cnazi3_1" "Don't ask me. No one ever tells me anything."
+
+"crypt1_cnazi1_3" "Mein Gott! Did you hear that!?"
+
+"crypt1_cnazi2_2" "Ja, and I wish I hadn't."
+
+"crypt1_cnazi3_2" "We have to get out of here! Follow me back to the entrance!"
+
+"crypt1_cnazi1_4" "What!? The ladder, it's destroyed!"
+
+"crypt1_cnazi2_3" "They sealed us in here!"
+
+"crypt1_cnazi1_5" "Get ready! They're coming!"
+
+"crypt1_cnazi1_shiver" " "
+
+"zmoan1" " "
+
+"zmoan2" " "
+
+"zgrowl1" " "
+
+"zgrowl2" " "
+
+"zgrowl3" " "
+
+"zgrowl5" " "
+
+"squish" " "
+
+"chase" " "
+
+"crypt1_talk1" "What was that?!"
+
+"crypt1_talk2" "I don't know. But I'm not going to check it out."
+
+"crypt1_talk3" "I'm not either. I think we should find some cover."
+
+"crypt1_talk4" "Ja, agreed."
+
+"lets_go" " "
+
+
+
+}

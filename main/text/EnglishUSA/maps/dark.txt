@@ -1,0 +1,17 @@
+{
+"blank" " "
+
+"dk_cs15_eli_01_3" "Alright. Madame Blavatsky will begin the ceremony anytime now. Once she begins, make sure that you do not look in the direction of the ruins."
+
+"dk_cs15_sol_01_3" "What... What will happen if we..."
+
+"dk_cs15_eli_02_2" "If you look? Well, first your blood will begin to boil. And after that... Well, it doesn't matter very much after that, ja?"
+
+"dk_cs15_eli_03" "Stand your post here, and make sure you do not lose power. Understood?"
+
+"dk_cs15_sol_02" "Jawohl!"
+
+"dk_cs15_sol2_01" "Jawohl!"
+
+"dk_earth_rumble" " "
+}

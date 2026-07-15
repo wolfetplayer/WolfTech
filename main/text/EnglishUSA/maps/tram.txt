@@ -1,0 +1,22 @@
+{
+"Tram_Station1" "Tram guard station report! Tram guard station! What is happening?"
+
+"sound/scenaric/tram/ast_1.wav" "Tram guard station report! Tram guard station! What is happening?"
+
+"Tram_Kesler1" "Yes, Lieutenant Rueger here. Situation under control."
+
+"Tram_Station2" "Ah... And the American?"
+
+"sound/scenaric/tram/ast_2.wav" "Ah... And the American?"
+
+"Tram_Kesler2" "Dead..."
+
+"Tram_Station3" "Excellent! Village guard station out."
+
+"sound/scenaric/tram/ast_3.wav" "Excellent! Village guard station out."
+
+"Tram_Kesler3" "Don't shoot! I'm Kessler!"
+
+"Tram_Kesler4" "Follow me. We must get you inside the village."
+
+}

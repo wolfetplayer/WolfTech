@@ -1,0 +1,247 @@
+#include "ui/menudef.h"
+{
+
+  assetGlobalDef {
+	font "fonts/font" 16						// font
+	smallFont "fonts/smallfont" 12				// font
+	bigFont "fonts/bigfont" 24					// font
+	handwritingFont "fonts/handfont" 17			// font (pt size needs to be diff than the others)
+	cursor "ui/assets/3_cursor3"				// cursor	
+	gradientBar "ui/assets/gradientbar2.tga"	// gradient bar
+	itemFocusSound "sound/misc/menu2.wav"		// sound for item getting focus (via keyboard or mouse )
+
+	fadeClamp 1.0								// sets the fadeup alpha
+	fadeCycle 1									// how often fade happens in milliseconds
+	fadeAmount 0.1								// amount to adjust alpha per cycle
+
+	shadowColor 0.1 0.1 0.1 0.25				// shadow color
+  	}
+							   
+
+\\ INGAME MENU \\
+
+menuDef {
+	name "ingame"
+	visible 0
+	fullScreen 0
+	outOfBoundsClick			// this closes the window if it gets a click out of the rectangle
+	rect 0 0 640 480
+	focusColor 1 .75 0 1
+	disableColor .5 .5 .5 1
+	onOpen
+	{
+		hide realrtcw_ingame_join;
+		hide realrtcw_ingame_vote;
+		hide realrtcw_ingame_controls;
+		hide realrtcw_ingame_system;
+		hide realrtcw_ingame_options;
+		hide realrtcw_ingame_exit;
+		
+		show realrtcw_ingame;
+		
+		show grpIngame;
+		
+		open ingame_quick
+	}
+
+itemDef
+	{
+		name realrtcw_logo
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_logo.tga"
+		visible 1
+		decoration
+	}
+
+
+itemDef
+	{
+		name realrtcw_ingame
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_ingame.tga"
+		visible 1
+		decoration
+	}
+
+
+itemDef
+	{
+		name realrtcw_ingame_join
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_ingame_join.tga"
+		visible 1
+		decoration
+	}
+
+
+itemDef
+	{
+		name realrtcw_ingame_vote
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_ingame_vote.tga"
+		visible 1
+		decoration
+	}
+
+
+itemDef
+	{
+		name realrtcw_ingame_controls
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_ingame_controls.tga"
+		visible 1
+		decoration
+	}
+
+
+itemDef
+	{
+		name realrtcw_ingame_options
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_ingame_options.tga"
+		visible 1
+		decoration
+	}
+
+
+itemDef
+	{
+		name realrtcw_ingame_system
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_ingame_system.tga"
+		visible 1
+		decoration
+	}
+
+
+itemDef
+	{
+		name realrtcw_ingame_exit
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_ingame_exit.tga"
+		visible 1
+		decoration
+	}
+
+	itemDef {
+	group grpIngame
+	name join
+	type 1
+	rect 10 144 178 26
+	visible 1
+	action {
+	close ingame_join;
+	close ingame_callvote;
+	close ingame_controls;
+	close ingame_options;
+	close ingame_system;
+	open ingame_join ;	close ingame_quick;
+	hide realrtcw_ingame_join;
+	hide realrtcw_ingame_vote;
+	hide realrtcw_ingame_controls;
+	hide realrtcw_ingame_system;
+	hide realrtcw_ingame_options;
+	hide realrtcw_ingame_exit;	
+	hide realrtcw_ingame;
+	hide grpIngame ;
+	uiScript RefreshServers ;
+	uiScript RefreshFilter }
+	mouseEnter { show "realrtcw_ingame_join" } 
+	mouseExit { hide "realrtcw_ingame_join" } 
+	}
+
+itemDef {
+	group grpIngame
+	name vote
+	type 1
+	rect 10 177 178 26 
+	visible 1
+	action {
+	close ingame_join;
+	close ingame_callvote;
+	close ingame_controls;
+	close ingame_options;
+	close ingame_system;
+	open ingame_callvote ; close ingame_quick }
+	mouseEnter { show "realrtcw_ingame_vote" } 
+	mouseExit { hide "realrtcw_ingame_vote" } 
+	}
+
+
+
+itemDef {
+	group grpIngame
+	name controls
+	type 1
+	rect 10 210 178 26
+	visible 1
+	action {
+	close ingame_join;
+	close ingame_callvote;
+	close ingame_controls;
+	close ingame_options;
+	close ingame_system;
+	open ingame_controls ; close ingame_quick }
+	mouseEnter { show "realrtcw_ingame_controls" } 
+	mouseExit { hide "realrtcw_ingame_controls" } 
+	}
+
+itemDef {
+	group grpIngame
+	name options
+	type 1
+	rect 10 243 178 26
+	visible 1
+	action {
+	close ingame_join;
+	close ingame_callvote;
+	close ingame_controls;
+	close ingame_options;
+	close ingame_system;
+	open ingame_options ; close ingame_quick }
+	mouseEnter { show "realrtcw_ingame_options" } 
+	mouseExit { hide "realrtcw_ingame_options" } 
+	}
+
+itemDef {
+	group grpIngame
+	name system
+	type 1
+	rect 10 276 178 26
+	visible 1 
+	action {
+	close ingame_join;
+	close ingame_callvote;
+	close ingame_controls;
+	close ingame_options;
+	close ingame_system;
+	open ingame_system ; close ingame_quick }
+	mouseEnter { show "realrtcw_ingame_system" } 
+	mouseExit { hide "realrtcw_ingame_system" } 
+	}
+
+	
+	
+	
+itemDef {
+	group grpIngame
+	name leave
+	type 1
+	rect 10 309 178 26
+	visible 1
+	action { uiscript leave }
+	mouseEnter { show "realrtcw_ingame_exit" } 
+	mouseExit { hide "realrtcw_ingame_exit" } 
+	}
+ 
+}
+
+}

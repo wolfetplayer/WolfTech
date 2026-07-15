@@ -1,0 +1,18 @@
+{
+
+"grenades_buy" "Grenades"
+
+"buy_armor"       "Armor"
+
+"buy_random_box"  "Random Weapon"
+
+"randomperk_buy"  "Random Perk"
+
+"reinforce_buy"  "Call Backup"
+
+"trap_buy"   "Flame Trap"
+
+"buy_ammo"       "Ammo"
+
+"weapon_upgrade_buy" "Upgrade Weapon"
+}

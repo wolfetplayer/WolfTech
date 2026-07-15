@@ -1,0 +1,188 @@
+{
+"basein_switch" " "
+
+"basein_rumble" " "
+
+"basein_cough2" " "
+
+"basein_yawn" " "
+
+"sound/scenaric/rocket/ls_attention.wav" "Attention, all personnel. V2 rocket test to commence in..."
+
+"rocket_ls_rocket_test" " "
+
+"sound/scenaric/rocket/ls_54321.wav" "5... 4... 3... 2... 1..."
+
+"sound/scenaric/rocket/ls_v2_test_complete.wav" "V2 rocket test complete. Telemetric operators, commence pre-launch calibration procedures."
+
+"sound/scenaric/rocket/ls_2min.wav" "Achtung! All launch supervisors report final readiness. V2 launch will commence in two minutes!"
+
+"rocket_ls_1min30sec" " "
+
+"rocket_ls_1min" " "
+
+"sound/scenaric/rocket/ls_30sec.wav" "Launch will commence in 30 seconds!"
+
+"rocket_ls_15sec" " "
+
+"rocket_ls_1098765sec" " "
+
+"rocket_ls_launch" " "
+
+"sound/scenaric/rocket/ls_launch_aborted.wav" "Launch aborted! All safety crews on station...!"
+
+"sound/scenaric/rocket/ls_intruder.wav" "Achtung! Intruder alert! intruder alert! Security teams, report immediately!"
+
+"sound/scenaric/rocket/ls_tower.wav" "Achtung, launch tower supervisor! Verify auto-release sequencer."
+
+"sound/scenaric/rocket/ls_fueling.wav" "Achtung! Fuel crews, complete final check of safety seals."
+
+"rocket_driver1_huh" "Huh? What was that?"
+
+"rocket_driver1_damn_tailgate" "Damn! This tailgate is still not fixed!"
+
+"rocket_driver1_imagination" "Hm. Must've been my imagination."
+
+"rocket_driver1_not_falling" "Uh. No, I'm not gonna fall for that again."
+
+"rocket_driver1_dont_kill_me" "Please, don't kill me! I'm just a mechanic!"
+
+"rocket_driver1_man_down" "Man down!"
+
+"rocket_driver1_gun_fire" "Gun fire!"
+
+"rocket_mech1_crane_connected" "Alright! The crane is connected to the transport container."
+
+"rocket_mech1_train_arrived" "Has the train arrived?"
+
+"rocket_mech1_stand_clear" "Attention! Crane is activated! Please stand clear of the crane!"
+
+"rocket_mech1_crane_ready" "Ok. Crane is ready."
+
+"rocket_mech1_lifting" "Lifting container."
+
+"rocket_mech1_moving_container" "Moving container into position."
+
+"rocket_mech1_lowering" "Ok. Transport in position. Lowering now."
+
+"rocket_mech1_man_down" "Man down! Hit the alarm!"
+
+"rocket_mech2_affirmative" "Affirmative. However, it is not in position."
+
+"rocket_mech2_in_position" "Alright. The transport is in position."
+
+"rocket_mech2_acknowledged" "Acknowledged."
+
+"rocket_mech2_almost_there" "Almost there... Lower..."
+
+"rocket_mech2_lower" "Lower..."
+
+"rocket_mech2_its_on" "Here. It's on. Go ahead and lift it back up."
+
+"rocket_mech2_come_in" "Hans! Hans! Come in train controller! Come in!"
+
+"rocket_mech2_whats_happening" "What is happening up there?"
+
+"rocket_mech2_sending_troops" "Sending up two troops to investigate."
+
+"rocket_mech2_forgot" "Hans, you forgot to lift the crane all the way up."
+
+"rocket_mech2_your_back" "Ah, you're back. Good."
+
+"rocket_mech2pa_affirmative" "Affirmative. However, it is not in position."
+
+"rocket_mech2pa_in_position" "Alright. The transport is in position."
+
+"rocket_mech2pa_acknowledged" "Acknowledged."
+
+"rocket_mech2pa_almost_there" "Almost there... Lower..." 
+
+"rocket_mech2pa_lower" "Lower..."
+
+"rocket_mech2pa_its_on" "Here. It's on. Go ahead and lift it back up."
+
+"rocket_mech2pa_come_in" "Hans! Hans! Come in train controller! Come in!"
+
+"rocket_mech2pa_whats_happening" "What is happening up there?"
+
+"rocket_mech2pa_sending_troops" "Sending up two troops to investigate."
+
+"rocket_mech2pa_forgot" "Hans, you forgot to lift the crane all the way up."
+
+"rocket_mech2pa_your_back" "Ah, you're back. Good."
+
+"rocket_nazi26_this_way" "Soldiers, soldiers. He's this way!"
+
+"rocket_nazi29_ammo" "Damn it! Out of ammo!"
+
+"rocket_nazi2a_elevator" "He've must gone down to the elevator."
+
+"rocket_nazi2a_down" "He's going down the elevator!"
+
+"rocket_nazi2a_lost_him" "Ah... Damn! We've lost him!"
+
+"rocket_nazi2a_gunfire" "Hey! I heard gunfire!"
+
+"rocket_nazi30_hurry" "He's this way! Hurry!"
+
+"rocket_nazi35_comes" "Here he comes! Los! Los!"
+
+"rocket_nazi36_charge_set" "Alright! The charge is set! Get out of here!"
+
+"rocket_nazi37_hold_him" "I'll hold him off! Go!"
+
+"rocket_nazi4_rocket_tests" "Ah, these rocket tests. Why don't they just launch the damn thing?"
+
+"rocket_nazi4_the_front" "So, how are the things on the front? Have you heard anything?"
+
+"rocket_nazi5_babysitting" "No! I'm here babysitting a bomb!"
+
+"rocket_nazi5_headache" "Ja, they're giving me a headache already."
+
+"rocket_nazi6a_where" "Where the hell is he?"
+
+"rocket_nazi7a_any_minute" "Alright. He should be coming down any minute now."
+
+"rocket_sci0_man_down" " "
+
+"rocket_sci0_here_all_day" "I don't want to be here all day."
+
+"rocket_sci0_hurry_up" "Alright. Let's hurry it up."
+
+"rocket_sci0_dont_shoot" " "
+
+"rocket_sci1_intruder" " "
+
+"rocket_sci1_man_down" " "
+
+"rocket_sci1_guards" " "
+
+"rocket_sci_misc_fear2" " "
+
+"rocket_sci_jeapordize" " "
+
+"rocket_sci_quick_guards" " "
+
+"rocket_sci_fear3" " "
+
+"rocket_nazi40_move_out" " "
+
+"rocket_v2_explode" " "
+
+"rocket_v2_takeoff" " "
+
+"rocket_bridge_fall" " "
+
+"rocket_bridge_fall2" " "
+
+"rocket_bridge_crash" " "
+
+"rocket_bridge_creak1" " "
+
+"rocket_bridge_creak2" " "
+
+"rocket_bridge_creak3" " "
+
+"rocket_d_battle" " "
+
+}

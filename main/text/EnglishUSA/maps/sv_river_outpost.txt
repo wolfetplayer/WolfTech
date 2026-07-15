@@ -1,0 +1,40 @@
+{
+
+"grenades_buy" "Grenades"
+
+"buy_armor"       "Armor"
+
+"buy_random_box"  "Random Weapon"
+
+"randomperk_buy"  "Random Perk"
+
+"reinforce_buy"  "Reinforce the Base"
+
+"buy_flametrap"   "Flame Trap"
+
+"buy_ammo"       "Ammo"
+
+"weapon_upgrade_buy" "Upgrade Weapon"
+
+"mg42_buy" "MG42"
+
+"mp44_buy" "MP44"
+
+"mp40_buy" "MP40"
+
+"secret_door" "Open the Lab"
+
+"res_buy"     "Resurrection"
+
+"second_chance_buy" "Resurrection"
+
+"marathon_buy" "Marathon"
+
+"fasthands_buy" "Fast Hands"
+
+"buy_scavenger" "Scavenger"
+
+"buy_regen"     "Resilience"
+
+"doubleshot_buy"  "Double Shot"
+}

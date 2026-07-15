@@ -1,0 +1,1193 @@
+#include "ui/menudef.h"
+
+{
+	assetGlobalDef {
+	
+		smallFont "fonts/smallfont" 12
+		font "fonts/font" 16
+		handwritingFont "fonts/handfont" 17
+		bigFont "fonts/bigfont" 24
+		
+		// hints
+		breakableHint		"gfx/2d/breakableHint.tga"
+		clipboardHint		"gfx/2d/clipboardHint.tga"
+		doorHint			"gfx/2d/doorHint.tga"
+		doorLockHint		"gfx/2d/lockedHint.tga"
+		doorRotateHint		"gfx/2d/doorHint.tga"
+		doorRotateLockHint	"gfx/2d/lockedHint.tga"
+		exitHint			"gfx/2d/exitHint.tga"
+		knifeHint			"gfx/2d/knifeHint.tga"
+		ladderHint			"gfx/2d/ladderHint.tga"
+		//friendHint		"gfx/2d/speechHint.tga"
+		speakHint			"gfx/2d/speechHint.tga"
+		mg42Hint			"gfx/2d/mg42Hint.tga"
+		waterHint			"gfx/2d/vanilla/waterHint.tga"
+		
+		cautionHint			"gfx/2d/et/tankHint.tga"		// Tank
+		dangerHint			"gfx/2d/dynamiteHint.tga"		// Dynamite
+		exclamationHint		"gfx/2d/et/satchelHint.tga"		// Satchel
+		hintPlrFriend		"gfx/2d/et/landmineHint.tga"	// Landmine
+		hintPlrNeutral		"gfx/2d/et/buildHint.tga"		// Build (Disarm)
+		hintPlrEnemy		"gfx/2d/et/uniformHint.tga"		// Uniform
+		hintPlrUnknown		"gfx/2d/et/reviveHint.tga"		// Revive / Speech (RealRTCW)
+						//	"gfx/2d/speechHint.tga"
+		
+		notUsableHint		"gfx/2d/notUsableHint.tga"
+		usableHint			"gfx/2d/usableHint.tga"
+		
+		alarmHint			"gfx/2d/usableHint.tga"
+		ammoHint			"gfx/2d/usableHint.tga"
+		armorHint			"gfx/2d/usableHint.tga"
+		buttonHint			"gfx/2d/usableHint.tga"
+		chairHint			"gfx/2d/usableHint.tga"
+		healthHint			"gfx/2d/usableHint.tga"
+		holdableHint		"gfx/2d/usableHint.tga"
+		inventoryHint		"gfx/2d/usableHint.tga"
+		powerupHint			"gfx/2d/usableHint.tga"
+		treasureHint		"gfx/2d/usableHint.tga"
+		weaponHint			"gfx/2d/usableHint.tga"
+		
+		youGotMail			"gfx/2d/youGotMail.tga"
+		youGotObjective		"gfx/2d/youGotObjective.tga"
+		
+		friendlyCross		"gfx/2d/friendlyCross.tga"
+
+		cursor "ui/assets/3_cursor3"				// cursor	
+		gradientBar "ui/assets/gradientbar2.tga"	// gradient bar
+
+		fadeClamp 1.0								// sets the fadeup alpha
+		fadeCycle 1									// how often fade happens in milliseconds
+		fadeAmount 0.1								// amount to adjust alpha per cycle
+
+		shadowX  5									// x amount for shadow offset
+		shadowY  5									// y amount for shadow offset
+		shadowColor 0.1 0.1 0.1 0.25				// shadow color
+	}
+	
+// SURVIVAL //
+
+	menuDef
+	{
+    	name "Survival"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+		style WINDOW_STYLE_EMPTY
+    	rect 60 0 640 480
+		
+		itemDef
+		{
+ 			name "waves"
+				
+			cvarTest "g_gameType"
+			showCvar { "2" }
+			
+			ownerDraw CG_PLAYER_WAVES
+			
+			rect -52 4 32 32
+			
+			decoration
+			foreColor 1 0 0 1
+			textFont UI_FONT_NORMAL
+			textAlignX 7
+			textScale .48
+			textStyle ITEM_TEXTSTYLE_SHADOWED
+			visible MENU_TRUE
+			
+			addColorRangerel 0 1	1.0 1.0 1.0 1
+			addColorRangerel 1 2	1.0 0.9 0.9 1
+			addColorRangerel 2 3	1.0 0.8 0.8 1
+			addColorRangerel 3 4	1.0 0.7 0.7 1
+			addColorRangerel 4 5	1.0 0.6 0.6 1
+			addColorRangerel 5 6	1.0 0.5 0.5 1
+			addColorRangerel 6 7	1.0 0.4 0.4 1
+			addColorRangerel 7 8	1.0 0.3 0.3 1
+			addColorRangerel 8 9	1.0 0.2 0.2 1
+			addColorRangerel 9 10	1.0 0.1 0.1 1
+			addColorRangerel 10 999	1.0 0.0 0.0 1
+		}
+	}
+	
+
+//	PLAYER STATUS	//
+
+	menuDef {
+    	name "Status"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect 40 438 372 32
+
+//	STAMINA
+		itemDef {
+			name ""
+			rect 7 0 165 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box_3x.tga"
+			
+			forecolor 1 1 1 1
+		}
+		
+		// stamina icon
+		itemDef {
+			name ""
+			rect 12 5 12 12
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/et/ic_stamina.tga"
+			
+			forecolor 1 1 1 1
+		}
+
+		// stamina bar backcolor
+		itemDef {
+			name ""
+			rect 27 6 138 10
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/backcolor.tga"
+			
+			forecolor 0 0 0 0.5			
+		}
+		
+		// stamina bar
+		itemDef {
+			name "stambar"
+			rect 29 8 134 6
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			align HUD_HORIZONTAL
+			ownerdraw CG_STAMINA
+			
+			addColorRangerel 0.0 0.1		1.0  0.1  0.1		1.0
+			addColorRangerel 0.1 0.2		1.0  0.2  0.2		1.0
+			addColorRangerel 0.2 0.3		1.0  0.3  0.3		1.0
+			addColorRangerel 0.3 0.4		1.0  0.4  0.4		1.0
+			addColorRangerel 0.4 0.5		1.0  0.5  0.5		1.0
+			addColorRangerel 0.5 0.6		1.0  0.6  0.6		1.0
+			addColorRangerel 0.6 0.7		1.0  0.7  0.7		1.0
+			addColorRangerel 0.7 0.8		1.0  0.8  0.8		1.0
+			addColorRangerel 0.8 0.9		1.0  0.9  0.9		1.0
+			addColorRangerel 0.9 1.0		1.0  1.0  1.0 		1.0
+		}
+
+		
+//	ARMOR
+		itemDef {
+			name ""
+			rect 7 -22 55 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "0" }												// Armor Value
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		itemDef {
+			name ""
+			rect 7 -22 165 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "1" }												// Armor Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box_3x.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		itemDef {
+			name ""
+			rect 7 -22 192.5 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "2" }												// Armor Bar + Value
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box_3_5x.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// armor icon
+		itemDef {
+			name ""
+			rect 12 -17 12 12
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "0"; "1"; "2" }										// Armor Value / Armor Bar / Armor Bar + Value
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/et/ic_armor.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// armor value
+		itemDef {
+ 			name ""
+			rect 22 -27.5 38 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "0" }												// Armor Value
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRange 1 999 1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// armor value
+		itemDef {
+ 			name ""
+			rect 163 -27.5 36.5 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "2" }												// Armor Bar + Value
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRange 1 999 1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// armor bar backcolor
+		itemDef {
+			name ""
+			rect 27 -16 138 10
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "1"; "2" }											// Armor Bar / Armor Bar + Value
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/backcolor.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		0 0 0 .5
+			
+			forecolor 1 1 1 0
+		}
+		
+		// armor bar
+		itemDef {
+			name "armorbar"
+			rect 29 -14 134 6
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "1"; "2" }											// Armor Bar / Armor Bar + Value
+			
+			decoration
+			visible MENU_TRUE
+			align HUD_HORIZONTAL
+			ownerdraw CG_PLAYER_ARMOR_VALUE_BAR
+			
+			forecolor 1 1 1 1
+		}
+
+		
+//	HEALTH & ARMOR
+		itemDef {
+			name ""
+			rect 7 -22 55 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "2" }												// Health & Armor Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			forecolor 1 1 1 1
+		}
+		
+		itemDef {
+			name ""
+			rect 62 -22 55 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "2" }												// Health & Armor Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		itemDef {
+			name ""
+			rect 7 -22 165 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "4" }											// Health & Armor Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box_3x.tga"
+			
+			forecolor 1 1 1 1
+		}
+		
+		itemDef {
+			name ""
+			rect 7 -22 192.5 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "5" }											// Health & Armor Bar + Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box_3_5x.tga"
+			
+			forecolor 1 1 1 1
+		}
+	
+		itemDef {
+			name ""
+			rect 199.5 -22 55 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "5" }												// Health & Armor Bar + Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// health icon
+		itemDef {
+			name ""
+			rect 12 -17 12 12
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "3"; "4"; "5" }										// Health & Armor Values / Health & Armor Values Bar / Health & Armor Values Bar + Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/et/ic_health.tga"
+			
+			forecolor 1 1 1 1
+		}
+	
+		// armor icon
+		itemDef {
+			name ""
+			rect 67 -17 12 12
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "2" }												// Health & Armor Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/et/ic_armor.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// armor icon
+		itemDef {
+			name ""
+			rect 204.5 -17 12 12
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "5" }												// Health & Armor Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/et/ic_armor.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		.5 .5 .5 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// health value
+		itemDef {
+ 			name ""
+			rect 22 -27.5 38 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "2" }												// Health & Armor Values
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_HEALTH
+			
+			addColorRange 1 999 1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// armor value
+		itemDef {
+ 			name ""
+			rect 77 -27.5 38 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "2" }												// Health & Armor Values
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRange 1 999 1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// health value
+		itemDef {
+ 			name ""
+			rect 163 -27.5 36.5 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "5" }												// Health & Armor Bar + Values
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_HEALTH
+			
+			addColorRange 1 999 1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// armor value
+		itemDef {
+ 			name ""
+			rect 214.5 -27.5 38 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "5" }												// Health & Armor Bar + Values
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRange 1 999 .5 .5 .5 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// health & armor bar backcolor
+		itemDef {
+			name ""
+			rect 27 -16 138 10
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "4"; "5" }											// Health & Armor Bar / Health & Armor Bar + Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/backcolor.tga"
+			
+			forecolor 0 0 0 .5
+		}
+		
+		// health bar
+		itemDef {
+			name "healthbar"
+			rect 29 -14 134 6
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "4"; "5" }											// Health & Armor Bar / Health & Armor Bar + Values
+			
+			decoration
+			visible MENU_TRUE
+			align HUD_HORIZONTAL
+			ownerdraw CG_PLAYER_HEALTH_BAR
+			
+		// 	addColorRangerel 000 010		1.0  0.0  0.0		1.0
+		// 	addColorRangerel 010 100		1.0  1.0  1.0 		1.0
+
+		// 	addColorRangerel 100.0 102.5		0.9  0.1  0.9 		1.0			
+		// 	addColorRangerel 102.5 105.0		0.8  0.2  0.8 		1.0
+		// 	addColorRangerel 105.0 107.5		0.7  0.3  0.7 		1.0
+		// 	addColorRangerel 107.5 110.0		0.6  0.4  0.6 		1.0
+		// 	addColorRangerel 110.0 112.5		0.5  0.5  0.5 		1.0
+		// 	addColorRangerel 112.5 115.0		0.4  0.6  0.4 		1.0
+		// 	addColorRangerel 115.0 117.5		0.3  0.7  0.3 		1.0
+		// 	addColorRangerel 117.5 120.0		0.2  0.8  0.2 		1.0
+		// 	addColorRangerel 120.0 122.5		0.1  0.9  0.1 		1.0
+		// 	addColorRangerel 122.5 999.0		0.0  1.0  0.0 		1.0
+		}
+		
+		// // health bar (max)
+		// itemDef {
+		// 	name "healthbar_max"
+		// 	rect 29 -14 134 6
+		// 	
+		// 	cvarTest "cg_hudStatus"
+		// 	showCvar { "4"; "5" }											// Health & Armor Bar / Health & Armor Bar + Values
+		// 	
+		// 	decoration
+		// 	visible MENU_TRUE
+		// 	align HUD_HORIZONTAL
+		// 	ownerdraw CG_PLAYER_HEALTH_BAR_MAX
+		// 	
+		// 	addColorRangerel 000 005		1.0  0.0  0.0		1.0
+		// 	addColorRangerel 005 050		1.0  1.0  1.0 		1.0
+		// 
+		// 	addColorRangerel 050 060		0.9  0.1  0.9 		1.0			
+		// 	addColorRangerel 060 070		0.8  0.2  0.8 		1.0
+		// 	addColorRangerel 070 080		0.7  0.3  0.7 		1.0
+		// 	addColorRangerel 080 090		0.6  0.4  0.6 		1.0
+		// 	addColorRangerel 090 100		0.5  0.5  0.5 		1.0
+		// 	addColorRangerel 100 110		0.4  0.6  0.4 		1.0
+		// 	addColorRangerel 110 120		0.3  0.7  0.3 		1.0
+		// 	addColorRangerel 120 130		0.2  0.8  0.2 		1.0
+		// 	addColorRangerel 130 140		0.1  0.9  0.1 		1.0
+		// 	addColorRangerel 140 999		0.0  1.0  0.0 		1.0
+		// }
+		
+		// // health bar (realism)
+		// itemDef {
+		// 	name "healthbar_realism"
+		// 	rect 29 -14 134 6
+		// 	
+		// 	cvarTest "cg_hudStatus"
+		// 	showCvar { "4"; "5" }											// Health & Armor Bar / Health & Armor Bar + Values
+		// 	
+		// 	decoration
+		// 	visible MENU_TRUE
+		// 	align HUD_HORIZONTAL
+		// 	ownerdraw CG_PLAYER_HEALTH_BAR_REALISM
+		// 	
+		// 	addColorRangerel 000.0 002.5		1.0  0.0  0.0		1.0
+		// 	addColorRangerel 002.5 025.0		1.0  1.0  1.0 		1.0
+		// 
+		// 	addColorRangerel 025 030		0.9  0.1  0.9 		1.0
+		// 	addColorRangerel 030 035		0.8  0.2  0.8 		1.0
+		// 	addColorRangerel 035 040		0.7  0.3  0.7 		1.0
+		// 	addColorRangerel 040 045		0.6  0.4  0.6 		1.0
+		// 	addColorRangerel 045 050		0.5  0.5  0.5 		1.0
+		// 	addColorRangerel 050 055		0.4  0.6  0.4 		1.0
+		// 	addColorRangerel 055 060		0.3  0.7  0.3 		1.0
+		// 	addColorRangerel 060 065		0.2  0.8  0.2 		1.0
+		// 	addColorRangerel 065 070		0.1  0.9  0.1 		1.0
+		// 	addColorRangerel 070 999		0.0  1.0  0.0 		1.0
+		// }
+		
+		// armor bar
+		itemDef {
+			name "armorbar"
+			rect 29 -11 134 3
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "4"; "5" }											// Health & Armor Bar / Health & Armor Bar + Values
+			
+			decoration
+			visible MENU_TRUE
+			align HUD_HORIZONTAL
+			ownerdraw CG_PLAYER_ARMOR_VALUE_BAR
+			
+			forecolor .5 .5 .5 1
+		}
+		
+		// SURVIVAL
+		
+		itemDef {
+			name "score_box"
+			rect 7 -44 55 22
+			
+			cvarTest "g_gameType"
+			showCvar { "2" }												// Score
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			forecolor 1 1 1 1
+		}
+		
+			itemDef
+			{
+				name "score_icon"
+					
+				cvarTest "g_gameType"
+				showCvar { "2" }
+				
+				rect 12 -39 12 24 // X+5 Y+5
+				
+				background "gfx/limbo/skill_roll.tga"
+				
+				decoration
+				style WINDOW_STYLE_SHADER
+				visible	1
+			}
+			
+			itemDef
+			{
+				name "score_text"
+				
+				cvarTest "g_gameType"
+				showCvar { "2" }
+				
+				rect 32 -40.5 16.5 12 // X+20 Y-1.5
+				
+				decoration
+				foreColor 1 1 1 1
+				textFont UI_FONT_BIG
+				textScale .28
+				visible MENU_TRUE
+				
+				ownerDraw CG_PLAYER_SCORE
+			}
+		
+		itemDef {
+			name "kills_box"
+			rect 62 -44 55 22
+			
+			cvarTest "g_gameType"
+			showCvar { "2" }												// Kills
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			forecolor 1 1 1 1
+		}
+		
+			itemDef
+			{
+				name "kills_icon"
+					
+				cvarTest "g_gameType"
+				showCvar { "2" }
+					
+				cvarTest "g_gameType"
+				showCvar { "2" }
+				
+				rect 68 -39 12 12 // X+5 Y+5
+				style WINDOW_STYLE_SHADER
+				background "gfx/hud/pm_death"
+				visible	1
+				decoration
+			}
+			
+			itemDef
+			{
+				name "kills_text"
+					
+				cvarTest "g_gameType"
+				showCvar { "2" }
+				
+				ownerDraw CG_PLAYER_KILLS
+				
+				rect 88 -40.5 12 12 // X+20 Y-1.5
+				
+				decoration
+				foreColor 1 1 1 1
+				textAlignX 6
+				textAlignY -12
+				textFont UI_FONT_NORMAL
+				textScale .28
+				textStyle ITEM_TEXTSTYLE_SHADOWED
+				visible MENU_TRUE
+			}
+
+		//	NOTEBOOK
+		
+		itemDef {
+			name "chRect"
+			
+			cvarTest "g_gameType"
+			hideCvar { "2" }
+			
+			decoration
+			visible MENU_TRUE
+			rect 11 -395 217 48
+			ownerdraw CG_NEWMESSAGE
+		}
+
+		
+		//	HEAT INDICATOR	
+
+		// heat indicator	
+		itemDef {
+			name "heat"
+			
+			cvarTest "g_gameType"
+			hideCvar { "2" }
+			
+			decoration
+			visible MENU_TRUE
+			rect 456 -44 83 43		// horizontal version
+			align HUD_HORIZONTAL
+			ownerdraw CG_PLAYER_WEAPON_HEAT
+		}
+		
+		itemDef {
+			name "heat"
+			
+			cvarTest "g_gameType"
+			showCvar { "2" }
+			
+			decoration
+			visible MENU_TRUE
+			rect 456 -66 83 43		// horizontal version
+			align HUD_HORIZONTAL
+			ownerdraw CG_PLAYER_WEAPON_HEAT
+		}
+
+
+		//	WEAPON ICON		
+		
+		// ammo icon
+		itemDef {
+			name "a"
+			rect 458 -40 80 40
+			
+			cvarTest "g_gameType"
+			hideCvar { "2" }
+			
+			visible MENU_TRUE
+			decoration
+			align ITEM_ALIGN_CENTER
+			ownerdraw CG_PLAYER_WEAPON_ICON2D
+		}
+		
+		itemDef {
+			name "a"
+			rect 458 -62 80 40
+			
+			cvarTest "g_gameType"
+			showCvar { "2" }
+			
+			visible MENU_TRUE
+			decoration
+			align ITEM_ALIGN_CENTER
+			ownerdraw CG_PLAYER_WEAPON_ICON2D
+		}
+
+		
+		//	CLIP
+		
+		itemDef {
+			name ""
+			rect 443 0 55 22
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel	0 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// clip icon
+		itemDef {
+			name ""
+			rect 448 5 12 12
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/et/ic_clip.tga"
+			
+			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel	0 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// clip count value
+		itemDef {
+ 			name "cliptex"
+			rect 456 -5.5 55 22
+			visible MENU_TRUE
+			decoration
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "0" }
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
+			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
+			
+			forecolor 1 1 1 1
+		}
+		
+		// clip count value
+		itemDef {
+ 			name "cliptex"
+			rect 469 -5.5 38 22
+			visible MENU_TRUE
+			decoration
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "1" }
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
+			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
+			
+			forecolor 1 1 1 1
+		}
+
+		
+//	AMMO
+		itemDef {
+			name ""
+			rect 498 0 55 22
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_AMMO_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel	0 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// ammo icon
+		itemDef {
+			name ""
+			rect 503 5 12 12
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/et/ic_ammo.tga"
+			
+			ownerdraw CG_PLAYER_AMMO_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel	0 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// ammo value
+		itemDef {
+ 			name "amtex"
+			rect 511 9.5 55 22
+			visible MENU_TRUE
+			decoration
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "0" }
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_AMMO_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
+			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
+			
+			forecolor 1 1 1 1
+		}
+		
+		// ammo value
+		itemDef {
+ 			name "amtex"
+			rect 516 9.5 55 22
+			visible MENU_TRUE
+			decoration
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "1" }
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_AMMO_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
+			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
+			
+			forecolor 1 1 1 1
+		}
+		
+		itemDef {
+			name "weapcharbar_box"
+			rect 443 -22 110 22
+			
+			cvarTest "g_gameType"
+			showCvar { "2" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box_2x.tga"
+			forecolor 1 1 1 1
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+		}
+		
+			itemDef
+			{
+				name "weapcharbar_icon"
+				rect 451 -17 6 12 // X+5 Y+5
+				
+				cvarTest "g_gameType"
+				showCvar { "2" }
+				
+				background "gfx/hud/et/ic_power.tga"
+				decoration
+				style WINDOW_STYLE_SHADER
+				visible	1
+				ownerdrawflag CG_SHOW_NOT_V_BINOC
+			}
+		
+		// weapon charge bar backcolor
+		itemDef {
+			name ""
+			rect 463 -16 83.25 10 // X+20 Y+6
+			
+			cvarTest "g_gameType"
+			showCvar { "2" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/backcolor.tga"
+			
+			forecolor 0 0 0 .5
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+		}
+		
+			itemDef {
+				name "weapcharbar"
+				
+				cvarTest "g_gameType"
+				showCvar { "2" }
+				
+				decoration
+				visible MENU_TRUE
+				align HUD_HORIZONTAL 
+				rect 463.5 -21.5 82 11 // horizontal version // Y-5.5
+				ownerdraw CG_PLAYER_WEAPON_RECHARGE
+				addColorRangerel 0.00 0.25  1 0.1 0.1 0.5   // 0-25%
+				addColorRangerel 0.25 0.50  .63 .47 .25 0.5 // 25%-50%
+				addColorRangerel 0.50 1.00  0.1 1 0.1 0.5   // 25-100%
+			}
+			
+			
+			
+	}
+	
+	//	GRENADE COUNT	//	always visible, regardless of equipped weapon
+	menuDef {
+    	name "GrenadeCount"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect 452 425 54 28
+
+		itemDef {
+			name "grencount"
+			ownerdraw CG_PLAYER_GRENADE_COUNT
+			rect -50 0 54 28
+			visible MENU_TRUE
+			decoration
+			textstyle ITEM_TEXTSTYLE_SHADOWEDMORE
+			textscale .42
+			forecolor .63 .59 .57 1	// grey
+		}
+}
+	
+	//	HOLDABLE	//
+	
+	menuDef {
+    	name "Holdables"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+  		rect 596 290 40 40
+	
+		itemDef {
+			name "w_holdable"
+			rect 0 0 40 40
+			visible MENU_TRUE
+			decoration
+			ownerdraw CG_PLAYER_HOLDABLE
+		}
+	}
+	
+	//	PERK	//
+	
+	menuDef {
+    	name "Perks"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+  		rect 320 0 240 40
+	
+		itemDef {
+			name "w_perk"
+			rect -120 0 40 40
+			visible MENU_TRUE
+			decoration
+			ownerdraw CG_PLAYER_PERKS
+		}
+	}
+
+	//	STABILITY	//	
+	
+	menuDef {
+    	name "stability"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect -80 206 10 64	// bar anchored in center, fills up/down
+
+		itemDef {
+			name "stabRect"
+			decoration
+			visible MENU_TRUE
+
+			addColorRange	0 128	.24 .4 .14 1
+			addColorRange	128 255	.24 .14 .4 1
+
+			rect 0 0 5 64
+			ownerdraw CG_PLAYER_WEAPON_STABILITY
+		}
+	}
+
+	//	CURSOR HINTS	//
+	
+	menuDef {
+    	name "Cursorhints"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect 320 291 32 32		// Subtitles
+    	// rect 320 317 32 32
+
+		itemDef {
+			name "chRect"
+			decoration
+			visible MENU_TRUE
+			rect -16 -16 32 32
+			ownerdraw CG_CURSORHINT
+		}
+	}
+}

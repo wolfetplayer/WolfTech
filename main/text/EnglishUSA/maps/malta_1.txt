@@ -1,0 +1,159 @@
+{
+"gimme_wp_guy" "^2Sgt.Evans"
+
+"course_sarge" "^2Lt.McDermott"
+
+"guy_learning_m1" "^2Pvt.Lesley"
+
+"table_guard"     "^2Pvt.Doyle"
+
+"harbor_patrol1" "^2Cpl.Blackwell"
+
+"balcony_guard"  "^2Sgt.Lehmkuhl"
+
+"shouting_lt"    "^2Lt.Wedgwood"
+
+"poor_fella"     "^2Pvt.Denny"
+
+"museum_guard1"  "^2Pvt.Kautz"
+
+"museum_guard2"  "^2Sgt.Jolly"
+
+"medic"          "^2Cpl.Hobbins"
+
+"waters"         "^2Pvt.Waters"
+
+"street_patrol2" "^2Sgt.Crowford"
+
+"hq_guard"       "^2Sgt.Wallcroft"
+
+"boss"           "^2Col.Redford"
+
+"south_guard"    "^2Cpl.Gibson"
+
+"bartender"      "^2Evie"
+
+"flak1_commander" "^2Cpt.Ingram"
+
+"driver"          "^2Pvt.MacMillan"
+
+"doc"             "^2Dr.Kovlov"
+
+"south_guard2"    "^2Cpl.Gibson"
+
+"bar_guy1"        "^2J.Luyties"
+
+"dream_hunter"      "^1Dream Hunter"
+
+"port_guard2"       "^2Sgt.MacTavish"
+
+"port_guard"        "^2Pvt.Griffen"
+
+"captain_table"     "Captain?"
+
+"stay_post"         "Sorry Captain, I have to stay on my post."
+
+"anything_sir"      "Do you need anything,sir?"
+
+"dont_worry_cap"    "We gonna keep an eye out, dont you worry Captain"
+
+"england_goods"     "Colonel says that we are gonna transport all those goods to England very soon. Just need to make sure that skies are safe."
+
+"welcome_museum"    "Welcome to our humble little museum Captain."
+
+"hq_sir"            "Sir!"
+
+"hq_hq"             "Headquarters are right ahead, Sir."
+
+"hq_colonel"        "Colonel should be inside, Captain."
+
+"gimmewp_intro"     "Captain Blazkowicz, welcome to the training facility."
+
+"gimmewp_justdont"  "Sorry, Captain. But you cant take those weapons outside this facility."
+
+"gimmewp_lt"        "Lieutenant McDermott is in the next section. He will guide you through our new course."
+
+"gimmewp_resupply"  "If you wanna resupply - use the ammo cabinet."
+
+"course_welcome"    "Hey Captain. Welcome back to the course."
+
+"course_garbage"    "That was an improvement. But its not hard to improve on garbage. Lets try it again."
+
+"course_horrible"   "That wasnt horrible, but it wasnt amazing either."
+
+"course_prettygood" "Now that was pretty damn good! Nice work Blazkowicz!"
+
+"course_seenworse"  "Alright. Ive seen worse. You ve got a few rough edges though."
+
+"course_ok"        "You looked ok back there. But you still need some work."
+
+"col_blazko?"      "Blazkowicz?"
+
+"doc_busy"         "Sorry Captain, Im too busy right now. Go bother someone else."
+
+"doc_touch"        "Please do not touch anything here!"
+
+"doc_syringes"     "If you need any syringes you can take them in the next room. Coproral will help you out."
+
+"waters_nothing" "I have nothing for you, BJ. If you wanna check out the guns we got you better go the firing range."
+
+"col_brief1"       "Now, about your mission. Ive been told that your task is to sabotage V2 Complex in Katamarunde and take possession of the newest German rocket plane."
+
+"col_brief12"      "You will be paradropped in the nearby forest. After that you are on your own. OSA transport plane is waiting for you at the airfield." 
+
+"col_brief13"      "You can learn the mission details in this sealed folder on your way there. In the meantime, we will prepare the airstrip for your return."
+
+"col_frank" "Its a real shame what happened to Agent One. I knew Frank personally. Never thought he will end up like that."
+
+"col_hell" "Thats a hell of the mission for one man. I sure hope OSA folks know what they are doing sending you there alone."
+
+"col_mynameis" "My name is Colonel Charles Redford. Im in charge of the British Garrison here."
+
+"col_mynameis2" "I have been ordered to provide all necessary assistance to OSA operations in Malta. If you need anything please dont hesitate to ask me directly."
+
+"col_namepresume" "Captain William Blazkowicz, I presume?"
+
+"col_watershelp" "Dont forget to resupply in the armory. Private Waters will help you out."
+
+"col_godspeed"   "Godspeed Captain!"
+
+"waters_gladtoseeya" "BJ! Am I glad to see you! Its been a while since our raid on Siwa."
+
+"waters_meandlt" "Me and Lieutenant were transferred here to support OSA operations."
+
+"waters_meandlt2" "He is currently stuck with the new guys on the training course, while I was put in charge of munitions and weapon logistics here in armory."
+
+"waters_chapter2" "Your next task will require stealth approach. I prepared two sets of equipment for this kind of mission. Pick the one to your preference."
+
+"waters_goodtogo" "Ok. Everything seems to be in order. Good luck!"
+
+"waters_france" "Have you heard anything about Agent Two? Lieutenant told me she was redeployed to France."
+
+"drunk_listen" "Hey! What do you think you doing? I was listening to that!"
+
+"bart_out" "I dont care! Get out!"
+
+"bart_name" "Names Evie.Managing this tavern as best as I can. Family business, you know."
+
+"bart_sleep" "If you are looking for a place to sleep you better check out hotel on the opposite side of the street. Lovely place"
+
+"bart_back" "What do you think you doing? Back off the counter! Now!"
+
+"bart_get" "What can I get for ya?"
+
+"bartender_welcome" "Welcome to One Eyed Jack! What can I get for ya?"
+
+"bart_beer" "You prefer beer? Or maybe something stronger?"
+
+"bart_new" "Never saw you before. Are you new here?"
+
+"medic_adrenaline" "Doctor Kovlov is currently in charge of adrenaline research. He studied the sample you brought and he is intend to improve it."
+
+"medic_greet"      "Greetings Captain!Coproral Hobbins at your service Im assisting doctor Kovlov here. Despite his heavy russian accent we getting along just fine."
+
+"medic_hesok" "Doctor Kovlov might not be the most pleasant fella you met but he is ok, believe me."
+
+"medic_captain" "Captain?"
+
+"patrol_crane1" "I dont wanna hurry you, but we need to get that crane operational until morning. So you better make this thing work ASAP."
+}

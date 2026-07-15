@@ -1,0 +1,69 @@
+{
+"blank" " "
+
+"g1_worthless" "Ah! This worthless pile of junk still won't start!"
+
+"g2_start_generator" "Are you still trying to start the generator?"
+
+"g1_no_upper_body" "Ah... No. I'm working on my upper body strength, one arm at a time."
+
+"g2_because_of_cold" "I bet it's because of the cold."
+
+"g1_shrewd_observation" "Tell me. Do you often make such shrewd observations? You should seriously consider officer's training."
+
+"g2_crank_harder" "I think you need to crank it harder."
+
+"g1_frozen_solid" "Look, are you acting stupid just to annoy me!? Don't you see I'm practically tearing my arm off!? Goddamn thing won't start because the goddamn thing is frozen solid!"
+
+"g2_relax" "Hey! Relax, will ya? I was just trying to be helpful."
+
+"g1_look_for_antifreeze" "Want to be helpful!? Well, go look for some antifreeze then. Don't just stand here making idiotic comments!"
+
+"g2_alright" " "
+
+"m1_Ive_had_it" "I have had it! I've absolutely had it with this place! Another day like today, and I'll be ready for the insane asylum!"
+
+"m2_what_is_it" "What is it this time?"
+
+"m1_stinking" "It's that stinking rocket plane again!"
+
+"m2_oh_gott" "Oh, Gott..."
+
+"m1_orings" "Remember the cracked o-rings on the reserve thrusters? You know, the ones we've known about since last August? The same ones the Leutnant never gave a damn about?"
+
+"m2_ja_ja" "Ja ja."
+
+"m1_full_standby" "Well, now I have to go out in this filthy weather and change both sets, because someone in their infinite wisdom decided to go to full standby in two hours!"
+
+"m2_dh_himself" "I bet that was Deathshead himself. He came storming through here a while ago looking none none too pleased."
+
+"m1_I_didnt_know" "Oh... I didn't even know he was back."
+
+"m1_I_dont_believe_it" "What the... I don't believe it! I do not believe it!"
+
+"m2_now_what" "Now what?"
+
+"m1_torque_wrench" "Where in bloody hell is my torque wrench?"
+
+"m2_dont_look_at_me" "Don't look at me. These are my tools!"
+
+"g1_how_is_erich" "So, how is Erich getting along?"
+
+"g2_still_sick" "Still sick."
+
+"g1_too_bad" "That's too bad. I hope it's nothing serious."
+
+"g3_bad_water" "The medic says it was bad water."
+
+"g1_lucky_for_me" "Lucky for me, I've never touched the stuff."
+
+"mecdril1" " "
+
+"metal_crank1" " "
+
+"intruder_alert" "X-Labs control, this is Ice Station 1. Intruder alert! Repeat. Intruder Alert!"
+
+"ze_american" " "
+
+"g1_alarm" "An intruder! Alarm! Alarm!"
+}

@@ -1,0 +1,55 @@
+{
+"cs1_director_1" "Come in..."
+
+"cs1_director_2" "Well, Jack, have we heard anything?"
+
+"cs1_jack_1" "Yes, sir. We've just received a coded transmission from Kessler, our contact in the Kreisau Circle."
+
+"cs1_director_3" "And?"
+
+"cs1_jack_2" "Both agents have been captured, and are being held  in castle Wolfenstein."
+
+"cs1_director_4" "Damn! Call a meeting, Jack."
+
+"cs1_jack_3" "Yes, sir."
+
+"cs1_director_6" "Alright, gentlemen. Now, let's go through it again by the numbers. What did we miss?"
+
+"cs1_jack_4" "Here is what we know..."
+
+"cs1_jack_5" "This is Castle Wolfenstein, located in the Harz mountains of Northern Germany. Property of Heinrich Himmler."
+
+"cs1_jack_6" "Now, we've known of the existence of Castle Wolfenstein for some time. But we've only recently heard reports from our Kreisau Circle contacts in the German resistance, regarding bizarre occult rituals taking place there."
+
+"cs1_jack_7" "Now, these characters are part of the Himmler's newly formed SS Paranormal Division. A small, but elite group comprised of members possesing above average IQs, and background with the occult and paranormal. The one in charge is this woman."
+
+"cs1_jack_8" "Helga von Bulow. Our Kreisau contact in one of the villages below the castle has informed us that she and other members of the division have been recently deployed to the area."
+
+"cs1_jack_9" "The kraut with the monocle is one Wilhelm Strasse, also known as Deathshead. A brilliant and ruthless scientist who heads up Himmler's special projects division."
+
+"cs1_hig_01" "Special Project? That's marvelously vague."
+
+"cs1_jack_10" "We know it encompasses all manners of advanced weapons research, including rocketry. It's also rumored to involve ultra secret research into chemical and biological warfare."
+
+"cs1_hig_02" "Charming..."
+
+"cs1_jack_11" "But at the moment we don't know how it ties in with this massive archaeological dig near Castle Wolfenstein."
+
+"cs1_director_7" "So, advanced weapons, rocketry, chemical and biological research. And now, the occult!"
+
+"cs1_mur_01" "It still doesn't add up!"
+
+"cs1_director_8" "That's why we sent our boys in there."
+
+"cs1_director_9" "Jack, what are our options here?"
+
+"cs1_jack_12" "Well, we could send a backup team in behind them."
+
+"cs1_director_10" "Or?"
+
+"cs1_jack_13" "Or, we sit tight and hope that they could find the way out."
+
+"cs1_mur_02" "It's your call, sir."
+
+"cs1_director_11" "Well. Looks like we play the waiting game..."
+}

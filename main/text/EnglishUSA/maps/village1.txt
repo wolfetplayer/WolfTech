@@ -1,0 +1,167 @@
+{
+"villofficer2_4" "Enough already! Stop punishing yourself. No-one is to blame."
+
+"villnazi0_2" "Oh... It's freezing out here."
+
+"villnazi1_2" "Heh. It's going to be even colder than last night. I hope we get some new blankets soon."
+
+"villnazi0_3" "I just hope we get some hot water soon. I haven't bathed in over two weeks."
+
+"villnazi1_3" "Ja. I know, I know, heh."
+
+"villnazi1_4" "The American! Los los!"
+
+"villdrunk1_1" " "
+
+"villdrunk1_2" " "
+
+"villdrunk1_3" " "
+
+"villdrunk1_4" " "
+
+"villdrunk1_5" "Shut your filthy hole! You slovenly swine!"
+
+"villdrunk1_6" "Stand at attention, soldier! You are a disgrace to the Reich!"
+
+"villdrunk1_7" "Bring me another beer, you dog! Schnell! Schnell!"
+
+"villdrunk1_8" "Hey, Frauhlein, Frauhlein! Kommen sie hier! I'm thirsty!"
+
+"villdrunk1_9" "Get back to your post, you malingering coward! I'll have you shot!"
+
+"villnazi5_1" "Some very strange goings-on up there last night?"
+
+"villnazi3_1" "I wouldn't know."
+
+"villnazi5_2" "Things are definitely getting more and more out of control."
+
+"villnazi3_2" "Hm. You don't say."
+
+"villnazi5_3" "Another casualty on the research team I'm told."
+
+"villnazi5_4" "And the three replacements reported in just this morning."
+
+"villnazi3_3" "Is that a fact?"
+
+"villnazi5_5" "According to Otto, one of them is a special assistant to the Reichsfuhrer SS himself."
+
+"villnazi5_6" "If you ask me, they really are onto something now."
+
+"villnazi3_4" "Did they really? Well, imagine that."
+
+"villnazi3_5" "According to Otto, eh? Well, Otto always did talk too much for his own good."
+
+"villnazi3_6" "Ah, but I didn't ask you, Leutnant. I suggest we change the subject to something less controversial."
+
+"villnazi5_7" "As you wish, Herr Hauptmann. But, you must have heard what happened to Erich."
+
+"villnazi3_7" "Truthfully, Lieutenant, I hear very little and remember even less."
+
+"villnazi5_8" "Ja ja ja..."
+
+"villnazi14_1" "What do you know, they actually found it."
+
+"villnazi15_1" "Unbelievable, I would've sworn the whole thing was a make-believe."
+
+"villnazi14_2" "I guess the crazy old witch was right after all."
+
+"villnazi15_2" "Well, she knew where to dig. I'll give her that."
+
+"villnazi14_3" "You suppose she's right about the rest of it?"
+
+"villnazi15_3" "The rest of what?"
+
+"villnazi14_4" "Well... You know..."
+
+"villnazi15_4" "What? Resurrecting the dead? Oh, come on! Who do you take me for? A schoolboy?"
+
+"villnazi17_1" "Willy! Kommen sie hier!"
+
+"villnazi15_5" "Jawohl, Herr Hauptmann!"
+
+"villofficer1_1" "That was bad business back there."
+
+"villofficer2_1" "Ja, I agree... Terrible."
+
+"villofficer1_2" "That was our own men we sealed in with those... those things."
+
+"villofficer2_2" "I know, I was there. But what else could we do? It was an order, an order from Helga no less."
+
+"villofficer1_3" "Of course... An order..."
+
+"villofficer1_4" "Those screams... Those horrible screams! Didn't you hear them? I can hear them still. I don't think I'll ever stop hearing them."
+
+"villofficer1_5" "I need a drink."
+
+"villofficer2_3" "We had to seal off the crypt. There was no time left."
+
+"villp4_1" "Wait! Don't shoot! Come inside!"
+
+"villp4_2" "I have something for you."
+
+"villp4_3" "Our British friends thought you might be able to use this. A silenced Sten submachine gun."
+
+"villp4_4" "It uses the same 9mm ammunition as the MP40."
+
+"villp4_5" "I have nothing else for you."
+
+"villp4_6" "Be careful. There is an officer's quarters just down the street."
+
+"villp4_7" "Heh, I must stay here."
+
+"villp4_8" "Watch for snipers in open windows."
+
+"villp4_9" "You must go now. If the guards find you here with me, we'll both be shot."
+
+"villmisc_1" " "
+
+"villmisc_3" " "
+
+"villmisc_4" " "
+
+"villmisc_5" " "
+
+"villmisc_6" " "
+
+"villmisc_7" " "
+
+"villmisc_8" " "
+
+"villmisc_9" " "
+
+"villmisc_10" " "
+
+"villmisc_11" " "
+
+"villmisc_12" " "
+
+"villmisc_13" " "
+
+"villblank" " "
+
+"villkess_1" "As such as it is, this is my house."
+
+"villkess_2" "If you go down these stairs, there's a back entrance to the cafe."
+
+"villkess_3" "I regret that I cannot accompany you any further in my condition."
+
+"villkess_4" "You must hurry! Helga's team has an excavation site at the graveyard at the end of town. The entrance to the crypt is there. Good luck."
+
+"villp1_1" "No please! Don't shoot!"
+
+"villfem1_1" "Oh, please do not kill me!"
+
+"villfem2_1" "Please, don't hurt me! I know nothing!"
+
+"kessler" "^2Kessler"
+
+"karl"    "^2Villigut"
+
+"villp3_1" "What do you want? I have nothing for you!"
+
+"villp3_2" "Stay away!"
+
+"villp3_3" "Guards!!"
+
+
+}

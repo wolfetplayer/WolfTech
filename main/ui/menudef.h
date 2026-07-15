@@ -2,9 +2,9 @@
 ===========================================================================
 
 Return to Castle Wolfenstein single player GPL Source Code
-Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Return to Castle Wolfenstein single player GPL Source Code (RTCW SP Source Code).  
+This file is part of the Return to Castle Wolfenstein single player GPL Source Code (RTCW SP Source Code).
 
 RTCW SP Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -118,8 +118,7 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_SHOW_LANPLAYONLY                 0x00001000
 #define CG_SHOW_MINED                       0x00002000
 #define CG_SHOW_HEALTHOK                    0x00004000
-#define CG_SHOW_TEAMINFO                    0x00008000
-#define CG_SHOW_NOTEAMINFO                  0x00010000
+
 #define CG_SHOW_OTHERTEAMHASFLAG            0x00020000
 #define CG_SHOW_YOURTEAMHASENEMYFLAG        0x00040000
 #define CG_SHOW_ANYNONTEAMGAME              0x00080000
@@ -168,12 +167,6 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_PLAYER_HEALTH            4
 #define CG_PLAYER_AMMO_ICON         5
 #define CG_PLAYER_AMMO_VALUE        6
-#define CG_SELECTEDPLAYER_HEAD      7
-#define CG_SELECTEDPLAYER_NAME      8
-#define CG_SELECTEDPLAYER_LOCATION  9
-#define CG_SELECTEDPLAYER_STATUS    10
-#define CG_SELECTEDPLAYER_WEAPON    11
-#define CG_SELECTEDPLAYER_POWERUP   12
 
 #define CG_FLAGCARRIER_HEAD         13
 #define CG_FLAGCARRIER_NAME         14
@@ -207,8 +200,6 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_PLAYER_HASFLAG           38
 #define CG_GAME_TYPE                39  // not done
 
-#define CG_SELECTEDPLAYER_ARMOR     40
-#define CG_SELECTEDPLAYER_HEALTH    41
 #define CG_PLAYER_STATUS            42
 #define CG_FRAGGED_MSG              43  // painted with old system
 #define CG_PROXMINED_MSG            44  // painted with old system
@@ -229,8 +220,6 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_GAUNTLET                 59
 #define CG_SPECTATORS               60
 #define CG_TEAMINFO                 61
-#define CG_VOICE_HEAD               62
-#define CG_VOICE_NAME               63
 #define CG_PLAYER_HASFLAG2D         64
 #define CG_HARVESTER_SKULLS2D       65  // only shows in harvester
 #define CG_CAPFRAGLIMIT             66
@@ -252,6 +241,9 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_CURSORHINT_STATUS        80  // like 'health' bar when pointing at a func_explosive
 #define CG_PLAYER_WEAPON_STABILITY  81  // shows aimSpreadScale value
 #define CG_NEWMESSAGE               82  // 'you got mail!'	//----(SA)	added
+#define CG_PLAYER_LIVES         83
+#define CG_PLAYER_COMPASS           84
+#define CG_PLAYER_SPAWNPOINTS       85
 
 #define CG_PLAYER_PERKS             86
 #define CG_PLAYER_KILLS             87
@@ -259,6 +251,7 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_PLAYER_ARMOR_VALUE_BAR   89
 #define CG_PLAYER_HEALTH_BAR        90
 #define CG_PLAYER_WEAPON_RECHARGE   91
+#define CG_PLAYER_GRENADE_COUNT     92
 
 #define UI_OWNERDRAW_BASE           200
 #define UI_HANDICAP                 200
@@ -330,6 +323,13 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_LOADSTATUSBAR            261
 #define UI_SAVEGAMENAME             262
 #define UI_SAVEGAMEINFO             263
+
+#define UI_CREATEMAPPREVIEW_SMALL1  264
+#define UI_CREATEMAPPREVIEW_SMALL2  265
+#define UI_CREATEMAPPREVIEW         266
+#define UI_REINFORCE                267
+#define UI_FREEZE                   268
+#define UI_UISKILL                  269
 
 #define VOICECHAT_GETFLAG           "getflag"                // command someone to get the flag
 #define VOICECHAT_OFFENSE           "offense"                // command someone to go on offense

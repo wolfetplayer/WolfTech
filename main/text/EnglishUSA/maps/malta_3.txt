@@ -1,0 +1,177 @@
+{
+"gimme_wp_guy" "^2Sgt.Evans"
+
+"course_sarge" "^2Lt.McDermott"
+
+"guy_learning_m1" "^2Pvt.Lesley"
+
+"table_guard"     "^2Pvt.Doyle"
+
+"harbor_patrol1" "^2Cpl.Blackwell"
+
+"balcony_guard"  "^2Sgt.Lehmkuhl"
+
+"lt"    "^2Lt.Wedgwood"
+
+"poor_fella"     "^2Pvt.Denny"
+
+"museum_guard1"  "^2Pvt.Kautz"
+
+"museum_guard2"  "^2Sgt.Jolly"
+
+"medic"          "^2Cpl.Hobbins"
+
+"waters"         "^2Pvt.Waters"
+
+"street_patrol2" "^2Sgt.Crowford"
+
+"hq_guard"       "^2Sgt.Wallcroft"
+
+"boss"           "^2Col.Redford"
+
+"south_guard"    "^2Cpl.Gibson"
+
+"bartender"      "^2Evie"
+
+"flak1_commander" "^2Cpt.Ingram"
+
+"driver"          "^2Pvt.MacMillan"
+
+"doc"             "^2Dr.Kovlov"
+
+"south_guard2"    "^2Cpl.Gibson"
+
+"bar_guy1"        "^2J.Luyties"
+
+"dream_hunter"      "^1Dream Hunter"
+
+"port_guard2"       "^2Sgt.MacTavish"
+
+"port_guard"        "^2Pvt.Griffen"
+
+"jack"            "^2OSA Agent"
+
+"captain_table"     "Captain?"
+
+"stay_post"         "Sorry Captain, I have to stay on my post."
+
+"anything_sir"      "Do you need anything,sir?"
+
+"dont_worry_cap"    "We gonna keep an eye out, dont you worry Captain"
+
+"england_goods"     "Colonel says that we are gonna transport all those goods to England very soon. Just need to make sure that skies are safe."
+
+"welcome_museum"    "Welcome to our humble little museum Captain."
+
+"hq_sir"            "Sir!"
+
+"hq_hq"             "Headquarters are right ahead, Sir."
+
+"hq_colonel"        "Colonel should be inside, Captain."
+
+"gimmewp_intro"     "Captain Blazkowicz, welcome to the 
+training facility."
+
+"gimmewp_justdont"  "Sorry, Captain. But you cant take those weapons outside this facility."
+
+"gimmewp_lt"        "Lieutenant McDermott is in the next section. He will guide you through our new course."
+
+"gimmewp_resupply"  "If you wanna resupply - use the ammo cabinet."
+
+"course_welcome"    "Hey Captain. Welcome back to the course."
+
+"course_garbage"    "That was an improvement. But its not hard to improve on garbage. Lets try it again."
+
+"course_horrible"   "That wasnt horrible, but it wasnt amazing either."
+
+"course_prettygood" "Now that was pretty damn good! Nice work Blazkowicz!"
+
+"course_seenworse"  "Alright. Ive seen worse. You ve got a few rough edges though."
+
+"course_ok"        "You looked ok back there. But you still need some work."
+
+"col_blazko?"      "Blazkowicz?"
+
+"waters_nothing" "I have nothing for you, BJ. If you wanna check out the guns we got you better go the firing range."
+
+"col_godspeed"   "Godspeed Captain!"
+
+"waters_goodtogo" "Ok. Everything seems to be in order. Good luck!"
+
+"drunk_listen" "Hey! What do you think you doing? I was listening to that!"
+
+"bart_sleep" "If you are looking for a place to sleep you better check out hotel on the opposite side of the street. Lovely place"
+
+"bart_back" "What do you think you doing? Back off the counter! Now!"
+
+"bart_get" "What can I get for ya?"
+
+"bartender_welcome" "Welcome to One Eyed Jack! What can I get for ya?"
+
+"bart_beer" "You prefer beer? Or maybe something stronger?"
+
+"bart_new" "Never saw you before. Are you new here?"
+
+"medic_captain" "Captain?"
+
+"col_ghost" "If you ask me we chasing a bloody ghost here."
+
+"col_waste" "Why do we care if Germans waste their resources on some uncontrollable monstrosities?"
+
+"col_norway" "Blazkowicz! I just got an urgent message from the OSA. You are tasked to follow Deathshead Uboat immediately. As you know the man should be in Norway."
+
+"col_norway2" "And we sure as hell dont want to lose the track of him again. So, resupply, heal up and board that jeep. You can read the file on your way to the airfield."
+
+"col_still_here" "Are you still here, Captain?"
+
+"port_closed"    "Sorry Captain. But the port is closed until further notice."
+
+"lt_post"        "Back to your post then soldier!"
+
+"lt_hurt"        "Nobody was hurt during this air raid. Just a few buildings damaged. Nothing we cant restore."
+
+"lt_never"       "Germans never used this type of airplanes before. At least not on Malta."
+
+"lt_locked"      "We are going to keep this area locked down until engineers arrive."
+
+"patrol_report"  "I got it. Secure the area. Wait for the engineers. Will pass your orders to Lieutenant, Sir!"
+
+"patrol_report2" "Lieutenant, sir! Colonel ordered to secure the area and wait for the engineers! No civilians allowed!"
+
+"patrol_report3" "Sir,yes,Sir!"
+
+"medic_al" "Miss Evie, can I get anything with alchohol in it? For medical purpose of course!"
+
+"medic_checkup" "Lieutenant ordered me to check up on civilians and personnel. No one was really hurt. Well, maybe a little scared."
+
+"medic_donttell" "Im gonna stick around for a bit."
+
+"medic_tried" "Glass of water then."
+
+"bart_water" "No you cant. Your Lieutenant guy already warned me about that. Water only."
+
+"bart_told" "Ive already told the Lieutenant everything I know."
+
+"bart_raids" "I thought the bombing raids are long over."
+
+"bart_cantsleep" "Im not closing anytime soon. Cant sleep anyway."
+
+"barguy_nicetry" "Nice try, pal."
+
+"waters_hunt" "Alright, you all set. Good hunting, Captain!"
+
+"waters_venom_wtf" "That Venom Gun you brought in last time? Never saw anything like that!"
+
+"waters_venom_report" "Command still waits for my report on the Venom Gun potential combat efficiency. If you want my honest take I think it would be better to use it as stationary gun on vehicles rather than infantry weapon."
+
+"waters_norway" "BJ! Ive just finished preparing your gear for the mission in Norway!"
+
+"waters_both_loadouts" "Both of these loadouts should do the job."
+
+"doc_side" "Any side effects to report Captain?"
+
+"doc_wherecoproral" "Captain, have you seen a coproral? He was suppose to return an hour ago."
+
+"doc_takesyringe" "The last adrenaline syringe modification is on the table. You can take it."
+
+}

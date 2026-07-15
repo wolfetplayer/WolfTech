@@ -1,0 +1,57 @@
+{
+"sound/scenaric/sfm/ast_1.wav" "Alright. We must move quickly."
+
+"sound/scenaric/sfm/ast_2.wav" "Panzerfaust! The Kreisau extraction team just ahead of us reports there is 6 man Panzergrenadier unit hiding in the next block. You must eliminate them before I can risk moving forward."
+
+"sound/scenaric/sfm/ast_3.wav" "Excellent work! Now keep moving! You must locate the extraction team."
+
+"sound/scenaric/sfm/ast_4.wav" "Our team has just met up with the defecting scientist. But they under heavy fire in the next block. They need your assistance. Hurry!"
+
+"sound/scenaric/sfm/ast_5.wav" "Good. The scientist is safe. But there is heavy resistance along the last block before the weapon complex. Let's go!"
+
+"sound/scenaric/sfm/ast_6.wav" "You may enter now. Good luck Blazkowicz!"
+
+"sound/scenaric/sfm/ast_7.wav" "I will destroy the bell tower in case there are more snipers."
+
+"sound/scenaric/sfm/ast_8.wav" "I'm under attack! They have more anti-tank weapons! Hurry!"
+
+"sound/scenaric/sfm/ast_9.wav" "I can't take much more of this! Move!"
+
+"sound/scenaric/sfm/ast_10.wav" " "
+
+"TankCom1" "Alright. We must move quickly."
+
+"TankCom2" "Panzerfaust! The Kreisau extraction team just ahead of us reports there is 6 man Panzergrenadier unit hiding in the next block. You must eliminate them before I can risk moving forward."
+
+"TankCom3" "Excellent work! Now keep moving! You must locate the extraction team."
+
+"TankCom4" "Our team has just met up with the defecting scientist. But they under heavy fire in the next block. They need your assistance. Hurry!"
+
+"TankCom5" "Good. The scientist is safe. But there is heavy resistance along the last block before the weapon complex. Let's go!"
+
+"TankCom6" "You may enter now. Good luck Blazkowicz!"
+
+"TankCom7" "I will destroy the bell tower in case there are more snipers."
+
+"TankCom8" "I'm under attack! They have more anti-tank weapons! Hurry!"
+
+"TankCom9" "I can't take much more of this! Move!"
+
+"TankCom10" " "
+
+"SFMHelp1" "Hurry! We need your help!"
+
+"SFMHelp2" "We're under attack!"
+
+"SFMHelp3" "Protect the scientist!"
+
+"SFMHelp4" "Move! Get over here!"
+
+"SFMHelp5" "Thank you for your assistance. We'll move the scientist out soon. You'd better get going."
+
+"SFMHelp6" "What are you waiting for? The tank driver is waiting for you!"
+
+"SFMHelp7" "He needs your help! Move!"
+
+"SFMHelp8" "Go, damn you!"
+}

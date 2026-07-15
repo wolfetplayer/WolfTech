@@ -1,0 +1,74 @@
+{
+"officer1_speak" " "
+
+"blank" " "
+
+"elevator1start" " "
+
+"elevator1loop" " "
+
+"elevator1end" " "
+
+"whistle1" " "
+
+"yawn" " "
+
+"galarm" "An intruder! Alarm! Alarm!"
+
+"bridgefall1" " "
+
+"hitler1" " "
+
+"hitler2" " "
+
+"hitler3" " "
+
+"hes_coming" "Okay. He should be coming down any minute now."
+
+"driver_open_gate" "Hey, can you open the gate, bitte? I have an an important delivery!"
+
+"guard_sorry_road_closed" "Sorry, this road is closed!"
+
+"driver_what_do_you_mean_closed" "What do you mean, closed? It can't be closed! This is is the only road into Paderborn!"
+
+"guard_I_know" "I know, that's why it's closed! Due to special conditions of security, pertaining to the upcoming ceremony, absolutely no traffic is to be allowed in or out of the vicinity of the village of Paderborn for the next 24 hours. By order of General von Stauff."
+
+"driver_delivery_for_gen" "But this delivery is for General von Stauff! It's six cases of cheese and sausages for the officer's kitchen. Get him on the phone, now, I'm sure he will make an exception."
+
+"guard_sorry_blacked_out" "Sorry, we're completely blacked out."
+
+"driver_what" "What?"
+
+"guard_due_to_radio" "Due to special conditions of security, pertaining to the upcoming ceremony, absolutely no radio communications will be allowed in or out of the vicinity of the village of Paderborn for the next 24 hours. By order-"
+
+"driver_ja_ja" "Ja, ja, I know, by order of General von Stauff. Look, I'm not going to be held responsible for this. I absolutely refuse to budge from this spot until you let me through."
+
+"guard_suit_yourself" "Suit yourself, but you'll be staying here until tomorrow!"
+
+"driver_what_am_I_supposed_to_do" "But what am I supposed to do with all this cheese?"
+
+"guard_look_for_crackers" "I don't know. Look for some crackers."
+
+"m1_verdammt_leak" "Argh, it's that same verdammt leak... Well, nothing for us to do but repack the valve."
+
+"m2_but_we_just" "But we just repacked it last week."
+
+"m1_thats_right" "That's right, and now we're going to repack it this week. And if we have to, we'll repack it again next week. See how it works?"
+
+"m2_doesnt_make_sense" "But it doesn't make any sense. Obviously, we need to order a new valve."
+
+"m1_makes_perfect_sense" "It makes perfect sense. Haven't you heard? There's a war on."
+
+"m2_alright" "Alright, but I still say it doesn't make sense."
+
+"m1_yes_it_was_obvious" "Yes, it was obvious six months ago, when I put in the requisition, and it's obvious now, that we'll be lucky if we get it before 1947. So, why don't you stop wasting time and hand me that sprocket wrench."
+
+"door10_close" " "
+
+"dam_b25_radio" "There's the drop zone, up ahead. Visibility: 4000 yds. Wind: 5 kts South-SE. Conditions: Good. Prepare for jump in two minutes!"
+
+"dam_b25" " "
+
+"officer1_speak" "What's going on down there?"
+
+}

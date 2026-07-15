@@ -1,0 +1,50 @@
+{
+"cs6_director_1" "Well, gentlemen. It's been 48 hours since our man Blazkowicz returned from Castle Wolfenstein. That's given us ample time to digest his findings. Findings which are to say the least - astonishing."
+
+"cs6_murphy_1" "That's an understatement, sir."
+
+"cs6_director_2" "The question I'm putting to you all now is this: What are Nazis really up to?"
+
+"cs6_jack_1" "Well, sir, to put it bluntly - I don't think we know enough to answer that question."
+
+"cs6_murphy_2" "Really?"
+
+"cs6_jack_2" "Don't get me wrong. We've learned plenty about their capabilities. That alone scares the hell outta me."
+
+"cs6_higgs_1" "Yeah, yeah."
+
+"cs6_jack_3" "But..."
+
+"cs6_director_3" "Yes, Jack?"
+
+"cs6_jack_4" "Well, there are two things that still bother me. Exactly what is this Dark Knight they all seemed to be so interested in?"
+
+"cs6_director_4" "What did our research come up with?"
+
+"cs6_jack_5" "Nothing... A complete blank."
+
+"cs6_higgs_2" "Well, it's obviously more of their jiggery-pokery raising the ghoulies rot."
+
+"cs6_director_5" "What's the second thing, Jack?"
+
+"cs6_jack_6" "The second thing is Deathshead. Now here we have probably the single most dangerous figure in the entire Third Reich. And still we don't have a clue about his connection to all this."
+
+"cs6_murphy_3" "Deathshead? Haven't our sources placed him with the secret rocket base in Peenemunde?"
+
+"cs6_director_6" "Well, that's correct. In fact, as luck would have it, our man Blazkowicz is headed there now."
+
+"cs6_murphy_4" "He is?"
+
+"cs6_director_7" "Yes. His orders are to infiltrate and sabotage the entire V weapons complex. With any luck he might even get his hands on the latest experimental Cobra."
+
+"cs6_higgs_3" "The Cobra rocket plane?"
+
+"cs6_director_8" "The very one."
+
+"cs6_murphy_5" "That's exciting news, sir!"
+
+"cs6_director_9" "So... What would you say, Jack, to my instructing our man to keep his eyes and ears open for any links to projects involving the... paranormal?"
+
+"cs6_jack_7" "I would say that was an excellent idea, sir."
+
+}

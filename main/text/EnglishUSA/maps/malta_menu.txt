@@ -1,0 +1,25 @@
+{
+"gimme_wp_guy" "^2Sgt.Evans"
+
+"course_sarge" "^2Lt.McDermott"
+
+"gimmewp_intro"     "Captain Blazkowicz, welcome to the training facility."
+
+"gimmewp_justdont"  "Sorry, Captain. But you cant take those weapons outside this facility."
+
+"gimmewp_lt"        "Lieutenant McDermott is in the next section. He will guide you through our new course."
+
+"gimmewp_resupply"  "If you wanna resupply - use the ammo cabinet."
+
+"course_welcome"    "Hey Captain. Welcome back to the course."
+
+"course_garbage"    "That was an improvement. But its not hard to improve on garbage. Lets try it again."
+
+"course_horrible"   "That wasnt horrible, but it wasnt amazing either."
+
+"course_prettygood" "Now that was pretty damn good! Nice work Blazkowicz!"
+
+"course_seenworse"  "Alright. Ive seen worse.You ve got a few rough edges though."
+
+"course_ok"        "You looked ok back there.But you still need some work."
+}

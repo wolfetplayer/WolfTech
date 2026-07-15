@@ -1,0 +1,14 @@
+{
+"rocket_sci0_dont_shoot" "Please, don't shoot me!"
+"TYSci1_1" "Hurry up with those documents!"
+
+"TYSci2_1" "I'm almost done! Just a minute!"
+
+"TYSci1_2" "We don't have a minute! Deathshead wanted to leave an hour ago and he's furious!"
+
+"TYSci2_2" "Alright. Alright. So why's the rush?"
+
+"TYSci1_3" "He's leaving for the facility up north. It's something big. That's all I know."
+
+"TYMech1_1" "Alright, the elevator is fixed! Now go upstairs and switch on the power!"
+}

@@ -1,0 +1,67 @@
+{
+"blank" " "
+
+"chat_who_are_you" " "
+
+"cough2" " "
+
+"yawn" " "
+
+"whistle" " "
+
+"marching" " "
+
+"dadum3" " "
+
+"alert_guards" " "
+
+"what_was_that" " "
+
+"american" " "
+
+"chat_whats_going_down_there" " "
+
+"guards_guards" " "
+
+"it_was_nothing" " "
+
+"los_los" " "
+
+"corp_jawol" "Jawohl!"
+
+"corp_just_checked" "I just checked a minute ago, sir. He hasn't."
+
+"corp_sir" "Sir!"
+
+"off_check_again" "Well, check again, damn you. And be quick about it!"
+
+"off_corporal" "Corporal!"
+
+"off_go_see" "Go, and see if General Burkhalter has arrived yet."
+
+"gen1_did_you_know" "Did you know Burkhalter and Von Stauff still haven't showed up?"
+
+"gen2_very_bad" "Ah, this is very bad. Something must've gone wrong."
+
+"gen1_blav_unwound" "I hear Blavatsky came completely unwound. According to Otto, she left right away, cancelled the whole party, and headed straight to the ceremonial site."
+
+"gen2_josef_furious" "Josef is going to be furious. He'd been planning this for weeks."
+
+"gen1_maybe_so" "Maybe so. But something tells me that if tonight is not a success, Herr Himmler isn't going to care one little bit about anyone's plans."
+
+"gen2_you_have_a_point" "You have a point there."
+
+"bg1_almost_feel" "You can almost feel the tension in the air."
+
+"bg2_definitely" "Definitely. This ceremony has everyone's nerves on edge."
+
+"bg1_not_kidding" "Not kidding. The Major almost bit my head off a while ago, and for nothing at all!"
+
+"hurt75" " "
+
+"bguard_intruder" "There is an intruder in the chateau! Call the guards, quickly!"
+
+"chat_eg_solo_loop" " "
+
+"officer1_enemysight" "What? Who are you?!"
+}

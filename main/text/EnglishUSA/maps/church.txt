@@ -1,0 +1,57 @@
+{
+"churchn1_1" "Poor Josef! Look at him! Torned to shreds!"
+
+"churchn2_1" "What could've done that?"
+
+"churchn3_1" "Nothing human..."
+
+"churche1_1" "What are you gawking at!? You'll see worse than this if you don't get moving! Stop standing around with your thumbs in your mouths, and start  searching the area! Keep an eye out for the American!"
+
+"churchn1_2" "He must be dead by now. I'm convinced of it!"
+
+"churche1_2" "Oh? You're convinced of it, are you? How reassuring! We can all rest easy now, I suppose. Get moving now before I shoot you on the spot!"
+
+"churchn1_3" "Jawohl, mein Hauptmann!"
+
+"coffinlid_1" " "
+
+"church_lightning1" " "
+
+"church_lightning2" " "
+
+"church_lightning3" " "
+
+"church_thunder1" " "
+
+"church_thunder2" " "
+
+"church_thunder3" " "
+
+"church_helga1_1" "Well, what's happening?"
+
+"church_zemph1_1" "A moment, please, mein Director."
+
+"church_helga1_2" "Is it working?"
+
+"church_zemph1_2" "Please, be patient! We are operating under very difficult conditions here."
+
+"church_helga1_3" "Enough of your stalling! Tell me - yes or no - will it work?!"
+
+"church_zemph1_3" "Frau von Bulow... How many times do I have to remind you? This is a very complex and delicate operation. It cannot be hurried! We are not filling teeth here."
+
+"church_helga1_4" "Don't take that patronizing tone with me!"
+
+"church_zemph1_4" "Just a moment... Just a moment...!"
+
+"church_helga1_5" "What? What!?"
+
+"church_zemph1_5" "Ja, ja! The extraction process is beginning. It is only a matter of time now!"
+
+"church_helga1_6" "Excellent!"
+
+"church_kill_him" " "
+
+"church_dispatch" " "
+
+
+}

@@ -1,0 +1,39 @@
+{
+"Me109Flight" " "
+
+"ForestNazi7_1" "Is that the last delivery for today?"
+
+"ForestNazi8_1" "I believe so. Nothing else is scheduled."
+
+"ForestNazi9_1" "Look! The American spy!"
+
+"ForestNazi11_1" "Hey Rudolf! There's a parachute caught in that tree across the lake!"
+
+"ForestNazi10_1" "Really? It's probably just a misdrop from that Black Guard division training to the South. It happens all the time, you will get used to it."
+
+"ForestNazi11_2" "Are they training today?"
+
+"ForestNazi10_2" "Ah, I don't know. There's a schedule here somewhere. Find out if you are that interested."
+
+"ForestNazi11_3" "I really think we should go investigate."
+
+"ForestNazi10_3" "Look, do whatever you want. I have to post this watch schedule in the next 20 minutes, or the Leutnant will have my head."
+
+"ForestNazi10_4" "I'll go alert the sentries!"
+
+"ForestNazi11_4" "Ja, ja..."
+
+"ForestNazi15_1" "Is there anything special to report, Corporal?"
+
+"ForestNazi13_1" "Well, sir. About 3 hours ago, a General's car with a full escort came flying through here. Then, about an hour and a half later, they left."
+
+"ForestNazi15_2" "Ah, Deathshead and his staff, one of his last minute tours of inspection, no doubt. He certainly does get around."
+
+"ForestNazi15_3" "Pardon me for a moment, Corporal, while I handle something important."
+
+"ForestNazi15_4" "Ah... Much better."
+
+"ForestNazi15_5" "What!? Was ist los!? Mein gott!"
+
+"ForestNazi15_6" "Coproral! I just found a parachute, and some weapons back here. Sound the alarm! Quickly!"
+}

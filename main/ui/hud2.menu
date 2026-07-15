@@ -1,0 +1,1252 @@
+#include "ui/menudef.h"
+
+// green text from MK mockup	- (61 64 36)	= (.24 .25 .14) (too light, using +0.1 (.34 .35 .24))
+// orange text from MK mockup	- (161 121 65)	= (.63 .47 .25)
+// white text from MK mockup	- (161 150 145)	= (.63 .59 .57)
+
+{
+	assetGlobalDef {
+	
+		font "fonts/font" 16						// font
+		handwritingFont "fonts/handfont" 17			// font (pt size needs to be diff than the others)
+
+		//	font "fonts/impact.ttf" 16				// font
+		smallFont "fonts/smallfont" 12				// font
+		bigFont "fonts/bigFont" 24					// font
+
+		cursor "ui/assets/3_cursor3"				// cursor	
+		gradientBar "ui/assets/gradientbar2.tga"	// gradient bar
+
+		fadeClamp 1.0								// sets the fadeup alpha
+		fadeCycle 1									// how often fade happens in milliseconds
+		fadeAmount 0.1								// amount to adjust alpha per cycle
+
+		shadowX  5									// x amount for shadow offset
+		shadowY  5									// y amount for shadow offset
+		shadowColor 0.1 0.1 0.1 0.25				// shadow color
+
+	}
+
+//	PLAYER STATUS	//
+
+	menuDef {
+    	name "Status"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect 40 438 372 32
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 125 999		0.0 1.0 0.0 1.00			
+			addColorRangerel 124 125		0.0 1.0 0.0 0.96
+			addColorRangerel 123 124		0.0 1.0 0.0 0.92
+			addColorRangerel 122 123		0.0 1.0 0.0 0.88
+			addColorRangerel 121 122		0.0 1.0 0.0 0.84
+			addColorRangerel 120 121		0.0 1.0 0.0 0.80
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+			
+			addColorRangerel 119 120		0.0 1.0 0.0 0.76
+			addColorRangerel 118 119		0.0 1.0 0.0 0.72
+			addColorRangerel 117 118		0.0 1.0 0.0 0.68
+			addColorRangerel 116 117		0.0 1.0 0.0 0.64
+			addColorRangerel 115 116		0.0 1.0 0.0 0.60
+			addColorRangerel 114 115		0.0 1.0 0.0 0.56
+			addColorRangerel 113 114		0.0 1.0 0.0 0.52
+			addColorRangerel 112 113		0.0 1.0 0.0 0.48
+			addColorRangerel 111 112		0.0 1.0 0.0 0.44
+			addColorRangerel 110 111		0.0 1.0 0.0 0.40
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+			
+			addColorRangerel 109 110		0.0 1.0 0.0 0.36
+			addColorRangerel 108 109		0.0 1.0 0.0 0.32
+			addColorRangerel 107 108		0.0 1.0 0.0 0.28
+			addColorRangerel 106 107		0.0 1.0 0.0 0.24
+			addColorRangerel 105 106		0.0 1.0 0.0 0.20
+			addColorRangerel 104 105		0.0 1.0 0.0 0.16
+			addColorRangerel 103 104		0.0 1.0 0.0 0.12
+			addColorRangerel 102 103		0.0 1.0 0.0 0.08
+			addColorRangerel 101 102		0.0 1.0 0.0 0.04
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 099 100		1.0 1.0 1.0 0.01
+			addColorRangerel 098 099		1.0 1.0 1.0 0.02
+			addColorRangerel 097 098		1.0 1.0 1.0 0.03
+			addColorRangerel 096 097		1.0 1.0 1.0 0.04
+			addColorRangerel 095 096		1.0 1.0 1.0 0.05
+			addColorRangerel 094 095		1.0 1.0 1.0 0.06
+			addColorRangerel 093 094		1.0 1.0 1.0 0.07
+			addColorRangerel 092 093		1.0 1.0 1.0 0.08
+			addColorRangerel 091 092		1.0 1.0 1.0 0.09
+			addColorRangerel 090 091		1.0 1.0 1.0 0.10
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 089 090		1.0 1.0 1.0 0.11
+			addColorRangerel 088 089		1.0 1.0 1.0 0.12
+			addColorRangerel 087 088		1.0 1.0 1.0 0.13
+			addColorRangerel 086 087		1.0 1.0 1.0 0.14
+			addColorRangerel 085 086		1.0 1.0 1.0 0.15
+			addColorRangerel 084 085		1.0 1.0 1.0 0.16
+			addColorRangerel 083 084		1.0 1.0 1.0 0.17
+			addColorRangerel 082 083		1.0 1.0 1.0 0.18
+			addColorRangerel 081 082		1.0 1.0 1.0 0.19
+			addColorRangerel 080 081		1.0 1.0 1.0 0.20
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 079 080		1.0 1.0 1.0 0.21
+			addColorRangerel 078 079		1.0 1.0 1.0 0.22
+			addColorRangerel 077 078		1.0 1.0 1.0 0.23
+			addColorRangerel 076 077		1.0 1.0 1.0 0.24
+			addColorRangerel 075 076		1.0 1.0 1.0 0.25
+			addColorRangerel 074 075		1.0 1.0 1.0 0.26
+			addColorRangerel 073 074		1.0 1.0 1.0 0.27
+			addColorRangerel 072 073		1.0 1.0 1.0 0.28
+			addColorRangerel 071 072		1.0 1.0 1.0 0.29
+			addColorRangerel 070 071		1.0 1.0 1.0 0.30
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 069 070		1.0 1.0 1.0 0.31
+			addColorRangerel 068 069		1.0 1.0 1.0 0.32
+			addColorRangerel 067 068		1.0 1.0 1.0 0.33
+			addColorRangerel 066 067		1.0 1.0 1.0 0.34
+			addColorRangerel 065 066		1.0 1.0 1.0 0.35
+			addColorRangerel 064 065		1.0 1.0 1.0 0.36
+			addColorRangerel 063 064		1.0 1.0 1.0 0.37
+			addColorRangerel 062 063		1.0 1.0 1.0 0.38
+			addColorRangerel 061 062		1.0 1.0 1.0 0.39
+			addColorRangerel 060 061		1.0 1.0 1.0 0.40
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 059 060		1.0 1.0 1.0 0.41
+			addColorRangerel 058 059		1.0 1.0 1.0 0.42
+			addColorRangerel 057 058		1.0 1.0 1.0 0.43
+			addColorRangerel 056 057		1.0 1.0 1.0 0.44
+			addColorRangerel 055 056		1.0 1.0 1.0 0.45
+			addColorRangerel 054 055		1.0 1.0 1.0 0.46
+			addColorRangerel 053 054		1.0 1.0 1.0 0.47
+			addColorRangerel 052 053		1.0 1.0 1.0 0.48
+			addColorRangerel 051 052		1.0 1.0 1.0 0.49
+			addColorRangerel 050 051		1.0 1.0 1.0 0.50
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 049 050		1.0 1.0 1.0 0.51
+			addColorRangerel 048 049		1.0 1.0 1.0 0.52
+			addColorRangerel 047 048		1.0 1.0 1.0 0.53
+			addColorRangerel 046 047		1.0 1.0 1.0 0.54
+			addColorRangerel 045 046		1.0 1.0 1.0 0.55
+			addColorRangerel 044 045		1.0 1.0 1.0 0.56
+			addColorRangerel 043 044		1.0 1.0 1.0 0.57
+			addColorRangerel 042 043		1.0 1.0 1.0 0.58
+			addColorRangerel 041 042		1.0 1.0 1.0 0.59
+			addColorRangerel 040 041		1.0 1.0 1.0 0.60
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 039 040		1.0 1.0 1.0 0.61
+			addColorRangerel 038 039		1.0 1.0 1.0 0.62
+			addColorRangerel 037 038		1.0 1.0 1.0 0.63
+			addColorRangerel 036 037		1.0 1.0 1.0 0.64
+			addColorRangerel 035 036		1.0 1.0 1.0 0.65
+			addColorRangerel 034 035		1.0 1.0 1.0 0.66
+			addColorRangerel 033 034		1.0 1.0 1.0 0.67
+			addColorRangerel 032 033		1.0 1.0 1.0 0.68
+			addColorRangerel 031 032		1.0 1.0 1.0 0.69
+			addColorRangerel 030 031		1.0 1.0 1.0 0.70
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 029 030		1.0 1.0 1.0 0.71
+			addColorRangerel 028 029		1.0 1.0 1.0 0.72
+			addColorRangerel 027 028		1.0 1.0 1.0 0.73
+			addColorRangerel 026 027		1.0 1.0 1.0 0.74
+			addColorRangerel 025 026		1.0 1.0 1.0 0.75
+			addColorRangerel 024 025		1.0 1.0 1.0 0.76
+			addColorRangerel 023 024		1.0 1.0 1.0 0.77
+			addColorRangerel 022 023		1.0 1.0 1.0 0.78
+			addColorRangerel 021 022		1.0 1.0 1.0 0.79
+			addColorRangerel 020 021		1.0 1.0 1.0 0.80
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 019 020		1.0 1.0 1.0 0.81
+			addColorRangerel 018 019		1.0 1.0 1.0 0.82
+			addColorRangerel 017 018		1.0 1.0 1.0 0.83
+			addColorRangerel 016 017		1.0 1.0 1.0 0.84
+			addColorRangerel 015 016		1.0 1.0 1.0 0.85
+			addColorRangerel 014 015		1.0 1.0 1.0 0.86
+			addColorRangerel 013 014		1.0 1.0 1.0 0.87
+			addColorRangerel 012 013		1.0 1.0 1.0 0.88
+			addColorRangerel 011 012		1.0 1.0 1.0 0.89
+			addColorRangerel 010 011		1.0 1.0 1.0 0.90
+			
+			forecolor 1 1 1 0
+		}
+
+//	HEALTH
+		itemDef {
+			name ""
+			decoration
+			visible MENU_TRUE
+			rect -40 -438 854 480
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/health.tga"
+			
+			ownerdraw CG_PLAYER_HEALTH
+
+			addColorRangerel 009 010		1.0 1.0 1.0 0.91
+			addColorRangerel 008 009		1.0 1.0 1.0 0.92
+			addColorRangerel 007 008		1.0 1.0 1.0 0.93
+			addColorRangerel 006 007		1.0 1.0 1.0 0.94
+			addColorRangerel 005 006		1.0 1.0 1.0 0.95
+			addColorRangerel 004 005		1.0 1.0 1.0 0.96
+			addColorRangerel 003 004		1.0 1.0 1.0 0.97
+			addColorRangerel 002 003		1.0 1.0 1.0 0.98
+			addColorRangerel 001 002		1.0 1.0 1.0 0.99
+			addColorRangerel -999 001		1.0 1.0 1.0 1.00
+			
+			forecolor 1 1 1 0
+		}
+
+
+//	STAMINA
+		itemDef {
+			name ""
+			rect 7 0 165 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box_3x.tga"
+			
+			forecolor 1 1 1 1
+		}
+		
+		// stamina icon
+		itemDef {
+			name ""
+			rect 12 5 12 12
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_stamina.tga"
+			
+			forecolor 1 1 1 1
+		}
+
+		// stamina bar backcolor
+		itemDef {
+			name ""
+			rect 27 6 138 10
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/backcolor.tga"
+			
+			forecolor 0 0 0 0.5			
+		}
+		
+		// stamina bar
+		itemDef {
+			name "stambar"
+			rect 29 8 134 6
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			align HUD_HORIZONTAL
+			ownerdraw CG_STAMINA
+			
+			addColorRangerel 0.0 0.1		1.0  0.1  0.1		1.0
+			addColorRangerel 0.1 0.2		1.0  0.2  0.2		1.0
+			addColorRangerel 0.2 0.3		1.0  0.3  0.3		1.0
+			addColorRangerel 0.3 0.4		1.0  0.4  0.4		1.0
+			addColorRangerel 0.4 0.5		1.0  0.5  0.5		1.0
+			addColorRangerel 0.5 0.6		1.0  0.6  0.6		1.0
+			addColorRangerel 0.6 0.7		1.0  0.7  0.7		1.0
+			addColorRangerel 0.7 0.8		1.0  0.8  0.8		1.0
+			addColorRangerel 0.8 0.9		1.0  0.9  0.9		1.0
+			addColorRangerel 0.9 1.0		1.0  1.0  1.0 		1.0
+		}
+
+		
+//	ARMOR
+		itemDef {
+			name ""
+			rect 7 -22 55 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "0" }												// Armor Value
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// armor icon
+		itemDef {
+			name ""
+			rect 12 -17 12 12
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "0" }												// Armor Value
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_armor.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// armor value
+		itemDef {
+ 			name ""
+			rect 22 -27.5 38 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "0" }												// Armor Value
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRange 1 999 1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+
+		
+//	HEALTH & ARMOR
+		itemDef {
+			name ""
+			rect 7 -22 55 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "3" }												// Health & Armor Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			forecolor 1 1 1 1
+		}
+		
+		itemDef {
+			name ""
+			rect 62 -22 55 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "3" }												// Health & Armor Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// health icon
+		itemDef {
+			name ""
+			rect 12 -17 12 12
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "3" }												// Health & Armor Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_health.tga"
+			
+			forecolor 1 1 1 1
+		}
+	
+		// armor icon
+		itemDef {
+			name ""
+			rect 67 -17 12 12
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "3" }												// Health & Armor Values
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_armor.tga"
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRangerel	1 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// health value
+		itemDef {
+ 			name ""
+			rect 22 -27.5 38 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "3" }												// Health & Armor Values
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_HEALTH
+			
+			addColorRange 1 999 1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// armor value
+		itemDef {
+ 			name ""
+			rect 77 -27.5 38 22
+			
+			cvarTest "cg_hudStatus"
+			showCvar { "3" }												// Health & Armor Values
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_ARMOR_VALUE
+			
+			addColorRange 1 999 1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		
+//	SCORE, LIVES & SAVES	
+		itemDef {
+			name ""
+			rect 172 0 55 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_SCORE
+			
+			addColorRangerel	1 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		itemDef {
+			name ""
+			rect 227 0 55 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_LIVES
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		itemDef {
+			name ""
+			rect 282 0 55 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_SPAWNPOINTS
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// score icon
+		itemDef {
+			name ""
+			rect 177 5 12 12
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_score.tga"
+			
+			ownerdraw CG_PLAYER_SCORE
+			
+			addColorRangerel	1 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// lives icon
+		itemDef {
+			name ""
+			rect 232 5 12 12
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_lives.tga"
+			
+			ownerdraw CG_PLAYER_LIVES
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// saves icon
+		itemDef {
+			name ""
+			rect 287 5 12 12
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_saves.tga"
+			
+			ownerdraw CG_PLAYER_SPAWNPOINTS
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// score value
+		itemDef {
+ 			name ""
+			rect 187 -5.5 38 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_SCORE
+			
+			addColorRangerel	1 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// lives value
+		itemDef {
+ 			name ""
+			rect 242 -5.5 38 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_LIVES
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// saves value
+		itemDef {
+ 			name ""
+			rect 297 -5.5 38 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "1" }												// Stamina Bar
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_SPAWNPOINTS
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		
+		itemDef {
+			name ""
+			rect 7 0 55 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_SCORE
+			
+			addColorRangerel	1 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		itemDef {
+			name ""
+			rect 62 0 55 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_LIVES
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		itemDef {
+			name ""
+			rect 117 0 55 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_SPAWNPOINTS
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// score icon
+		itemDef {
+			name ""
+			rect 12 5 12 12
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_score.tga"
+			
+			ownerdraw CG_PLAYER_SCORE
+			
+			addColorRangerel	1 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// lives icon
+		itemDef {
+			name ""
+			rect 67 5 12 12
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_lives.tga"
+			
+			ownerdraw CG_PLAYER_LIVES
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// saves icon
+		itemDef {
+			name ""
+			rect 122 5 12 12
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_saves.tga"
+			
+			ownerdraw CG_PLAYER_SPAWNPOINTS
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// score value
+		itemDef {
+ 			name ""
+			rect 22 -5.5 38 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_SCORE
+			
+			addColorRangerel	1 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// lives value
+		itemDef {
+ 			name ""
+			rect 77 -5.5 38 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_LIVES
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// saves value
+		itemDef {
+ 			name ""
+			rect 132 -5.5 38 22
+			
+			cvarTest "cg_hudStamina"
+			showCvar { "0" }												// No Stamina Bar
+			
+			visible MENU_TRUE
+			decoration
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_SPAWNPOINTS
+			
+			addColorRangerel	0 99999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+
+//	NOTEBOOK
+		
+	/*	itemDef {
+			name "chRect"
+			decoration
+			visible MENU_TRUE
+			rect 11 -395 217 48
+			ownerdraw CG_NEWMESSAGE
+		}*/
+
+		
+//	HEAT INDICATOR	
+
+		// heat indicator	
+		itemDef {
+			name "heat"
+			
+			cvarTest "cg_hudWeapIcon"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			rect 456 -55 83 43		// horizontal version
+			align HUD_HORIZONTAL
+			ownerdraw CG_PLAYER_WEAPON_HEAT
+		}
+
+
+//	WEAPON ICON		
+		
+		// ammo icon
+		itemDef {
+			name "a"
+			rect 458 -51 80 40
+			
+			cvarTest "cg_hudWeapIcon"
+			showCvar { "1" }
+			
+			visible MENU_TRUE
+			decoration
+			align ITEM_ALIGN_CENTER
+			ownerdraw CG_PLAYER_WEAPON_ICON2D
+		}
+
+		
+//	CLIP
+		
+		itemDef {
+			name ""
+			rect 443 -11 55 22
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel	0 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// clip icon
+		itemDef {
+			name ""
+			rect 448 -6 12 12
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_clip.tga"
+			
+			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel	0 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+
+		// heat indicator	
+		itemDef {
+			name "heat"
+			
+			cvarTest "cg_hudWeapIcon"
+			showCvar { "0" }
+			
+			decoration
+			visible MENU_TRUE
+			rect 445.5 -8.5 50 17		// horizontal version
+			align HUD_HORIZONTAL
+			ownerdraw CG_PLAYER_WEAPON_HEAT
+		}
+		
+		// clip count value
+		itemDef {
+ 			name "cliptex"
+			rect 444 -16.5 55 22
+			visible MENU_TRUE
+			decoration
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "0" }
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
+			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
+			
+			forecolor 1 1 1 1
+		}
+		
+		// clip count value
+		itemDef {
+ 			name "cliptex"
+			rect 457 -16.5 38 22
+			visible MENU_TRUE
+			decoration
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "1" }
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
+			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
+			
+			forecolor 1 1 1 1
+		}
+
+		
+//	AMMO
+		itemDef {
+			name ""
+			rect 498 -11 55 22
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/2d/back_box.tga"
+			
+			ownerdraw CG_PLAYER_AMMO_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel	0 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+	
+		// ammo icon
+		itemDef {
+			name ""
+			rect 503 -6 12 12
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "1" }
+			
+			decoration
+			visible MENU_TRUE
+			style WINDOW_STYLE_SHADER
+			background "gfx/hud/ic_ammo.tga"
+			
+			ownerdraw CG_PLAYER_AMMO_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel	0 999		1 1 1 1
+			
+			forecolor 1 1 1 0
+		}
+		
+		// ammo value
+		itemDef {
+ 			name "amtex"
+			rect 499 -1.5 55 22
+			visible MENU_TRUE
+			decoration
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "0" }
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_AMMO_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
+			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
+			
+			forecolor 1 1 1 1
+		}
+		
+		// ammo value
+		itemDef {
+ 			name "amtex"
+			rect 504 -1.5 55 22
+			visible MENU_TRUE
+			decoration
+			
+			cvarTest "cg_hudAmmoClip"
+			showCvar { "1" }
+			
+			textfont UI_FONT_BIG
+			textscale .32
+			
+			ownerdraw CG_PLAYER_AMMO_VALUE
+			ownerdrawflag CG_SHOW_NOT_V_BINOC
+			
+			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
+			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
+			
+			forecolor 1 1 1 1
+		}
+	}
+				
+		
+//	HOLDABLE	//
+	menuDef {
+    	name "Holdables"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+  		rect 600 310 24 48
+	
+		itemDef {
+			name "w_holdable"
+			rect 0 0 36 36
+			visible MENU_TRUE
+			decoration
+			ownerdraw CG_PLAYER_HOLDABLE
+		}
+	}
+
+
+//	STABILITY	//		
+	menuDef {
+    	name "stability"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect -80 206 10 64	// bar anchored in center, fills up/down
+
+		itemDef {
+			name "stabRect"
+			decoration
+			visible MENU_TRUE
+
+			addColorRange	0 128	.24 .4 .14 1
+			addColorRange	128 255	.24 .14 .4 1
+
+			rect 0 0 5 64
+			ownerdraw CG_PLAYER_WEAPON_STABILITY
+		}
+	}
+	
+
+//	CURSOR HINTS (LIKE HAND...ETC.)	//
+	menuDef {
+    	name "Cursorhints"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect 302 420 32 32
+
+		itemDef {
+			name "chRect"
+			decoration
+			visible MENU_TRUE
+			rect 0 -32 32 32
+			ownerdraw CG_CURSORHINT
+		}
+	}
+}

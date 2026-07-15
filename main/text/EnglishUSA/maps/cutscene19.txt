@@ -1,0 +1,24 @@
+{
+"cs19_director_1" "Come in."
+
+"cs19_jack_1" "You wanted to see me, sir?"
+
+"cs19_director_2" "Well,I've just finished reading the last of the reports. Still hard to believe..."
+
+"cs19_director_3" "Well, I suppose we can close the book on Operation Ressurection, wouldn't you agree?"
+
+"cs19_jack_2" "Yes, sir."
+
+"cs19_director_4" "Jack, I think that agent Blazkowicz deserves a medal for what he did. But, see how this mission never officially existed..."
+
+"cs19_jack_3" "I'm sure he understands, sir."
+
+"cs19_director_5" "Well, I hope at least he's enjoying some well-deserved time off."
+
+"cs19_jack_4" "Oh, yes. He's off on a little R&R as we speak."
+
+"cs19_director_6" "Excellent, excellent. Anything special?"
+
+"cs19_soldiers_running" " "
+
+}

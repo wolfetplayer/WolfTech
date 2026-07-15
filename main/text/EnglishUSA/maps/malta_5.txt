@@ -1,0 +1,147 @@
+{
+"gimme_wp_guy" "^2Sgt.Evans"
+
+"course_sarge" "^2Lt.McDermott"
+
+"guy_learning_m1" "^2Pvt.Lesley"
+
+"table_guard"     "^2Pvt.Doyle"
+
+"harbor_patrol1" "^2Cpl.Blackwell"
+
+"balcony_guard"  "^2Sgt.Lehmkuhl"
+
+"lt"    "^2Lt.Wedgwood"
+
+"poor_fella"     "^2Pvt.Denny"
+
+"museum_guard1"  "^2Pvt.Kautz"
+
+"museum_guard2"  "^2Sgt.Jolly"
+
+"medic"          "^2Cpl.Hobbins"
+
+"waters"         "^2Pvt.Waters"
+
+"street_patrol2" "^2Sgt.Crowford"
+
+"hq_guard"       "^2Sgt.Wallcroft"
+
+"boss"           "^2Col.Redford"
+
+"south_guard"    "^2Cpl.Gibson"
+
+"bartender"      "^2Evie"
+
+"flak1_commander" "^2Cpt.Ingram"
+
+"driver"          "^2Pvt.MacMillan"
+
+"doc"             "^2Dr.Kovlov"
+
+"south_guard2"    "^2Cpl.Gibson"
+
+"bar_guy1"        "^2J.Luyties"
+
+"dream_hunter"      "^1Dream Hunter"
+
+"port_guard2"       "^2Sgt.MacTavish"
+
+"port_guard"        "^2Pvt.Griffen"
+
+"jack"            "^2OSA Agent"
+
+"agent2"          "^2Agent 2"
+
+"captain_table"     "Captain?"
+
+"stay_post"         "Sorry Captain, I have to stay on my post."
+
+"anything_sir"      "Do you need anything,sir?"
+
+"dont_worry_cap"    "We gonna keep an eye out, dont you worry Captain"
+
+"england_goods"     "Colonel says that we are gonna transport all those goods to England very soon. Just need to make sure that skies are safe."
+
+"welcome_museum"    "Welcome to our humble little museum Captain."
+
+"hq_sir"            "Sir!"
+
+"hq_hq"             "Headquarters are right ahead, Sir."
+
+"hq_colonel"        "Colonel should be inside, Captain."
+
+"gimmewp_intro"     "Captain Blazkowicz, welcome to the training facility."
+
+"gimmewp_justdont"  "Sorry, Captain. But you cant take those weapons outside this facility."
+
+"gimmewp_lt"        "Lieutenant McDermott is in the next section. He will guide you through our new course."
+
+"gimmewp_resupply"  "If you wanna resupply - use the ammo cabinet."
+
+"course_welcome"    "Hey Captain. Welcome back to the course."
+
+"course_garbage"    "That was an improvement. But its not hard to improve on garbage. Lets try it again."
+
+"course_horrible"   "That wasnt horrible, but it wasnt amazing either."
+
+"course_prettygood" "Now that was pretty damn good! Nice work Blazkowicz!"
+
+"course_seenworse"  "Alright. Ive seen worse. You ve got a few rough edges though."
+
+"course_ok"        "You looked ok back there. But you still need some work."
+
+"col_blazko?"      "Blazkowicz?"
+
+"waters_nothing" "I have nothing for you, BJ. If you wanna check out the guns we got you better go the firing range."
+
+"drunk_listen" "Hey! What do you think you doing? I was listening to that!"
+
+"bart_name" "Names Evie.Managing this tavern as best as I can. Family business, you know."
+
+"bart_sleep" "If you are looking for a place to sleep you better check out hotel on the opposite side of the street. Lovely place"
+
+"bart_back" "What do you think you doing? Back off the counter! Now!"
+
+"bart_get" "What can I get for ya?"
+
+"bart_beer" "You prefer beer? Or maybe something stronger?"
+
+"medic_captain" "Captain?"
+
+"medic_cant" "I cant really talk right now!"
+
+"medic_later" "Is it possible to discuss it later?"
+
+"medic_middle" "Oh, hey Captain. Im in the middle of something right now. Can you come back later?"
+
+"medic_sgt"  "Sergeant, please dont move. You only makes things worse for yourself."
+
+"medic_short" "Im really short handed here."
+
+"agent2_bj" "Who the bloody hell is... Oh.. its you Blazkowicz..."
+
+"agent2_castle" "Im glad you made it out of this damned castle though."
+
+"agent2_do" "Dont you have things to do?"
+
+"agent2_dora" "There is a high chance Im gonna assigned on the mission to destroy Dora. Waters will probably be there too."
+
+"agent2_fine" "Im doing fine. Just want some quiet."
+
+"agent2_frank" "I only recently discovered what happened to Frank. Its a damn shame."
+
+"col_nonews" "No news from the OSA Headquarters. You are on R&R for now, Blazkowicz."
+
+"col_stayput" "Stay put, Captain. Im pretty sure you will receive new assignment soon."
+
+"col_italy" "Have you heard the news? We almost kicked the Rommel out of Africa! I even heard some talks about invasion in Italy."
+
+"waters_dora" "Ever heard about Dora Railgun? Agent Two told me that command assembling a team to destroy it."
+
+"waters_inventory" "Im in the middle of inventory right now. Can you come back later?"
+
+"waters_bj" "Hey, BJ."
+
+
+}

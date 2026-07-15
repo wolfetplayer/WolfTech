@@ -1,0 +1,408 @@
+#include "ui/menudef.h"
+
+{
+\\ SETUP MENU \\
+
+menuDef {
+   	name "setup_menu"
+   	visible 0
+   	fullscreen 1
+   	rect 186 0 454 480
+//	background "menuback_a"
+   	focusColor .9 .9 .9 1
+   	style 1
+   	border 1
+	soundloop ""
+	onOpen { 
+		show realrtcw_options;
+		hide realrtcw_options_controls;
+		hide realrtcw_options_system;
+		hide realrtcw_options_game;
+		hide realrtcw_options_defaults;
+		hide realrtcw_options_back;
+		show optionsmenugroup;
+		
+		setitemcolor fadebox backcolor 0 0 0 1 ; 
+		fadeout fadebox ;
+		hide back_alt ;
+		show back ;
+		hide grpmessage }
+	onEsc { close setup_menu ; open main }
+
+
+
+
+	itemDef {
+		name solid_box
+		style 1 
+		rect 4 2 178 426
+		border 1 
+		bordersize 1
+		bordercolor .5 .5 .5 .5
+		backcolor 0 0 .75 .25
+		visible 1 
+		decoration 
+		mouseEnter { setcolor backcolor .75 0 0 .5 }
+		mouseExit { setcolor backcolor 0 0 .75 .25 }
+	}
+
+// Start of Menu Background
+
+itemDef
+	{
+		name realrtcw_background
+		style WINDOW_STYLE_SHADER
+		rect -120 -9.25 917 500
+		background "realrtcw_background"
+		visible 1
+		decoration
+	}
+
+itemDef
+	{
+		name realrtcw_logo
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_logo.tga"
+		visible 1
+		decoration
+	}
+	
+// End of Menu Background
+
+	
+
+///////////////////////////////////////////////////////////
+
+	// CONTROLS BUTTON
+	itemDef {
+	    name controlsmenu
+		group optionsmenugroup
+ 	    type 1
+	    rect 10 200 178 30
+	    visible 1
+	    text "@MAIN_CONTROLS"
+	textalign 0
+	textaligny 20
+	textscale .60
+		
+	action { play "sound/misc/kcaction.wav" ; 
+	close control_menu ; 
+	close system_menu ;
+	close options_menu ; 
+	close cdkey_menu ;
+	close default_menu ;
+	open control_menu }
+	}
+	
+	// SYSTEM BUTTON
+	itemDef {
+        name systemmenu
+		group optionsmenugroup
+ 	    type 1
+	    rect 10 250 178 30
+	    visible 1
+	    text "@MAIN_SYSTEM"
+	textalign 0
+	textaligny 20
+	textscale .60
+	action { play "sound/misc/kcaction.wav" ; 
+	close control_menu ; 
+	close system_menu ;
+	close options_menu ; 
+	close cdkey_menu ;
+	close default_menu ;
+	open system_menu }	
+	}
+	
+	// GAME OPTIONS BUTTON
+	itemDef {
+        name gameoptionsmenu
+		group optionsmenugroup
+ 	    type 1
+	    rect 10 300 178 40
+	    visible 1
+	    text "@MAIN_GAME_OPTIONS"	
+	textalign 0
+	textaligny 20
+	textscale .60	
+		
+	action { play "sound/misc/kcaction.wav" ; 
+	close control_menu ; 
+	close system_menu ;
+	close options_menu ; 
+	close cdkey_menu ;
+	close default_menu ;
+	open options_menu }		
+	}
+	
+	// DEFAULTS BUTTON
+	itemDef {
+      	name defaultsmenu
+		group optionsmenugroup
+ 	    type 1
+	    textstyle 6
+	    rect 10 350 178 40
+	    visible 0 
+	    text "@MAIN_DEFAULTS"	
+	textalign 0
+	textaligny 20
+	textscale .60
+	action { play "sound/misc/kcaction.wav" ; 
+	close control_menu ; 
+	close system_menu ;
+	close options_menu ; 
+	close cdkey_menu ;
+	close default_menu ;
+	open default_menu }
+	}
+	
+	// BACK BUTTON
+	itemDef {
+        name backmenu
+		group optionsmenugroup
+ 	    type 1
+        rect 10 400 178 40
+	    visible 1 
+	    text "@MAIN_BACK"	
+	textalign 0
+	textaligny 20
+	textscale .60
+     	action { close control_menu ; 
+	close setup_menu ; 
+	close system_menu ;
+	close options_menu ; 
+	close default_menu ; 
+	close resetscore_menu ;
+	open main }
+    }
+
+//	MESSAGES	//
+
+itemDef {
+	name message_back
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textstyle 1
+	textalign 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "EXIT TO MAIN MENU"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_accept
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Refresh Video"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_controls
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Select to Edit Game Controls"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_nowork
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Selection Isn't Implemented"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_look
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Select to Edit View Controls"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_move
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Select to Edit Movement Controls"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_shoot
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Select to Edit Firing and Weapon Selection"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+itemDef {
+	name message_misc
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Select to Edit Chat and Mouse Functions"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+itemDef {
+	name message_system
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Edit System Settings"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+itemDef {
+	name message_gameoptions
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Edit Game Options"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_default
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Reset to Default Settings"
+//	text "disabled for show build"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+itemDef {
+	name message_cine
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "This will play the intro Cinematic"
+//	text "disabled for show build"
+	textfont UI_FONT_BIG	// RealRTCWCoop
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+
+itemDef {
+	name message_scores
+	group grpmessage
+	style 0 
+	rect 320 437 128 30
+	textalign 1
+	textstyle 1
+	textalignx 0
+	textaligny 25
+	textscale .23
+	text "Clear High Scores to Zero"
+//	text "disabled for show build"
+	textfont UI_FONT_BIG	// RealRTCWCoop     
+	forecolor 1 1 1 1
+	decoration 
+	visible 0
+	}
+
+
+}
+
+
+}

@@ -1,0 +1,40 @@
+{
+
+"grenades_buy" "Grenades"
+
+"buy_armor"       "Armor"
+
+"buy_random_box"  "Random Weapon"
+
+"randomperk_buy"  "Random Perk"
+
+"reinforce_buy"  "Call Special Backup"
+
+"buy_ammo"       "Ammo"
+
+"buy_weapon_upgrade" "Upgrade Weapon"
+
+"tommy_buy"        "Thompson"
+
+"venom_buy"        "Venom Gun"
+
+"buy_ithaca"       "Shotgun"
+
+"buy_mp44"        "MP44"
+
+"ppsh_buy"       "PPSH"
+
+"garand_buy"     "M1 Garand"
+
+"second_chance_buy" "Resurrection"
+
+"marathon_buy" "Marathon"
+
+"fasthands_buy" "Fast Hands"
+
+"buy_scavenger" "Scavenger"
+
+"buy_regen"     "Resilience"
+
+"doubleshot_buy"  "Double Shot"
+}

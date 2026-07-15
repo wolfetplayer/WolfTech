@@ -1,0 +1,42 @@
+{
+
+"second_chance_buy" "Resurrection"
+
+"grenades_buy" "Grenades"
+
+"marathon_buy" "Marathon"
+
+"buy_bar" "BAR"
+
+"fasthands_buy" "Fast Hands"
+
+"buy_mp40"      "MP40"
+
+"buy_snooper"    "Snooper Rifle"
+
+"snipers_buy"    "Call Snipers Support"
+
+"buy_scavenger" "Scavenger"
+
+"buy_regen"     "Resilience"
+
+"buy_ithaca"      "Shotgun"
+
+"buy_m1garand"      "M1 Garand"
+
+"doubleshot_buy"  "Double Shot"
+
+"buy_armor"       "Armor"
+
+"buy_flametrap"   "Flame Trap"
+
+"buy_random_box"  "Random Weapon"
+
+"reinforce_buy"  "Call Backup"
+
+"buy_ammo"       "Ammo"
+
+"buy_browning"  "Browning LMG"
+
+"weapon_upgrade_buy" "Upgrade Weapon"
+}

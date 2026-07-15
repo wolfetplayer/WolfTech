@@ -1,0 +1,190 @@
+S#include "ui/menudef.h"
+
+{
+	assetGlobalDef {
+		font "fonts/normal" 16			
+		smallFont "fonts/smallFont" 12			
+		bigFont "fonts/bigFont" 24			
+		cursor "ui/assets/3_cursor3"			
+		gradientBar "ui/assets/gradientbar2.tga"	
+		itemFocusSound "sound/misc/menu2.wav"
+		fadeClamp 1.0				
+		fadeCycle 1				
+		fadeAmount 0.1				
+		shadowColor 0.1 0.1 0.1 0.25			
+		}
+		
+	menuDef {
+	name		"backgroundmusic"
+	fullScreen	1
+	visible		1
+	onOpen 
+	{
+		playlooped "sound/music/l_theme.wav"
+	}
+    }
+		
+	menuDef {
+	name "main"
+	fullScreen MENU_TRUE				
+	rect -120 0 900 480			    // Size and position of the menu
+	visible MENU_TRUE				// Visible on open
+	focusColor .9 .85 1 .8			// Menu focus color for text and items
+	
+	onOpen { 
+		setitemcolor fadebox backcolor 0 0 0 1 ;   
+		uiScript stopRefresh ;
+		
+		hide realrtcw_main_create;
+		hide realrtcw_main_join;
+		hide realrtcw_main_options;
+		hide realrtcw_main_credits;
+		hide realrtcw_main_quit;
+		
+		show realrtcw_main
+	}
+
+itemDef
+	{
+		name realrtcw_background
+		style WINDOW_STYLE_SHADER
+		rect -120 -9.25 917 500
+		background "realrtcw_background"
+		visible 1
+		decoration
+	}
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////               IMAGES            //////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+itemDef
+	{
+		name realrtcw_logo
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_logo.tga"
+		visible 1
+		decoration
+	}
+
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        MAIN MENU BUTTONS    //////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+	// CREATE SERVER BUTTON
+	itemDef { 
+	    name createmenu
+	    group mainmenus
+	    text "@MAIN_LOBBY_CREATE"
+	    type 1
+	    rect 10 200 178 26
+	    visible 1 
+	textalign 0
+	textaligny 20
+	textscale .60
+		
+    	action {
+			play "sound/misc/zap.wav" ;
+			close main ;
+ 			open create_menu;
+			uiScript loadArenas }
+		
+	    mouseEnter { show "realrtcw_main_create" } 
+	    mouseExit { hide "realrtcw_main_create" } 	
+	}
+	
+	// JOIN GAME BUTTON
+	itemDef {
+		name joinmenu
+		text "@MAIN_LOBBY_JOIN"
+		group mainmenus
+		type 1
+	    rect 10 250 178 26
+		visible 1 
+		textfont UI_FONT_BIG
+	textalign 0
+	textaligny 20
+	textscale .60
+		
+    	action {
+			play "sound/misc/zap.wav" ;
+			close main ;
+ 			open multi_menu;
+			uiScript RefreshServers ;
+			uiScript RefreshFilter }
+		
+	    mouseEnter { show "realrtcw_main_join" } 
+	    mouseExit { hide "realrtcw_main_join" } 	
+    }
+		
+    // OPTIONS BUTTON
+	itemDef {
+		name optionsmenu
+		text "@MAIN_OPTIONS"
+		group mainmenus
+		type 1
+	    rect 10 300 178 26
+		visible 1
+		textfont UI_FONT_BIG
+	textalign 0
+	textaligny 20
+	textscale .60
+		
+		action {play "sound/misc/zap.wav" ; 
+		close main ; 
+		open setup_menu ;
+		open control_menu }
+		
+	    mouseEnter { show "realrtcw_main_options" } 
+	    mouseExit { hide "realrtcw_main_options" }  
+    }
+	
+    // CREDITS BUTTON	
+	itemDef {
+        name creditsmenu
+        text "@MAIN_CREDITS"
+		group mainmenus
+ 	    type 1
+	    rect 10 350 178 26
+	textalign 0
+	textaligny 20
+	textscale .60
+	    visible 1
+		
+		action {close main;
+		open credit } 
+		
+	    mouseEnter { show "realrtcw_main_credits" } 
+	    mouseExit { hide "realrtcw_main_credits" }  	
+	}
+	
+	// QUIT BUTTON
+	itemDef {
+        name quit
+        text "@MAIN_QUIT"
+		group mainmenus
+ 	    type 1
+	    rect 10 400 178 26
+	textalign 0
+	textaligny 20
+	textscale .60
+	    visible 1
+		
+		action 
+		{ 
+		uiScript "quit" 
+		}	
+		
+	    mouseEnter { show "realrtcw_main_quit" } 
+	    mouseExit { hide "realrtcw_main_quit" } 
+	}
+	
+}
+	
+}
+
+		
+		
+		

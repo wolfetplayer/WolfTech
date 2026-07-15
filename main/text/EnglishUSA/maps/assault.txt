@@ -1,0 +1,42 @@
+{
+"ass_jet_idle" " "
+
+"ass_jet_takeoff" " "
+
+"ass_switch" " "
+
+"ass_fuel" " "
+
+"ass_fueltank1" " "
+
+"ass_fueltank2" " "
+
+"ass_fuelmotor1" " "
+
+"ass_jet2_flyby" " "
+
+"ass_truck_loop" " "
+
+"ass_sign_fall" " "
+
+"ass_table_fall" " "
+
+"ass_jet_explode1" " "
+
+"ass_bell_loop" " "
+
+"ass_bell_end" " "
+
+"ass_mech_1" "No! Please don't shoot!"
+
+"ass_mech_7" "The lever on the right is to open the hatch doors."
+
+"ass_mech_8" "The lever has malfunctioned though. So, you need to go to the manual override station, just below the tower door."
+
+"ass_mech_9" "In there you'll see a hand crank. You'll have to turn it many times, but the doors will open."
+
+"ass_mech_10" "Now, please let me go.I told you everything I know."
+
+"ass_cargo_flyby" " "
+
+}

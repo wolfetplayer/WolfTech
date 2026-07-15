@@ -1,0 +1,41 @@
+{
+"mauser_buy" "Mauser Rifle"
+
+"second_chance_buy" "Resurrection"
+
+"grenades_buy" "Grenades"
+
+"marathon_buy" "Marathon"
+
+"tommy_buy" "Thompson SMG"
+
+"fasthands_buy" "Fast Hands"
+
+"buy_g43"       "Gewehr 43"
+
+"buy_scavenger" "Scavenger"
+
+"buy_regen"     "Resilience"
+
+"buy_mp44"      "MP44"
+
+"buy_ppsh"      "PPSH"
+
+"doubleshot_buy"  "Double Shot"
+
+"buy_armor"       "Armor"
+
+"buy_flametrap"   "Flame Trap"
+
+"buy_random_box"  "Random Weapon"
+
+"reinforce_buy"  "Call Backup"
+
+"buy_ammo"       "Ammo"
+
+"weapon_upgrade_buy" "Upgrade Weapon"
+
+"door_buy"           "Open Passage"
+
+"buy_door"            "Open Passage"
+}

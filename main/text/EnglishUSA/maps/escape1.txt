@@ -1,0 +1,61 @@
+{
+"esc1_cine1_drz_1" "Come in, Sergeant, come in."
+
+"esc1_cine1_c_nazi1_1" "Your orders, Herr Doctor?"
+
+"esc1_cine1_drz_2" "Go get the other one. This one is almost finished."
+
+"esc1_cine1_c_nazi1_2" "Jawohl!"
+
+"esc1_cine1_drz_3" "Let's try it again, shall we? Who do you work for?"
+
+"esc1_cine1_scuffle" " "
+
+"Esc1Nazi1_1" "Yes, yes... Yes, yes."
+
+"Esc1Nazi1_2" "Ah, there you are. Shackle that one to the wall, and take the other one off the table."
+
+"Esc1Nazi1_3" "Sergeant, when I give you an order, I expect an acknowledgement."
+
+"Esc1Nazi1_4" "Sergeant!?"
+
+"Esc1Nazi1_5" "What?! Guards! Alarm! The American is loose!"
+
+"Esc1Res10_1" "Dr. Zee, is everything alright down here?"
+
+"Esc1Nazi2_1" "Hey, still trying to get some music on that thing?"
+
+"Esc1Nazi3_1" "Ja, but the weather is terrible today."
+
+"Esc1Nazi2_2" "Haha. Good luck!"
+
+"Esc1Nazi3_2" "Danke, Willy!"
+
+"Esc1Nazi2_3" "Hey, Hans!"
+
+"Esc1Nazi5_1" "Wie geht's, Willy?"
+
+"Esc1Nazi2_4" "Not much. One of the American spies is dead."
+
+"Esc1Nazi5_2" "I'm sure the good doctor did his best, eh?"
+
+"Esc1Nazi5_3" "Maybe I'll see you in the village tonight?"
+
+"Esc1Nazi2_6" "Ja ja."
+
+"Esc1Nazi12_1r" "This coded dispatch must go out immediately."
+
+"Esc1Nazi12_2r" "Also, you are to inform me at once of any priority messages. Is that understood?"
+
+"Esc1Nazi13_1r" "Jawohl, Herr Leutnant!"
+
+"Esc1Nazi12_3r" "What is the status of the M7G transceiver?"
+
+"Esc1Nazi13_3r" "Still waiting on parts, Herr Leutnant!"
+
+"Esc1Nazi12_4r" "Ah, that is so typical. Carry on."
+
+"Esc1Nazi13_2r" "Jawohl, mein Herr!"
+
+"Esc1Nazi18_4" "It's that American. Shoot!"
+}

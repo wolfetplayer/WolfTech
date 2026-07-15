@@ -1,0 +1,28 @@
+{
+"xlab_table_fall" " "
+
+"cine1_nazi1_1" "Sir..."
+
+"deathshead_1" "This better be important..."
+
+"cine1_nazi1_2" "Yes, sir. The American agent has infiltrated the X-lab facility."
+
+"deathshead_2" "What?! Will this fool follow me to the ends of the Earth?"
+
+"cine1_nazi1_3" "What are your orders, Herr Oberfuhrer?"
+
+"deathshead_3" "Dispatch the remaining security force immediately!"
+
+"cine1_nazi1_4" "And if the American gets past the security force?"
+
+"deathshead_4" "Then I will deal with him."
+
+"cine1_nazi1_jawohl" "Jawohl!"
+
+"xlabs_switch" " "
+
+"xlabs_sci_fear3" " "
+
+"xlabs_sci_misc_fear2" " "
+
+}

@@ -1,0 +1,32 @@
+{
+"cs11_director_1" "Well, Jack. Agent Blazkowicz is certainly full of surprises. There's no denying that."
+
+"cs11_jack_1" "No, sir."
+
+"cs11_director_2" "I always knew he was resourceful, but I never imagined he had such an expert interrogation skill."
+
+"cs11_jack_clearthroat" " "
+
+"cs11_director_3" "Well, from BJ's interrogation of the officer we now know the approximate location of Deathshead's so-called X-labs in occupied Norway. What have we learned from our defecting scientist?"
+
+"cs11_jack_2" "Well, unfortunately not as much as I'd hoped. He was pretty badly shaken when we got a hold of him. And he still hasn't completely recovered. He kept referring to the project Uber Soldat."
+
+"cs11_director_4" "Super Soldier..."
+
+"cs11_jack_3" "Yes. From what I can piece together, it involves some bizarre synthesis of robotic and biological engineering."
+
+"cs11_director_5" "For what purpose?"
+
+"cs11_jack_4" "Apparently to create the ultimate killing machine."
+
+"cs11_director_6" "Good lord."
+
+"cs11_jack_5" "According to the scientist, this project is Deathshead's baby. The thing most near and dear to his heart. And he's been working on it in one form or another since 1937."
+
+"cs11_director_7" "I suppose that explains the Proto Soldier blueprint and those looping monstrosities as well. But it still doesn't explain the involvement with the occult."
+
+"cs11_jack_6" "No, it doesn't. And there's only one place where we are likely to find that out."
+
+"cs11_director_8" "Yes. And, that's why agent Blazkowicz is on his way to the X-labs in Norway as we speak."
+
+}

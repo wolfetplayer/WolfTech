@@ -1,0 +1,46 @@
+{
+"cs9_director_1" "Come in!"
+
+"cs9_director_2" "Well, Jack?"
+
+"cs9_jack_1" "Blazkowicz touched down with the Cobra in Malta about 6 hours ago."
+
+"cs9_director_3" "Hm. In one piece, I assume?"
+
+"cs9_jack_2" "Yes, sir. Advanced aeronautics is en route to Malta now."
+
+"cs9_director_4" "Excellent! Now I've read your report, Jack. Tell me what you make of this Operation Ressurection the Jerries are so hot about."
+
+"cs9_jack_3" "Well, sir, this is the second time that name has cropped up. First at the dig, and then at the rocket base. It is unquestionably the link between Deathshead and the paranormal."
+
+"cs9_director_5" "Anything else?"
+
+"cs9_jack_4" "I'm afraid not, sir. We still need more information."
+
+"cs9_director_6" "And what would you suggest?"
+
+"cs9_jack_5" "We go to the source. And by that I mean we shadow Deathshead himself. And we do it right in his own backyard."
+
+"cs9_director_7" "I take it you are referring to the secret weapons facility near Kugelstadt."
+
+"cs9_jack_6" "Exactly."
+
+"cs9_director_8" "Hm... Interesting proposition. You know, for months we've been trying to infiltrate that facility, and had no luck at all."
+
+"cs9_jack_7" "I'm aware of that, sir."
+
+"cs9_director_9" "And, are you also aware that Kugelstadt itself has been undergoing intense Allied bombing raids for the past 48 hours?"
+
+"cs9_jack_8" "Yes, sir. In fact I was counting on that diversion to help tip the scales in our favor."
+
+"cs9_director_10" "Hm... What you probably don't know is that our Kreisau friends in the area have recently reported the existence of the high level scientist from the weapons facility who wishes to defect, and he's desperately seeking asylum. I imagine he could supply us with some very useful facts."
+
+"cs9_jack_9" "Indeed..."
+
+"cs9_director_11" "Alright... Now this is what we're going to do. We send agent Blazkowicz in to link up with the Kreisau group outside the Kugelstadt. They have means for getting him inside the weapons facility. And he can assist them as necessary in order to get this scientist out of there, and back in our hands."
+
+"cs9_jack_10" "And then?"
+
+"cs9_director_12" "And then we have him play the bloodhound. Follow the scent."
+
+}

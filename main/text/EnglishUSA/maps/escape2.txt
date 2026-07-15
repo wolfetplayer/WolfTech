@@ -1,0 +1,43 @@
+{
+"Esc2Nazi2_1" "So, what's going on here? Where is everyone? Half of castle guards is missing."
+
+"Esc2Nazi1_1" "That's because the Major just doubled the guard on the dig site. Again."
+
+"Esc2Nazi2_2" "Sounds like a bad case of nerves to me. Have you seen the Major lately? He looks positively ill."
+
+"Esc2Nazi1_2" "I know. According to Otto, he and Frau von Bulow had some big disagreement over security. I suppose it really shook him up."
+
+"Esc2Nazi2_3" "That's understandable. She's about as disagreeable as they come."
+
+"Esc2Nazi1_3" "I'll say... Well, I'll see you later. I gotta go polish my weapon."
+
+"Esc2Officer2_1" "Any luck, Sergeant?"
+
+"Esc2Nazi5_1" "Nein, my Hauptmann. The weather is still blocking all long range transmissions."
+
+"Esc2Officer2_2" "Keep trying Sergeant."
+
+"Esc2Nazi5_2" "Jawohl!"
+
+"Esc2Nazi10_1" "Sigh..."
+
+"Esc2Nazi11_1" "What?"
+
+"Esc2Nazi10_2" "Will someone please explain to me why it takes two of us to guard some dusty old wine bottles?"
+
+"Esc2Nazi11_2" "Haven't you heard? This is valuable property of the Reich. With all those accusations of pilfering coming from theReichsmarschall office, the Major doesn't take any chances."
+
+"Esc2Nazi10_3" "You think they would really miss just one bottle?"
+
+"Esc2Nazi11_3" "Are you kidding? The Reichsmarschall's office doesn't miss a thing!"
+
+"Esc2Nazi23_1" "Protect the gold! Kill the intruder!"
+
+"Esc2Nazi23_2" "Move, you fools! Schnell! Schnell!"
+
+"Esc2Nazi3_1" "Wie geht's, Willy?"
+
+"Esc2Nazi1_4" "Hey! Hans!"
+
+"Esc2Officer1_1" "Look! The American spy!"
+}

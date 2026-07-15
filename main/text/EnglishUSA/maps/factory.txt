@@ -1,0 +1,9 @@
+{
+"FacNazi1_1" "So, how do I disarm this thing?"
+
+"FacNazi2_1" "I told you, just clip the red wire! Or was it the blue one? Argh... Hold on while I go get the manual."
+
+"FacNazi1_2" "Nevermind. They all look gray to me anyway."
+
+"FacNazi3_1" "Hey! Someone lower the ladder!"
+}

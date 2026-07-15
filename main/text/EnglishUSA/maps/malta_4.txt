@@ -1,0 +1,149 @@
+{
+"gimme_wp_guy" "^2Sgt.Evans"
+
+"course_sarge" "^2Lt.McDermott"
+
+"guy_learning_m1" "^2Pvt.Lesley"
+
+"table_guard"     "^2Pvt.Doyle"
+
+"harbor_patrol1" "^2Cpl.Blackwell"
+
+"balcony_guard"  "^2Sgt.Lehmkuhl"
+
+"lt"    "^2Lt.Wedgwood"
+
+"poor_fella"     "^2Pvt.Denny"
+
+"museum_guard1"  "^2Pvt.Kautz"
+
+"museum_guard2"  "^2Sgt.Jolly"
+
+"medic"          "^2Cpl.Hobbins"
+
+"waters"         "^2Pvt.Waters"
+
+"street_patrol2" "^2Sgt.Crowford"
+
+"hq_guard"       "^2Sgt.Wallcroft"
+
+"boss"           "^2Col.Redford"
+
+"south_guard"    "^2Cpl.Gibson"
+
+"bartender"      "^2Evie"
+
+"flak1_commander" "^2Cpt.Ingram"
+
+"driver"          "^2Pvt.MacMillan"
+
+"doc"             "^2Dr.Kovlov"
+
+"south_guard2"    "^2Cpl.Gibson"
+
+"bar_guy1"        "^2J.Luyties"
+
+"dream_hunter"      "^1Dream Hunter"
+
+"port_guard2"       "^2Sgt.MacTavish"
+
+"port_guard"        "^2Pvt.Griffen"
+
+"jack"            "^2OSA Agent"
+
+"captain_table"     "Captain?"
+
+"stay_post"         "Sorry Captain, I have to stay on my post."
+
+"anything_sir"      "Do you need anything,sir?"
+
+"dont_worry_cap"    "We gonna keep an eye out, dont you worry Captain"
+
+"england_goods"     "Colonel says that we are gonna transport all those goods to England very soon. Just need to make sure that skies are safe."
+
+"welcome_museum"    "Welcome to our humble little museum Captain."
+
+"hq_sir"            "Sir!"
+
+"hq_hq"             "Headquarters are right ahead, Sir."
+
+"hq_colonel"        "Colonel should be inside, Captain."
+
+"gimmewp_intro"     "Captain Blazkowicz, welcome to the training facility."
+
+"gimmewp_justdont"  "Sorry, Captain. But you cant take those weapons outside this facility."
+
+"gimmewp_lt"        "Lieutenant McDermott is in the next section. He will guide you through our new course."
+
+"gimmewp_resupply"  "If you wanna resupply - use the ammo cabinet."
+
+"course_welcome"    "Hey Captain. Welcome back to the course."
+
+"course_garbage"    "That was an improvement. But its not hard to improve on garbage. Lets try it again."
+
+"course_horrible"   "That wasnt horrible, but it wasnt amazing either."
+
+"course_prettygood" "Now that was pretty damn good! Nice work Blazkowicz!"
+
+"course_seenworse"  "Alright. Ive seen worse. You ve got a few rough edges though."
+
+"course_ok"        "You looked ok back there. But you still need some work."
+
+"col_blazko?"      "Blazkowicz?"
+
+"waters_nothing" "I have nothing for you, BJ. If you wanna check out the guns we got you better go the firing range."
+
+"col_godspeed"   "Godspeed Captain!"
+
+"waters_goodtogo" "Ok. Everything seems to be in order. Good luck!"
+
+"drunk_listen" "Hey! What do you think you doing? I was listening to that!"
+
+"bart_out" "I dont care! Get out!"
+
+"bart_name" "Names Evie.Managing this tavern as best as I can. Family business, you know."
+
+"bart_sleep" "If you are looking for a place to sleep you better check out hotel on the opposite side of the street. Lovely place"
+
+"bart_back" "What do you think you doing? Back off the counter! Now!"
+
+"bart_get" "What can I get for ya?"
+
+"bart_beer" "You prefer beer? Or maybe something stronger?"
+
+"bart_new" "Never saw you before. Are you new here?"
+
+"medic_captain" "Captain?"
+
+"col_elsewhere" "Now all thats left is to deal with the remaining occult folks."
+
+"col_elsewhere2" "If I was in charge I would leave those nuts alone and let them destroy the German War Machine from the inside by wasting its precious resources. But the orders are coming from elsewhere."
+
+"col_end"   "So, according to the intel you acquired, Resurrection ceremony will take place near Castle Wolfenstein. And it will be conducted by Marianna Blavatsky herself." 
+
+"col_end2" "You need to stop the ceremony no matter what and eliminate Blavatsky if possible. As always, the transport is waiting for you at the airfield Captain. Contact us once you re done. Good luck!"
+
+"col_richard" "Maybe we should resurrect Richard the Lionheart and let him fight Heinrich? That would be something those paranormal psychos wouldnt expect."
+
+"col_rtcw" "Have you ever thought you will return to castle Wolfenstein?"
+
+"col_vendetta" "Captain! I heard that hunt for the Deathshead wasnt that successful."
+
+"col_vendetta2" "But Im pretty sure his reputation is finished. Especially after you destroyed his so called Super Soldier all by yourself."
+
+"col_wolfenstein" "Make sure to gear up properly. Dont expect an easy fight. Wolfenstein is the last citadel for the Paranormal division."
+
+"waters_gl_end" "Good luck."
+
+"waters_riptear" "I guess this is it! Time to rip and tear! We cant say for sure what are you up against, so its better to not take any chances."
+
+"waters_anywill" "Whatever loadout you pick it should be enough to obliterate anything that could possibly stand in your way."
+
+"medic_last"  "Captain! Glad to report that last modification of adrenaline syringe is ready. Its right there on the table."
+
+"medic_leave" "It is a bit sad that Doctor Kovlov is leaving. He was a brilliant mentor, you know."
+
+"medic_ropes" "Doctor Kovlov showed me some ropes. I should be able to handle this medbay just fine."
+
+
+}

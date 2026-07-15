@@ -1,0 +1,17 @@
+{
+"boss2_breathe" " "
+
+"b2_deathshead01" "Well, agent Blazkowicz, is it? You are a most impressive specimen. It will be my pleasure to dissect you piece by piece. Let me introduce you to someone. Do not confuse it with the mere prototypes you've encountered. This is the pinnacle of all my research. Das Uber Soldat. The Super Soldier."
+
+"b2_deathshead02" "It will be my pleasure to watch him destroy you."
+
+"b2_alltaunts" " "
+
+"b2_losing3" "We shall meet again one day!"
+
+"b2_losing1" "But, how?!"
+
+"b2_losing2" "What!? It's not possible!"
+
+"boss2_takeoff" " "
+}
