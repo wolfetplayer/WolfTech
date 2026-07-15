@@ -1,0 +1,117 @@
+weaponDef
+{
+	client {
+		//standModel		 ""
+		pickupModel		     "models/weapons/pistols/luger/luger_3rd.md3"
+		droppedAnglesHack                                       
+		
+		weaponConfig		"models/weapons/pistols/luger/weapon.cfg"
+		handsModel			"models/weapons/pistols/luger/v_luger_hand.mdc"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/luger/luger_fire.wav"	
+		flashEchoSound		"sound/weapons/luger/luger_far.wav"		
+		//lastShotSound		""								
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/luger/luger_reload.wav"
+		reloadFullSound		"sound/weapons/luger/luger_reload_full.wav"
+		reloadSoundFast		"sound/weapons/luger/luger_reload_fast.wav"
+		reloadFullSoundFast	"sound/weapons/luger/luger_reload_full_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/pistol_reload.wav"
+		//spinupSound		""									
+		//spindownSound		""									
+		switchSound			"sound/weapons/luger/silencerremove.wav"
+        bounceSound         "sound/misc/weapon_bounce.wav"	
+		
+		weaponIcon			"icons/iconw_luger_1"
+		weaponSelectedIcon	"icons/iconw_luger_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      0 0 0                               // X Y Z positions
+		weaponPositionAlt   0 0 4                              // X Y Z positions
+		weaponPositionAlt2  0 4 0                              // X Y Z positions
+		
+		
+		ejectBrassFunc		"PistolEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/pistols/luger/v_luger.md3"
+			flashModel		"models/weapons/pistols/luger/v_luger_flash.md3"
+			
+			weaponLink
+			{
+				
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/pistols/luger/v_luger_barrel.md3"
+				}
+			
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/pistols/luger/v_luger_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/pistols/luger/v_luger_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/pistols/luger/v_luger_barrel4.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/pistols/luger/luger_3rd.md3"
+			flashmodel		"models/weapons/pistols/luger/luger_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         300 300 200 150 150 300
+			maxammoUpgradedPerSkill 500 500 500 500 500 500
+			maxclipPerSkill         8   8   8   8   8   8
+			maxclipUpgradedPerSkill 32  32  32  32  32  32
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              1850                
+			reloadTimeFull          2650                
+			fireDelayTime           0               
+			nextShotTime            300
+            nextShotTimeUpgraded    100
+            nextShotTime2           300			
+			nextShotTime2Upgraded   100                
+			maxHeat                 0                   
+			coolRate                0                   
+			playerDamage            6
+            playerDamageUpgraded    18			
+			aiDamage                5                   
+			playerSplashRadius      0                   
+			aiSplashRadius          0                   
+			spread                  400
+            spreadUpgraded          300			
+			aimSpreadScaleAdd       35                  
+			spreadScale             0.3                
+			weapRecoilDuration      50                  
+			weapRecoilPitch         0.2 0.1             
+			weapRecoilYaw           0.0 0.0             
+			soundRange              700                 
+			moveSpeed               0.95                
+			twoHand                 0                   
+			upAngle                 0                  
+			falloffDistance         750.0 1500.0       
+		}
+}

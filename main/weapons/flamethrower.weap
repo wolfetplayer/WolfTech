@@ -1,0 +1,29 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/heavy/flame/flame_pickup.md3"
+
+		weaponConfig		"models/weapons/heavy/flame/weapon.cfg"
+		handsModel			"models/weapons/heavy/flame/v_flame_hand.md3"
+
+		//flashDlightColor	0 0 0
+		//flashSound		""
+		//lastShotSound		""
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_flamethrower_1"
+		weaponSelectedIcon	"icons/iconw_flamethrower_1_select"
+
+		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/heavy/flame/v_flame.md3"
+		}
+
+		thirdPerson {
+			model			"models/weapons/heavy/flame/flame_3rd.md3"
+			flashModel		"models/weapons/heavy/flame/flame_3rd_flash.md3"
+		}
+	}
+}

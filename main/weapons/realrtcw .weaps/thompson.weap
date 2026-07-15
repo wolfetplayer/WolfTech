@@ -1,0 +1,107 @@
+weaponDef
+{
+	    client {
+		//standModel		""
+		pickupModel			"models/weapons/smgs/thompson/thompson_3rd.md3"
+		droppedAnglesHack                       
+		
+		weaponConfig		"models/weapons/smgs/thompson/weapon.cfg"
+		handsModel			"models/weapons/smgs/thompson/v_thompson_hand.mdc"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/thompson/thompson_fire.wav"		
+		flashEchoSound		"sound/weapons/thompson/thompson_far.wav"		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/thompson/thompson_reload.wav"
+		reloadSoundFast     "sound/weapons/thompson/thompson_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/smg_reload.wav"
+		//spinupSound		""									
+		//spindownSound		""								
+		//switchSound		""	
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_thompson_1"
+		weaponSelectedIcon	"icons/iconw_thompson_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      -2 0 -1                              // X Y Z positions
+		weaponPositionAlt   -1 5 3                              // X Y Z positions
+		weaponPositionAlt2  -2 2 -1                              // X Y Z positions
+		
+		ejectBrassFunc		"PistolEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/smgs/thompson/v_thompson.md3"
+			flashModel		"models/weapons/smgs/thompson/v_thompson_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/smgs/thompson/v_thompson_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/smgs/thompson/v_thompson_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/smgs/thompson/v_thompson_barrel3.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/smgs/thompson/thompson_3rd.md3"
+			flashmodel		"models/weapons/smgs/thompson/thompson_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         300 250 200 150 150 200
+			maxammoUpgradedPerSkill 400 400 400 400 400 400
+			maxclipPerSkill         30  30  30  30  30  30
+			maxclipUpgradedPerSkill 60  60  60  60  60  60
+			uses                    1
+            usesUpgraded            2			
+			reloadTime              2400                
+			reloadTimeFull          2400                
+			fireDelayTime           0                 
+			nextShotTime            90
+            nextShotTimeUpgraded    90			
+			nextShotTime2           90
+            nextShotTime2Upgraded   90			
+			maxHeat                 0                   
+			coolRate                0                   
+			playerDamage            9
+            playerDamageUpgraded    27			
+			aiDamage                5                   
+			playerSplashRadius      0                   
+			aiSplashRadius          0                 
+			spread                  950
+            spreadUpgraded          850			
+			aimSpreadScaleAdd       15                 
+			spreadScale             0.4                 
+			weapRecoilDuration      30                  
+			weapRecoilPitch         0.2 0.2             
+			weapRecoilYaw           0.0 0.0            
+			soundRange              1000                
+			moveSpeed               0.90               
+			twoHand                 1                   
+			upAngle                 0                   
+			falloffDistance         750.0 1500.0        
+		}
+}

@@ -1,0 +1,107 @@
+weaponDef
+{
+	client {
+		//standModel		""
+		pickupModel			"models/weapons/smgs/mp34/mp34_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/smgs/mp34/weapon.cfg"
+		handsModel			"models/weapons/smgs/mp34/v_mp34_hand.md3"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/mp34/mp34_fire.wav"		
+		flashEchoSound		"sound/weapons/mp34/mp34_far.wav"		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/mp34/mp34_reload.wav"
+		reloadSoundFast		"sound/weapons/mp34/mp34_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/smg_reload.wav"	
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_mp34"
+		weaponSelectedIcon	"icons/iconw_mp34_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail" 
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      -12 -1 0                              // X Y Z positions
+		weaponPositionAlt   1 2 0                              // X Y Z positions
+		weaponPositionAlt2   -12 5 0                              // X Y Z positions
+		
+		ejectBrassFunc		"PistolEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/smgs/mp34/v_mp34.md3"
+			flashModel		"models/weapons/smgs/mp34/v_mp34_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/smgs/mp34/v_mp34_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/smgs/mp34/v_mp34_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/smgs/mp34/v_mp34_barrel3.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/smgs/mp34/mp34_3rd.md3"
+			flashmodel		"models/weapons/smgs/mp34/mp34_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         300 300 200 150 150 200
+			maxammoUpgradedPerSkill 400 400 400 400 400 400
+			maxclipPerSkill         32  32  32  32  32  32
+			maxclipUpgradedPerSkill 64  64  64  64  64  64
+			uses                    1
+            usesUpgraded            2			
+			reloadTime              2620               
+			reloadTimeFull          2620                
+			fireDelayTime           0                 
+			nextShotTime            105
+            nextShotTimeUpgraded    105			
+			nextShotTime2           105
+            nextShotTime2Upgraded   105			
+			maxHeat                 0                   
+			coolRate                0                  
+			playerDamage            6
+            playerDamageUpgraded    18			
+			aiDamage                4                  
+			playerSplashRadius      0                   
+			aiSplashRadius          0                  
+			spread                  900
+            spreadUpgraded          800			
+			aimSpreadScaleAdd       15                  
+			spreadScale             0.5                 
+			weapRecoilDuration      30                  
+			weapRecoilPitch         0.1 0.1            
+			weapRecoilYaw           0.0 0.0             
+			soundRange              1000                
+			moveSpeed               0.90                
+			twoHand                 1                  
+			upAngle                 0                   
+			falloffDistance         750.0 1500.0        
+		}
+}

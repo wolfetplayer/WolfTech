@@ -1,0 +1,108 @@
+weaponDef
+{
+	client {
+		//standModel		""	
+		pickupModel	        "models/weapons/smgs/ppsh/ppsh_3rd.md3"
+		droppedAnglesHack                                       
+		
+		weaponConfig		"models/weapons/smgs/ppsh/weapon.cfg"
+		handsModel			"models/weapons/smgs/ppsh/v_ppsh_hand.mdc"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/ppsh/ppsh_fire.wav"		
+		flashEchoSound		"sound/weapons/ppsh/ppsh_far.wav"		
+		//lastShotSound		""								
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/ppsh/ppsh_reload.wav"
+		reloadSoundFast		"sound/weapons/ppsh/ppsh_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/smg_reload.wav"
+		//reloadFastSound	""
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_ppsh_1"
+		weaponSelectedIcon	"icons/iconw_ppsh_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+	
+		weaponPosition      0 0 0                             // X Y Z positions
+		weaponPositionAlt   0 3 0                             // X Y Z positions
+		weaponPositionAlt2  0 4 0                             // X Y Z positions
+		
+		ejectBrassFunc		"PistolEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/smgs/ppsh/v_ppsh.md3"
+			flashModel		"models/weapons/smgs/ppsh/v_ppsh_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/smgs/ppsh/v_ppsh_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/smgs/ppsh/v_ppsh_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/smgs/ppsh/v_ppsh_barrel3.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/smgs/ppsh/ppsh_3rd.md3"
+			flashmodel		"models/weapons/smgs/ppsh/ppsh_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         400 300 250 200 200 300
+			maxammoUpgradedPerSkill 600 600 600 600 600 600
+			maxclipPerSkill         71  71  71  71  71  71
+			maxclipUpgradedPerSkill 142 142 142 142 142 142
+			uses                    1
+            usesUpgraded            2			
+			reloadTime              2600              
+			reloadTimeFull          2600               
+			fireDelayTime           0                 
+			nextShotTime            65
+            nextShotTimeUpgraded    65			
+			nextShotTime2           65
+            nextShotTime2Upgraded   65			
+			maxHeat                 0                  
+			coolRate                0                  
+			playerDamage            6
+            playerDamageUpgraded    18			
+			aiDamage                5                   
+			playerSplashRadius      0                   
+			aiSplashRadius          0                   
+			spread                  1000
+            spreadUpgraded          900			
+			aimSpreadScaleAdd       15                  
+			spreadScale             0.5                 
+			weapRecoilDuration      30                  
+			weapRecoilPitch         0.1 0.1            
+			weapRecoilYaw           0.0 0.0             
+			soundRange              1000                
+			moveSpeed               0.90                
+			twoHand                 1                   
+			upAngle                 0                  
+			falloffDistance         750.0 1500.0        
+		}
+}

@@ -1,0 +1,93 @@
+weaponDef
+{
+	client {
+		//standModel		""										
+		pickupModel		    "models/weapons/explosives/pineapple/pineapple_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/explosives/pineapple/weapon.cfg"
+		handsModel			"models/weapons/explosives/pineapple/v_pineapple_hand.mdc"
+		
+		flashDlightColor	1 0.7 0.5
+		flashSound			"sound/weapons/grenade/grenlf1a.wav"	
+		//flashEchoSound	""										
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		//reloadSound		""
+		//reloadFullSound	""
+		//reloadFastSound	""									
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""			
+        //bounceSound       ""			
+		
+		weaponIcon			"icons/iconw_pineapple_1"
+		weaponSelectedIcon	"icons/iconw_pineapple_1_select"
+		
+		missileModel		"models/weapons2/grenade/pineapple.md3"
+		//missileSound		""
+		missileTrailFunc	"GrenadeTrail"						// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		//ejectBrassFunc	""									// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/explosives/pineapple/v_pineapple.md3"
+			//flashModel		""
+			
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/explosives/pineapple/v_pineapple_barrel.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/explosives/pineapple/pineapple_3rd.md3"
+			//flashmodel		""
+		}
+	}
+			ammo {
+			maxammoPerSkill         10 8 6 5 5 10
+            maxammoUpgradedPerSkill 10 10 10 10 10 10			
+			maxclipPerSkill         10 8 6 5 5 10
+            maxclipUpgradedPerSkill 10 10 10 10 10 10			
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              1000       
+			reloadTimeFull          1000    
+			fireDelayTime           250      
+			nextShotTime            1600
+            nextShotTimeUpgraded    1600			
+			nextShotTime2           1600
+            nextShotTime2Upgraded   1600			
+			maxHeat                 0         
+			coolRate                0          
+			playerDamage            220
+            playerDamageUpgraded    220			
+			aiDamage                220        
+			playerSplashRadius      270        
+			aiSplashRadius          270        
+			spread                  0
+            spreadUpgraded          0			
+			aimSpreadScaleAdd       0         
+			spreadScale             0.0        
+			weapRecoilDuration      0          
+			weapRecoilPitch         0.0 0.0    
+			weapRecoilYaw           0.0 0.0  
+			soundRange              1500       
+			moveSpeed               0.95       
+			twoHand                 0         
+			upAngle                 1000       
+			falloffDistance         0.0 0.0            
+		}
+}

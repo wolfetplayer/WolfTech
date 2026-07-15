@@ -1,0 +1,113 @@
+weaponDef
+{
+	client {
+		//standModel		""
+		pickupModel		    "models/weapons/assault_rifles/bar/bar_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/assault_rifles/bar/weapon.cfg"
+		handsModel			"models/weapons/assault_rifles/bar/v_bar_hand.md3"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/bar/bar_fire.wav"		
+		flashEchoSound		"sound/weapons/bar/bar_far.wav"		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/bar/bar_reload.wav"
+		reloadSoundFast		"sound/weapons/bar/bar_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/ar_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""	
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_bar"
+		weaponSelectedIcon	"icons/iconw_bar_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition         -2 -1 -1                              // Classic RealRTCW view
+		weaponPositionAlt      -4 5 -3                              // MoHAA/CoD1
+		weaponPositionAlt2     -2 5 -1                              // Quake1/Doom
+		
+		ejectBrassFunc		"MachineGunEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/assault_rifles/bar/v_bar.md3"
+			flashModel		"models/weapons/assault_rifles/bar/v_bar_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/assault_rifles/bar/v_bar_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/assault_rifles/bar/v_bar_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/assault_rifles/bar/v_bar_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/assault_rifles/bar/v_bar_barrel4.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/assault_rifles/bar/bar_3rd.md3"
+			flashmodel		"models/weapons/assault_rifles/bar/bar_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill             300 200 180 150 150 180 
+			maxammoUpgradedPerSkill     300 300 300 300 300 300 
+			maxclipPerSkill             20  20  20  20  20  20 
+			maxclipUpgradedPerSkill     40  40  40  40  40  40 
+			uses                        1
+            usesUpgraded                1			
+			reloadTime                  3300                   
+			reloadTimeFull              3300                   
+			fireDelayTime               0                      
+			nextShotTime                200                    
+			nextShotTimeUpgraded        200                    
+			nextShotTime2               100                    
+			nextShotTime2Upgraded       100                     
+			maxHeat                     0                              
+			coolRate                    0                              
+			playerDamage                15                             
+			playerDamageUpgraded        45                            
+			aiDamage                    6                              
+			playerSplashRadius          0                             
+			aiSplashRadius              0                             
+			spread                      700                           
+			spreadUpgraded              600                           
+			aimSpreadScaleAdd           15                           
+			spreadScale                 0.6                          
+			weapRecoilDuration          40                         
+			weapRecoilPitch             0.1 0.1                   
+			weapRecoilYaw               0.0 0.0                   
+			soundRange                  1500                      
+			moveSpeed                   0.90                      
+			twoHand                     1                        
+			upAngle                     0                         
+			falloffDistance             2000.0 4000.0           
+		}
+}

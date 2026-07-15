@@ -1,0 +1,101 @@
+weaponDef
+{
+	client {
+		//standModel		""									
+		pickupModel		    "models/weapons/melee/knife/knife_pickup.md3"
+		//droppedAnglesHack
+		
+		weaponConfig		"models/weapons/melee/knife/weapon.cfg"
+		handsModel			"models/weapons/melee/knife/v_knife_hand.mdc"
+		
+		//flashDlightColor	0 0 0
+		flashSound			"sound/weapons/knife/knife_slash1.wav"	
+		flashSound			"sound/weapons/knife/knife_slash2.wav"	
+		flashSound			"sound/weapons/knife/knife_slash3.wav"	
+		//flashEchoSound	""										
+		//lastShotSound		""									
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		//reloadSound		""
+		//reloadFullSound	""
+		//reloadFastSound	""									
+		//spinupSound		""									
+		//spindownSound		""									
+		switchSound		    "sound/weapons/knife/knife_ready.wav"
+        bounceSound         "sound/weapons/knife/knife_bounce.wav"			
+		
+		
+		weaponIcon			"icons/iconw_knife_1"
+		weaponSelectedIcon	"icons/iconw_knife_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail" 
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      0 0 0                              // X Y Z positions
+		weaponPositionAlt      0 0 0                              // X Y Z positions
+		weaponPositionAlt2      0 5 0                              // X Y Z positions
+		
+		//ejectBrassFunc	""									// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model		"models/weapons/melee/knife/v_knife.md3"
+			//flashModel	""
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/melee/knife/v_knife_barrel.md3"
+				}
+				
+			}
+		}
+		
+		thirdPerson {
+			model		"models/weapons/melee/knife/knife_pickup.md3"
+			//flashmodel	""
+		}
+	}
+			ammo {
+			maxammoPerSkill         10 10 10 10 10 10
+			maxammoUpgradedPerSkill 20 20 20 20 20 20
+			maxclipPerSkill         10 10 10 10 10 10
+            maxclipUpgradedPerSkill 20 20 20 20 20 20			
+			uses                    0
+            usesUpgraded            0			
+			reloadTime              0                   
+			reloadTimeFull          0                   
+			fireDelayTime           50                  
+			nextShotTime            300
+            nextShotTimeUpgraded    200			
+			nextShotTime2           300
+            nextShotTime2Upgraded   200			
+			maxHeat                 0                  
+			coolRate                0                   
+			playerDamage            10
+            playerDamageUpgraded    50			
+			aiDamage                6                   
+			playerSplashRadius      0                   
+			aiSplashRadius          0                  
+			spread                  0
+            spreadUpgraded          0			
+			aimSpreadScaleAdd       0                   
+			spreadScale             0.0                 
+			weapRecoilDuration      0                   
+			weapRecoilPitch         0.0 0.0             
+			weapRecoilYaw           0.0 0.0             
+			soundRange              64                  
+			moveSpeed               1.0                 
+			twoHand                 0                   
+			upAngle                 0                  
+			falloffDistance         0.0 0.0             
+		}
+}

@@ -1,0 +1,108 @@
+weaponDef
+{
+	client {
+		//standModel		""	
+		pickupModel			"models/weapons/heavy/browning/brown30cal_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/heavy/browning/weapon.cfg"
+		handsModel			"models/weapons/heavy/browning/v_brown30cal_hand.md3"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/browning/browning_fire.wav"		
+		flashEchoSound	    "sound/weapons/browning/browning_far.wav"		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		overheatSound		"sound/weapons/browning/browning_heat.wav"
+		reloadSound			"sound/weapons/browning/browning_reload.wav"
+		reloadSoundFast		"sound/weapons/browning/browning_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/mg_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""		
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_browning"
+		weaponSelectedIcon	"icons/iconw_browning_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      -6 0 0                              // X Y Z positions
+		weaponPositionAlt   6 8 -1                              // X Y Z positions
+		weaponPositionAlt2  -6 5 0                              // X Y Z positions
+		
+		ejectBrassFunc		"MachineGunEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/heavy/browning/v_brown30cal.md3"
+			flashModel		"models/weapons/heavy/browning/v_brown30cal_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/heavy/browning/v_brown30cal_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/heavy/browning/v_brown30cal_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/heavy/browning/v_brown30cal_barrel3.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/heavy/browning/brown30cal_3rd.md3"
+			flashmodel		"models/weapons/heavy/browning/brown30cal_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         1000 1000 750  500 500 500
+			maxammoUpgradedPerSkill 650  650  650  650 650 650
+			maxclipPerSkill         100  100  100  100 100 100
+			maxclipUpgradedPerSkill 150  150  150  150 150 150
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              7000                  
+			reloadTimeFull          7000                  
+			fireDelayTime           0                    
+			nextShotTime            100
+            nextShotTimeUpgraded    90			
+			nextShotTime2           100
+            nextShotTime2Upgraded   90			
+			maxHeat                 2500                   
+			coolRate                350                   
+			playerDamage            15
+            playerDamageUpgraded    45			
+			aiDamage                6                      
+			playerSplashRadius      0                      
+			aiSplashRadius          0                      
+			spread                  1000
+            spreadUpgraded          900			
+			aimSpreadScaleAdd       15                     
+			spreadScale             0.6                    
+			weapRecoilDuration      75                    
+			weapRecoilPitch         0.1 0.1                
+			weapRecoilYaw           0.1 0.1                
+			soundRange              1500                   
+			moveSpeed               0.80                  
+			twoHand                 1                     
+			upAngle                 0                       
+			falloffDistance         2000.0 4000.0 
+		}
+}

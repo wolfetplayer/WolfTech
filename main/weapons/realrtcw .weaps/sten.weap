@@ -1,0 +1,108 @@
+weaponDef
+{
+	client {
+		//standModel		""	
+		pickupModel			"models/weapons/smgs/sten/sten_3rd.md3"
+		droppedAnglesHack     
+		
+		weaponConfig		"models/weapons/smgs/sten/weapon.cfg"
+		handsModel			"models/weapons/smgs/sten/v_sten_hand.mdc"
+		
+		//flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/sten/sten_fire.wav"		
+		//flashEchoSound	""										
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		overheatSound		"sound/weapons/sten/sten_overheat.wav"
+		reloadSound			"sound/weapons/sten/sten_reload.wav"
+		reloadSoundFast		"sound/weapons/sten/sten_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/smg_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""		
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_sten_1"
+		weaponSelectedIcon	"icons/iconw_sten_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      -6 -1 -2                              // X Y Z positions
+		weaponPositionAlt   2 2 -1                             // X Y Z positions
+		weaponPositionAlt2  -6 5 -2                             // X Y Z positions
+		
+		ejectBrassFunc		"PistolEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/smgs/sten/v_sten.md3"
+			//flashModel	"models/weapons/smgs/sten/v_sten_flash.mdc"
+			
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/smgs/sten/v_sten_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/smgs/sten/v_sten_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/smgs/sten/v_sten_barrel3.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/smgs/sten/sten_3rd.md3"
+			//flashmodel	"models/weapons/smgs/sten/sten_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         150 300 200 150 150 200
+            maxammoUpgradedPerSkill 400 400 400 400 400 400			
+			maxclipPerSkill         32  32  32  32  32  32
+            maxclipUpgradedPerSkill 64  64  64  64  64  64			
+			uses                    1
+            usesUpgraded            2			
+			reloadTime              2500               
+			reloadTimeFull          2500               
+			fireDelayTime           0                 
+			nextShotTime            115
+            nextShotTimeUpgraded    115			
+			nextShotTime2           115
+            nextShotTime2Upgraded   115			
+			maxHeat                 900               
+			coolRate                500                 
+			playerDamage            7
+            playerDamageUpgraded    21			
+			aiDamage                4                   
+			playerSplashRadius      0                   
+			aiSplashRadius          0                   
+			spread                  900
+            spreadUpgraded          800			
+			aimSpreadScaleAdd       15                  
+			spreadScale             0.6                 
+			weapRecoilDuration      40                  
+			weapRecoilPitch         0.1 0.1            
+			weapRecoilYaw           0.0 0.0            
+			soundRange              64                  
+			moveSpeed               0.90                
+			twoHand                 1                   
+			upAngle                 0                   
+			falloffDistance         750.0 1500.0       
+		}
+}

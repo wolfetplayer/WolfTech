@@ -1,0 +1,117 @@
+weaponDef
+{
+	client {
+		//standModel			""
+		pickupModel			"models/weapons/heavy/pf/pf_3rd.md3"
+		//droppedAnglesHack                        
+	
+		weaponConfig		"models/weapons/heavy/pf/weapon.cfg"
+		handsModel			"models/weapons/heavy/pf/v_pf_hand.mdc"
+		
+		flashDlightColor	0.75 0.3 0.0
+		flashSound			"sound/weapons/rocket/rocklf1a.wav"	
+//		flashEchoSound		""	
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		//reloadSound		""
+		//reloadFullSound	""
+		//reloadFastSound	""									
+		//spinupSound		""		
+		//spindownSound		""									
+		//switchSound		""		
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_panzerfaust_1"
+		weaponSelectedIcon	"icons/iconw_panzerfaust_1_select"
+		
+		missileModel		"models/ammo/rocket/rocket.md3"
+		missileSound		"sound/weapons/rocket/rockfly.wav"
+		missileTrailFunc	"RocketTrail"						// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		missileDlight		200
+		missileDlightColor	0.75 0.3 0.0
+		
+		weaponPosition      3 1 1                              // X Y Z positions
+		weaponPositionAlt   2 3 0                              // X Y Z positions
+		weaponPositionAlt2  3 5 1                              // X Y Z positions
+		
+		ejectBrassFunc		"PanzerFaustEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/heavy/pf/v_pf.md3"
+			flashModel		"models/weapons/heavy/pf/v_pf_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/heavy/pf/v_pf_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/heavy/pf/v_pf_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/heavy/pf/v_pf_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/heavy/pf/v_pf_barrel4.md3"
+				}
+				part 4
+				{
+					tag		"tag_barrel5"
+					model	"models/weapons/heavy/pf/v_pf_barrel5.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/heavy/pf/pf_3rd.md3"
+			flashmodel		"models/weapons/heavy/pf/pf_3rd_flash.mdc"
+		}
+	}
+			ammo {
+			maxammoPerSkill         8  6  5  4  4  12
+            maxammoUpgradedPerSkill 20 20 20 20 20 20			
+			maxclipPerSkill         1  1  1  1  1  1
+            maxclipUpgradedPerSkill 2  2  2  2  2  2			
+			uses                    1
+            usesUpgraded            2			
+			reloadTime              1000              
+			reloadTimeFull          1000              
+			fireDelayTime           0                
+			nextShotTime            2000             
+			nextShotTime2           2000            
+			maxHeat                 0                 
+			coolRate                0                
+			playerDamage            400
+            playerDamageUpgraded    400			
+			aiDamage                100               
+			playerSplashRadius      450               
+			aiSplashRadius          200               
+			spread                  0
+            spreadUpgraded          0			
+			aimSpreadScaleAdd       30                
+			spreadScale             0.4               
+			weapRecoilDuration      0                
+			weapRecoilPitch         0.0 0.0          
+			weapRecoilYaw           0.0 0.0           
+			soundRange              1000             
+			moveSpeed               0.85              
+			twoHand                 1                 
+			upAngle                 0                 
+			falloffDistance         0.0 0.0             
+			brassDelayEmpty         550
+			brassDelay              550
+		}
+}

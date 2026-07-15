@@ -1,0 +1,54 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/smgs/thompson/thompson_3rd.md3"
+
+		weaponConfig		"models/weapons/smgs/thompson/weapon.cfg"
+		handsModel			"models/weapons/smgs/thompson/v_thompson_hand.mdc"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/thompson/thompson_fire.wav"
+		flashEchoSound		"sound/weapons/thompson/thompson_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/thompson/thompson_reload.wav"
+		reloadSoundFast     "sound/weapons/thompson/thompson_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/smg_reload.wav"
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_thompson_1"
+		weaponSelectedIcon	"icons/iconw_thompson_1_select"
+
+		ejectBrassFunc		"PistolEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/smgs/thompson/v_thompson.md3"
+			flashModel		"models/weapons/smgs/thompson/v_thompson_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/smgs/thompson/v_thompson_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/smgs/thompson/v_thompson_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/smgs/thompson/v_thompson_barrel3.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/smgs/thompson/thompson_3rd.md3"
+			flashModel		"models/weapons/smgs/thompson/thompson_3rd_flash.md3"
+		}
+	}
+}

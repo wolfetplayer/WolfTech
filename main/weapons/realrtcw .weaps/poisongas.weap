@@ -1,0 +1,87 @@
+weaponDef
+{
+	client {
+		//standModel		""										
+		//pickupModel		""
+		
+		weaponConfig		"models/weapons/explosives/gasgrenade/weapon.cfg"
+		handsModel			"models/weapons/explosives/gasgrenade/v_gasgrenade_hand.md3"
+		
+		flashDlightColor	1 0.7 0.5
+		//flashSound	    ""	
+		//flashEchoSound	""										
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		overheatSound		"sound/weapons/gasgrenade/gren_gas.wav"	
+		//reloadSound		""
+		//reloadFullSound	""
+		//reloadFastSound	""									
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""	
+        //bounceSound       ""			
+		
+		weaponIcon			"icons/iconw_gasgrenade_1"
+		weaponSelectedIcon	"icons/iconw_gasgrenade_1_select"
+		
+		missileModel		"models/weapons/explosives/gasgrenade/gasgrenade.md3"
+		//missileSound		""
+		missileTrailFunc	"GrenadeTrail"						// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		200
+		//missileDlightColor	0 0 0
+		
+		//ejectBrassFunc	""									// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/explosives/gasgrenade/v_gasgrenade.md3"
+			//flashModel		""
+			
+			weaponLink
+			{
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/explosives/gasgrenade/gasgrenade.md3"
+			//flashmodel		""
+		}
+	}
+			ammo {
+			maxammoPerSkill         999 999 999 999 999 999
+			maxammoUpgradedPerSkill 999 999 999 999 999 999
+			maxclipPerSkill         999 999 999 999 999 999
+			maxclipUpgradedPerSkill 999 999 999 999 999 999
+			uses                    0
+            usesUpgraded            0			
+			reloadTime              0                  
+			reloadTimeFull          0                 
+			fireDelayTime           250                 
+			nextShotTime            1500
+            nextShotTimeUpgraded    1500			
+			nextShotTime2           1500
+            nextShotTime2Upgraded   1500			
+			maxHeat                 0                  
+			coolRate                0                 
+			playerDamage            50
+            playerDamageUpgraded    50			
+			aiDamage                50              
+			playerSplashRadius      300                 
+			aiSplashRadius          300                 
+			spread                  0
+            spreadUpgraded          0			
+			aimSpreadScaleAdd       0                  
+			spreadScale             0.0                
+			weapRecoilDuration      0                   
+			weapRecoilPitch         0.0 0.0           
+			weapRecoilYaw           0.0 0.0             
+			soundRange              400                 
+			moveSpeed               0.95                
+			twoHand                 0                   
+			upAngle                 900                 
+			falloffDistance         0.0 0.0           
+		}
+}

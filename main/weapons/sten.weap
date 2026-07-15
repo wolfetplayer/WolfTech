@@ -1,0 +1,51 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/smgs/sten/sten_3rd.md3"
+
+		weaponConfig		"models/weapons/smgs/sten/weapon.cfg"
+		handsModel			"models/weapons/smgs/sten/v_sten_hand.mdc"
+
+		//flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/sten/sten_fire.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/sten/sten_reload.wav"
+		reloadSoundFast		"sound/weapons/sten/sten_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/smg_reload.wav"
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_sten_1"
+		weaponSelectedIcon	"icons/iconw_sten_1_select"
+
+		ejectBrassFunc		"PistolEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/smgs/sten/v_sten.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/smgs/sten/v_sten_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/smgs/sten/v_sten_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/smgs/sten/v_sten_barrel3.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/smgs/sten/sten_3rd.md3"
+		}
+	}
+}

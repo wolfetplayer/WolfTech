@@ -1301,6 +1301,9 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 		} else if ( !Q_stricmp( token.string, "standModel" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected standModel filename" ); return qfalse; }
 			Q_strncpyz( c->standModel, s, sizeof( c->standModel ) );
+		} else if ( !Q_stricmp( token.string, "pickupModel" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected pickupModel filename" ); return qfalse; }
+			wi->weaponModel[W_PU_MODEL] = trap_R_RegisterModel( s );
 		} else if ( !Q_stricmp( token.string, "weaponIcon" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected weaponIcon filename" ); return qfalse; }
 			Q_strncpyz( c->weaponIcon, s, sizeof( c->weaponIcon ) );

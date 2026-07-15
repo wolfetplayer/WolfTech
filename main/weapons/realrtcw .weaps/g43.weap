@@ -1,0 +1,108 @@
+weaponDef
+{
+	client {
+		//standModel		""	
+		pickupModel			"models/weapons/auto_rifles/g43/g43_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/auto_rifles/g43/weapon.cfg"
+		handsModel			"models/weapons/auto_rifles/g43/v_g43_hand.md3"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/g43/g43_fire.wav"		
+		flashEchoSound	    "sound/weapons/g43/g43_far.wav"		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/g43/g43_reload.wav"
+		reloadSoundFast		"sound/weapons/g43/g43_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/auto_rifle_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""		
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_g43"
+		weaponSelectedIcon	"icons/iconw_g43_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      1 0 -1                              // X Y Z positions
+		weaponPositionAlt   1 2 0                              // X Y Z positions
+		weaponPositionAlt2  1 2 -1                              // X Y Z positions
+		
+		ejectBrassFunc		"MachineGunEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/auto_rifles/g43/v_g43.md3"
+			flashModel		"models/weapons/auto_rifles/g43/v_g43_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/auto_rifles/g43/v_g43_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/auto_rifles/g43/v_g43_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/auto_rifles/g43/v_g43_barrel3.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/auto_rifles/g43/g43_3rd.md3"
+			flashmodel		"models/weapons/auto_rifles/g43/g43_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         200 200 180 150 150 150
+			maxammoUpgradedPerSkill 250 250 250 250 250 250
+			maxclipPerSkill         10  10  10  10  10  10
+            maxclipUpgradedPerSkill 20  20  20  20  20  20			
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              2300                
+			reloadTimeFull          2300                
+			fireDelayTime           0                
+			nextShotTime            300
+            nextShotTimeUpgraded    150			
+			nextShotTime2           300
+            nextShotTime2Upgraded   150			
+			maxHeat                 0                  
+			coolRate                0                   
+			playerDamage            20
+            playerDamageUpgraded    50			
+			aiDamage                10                   
+			playerSplashRadius      0                   
+			aiSplashRadius          0                   
+			spread                  350
+            spreadUpgraded          300			
+			aimSpreadScaleAdd       40                  
+			spreadScale             0.4                 
+			weapRecoilDuration      40                 
+			weapRecoilPitch         0.2 0.2             
+			weapRecoilYaw           0.1 0.1             
+			soundRange              2000                
+			moveSpeed               0.90               
+			twoHand                 1                   
+			upAngle                 0                  
+			falloffDistance         2000.0 4000.0
+		}
+}

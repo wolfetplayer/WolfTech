@@ -1,0 +1,96 @@
+weaponDef
+{
+	client {
+		//standModel		""									
+		//pickupModel		""
+		
+		weaponConfig		"models/weapons/explosives/dynamite/weapon.cfg"
+		handsModel			"models/weapons/explosives/dynamite/v_dynamite_hand.mdc"
+		
+		//flashDlightColor	0 0 0
+		//flashSound		""									
+		//flashEchoSound	""									
+		//lastShotSound		""									
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		//reloadSound		""
+		//reloadFullSound   ""
+		//reloadFastSound	""									
+		//spinupSound		""									
+		spindownSound		"sound/weapons/dynamite/dynamite_timer.wav"			
+		//switchSound		""	
+        //bounceSound       ""			
+		
+		weaponIcon			"icons/iconw_dynamite_1"
+		weaponSelectedIcon	"icons/iconw_dynamite_1_select"
+		
+		missileModel		"models/ammo/dynamite.mdc"
+		//missileSound		""
+		//missileTrailFunc	""						// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      3 0 0                             // X Y Z positions
+		weaponPositionAlt   3 0 0                              // X Y Z positions
+		weaponPositionAlt2  3 0 0                             // X Y Z positions
+		
+		//ejectBrassFunc	""									// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model		"models/weapons/explosives/dynamite/v_dynamite.md3"
+			//flashModel	""
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/explosives/dynamite/v_dynamite_barrel.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model		"models/weapons/explosives/dynamite/dynamite_3rd.md3"
+			//flashmodel	""
+		}
+	}
+			ammo {
+			maxammoPerSkill         999 999 999 999 999 999 
+			maxammoUpgradedPerSkill 999 999 999 999 999 999
+			maxclipPerSkill         999 999 999 999 999 999
+            maxclipUpgradedPerSkill 999 999 999 999 999 999			
+			uses                    0
+            usesUpgraded            0			
+			reloadTime              50     
+			reloadTimeFull          50      
+			fireDelayTime           250       
+			nextShotTime            1600
+            nextShotTimeUpgraded    1600			
+			nextShotTime2           1600
+            nextShotTime2Upgraded   1600			
+			maxHeat                 0         
+			coolRate                0         
+			playerDamage            800
+            playerDamageUpgraded    800			
+			aiDamage                800    
+			playerSplashRadius      450     
+			aiSplashRadius          450       
+			spread                  0
+            spreadUpgraded          0			
+			aimSpreadScaleAdd       0         
+			spreadScale             0.0       
+			weapRecoilDuration      0        
+			weapRecoilPitch         0.0 0.0   
+			weapRecoilYaw           0.0 0.0   
+			soundRange              3000      
+			moveSpeed               0.95     
+			twoHand                 0         
+			upAngle                 500       
+			falloffDistance         0.0 0.0           
+		}
+}

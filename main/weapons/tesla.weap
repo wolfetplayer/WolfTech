@@ -1,0 +1,42 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/secret/tesla/tesla_pickup.md3"
+
+		weaponConfig		"models/weapons/secret/tesla/weapon.cfg"
+		handsModel			"models/weapons/secret/tesla/v_tesla_hand.mdc"
+
+		flashDlightColor	0.2 0.6 1
+		//flashSound		""
+		//lastShotSound		""
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_tesla_1"
+		weaponSelectedIcon	"icons/iconw_tesla_1_select"
+
+		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/secret/tesla/v_tesla.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/secret/tesla/v_tesla_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/secret/tesla/v_tesla_barrel2.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/secret/tesla/tesla_3rd.md3"
+		}
+	}
+}

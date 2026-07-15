@@ -1,0 +1,53 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/rifles/snooper/snooper_3rd.md3"
+
+		weaponConfig		"models/weapons/rifles/snooper/weapon.cfg"
+		handsModel			"models/weapons/rifles/snooper/v_snooper_hand.md3"
+
+		//flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/garand/garand_fire.wav"
+		//flashEchoSound	"sound/weapons/garand/garand_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/garand/garand_reload.wav"
+		reloadSoundFast		"sound/weapons/garand/garand_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/auto_rifle_reload.wav"
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_garand_1"
+		weaponSelectedIcon	"icons/iconw_garand_1_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/rifles/snooper/v_snooper.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/rifles/snooper/v_snooper_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/rifles/snooper/v_snooper_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/rifles/snooper/v_snooper_barrel3.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/rifles/snooper/snooper_3rd.md3"
+			flashModel		"models/weapons/rifles/snooper/snooper_3rd_flash.md3"
+		}
+	}
+}

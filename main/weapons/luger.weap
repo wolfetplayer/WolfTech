@@ -1,0 +1,61 @@
+weaponDef
+{
+	client {
+		pickupModel		     "models/weapons/pistols/luger/luger_3rd.md3"
+
+		weaponConfig		"models/weapons/pistols/luger/weapon.cfg"
+		handsModel			"models/weapons/pistols/luger/v_luger_hand.mdc"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/luger/luger_fire.wav"
+		flashEchoSound		"sound/weapons/luger/luger_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/luger/luger_reload.wav"
+		reloadFullSound		"sound/weapons/luger/luger_reload_full.wav"
+		reloadSoundFast		"sound/weapons/luger/luger_reload_fast.wav"
+		reloadFullSoundFast	"sound/weapons/luger/luger_reload_full_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/pistol_reload.wav"
+		switchSound			"sound/weapons/luger/silencerremove.wav"
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_luger_1"
+		weaponSelectedIcon	"icons/iconw_luger_1_select"
+
+		ejectBrassFunc		"PistolEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/pistols/luger/v_luger.md3"
+			flashModel		"models/weapons/pistols/luger/v_luger_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/pistols/luger/v_luger_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/pistols/luger/v_luger_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/pistols/luger/v_luger_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/pistols/luger/v_luger_barrel4.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/pistols/luger/luger_3rd.md3"
+			flashModel		"models/weapons/pistols/luger/luger_3rd_flash.md3"
+		}
+	}
+}

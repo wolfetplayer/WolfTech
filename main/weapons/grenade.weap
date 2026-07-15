@@ -1,0 +1,41 @@
+weaponDef
+{
+	client {
+		pickupModel		    "models/weapons/explosives/grenade/grenade_3rd.md3"
+
+		weaponConfig		"models/weapons/explosives/grenade/weapon.cfg"
+		handsModel			"models/weapons/explosives/grenade/v_grenade_hand.md3"
+
+		flashDlightColor	1 0.7 0.5
+		flashSound			"sound/weapons/grenade/grenlf1a.wav"
+		//lastShotSound		""
+		//switchSound		""
+
+		weaponIcon			"icons/iconw_grenade_1"
+		weaponSelectedIcon	"icons/iconw_grenade_1_select"
+
+		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/explosives/grenade/v_grenade.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/explosives/grenade/v_grenade_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/explosives/grenade/v_grenade_barrel2.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/explosives/grenade/grenade_3rd.md3"
+		}
+	}
+}

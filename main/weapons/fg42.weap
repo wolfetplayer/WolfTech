@@ -1,0 +1,55 @@
+weaponDef
+{
+	client {
+		standModel		    "models/weapons/assault_rifles/fg42/fg42_stand.mdc"
+		pickupModel			"models/weapons/assault_rifles/fg42/fg42_3rd.md3"
+
+		weaponConfig		"models/weapons/assault_rifles/fg42/weapon.cfg"
+		handsModel			"models/weapons/assault_rifles/fg42/v_fg42_hand.mdc"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/fg42/fg42_fire.wav"
+		flashEchoSound		"sound/weapons/fg42/fg42_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/fg42/fg42_reload.wav"
+		reloadSoundFast		"sound/weapons/fg42/fg42_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/ar_reload.wav"
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_fg42_1"
+		weaponSelectedIcon	"icons/iconw_fg42_1_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/assault_rifles/fg42/v_fg42.md3"
+			flashModel		"models/weapons/assault_rifles/fg42/v_fg42_flash.md3"
+
+			weaponLink
+			{
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/assault_rifles/fg42/v_fg42_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/assault_rifles/fg42/v_fg42_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/assault_rifles/fg42/v_fg42_barrel4.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/assault_rifles/fg42/fg42_3rd.md3"
+			flashModel		"models/weapons/assault_rifles/fg42/fg42_3rd_flash.md3"
+		}
+	}
+}

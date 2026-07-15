@@ -1,0 +1,54 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/rifles/mauser/mauser_3rd.md3"
+
+		weaponConfig		"models/weapons/rifles/mauser/weapon.cfg"
+		handsModel			"models/weapons/rifles/mauser/v_mauser_hand.mdc"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/mauser/mauser_fire.wav"
+		flashEchoSound		"sound/weapons/mauser/mauser_far.wav"
+		lastShotSound		"sound/weapons/mauser/mauser_fire_last.wav"
+
+		reloadSound			"sound/weapons/mauser/mauser_reload.wav"
+		reloadSoundFast		"sound/weapons/mauser/mauser_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/rifle_reload.wav"
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_mauser_1"
+		weaponSelectedIcon	"icons/iconw_mauser_1_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/rifles/mauser/v_mauser.md3"
+			flashModel		"models/weapons/rifles/mauser/v_mauser_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/rifles/mauser/v_mauser_barrel.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/rifles/mauser/v_mauser_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/rifles/mauser/v_mauser_barrel4.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/rifles/mauser/mauser_3rd.md3"
+			flashModel		"models/weapons/rifles/mauser/mauser_3rd_flash.mdc"
+		}
+	}
+}

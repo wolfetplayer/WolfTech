@@ -1,0 +1,52 @@
+weaponDef
+{
+	client {
+		standModel			"models/weapons2/yourweapon/yourweapon_stand.md3"
+		pickupModel			"models/weapons2/yourweapon/yourweapon_3rd.md3"
+		weaponConfig		"models/weapons2/yourweapon/weapon.cfg"
+		handsModel			"models/weapons2/yourweapon/v_yourweapon_hand.md3"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/yourweapon/yourweapon_fire.wav"
+		flashEchoSound		"sound/weapons/yourweapon/yourweapon_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/yourweapon/yourweapon_reload.wav"
+		reloadSoundFast		"sound/weapons/yourweapon/yourweapon_reload_fast.wav"
+		reloadFullSound		"sound/weapons/yourweapon/yourweapon_reload_full.wav"
+		reloadFullSoundFast	"sound/weapons/yourweapon/yourweapon_reload_full_fast.wav"
+		reloadSoundAi		"sound/weapons/ai/smg_reload.wav"
+		//switchSound		""
+		bounceSound			"sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_yourweapon"
+		weaponSelectedIcon	"icons/iconw_yourweapon_select"
+		ammoIcon			"icons/iconw_yourweapon_ammo"
+
+		ejectBrassFunc		"PistolEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons2/yourweapon/v_yourweapon.md3"
+			flashModel		"models/weapons2/yourweapon/v_yourweapon_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons2/yourweapon/v_yourweapon_barrel.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons2/yourweapon/yourweapon.md3"
+			flashModel		"models/weapons2/yourweapon/yourweapon_flash.md3"
+		}
+
+		//skeletalThirdPerson {
+		//	model			""
+		//	flashModel		""
+		//}
+	}
+}

@@ -1,0 +1,108 @@
+weaponDef
+{
+	client {
+		//standModel		""
+		pickupModel			"models/weapons/rifles/snooper/snooper_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/rifles/snooper/weapon.cfg"
+		handsModel			"models/weapons/rifles/snooper/v_snooper_hand.md3"
+		
+		//flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/garand/garand_fire.wav"		
+		//flashEchoSound	"sound/weapons/garand/garand_far.wav"		
+		//lastShotSound		""									
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/garand/garand_reload.wav"
+		reloadSoundFast		"sound/weapons/garand/garand_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/auto_rifle_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""								
+		//spindownSound		""									
+		//switchSound		""			
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_garand_1"
+		weaponSelectedIcon	"icons/iconw_garand_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      -1 0 0                              // X Y Z positions
+		weaponPositionAlt   -1 1 0                              // X Y Z positions
+		weaponPositionAlt2  -1 4 -2                              // X Y Z positions
+		
+		ejectBrassFunc		"MachineGunEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/rifles/snooper/v_snooper.md3"
+			flashModel		""
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/rifles/snooper/v_snooper_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/rifles/snooper/v_snooper_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/rifles/snooper/v_snooper_barrel3.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/rifles/snooper/snooper_3rd.md3"
+			flashmodel		"models/weapons/rifles/snooper/snooper_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         30 25 20 15 15 25
+			maxammoUpgradedPerSkill 50 50 50 50 50 50
+			maxclipPerSkill         5  5  5  5 5 5
+			maxclipUpgradedPerSkill 10 10 10 10 10 10
+			uses                    1
+            usesUpgraded            1            
+			reloadTime              3000         
+			reloadTimeFull          3000         
+			fireDelayTime           0            
+			nextShotTime            360
+            nextShotTimeUpgraded    360			
+			nextShotTime2           360
+            nextShotTime2Upgraded   360			
+			maxHeat                 0            
+			coolRate                0            
+			playerDamage            35
+            playerDamageUpgraded    70			
+			aiDamage                15         
+			playerSplashRadius      0            
+			aiSplashRadius          0            
+			spread                  50
+            spreadUpgraded          50			
+			aimSpreadScaleAdd       0           
+			spreadScale             8.0          
+			weapRecoilDuration      300           
+			weapRecoilPitch         0.7 0.0      
+			weapRecoilYaw           0.4 0.0      
+			soundRange              128          
+			moveSpeed               0.40        
+			twoHand                 1            
+			upAngle                 0            
+			falloffDistance         2000.0 4000.0      
+		}
+}

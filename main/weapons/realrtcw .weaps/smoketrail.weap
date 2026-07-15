@@ -1,0 +1,89 @@
+weaponDef
+{
+	client {
+		//standModel		""										
+		//pickupModel		""
+		
+		weaponConfig		""
+		handsModel			"models/multiplayer/syringe/v_syringe.md3"
+		
+		//flashDlightColor	1 0.7 0.5
+		//flashSound			"sound/weapons/airstrike/throw.wav"	
+		//flashEchoSound	""										
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		//reloadSound		""
+		//reloadFastSound	""
+		//reloadFullSound	""			
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""	
+        //bounceSound       ""			
+		
+		weaponIcon			""
+		weaponSelectedIcon	""
+		
+		//missileModel		"models/weapons/explosives/airstrike/signal.md3"
+		//missileSound		""
+		missileTrailFunc	"PyroSmokeTrail"						// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		missileDlight		200
+		wiTrailTime         4000
+		trailRadius         256
+		//missileDlightColor	0 0 0
+		
+		//ejectBrassFunc	""									// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/explosives/airstrike/v_signal.md3"
+			//flashModel		""
+			
+			weaponLink
+			{
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/explosives/airstrike/signal.md3"
+			//flashmodel		""
+		}
+	}
+			ammo {
+			maxammoPerSkill         1 1 1 1 1 1
+			maxammoUpgradedPerSkill 1 1 1 1 1 1
+			maxclipPerSkill         1 1 1 1 1 1
+			maxclipUpgradedPerSkill 1 1 1 1 1 1
+			uses                    0
+            usesUpgraded            0			
+			reloadTime              3000                  
+			reloadTimeFull          3000                   
+			fireDelayTime           50                 
+			nextShotTime            1000
+            nextShotTimeUpgraded    1000            
+			nextShotTime2           1000
+            nextShotTime2Upgraded   1000			
+			maxHeat                 0                  
+			coolRate                0                   
+			playerDamage            1000
+            playerDamageUpgraded    1000			
+			aiDamage                1000                
+			playerSplashRadius      350                
+			aiSplashRadius          350                 
+			spread                  0
+            spreadUpgraded          0			
+			aimSpreadScaleAdd       0                   
+			spreadScale             0.0                
+			weapRecoilDuration      0                  
+			weapRecoilPitch         0.0 0.0            
+			weapRecoilYaw           0.0 0.0            
+			soundRange              0                
+			moveSpeed               0.95                
+			twoHand                 0                 
+			upAngle                 0                 
+			falloffDistance         0.0 0.0            
+		}
+}

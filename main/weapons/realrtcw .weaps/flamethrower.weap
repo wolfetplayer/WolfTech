@@ -1,0 +1,87 @@
+weaponDef
+{
+	client {
+		//standModel		""										
+		pickupModel			"models/weapons/heavy/flame/flame_pickup.md3"
+		
+		weaponConfig		"models/weapons/heavy/flame/weapon.cfg"
+		handsModel			"models/weapons/heavy/flame/v_flame_hand.md3"
+		
+		//flashDlightColor	0 0 0
+		//flashSound		""										
+		//flashEchoSound	""										
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		//reloadSound		""
+		//reloadFullSound   ""
+		//reloadFastSound	""									
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""				
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_flamethrower_1"
+		weaponSelectedIcon	"icons/iconw_flamethrower_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      10 2 0                              // X Y Z positions
+		weaponPositionAlt   11 6 -1                              // X Y Z positions
+		weaponPositionAlt2  10 10 0                              // X Y Z positions
+		
+		//ejectBrassFunc	""									// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/heavy/flame/v_flame.md3"
+			//flashModel	""
+		}
+		
+		thirdPerson {
+			model			"models/weapons/heavy/flame/flame_3rd.md3"
+			flashmodel		"models/weapons/heavy/flame/flame_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         250 200 150 100 100 150
+            maxammoUpgradedPerSkill 200 200 200 200 200 200			
+			maxclipPerSkill         250 200 150 100 100 150
+            maxclipUpgradedPerSkill 200 200 200 200 200 200			
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              1000                
+			reloadTimeFull          1000                
+			fireDelayTime           50                 
+			nextShotTime            50
+            nextShotTimeUpgraded    50			
+			nextShotTime2           50
+            nextShotTime2Upgraded   50			
+			maxHeat                 0                   
+			coolRate                0                   
+			playerDamage            5
+            playerDamageUpgraded    10			
+			aiDamage                5                  
+			playerSplashRadius      0                   
+			aiSplashRadius          0                   
+			spread                  0
+            spreadUpgraded          0			
+			aimSpreadScaleAdd       0                   
+			spreadScale             0.0                
+			weapRecoilDuration      0                   
+			weapRecoilPitch         0.0 0.0             
+			weapRecoilYaw           0.0 0.0             
+			soundRange              1000                
+			moveSpeed               0.85                
+			twoHand                 1                   
+			upAngle                 0                  
+			falloffDistance         0.0 0.0             
+		}
+}

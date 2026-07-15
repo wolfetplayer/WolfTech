@@ -935,6 +935,7 @@ static void CG_Item( centity_t *cent ) {
 	refEntity_t ent;
 	entityState_t       *es;
 	gitem_t             *item;
+	weaponInfo_t        *weaponInfo = NULL;
 	qboolean hasStand, highlight;
 	float highlightFadeScale = 1.0f;
 
@@ -984,7 +985,7 @@ static void CG_Item( centity_t *cent ) {
 	ent.nonNormalizedAxes = qfalse;
 
 	if ( item->giType == IT_WEAPON ) {
-		weaponInfo_t    *weaponInfo = &cg_weapons[item->giTag];
+		weaponInfo = &cg_weapons[item->giTag];
 
 		if ( weaponInfo->standModel ) {
 			hasStand = qtrue;
@@ -1025,7 +1026,7 @@ static void CG_Item( centity_t *cent ) {
 			ent.nonNormalizedAxes = qtrue;
 
 		} else {                                // then default to laying it on it's side
-			if ( !cg_items[es->modelindex].models[2] ) {
+			if ( !weaponInfo->weaponModel[W_PU_MODEL] && !cg_items[es->modelindex].models[2] ) {
 				cent->lerpAngles[2] += 90;
 			}
 
@@ -1066,7 +1067,9 @@ static void CG_Item( centity_t *cent ) {
 							   // try to load it first, and if it fails, default to the itemlist model
 		ent.hModel = cgs.gameModels[ es->modelindex2 ];
 	} else {
-		if ( item->giType == IT_WEAPON && cg_items[es->modelindex].models[2] ) {	// check if there's a specific model for weapon pickup placement
+		if ( item->giType == IT_WEAPON && weaponInfo->weaponModel[W_PU_MODEL] ) {	// .weap-defined pickup placement model takes priority
+			ent.hModel = weaponInfo->weaponModel[W_PU_MODEL];
+		} else if ( item->giType == IT_WEAPON && cg_items[es->modelindex].models[2] ) {	// check if there's a specific model for weapon pickup placement
 			ent.hModel = cg_items[es->modelindex].models[2];
 		} else if ( item->giType == IT_HEALTH || item->giType == IT_AMMO || item->giType == IT_POWERUP ) {
 			if ( es->density < ( 1 << 9 ) ) {  // (10 bits of data transmission for density)

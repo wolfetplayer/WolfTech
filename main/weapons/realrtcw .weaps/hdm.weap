@@ -1,0 +1,113 @@
+weaponDef
+{
+	client {
+		//standModel			""
+		pickupModel		        "models/weapons/pistols/hdm/hdm_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/pistols/hdm/weapon.cfg"
+		handsModel			"models/weapons/pistols/hdm/v_hdm_hand.mdc"
+		
+		//flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/hdm/hdm_fire.wav"		
+		//flashEchoSound	""		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/hdm/hdm_reload.wav"
+		reloadSoundFast		"sound/weapons/hdm/hdm_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/pistol_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""	
+        bounceSound         "sound/misc/weapon_bounce.wav"	
+		
+		weaponIcon			"icons/iconw_hdm_1"
+		weaponSelectedIcon	"icons/iconw_hdm_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      0 0 -1                             // X Y Z positions
+		weaponPositionAlt   0 2 4
+		weaponPositionAlt2  0 4 -2
+		
+		ejectBrassFunc		"PistolEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/pistols/hdm/v_hdm.md3"
+			//flashModel		""
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/pistols/hdm/v_hdm_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/pistols/hdm/v_hdm_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/pistols/hdm/v_hdm_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/pistols/hdm/v_hdm_barrel4.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/pistols/hdm/hdm_3rd.md3"
+			//flashmodel		"models/weapons/pistols/colt/colt_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         200 150 150 100 100 100
+			maxammoUpgradedPerSkill 200 200 200 200 200 200
+			maxclipPerSkill         10  10  10  10  10  10
+			maxclipUpgradedPerSkill 20  20  20  20  20  20
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              2300               
+			reloadTimeFull          2300                
+			fireDelayTime           0                 
+			nextShotTime            300
+            nextShotTimeUpgraded    90			
+			nextShotTime2           300
+            nextShotTime2Upgraded   0			
+			maxHeat                 0                   
+			coolRate                0                   
+			playerDamage            8
+            playerDamageUpgraded    20			
+			aiDamage                4                   
+			playerSplashRadius      0                   
+			aiSplashRadius          0                  
+			spread                  250
+            spreadUpgraded          100			
+			aimSpreadScaleAdd       35                  
+			spreadScale             0.4                 
+			weapRecoilDuration      50                  
+			weapRecoilPitch         0.2 0.1             
+			weapRecoilYaw           0.0 0.0             
+			soundRange              1                 
+			moveSpeed               0.95               
+			twoHand                 0                   
+			upAngle                 0                  
+			falloffDistance         750.0 1500.0
+		}
+}

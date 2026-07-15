@@ -1,0 +1,59 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/auto_rifles/m1_garand/m1_3rd.md3"
+
+		weaponConfig		"models/weapons/auto_rifles/m1_garand/weapon.cfg"
+		handsModel			"models/weapons/auto_rifles/m1_garand/v_m1_hand.md3"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/m1_garand/m1garand_fire.wav"
+		flashEchoSound	    "sound/weapons/m1_garand/m1garand_far.wav"
+		lastShotSound		"sound/weapons/m1_garand/m1garand_fire_last.wav"
+
+		reloadSound			"sound/weapons/m1_garand/m1garand_reload.wav"
+		reloadSoundFast		"sound/weapons/m1_garand/m1garand_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/auto_rifle_reload.wav"
+		switchSound		    "sound/weapons/m1_garand/m1_grenade_off.wav"
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_m1garand"
+		weaponSelectedIcon	"icons/iconw_m1garand_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/auto_rifles/m1_garand/v_m1.md3"
+			flashModel		"models/weapons/auto_rifles/m1_garand/v_m1_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/auto_rifles/m1_garand/v_m1_barrel.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/auto_rifles/m1_garand/v_m1_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/auto_rifles/m1_garand/v_m1_barrel4.md3"
+				}
+				part 5
+				{
+					tag		"tag_barrel6"
+					model	"models/weapons/auto_rifles/m1_garand/v_m1_barrel6.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/auto_rifles/m1_garand/m1_3rd.md3"
+			flashModel		"models/weapons/auto_rifles/m1_garand/m1_3rd_flash.md3"
+		}
+	}
+}

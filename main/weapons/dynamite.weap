@@ -1,0 +1,34 @@
+weaponDef
+{
+	client {
+		weaponConfig		"models/weapons/explosives/dynamite/weapon.cfg"
+		handsModel			"models/weapons/explosives/dynamite/v_dynamite_hand.mdc"
+
+		//flashDlightColor	0 0 0
+		//flashSound		""
+		//lastShotSound		""
+		//switchSound		""
+
+		weaponIcon			"icons/iconw_dynamite_1"
+		weaponSelectedIcon	"icons/iconw_dynamite_1_select"
+
+		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model		"models/weapons/explosives/dynamite/v_dynamite.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/explosives/dynamite/v_dynamite_barrel.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model		"models/weapons/explosives/dynamite/dynamite_3rd.md3"
+		}
+	}
+}

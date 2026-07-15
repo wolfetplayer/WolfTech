@@ -1,0 +1,40 @@
+weaponDef
+{
+	client {
+		pickupModel		    "models/weapons/melee/knife/knife_pickup.md3"
+
+		weaponConfig		"models/weapons/melee/knife/weapon.cfg"
+		handsModel			"models/weapons/melee/knife/v_knife_hand.mdc"
+
+		//flashDlightColor	0 0 0
+		flashSound			"sound/weapons/knife/knife_slash1.wav"
+		flashSound			"sound/weapons/knife/knife_slash2.wav"
+		flashSound			"sound/weapons/knife/knife_slash3.wav"
+		//lastShotSound		""
+
+		switchSound		    "sound/weapons/knife/knife_ready.wav"
+		bounceSound         "sound/weapons/knife/knife_bounce.wav"
+
+		weaponIcon			"icons/iconw_knife_1"
+		weaponSelectedIcon	"icons/iconw_knife_1_select"
+
+		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model		"models/weapons/melee/knife/v_knife.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/melee/knife/v_knife_barrel.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model		"models/weapons/melee/knife/knife_pickup.md3"
+		}
+	}
+}

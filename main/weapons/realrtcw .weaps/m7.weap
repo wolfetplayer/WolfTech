@@ -1,0 +1,112 @@
+weaponDef
+{
+	client {
+		//standModel		""	
+		pickupModel			"models/weapons/auto_rifles/m1_garand/m1_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/auto_rifles/m1_garand/weapon2.cfg"
+		handsModel			"models/weapons/auto_rifles/m1_garand/v_m1_hand.md3"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/m1_garand/m1_fire_grenade.wav"		
+		flashEchoSound	    "sound/weapons/m1_garand/m1garand_far.wav"		
+		//lastShotSound		"sound/weapons/m1_garand/m1garand_fire_last.wav" 
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/m1_garand/m1_reload_grenade.wav"
+		reloadFullSound		"sound/weapons/m1_garand/m1_reload_grenade.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		switchSound		    "sound/weapons/m1_garand/m1_grenade_on.wav"
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+        weaponIcon            "icons/iconw_m7"
+        weaponSelectedIcon    "icons/iconw_m7_select"
+		
+		missileModel		"models/weapons/auto_rifles/m1_garand/m7_projectile.md3"
+		missileSound		"sound/weapons/m1_garand/m1_grenade_fly.wav"
+		missileTrailFunc	"GrenadeTrail"									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail" 
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      0 0 -2                              // Classic RealRTCW view
+		weaponPositionAlt   -1 4 -4                            // MoHAA/CoD1
+		weaponPositionAlt2  0 9 -4                             // Quake1/Doom
+		
+		ejectBrassFunc		""				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		modModel 0		"models/weapons/auto_rifles/m1_garand/v_m1_scope.md3"
+		
+		firstPerson {
+			model			"models/weapons/auto_rifles/m1_garand/v_m1.md3"
+			flashModel		"models/weapons/auto_rifles/m1_garand/v_m1_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/auto_rifles/m1_garand/v_m1_barrel.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/auto_rifles/m1_garand/v_m1_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/auto_rifles/m1_garand/v_m1_barrel4.md3"
+				}
+				part 5
+				{
+					tag		"tag_barrel6"
+					model	"models/weapons/auto_rifles/m1_garand/v_m1_barrel6.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/auto_rifles/m1_garand/m1_3rd.md3"
+			flashmodel		"models/weapons/auto_rifles/m1_garand/m1_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill          10 10 10 10 10 10
+			maxammoUpgradedPerSkill  20 20 20 20 20 20
+			maxclipPerSkill          1  1  1  1  1  1
+            maxclipUpgradedPerSkill  1  1  1  1  1  1			
+			uses                     1
+            usesUpgraded             1			
+			reloadTime               3000              
+			reloadTimeFull           3000             
+			fireDelayTime            0               
+			nextShotTime             400
+            nextShotTimeUpgraded     400			
+			nextShotTime2            400
+            nextShotTime2Upgraded    400			
+			maxHeat                  0                 
+			coolRate                 0                 
+			playerDamage             220
+            playerDamageUpgraded     220			
+			aiDamage                 220               
+			playerSplashRadius       270              
+			aiSplashRadius           270              
+			spread                   0
+            spreadUpgraded           0			
+			aimSpreadScaleAdd        0                 
+			spreadScale              0.0             
+			weapRecoilDuration       0                 
+			weapRecoilPitch          0.0 0.0           
+			weapRecoilYaw            0.0 0.0           
+			soundRange               1500              
+			moveSpeed                0.90             
+			twoHand                  1                
+			upAngle                  0                
+			falloffDistance          0.0 0.0            
+		}
+}

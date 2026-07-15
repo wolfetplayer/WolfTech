@@ -1,0 +1,103 @@
+weaponDef
+{
+	client {
+		//standModel		""	
+		pickupModel			"models/weapons/heavy/mg42/mg42_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/heavy/mg42/weapon.cfg"
+		handsModel			"models/weapons/heavy/mg42/v_mg42_hand.md3"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/mg42m/mg42m_fire.wav"		
+		flashEchoSound	    "sound/weapons/mg42m/mg42m_far.wav"		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		overheatSound		"sound/weapons/mg42m/mg42m_heat.wav"
+		reloadSound			"sound/weapons/mg42m/mg42m_reload.wav"
+		reloadSoundFast		"sound/weapons/mg42m/mg42m_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/mg_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_mg42m"
+		weaponSelectedIcon	"icons/iconw_mg42m_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      2 -3 -4                              // X Y Z positions
+		weaponPositionAlt   6 8 -1                              // X Y Z positions
+		weaponPositionAlt2  2 5 -4                              // X Y Z positions
+		
+		ejectBrassFunc		"MachineGunEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/heavy/mg42/v_mg42.md3"
+			flashModel		"models/weapons/heavy/mg42/v_mg42_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/heavy/mg42/v_mg42_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/heavy/mg42/v_mg42_barrel2.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/heavy/mg42/mg42_3rd.md3"
+			flashmodel		"models/weapons/heavy/mg42/mg42_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         1000 1000 750 500 500 250
+            maxammoUpgradedPerSkill	500  500  500 500 500 500		
+			maxclipPerSkill         50   50   50  50  50  50
+            maxclipUpgradedPerSkill 100  100  100 100 100 100			
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              4800                  
+			reloadTimeFull          4800                   
+			fireDelayTime           0                  
+			nextShotTime            70
+            nextShotTimeUpgraded    70			
+			nextShotTime2           70
+            nextShotTime2Upgraded   70			
+			maxHeat                 0                      
+			coolRate                0                   
+			playerDamage            15
+            playerDamageUpgraded    45			
+			aiDamage                6                      
+			playerSplashRadius      0                      
+			aiSplashRadius          0                     
+			spread                  1200
+            spreadUpgraded          1100			
+			aimSpreadScaleAdd       15                     
+			spreadScale             0.6                    
+			weapRecoilDuration      50                    
+			weapRecoilPitch         0.1 0.1                
+			weapRecoilYaw           0.1 0.1               
+			soundRange              1500                  
+			moveSpeed               0.85                   
+			twoHand                 1                     
+			upAngle                 0                      
+			falloffDistance         2000.0 4000.0     
+		} 
+}

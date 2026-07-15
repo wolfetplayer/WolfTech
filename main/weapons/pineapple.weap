@@ -1,0 +1,36 @@
+weaponDef
+{
+	client {
+		pickupModel		    "models/weapons/explosives/pineapple/pineapple_3rd.md3"
+
+		weaponConfig		"models/weapons/explosives/pineapple/weapon.cfg"
+		handsModel			"models/weapons/explosives/pineapple/v_pineapple_hand.mdc"
+
+		flashDlightColor	1 0.7 0.5
+		flashSound			"sound/weapons/grenade/grenlf1a.wav"
+		//lastShotSound		""
+		//switchSound		""
+
+		weaponIcon			"icons/iconw_pineapple_1"
+		weaponSelectedIcon	"icons/iconw_pineapple_1_select"
+
+		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/explosives/pineapple/v_pineapple.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/explosives/pineapple/v_pineapple_barrel.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/explosives/pineapple/pineapple_3rd.md3"
+		}
+	}
+}

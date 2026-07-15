@@ -1,0 +1,102 @@
+weaponDef
+{
+	client {
+		//standModel		""	                               
+		pickupModel			"models/weapons/secret/tesla/tesla_pickup.md3"
+		//droppedAnglesHack
+		
+		weaponConfig		"models/weapons/secret/tesla/weapon.cfg"
+		handsModel			"models/weapons/secret/tesla/v_tesla_hand.mdc"
+		
+		flashDlightColor	0.2 0.6 1
+		//flashSound	    ""		
+		//flashEchoSound	""		                                
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		//reloadSound		""
+		//reloadFullSound	""
+		//reloadFastSound	""		                          
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""		
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_tesla_1"
+		weaponSelectedIcon	"icons/iconw_tesla_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      3 1 -2                              // X Y Z positions
+		weaponPositionAlt   0 4 -2                              // X Y Z positions
+		weaponPositionAlt2  3 8 -2                              // X Y Z positions
+		
+		//ejectBrassFunc	""				              // supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/secret/tesla/v_tesla.md3"
+			//flashModel	""
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/secret/tesla/v_tesla_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/secret/tesla/v_tesla_barrel2.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/secret/tesla/tesla_3rd.md3"
+			//flashmodel	""
+		}
+	}
+			ammo {
+			maxammoPerSkill         150 100 100 50  50  100
+			maxammoUpgradedPerSkill 150 150 150 150 150 150
+			maxclipPerSkill         150 100 100 50  50  100
+			maxclipUpgradedPerSkill 150 150 150 150 150 150
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              1000              
+			reloadTimeFull          1000              
+			fireDelayTime           0               
+			nextShotTime            250
+            nextshotTimeUpgraded    250			
+			nextShotTime2           250
+            nextShotTime2Upgraded   250			
+			maxHeat                 0                
+			coolRate                0                
+			playerDamage            15
+            playerDamageUpgraded    50			
+			aiDamage                4                 
+			playerSplashRadius      0                 
+			aiSplashRadius          0                
+			spread                  0
+            spreadUpgraded          0			
+			aimSpreadScaleAdd       0                
+			spreadScale             0.0               
+			weapRecoilDuration      0                 
+			weapRecoilPitch         0.0 0.0          
+			weapRecoilYaw           0.0 0.0          
+			soundRange              1000              
+			moveSpeed               0.85              
+			twoHand                 1                 
+			upAngle                 0                 
+			falloffDistance         0.0 0.0             
+		}
+}

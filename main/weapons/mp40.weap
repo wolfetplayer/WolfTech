@@ -1,0 +1,58 @@
+weaponDef
+{
+	client {
+		standModel		    "models/weapons/smgs/mp40/mp40_stand.mdc"
+		pickupModel			"models/weapons/smgs/mp40/mp40_3rd.md3"
+		weaponConfig		"models/weapons/smgs/mp40/weapon.cfg"
+		handsModel			"models/weapons/smgs/mp40/v_mp40_hand.mdc"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/mp40/mp40_fire.wav"	
+		flashEchoSound		"sound/weapons/mp40/mp40_far.wav"	
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/mp40/mp40_reload.wav"
+		reloadSoundFast		"sound/weapons/mp40/mp40_reload_fast.wav"
+		//reloadFullSound		"sound/weapons/yourweapon/yourweapon_reload_full.wav"
+		//reloadFullSoundFast	"sound/weapons/yourweapon/yourweapon_reload_full_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/smg_reload.wav"
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_mp40_1"
+		weaponSelectedIcon	"icons/iconw_mp40_1_select"
+		//ammoIcon			"icons/iconw_yourweapon_ammo"
+
+		ejectBrassFunc		"PistolEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass | NailgunEjectBrass
+
+		firstPerson {
+			model			"models/weapons/smgs/mp40/v_mp40.md3"
+			flashModel		"models/weapons/smgs/mp40/v_mp40_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/smgs/mp40/v_mp40_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/smgs/mp40/v_mp40_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/smgs/mp40/v_mp40_barrel3.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/smgs/mp40/mp40_3rd.md3"
+			flashModel		"models/weapons/smgs/mp40/mp40_3rd_flash.md3"
+		}
+
+	}
+}
