@@ -1310,6 +1310,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 	case WP_SNIPERRIFLE:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire.wav" );
+		weaponInfo->lastShotSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_fire_last.wav" );
 		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/mauser/mauser_far.wav" );
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload.wav" );
 		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/mauser/mauser_reload_fast.wav" );
@@ -1335,21 +1336,24 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 	case WP_M1GARAND:
 		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.6, 0.23 );
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/m1garand/m1garand_fire.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/m1garand/m1garand_reload.wav" );
-		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/m1garand/m1garand_reload_fast.wav" );
-		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/rifle_reload.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_fire.wav" );
+		weaponInfo->lastShotSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_fire_last.wav" );
+		weaponInfo->flashEchoSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_far.wav" );
+		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_reload.wav" );
+		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/m1_garand/m1garand_reload_fast.wav" );
+		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/auto_rifle_reload.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
 	case WP_M7:
 		MAKERGB( weaponInfo->flashDlightColor, 1, 0.7, 0.5 );
-		weaponInfo->missileModel = trap_R_RegisterModel( "models/ammo/grenade1.md3" );
+		weaponInfo->missileModel = trap_R_RegisterModel( "models/weapons/auto_rifles/m1_garand/m7_projectile.md3" );
 		weaponInfo->missileTrailFunc = CG_GrenadeTrail;
 		weaponInfo->wiTrailTime = 1000;
 		weaponInfo->trailRadius = 32;
-		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/m1garand/m7_fire.wav" );
-		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/m1garand/m7_reload.wav" );
+		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1_fire_grenade.wav" );
+		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/m1_garand/m1_reload_grenade.wav" );
+		weaponInfo->switchSound[0] = trap_S_RegisterSound( "sound/weapons/m1_garand/m1_grenade_on.wav");
 		cgs.media.grenadeExplosionShader = trap_R_RegisterShader( "grenadeExplosion" );
 		break;
 
@@ -1401,7 +1405,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/fg42/fg42_reload.wav" );
 		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/fg42/fg42_reload_fast.wav" );
 		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/ar_reload.wav" );
-		weaponInfo->fireModeSwitchSound = trap_S_RegisterSound( "sound/weapons/fg42/fg42_firemode.wav" );
+		weaponInfo->fireModeSwitchSound = trap_S_RegisterSound( "sound/weapons/misc/firemode_switch.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
@@ -1412,6 +1416,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->reloadSound = trap_S_RegisterSound( "sound/weapons/bar/bar_reload.wav" );
 		weaponInfo->reloadSoundFast = trap_S_RegisterSound( "sound/weapons/bar/bar_reload_fast.wav" );
 		weaponInfo->reloadSoundAi = trap_S_RegisterSound( "sound/weapons/ai/ar_reload.wav" );
+		weaponInfo->fireModeSwitchSound = trap_S_RegisterSound( "sound/weapons/misc/firemode_switch.wav" );
 		weaponInfo->ejectBrassFunc = CG_RifleEjectBrass;
 		break;
 
