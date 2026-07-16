@@ -36,6 +36,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "../qcommon/q_shared.h"
+#include "g_survival.h"
 
 /*
 Contains the code to handle the various commands available with an event script.
@@ -806,6 +807,78 @@ qboolean G_ScriptAction_Accum( gentity_t *ent, char *params ) {
 		ent->scriptAccumBuffer[bufferIndex] = rand() % atoi( token );
 	} else {
 		G_Error( "Scripting: accum: \"%s\": unknown command\n", params );
+	}
+
+	return qtrue;
+}
+
+/*
+=================
+G_ScriptAction_Wave
+
+  syntax: wave <command> <parameter>
+
+  Commands (similar to accum):
+	wave abort_if_less_than <n>
+	wave abort_if_greater_than <n>
+	wave abort_if_not_equal <n>
+	wave abort_if_equal <n>
+	wave bitset <n>
+	wave bitreset <n>
+	wave abort_if_bitset <n>
+	wave abort_if_not_bitset <n>
+=================
+*/
+qboolean G_ScriptAction_Wave( gentity_t *ent, char *params ) {
+	char *pString, *token, lastToken[MAX_QPATH];
+	int value;
+
+	pString = params;
+
+	token = COM_ParseExt( &pString, qfalse );
+	if ( !token[0] ) {
+		G_Error( "G_Scripting: wave without a command\n" );
+	}
+
+	Q_strncpyz( lastToken, token, sizeof( lastToken ) );
+	token = COM_ParseExt( &pString, qfalse );
+
+	if ( !token[0] ) {
+		G_Error( "Scripting: wave %s requires a parameter\n", lastToken );
+	}
+
+	value = atoi( token );
+
+	if ( !Q_stricmp( lastToken, "abort_if_less_than" ) ) {
+		if ( svParams.waveCount < value ) {
+			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "abort_if_greater_than" ) ) {
+		if ( svParams.waveCount > value ) {
+			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "abort_if_not_equal" ) ) {
+		if ( svParams.waveCount != value ) {
+			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "abort_if_equal" ) ) {
+		if ( svParams.waveCount == value ) {
+			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "bitset" ) ) {
+		svParams.waveCount |= ( 1 << value );
+	} else if ( !Q_stricmp( lastToken, "bitreset" ) ) {
+		svParams.waveCount &= ~( 1 << value );
+	} else if ( !Q_stricmp( lastToken, "abort_if_bitset" ) ) {
+		if ( svParams.waveCount & ( 1 << value ) ) {
+			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "abort_if_not_bitset" ) ) {
+		if ( !( svParams.waveCount & ( 1 << value ) ) ) {
+			ent->scriptStatus.scriptStackHead = ent->scriptEvents[ent->scriptStatus.scriptEventIndex].stack.numItems;
+		}
+	} else {
+		G_Error( "G_Scripting: wave %s: unknown command\n", lastToken );
 	}
 
 	return qtrue;

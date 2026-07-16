@@ -56,6 +56,7 @@ qboolean G_ScriptAction_PlayAnim( gentity_t *ent, char *params );
 qboolean G_ScriptAction_AlertEntity( gentity_t *ent, char *params );
 qboolean G_ScriptAction_RemoveEntity( gentity_t *ent, char *params );
 qboolean G_ScriptAction_Accum( gentity_t *ent, char *params );
+qboolean G_ScriptAction_Wave( gentity_t *ent, char *params );
 qboolean G_ScriptAction_MissionFailed( gentity_t *ent, char *params );
 qboolean G_ScriptAction_MissionSuccess( gentity_t *ent, char *params );
 qboolean G_ScriptAction_Print( gentity_t *ent, char *params );
@@ -110,6 +111,7 @@ g_script_stack_action_t gScriptActions[] =
 	{"alertentity",              G_ScriptAction_AlertEntity},
 	{"removeentity",              G_ScriptAction_RemoveEntity},
 	{"accum",                    G_ScriptAction_Accum},
+	{"wave",                     G_ScriptAction_Wave},
 	{"missionfailed",            G_ScriptAction_MissionFailed},
 	{"missionsuccess",           G_ScriptAction_MissionSuccess},
 	{"print",                    G_ScriptAction_Print},

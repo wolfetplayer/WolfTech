@@ -91,6 +91,7 @@ qboolean AICast_ScriptAction_FireAtTarget( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_GodMode( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_GlobalAccum( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_Accum( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Wave( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SpawnCast( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_MissionFailed( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_ObjectiveMet( cast_state_t *cs, char *params );
@@ -193,6 +194,7 @@ cast_script_stack_action_t scriptActions[] =
 	{"godmode",          AICast_ScriptAction_GodMode},
 	{"globalaccum",      AICast_ScriptAction_GlobalAccum},
 	{"accum",            AICast_ScriptAction_Accum},
+	{"wave",             AICast_ScriptAction_Wave},
 	{"spawncast",        AICast_ScriptAction_SpawnCast},
 	{"missionfailed",    AICast_ScriptAction_MissionFailed},
 	{"missionsuccess",   AICast_ScriptAction_ObjectiveMet},

@@ -730,6 +730,7 @@ extern qboolean G_ScriptAction_ObjectiveMet ( gentity_t * ent , char * params ) 
 extern qboolean G_ScriptAction_ObjectivesNeeded ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_MissionFailed ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_Accum ( gentity_t * ent , char * params ) ;
+extern qboolean G_ScriptAction_Wave ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_AlertEntity ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_RemoveEntity ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_PlayAnim ( gentity_t * ent , char * params ) ;
@@ -1464,6 +1465,7 @@ extern qboolean AICast_ScriptAction_ObjectivesNeeded ( cast_state_t * cs , char 
 extern qboolean AICast_ScriptAction_MissionFailed ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_SpawnCast ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_Accum ( cast_state_t * cs , char * params ) ;
+extern qboolean AICast_ScriptAction_Wave ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_GlobalAccum ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_GodMode ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_FireAtTarget ( cast_state_t * cs , char * params ) ;
