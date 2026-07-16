@@ -753,11 +753,6 @@ void AICast_Think( int client, float thinktime ) {
 		}
 	}
 
-
-	if (g_gametype.integer == GT_COOP_SURVIVAL)
-	{
-		AICast_SurvivalUpdateAwareness(cs);
-	}
 	//
 	//if (cs->enemyNum >= 0) {
 	//update the attack inventory values

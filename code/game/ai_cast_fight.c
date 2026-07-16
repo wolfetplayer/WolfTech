@@ -176,7 +176,6 @@ int AICast_ScanForEnemies( cast_state_t *cs, int *enemies ) {
 			enemies[0] = cs->castScriptStatus.scriptAttackEnt;
 			return 1;
 		}
-		// Survival: don't force combat blind when out of real sight - let SurvivalHunt handle the approach instead.
 	}
 
 	if ( cs->castScriptStatus.scriptNoAttackTime >= level.time ) {

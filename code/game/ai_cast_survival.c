@@ -1580,11 +1580,8 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				}
 				else
 				{
-					VectorCopy(player->r.currentOrigin, cs->survivalAwarenessPos);
-					cs->survivalAwarenessEnt = player->s.number;
-					cs->survivalAwarenessExpireTime = level.time + 30000;
-
-					AIFunc_SurvivalHuntStart(cs);
+					AICast_StateChange(cs, AISTATE_RELAXED);
+					AIFunc_IdleStart(cs);
 
 					svParams.spawnedThisWave++;
 				}

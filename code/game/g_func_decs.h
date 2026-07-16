@@ -1506,8 +1506,6 @@ extern qboolean AICast_ScriptAction_DefendStop( cast_state_t *cs, char *params )
 extern qboolean AICast_ScriptAction_AchievementGeneric( cast_state_t *cs, char *params );
 extern qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params );
 extern qboolean AICast_Loadouts_ApplyToEnt( cast_state_t *cs, gentity_t *target, const char *loadoutName );
-extern void AICast_SurvivalUpdateAwareness( cast_state_t *cs );
-extern qboolean AICast_SurvivalHasAwarenessTarget( cast_state_t *cs, vec3_t out ) ;
 extern void AICast_NoAttackIfNotHurtSinceLastScriptAction ( cast_state_t * cs ) ;
 extern char * AIFunc_DefaultStart ( cast_state_t * cs ) ;
 extern char * AIFunc_BattleStart ( cast_state_t * cs ) ;
@@ -1549,9 +1547,6 @@ extern char * AIFunc_InspectFriendlyStart ( cast_state_t * cs , int entnum ) ;
 extern char * AIFunc_InspectFriendly ( cast_state_t * cs ) ;
 extern char * AIFunc_IdleStart ( cast_state_t * cs ) ;
 extern char * AIFunc_Idle ( cast_state_t * cs ) ;
-extern char *AIFunc_SurvivalHunt( cast_state_t *cs );
-extern char *AIFunc_SurvivalHuntStart( cast_state_t *cs );
-extern qboolean AICast_SurvivalResolveCrowdBlock( cast_state_t *cs );
 extern void AICast_SpecialFunc ( cast_state_t * cs ) ;
 extern void AICast_SurvivalRespawn (gentity_t *ent, cast_state_t * cs ) ;
 extern void AICast_CheckSurvivalProgression( gentity_t *attacker );

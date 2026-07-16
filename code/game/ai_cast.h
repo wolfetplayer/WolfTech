@@ -562,15 +562,6 @@ typedef struct cast_state_s
 	int respawnsleft;
 	qboolean registeredSurvivalKill;
 
-
-	// Survival-only hunting knowledge.
-	// This is NOT visual contact.
-	int survivalAwarenessEnt;
-	int survivalAwarenessTime;
-	int survivalAwarenessExpireTime;
-	int survivalAwarenessNextUpdate;
-	vec3_t survivalAwarenessPos;
-
 	qboolean defendActive;
 	qboolean defendReturning; 
 	vec3_t defendOrigin;
@@ -668,11 +659,6 @@ char    *AIFunc_InspectBulletImpactStart( cast_state_t *cs );
 char    *AIFunc_InspectAudibleEventStart( cast_state_t *cs, int entnum );
 char    *AIFunc_BattleAmbushStart( cast_state_t *cs );
 char    *AIFunc_BattleHuntStart( cast_state_t *cs );
-
-//   Survival
-char *AIFunc_SurvivalHunt( cast_state_t *cs );
-char *AIFunc_SurvivalHuntStart( cast_state_t *cs );
-qboolean AICast_SurvivalResolveCrowdBlock( cast_state_t *cs );
 
 //
 // ai_cast_func_attack.c
@@ -786,6 +772,3 @@ typedef struct
 } cast_achievementDef_t;
 
 qboolean AICast_Loadouts_ApplyToEnt( cast_state_t *cs, gentity_t *target, const char *loadoutName );
-
-void AICast_SurvivalUpdateAwareness( cast_state_t *cs );
-qboolean AICast_SurvivalHasAwarenessTarget( cast_state_t *cs, vec3_t out ) ;

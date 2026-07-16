@@ -1191,8 +1191,27 @@ void ClientThink_real( gentity_t *ent ) {
 
 	VectorCopy( client->ps.origin, client->oldOrigin );
 
+	// Survival: same-team AI don't collide with each other during movement,
+	// so dense mobs can't get physically stuck inside one another. They stay
+	// linked (solid) the rest of the frame, so weapon traces still hit them.
+	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		for ( i = 0; i < level.num_entities; ++i ) {
+			if ( g_entities[i].r.svFlags & SVF_CASTAI && g_entities[i].aiTeam == ent->aiTeam && &g_entities[i] != ent ) {
+				trap_UnlinkEntity( &g_entities[i] );
+			}
+		}
+	}
+
 	// perform a pmove
 	monsterslick = Pmove( &pm );
+
+	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		for ( i = 0; i < level.num_entities; ++i ) {
+			if ( g_entities[i].r.svFlags & SVF_CASTAI && g_entities[i].aiTeam == ent->aiTeam && &g_entities[i] != ent ) {
+				trap_LinkEntity( &g_entities[i] );
+			}
+		}
+	}
 
 	if ( monsterslick && !( ent->flags & FL_NO_MONSTERSLICK ) ) {
 		{

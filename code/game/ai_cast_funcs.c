@@ -77,47 +77,6 @@ char *AIFunc_Battle( cast_state_t *cs );
 
 static bot_moveresult_t *moveresult;
 
-
-/*
-============
-AICast_SurvivalForceHuntFromIdle
-
-Prevents Survival enemies from staying in vanilla idle after respawn.
-============
-*/
-static qboolean AICast_SurvivalForceHuntFromIdle( cast_state_t *cs ) {
-	gentity_t *ent;
-	vec3_t huntPos;
-
-	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
-		return qfalse;
-	}
-
-	if ( !cs || !cs->bs || cs->entityNum < 0 ) {
-		return qfalse;
-	}
-
-	ent = &g_entities[cs->entityNum];
-
-	if ( !ent->inuse || ent->health <= 0 || ent->aiInactive ) {
-		return qfalse;
-	}
-
-	if ( !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qfalse;
-	}
-
-	if ( cs->enemyNum >= 0 ) {
-		return qfalse;
-	}
-
-	if ( AICast_SurvivalHasAwarenessTarget( cs, huntPos ) ) {
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
 /*
 ============
 AIFunc_Restore()
@@ -529,22 +488,10 @@ char *AIFunc_Idle( cast_state_t *cs ) {
 		return AIFunc_DoorMarkerStart( cs, cs->doorMarkerDoor, cs->doorMarkerNum );
 	}
 
-	if (AICast_SurvivalForceHuntFromIdle(cs))
-	{
-		return AIFunc_SurvivalHuntStart(cs);
-	}
-
 	// Defend override can fully handle idle behavior.
 	if ( AICast_Defend_Update( cs ) ) {
 		return NULL;
 	}
-
-	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
-	if ( AICast_SurvivalResolveCrowdBlock( cs ) ) {
-		AICast_IdleReload( cs );
-		return NULL;
-	}
-}
 
 	// Stay near leader if following one.
 	if ( hasLeader && Distance( cs->bs->origin, g_entities[cs->leaderNum].r.currentOrigin ) > MAX_LEADER_DIST ) {
@@ -623,16 +570,6 @@ char *AIFunc_Idle( cast_state_t *cs ) {
 			if ( cs->attributes[ATTACK_CROUCH] > 0.5 ) {
 				cs->attackcrouch_time = level.time + 1000;
 			}
-		}
-	}
-
-	if (g_gametype.integer == GT_COOP_SURVIVAL && cs->enemyNum < 0)
-	{
-		vec3_t huntPos;
-
-		if (AICast_SurvivalHasAwarenessTarget(cs, huntPos))
-		{
-			return AIFunc_SurvivalHuntStart(cs);
 		}
 	}
 
@@ -2363,23 +2300,6 @@ char *AIFunc_BattleHunt( cast_state_t *cs ) {
 
 		dist = Distance( destorg, cs->bs->origin );
 
-		// Survival: drop to lightweight hunting once sight's really been lost for a bit, not just this frame.
-		if (g_gametype.integer == GT_COOP_SURVIVAL &&
-			cs->enemyNum >= 0 &&
-			cs->vislist[cs->enemyNum].real_visible_timestamp < level.time - 500 &&
-			!AICast_EntityVisible(cs, cs->enemyNum, qtrue))
-		{
-			vec3_t huntPos;
-
-			if (AICast_SurvivalHasAwarenessTarget(cs, huntPos))
-			{
-				cs->lastEnemy = cs->enemyNum;
-				cs->enemyNum = -1;
-
-				return AIFunc_SurvivalHuntStart(cs);
-			}
-		}
-
 		if ( dist < chaseDist ) {
 			if ( cs->battleChaseMarker == cs->vislist[cs->enemyNum].chase_marker_count - 1 ) {
 				cs->battleHuntPauseTime = level.time + 4000;
@@ -2427,15 +2347,6 @@ Resets hunt marker traversal and pause timing.
 =============
 */
 char *AIFunc_BattleHuntStart( cast_state_t *cs ) {
-
-		if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
-		vec3_t huntPos;
-
-		if ( AICast_SurvivalHasAwarenessTarget( cs, huntPos ) ) {
-			cs->enemyNum = -1;
-			return AIFunc_SurvivalHuntStart( cs );
-		}
-	}
 
 	cs->combatGoalTime = 0;
 	cs->battleChaseMarker = 0;
@@ -2704,16 +2615,6 @@ Prepares crouch-attack state and clears cached predicted cover goal.
 */
 char *AIFunc_BattleAmbushStart( cast_state_t *cs ) {
 
-	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
-		vec3_t huntPos;
-
-		if ( AICast_SurvivalHasAwarenessTarget( cs, huntPos ) ) {
-			cs->enemyNum = -1;
-			return AIFunc_SurvivalHuntStart( cs );
-		}
-	}
-
-
 	if ( !AICast_CanMoveWhileFiringWeapon( cs->weaponNum ) ) {
 		// Heavy/static weapons should run without crouch attack
 		cs->attackcrouch_time = 0;
@@ -2846,22 +2747,6 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 	if ( followent->client ) {
 		VectorCopy( cs->vislist[cs->enemyNum].visible_pos, destorg );
 
-		// Survival: drop to lightweight hunting once sight's really been lost for a bit, not just this frame.
-		if (g_gametype.integer == GT_COOP_SURVIVAL &&
-			cs->enemyNum >= 0 &&
-			cs->vislist[cs->enemyNum].real_visible_timestamp < level.time - 500 &&
-			!AICast_EntityVisible(cs, cs->enemyNum, qtrue))
-		{
-			vec3_t huntPos;
-
-			if (AICast_SurvivalHasAwarenessTarget(cs, huntPos))
-			{
-				cs->lastEnemy = cs->enemyNum;
-				cs->enemyNum = -1;
-
-				return AIFunc_SurvivalHuntStart(cs);
-			}
-		}
 		dist = Distance( destorg, cs->bs->origin );
 
 		// Reached last known position, switch to hunt/ambush behavior
@@ -5214,405 +5099,5 @@ char *AIFunc_DefaultStart( cast_state_t *cs ) {
 		return rval;
 	}
 
-	if (AICast_SurvivalForceHuntFromIdle(cs))
-	{
-		return AIFunc_SurvivalHuntStart(cs);
-	}
-
 	return AIFunc_IdleStart( cs );
-}
-
-
-/*
-============
-AICast_SurvivalCrowdOffset
-
-Small local separation offset for Survival hunting.
-Prevents all AI from stacking into the exact same hunt position.
-============
-*/
-static qboolean AICast_SurvivalCrowdOffset( cast_state_t *cs, vec3_t huntPos, vec3_t outPos ) {
-	int i;
-	int count;
-	float radius;
-	float angle;
-	vec3_t away;
-	vec3_t diff;
-	gentity_t *ent;
-	gentity_t *other;
-
-	ent = &g_entities[cs->entityNum];
-
-	VectorCopy( huntPos, outPos );
-	VectorClear( away );
-
-	count = 0;
-	radius = 96.0f;
-
-	for ( i = 0; i < level.num_entities; i++ ) {
-		if ( i == cs->entityNum ) {
-			continue;
-		}
-
-		other = &g_entities[i];
-
-		if ( !other->inuse || other->health <= 0 ) {
-			continue;
-		}
-
-		if ( !( other->r.svFlags & SVF_CASTAI ) ) {
-			continue;
-		}
-
-		if ( other->aiInactive ) {
-			continue;
-		}
-
-		if ( Distance( ent->r.currentOrigin, other->r.currentOrigin ) > radius ) {
-			continue;
-		}
-
-		VectorSubtract( ent->r.currentOrigin, other->r.currentOrigin, diff );
-		diff[2] = 0;
-
-		if ( VectorNormalize( diff ) < 1.0f ) {
-			angle = DEG2RAD( (float)( ( cs->entityNum * 73 + i * 37 ) % 360 ) );
-			diff[0] = cos( angle );
-			diff[1] = sin( angle );
-			diff[2] = 0;
-		}
-
-		VectorAdd( away, diff, away );
-		count++;
-	}
-
-	if ( !count ) {
-		return qfalse;
-	}
-
-	if ( VectorNormalize( away ) < 1.0f ) {
-		return qfalse;
-	}
-
-	VectorMA( outPos, 96.0f + 32.0f * (float)( cs->entityNum % 3 ), away, outPos );
-
-	return qtrue;
-}
-
-
-/*
-============
-AICast_SurvivalResolveCrowdBlock
-
-Hard local anti-stack for Survival mode.
-
-This handles cases where AI are already physically blocking/overlapping each
-other, which AICast_Blocked() does not always solve because it depends on
-bot movement producing a useful blocked result.
-============
-*/
-qboolean AICast_SurvivalResolveCrowdBlock( cast_state_t *cs ) {
-	int i;
-	gentity_t *ent;
-	gentity_t *other;
-	vec3_t away;
-	vec3_t diff;
-	vec3_t moveDir;
-	float dist;
-	float minDist;
-	float side;
-	qboolean foundBlocker;
-
-	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
-		return qfalse;
-	}
-
-	if ( !cs || !cs->bs ) {
-		return qfalse;
-	}
-
-	ent = &g_entities[cs->entityNum];
-
-	if ( !ent->inuse || ent->health <= 0 ) {
-		return qfalse;
-	}
-
-	VectorClear( away );
-	foundBlocker = qfalse;
-
-	// Approximate personal-space radius. Tune this.
-	minDist = 56.0f;
-
-	for ( i = 0; i < level.num_entities; i++ ) {
-		if ( i == cs->entityNum ) {
-			continue;
-		}
-
-		other = &g_entities[i];
-
-		if ( !other->inuse || other->health <= 0 ) {
-			continue;
-		}
-
-		if ( other->aiInactive ) {
-			continue;
-		}
-
-		if ( !( other->r.svFlags & SVF_CASTAI ) ) {
-			continue;
-		}
-
-		VectorSubtract( ent->r.currentOrigin, other->r.currentOrigin, diff );
-		diff[2] = 0;
-
-		dist = VectorNormalize( diff );
-
-		if ( dist > minDist ) {
-			continue;
-		}
-
-		// Exact/near-exact overlap. Pick deterministic split direction.
-		if ( dist < 1.0f ) {
-			float yaw;
-
-			yaw = (float)( ( cs->entityNum * 97 + i * 53 ) % 360 );
-			AngleVectors( tv( 0, yaw, 0 ), diff, NULL, NULL );
-			diff[2] = 0;
-		}
-
-		// Stronger push when closer.
-		VectorMA( away, ( minDist - dist ) / minDist, diff, away );
-		foundBlocker = qtrue;
-	}
-
-	if ( !foundBlocker ) {
-		return qfalse;
-	}
-
-	if ( VectorNormalize( away ) < 0.1f ) {
-		return qfalse;
-	}
-
-	// Add a small side bias so two AI do not push directly into each other forever.
-	side = ( cs->entityNum & 1 ) ? 0.65f : -0.65f;
-
-	moveDir[0] = away[0] - away[1] * side;
-	moveDir[1] = away[1] + away[0] * side;
-	moveDir[2] = 0;
-
-	if ( VectorNormalize( moveDir ) < 0.1f ) {
-		VectorCopy( away, moveDir );
-	}
-
-	trap_EA_Move( cs->entityNum, moveDir, 300 );
-
-	vectoangles( moveDir, cs->ideal_viewangles );
-	cs->ideal_viewangles[PITCH] = 0;
-
-	cs->speedScale = 0.6f;
-
-	// Briefly mark us as resolving obstruction, so normal movement does not instantly fight it.
-	cs->obstructingTime = level.time + 250;
-	VectorMA( cs->bs->origin, 96.0f, moveDir, cs->obstructingPos );
-
-	return qtrue;
-}
-
-
-/*
-============
-AIFunc_SurvivalHunt
-
-Survival-only hunting behavior.
-
-The AI knows approximately where the player is, but does not have real visual
-contact. This should only move/search. It must not fire, must not call sight
-scripts, and must not fake visibility.
-============
-*/
-char *AIFunc_SurvivalHunt( cast_state_t *cs ) {
-	gentity_t *ent;
-	vec3_t huntPos;
-	vec3_t dir;
-	float dist;
-
-	ent = &g_entities[cs->entityNum];
-
-	// Real enemies still take priority.
-	numEnemies = AICast_ScanForEnemies( cs, enemies );
-
-	if ( numEnemies == -1 ) {
-		return NULL;
-	} else if ( numEnemies == -2 ) {
-		char *retval;
-
-		if ( ( retval = AIFunc_InspectFriendlyStart( cs, enemies[0] ) ) ) {
-			return retval;
-		}
-	} else if ( numEnemies == -3 ) {
-		if ( cs->aiState < AISTATE_COMBAT ) {
-			return AIFunc_InspectBulletImpactStart( cs );
-		}
-	} else if ( numEnemies == -4 ) {
-		if ( cs->aiState < AISTATE_COMBAT ) {
-			return AIFunc_InspectAudibleEventStart( cs, cs->audibleEventEnt );
-		}
-	} else if ( numEnemies > 0 ) {
-		int i;
-
-		// SurvivalHunt only returns to combat on real direct visibility.
-		// Do not trust stale/non-direct visibility memory here, otherwise
-		// AI can bounce between SurvivalHunt -> Battle -> BattleChase.
-		for ( i = 0; i < numEnemies; i++ ) {
-			if ( AICast_EntityVisible( cs, enemies[i], qtrue ) ) {
-				cs->enemyNum = enemies[i];
-				return AIFunc_BattleStart( cs );
-			}
-		}
-
-		cs->enemyNum = -1;
-	}
-
-	// No real sight target. Continue Survival hunt only if awareness exists.
-	if ( !AICast_SurvivalHasAwarenessTarget( cs, huntPos ) ) {
-		return AIFunc_IdleStart( cs );
-	}
-
-	// Hard anti-stack resolver.
-	// This handles cases where AI are already touching/overlapping and
-	// AICast_Blocked() did not get a useful moveresult.
-	if ( AICast_SurvivalResolveCrowdBlock( cs ) ) {
-		AICast_IdleReload( cs );
-		return NULL;
-	}
-
-	// If another AI asked us to move aside, obey that before normal hunting.
-	if ( cs->obstructingTime > level.time ) {
-		moveresult = AICast_MoveToPos( cs, cs->obstructingPos, -1 );
-
-		if ( moveresult && moveresult->failure ) {
-			trap_BotResetAvoidReach( cs->bs->ms );
-		}
-
-		cs->speedScale = 0.5f;
-
-		if ( cs->movestate != MS_CROUCH ) {
-			cs->movestate = MS_WALK;
-		}
-
-		cs->movestateType = MSTYPE_TEMPORARY;
-
-		AICast_IdleReload( cs );
-		return NULL;
-	}
-
-	// Soft crowd offset.
-	// This spreads AI around the approximate player position instead of
-	// forcing everyone into the exact same goal point.
-	{
-		vec3_t crowdPos;
-
-		if ( AICast_SurvivalCrowdOffset( cs, huntPos, crowdPos ) ) {
-			VectorCopy( crowdPos, huntPos );
-		}
-	}
-
-	dist = Distance( cs->bs->origin, huntPos );
-
-	// Move toward approximate player position.
-	if ( dist > 96 ) {
-		moveresult = AICast_MoveToPos( cs, huntPos, cs->survivalAwarenessEnt );
-
-		if (moveresult && moveresult->failure)
-		{
-			trap_BotResetAvoidReach(cs->bs->ms);
-
-			// Do NOT clear awareness here.
-			// Spawn areas / clipped doors can fail routing briefly, but the AI should keep trying.
-			cs->battleHuntViewTime = level.time + 500 + rand() % 500;
-
-			AICast_IdleReload(cs);
-			return NULL;
-		}
-
-		// Movement-level blocked fallback.
-		// This handles "I tried to move and hit someone/something".
-		if ( moveresult && moveresult->blocked ) {
-			vec3_t side;
-			float yaw;
-
-			yaw = cs->ideal_viewangles[YAW] + 90.0f;
-
-			if ( cs->entityNum & 1 ) {
-				yaw -= 180.0f;
-			}
-
-			AngleVectors( tv( 0, yaw, 0 ), side, NULL, NULL );
-
-			trap_EA_Move( cs->entityNum, side, 200 );
-
-			cs->speedScale = 0.5f;
-			cs->obstructingTime = level.time + 250;
-			VectorMA( cs->bs->origin, 96.0f, side, cs->obstructingPos );
-
-			AICast_IdleReload( cs );
-			return NULL;
-		}
-
-		cs->speedScale = AICast_SpeedScaleForDistance( cs, dist, 96 );
-	} else {
-		// Reached approximate location. Look around briefly.
-		if ( cs->battleHuntViewTime < level.time ) {
-			cs->battleHuntViewTime = level.time + 700 + rand() % 1000;
-			cs->ideal_viewangles[YAW] = AngleMod( cs->ideal_viewangles[YAW] +
-												  ( 45.0 + random() * 90.0 ) *
-												  ( 2 * ( rand() % 2 ) - 1 ) );
-			cs->ideal_viewangles[PITCH] = 0;
-		}
-	}
-
-	// Face toward hunt position while moving/searching.
-	if ( dist > 8 ) {
-		VectorSubtract( huntPos, cs->bs->origin, dir );
-
-		if ( VectorNormalize( dir ) > 1.0f ) {
-			vectoangles( dir, cs->ideal_viewangles );
-			cs->ideal_viewangles[PITCH] = 0;
-		}
-	}
-
-	AICast_IdleReload( cs );
-
-	// Headlook while searching.
-	if ( cs->attributes[TACTICAL] >= 0.5 && !( cs->aiFlags & AIFL_NO_HEADLOOK ) ) {
-		ent->client->ps.eFlags |= EF_HEADLOOK;
-	}
-
-	return NULL;
-}
-
-/*
-============
-AIFunc_SurvivalHuntStart
-============
-*/
-char *AIFunc_SurvivalHuntStart( cast_state_t *cs ) {
-	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
-		return NULL;
-	}
-
-	// Raise to ALERT only - never downgrade out of COMBAT (ScanForEnemies may have already forced it).
-	if ( cs->aiState < AISTATE_ALERT )
-	{
-		AICast_StateChange(cs, AISTATE_ALERT);
-	}
-
-	cs->enemyNum = -1;
-	cs->followEntity = -1;
-	cs->combatGoalTime = 0;
-	cs->battleHuntPauseTime = 0;
-	cs->battleHuntViewTime = 0;
-
-	cs->aifunc = AIFunc_SurvivalHunt;
-	return "AIFunc_SurvivalHunt";
 }
