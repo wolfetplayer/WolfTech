@@ -2875,12 +2875,12 @@ model="models/powerups/holdable/wine.md3"
 		"sound/misc/powerup_vampirism.wav",
 		{
 		"models/powerups/survival/thule_r.md3",
-		0, 
+		0,
 		0
 		},
 		"",
-		NULL,                       // ammo icon                
-		"Veil Essence Reaver",       
+		NULL,                       // ammo icon
+		"Veil Essence Reaver",
 		30,
 		IT_POWERUP,
 		WP_NONE,
@@ -2888,8 +2888,33 @@ model="models/powerups/holdable/wine.md3"
 		0,
 		0,
 		0,
-		"",                            
-		"",   
+		"",
+		"",
+		{0,0,0,0}
+	},
+
+/*QUAKED item_venompw (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+		{
+		"item_venompw",
+		"sound/misc/w_pkup.wav",
+		{
+		"models/weapons/secret/venom/venom_3rd.md3",
+		0,
+		0
+		},
+		"",
+		NULL,                       // ammo icon
+		"Venom",
+		30,
+		IT_POWERUP,
+		WP_NONE,
+		PW_VENOM,
+		0,
+		0,
+		0,
+		"",
+		"",
 		{0,0,0,0}
 	},
 
@@ -4081,6 +4106,8 @@ char *eventnames[] = {
 	"EV_FIREMODE_SWITCH",
 
 	"EV_BOUNCE_SOUND",
+
+	"EV_VENOM_POWERUP_GONE",
 
 	"EV_MAX_EVENTS"
 };

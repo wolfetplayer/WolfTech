@@ -532,6 +532,11 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 		return;
 	}
 
+	// venom powerup grants unlimited ammo - nothing meaningful to show
+	if ( weap == WP_VENOM && ps->powerups[PW_VENOM] ) {
+		return;
+	}
+
 	if ( cg_fixedAspect.integer == 2 ) {
 		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 	}

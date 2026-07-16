@@ -120,11 +120,12 @@ void TossClientPowerups(gentity_t *self, gentity_t *attacker) {
     }
 
     if (rand() % 100 < dropChance) {
-        switch (rand() % 4) {
+        switch (rand() % 5) {
             case 0: powerup = PW_QUAD; break;
             case 1: powerup = PW_BATTLESUIT_SURV; break;
             case 2: powerup = PW_VAMPIRE; break;
             case 3: powerup = PW_AMMO; break;
+            case 4: powerup = PW_VENOM; break;
         }
 
         item = BG_FindItemForPowerup(powerup);

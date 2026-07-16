@@ -2301,6 +2301,18 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 		// restore and bail (invis usually replaces base draw)
 		gun->customShader = savedCustomShader;
 
+	} else if ( ( powerups & ( 1 << PW_VENOM ) ) &&
+				( ( ps ? ps->powerups[PW_VENOM] - cg.time : 5000 ) < 5000 ) ) {
+
+		// venom wearing off: flicker between the normal weapon and the invisibility shader
+		if ( ( cg.time / 200 ) % 2 ) {
+			gun->customShader = cgs.media.invisShader;
+		} else {
+			gun->customShader = 0;
+		}
+		trap_R_AddRefEntityToScene( gun );
+		gun->customShader = savedCustomShader;
+
 	} else {
 
 		// always draw base weapon normally (no shader override)

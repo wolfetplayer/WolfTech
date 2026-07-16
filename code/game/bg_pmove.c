@@ -2218,6 +2218,12 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 		pm->ps->weaponstate = WEAPON_DROPPING;
 	}
 
+	// discarding the venom powerup by switching away - it's gone for good, can't switch back to it
+	if ( oldweapon == WP_VENOM && pm->ps->powerups[PW_VENOM] ) {
+		pm->ps->powerups[PW_VENOM] = 0;
+		COM_BitClear( pm->ps->weapons, WP_VENOM );
+	}
+
 	switchtime = 250;   // dropping/raising usually takes 1/4 sec.
 	// sometimes different switch times for alt weapons
 	switch ( oldweapon ) {
@@ -3285,8 +3291,8 @@ static void PM_Weapon( void ) {
 		qboolean reloadingW, playswitchsound = qtrue;
 	
 		ammoAvailable = PM_WeaponAmmoAvailable( pm->ps->weapon );
-	
-		if ( ammoNeeded > ammoAvailable ) {
+
+		if ( ammoNeeded > ammoAvailable && !( pm->ps->weapon == WP_VENOM && pm->ps->powerups[PW_VENOM] ) ) {
 	
 			reloadingW = (qboolean)( ammoNeeded <= pm->ps->ammo[ BG_FindAmmoForWeapon( pm->ps->weapon )] ); // you have ammo for this, just not in the clip
 	
@@ -3342,7 +3348,7 @@ static void PM_Weapon( void ) {
 	}
 
 	// take an ammo away if not infinite
-	if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) != -1 ) {
+	if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) != -1 && !( pm->ps->weapon == WP_VENOM && pm->ps->powerups[PW_VENOM] ) ) {
 		// Rafael - check for being mounted on mg42
 		if ( !( pm->ps->persistant[PERS_HWEAPON_USE] ) ) {
 			PM_WeaponUseAmmo( pm->ps->weapon, ammoNeeded );
@@ -3352,8 +3358,8 @@ static void PM_Weapon( void ) {
 
 	// fire weapon
 
-	// Add weapon heat (unless player has Rifling perk)
-	if (!pm->ps->perks[PERK_RIFLING])
+	// Add weapon heat (unless Rifling perk or venom powerup - no overheat)
+	if (!pm->ps->perks[PERK_RIFLING] && !pm->ps->powerups[PW_VENOM])
 	{
 		const ammotable_t *wt = &ammoTable[pm->ps->weapon];
 
@@ -3480,6 +3486,7 @@ static void PM_Weapon( void ) {
 	// the weapon can overheat, and it's hot
 	if ( ( pm->ps->aiChar != AICHAR_PROTOSOLDIER ) &&
 		 ( pm->ps->aiChar != AICHAR_SUPERSOLDIER ) &&
+		 !pm->ps->powerups[PW_VENOM] &&
 		 ( ammoTable[pm->ps->weapon].maxHeat && pm->ps->weapHeat[pm->ps->weapon] ) ) {
 		// it is overheating
 		if ( pm->ps->weapHeat[pm->ps->weapon] >= ammoTable[pm->ps->weapon].maxHeat ) {

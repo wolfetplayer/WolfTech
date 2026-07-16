@@ -76,6 +76,25 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 			// count in sync
 			other->client->ps.powerups[ent->item->giTag] = level.time - ( level.time % 1000 );
 		}
+
+		if ( ent->item->giTag == PW_VENOM ) {
+			// remember what they were holding so we can restore it on discard/expiry
+			other->client->venomPrevWeapon = other->client->ps.weapon;
+
+			COM_BitSet( other->client->ps.weapons, WP_VENOM );
+			other->client->ps.weapHeat[WP_VENOM] = 0;
+			Add_Ammo( other, WP_VENOM, BG_GetMaxAmmo( &other->client->ps, WP_VENOM, LT_AMMO_BONUS_MULTIPLIER ), qtrue );
+
+			other->client->ps.weapon = WP_VENOM;
+			other->client->ps.weaponstate = WEAPON_RAISING;
+			other->client->ps.weaponTime = 250;    // matches the normal weapon-switch raise time
+
+			// bypasses PM_FinishWeaponChange, so replicate its bookkeeping by hand or the raise anim never starts
+			other->client->ps.weapAnimTimer = 0;
+			other->client->ps.weapAnim = ( ( other->client->ps.weapAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | WEAP_RAISE;
+			BG_UpdateConditionValue( other->client->ps.clientNum, ANIM_COND_WEAPON, WP_VENOM, qtrue );
+			BG_AnimScriptEvent( &other->client->ps, ANIM_ET_RAISEWEAPON, qfalse, qfalse );
+		}
 	}
 
 	// if an amount was specified in the ent, use it
@@ -1590,6 +1609,26 @@ void G_RemoveWeapon( gentity_t *ent, weapon_t weapon ) {
 
 	if ( weapon == ent->client->ps.weapon ) {
 		ent->client->ps.weapon = 0;
+	}
+}
+
+// venom powerup expired without being discarded - strip it and restore the previous weapon
+void G_VenomPowerupExpired( gentity_t *ent ) {
+	COM_BitClear( ent->client->ps.weapons, WP_VENOM );
+
+	if ( ent->client->ps.weapon == WP_VENOM ) {
+		ent->client->ps.weapon = ent->client->venomPrevWeapon;
+		ent->client->ps.weaponstate = WEAPON_RAISING;
+		ent->client->ps.weaponTime = 250;    // matches the normal weapon-switch raise time
+
+		// bypasses PM_FinishWeaponChange, so replicate its bookkeeping by hand or the raise anim never starts
+		ent->client->ps.weapAnimTimer = 0;
+		ent->client->ps.weapAnim = ( ( ent->client->ps.weapAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | WEAP_RAISE;
+		BG_UpdateConditionValue( ent->client->ps.clientNum, ANIM_COND_WEAPON, ent->client->ps.weapon, qtrue );
+		BG_AnimScriptEvent( &ent->client->ps, ANIM_ET_RAISEWEAPON, qfalse, qfalse );
+
+		// tell cgame what we're holding now, so its next usercmd doesn't ask for venom and stomp the restore
+		G_AddPredictableEvent( ent, EV_VENOM_POWERUP_GONE, ent->client->ps.weapon );
 	}
 }
 

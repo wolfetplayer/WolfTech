@@ -582,6 +582,12 @@ static void CG_ItemPickup( int itemNum ) {
 
 	}   // end bg_itemlist[itemNum].giType == IT_WEAPON
 
+	// venom forces the weapon switch server-side - follow suit or our next usercmd re-requests the old weapon
+	if ( bg_itemlist[itemNum].giType == IT_POWERUP && itemid == PW_VENOM ) {
+		cg.weaponSelectTime = cg.time;
+		cg.weaponSelect     = WP_VENOM;
+	}
+
 	if ( bg_itemlist[itemNum].giType == IT_HOLDABLE ) {
 		cg.holdableSelectTime   = cg.time;  // show holdables when a new one is picked up
 		cg.holdableSelect       = itemid;   // and select the new one
@@ -2163,6 +2169,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		CG_WeaponSuggest( es->eventParm );
 		break;
 //----(SA)	end
+	case EV_VENOM_POWERUP_GONE:
+		// venom force-switched away server-side (expired/discarded) - follow suit so our usercmd matches
+		DEBUGNAME( "EV_VENOM_POWERUP_GONE" );
+		cg.weaponSelectTime = cg.time;
+		cg.weaponSelect     = es->eventParm;
+		break;
 	case EV_FIRE_WEAPON_MG42:
 		// shake the camera a bit
 		CG_StartShakeCamera( 0.05, 100, cent->lerpOrigin, 100 );

@@ -1761,7 +1761,10 @@ void ClientEndFrame( gentity_t *ent ) {
 				continue;
 			}
 
-			if ( ent->client->ps.powerups[ i ] < level.time ) {
+			if ( ent->client->ps.powerups[ i ] && ent->client->ps.powerups[ i ] < level.time ) {
+				if ( i == PW_VENOM ) {
+					G_VenomPowerupExpired( ent );
+				}
 				ent->client->ps.powerups[ i ] = 0;
 			}
 		}

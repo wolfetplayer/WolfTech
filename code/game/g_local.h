@@ -683,6 +683,8 @@ struct gclient_s {
 	pmoveExt_t pmext;
 
 	int healthRegenStartTime;
+
+	int venomPrevWeapon;            // weapon to restore when the venom powerup discards/expires
 };
 
 
@@ -893,6 +895,7 @@ int G_FindWeaponSlot( gentity_t *other, weapon_t weapon );
 int G_GetFreeWeaponSlot( gentity_t *other );
 void G_DropWeapon( gentity_t *ent, weapon_t weapon );
 qboolean Give_Weapon_New_Inventory( gentity_t *other, weapon_t weapon, qboolean needThrowItem );
+void G_VenomPowerupExpired( gentity_t *ent );
 
 // Touch_Item_Auto is bound by the rules of autoactivation (if cg_autoactivate is 0, only touch on "activate")
 void Touch_Item_Auto( gentity_t *ent, gentity_t *other, trace_t *trace );

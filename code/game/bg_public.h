@@ -476,6 +476,7 @@ typedef enum {
 	PW_AMMO,
 	PW_BATTLESUIT_SURV,
 	PW_VAMPIRE,
+	PW_VENOM,
 
 	PW_NUM_POWERUPS
 } powerup_t;
@@ -921,6 +922,8 @@ typedef enum {
 	EV_FIREMODE_SWITCH, // player toggled semi/full-auto fire mode
 
 	EV_BOUNCE_SOUND,    // dropped weapon/ammo item bounced on the ground; eventParm 0 = weapon, 1 = ammo
+
+	EV_VENOM_POWERUP_GONE,  // venom force-switched away; eventParm = new weapon
 
 	EV_MAX_EVENTS   // just added as an 'endcap'
 
