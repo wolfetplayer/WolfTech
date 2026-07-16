@@ -218,9 +218,12 @@ typedef int intptr_t;
 //=============================================================
 
 
+#ifndef __BYTEBOOL__
+#define __BYTEBOOL__
 typedef unsigned char byte;
 
 typedef enum {qfalse, qtrue}    qboolean;
+#endif /* __BYTEBOOL__ */
 
 typedef union {
 	float f;
@@ -703,15 +706,21 @@ typedef struct {
 #define Vector4MA( v, s, b, o )       ( ( o )[0] = ( v )[0] + ( b )[0] * ( s ),( o )[1] = ( v )[1] + ( b )[1] * ( s ),( o )[2] = ( v )[2] + ( b )[2] * ( s ),( o )[3] = ( v )[3] + ( b )[3] * ( s ) )
 #define Vector4Average( v, b, s, o )  ( ( o )[0] = ( ( v )[0] * ( 1 - ( s ) ) ) + ( ( b )[0] * ( s ) ),( o )[1] = ( ( v )[1] * ( 1 - ( s ) ) ) + ( ( b )[1] * ( s ) ),( o )[2] = ( ( v )[2] * ( 1 - ( s ) ) ) + ( ( b )[2] * ( s ) ),( o )[3] = ( ( v )[3] * ( 1 - ( s ) ) ) + ( ( b )[3] * ( s ) ) )
 
+// bspc's map.c defines a real SnapVector() function; the macro would mangle that definition
+#ifndef __MATHLIB__
 #define SnapVector( v ) {v[0] = ( (int)( v[0] ) ); v[1] = ( (int)( v[1] ) ); v[2] = ( (int)( v[2] ) );}
+#endif /* __MATHLIB__ */
 
 // just in case you do't want to use the macros
+// (bspc's l_math.h ships its own conflicting declarations of these; skip ours when it's already loaded)
+#ifndef __MATHLIB__
 vec_t _DotProduct( const vec3_t v1, const vec3_t v2 );
 void _VectorSubtract( const vec3_t veca, const vec3_t vecb, vec3_t out );
 void _VectorAdd( const vec3_t veca, const vec3_t vecb, vec3_t out );
 void _VectorCopy( const vec3_t in, vec3_t out );
 void _VectorScale( const vec3_t in, float scale, vec3_t out );
 void _VectorMA( const vec3_t veca, float scale, const vec3_t vecb, vec3_t vecc );
+#endif /* __MATHLIB__ */
 
 unsigned ColorBytes3( float r, float g, float b );
 unsigned ColorBytes4( float r, float g, float b, float a );
@@ -722,6 +731,9 @@ float RadiusFromBounds( const vec3_t mins, const vec3_t maxs );
 void ClearBounds( vec3_t mins, vec3_t maxs );
 void AddPointToBounds( const vec3_t v, vec3_t mins, vec3_t maxs );
 
+// bspc's l_math.h declares its own (incompatible) VectorCompare/VectorLength/VectorInverse/
+// CrossProduct/etc; skip ours when it's already loaded to avoid conflicting redeclarations.
+#ifndef __MATHLIB__
 #if !defined( Q3_VM ) || ( defined( Q3_VM ) && defined( __Q3_VM_MATH ) )
 static ID_INLINE int VectorCompare( const vec3_t v1, const vec3_t v2 ) {
 	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2]) {
@@ -788,6 +800,7 @@ void VectorInverse( vec3_t v );
 void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cross );
 
 #endif
+#endif /* __MATHLIB__ */
 
 vec_t VectorNormalize( vec3_t v );       // returns vector length
 vec_t VectorNormalize2( const vec3_t v, vec3_t out );
@@ -816,7 +829,10 @@ void AxisClear( vec3_t axis[3] );
 void AxisCopy( vec3_t in[3], vec3_t out[3] );
 
 void SetPlaneSignbits( struct cplane_s *out );
+// bspc's brushbsp.c declares its own conflicting BoxOnPlaneSide(vec3_t,vec3_t,plane_t*)
+#ifndef __MATHLIB__
 int BoxOnPlaneSide( vec3_t emins, vec3_t emaxs, struct cplane_s *plane );
+#endif /* __MATHLIB__ */
 
 qboolean BoundsIntersect(const vec3_t mins, const vec3_t maxs,
 		const vec3_t mins2, const vec3_t maxs2);
@@ -834,7 +850,10 @@ float AngleNormalize360( float angle );
 float AngleNormalize180( float angle );
 float AngleDelta( float angle1, float angle2 );
 
+// bspc's qbsp.h declares its own PlaneFromPoints(int*,int*,int*) with an unrelated signature/meaning
+#ifndef __MATHLIB__
 qboolean PlaneFromPoints( vec4_t plane, const vec3_t a, const vec3_t b, const vec3_t c );
+#endif /* __MATHLIB__ */
 void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal );
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );
 void RotatePointAroundVertex( vec3_t pnt, float rot_x, float rot_y, float rot_z, const vec3_t origin );
@@ -877,7 +896,10 @@ void    COM_BeginParseSession( const char *name );
 void    COM_RestoreParseSession( char **data_p );
 void    COM_SetCurrentParseLine( int line );
 int     COM_GetCurrentParseLine( void );
+// bspc's l_cmd.h declares its own conflicting single-arg COM_Parse( char *data )
+#ifndef __CMDLIB__
 char    *COM_Parse( char **data_p );
+#endif /* __CMDLIB__ */
 char    *COM_ParseExt( char **data_p, qboolean allowLineBreak );
 int     COM_Compress( char *data_p );
 void	COM_ParseError( char *format, ... ) __attribute__ ((format (printf, 1, 2)));
@@ -1188,7 +1210,10 @@ PlaneTypeForNormal
 =================
 */
 
+// bspc's map.c defines a real PlaneTypeForNormal() function; the macro would mangle that definition
+#ifndef __MATHLIB__
 #define PlaneTypeForNormal( x ) ( x[0] == 1.0 ? PLANE_X : ( x[1] == 1.0 ? PLANE_Y : ( x[2] == 1.0 ? PLANE_Z : PLANE_NON_AXIAL ) ) )
+#endif /* __MATHLIB__ */
 
 // plane_t structure
 // !!! if this is changed, it must be changed in asm code too !!!

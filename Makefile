@@ -363,9 +363,9 @@ Q3LCCETCDIR=$(MOUNT_DIR)/tools/lcc/etc
 Q3LCCSRCDIR=$(MOUNT_DIR)/tools/lcc/src
 SDLHDIR=$(MOUNT_DIR)/SDL3
 LIBSDIR=$(MOUNT_DIR)/libs
-BSPCDIR=$(MOUNT_DIR)/../sdk/rtcw-bspc-custom/src/bspc
-BSPCBLIBDIR=$(MOUNT_DIR)/../sdk/rtcw-bspc-custom/src/botlib
-BSPCCMDIR=$(MOUNT_DIR)/../sdk/rtcw-bspc-custom/src/qcommon
+BSPCDIR=$(MOUNT_DIR)/bspc
+BSPCBLIBDIR=$(MOUNT_DIR)/botlib
+BSPCCMDIR=$(MOUNT_DIR)/qcommon
 
 bin_path=$(shell which $(1) 2> /dev/null)
 

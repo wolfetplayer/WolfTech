@@ -184,6 +184,10 @@ typedef struct token_s
 	struct token_s *next;           //next token in chain
 } token_t;
 
+#ifndef MAX_QPATH
+#define MAX_QPATH           64      // max length of a quake game pathname
+#endif
+
 //script file
 typedef struct script_s
 {

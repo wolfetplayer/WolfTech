@@ -50,7 +50,12 @@ If you have questions concerning this license or the applicable additional terms
 
 extern botlib_import_t botimport;
 
+// bspc.c owns this definition (it populates aassettings from command line args)
+#ifdef BSPC
+extern aas_settings_t aassettings;
+#else
 aas_settings_t aassettings;
+#endif
 
 //#define AAS_MOVE_DEBUG
 

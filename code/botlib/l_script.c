@@ -75,6 +75,7 @@ typedef enum {qfalse, qtrue}    qboolean;
 #include "../bspc/qbsp.h"
 #include "../bspc/l_log.h"
 #include "../bspc/l_mem.h"
+#include "../qcommon/q_shared.h"    //for Q_vsnprintf/Q_strncpyz/Com_Memset/Com_Memcpy
 
 #define qtrue   true
 #define qfalse  false

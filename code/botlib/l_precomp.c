@@ -85,22 +85,12 @@ typedef enum {qfalse, qtrue}    qboolean;
 #include "../bspc/qbsp.h"
 #include "../bspc/l_log.h"
 #include "../bspc/l_mem.h"
+#include "../qcommon/q_shared.h"    //for Q_vsnprintf/Q_strncpyz/Q_strcat
 #include "l_precomp.h"
 
 #define qtrue   true
 #define qfalse  false
 #define Q_stricmp   stricmp
-
-#define MAX_TOKENLENGTH     1024
-
-typedef struct pc_token_s
-{
-	int type;
-	int subtype;
-	int intvalue;
-	float floatvalue;
-	char string[MAX_TOKENLENGTH];
-} pc_token_t;
 #endif //BSPC
 
 #if defined( QUAKE ) && !defined( BSPC )

@@ -50,6 +50,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../bspc/qbsp.h"
 #include "../bspc/l_log.h"
 #include "../bspc/l_mem.h"
+#include "../qcommon/q_shared.h"    //for Com_sprintf
 #include "l_precomp.h"
 #include "l_struct.h"
 
