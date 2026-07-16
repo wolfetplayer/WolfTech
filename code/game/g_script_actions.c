@@ -489,6 +489,32 @@ qboolean G_ScriptAction_MusicQueue( gentity_t *ent, char *params ) {
 //----(SA)	end
 
 /*
+==================
+G_ScriptAction_Atmosphere
+
+  syntax: atmosphere <effect string>
+          atmosphere none
+
+  Dynamically changes (or clears) the map's rain/snow atmospheric effect.
+  <effect string> uses the same format as worldspawn's "atmosphere" key, e.g.:
+
+    atmosphere T=RAIN,B=5 10,C=0.5,G=0.5 2,BV=50 50,GV=200 200,W=1 2,D=2000
+    atmosphere T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=20 30,GV=25 40,W=3 5,D=2400
+    atmosphere none
+==================
+*/
+qboolean G_ScriptAction_Atmosphere( gentity_t *ent, char *params ) {
+	if ( !params || !params[0] || !Q_stricmp( params, "none" ) ||
+		 !Q_stricmp( params, "off" ) || !Q_stricmp( params, "clear" ) ) {
+		trap_SetConfigstring( CS_ATMOSEFFECT, "" );
+	} else {
+		trap_SetConfigstring( CS_ATMOSEFFECT, params );
+	}
+
+	return qtrue;
+}
+
+/*
 =================
 G_ScriptAction_PlayAnim
 

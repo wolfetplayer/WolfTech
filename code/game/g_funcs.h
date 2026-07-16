@@ -712,6 +712,7 @@ If you have questions concerning this license or the applicable additional terms
 {"G_ScriptAction_AlliedRespawntime", (byte *)G_ScriptAction_AlliedRespawntime},
 {"G_ScriptAction_AxisRespawntime", (byte *)G_ScriptAction_AxisRespawntime},
 {"G_ScriptAction_MapDescription", (byte *)G_ScriptAction_MapDescription},
+{"G_ScriptAction_Atmosphere", (byte *)G_ScriptAction_Atmosphere},
 {"G_ScriptAction_AIScriptName", (byte *)G_ScriptAction_AIScriptName},
 {"G_ScriptAction_EntityScriptName", (byte *)G_ScriptAction_EntityScriptName},
 {"G_ScriptStartCam", (byte *)G_ScriptStartCam},

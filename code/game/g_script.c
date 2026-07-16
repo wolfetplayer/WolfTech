@@ -93,6 +93,7 @@ qboolean G_ScriptAction_MusicStop( gentity_t *ent, char *params );
 qboolean G_ScriptAction_MusicFade( gentity_t *ent, char *params );
 qboolean G_ScriptAction_MusicQueue( gentity_t *ent, char *params );
 //----(SA)	end
+qboolean G_ScriptAction_Atmosphere( gentity_t *ent, char *params );
 
 //coop
 qboolean G_ScriptAction_ObjectivesNeeded( gentity_t *ent, char *params );
@@ -122,6 +123,7 @@ g_script_stack_action_t gScriptActions[] =
 	{"entityscriptname",     G_ScriptAction_EntityScriptName},
 	{"aiscriptname",         G_ScriptAction_AIScriptName},
 	{"objectivemet", G_ScriptAction_ObjectiveMet},
+	{"atmosphere",               G_ScriptAction_Atmosphere},
 	// DHM - Nerve :: multiplayer scripting commands start with "wm_" (Wolf Multiplayer)
 	{"wm_mapdescription",        G_ScriptAction_MapDescription},
 	{"wm_axis_respawntime",      G_ScriptAction_AxisRespawntime},

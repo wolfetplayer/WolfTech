@@ -712,6 +712,7 @@ extern qboolean G_ScriptAction_NumberofObjectives ( gentity_t * ent , char * par
 extern qboolean G_ScriptAction_AlliedRespawntime ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_AxisRespawntime ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_MapDescription ( gentity_t * ent , char * params ) ;
+extern qboolean G_ScriptAction_Atmosphere ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_AIScriptName ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptAction_EntityScriptName ( gentity_t * ent , char * params ) ;
 extern qboolean G_ScriptStartCam ( gentity_t * ent , char * params, qboolean black ) ;
