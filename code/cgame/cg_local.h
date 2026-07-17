@@ -1650,6 +1650,7 @@ typedef struct {
 
 #define MAX_SCRIPT_SPEAKERS 256
 extern scriptSpeaker_t scriptSpeakers[MAX_SCRIPT_SPEAKERS];
+extern int             numScriptSpeakers;
 
 
 
@@ -2343,6 +2344,9 @@ void CG_SoundInit( void );
 void CG_ClearScriptSpeakers( void );
 void CG_LoadSpeakerScript( void );
 void CG_AddScriptSpeakers( void );
+qboolean CG_AddScriptSpeaker( scriptSpeaker_t *speaker );
+qboolean CG_DeleteScriptSpeaker( int index );
+qboolean CG_SaveSpeakerScript( void );
 // done.
 
 // Ridah, flamethrower

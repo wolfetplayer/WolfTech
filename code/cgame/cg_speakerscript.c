@@ -32,7 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../ui/ui_shared.h"    // PC_Int_Parse / PC_Float_Parse / PC_String_Parse
 
 scriptSpeaker_t scriptSpeakers[MAX_SCRIPT_SPEAKERS];
-static int      numScriptSpeakers;
+int             numScriptSpeakers;
 
 /*
 ================
@@ -180,19 +180,15 @@ static qboolean CG_SS_ParseSpeaker( int handle, const char *filename ) {
 
 /*
 ================
-CG_LoadSpeakerScript
+CG_SpeakerScriptFilename
 
-Loads sound/maps/<mapname>.sps, derived from cgs.mapname ("maps/<mapname>.bsp").
-Not finding a .sps file is not an error -- most maps simply won't have one.
+Derives sound/maps/<mapname>.sps from cgs.mapname ("maps/<mapname>.bsp").
+Shared by load and save so the two can never disagree on the path.
 ================
 */
-void CG_LoadSpeakerScript( void ) {
-	char       filename[MAX_QPATH];
-	char       mapname[MAX_QPATH];
-	char       *base, *ext;
-	pc_token_t token;
-	int        handle;
-	int        i;
+static void CG_SpeakerScriptFilename( char *out, int size ) {
+	char mapname[MAX_QPATH];
+	char *base, *ext;
 
 	Q_strncpyz( mapname, cgs.mapname, sizeof( mapname ) );
 	base = strrchr( mapname, '/' );
@@ -202,7 +198,24 @@ void CG_LoadSpeakerScript( void ) {
 		*ext = '\0';
 	}
 
-	Com_sprintf( filename, sizeof( filename ), "sound/maps/%s.sps", base );
+	Com_sprintf( out, size, "sound/maps/%s.sps", base );
+}
+
+/*
+================
+CG_LoadSpeakerScript
+
+Loads sound/maps/<mapname>.sps, derived from cgs.mapname ("maps/<mapname>.bsp").
+Not finding a .sps file is not an error -- most maps simply won't have one.
+================
+*/
+void CG_LoadSpeakerScript( void ) {
+	char       filename[MAX_QPATH];
+	pc_token_t token;
+	int        handle;
+	int        i;
+
+	CG_SpeakerScriptFilename( filename, sizeof( filename ) );
 
 	handle = trap_PC_LoadSource( filename );
 	if ( !handle ) {
@@ -310,4 +323,135 @@ void CG_AddScriptSpeakers( void ) {
 			trap_S_AddLoopingSound( -( i + 2 ), speaker->origin, vec3_origin, speaker->range, speaker->noise, speaker->volume );
 		}
 	}
+}
+
+// Authoring helpers (dumpsound / listsounds / deletesound console commands)
+
+/*
+================
+CG_AddScriptSpeaker
+
+Appends a speaker to the live list and registers its sound so it starts
+playing immediately. Does not touch disk -- call CG_SaveSpeakerScript()
+afterward to persist the change.
+================
+*/
+qboolean CG_AddScriptSpeaker( scriptSpeaker_t *speaker ) {
+	if ( numScriptSpeakers >= MAX_SCRIPT_SPEAKERS ) {
+		CG_Printf( S_COLOR_RED "ERROR CG_AddScriptSpeaker: MAX_SCRIPT_SPEAKERS (%i) reached\n", MAX_SCRIPT_SPEAKERS );
+		return qfalse;
+	}
+
+	if ( *speaker->filename ) {
+		speaker->noise = trap_S_RegisterSound( speaker->filename );
+	}
+
+	scriptSpeakers[numScriptSpeakers++] = *speaker;
+
+	return qtrue;
+}
+
+/*
+================
+CG_DeleteScriptSpeaker
+
+Removes a speaker from the live list by index. Does not touch disk -- call
+CG_SaveSpeakerScript() afterward to persist the change.
+================
+*/
+qboolean CG_DeleteScriptSpeaker( int index ) {
+	if ( index < 0 || index >= numScriptSpeakers ) {
+		return qfalse;
+	}
+
+	// ranges overlap when removing anything but the last entry -- Com_Memcpy
+	// (== memcpy) is not safe here, this needs memmove
+	memmove( &scriptSpeakers[index], &scriptSpeakers[index + 1], sizeof( scriptSpeaker_t ) * ( numScriptSpeakers - index - 1 ) );
+	numScriptSpeakers--;
+
+	return qtrue;
+}
+
+/*
+================
+CG_SaveSpeakerScript
+
+Rewrites sound/maps/<mapname>.sps from the live in-memory speaker list.
+================
+*/
+qboolean CG_SaveSpeakerScript( void ) {
+	static const char *loopedStr[]    = { "no", "on", "off" };
+	static const char *broadcastStr[] = { "no", "global", "nopvs" };
+	char             filename[MAX_QPATH];
+	fileHandle_t     f;
+	char             *s;
+	int              i;
+	scriptSpeaker_t  *speaker;
+	char             targetnameStr[64];
+	char             waitStr[32];
+	char             randomStr[32];
+	char             volumeStr[32];
+	char             rangeStr[32];
+
+	CG_SpeakerScriptFilename( filename, sizeof( filename ) );
+
+	trap_FS_FOpenFile( filename, &f, FS_WRITE );
+	if ( !f ) {
+		CG_Printf( S_COLOR_RED "ERROR CG_SaveSpeakerScript: failed to open '%s' for writing\n", filename );
+		return qfalse;
+	}
+
+	s = "speakerScript\n{\n";
+	trap_FS_Write( s, strlen( s ), f );
+
+	for ( i = 0; i < numScriptSpeakers; i++ ) {
+		speaker = &scriptSpeakers[i];
+
+		targetnameStr[0] = '\0';
+		waitStr[0]        = '\0';
+		randomStr[0]      = '\0';
+		volumeStr[0]      = '\0';
+		rangeStr[0]       = '\0';
+
+		if ( *speaker->targetname ) {
+			Com_sprintf( targetnameStr, sizeof( targetnameStr ), "\t\ttargetname \"%s\"\n", speaker->targetname );
+		}
+		if ( speaker->wait ) {
+			Com_sprintf( waitStr, sizeof( waitStr ), "\t\twait %i\n", speaker->wait );
+		}
+		if ( speaker->random ) {
+			Com_sprintf( randomStr, sizeof( randomStr ), "\t\trandom %i\n", speaker->random );
+		}
+		if ( speaker->volume ) {
+			Com_sprintf( volumeStr, sizeof( volumeStr ), "\t\tvolume %i\n", speaker->volume );
+		}
+		if ( speaker->range ) {
+			Com_sprintf( rangeStr, sizeof( rangeStr ), "\t\trange %i\n", speaker->range );
+		}
+
+		s = va( "\tspeakerDef\n\t{\n"
+				"\t\tnoise \"%s\"\n"
+				"\t\torigin %.2f %.2f %.2f\n"
+				"%s"
+				"\t\tlooped \"%s\"\n"
+				"\t\tbroadcast \"%s\"\n"
+				"%s%s%s%s"
+				"\t}\n",
+				speaker->filename,
+				(double)speaker->origin[0], (double)speaker->origin[1], (double)speaker->origin[2],
+				targetnameStr,
+				loopedStr[speaker->loop],
+				broadcastStr[speaker->broadcast],
+				waitStr, randomStr, volumeStr, rangeStr );
+		trap_FS_Write( s, strlen( s ), f );
+	}
+
+	s = "}\n";
+	trap_FS_Write( s, strlen( s ), f );
+
+	trap_FS_FCloseFile( f );
+
+	CG_Printf( "Saved %i speaker%s to '%s'\n", numScriptSpeakers, numScriptSpeakers == 1 ? "" : "s", filename );
+
+	return qtrue;
 }
