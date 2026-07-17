@@ -613,6 +613,7 @@ typedef enum {
 	WP_AKIMBO,
 	
 	WP_MP34,
+	WP_MP44,
 
 	WP_DYNAMITE,
 
@@ -621,13 +622,13 @@ typedef enum {
 	WP_MONSTER_ATTACK3,
 
 	WP_SNIPER,
-	WP_GRENADE_SMOKE,       
-	WP_MEDIC_HEAL,          
-	WP_MORTAR,              
+	WP_GRENADE_SMOKE,
+	WP_MEDIC_HEAL,
+	WP_MORTAR,
 
-	VERYBIGEXPLOSION,      
+	VERYBIGEXPLOSION,
 
-	WP_NUM_WEAPONS          
+	WP_NUM_WEAPONS
 
 } weapon_t;
 
@@ -1264,6 +1265,7 @@ typedef enum {
 	MOD_BAR,    //----(SA)
 	MOD_FG42,
 	MOD_FG42SCOPE,
+	MOD_MP44,
 	MOD_PANZERFAUST,
 	MOD_ROCKET_LAUNCHER,
 	MOD_GRENADE_LAUNCHER,

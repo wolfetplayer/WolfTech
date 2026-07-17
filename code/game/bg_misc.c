@@ -61,7 +61,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO   },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND },  //	4
-	{WP_FG42,               WP_BAR,                 0           },  //	5
+	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        0,                      0           },  //	7
 	{WP_VENOM,              0,                      0           },  //	8
@@ -663,6 +663,38 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.fireModeSwitchTime = 250,
 		.weapFile           = "fg42scope.weap",
+    },
+    [WP_MP44] = {
+		.weaponindex        = WP_MP44,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_ASSAULT_RIFLE,
+        .maxammo            = 200,
+        .uses               = 1,
+        .maxclip            = 30,
+        .reloadTime         = 2600,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 115,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 9,
+		.weaponSpread       = 800,
+		.spreadScale        = 0.6f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 40,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 0.90f,
+        .mod                = MOD_MP44,
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -8.0f, -1.0f, 0.0f },
+		.fireModeSwitchTime = 250,
+		.weapFile           = "mp44.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -1919,6 +1951,29 @@ gitem_t bg_itemlist[] =
 		WP_M1GARAND,
 		WP_BAR,
 		WP_BAR,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_mp44",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/assault_rifles/mp44/mp44_3rd.md3",
+			"models/weapons/assault_rifles/mp44/v_mp44.md3",
+			"models/weapons/assault_rifles/mp44/mp44_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_mp44",       // icon
+		"icons/ammo5",            // ammo icon
+		"MP44 Sturmgewehr",       // pickup
+		30,
+		IT_WEAPON,
+		WP_MP44,
+		WP_MP44,
+		WP_MP44,
+		WP_MP44,
+		WP_MP44,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
