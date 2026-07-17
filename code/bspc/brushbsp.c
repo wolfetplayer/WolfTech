@@ -1026,12 +1026,26 @@ side_t *SelectSplitSide( bspbrush_t *brushes, node_t *node ) {
 	int front, back, both, facing, splits;
 	int bsplits;
 	int bestsplits;
+	int bestfront, bestback;
 	int epsilonbrush;
 	qboolean hintsplit = false;
+	// fallback: on brush-heavy terrain the best-scored plane can still be
+	// wildly unbalanced (e.g. 99% on one side), forcing the same huge list
+	// to be rescanned next level. track the most evenly split candidate too.
+	side_t      *balanceside;
+	int balancepnum;
+	int balancemax;
+	int totalbrushes;
 
 	bestside = NULL;
 	bestvalue = -99999;
 	bestsplits = 0;
+	bestfront = bestback = 0;
+
+	balanceside = NULL;
+	balancepnum = -1;
+	balancemax = -1;
+	totalbrushes = CountBrushList( brushes );
 
 	// the search order goes: visible-structural, visible-detail,
 	// nonvisible-structural, nonvisible-detail.
@@ -1126,6 +1140,17 @@ side_t *SelectSplitSide( bspbrush_t *brushes, node_t *node ) {
 					value = -9999999;
 				}
 
+				// track the most evenly split candidate too, in case the
+				// winner below turns out unusably skewed
+				if ( front > 0 && back > 0 ) {
+					int worst = front > back ? front : back;
+					if ( !balanceside || worst < balancemax ) {
+						balancemax = worst;
+						balanceside = side;
+						balancepnum = pnum;
+					} //end if
+				} //end if
+
 				// save off the side test so we don't need
 				// to recalculate it when we actually seperate
 				// the brushes
@@ -1133,6 +1158,8 @@ side_t *SelectSplitSide( bspbrush_t *brushes, node_t *node ) {
 					bestvalue = value;
 					bestside = side;
 					bestsplits = splits;
+					bestfront = front;
+					bestback = back;
 					for ( test = brushes; test ; test = test->next )
 						test->side = test->testside;
 				} //end if
@@ -1153,6 +1180,21 @@ side_t *SelectSplitSide( bspbrush_t *brushes, node_t *node ) {
 			break;
 		} //end if
 	} //end for (pass = 0;
+
+	// if the winner is pathologically skewed on a large list, and a real
+	// candidate splits it far more evenly, use that one instead. only
+	// engages well above normal sizes so it doesn't affect ordinary nodes.
+	if ( bestside && balanceside && balanceside != bestside && totalbrushes > 200 ) {
+		int bestworst = bestfront > bestback ? bestfront : bestback;
+		if ( bestworst > ( totalbrushes * 9 ) / 10 && balancemax < bestworst ) {
+			bestside = balanceside;
+			pnum = balancepnum & ~1;
+			for ( test = brushes; test; test = test->next )
+			{
+				test->side = TestBrushToPlanenum( test, pnum, &bsplits, &hintsplit, &epsilonbrush );
+			} //end for
+		} //end if
+	} //end if
 
 	//
 	// clear all the tested flags we set
@@ -1250,6 +1292,21 @@ void SplitBrush( bspbrush_t *brush, int planenum,
 	if ( d_back > -0.2 ) { // PLANESIDE_EPSILON)
 		// only on front
 		*front = CopyBrush( brush );
+		return;
+	}
+
+	// already below the minimum volume: any split only makes it smaller, so
+	// it'd get discarded below anyway. skip straight to that outcome.
+	if ( BrushVolume( brush ) < 1.0 ) {
+		int side;
+
+		side = BrushMostlyOnSide( brush, plane );
+		if ( side == PSIDE_FRONT ) {
+			*front = CopyBrush( brush );
+		}
+		if ( side == PSIDE_BACK ) {
+			*back = CopyBrush( brush );
+		}
 		return;
 	}
 

@@ -782,12 +782,19 @@ qboolean BrushGE( bspbrush_t *b1, bspbrush_t *b2 ) {
 // Changes Globals:		-
 //===========================================================================
 bspbrush_t *ChopBrushes( bspbrush_t *head ) {
-	bspbrush_t  *b1, *b2, *next;
-	bspbrush_t  *tail;
+	// used to restart the whole scan (full list reversal + tail re-walk)
+	// after every intersection event, which dominated CSG time on
+	// brush-heavy terrain. brushes already moved to `keep` are never
+	// revisited either way, so only what changed needs splicing back in.
+	bspbrush_t  *b1, *b2;
+	bspbrush_t  *prev2, *next2;
 	bspbrush_t  *keep;
 	bspbrush_t  *sub, *sub2;
+	bspbrush_t  *fragtail;
+	bspbrush_t  *advance_to;
 	int c1, c2;
 	int num_csg_iterations;
+	qboolean b1_swallowed, b1_replaced;
 
 	Log_Print( "-------- Brush CSG ---------\n" );
 	Log_Print( "%6d original brushes\n", CountBrushList( head ) );
@@ -795,36 +802,34 @@ bspbrush_t *ChopBrushes( bspbrush_t *head ) {
 	num_csg_iterations = 0;
 	qprintf( "%6d output brushes", num_csg_iterations );
 
-#if 0
-	if ( startbrush == 0 ) {
-		WriteBrushList( "before.gl", head, false );
-	}
-#endif
 	keep = NULL;
 
-newlist:
-	// find tail
-	if ( !head ) {
-		return NULL;
-	}
-
-	for ( tail = head; tail->next; tail = tail->next )
-		;
-
-	for ( b1 = head ; b1 ; b1 = next )
+	while ( head )
 	{
-		next = b1->next;
+		b1 = head;
 
 		//if the conversion is cancelled
 		if ( cancelconversion ) {
+			head = b1->next;
 			b1->next = keep;
 			keep = b1;
 			continue;
 		} //end if
 
-		for ( b2 = b1->next; b2; b2 = b2->next )
+		b1_swallowed = false;
+		b1_replaced = false;
+		advance_to = NULL;
+
+		prev2 = b1;
+		b2 = b1->next;
+
+		while ( b2 )
 		{
+			next2 = b2->next;
+
 			if ( BrushesDisjoint( b1, b2 ) ) {
+				prev2 = b2;
+				b2 = next2;
 				continue;
 			}
 
@@ -836,11 +841,15 @@ newlist:
 			if ( BrushGE( b2, b1 ) ) {
 				sub = SubtractBrush( b1, b2 );
 				if ( sub == b1 ) {
+					sub = NULL;
+					prev2 = b2;
+					b2 = next2;
 					continue;       // didn't really intersect
 				} //end if
 				if ( !sub ) { // b1 is swallowed by b2
-					head = CullList( b1, b1 );
-					goto newlist;
+					b1_swallowed = true;
+					advance_to = b1->next;
+					break;
 				}
 				c1 = CountBrushList( sub );
 			}
@@ -848,20 +857,33 @@ newlist:
 			if ( BrushGE( b1, b2 ) ) {
 				sub2 = SubtractBrush( b2, b1 );
 				if ( sub2 == b2 ) {
+					if ( sub ) {
+						FreeBrushList( sub );
+						sub = NULL;
+					}
+					prev2 = b2;
+					b2 = next2;
 					continue;       // didn't really intersect
 				}
 				if ( !sub2 ) { // b2 is swallowed by b1
-					FreeBrushList( sub );
-					head = CullList( b1, b2 );
-					goto newlist;
+					if ( sub ) {
+						FreeBrushList( sub );
+					}
+					// unlink just b2 in place, keep testing b1 against the rest
+					prev2->next = next2;
+					FreeBrush( b2 );
+					b2 = next2;
+					continue;
 				}
 				c2 = CountBrushList( sub2 );
 			}
 
 			if ( !sub && !sub2 ) {
+				prev2 = b2;
+				b2 = next2;
 				continue;       // neither one can bite
-
 			}
+
 			// only accept if it didn't fragment
 			// (commenting this out allows full fragmentation)
 			if ( c1 > 1 && c2 > 1 ) {
@@ -871,35 +893,50 @@ newlist:
 				if ( sub ) {
 					FreeBrushList( sub );
 				}
+				prev2 = b2;
+				b2 = next2;
 				continue;
 			}
 
 			if ( c1 < c2 ) {
+				// b1 loses: splice its fragments in where b1 was
 				if ( sub2 ) {
 					FreeBrushList( sub2 );
 				}
-				tail = AddBrushListToTail( sub, tail );
-				head = CullList( b1, b1 );
-				goto newlist;
+				for ( fragtail = sub; fragtail->next; fragtail = fragtail->next )
+					;
+				fragtail->next = b1->next;
+				b1_replaced = true;
+				advance_to = sub;
+				break;
 			} //end if
 			else
 			{
+				// b2 loses: splice its fragments in where b2 was, b1 keeps sweeping
 				if ( sub ) {
 					FreeBrushList( sub );
 				}
-				tail = AddBrushListToTail( sub2, tail );
-				head = CullList( b1, b2 );
-				goto newlist;
+				for ( fragtail = sub2; fragtail->next; fragtail = fragtail->next )
+					;
+				fragtail->next = next2;
+				prev2->next = sub2;
+				FreeBrush( b2 );
+				b2 = sub2;
+				continue;
 			} //end else
-		} //end for
+		} //end while (b2)
 
-		if ( !b2 ) { // b1 is no longer intersecting anything, so keep it
+		if ( b1_swallowed || b1_replaced ) {
+			FreeBrush( b1 );
+			head = advance_to;
+		} else { // b1 is no longer intersecting anything, so keep it
+			head = b1->next;
 			b1->next = keep;
 			keep = b1;
-		} //end if
-		num_csg_iterations++;
-		qprintf( "\r%6d", num_csg_iterations );
-	} //end for
+			num_csg_iterations++;
+			qprintf( "\r%6d", num_csg_iterations );
+		} //end else
+	} //end while (head)
 
 	if ( cancelconversion ) {
 		return keep;
@@ -907,13 +944,6 @@ newlist:
 	//
 	qprintf( "\n" );
 	Log_Write( "%6d output brushes\r\n", num_csg_iterations );
-
-#if 0
-	{
-		WriteBrushList( "after.gl", keep, false );
-		WriteBrushMap( "after.map", keep );
-	}
-#endif
 
 	return keep;
 } //end of the function ChopBrushes
@@ -1034,7 +1064,10 @@ tree_t *ProcessWorldBrushes( int brush_start, int brush_end ) {
 		//Carves any intersecting solid brushes into the minimum number
 		//of non-intersecting brushes.
 		if ( !nocsg ) {
+			// DIAGNOSTIC: split CSG time from BSP tree-build time.
+			double csg_start_time = I_FloatTime();
 			brushes = ChopBrushes( brushes );
+			Log_Print( "CSG chop done in %5.0f seconds\n", I_FloatTime() - csg_start_time );
 			/*
 			if (create_aas)
 			{

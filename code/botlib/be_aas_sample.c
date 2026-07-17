@@ -40,6 +40,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "l_script.h"
 #include "l_precomp.h"
 #include "l_struct.h"
+#include "l_libvar.h"
 #include "aasfile.h"
 #include "botlib.h"
 #include "be_aas.h"
@@ -100,7 +101,7 @@ void AAS_InitAASLinkHeap( void ) {
 	max_aaslinks = ( *aasworld ).linkheapsize;
 	//if there's no link heap present
 	if ( !( *aasworld ).linkheap ) {
-		max_aaslinks = (int) 4096; //LibVarValue("max_aaslinks", "4096");
+		max_aaslinks = (int) LibVarValue( "max_aaslinks", "16384" );
 		if ( max_aaslinks < 0 ) {
 			max_aaslinks = 0;
 		}
