@@ -2971,15 +2971,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	{
 		if (!ps || cg.renderingThirdPerson)
 		{
-			if (!cent->akimboFire)
-			{
-				CG_PositionRotatedEntityOnTag(&flash, parent, "tag_weapon");
-				VectorMA(flash.origin, 10, flash.axis[0], flash.origin);
-			}
-			else
-			{
-				CG_PositionRotatedEntityOnTag(&flash, &gun, "tag_flash");
-			}
+			CG_PositionRotatedEntityOnTag(&flash, &gun, "tag_flash");
 		}
 		else
 		{
@@ -3100,15 +3092,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			}
 		}
 	}
-
-	if ( isPlayer ) {
-		if ( weaponNum == WP_AKIMBO ) {
-			if ( !cent->akimboFire ) {
-				CG_PositionRotatedEntityOnTag( &flash, &gun, "tag_flash2" );
-			}
-		}
-	}
-
 
 	if ( flash.hModel ) {
 		if ( weaponNum != WP_FLAMETHROWER && weaponNum != WP_TESLA ) {    //Ridah, hide the flash also for now
