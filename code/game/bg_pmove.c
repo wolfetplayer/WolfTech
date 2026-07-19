@@ -2394,7 +2394,7 @@ static void PM_BeginM97Reload( void ) {
 
 	// choose which first person animation to play
 	if ( pm->ps->ammoclip[BG_FindClipForWeapon( WP_M97 )] == 0 ) {
-		anim = WEAP_ALTSWITCHFROM;
+		anim = fastReload ? WEAP_ALTSWITCHFROM_FAST : WEAP_ALTSWITCHFROM;
 		PM_AddEvent( EV_M97_PUMP );
 		pm->ps->weaponTime += fastReload ? ( ammoTable[WP_M97].shotgunPumpStart / 2 ) : ammoTable[WP_M97].shotgunPumpStart;
 		pm->ps->holdable[HI_M97] = M97_RELOADING_BEGIN_PUMP;
@@ -2429,12 +2429,12 @@ static void PM_M97Reload( void ) {
 
 		if ( !pm->ps->ammo[ammoIndex] || pm->pmext->m97reloadInterrupt ) {
 			// no more shells, or the player fired/interrupted - break back to ready position
-			PM_StartWeaponAnim( WEAP_DROP );
+			PM_StartWeaponAnim( fastReload ? WEAP_DROP2_FAST : WEAP_DROP2 );
 			pm->ps->weaponTime += fastReload ? ( ammoTable[WP_M97].shotgunPumpEnd / 2 ) : ammoTable[WP_M97].shotgunPumpEnd;
 			pm->ps->weaponstate = WEAPON_READY;
 		} else {
 			// keep pumping to load another shell
-			PM_StartWeaponAnim( WEAP_ALTSWITCHTO );
+			PM_StartWeaponAnim( fastReload ? WEAP_ALTSWITCHTO_FAST : WEAP_ALTSWITCHTO );
 			pm->ps->weaponTime += fastReload ? ( ammoTable[WP_M97].shotgunPumpLoop / 2 ) : ammoTable[WP_M97].shotgunPumpLoop;
 			pm->ps->holdable[HI_M97] = M97_RELOADING_AFTER_PUMP;
 		}
@@ -2555,7 +2555,9 @@ void PM_CheckForReload( int weapon ) {
 	}
 
 
-//	if ( pm->ps->weaponTime <= 0) {
+	if ( pm->ps->weaponTime > 0 ) {
+		return;
+	}
 
 	if ( reloadRequested ) {
 		// don't allow a force reload if it won't have any effect (no more ammo reserves or full clip)
@@ -2571,8 +2573,6 @@ void PM_CheckForReload( int weapon ) {
 			doReload = qtrue;
 		}
 	}
-
-//	}
 
 	if ( doReload ) {
 		PM_BeginWeaponReload( weapon );
@@ -3165,6 +3165,11 @@ static void PM_Weapon( void ) {
 
 	if ( pm->ps->weaponstate == WEAPON_RELOADING ) {
 		PM_FinishWeaponReload();
+
+		// This will happen for chained shotgun reloads
+		if (pm->ps->weaponTime > 0) {
+			return;
+		}
 	}
 
 	// change weapon if time

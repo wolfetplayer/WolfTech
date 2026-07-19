@@ -1179,6 +1179,15 @@ typedef enum {
 	WEAP_RELOAD3_FAST,
 	WEAP_SPRINTIN,      // g_realism: lowering weapon to sprint
 	WEAP_SPRINTOUT,     // g_realism: raising weapon after sprinting
+
+	// M97 pump-action only - appended at the end (not inserted at RealRTCW's original
+	// position, which was right after WEAP_ALTSWITCHTO) so every other weapon's existing
+	// weapon.cfg, authored against the 17-slot layout above, keeps parsing correctly.
+	WEAP_DROP2,              // quick snap from pump position back to ready (no more shells)
+	WEAP_ALTSWITCHFROM_FAST, // PERK_WEAPONHANDLING variant of WEAP_ALTSWITCHFROM
+	WEAP_ALTSWITCHTO_FAST,   // PERK_WEAPONHANDLING variant of WEAP_ALTSWITCHTO
+	WEAP_DROP2_FAST,         // PERK_WEAPONHANDLING variant of WEAP_DROP2
+
 	MAX_WP_ANIMATIONS
 } weapAnimNumber_t;
 
