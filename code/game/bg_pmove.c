@@ -161,6 +161,47 @@ static void PM_ContinueWeaponAnim( int anim ) {
 	PM_StartWeaponAnim( anim );
 }
 
+// M7 rests in its own idle pose (grenade launcher attached, chambered) instead of the Garand's
+static int PM_IdleAnimForWeapon( int weapon ) {
+	return ( weapon == WP_M7 ) ? WEAP_IDLE2 : WEAP_IDLE1;
+}
+
+static int PM_AltSwitchFromForWeapon( int weapon ) {
+	switch ( weapon ) {
+	default:
+		return WEAP_ALTSWITCHFROM;
+	}
+}
+
+// the M7 attaches using its own "equipping" clip (ALTSWITCHFROM), not the generic ALTSWITCHTO
+static int PM_AltSwitchToForWeapon( int weapon ) {
+	return ( weapon == WP_M7 ) ? WEAP_ALTSWITCHFROM : WEAP_ALTSWITCHTO;
+}
+
+// M7 snaps out of its grenade-launcher pose rather than the rifle's normal drop
+static int PM_DropAnimForWeapon( int weapon ) {
+	return ( weapon == WP_M7 ) ? WEAP_DROP2 : WEAP_DROP;
+}
+
+// M7 raises back into its grenade-launcher pose rather than the rifle's normal raise
+static int PM_RaiseAnimForWeapon( int weapon ) {
+	return ( weapon == WP_M7 ) ? WEAP_RELOAD3 : WEAP_RAISE;
+}
+
+static int PM_SprintInAnimForWeapon( int weapon ) {
+	switch ( weapon ) {
+	default:
+		return WEAP_SPRINTIN;
+	}
+}
+
+static int PM_SprintOutAnimForWeapon( int weapon ) {
+	switch ( weapon ) {
+	default:
+		return WEAP_SPRINTOUT;
+	}
+}
+
 /*
 ==================
 PM_ClipVelocity
@@ -2035,6 +2076,7 @@ static void PM_WaterEvents( void ) {        // FIXME?
 
 static void PM_BeginM97Reload( void );
 static void PM_M97Reload( void );
+static void PM_ReloadClip( int weapon );
 
 /*
 ==============
@@ -2051,6 +2093,12 @@ static void PM_BeginWeaponReload( int weapon ) {
 	}
 
 	if ( weapon < WP_BEGINGERMAN || weapon > WP_DYNAMITE ) {
+		return;
+	}
+
+	if ( weapon == WP_M1GARAND &&
+		 pm->ps->weaponUpgraded[WP_M1GARAND] <= 0 &&
+		 pm->ps->ammoclip[BG_FindClipForWeapon( WP_M1GARAND )] != 0 ) {
 		return;
 	}
 
@@ -2211,10 +2259,10 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 		}
 
 		if ( altswitch ) {  // it's an alt mode, play different anim
-			PM_StartWeaponAnim( WEAP_ALTSWITCHFROM );
+			PM_StartWeaponAnim( PM_AltSwitchFromForWeapon( oldweapon ) );
 		} else {
 			if ( showdrop ) {
-				PM_StartWeaponAnim( WEAP_DROP );    // PM_ContinueWeaponAnim(WEAP_DROP);
+				PM_StartWeaponAnim( PM_DropAnimForWeapon( oldweapon ) );
 			}
 		}
 	}
@@ -2243,6 +2291,21 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 		}
 		break;
 
+	case WP_M1GARAND:
+		if ( altswitch ) {
+			switchtime = 0;
+			// auto-chamber a grenade into the M7 if you've got one
+			if ( !pm->ps->ammoclip[BG_FindClipForWeapon( newweapon )] && pm->ps->ammo[BG_FindAmmoForWeapon( newweapon )] ) {
+				PM_ReloadClip( newweapon );
+			}
+		}
+		break;
+	case WP_M7:
+		if ( altswitch ) {
+			switchtime = 0;
+		}
+		break;
+
 //		case WP_MAUSER:
 //		case WP_SNIPERRIFLE:
 //		case WP_SNOOPER:
@@ -2268,6 +2331,7 @@ PM_FinishWeaponChange
 */
 static void PM_FinishWeaponChange( void ) {
 	int oldweapon, newweapon, switchtime;
+	qboolean doSwitchAnim = qtrue;
 
 	newweapon = pm->cmd.weapon;
 	if ( newweapon < WP_NONE || newweapon >= WP_NUM_WEAPONS ) {
@@ -2325,6 +2389,26 @@ static void PM_FinishWeaponChange( void ) {
 		switchtime = 100;
 	}
 
+	switch ( newweapon ) {
+	case WP_M1GARAND:
+		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+			if ( pm->ps->ammoclip[BG_FindClipForWeapon( oldweapon )] ) {
+				// grenade was still chambered -- takes a moment to safely pull the launcher off
+				switchtime = 1347;
+			} else {
+				// already fired, nothing to detach -- snap back to the rifle instantly
+				switchtime = 0;
+				doSwitchAnim = qfalse;
+			}
+		}
+		break;
+	case WP_M7:
+		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+			switchtime = 2350;
+		}
+		break;
+	}
+
 	pm->ps->weaponTime += switchtime;
 
 	// make scripting aware of new weapon
@@ -2333,11 +2417,13 @@ static void PM_FinishWeaponChange( void ) {
 	// play an animation
 	BG_AnimScriptEvent( pm->ps, ANIM_ET_RAISEWEAPON, qfalse, qfalse );
 
-	// alt weapon switch was played when switching away, just go into idle
-	if ( ammoTable[oldweapon].weapAlts == newweapon ) {
-		PM_StartWeaponAnim( WEAP_ALTSWITCHTO );
-	} else {
-		PM_StartWeaponAnim( WEAP_RAISE );
+	if ( doSwitchAnim ) {
+		// alt weapon switch was played when switching away, just go into idle
+		if ( ammoTable[oldweapon].weapAlts == newweapon ) {
+			PM_StartWeaponAnim( PM_AltSwitchToForWeapon( newweapon ) );
+		} else {
+			PM_StartWeaponAnim( PM_RaiseAnimForWeapon( newweapon ) );
+		}
 	}
 
 }
@@ -2502,6 +2588,10 @@ void PM_CheckForReload( int weapon ) {
 	int clipWeap, ammoWeap;
 
 	if ( pm->noWeapClips ) { // no need to reload
+		return;
+	}
+
+	if ( weapon == WP_M7 ) {
 		return;
 	}
 
@@ -2945,7 +3035,7 @@ static void PM_Weapon( void ) {
 			pm->ps->fireModeSwitchTime = GetWeaponTableData( pm->ps->weapon )->fireModeSwitchTime;
 		} else {
 			// finished raising - weapon is usable again
-			PM_StartWeaponAnim( WEAP_IDLE1 );
+			PM_StartWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 		}
 		return;
 	}
@@ -3070,7 +3160,7 @@ static void PM_Weapon( void ) {
 				pm->ps->weaponTime = 250;
 			} else {
 				pm->ps->weaponstate = WEAPON_READY;
-				PM_StartWeaponAnim( WEAP_IDLE1 );
+				PM_StartWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 			}
 		}
 		return;
@@ -3180,7 +3270,7 @@ static void PM_Weapon( void ) {
 
 	if ( pm->ps->weaponstate == WEAPON_RAISING ) {
 		pm->ps->weaponstate = WEAPON_READY;
-		PM_StartWeaponAnim( WEAP_IDLE1 );
+		PM_StartWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 		return;
 	} else if ( pm->ps->weaponstate == WEAPON_RAISING_TORELOAD ) {
 		pm->ps->weaponstate = WEAPON_READY;     // need to switch to READY so the reload will work
@@ -3194,7 +3284,7 @@ static void PM_Weapon( void ) {
 		if ( pm->ps->pm_flags & PMF_LADDER ) {
 			if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN ) {
 				pm->ps->weaponstate = WEAPON_HOLSTER_IN;
-				PM_StartWeaponAnim( WEAP_DROP );
+				PM_StartWeaponAnim( PM_DropAnimForWeapon( pm->ps->weapon ) );
 				pm->ps->weaponTime += 300;
 			} else {
 				pm->ps->weaponTime += 50;
@@ -3202,19 +3292,19 @@ static void PM_Weapon( void ) {
 			return;
 		} else if ( pm->ps->weaponstate == WEAPON_HOLSTER_IN ) {
 			pm->ps->weaponstate = WEAPON_HOLSTER_OUT;
-			PM_StartWeaponAnim( WEAP_RAISE );
+			PM_StartWeaponAnim( PM_RaiseAnimForWeapon( pm->ps->weapon ) );
 			pm->ps->weaponTime += 300;
 			return;
 		} else if ( pm->ps->weaponstate == WEAPON_HOLSTER_OUT ) {
 			pm->ps->weaponstate = WEAPON_READY;
-			PM_StartWeaponAnim( WEAP_IDLE1 );
+			PM_StartWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 			return;
 		}
 
 		if ( ( pm->ps->pm_flags & PMF_SPRINTING ) && pm->ps->sprintTime > 0 ) {
 			if ( pm->ps->weaponstate != WEAPON_SPRINT_IN ) {
 				pm->ps->weaponstate = WEAPON_SPRINT_IN;
-				PM_StartWeaponAnim( WEAP_SPRINTIN );
+				PM_StartWeaponAnim( PM_SprintInAnimForWeapon( pm->ps->weapon ) );
 				pm->ps->weaponTime += 300;
 			} else {
 				pm->ps->weaponTime += 50;
@@ -3222,12 +3312,12 @@ static void PM_Weapon( void ) {
 			return;
 		} else if ( pm->ps->weaponstate == WEAPON_SPRINT_IN ) {
 			pm->ps->weaponstate = WEAPON_SPRINT_OUT;
-			PM_StartWeaponAnim( WEAP_SPRINTOUT );
+			PM_StartWeaponAnim( PM_SprintOutAnimForWeapon( pm->ps->weapon ) );
 			pm->ps->weaponTime += 300;
 			return;
 		} else if ( pm->ps->weaponstate == WEAPON_SPRINT_OUT ) {
 			pm->ps->weaponstate = WEAPON_READY;
-			PM_StartWeaponAnim( WEAP_IDLE1 );
+			PM_StartWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 			return;
 		}
 	}
@@ -3237,7 +3327,7 @@ static void PM_Weapon( void ) {
 		if ( pm->ps->pm_flags & PMF_LADDER ) {
 			if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN ) {
 				pm->ps->weaponstate = WEAPON_HOLSTER_IN;
-				PM_StartWeaponAnim( WEAP_DROP );
+				PM_StartWeaponAnim( PM_DropAnimForWeapon( pm->ps->weapon ) );
 				pm->ps->weaponTime += 300;
 			} else {
 				pm->ps->weaponTime += 50;
@@ -3245,19 +3335,19 @@ static void PM_Weapon( void ) {
 			return;
 		} else if ( pm->ps->weaponstate == WEAPON_HOLSTER_IN ) {
 			pm->ps->weaponstate = WEAPON_HOLSTER_OUT;
-			PM_StartWeaponAnim( WEAP_RAISE );
+			PM_StartWeaponAnim( PM_RaiseAnimForWeapon( pm->ps->weapon ) );
 			pm->ps->weaponTime += 300;
 			return;
 		} else if ( pm->ps->weaponstate == WEAPON_HOLSTER_OUT ) {
 			pm->ps->weaponstate = WEAPON_READY;
-			PM_StartWeaponAnim( WEAP_IDLE1 );
+			PM_StartWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 			return;
 		}
 
 		if ( ( pm->ps->pm_flags & PMF_SPRINTING ) && pm->ps->sprintTime > 0 ) {
 			if ( pm->ps->weaponstate != WEAPON_SPRINT_IN ) {
 				pm->ps->weaponstate = WEAPON_SPRINT_IN;
-				PM_StartWeaponAnim( WEAP_SPRINTIN );
+				PM_StartWeaponAnim( PM_SprintInAnimForWeapon( pm->ps->weapon ) );
 				pm->ps->weaponTime += 300;
 			} else {
 				pm->ps->weaponTime += 50;
@@ -3265,12 +3355,12 @@ static void PM_Weapon( void ) {
 			return;
 		} else if ( pm->ps->weaponstate == WEAPON_SPRINT_IN ) {
 			pm->ps->weaponstate = WEAPON_SPRINT_OUT;
-			PM_StartWeaponAnim( WEAP_SPRINTOUT );
+			PM_StartWeaponAnim( PM_SprintOutAnimForWeapon( pm->ps->weapon ) );
 			pm->ps->weaponTime += 300;
 			return;
 		} else if ( pm->ps->weaponstate == WEAPON_SPRINT_OUT ) {
 			pm->ps->weaponstate = WEAPON_READY;
-			PM_StartWeaponAnim( WEAP_IDLE1 );
+			PM_StartWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 			return;
 		}
 	}
@@ -3315,7 +3405,7 @@ static void PM_Weapon( void ) {
 		pm->ps->semiAutoTriggerHeld = qfalse;
 
 		if ( weaponstateFiring ) { // you were just firing, time to relax
-			PM_ContinueWeaponAnim( WEAP_IDLE1 );
+			PM_ContinueWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 		}
 
 		pm->ps->weaponstate = WEAPON_READY;
@@ -3329,7 +3419,7 @@ static void PM_Weapon( void ) {
 		pm->ps->weaponDelay = 0;
 
 		if ( weaponstateFiring ) {
-			PM_ContinueWeaponAnim( WEAP_IDLE1 );
+			PM_ContinueWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 		}
 
 		pm->ps->weaponstate = WEAPON_READY;
@@ -3468,7 +3558,7 @@ static void PM_Weapon( void ) {
 			if ( reloadingW ) {
 				PM_ContinueWeaponAnim( WEAP_RELOAD1 );      //----(SA)
 			} else {
-				PM_ContinueWeaponAnim( WEAP_IDLE1 );
+				PM_ContinueWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
 				pm->ps->weaponTime += 500;
 			}
 	

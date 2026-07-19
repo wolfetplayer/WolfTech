@@ -38,6 +38,7 @@ extern void SP_target_smoke( gentity_t *ent );
 
 
 void G_ExplodeMissilePoisonGas( gentity_t *ent );
+void G_ExplodeMissile( gentity_t *ent );
 void M_think( gentity_t *ent );
 /*
 ================
@@ -61,6 +62,15 @@ qboolean G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 		return qfalse;
 	}
 */
+	if ( ent->s.weapon == WP_M7 ) {
+		ent->s.effect1Time = qtrue; // has bounced
+
+		if ( ( ent->nextthink - level.time ) < 3250 ) {
+			G_ExplodeMissile( ent );
+			return qfalse;
+		}
+	}
+
 	contents = trap_PointContents( ent->s.origin, -1 );
 
 	// reflect the velocity on the trace plane
@@ -108,6 +118,10 @@ qboolean G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 //----(SA)	end
 			G_SetOrigin( ent, trace->endpos );
 			ent->s.time = level.time / 4;
+			if ( ent->s.weapon == WP_M7 ) {
+				// explode ~750msec after launch, regardless of how long it took to come to rest
+				ent->nextthink = level.time + ( 750 - ( level.time + 4000 - ent->nextthink ) );
+			}
 			return qfalse;
 		}
 	}
@@ -1360,6 +1374,8 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->methodOfDeath         = MOD_M7;
 		bolt->splashMethodOfDeath   = MOD_M7;
 		bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
+		// rifle grenade: short fuze, not the multi-second hand-grenade cook timer.
+		bolt->nextthink             = level.time + 4000;
 		break;
 // JPW NERVE
 	case WP_GRENADE_SMOKE:

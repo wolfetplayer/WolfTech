@@ -3063,6 +3063,18 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		}
 	}
 
+		if ( isPlayer && !cg.renderingThirdPerson ) {        // (SA) for now just do it on the first person weapons
+		if ( weaponNum == WP_M1GARAND || weaponNum == WP_M7 ) {
+			if ( (  cg.snap->ps.ammo[BG_FindAmmoForWeapon( WP_M7 )] || cg.snap->ps.ammoclip[BG_FindAmmoForWeapon( WP_M7 )]  ) ) {
+					barrel.hModel = weapon->modModel[0];
+					if ( barrel.hModel ) {
+						CG_PositionEntityOnTag( &barrel, parent, "tag_scope", 0, NULL );
+						CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups, ps, cent );
+					}
+			}
+		}
+		}
+
 
 	// make sure we aren't looking at cg.predictedPlayerEntity for LG
 	nonPredictedCent = &cg_entities[cent->currentState.clientNum];
@@ -3988,11 +4000,30 @@ CG_PlaySwitchSound
 ==============
 */
 void CG_PlaySwitchSound( int lastweap, int newweap ) {
-//	weaponInfo_t	*weap;
-//	weap = &cg_weapons[ ent->weapon ];
 	sfxHandle_t switchsound;
 
 	switchsound = cgs.media.selectSound;
+
+	if ( getAltWeapon( lastweap ) == newweap ) { // alt switch
+		switch ( newweap ) {
+		case WP_M7:
+			switchsound = cg_weapons[newweap].switchSound[0];
+			break;
+		case WP_M1GARAND:
+			if ( cg.predictedPlayerState.ammoclip[lastweap] ) {
+				switchsound = cg_weapons[newweap].switchSound[0];
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	switch ( newweap ) {
+	case WP_KNIFE:
+		switchsound = cg_weapons[newweap].switchSound[0];
+		break;
+	}
 
 	trap_S_StartSound( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, switchsound );
 }
@@ -5468,7 +5499,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 				}
 			}
 		}
-		else if ( wc & WEAPON_CLASS_GRENADE ) {
+		else if ( wc & ( WEAPON_CLASS_GRENADE | WEAPON_CLASS_RIFLENADE ) ) {
 			shader = cgs.media.rocketExplosionShader;
 			sfx = cgs.media.sfx_rockexp;
 			mark = cgs.media.burnMarkShader;

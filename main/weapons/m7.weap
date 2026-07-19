@@ -25,6 +25,8 @@ weaponDef
 		missileTrailRadius	32
 
 		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+		
+		modModel 0		"models/weapons/auto_rifles/m1_garand/v_m1_scope.md3"
 
 		firstPerson {
 			model			"models/weapons/auto_rifles/m1_garand/v_m1.md3"

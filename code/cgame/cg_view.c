@@ -1580,6 +1580,10 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		}
 	}
 
+	if ( cg.snap->ps.weapon == WP_M7 && !cg.snap->ps.ammoclip[BG_FindClipForWeapon( WP_M7 )] ) {
+		CG_FinishWeaponChange( cg.weaponSelect, WP_M1GARAND );
+	}
+
 	DEBUGTIME
 
 	if ( !cg.lightstylesInited ) {
