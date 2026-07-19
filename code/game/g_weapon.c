@@ -1849,13 +1849,29 @@ void FireWeapon( gentity_t *ent ) {
 				   WEAPON_CLASS_RIFLE_AUTO |
 				   WEAPON_CLASS_RIFLE_BOLTACTION |
 				   WEAPON_CLASS_AKIMBO |
-				   WEAPON_CLASS_MG))
+				   WEAPON_CLASS_MG |
+				   WEAPON_CLASS_SHOTGUN))
 	{
 		Bullet_Fire_Normal(ent, aimSpreadScale);
 	}
 
 	switch (ent->s.weapon)
 	{
+	case WP_M97:
+		if (!ent->aiCharacter)
+		{
+			vec3_t vec_forward, vec_vangle;
+			VectorCopy(ent->client->ps.viewangles, vec_vangle);
+			vec_vangle[PITCH] = 0; // nullify pitch so you can't lightning jump
+			AngleVectors(vec_vangle, vec_forward, NULL, NULL);
+			// make it less if in the air
+			if (ent->s.groundEntityNum == ENTITYNUM_NONE)
+				VectorMA(ent->client->ps.velocity, -8, vec_forward, ent->client->ps.velocity);
+			else
+				VectorMA(ent->client->ps.velocity, -24, vec_forward, ent->client->ps.velocity);
+		}
+		break;
+
 	case WP_MONSTER_ATTACK1:
 		switch (ent->aiCharacter)
 		{

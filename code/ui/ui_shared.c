@@ -3751,7 +3751,6 @@ static bind_t g_bindings[] =
 	{"weaponbank 7", '7',         -1, -1, -1},
 	{"weaponbank 8", '8',         -1, -1, -1},
 	{"weaponbank 9", '9',         -1, -1, -1},
-	{"weaponbank 10",    '0',         -1, -1, -1},
 	{"weapon 1",     -1,             -1, -1, -1},
 	{"weapon 2",     -1,             -1, -1, -1},
 	{"weapon 3",     -1,             -1, -1, -1},

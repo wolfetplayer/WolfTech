@@ -342,6 +342,10 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s MP44";
 				break;
+			case MOD_SHOTGUN:
+				message = "was blasted by";
+				message2 = "'s shotgun";
+				break;
 			default:
 				message = "was killed by";
 				message2 = "";
@@ -2102,6 +2106,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_STOP_RELOADING_SOUND:
 		DEBUGNAME( "EV_STOP_RELOADING_SOUND" );
 		trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+		break;
+	case EV_M97_PUMP:
+		DEBUGNAME( "EV_M97_PUMP" );
+		if ( cg_weapons[es->weapon].pumpSound ) {
+			trap_S_StartSoundEx( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].pumpSound, SND_REQUESTCUT );
+		}
 		break;
 	case EV_FIREMODE_SWITCH:
 		DEBUGNAME( "EV_FIREMODE_SWITCH" );

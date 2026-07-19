@@ -653,6 +653,11 @@ typedef enum {
 	W_PART_5,
 	W_PART_6,
 	W_PART_7,
+	W_PART_8,
+	W_PART_9,
+	W_PART_10,
+	W_PART_11,
+	W_PART_12,
 	W_MAX_PARTS
 } barrelType_t;
 
@@ -724,6 +729,7 @@ typedef struct weaponInfo_s {
 	sfxHandle_t reloadFullSound;        // full (empty clip) reload sound
 	sfxHandle_t reloadFullSoundFast;    // PERK_WEAPONHANDLING full reload sound
 	sfxHandle_t reloadSoundAi;          // AI reload sound
+	sfxHandle_t pumpSound;              // M97 pump-action rack sound, played on EV_M97_PUMP
 	sfxHandle_t bounceSound;            // played when a dropped weapon/ammo item bounces on the ground
 
 	sfxHandle_t spinupSound;        //----(SA)	added // sound started when fire button goes down, and stepped on when the first fire event happens

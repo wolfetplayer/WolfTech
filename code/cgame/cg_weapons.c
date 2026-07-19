@@ -294,6 +294,125 @@ static void CG_PistolEjectBrass( centity_t *cent ) {
 }
 
 
+/*
+==============
+CG_ShotgunEjectBrass
+==============
+*/
+static void CG_ShotgunEjectBrass( centity_t *cent ) {
+	localEntity_t *le;
+	refEntity_t *re;
+	vec3_t velocity, xvelocity;
+	vec3_t offset, xoffset;
+	float waterScale = 1.0f;
+	vec3_t v[3];
+	qboolean firstPersonBrass;
+
+	if ( cg_brassTime.integer <= 0 ) {
+		return;
+	}
+
+	firstPersonBrass =
+		!cg.snap->ps.persistant[PERS_HWEAPON_USE] &&
+		cent->currentState.clientNum == cg.snap->ps.clientNum;
+
+	le = CG_AllocLocalEntity();
+	re = &le->refEntity;
+
+	le->leType = LE_FRAGMENT;
+	le->startTime = cg.time;
+	le->endTime = le->startTime + cg_brassTime.integer +
+		( cg_brassTime.integer / 4 ) * random();
+
+	le->pos.trType = TR_GRAVITY;
+	le->pos.trTime = cg.time - ( rand() & 15 );
+
+	AnglesToAxis( cent->lerpAngles, v );
+
+	if ( firstPersonBrass ) {
+		// RealRTCW first-person brass origin from weapon tag / calculated point
+		VectorCopy( ejectBrassCasingOrigin, re->origin );
+
+		velocity[0] = -50 + 25 * crandom();
+		velocity[1] = -100 + 40 * crandom();
+		velocity[2] = 200 + 50 * random();
+	} else {
+		// Third-person / mounted weapon fallback
+		velocity[0] = 16;
+		velocity[1] = -50 + 40 * crandom();
+		velocity[2] = 100 + 50 * crandom();
+
+		if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
+			offset[0] = 32;
+			offset[1] = -4;
+			offset[2] = 0;
+		} else {
+			VectorClear( offset );
+		}
+
+		xoffset[0] = offset[0] * v[0][0] + offset[1] * v[1][0] + offset[2] * v[2][0];
+		xoffset[1] = offset[0] * v[0][1] + offset[1] * v[1][1] + offset[2] * v[2][1];
+		xoffset[2] = offset[0] * v[0][2] + offset[1] * v[1][2] + offset[2] * v[2][2];
+
+		VectorAdd( cent->lerpOrigin, xoffset, re->origin );
+	}
+
+	VectorCopy( re->origin, le->pos.trBase );
+
+	if ( CG_PointContents( re->origin, -1 ) & ( CONTENTS_WATER | CONTENTS_SLIME ) ) {
+		waterScale = 0.10f;
+	}
+
+	xvelocity[0] = velocity[0] * v[0][0] + velocity[1] * v[1][0] + velocity[2] * v[2][0];
+	xvelocity[1] = velocity[0] * v[0][1] + velocity[1] * v[1][1] + velocity[2] * v[2][1];
+	xvelocity[2] = velocity[0] * v[0][2] + velocity[1] * v[1][2] + velocity[2] * v[2][2];
+
+	VectorScale( xvelocity, waterScale, le->pos.trDelta );
+
+	AxisCopy( axisDefault, re->axis );
+	re->hModel = cgs.media.shotgunBrassModel;
+
+	le->bounceFactor = 0.4f * waterScale;
+
+	le->angles.trType = TR_LINEAR;
+	le->angles.trTime = cg.time;
+
+	if ( firstPersonBrass ) {
+		le->angles.trBase[0] = ( rand() & 31 ) + 60;
+		le->angles.trBase[1] = rand() & 255;
+		le->angles.trBase[2] = rand() & 31;
+	} else {
+		le->angles.trBase[0] = rand() & 31;
+		le->angles.trBase[1] = rand() & 31;
+		le->angles.trBase[2] = rand() & 31;
+	}
+
+	le->angles.trDelta[0] = 2;
+	le->angles.trDelta[1] = 1;
+	le->angles.trDelta[2] = 0;
+
+	le->leFlags = LEF_TUMBLE;
+
+	{
+		int contents;
+		vec3_t end;
+
+		VectorCopy( cent->lerpOrigin, end );
+		end[2] -= 24;
+
+		contents = trap_CM_PointContents( end, 0 );
+
+		if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
+			le->leBounceSoundType = LEBS_NONE;
+		} else {
+			le->leBounceSoundType = LEBS_BRASS;
+		}
+	}
+
+	le->leMarkType = LEMT_NONE;
+}
+
+
 //----(SA)	added
 /*
 ==============
@@ -1084,6 +1203,9 @@ static void ( *CG_WeapEjectBrassFuncForName( const char *name ) )( centity_t * )
 	if ( !Q_stricmp( name, "PanzerFaustEjectBrass" ) ) {
 		return CG_PanzerFaustEjectBrass;
 	}
+	if ( !Q_stricmp( name, "ShotgunEjectBrass" ) ) {
+		return CG_ShotgunEjectBrass;
+	}
 	return NULL;
 }
 
@@ -1365,6 +1487,9 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 		} else if ( !Q_stricmp( token.string, "reloadSoundAi" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected reloadSoundAi filename" ); return qfalse; }
 			wi->reloadSoundAi = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "pumpSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected pumpSound filename" ); return qfalse; }
+			wi->pumpSound = trap_S_RegisterSound( s );
 		} else if ( !Q_stricmp( token.string, "bounceSound" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected bounceSound filename" ); return qfalse; }
 			wi->bounceSound = trap_S_RegisterSound( s );
@@ -4733,6 +4858,14 @@ void CG_WeaponFireRecoil( int weapon ) {
 		pitchAdd = 1;
 		pitchRecoilAdd = 1;
 		yawRandom = 1;
+	}
+	else if (wc & WEAPON_CLASS_SHOTGUN)
+	{
+		pitchRecoilAdd = 1;
+		pitchAdd = 8 + rand() % 3;
+		yawRandom = 2;
+		pitchAdd *= 0.5;
+		yawRandom *= 0.5;
 	}
 	else if (wc & WEAPON_CLASS_LAUNCHER)
 	{

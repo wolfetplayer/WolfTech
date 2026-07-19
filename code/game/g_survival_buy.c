@@ -67,8 +67,11 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 
 		// Assault Rifles
 		case WP_FG42:         return 200;
+		case WP_MP44:         return 220;
+		case WP_BAR:          return 250;
 
 		// Shotguns
+		case WP_M97:          return 200;
 
 		// Heavy
 		case WP_PANZERFAUST:  return 400;
@@ -96,7 +99,7 @@ qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, ch
 		WP_LUGER, WP_SILENCER, WP_COLT,
 		WP_AKIMBO, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34,
 		WP_MAUSER, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
-		WP_M1GARAND,
+		WP_M1GARAND, WP_MP44, WP_BAR, WP_M97,
 		WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA
 	};
 

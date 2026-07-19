@@ -66,6 +66,7 @@ If you have questions concerning this license or the applicable additional terms
 #define AI_WEAPON_RANGE_MELEE          80.0f
 #define AI_WEAPON_RANGE_FLAMETHROWER   -1.0f
 #define AI_WEAPON_RANGE_TESLA          -2.0f
+#define AI_WEAPON_RANGE_SHOTGUN        475.0f
 
 #define LIGHTNING_RANGE     600
 #define TESLA_RANGE         800
@@ -312,9 +313,10 @@ typedef struct
 	qboolean	releasedFire;
 	int lastRecoilDeltaTime;
 	int weapRecoilDuration;
-	float weapRecoilPitch;       
+	float weapRecoilPitch;
 	float weapRecoilYaw;
 	int weapRecoilTime;
+	qboolean m97reloadInterrupt;    // player pulled the trigger during an M97 pump-reload, cutting it short
 } pmoveExt_t;
 
 typedef struct {
@@ -526,7 +528,7 @@ typedef enum {
 	HI_BOOK1,   //----(SA)	added
 	HI_BOOK2,   //----(SA)	added
 	HI_BOOK3,   //----(SA)	added
-	HI_11,
+	HI_M97,     // not a real holdable pickup - reuses this networked slot for the M97 pump-reload sub-state (m97state_t)
 	HI_12,
 	HI_13,
 	HI_14,
@@ -534,6 +536,15 @@ typedef enum {
 
 	HI_NUM_HOLDABLE
 } holdable_t;
+
+// M97 pump-reload sub-state, stored in ps->holdable[HI_M97]
+typedef enum {
+	M97_READY,              // not reloading
+	M97_RELOADING_BEGIN,        // reload normal shell start
+	M97_RELOADING_BEGIN_PUMP,   // reload first shell and pump start
+	M97_RELOADING_AFTER_PUMP,   // reload first shell and pump to loop
+	M97_RELOADING_LOOP      // reload normal shell loop
+} m97state_t;
 
 
 typedef enum {
@@ -614,6 +625,7 @@ typedef enum {
 	
 	WP_MP34,
 	WP_MP44,
+	WP_M97,
 
 	WP_DYNAMITE,
 
@@ -676,6 +688,14 @@ typedef struct ammotable_s {
 
 	int fireModeSwitchTime; // 0 = no selectable fire modes; otherwise ms for each of the drop/raise phases of the switch
 	qboolean fireModeIsRateSwitch; // qtrue: selector swaps nextShotTime/nextShotTime2 (e.g. BAR) instead of enforcing semi-auto
+
+	// per-shell pump-action reload timings (WEAPON_CLASS_SHOTGUN only, see PM_M97Reload)
+	int shotgunReloadStart;
+	int shotgunReloadLoop;
+	int shotgunReloadEnd;
+	int shotgunPumpStart;
+	int shotgunPumpLoop;
+	int shotgunPumpEnd;
 
 	const char *weapFile;   // cgame-only cosmetic media (models/sounds/icons) filename under weapons/, NULL = use legacy hardcoded registration
 } ammotable_t;
@@ -925,6 +945,8 @@ typedef enum {
 	EV_BOUNCE_SOUND,    // dropped weapon/ammo item bounced on the ground; eventParm 0 = weapon, 1 = ammo
 
 	EV_VENOM_POWERUP_GONE,  // venom force-switched away; eventParm = new weapon
+
+	EV_M97_PUMP,    // M97 pump-action rack sound, played when starting a reload from an empty clip
 
 	EV_MAX_EVENTS   // just added as an 'endcap'
 

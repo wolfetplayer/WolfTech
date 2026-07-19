@@ -63,10 +63,9 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
-	{WP_PANZERFAUST,        0,                      0           },  //	7
-	{WP_VENOM,              0,                      0           },  //	8
-	{WP_FLAMETHROWER,       0,                      0           },  //	9
-	{WP_TESLA,              0,                      0           }   //	10
+	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
+	{WP_TESLA,              WP_VENOM,               0           },  //	8
+	{WP_M97,                0,                      0           }   //	9
 };
 
 extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
@@ -695,6 +694,44 @@ ammotable_t ammoTable[] = {
 		.gunOffset          = { -8.0f, -1.0f, 0.0f },
 		.fireModeSwitchTime = 250,
 		.weapFile           = "mp44.weap",
+    },
+    [WP_M97] = {
+		.weaponindex        = WP_M97,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_SHOTGUN,
+        .maxammo            = 100,
+        .uses               = 1,
+        .maxclip            = 7,
+        .reloadTime         = 2300,
+        .reloadTimeFull     = 2300,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 800,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 10,
+		.weaponSpread       = 4500,
+		.spreadScale        = 0.6f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 100,
+        .weapRecoilPitch    = { 0.1f, 0.2f },
+        .weapRecoilYaw      = { 0.5f, 0.5f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_SHOTGUN,
+        .moveSpeed          = 0.90f,
+        .mod                = MOD_SHOTGUN,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -3.0f, 0.0f, -1.0f },
+		.shotgunReloadStart = 300,
+		.shotgunReloadLoop  = 800,
+		.shotgunReloadEnd   = 450,
+		.shotgunPumpStart   = 1700,
+		.shotgunPumpLoop    = 250,
+		.shotgunPumpEnd     = 275,
+		.weapFile           = "ithaca.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -1974,6 +2011,29 @@ gitem_t bg_itemlist[] =
 		WP_MP44,
 		WP_MP44,
 		WP_MP44,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_m97",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/shotguns/ithaca/ithaca_3rd.md3",
+			"models/weapons/shotguns/ithaca/v_ithaca.md3",
+			"models/weapons/shotguns/ithaca/ithaca_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_ithaca",     // icon
+		"icons/ammo10",           // ammo icon
+		"Ithaca 37",              // pickup
+		30,
+		IT_WEAPON,
+		WP_M97,
+		WP_M97,
+		WP_M97,
+		WP_M97,
+		WP_M97,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
@@ -4163,6 +4223,8 @@ char *eventnames[] = {
 	"EV_BOUNCE_SOUND",
 
 	"EV_VENOM_POWERUP_GONE",
+
+	"EV_M97_PUMP",
 
 	"EV_MAX_EVENTS"
 };
