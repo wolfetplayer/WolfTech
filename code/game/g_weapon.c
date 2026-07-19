@@ -871,7 +871,7 @@ gentity_t *weapon_grenadelauncher_fire_coop( gentity_t *ent, int grenType ) {
 	if ( pitch >= 0 ) {
 		forward[2] += 0.5f;
 		// Used later in underhand boost
-		pitch = 1.3f;
+		pitch = 1.15f;
 	} else {
 		pitch = -pitch;
 		pitch = min( pitch, 30 );
@@ -880,7 +880,7 @@ gentity_t *weapon_grenadelauncher_fire_coop( gentity_t *ent, int grenType ) {
 		forward[2] += ( pitch * 0.5f );
 
 		// Used later in underhand boost
-		pitch *= 0.3f;
+		pitch *= 0.15f;
 		pitch += 1.f;
 	}
 
@@ -889,20 +889,20 @@ gentity_t *weapon_grenadelauncher_fire_coop( gentity_t *ent, int grenType ) {
 	upangle = -( ent->s.apos.trBase[0] );     //        this will give between  -90 / 90
 	upangle = min( upangle, 50 );
 	upangle = max( upangle, -50 );            //        now clamped to  -50 / 50        (don't allow firing straight up/down)
-	upangle = upangle / 100.0f;               //                                   -0.5 / 0.5
-	upangle += 0.5f;                        //                              0.0 / 1.0
+	upangle = upangle / 500.0f;               //                                   -0.1 / 0.1  (flattened angle influence further so aim pitch barely dents range)
+	upangle += 0.85f;                       //                              0.75 / 0.95
 
-	if ( upangle < .1 ) {
-		upangle = .1;
+	if ( upangle < .7 ) {
+		upangle = .7;
 	}
 
 	// pineapples are not thrown as far as mashers
 	if ( grenType == WP_GRENADE_LAUNCHER ) {
-		upangle *= 900;
+		upangle *= 1100;
 	} else if ( grenType == WP_GRENADE_PINEAPPLE ) {
-		upangle *= 900;
+		upangle *= 1100;
 	} else if ( grenType == WP_GRENADE_SMOKE ) {
-		upangle *= 900;
+		upangle *= 1100;
 	} else {     // WP_DYNAMITE
 		upangle *= 400;
 	}
