@@ -61,13 +61,13 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 		case WP_MAUSER:       return 50;
 		case WP_SNIPERRIFLE:  return 100;
 		case WP_SNOOPERSCOPE: return 150;
-		case WP_M1GARAND:     return 175;
+		case WP_M1GARAND:     return 150;
 
 		// Auto Rifles
 
 		// Assault Rifles
-		case WP_FG42:         return 200;
-		case WP_MP44:         return 220;
+		case WP_FG42:         return 250;
+		case WP_MP44:         return 250;
 		case WP_BAR:          return 250;
 
 		// Shotguns
