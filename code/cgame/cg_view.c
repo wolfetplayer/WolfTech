@@ -1598,6 +1598,11 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_FinishWeaponChange( cg.weaponSelect, WP_M1GARAND );
 	}
 
+	// stamina drained -- cancel toggle-sprint so it doesn't silently resume once recharged
+	if ( cg.snap->ps.sprintTime <= 0 ) {
+		trap_SendConsoleCommand( "forceuntogglesprint\n" );
+	}
+
 	DEBUGTIME
 
 	if ( !cg.lightstylesInited ) {

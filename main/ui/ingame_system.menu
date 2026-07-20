@@ -400,8 +400,10 @@ itemDef {
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07       
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
+		mouseenter { show brightness_apply_message }
+		mouseexit { hide brightness_apply_message }
 		}
 
 	itemDef {
@@ -642,7 +644,20 @@ open in_snd_restart_popmenu ; hide sound ; hide applysystem }
 
 		}
 
-
+	itemDef
+	{
+		name brightness_apply_message
+		rect 0 320 640 30
+		text "@SYSTEM_BRIGHTNESS_APPLY_MSG"
+		textfont		UI_FONT_BIG
+		forecolor 1 .75 0 1
+		textscale .23
+		textalignx 221
+		textalign 1
+		textaligny 20
+		visible 0
+		decoration
+		}
 
 
 }

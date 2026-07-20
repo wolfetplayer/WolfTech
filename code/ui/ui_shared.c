@@ -3836,6 +3836,7 @@ static bind_t g_bindings[] =
 	{"+kick",            -1,             -1, -1, -1},
 	{"+reload",      -1,             -1, -1, -1},
 	{"+sprint",      -1,             -1, -1, -1},
+	{"=sprint",      -1,             -1, -1, -1},
 	{"notebook",     K_TAB,          -1, -1, -1},
 //	{"help",			K_F1,           -1, -1, -1},
 	{"+leanleft",        -1,             -1, -1, -1},

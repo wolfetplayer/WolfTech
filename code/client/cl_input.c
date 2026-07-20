@@ -56,6 +56,7 @@ at the same time.
 static kbutton_t kb[NUM_BUTTONS];
 
 static qboolean s_isToggledCrouch = qfalse;
+static qboolean s_isToggledSprint = qfalse;
 
 #ifdef USE_VOIP
 kbutton_t	in_voiprecord;
@@ -148,14 +149,14 @@ void IN_KeyUp( kbutton_t *b ) {
 	b->active = qfalse;
 }
 
-void IN_KeyToggle( kbutton_t *b ) {
-	if ( s_isToggledCrouch ) {
+void IN_KeyToggle( kbutton_t *b, qboolean *toggled ) {
+	if ( *toggled ) {
 		IN_KeyUp( b );
 	} else {
 		IN_KeyDown( b );
 	}
 
-	s_isToggledCrouch = !s_isToggledCrouch;
+	*toggled = !*toggled;
 }
 
 
@@ -222,7 +223,17 @@ void IN_ForceUntoggleCrouch( void ) {
 	s_isToggledCrouch = qfalse;
 }
 
-void IN_DownToggle( void ) {IN_KeyToggle( &kb[KB_DOWN] );}
+void IN_DownToggle( void ) {IN_KeyToggle( &kb[KB_DOWN], &s_isToggledCrouch );}
+
+void IN_ForceUntoggleSprint( void ) {
+	if ( !s_isToggledSprint ) {
+		return;
+	}
+
+	IN_ClearKButton( &kb[KB_BUTTONS5] );
+
+	s_isToggledSprint = qfalse;
+}
 
 void IN_UpDown( void ) {
 	if ( s_isToggledCrouch ) {
@@ -298,6 +309,7 @@ void IN_KickUp( void ) {IN_KeyUp( &kb[KB_KICK] );}
 
 void IN_SprintDown( void ) {IN_KeyDown( &kb[KB_BUTTONS5] );}
 void IN_SprintUp( void ) {IN_KeyUp( &kb[KB_BUTTONS5] );}
+void IN_SprintToggle( void ) {IN_KeyToggle( &kb[KB_BUTTONS5], &s_isToggledSprint );}
 
 
 // wbuttons (wolf buttons)
@@ -1124,6 +1136,8 @@ void CL_InitInput( void ) {
 
 	Cmd_AddCommand( "+sprint", IN_SprintDown );
 	Cmd_AddCommand( "-sprint", IN_SprintUp );
+	Cmd_AddCommand( "=sprint", IN_SprintToggle );
+	Cmd_AddCommand( "forceuntogglesprint", IN_ForceUntoggleSprint );
 
 
 	// wolf buttons

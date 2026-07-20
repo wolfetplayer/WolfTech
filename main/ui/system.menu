@@ -413,8 +413,10 @@ itemDef {
 		cvarTest "r_ignorehwgamma"
 //		showcvar { "1" }
 
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
+		mouseenter { show brightness_apply_message }
+		mouseexit { hide brightness_apply_message }
     		}
 
 	itemDef {
@@ -693,7 +695,20 @@ open snd_restart_popmenu ; hide other ; hide applysystem }
 
 		}
 
-	
+	itemDef
+	{
+		name brightness_apply_message
+		rect 0 320 640 30
+		text "@SYSTEM_BRIGHTNESS_APPLY_MSG"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		forecolor 1 .75 0 1
+		textscale .23
+		textalignx 221
+		textalign 1
+		textaligny 20
+		visible 0
+		decoration
+		}
 
 
 }

@@ -597,11 +597,51 @@ itemDef {
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
 		textaligny 10
-		textscale .23            
+		textscale .23
 		forecolor 1 1 1 1
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
-		visible 0 
+		visible 0
+		mouseenter { show keyBindStatus }
+		mouseexit { hide keyBindStatus }
+    		}
+
+	itemDef {
+		name move
+		group grpControls
+		type ITEM_TYPE_BIND
+		text "@CONTROLS_TOGGLECROUCH"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "=movedown"
+		rect 82 195 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		forecolor 1 1 1 1
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		visible 0
+		mouseenter { show keyBindStatus }
+		mouseexit { hide keyBindStatus }
+    		}
+
+	itemDef {
+		name move
+		group grpControls
+		type ITEM_TYPE_BIND
+		text "@CONTROLS_TOGGLESPRINT"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "=sprint"
+		rect 82 210 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		forecolor 1 1 1 1
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		visible 0
 		mouseenter { show keyBindStatus }
 		mouseexit { hide keyBindStatus }
     		}
@@ -613,15 +653,15 @@ itemDef {
 		text "@CONTROLS_STRAFE"
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "+strafe"
-		rect 82 195 290 12
+		rect 82 225 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
 		textaligny 10
-		textscale .23            
+		textscale .23
 		forecolor 1 1 1 1
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
-		visible 0 
+		visible 0
 		mouseenter { show keyBindStatus }
 		mouseexit { hide keyBindStatus }
 		}
@@ -633,15 +673,15 @@ itemDef {
 		text "@CONTROLS_TELEPORT"
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "teleport"
-		rect 82 210 290 12
+		rect 82 240 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
 		textaligny 10
-		textscale .23            
+		textscale .23
 		forecolor 1 1 1 1
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
-		visible 0 
+		visible 0
 		mouseenter { show keyBindStatus }
 		mouseexit { hide keyBindStatus }
 		}
@@ -979,7 +1019,27 @@ itemDef {
 		mouseenter { show keyBindStatus }
 		mouseexit { hide keyBindStatus }
     		}
-	
+
+	itemDef {
+		name shoot
+		group grpControls
+		type ITEM_TYPE_BIND
+		text "@CONTROLS_QUICKGREN"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "+quickgren"
+		rect 82 255 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		forecolor 1 1 1 1
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		visible 0
+		mouseenter { show keyBindStatus }
+		mouseexit { hide keyBindStatus }
+    		}
+
 ////////////////	end shoot
 
 
