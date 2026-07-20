@@ -1238,6 +1238,145 @@ static void RB_SurfaceFlare( srfFlare_t *surf ) {
 		RB_AddFlare(surf, tess.fogNum, surf->origin, surf->color, 1.0f, surf->normal, 0, qtrue);
 }
 
+/*
+=============
+RB_SurfaceFoliage - ydnar
+=============
+*/
+static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
+	int               o, i, a;
+	int               numVerts = srf->numVerts, numIndexes = srf->numIndexes;
+	vec4_t            distanceCull, distanceVector;
+	float             alpha, z, dist, fovScale = backEnd.viewParms.fovX * ( 1.0f / 90.0f );
+	vec3_t            local;
+	float             *xyz, *texCoords, *lightCoords;
+	int16_t           *normal;
+	uint16_t          *color;
+	byte              srcColor[4];
+	int               dlightBits, pshadowBits;
+	foliageInstance_t *instance;
+	srfVert_t         *dv;
+	glIndex_t         *inIndex, *outIndex;
+
+	RB_CheckVao(tess.vao);
+
+	// calculate distance vector
+	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
+	distanceVector[0] = -backEnd.or.modelMatrix[2];
+	distanceVector[1] = -backEnd.or.modelMatrix[6];
+	distanceVector[2] = -backEnd.or.modelMatrix[10];
+	distanceVector[3] = DotProduct( local, backEnd.viewParms.or.axis[0] );
+
+	// attempt distance cull
+	Vector4Copy( tess.shader->distanceCull, distanceCull );
+
+	if ( distanceCull[1] > 0 ) {
+		z = fovScale * ( DotProduct( srf->origin, distanceVector ) + distanceVector[3] - srf->radius );
+		alpha = ( distanceCull[1] - z ) * distanceCull[3];
+		if ( alpha < distanceCull[2] ) {
+			return;
+		}
+	}
+
+	// set dlight/pshadow bits
+	dlightBits  = srf->dlightBits;
+	pshadowBits = srf->pshadowBits;
+	tess.dlightBits  |= dlightBits;
+	tess.pshadowBits |= pshadowBits;
+
+	// iterate through origin list
+	instance = srf->instances;
+	for ( o = 0 ; o < srf->numInstances ; o++, instance++ ) {
+		// fade alpha based on distance between inner and outer radii
+		if ( distanceCull[1] > 0.0f ) {
+			// calculate z distance
+			z = fovScale * ( DotProduct( instance->origin, distanceVector ) + distanceVector[3] );
+			if ( z < -64.0f ) {      // epsilon so close-by foliage doesn't pop in and out
+				continue;
+			}
+
+			// check against frustum planes (4 side planes, matching MAX_FRUSTUM in renderer1)
+			for ( i = 0 ; i < 4 ; i++ ) {
+				dist = DotProduct( instance->origin, backEnd.viewParms.frustum[i].normal ) - backEnd.viewParms.frustum[i].dist;
+				if ( dist < -64 ) {
+					break;
+				}
+			}
+			if ( i != 4 ) {
+				continue;
+			}
+
+			// radix
+			if ( o & 1 ) {
+				z *= 1.25;
+				if ( o & 2 ) {
+					z *= 1.25;
+				}
+			}
+
+			// calculate alpha
+			alpha = ( distanceCull[1] - z ) * distanceCull[3];
+			if ( alpha < distanceCull[2] ) {
+				continue;
+			}
+
+			// set color
+			a = alpha > 1.0f ? 255 : (int)( alpha * 255 );
+			srcColor[0] = instance->color[0];
+			srcColor[1] = instance->color[1];
+			srcColor[2] = instance->color[2];
+			srcColor[3] = (byte)a;
+		} else {
+			srcColor[0] = instance->color[0];
+			srcColor[1] = instance->color[1];
+			srcColor[2] = instance->color[2];
+			srcColor[3] = instance->color[3];
+		}
+
+		RB_CHECKOVERFLOW( numVerts, numIndexes );
+
+		// set after overflow check so dlights work properly
+		tess.dlightBits  |= dlightBits;
+		tess.pshadowBits |= pshadowBits;
+
+		// copy indexes
+		inIndex  = srf->indexes;
+		outIndex = &tess.indexes[tess.numIndexes];
+		for ( i = 0 ; i < numIndexes ; i++ ) {
+			*outIndex++ = tess.numVertexes + *inIndex++;
+		}
+		tess.numIndexes += numIndexes;
+
+		// copy xyz (offset by instance origin), normal, st and lightmap st; stamp instance color
+		dv          = srf->verts;
+		xyz         = tess.xyz[tess.numVertexes];
+		normal      = tess.normal[tess.numVertexes];
+		texCoords   = tess.texCoords[tess.numVertexes];
+		lightCoords = tess.lightCoords[tess.numVertexes];
+		color       = tess.color[tess.numVertexes];
+
+		for ( i = 0 ; i < numVerts ; i++, dv++, xyz += 4, normal += 4, texCoords += 2, lightCoords += 2, color += 4 ) {
+			VectorAdd( dv->xyz, instance->origin, xyz );
+
+			VectorCopy4( dv->normal, normal );
+
+			texCoords[0] = dv->st[0];
+			texCoords[1] = dv->st[1];
+
+			lightCoords[0] = dv->lightmap[0];
+			lightCoords[1] = dv->lightmap[1];
+
+			// scale 0-255 instance color up to the 0-65535 packed color range
+			color[0] = srcColor[0] * 257;
+			color[1] = srcColor[1] * 257;
+			color[2] = srcColor[2] * 257;
+			color[3] = srcColor[3] * 257;
+		}
+
+		tess.numVertexes += numVerts;
+	}
+}
+
 void RB_SurfaceVaoMdvMesh(srfVaoMdvMesh_t * surface)
 {
 	//mdvModel_t     *mdvModel;
@@ -1347,4 +1486,5 @@ void( *rb_surfaceTable[SF_NUM_SURFACE_TYPES] ) ( void * ) = {
 	( void( * ) ( void* ) )RB_SurfaceEntity,	// SF_ENTITY
 	( void( * ) ( void* ) )RB_SurfaceVaoMdvMesh,	// SF_VAO_MDVMESH
 	( void( * ) ( void* ) )RB_IQMSurfaceAnimVao,	// SF_VAO_IQM
+	( void( * ) ( void* ) )RB_SurfaceFoliage,	// SF_FOLIAGE
 };

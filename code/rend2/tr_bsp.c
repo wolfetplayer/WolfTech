@@ -1020,6 +1020,99 @@ static void ParseFlare( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int
 	surf->cullinfo.type = CULLINFO_NONE;
 }
 
+/*
+ParseFoliage() - ydnar
+parses a foliage drawsurface
+*/
+static void ParseFoliage( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int *indexes ) {
+	srfFoliage_t *foliage = (srfFoliage_t *)surf->data;
+	int          i, j, numVerts, numIndexes, numInstances;
+	vec3_t       bounds[2], boundsTranslated[2], temp;
+	float        scale;
+
+	// get fog volume
+	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+
+	// get shader
+	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
+	if ( r_singleShader->integer && !surf->shader->isSky ) {
+		surf->shader = tr.defaultShader;
+	}
+
+	// foliage surfaces have their actual vert count in patchHeight
+	// and the instance count in patchWidth
+	// the instances are just additional drawverts
+	numVerts     = LittleLong( ds->patchHeight );
+	numIndexes   = LittleLong( ds->numIndexes );
+	numInstances = LittleLong( ds->patchWidth );
+
+	foliage->surfaceType  = SF_FOLIAGE;
+	foliage->numVerts     = numVerts;
+	foliage->numIndexes   = numIndexes;
+	foliage->numInstances = numInstances;
+
+	foliage->verts     = ri.Hunk_Alloc( numVerts * sizeof( foliage->verts[0] ), h_low );
+	foliage->indexes   = ri.Hunk_Alloc( numIndexes * sizeof( foliage->indexes[0] ), h_low );
+	foliage->instances = ri.Hunk_Alloc( numInstances * sizeof( foliage->instances[0] ), h_low );
+
+	surf->data = (surfaceType_t *) foliage;
+
+	// get foliage drawscale
+	scale = r_drawfoliage->value;
+	if ( scale < 0.0f ) {
+		scale = 1.0f;
+	} else if ( scale > 2.0f ) {
+		scale = 2.0f;
+	}
+
+	// copy vertexes
+	ClearBounds( bounds[0], bounds[1] );
+	verts += LittleLong( ds->firstVert );
+	for ( i = 0 ; i < numVerts ; i++ ) {
+		LoadDrawVertToSrfVert( &foliage->verts[i], &verts[i], -1, NULL, NULL );
+
+		// scale height
+		foliage->verts[i].xyz[2] *= scale;
+
+		AddPointToBounds( foliage->verts[i].xyz, bounds[0], bounds[1] );
+	}
+
+	// copy indexes
+	indexes += LittleLong( ds->firstIndex );
+	for ( i = 0 ; i < numIndexes ; i++ ) {
+		foliage->indexes[i] = LittleLong( indexes[i] );
+		if ( foliage->indexes[i] >= numVerts ) {
+			ri.Error( ERR_DROP, "Bad index in foliage surface" );
+		}
+	}
+
+	// copy origins and colors
+	ClearBounds( foliage->bounds[0], foliage->bounds[1] );
+	verts += numVerts;
+	for ( i = 0 ; i < numInstances ; i++ ) {
+		for ( j = 0 ; j < 3 ; j++ ) {
+			foliage->instances[i].origin[j] = LittleFloat( verts[i].xyz[j] );
+		}
+		VectorAdd( bounds[0], foliage->instances[i].origin, boundsTranslated[0] );
+		VectorAdd( bounds[1], foliage->instances[i].origin, boundsTranslated[1] );
+		AddPointToBounds( boundsTranslated[0], foliage->bounds[0], foliage->bounds[1] );
+		AddPointToBounds( boundsTranslated[1], foliage->bounds[0], foliage->bounds[1] );
+
+		R_ColorShiftLightingBytes( verts[i].color, foliage->instances[i].color );
+	}
+
+	// bounding sphere
+	VectorAdd( foliage->bounds[0], foliage->bounds[1], foliage->origin );
+	VectorScale( foliage->origin, 0.5f, foliage->origin );
+	VectorSubtract( foliage->bounds[1], foliage->origin, temp );
+	foliage->radius = VectorLength( temp );
+
+	surf->cullinfo.type = CULLINFO_BOX | CULLINFO_SPHERE;
+	VectorCopy( foliage->bounds[0], surf->cullinfo.bounds[0] );
+	VectorCopy( foliage->bounds[1], surf->cullinfo.bounds[1] );
+	VectorCopy( foliage->origin, surf->cullinfo.localOrigin );
+	surf->cullinfo.radius = foliage->radius;
+}
 
 /*
 =================
@@ -1920,7 +2013,7 @@ static void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	drawVert_t  *dv;
 	int         *indexes;
 	int count;
-	int numFaces, numMeshes, numTriSurfs, numFlares;
+	int numFaces, numMeshes, numTriSurfs, numFlares, numFoliage;
 	int i;
 	float *hdrVertColors = NULL;
 
@@ -1928,6 +2021,7 @@ static void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	numMeshes = 0;
 	numTriSurfs = 0;
 	numFlares = 0;
+	numFoliage = 0;
 
 	if ( surfs->filelen % sizeof( *in ) ) {
 		ri.Error( ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name );
@@ -1995,11 +2089,14 @@ static void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 			case MST_FLARE:
 				out->data = ri.Hunk_Alloc( sizeof(srfFlare_t), h_low);
 				break;
+			case MST_FOLIAGE:
+				out->data = ri.Hunk_Alloc( sizeof(srfFoliage_t), h_low);
+				break;
 			default:
 				break;
 		}
 	}
-	
+
 	in = (void *)(fileBase + surfs->fileofs);
 	out = s_worldData.surfaces;
 	for ( i = 0 ; i < count ; i++, in++, out++ ) {
@@ -2019,6 +2116,10 @@ static void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 		case MST_FLARE:
 			ParseFlare( in, dv, out, indexes );
 			numFlares++;
+			break;
+		case MST_FOLIAGE:
+			ParseFoliage( in, dv, out, indexes );
+			numFoliage++;
 			break;
 		default:
 			ri.Error( ERR_DROP, "Bad surfaceType" );
@@ -2040,8 +2141,8 @@ static void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	R_MovePatchSurfacesToHunk();
 #endif
 
-	ri.Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs, %i flares\n",
-			   numFaces, numMeshes, numTriSurfs, numFlares );
+	ri.Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs, %i flares, %i foliage\n",
+			   numFaces, numMeshes, numTriSurfs, numFlares, numFoliage );
 }
 
 /*
