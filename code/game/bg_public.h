@@ -603,10 +603,12 @@ typedef enum {
 	WP_MAUSER,              
 	WP_FG42,                
 	WP_GRENADE_LAUNCHER,    
-	WP_PANZERFAUST,         
-	WP_VENOM,               
-	WP_FLAMETHROWER,        
-	WP_TESLA,               
+	WP_PANZERFAUST,
+	WP_VENOM,
+	WP_FLAMETHROWER,
+	WP_TESLA,
+	WP_MG42M,
+	WP_BROWNING,
 
 	WP_COLT,
 	WP_THOMPSON,
@@ -1350,7 +1352,10 @@ typedef enum {
 	MOD_ENGINEER,   // not sure if we'll use
 	MOD_MEDIC,      // these like this or not
 //
-	MOD_BAT
+	MOD_BAT,
+
+	MOD_MG42M,
+	MOD_BROWNING
 
 } meansOfDeath_t;
 

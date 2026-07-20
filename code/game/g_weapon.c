@@ -1872,6 +1872,21 @@ void FireWeapon( gentity_t *ent ) {
 		}
 		break;
 
+	case WP_MG42M:
+	case WP_BROWNING:
+		if (!ent->aiCharacter)
+		{
+			vec3_t vec_forward, vec_vangle;
+			VectorCopy(ent->client->ps.viewangles, vec_vangle);
+			vec_vangle[PITCH] = 0;
+			AngleVectors(vec_vangle, vec_forward, NULL, NULL);
+			if (ent->s.groundEntityNum == ENTITYNUM_NONE)
+				VectorMA(ent->client->ps.velocity, -8, vec_forward, ent->client->ps.velocity);
+			else
+				VectorMA(ent->client->ps.velocity, -24, vec_forward, ent->client->ps.velocity);
+		}
+		break;
+
 	case WP_MONSTER_ATTACK1:
 		switch (ent->aiCharacter)
 		{

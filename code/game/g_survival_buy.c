@@ -78,6 +78,8 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 		case WP_FLAMETHROWER: return 500;
 		case WP_VENOM:        return 500;
 		case WP_TESLA:        return 500;
+		case WP_MG42M:        return 500;
+		case WP_BROWNING:     return 500;
 
 		// Grenades
 		case WP_GRENADE_LAUNCHER:   return 100;
@@ -100,7 +102,8 @@ qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, ch
 		WP_AKIMBO, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34,
 		WP_MAUSER, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
 		WP_M1GARAND, WP_MP44, WP_BAR, WP_M97,
-		WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA
+		WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA,
+		WP_MG42M, WP_BROWNING
 	};
 
 
@@ -122,12 +125,12 @@ qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, ch
 		tries--;
 
 		if ( svParams.waveCount < 5 &&
-			( chosen == WP_TESLA || chosen == WP_VENOM || chosen == WP_FLAMETHROWER ) ) {
+			( chosen == WP_TESLA || chosen == WP_VENOM || chosen == WP_FLAMETHROWER || chosen == WP_MG42M || chosen == WP_BROWNING ) ) {
 			continue;
 		}
 	} while ( ( G_FindWeaponSlot( activator, chosen ) >= 0 ||
 		( svParams.waveCount < 5 &&
-		( chosen == WP_TESLA || chosen == WP_VENOM || chosen == WP_FLAMETHROWER ) ) ) && tries > 0 );
+		( chosen == WP_TESLA || chosen == WP_VENOM || chosen == WP_FLAMETHROWER || chosen == WP_MG42M || chosen == WP_BROWNING ) ) ) && tries > 0 );
 
 	if (tries <= 0) {
 		trap_SendServerCommand(-1, "mu_play sound/items/use_nothing.wav 0\n");

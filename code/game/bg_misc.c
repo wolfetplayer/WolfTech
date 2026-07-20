@@ -65,7 +65,8 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
 	{WP_TESLA,              WP_VENOM,               0           },  //	8
-	{WP_M97,                0,                      0           }   //	9
+	{WP_M97,                0,                      0           },  //	9
+	{WP_MG42M,              WP_BROWNING,            0           }   //	10
 };
 
 extern int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK];
@@ -945,6 +946,72 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 3.0f, 1.0f, -2.0f },
 		.weapFile           = "tesla.weap",
+    },
+    [WP_MG42M] = {
+		.weaponindex        = WP_MG42M,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_MG,
+        .maxammo            = 500,
+        .uses               = 1,
+        .maxclip            = 50,
+        .reloadTime         = 4800,
+        .reloadTimeFull     = 4800,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 70,
+        .nextShotTime2      = 70,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 15,
+		.weaponSpread       = 1200,
+		.spreadScale        = 0.6f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 0.85f,
+        .mod                = MOD_MG42M,
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 2.0f, -3.0f, -4.0f },
+		.weapFile           = "mg42m.weap",
+    },
+    [WP_BROWNING] = {
+		.weaponindex        = WP_BROWNING,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_MG,
+        .maxammo            = 500,
+        .uses               = 1,
+        .maxclip            = 100,
+        .reloadTime         = 7000,
+        .reloadTimeFull     = 7000,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 100,
+        .nextShotTime2      = 100,
+        .maxHeat            = 2500,
+        .coolRate           = 350,
+		.weaponDamage       = 15,
+		.weaponSpread       = 1000,
+		.spreadScale        = 0.6f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 75,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 0.80f,
+        .mod                = MOD_BROWNING,
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -6.0f, 0.0f, 0.0f },
+		.weapFile           = "browning.weap",
     },
     [WP_MONSTER_ATTACK1] = {
 		.weaponindex        = WP_MONSTER_ATTACK1,
@@ -2220,6 +2287,52 @@ gitem_t bg_itemlist[] =
 		WP_TESLA,
 		WP_TESLA,
 		WP_TESLA,
+		"",                          // precache
+		"",                          // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_mg42m",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/heavy/mg42/mg42_3rd.md3",
+			"models/weapons/heavy/mg42/v_mg42.md3",
+			"models/weapons/heavy/mg42/mg42_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_mg42m",     // icon
+		"icons/icona_machinegun", // ammo icon
+		"MG42",                  // pickup
+		500,
+		IT_WEAPON,
+		WP_MG42M,
+		WP_MG42M,
+		WP_MG42M,
+		WP_MG42M,
+		WP_MG42M,
+		"",                          // precache
+		"",                          // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_browning",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/heavy/browning/brown30cal_3rd.md3",
+			"models/weapons/heavy/browning/v_brown30cal.md3",
+			"models/weapons/heavy/browning/brown30cal_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_browning",  // icon
+		"icons/icona_machinegun", // ammo icon
+		"Browning M1919",        // pickup
+		500,
+		IT_WEAPON,
+		WP_BROWNING,
+		WP_BROWNING,
+		WP_BROWNING,
+		WP_BROWNING,
+		WP_BROWNING,
 		"",                          // precache
 		"",                          // sounds
 		{0,0,0,0}

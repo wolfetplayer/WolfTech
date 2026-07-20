@@ -1,0 +1,50 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/heavy/mg42/mg42_3rd.md3"
+
+		weaponConfig		"models/weapons/heavy/mg42/weapon.cfg"
+		handsModel			"models/weapons/heavy/mg42/v_mg42_hand.md3"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/mg42m/mg42m_fire.wav"
+		flashEchoSound		"sound/weapons/mg42m/mg42m_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/mg42m/mg42m_reload.wav"
+		reloadSoundFast		"sound/weapons/mg42m/mg42m_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/mg_reload.wav"
+		overheatSound		"sound/weapons/mg42m/mg42m_heat.wav"
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_mg42m"
+		weaponSelectedIcon	"icons/iconw_mg42m_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass | ShotgunEjectBrass
+
+		firstPerson {
+			model			"models/weapons/heavy/mg42/v_mg42.md3"
+			flashModel		"models/weapons/heavy/mg42/v_mg42_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/heavy/mg42/v_mg42_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/heavy/mg42/v_mg42_barrel2.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/heavy/mg42/mg42_3rd.md3"
+			flashModel		"models/weapons/heavy/mg42/mg42_3rd_flash.md3"
+		}
+	}
+}

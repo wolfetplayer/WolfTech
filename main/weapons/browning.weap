@@ -1,0 +1,55 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/heavy/browning/brown30cal_3rd.md3"
+
+		weaponConfig		"models/weapons/heavy/browning/weapon.cfg"
+		handsModel			"models/weapons/heavy/browning/v_brown30cal_hand.md3"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/browning/browning_fire.wav"
+		flashEchoSound		"sound/weapons/browning/browning_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/browning/browning_reload.wav"
+		reloadSoundFast		"sound/weapons/browning/browning_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/mg_reload.wav"
+		overheatSound		"sound/weapons/browning/browning_heat.wav"
+		//switchSound		""
+		bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_browning"
+		weaponSelectedIcon	"icons/iconw_browning_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass | ShotgunEjectBrass
+
+		firstPerson {
+			model			"models/weapons/heavy/browning/v_brown30cal.md3"
+			flashModel		"models/weapons/heavy/browning/v_brown30cal_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/heavy/browning/v_brown30cal_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/heavy/browning/v_brown30cal_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/heavy/browning/v_brown30cal_barrel3.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/heavy/browning/brown30cal_3rd.md3"
+			flashModel		"models/weapons/heavy/browning/brown30cal_3rd_flash.md3"
+		}
+	}
+}

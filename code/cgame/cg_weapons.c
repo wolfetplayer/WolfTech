@@ -3222,7 +3222,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	// weaps with barrel smoke
 	if ( ps || cg.renderingThirdPerson || !isPlayer ) {
 		if ( !cg_paused.integer ) {    // don't add while paused
-			if ( weaponNum == WP_STEN || weaponNum == WP_VENOM ) {
+			if ( weaponNum == WP_STEN || weaponNum == WP_VENOM || weaponNum == WP_MG42M || weaponNum == WP_BROWNING ) {
 				if ( cg.time - cent->muzzleFlashTime < 100 ) {
 					CG_ParticleImpactSmokePuffExtended( cgs.media.smokeParticleShader, flash.origin, tv( 0,0,1 ), 8, 500, 8, 20, 30, 0.25f );
 				}
