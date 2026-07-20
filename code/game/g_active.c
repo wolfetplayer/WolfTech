@@ -1607,7 +1607,6 @@ SpectatorClientEndFrame
 void SpectatorClientEndFrame( gentity_t *ent ) {
 	gclient_t   *cl;
 	int do_respawn = 0; // JPW NERVE
-	int savedScore;     // DHM
 	int savedRespawns;
 	//static int lastRedReinforceTime = 0, lastBlueReinforceTime = 0;
 	int testtime;
@@ -1699,7 +1698,6 @@ void SpectatorClientEndFrame( gentity_t *ent ) {
 // JPW NERVE -- limbo latch
 				if ( ent->client->ps.pm_flags & PMF_LIMBO ) {
 					// abuse do_respawn var
-					savedScore = ent->client->ps.persistant[PERS_SCORE];
 					do_respawn = ent->client->ps.pm_time;
 					savedRespawns = ent->client->ps.persistant[PERS_RESPAWNS_LEFT];
 
@@ -1708,7 +1706,7 @@ void SpectatorClientEndFrame( gentity_t *ent ) {
 					ent->client->ps.pm_flags |= PMF_LIMBO;
 					ent->client->ps.pm_time = do_respawn; // put pm_time back
 					ent->client->ps.persistant[PERS_RESPAWNS_LEFT] = savedRespawns;
-					ent->client->ps.persistant[PERS_SCORE] = savedScore;    // put score back
+					// PERS_SCORE and PERS_KILLS intentionally left from cl->ps so both reflect the watched player
 				} else {
 					ent->client->ps = cl->ps;
 					ent->client->ps.pm_flags |= PMF_FOLLOW;
