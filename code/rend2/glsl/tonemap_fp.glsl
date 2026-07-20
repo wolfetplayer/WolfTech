@@ -6,6 +6,7 @@ uniform vec4      u_Color;
 
 uniform vec2      u_AutoExposureMinMax;
 uniform vec3      u_ToneMinAvgMaxLinear;
+uniform float     u_InvGamma;
 
 varying vec2      var_TexCoords;
 varying float     var_InvWhite;
@@ -49,6 +50,9 @@ void main()
 #if defined(USE_PBR)
 	color.rgb = sqrt(color.rgb);
 #endif
+
+	// software gamma correction, replaces the hw gamma ramp SDL3 no longer supports
+	color.rgb = pow(color.rgb, vec3(u_InvGamma));
 
 	// add a bit of dither to reduce banding
 	color.rgb += vec3(1.0/510.0 * mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) - 1.0/1020.0);

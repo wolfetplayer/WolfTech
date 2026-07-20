@@ -2140,20 +2140,17 @@ const void *RB_PostProcess(const void *data)
 			autoExposure = r_autoExposure->integer || r_forceAutoExposure->integer;
 			RB_ToneMap(srcFbo, srcBox, NULL, dstBox, autoExposure);
 		}
-		else if (r_cameraExposure->value == 0.0f)
-		{
-			FBO_FastBlit(srcFbo, srcBox, NULL, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		}
 		else
 		{
 			vec4_t color;
 
 			color[0] =
 			color[1] =
-			color[2] = pow(2, r_cameraExposure->value); //exp2(r_cameraExposure->value);
+			color[2] = (r_cameraExposure->value == 0.0f) ? 1.0f : pow(2, r_cameraExposure->value); //exp2(r_cameraExposure->value);
 			color[3] = 1.0f;
 
-			FBO_Blit(srcFbo, srcBox, NULL, NULL, dstBox, NULL, color, 0);
+			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_INVGAMMA, tr.invGamma);
+			FBO_Blit(srcFbo, srcBox, NULL, NULL, dstBox, &tr.gammaShader, color, 0);
 		}
 	}
 

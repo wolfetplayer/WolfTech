@@ -796,6 +796,8 @@ typedef enum
 	UNIFORM_ZFADELOWEST,
 	UNIFORM_ZFADEHIGHEST,
 
+	UNIFORM_INVGAMMA,
+
 	UNIFORM_COUNT
 } uniform_t;
 
@@ -1757,6 +1759,7 @@ typedef struct {
 	//
 	shaderProgram_t genericShader[GENERICDEF_COUNT];
 	shaderProgram_t textureColorShader;
+	shaderProgram_t gammaShader;
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
@@ -1779,6 +1782,7 @@ typedef struct {
 	float identityLight;                        // 1.0 / ( 1 << overbrightBits )
 	int identityLightByte;                      // identityLight * 255
 	int overbrightBits;                         // r_overbrightBits->integer, but set to 0 if no hw gamma
+	float invGamma;                             // 1.0 / r_gamma->value, applied in a postprocess shader pass since there's no hw gamma ramp
 
 	orientationr_t          or;                 // for current entity
 

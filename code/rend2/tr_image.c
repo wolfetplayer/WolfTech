@@ -1267,22 +1267,13 @@ lighting range
 ================
 */
 void R_LightScaleTexture( byte *in, int inwidth, int inheight, qboolean only_gamma ) {
+	// gamma is applied once, at the very end, as a postprocess shader pass (see
+	// R_SetColorMappings/tr.invGamma and RB_PostProcess/RB_ToneMap). Baking it into
+	// source textures here too would double-apply it on top of that final pass.
 	if ( only_gamma ) {
-		if ( !glConfig.deviceSupportsGamma ) {
-			int i, c;
-			byte    *p;
+		return;
+	}
 
-			p = (byte *)in;
-
-			c = inwidth * inheight;
-			for ( i = 0 ; i < c ; i++, p += 4 )
-			{
-				p[0] = s_gammatable[p[0]];
-				p[1] = s_gammatable[p[1]];
-				p[2] = s_gammatable[p[2]];
-			}
-		}
-	} else
 	{
 		int i, c;
 		byte    *p;
@@ -1291,21 +1282,11 @@ void R_LightScaleTexture( byte *in, int inwidth, int inheight, qboolean only_gam
 
 		c = inwidth * inheight;
 
-		if ( glConfig.deviceSupportsGamma ) {
-			for ( i = 0 ; i < c ; i++, p += 4 )
-			{
-				p[0] = s_intensitytable[p[0]];
-				p[1] = s_intensitytable[p[1]];
-				p[2] = s_intensitytable[p[2]];
-			}
-		} else
+		for ( i = 0 ; i < c ; i++, p += 4 )
 		{
-			for ( i = 0 ; i < c ; i++, p += 4 )
-			{
-				p[0] = s_gammatable[s_intensitytable[p[0]]];
-				p[1] = s_gammatable[s_intensitytable[p[1]]];
-				p[2] = s_gammatable[s_intensitytable[p[2]]];
-			}
+			p[0] = s_intensitytable[p[0]];
+			p[1] = s_intensitytable[p[1]];
+			p[2] = s_intensitytable[p[2]];
 		}
 	}
 }
@@ -2925,6 +2906,9 @@ void R_SetColorMappings( void ) {
 
 	// setup the overbright lighting
 	tr.overbrightBits = r_overBrightBits->integer;
+	if ( !glConfig.deviceSupportsGamma ) {
+		tr.overbrightBits = 0;      // need hardware gamma for overbright
+	}
 
 	// allow 2 overbright bits
 	if ( tr.overbrightBits > 2 ) {
@@ -2980,6 +2964,10 @@ void R_SetColorMappings( void ) {
 
 	if ( glConfig.deviceSupportsGamma ) {
 		GLimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );
+		tr.invGamma = 1.0f;
+	} else {
+		// no hw gamma ramp (SDL3): applied as a postprocess shader pass instead, see RB_PostProcess/RB_ToneMap
+		tr.invGamma = 1.0f / g;
 	}
 }
 
