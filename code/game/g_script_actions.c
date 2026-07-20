@@ -496,11 +496,12 @@ G_ScriptAction_Atmosphere
   syntax: atmosphere <effect string>
           atmosphere none
 
-  Dynamically changes (or clears) the map's rain/snow atmospheric effect.
+  Dynamically changes (or clears) the map's rain/snow/sandstorm atmospheric effect.
   <effect string> uses the same format as worldspawn's "atmosphere" key, e.g.:
 
     atmosphere T=RAIN,B=5 10,C=0.5,G=0.5 2,BV=50 50,GV=200 200,W=1 2,D=2000
     atmosphere T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=20 30,GV=25 40,W=3 5,D=2400
+    atmosphere T=SANDSTORM,B=1 2,C=0.2,G=0.3 0.7,BV=260 220,GV=700 650,W=2 5,D=7800
     atmosphere none
 ==================
 */

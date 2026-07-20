@@ -39,3 +39,17 @@ gfx/atmosphere/snowflake
 		rgbgen vertex
 	}
 }
+
+gfx/atmosphere/sandparticle
+{
+	cull none
+	entitymergable
+	nopicmip
+//	sort decal
+	{
+		clampmap gfx/atmosphere/sandparticle.tga
+		blendfunc blend
+		//alphafunc GE128
+		rgbgen vertex
+	}
+}
