@@ -320,6 +320,7 @@ vmCvar_t cg_atm_effects_force;
 
 vmCvar_t cg_simpleZoomFov;
 vmCvar_t cg_simpleZoomTimeMs;
+vmCvar_t cg_simpleZoomVenomScale;
 
 typedef struct {
 	vmCvar_t    *vmCvar;
@@ -563,6 +564,7 @@ cvarTable_t cvarTable[] = {
 
 	{&cg_simpleZoomFov, "cg_simpleZoomFov", "60", CVAR_ARCHIVE},
 	{&cg_simpleZoomTimeMs, "cg_simpleZoomTimeMs", "120", CVAR_ARCHIVE},
+	{&cg_simpleZoomVenomScale, "cg_simpleZoomVenomScale", "0.5", CVAR_ARCHIVE},
 
 };
 int cvarTableSize = ARRAY_LEN( cvarTable );

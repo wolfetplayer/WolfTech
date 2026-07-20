@@ -2087,8 +2087,8 @@ static void PM_BeginWeaponReload( int weapon ) {
 	int reloadTime, reloadTimeFull;
 	qboolean fastReload;
 
-	// only allow reload if the weapon isn't already occupied (firing is okay)
-	if ( pm->ps->weaponstate != WEAPON_READY && pm->ps->weaponstate != WEAPON_FIRING ) {
+	// only allow reload if the weapon isn't already occupied (firing, or resting pre-spun, is okay)
+	if ( pm->ps->weaponstate != WEAPON_READY && pm->ps->weaponstate != WEAPON_FIRING && pm->ps->weaponstate != WEAPON_VENOM_REST ) {
 		return;
 	}
 
@@ -3400,6 +3400,21 @@ static void PM_Weapon( void ) {
 
 	// check for fire
 	if ( !( pm->cmd.buttons & ( BUTTON_ATTACK | WBUTTON_ATTACK2 ) ) && !delayedFire ) { // if not on fire button and there's not a delayed shot this frame...
+
+		// WP_VENOM: simple-zoom holds the barrels pre-spun instead of relaxing them
+		if ( pm->ps->weapon == WP_VENOM && pm->ps->simpleZoomed && !pm->ps->aiChar ) {
+			pm->ps->weaponTime  = 0;
+			pm->ps->weaponDelay = 0;
+			pm->ps->semiAutoTriggerHeld = qfalse;
+
+			if ( weaponstateFiring ) { // stopped shooting but still zoomed - settle the base anim, the spin stays up procedurally
+				PM_ContinueWeaponAnim( PM_IdleAnimForWeapon( pm->ps->weapon ) );
+			}
+
+			pm->ps->weaponstate = WEAPON_VENOM_REST;
+			return;
+		}
+
 		pm->ps->weaponTime  = 0;
 		pm->ps->weaponDelay = 0;
 		pm->ps->semiAutoTriggerHeld = qfalse;
@@ -3488,6 +3503,9 @@ static void PM_Weapon( void ) {
 			if ( pm->ps->aiChar && pm->ps->weapon == WP_VENOM ) {
 				// AI get fast spin-up
 				pm->ps->weaponDelay = 150;
+			} else if ( pm->ps->weapon == WP_VENOM && pm->ps->weaponstate == WEAPON_VENOM_REST ) {
+				// already pre-spun via simple zoom - fire instantly, no spin-up
+				pm->ps->weaponDelay = 0;
 			} else {
 				pm->ps->weaponDelay = wt->fireDelayTime;
 			}
@@ -4461,6 +4479,11 @@ void PmoveSingle( pmove_t *pmove ) {
 					pm->ps->eFlags |= EF_FIRING;
 				}
 			}
+		}
+
+		// WP_VENOM: pre-spun via simple zoom - show the barrels spinning to others too
+		if ( pm->ps->weapon == WP_VENOM && pm->ps->weaponstate == WEAPON_VENOM_REST ) {
+			pm->ps->eFlags |= EF_FIRING;
 		}
 	}
 

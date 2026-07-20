@@ -2339,7 +2339,8 @@ static float CG_VenomSpinAngle( centity_t *cent ) {
 
 	firing = (qboolean)( cent->currentState.eFlags & EF_FIRING );
 
-	if ( cg.snap->ps.weaponstate != WEAPON_FIRING ) { // (SA) this seems better
+	// WEAPON_VENOM_REST: barrels pre-spun via simple zoom, holding at speed without firing
+	if ( cg.snap->ps.weaponstate != WEAPON_FIRING && cg.snap->ps.weaponstate != WEAPON_VENOM_REST ) { // (SA) this seems better
 		firing = qfalse;
 	}
 

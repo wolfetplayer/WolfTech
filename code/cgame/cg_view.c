@@ -809,7 +809,14 @@ float CG_ApplySimpleZoomFov( float currentFovX ) {
 	// scale relative to the current base fov, not an absolute target, so zoom stays noticeable even when base fov is already reduced (e.g. mounted mg42)
 	{
 		float zoomRatio = ( cg_fov.value > 0 ) ? ( cg_simpleZoomFov.value / cg_fov.value ) : 1.0f;
-		float zoomedFovX = baseFovX * zoomRatio;
+		float zoomedFovX;
+
+		// WP_VENOM: spread is too wide for zoom to meaningfully help, so soften the zoom-in
+		if ( cg.predictedPlayerState.weapon == WP_VENOM ) {
+			zoomRatio = 1.0f - ( ( 1.0f - zoomRatio ) * cg_simpleZoomVenomScale.value );
+		}
+
+		zoomedFovX = baseFovX * zoomRatio;
 
 		if ( zoomedFovX < 1 ) zoomedFovX = 1;
 		if ( zoomedFovX > 160 ) zoomedFovX = 160;

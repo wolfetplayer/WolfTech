@@ -1985,6 +1985,7 @@ extern vmCvar_t cg_atm_effects_force;
 
 extern vmCvar_t cg_simpleZoomFov;
 extern vmCvar_t cg_simpleZoomTimeMs;
+extern vmCvar_t cg_simpleZoomVenomScale;
 
 //
 // cg_main.c
