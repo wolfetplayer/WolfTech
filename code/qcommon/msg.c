@@ -1408,6 +1408,7 @@ netField_t playerStateFields[] =
 	{ PSF( fireModeSwitchRaising ), 1 },
 	{ PSF( fireModeWbuttonDown ), 1 },
 	{ PSF( semiAutoTriggerHeld ), 1 },
+	{ PSF( simpleZoomed ), 1 },
 };
 
 /*

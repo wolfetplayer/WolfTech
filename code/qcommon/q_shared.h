@@ -1592,6 +1592,8 @@ typedef struct playerState_s {
 	qboolean fireModeWbuttonDown;       // previous-frame state of WBUTTON_FIREMODE, for edge detection
 	qboolean semiAutoTriggerHeld;       // in semi-auto, blocks refire until the attack button is released
 
+	qboolean simpleZoomed;               // networked mirror of cg.simpleZoomed, so spectators/followers see it too
+
 } playerState_t;
 
 

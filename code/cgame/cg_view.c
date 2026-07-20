@@ -775,6 +775,8 @@ void CG_Zoom( void ) {
 
 float CG_ApplySimpleZoomFov( float currentFovX ) {
 	float baseFovX, targetFovX, f, out;
+	qboolean zoomed;
+	qboolean following = (qboolean)( cg.snap && ( cg.snap->ps.pm_flags & PMF_FOLLOW ) );
 
 	// feature disabled / not set up
 	if ( cg_simpleZoomFov.value <= 0 ) {
@@ -790,6 +792,18 @@ float CG_ApplySimpleZoomFov( float currentFovX ) {
 		return currentFovX;
 	}
 
+	if ( following ) {
+		// mirror the followed player's networked zoom state instead of our own (disabled) toggle
+		zoomed = (qboolean)cg.predictedPlayerState.simpleZoomed;
+		if ( zoomed != cg.simpleZoomedFollow ) {
+			cg.simpleZoomedFollow = zoomed;
+			cg.simpleZoomTime = cg.time;
+		}
+	} else {
+		zoomed = cg.simpleZoomed;
+		cg.simpleZoomedFollow = qfalse;
+	}
+
 	baseFovX = currentFovX;
 
 	// scale relative to the current base fov, not an absolute target, so zoom stays noticeable even when base fov is already reduced (e.g. mounted mg42)
@@ -800,7 +814,7 @@ float CG_ApplySimpleZoomFov( float currentFovX ) {
 		if ( zoomedFovX < 1 ) zoomedFovX = 1;
 		if ( zoomedFovX > 160 ) zoomedFovX = 160;
 
-		targetFovX = cg.simpleZoomed ? zoomedFovX : baseFovX;
+		targetFovX = zoomed ? zoomedFovX : baseFovX;
 
 		// lerp time
 		{
@@ -816,7 +830,7 @@ float CG_ApplySimpleZoomFov( float currentFovX ) {
 			if ( f > 1.0f ) f = 1.0f;
 		}
 
-		if ( cg.simpleZoomed ) {
+		if ( zoomed ) {
 			// zooming in: base -> target
 			out = baseFovX + f * ( targetFovX - baseFovX );
 		} else {

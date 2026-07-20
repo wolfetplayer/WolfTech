@@ -1089,6 +1089,7 @@ typedef struct {
 
 	qboolean simpleZoomed;
 	int simpleZoomTime;
+	qboolean simpleZoomedFollow;        // last known networked zoom state of the player we're following/watching
 
 } cg_t;
 

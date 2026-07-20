@@ -4103,6 +4103,8 @@ qboolean CG_WeaponSupportsSimpleZoom( int weap ) {
 void CG_ToggleSimpleZoom( void ) {
     cg.simpleZoomed = !cg.simpleZoomed;
     cg.simpleZoomTime = cg.time;
+    // let the server know so spectators/followers see the same zoom
+    trap_SendClientCommand( va( "simplezoom %i", cg.simpleZoomed ) );
 }
 
 
@@ -4110,6 +4112,7 @@ void CG_ResetSimpleZoom( void ) {
     if ( cg.simpleZoomed ) {
         cg.simpleZoomed = qfalse;
         cg.simpleZoomTime = cg.time;
+        trap_SendClientCommand( "simplezoom 0" );
     }
 }
 

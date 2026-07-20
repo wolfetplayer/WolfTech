@@ -3581,6 +3581,14 @@ void ClientCommand( int clientNum ) {
 		return;
 	}
 //----(SA)	end
+
+	if ( Q_stricmp( cmd, "simplezoom" ) == 0 ) {
+		char arg[8];
+		trap_Argv( 1, arg, sizeof( arg ) );
+		ent->client->ps.simpleZoomed = atoi( arg ) ? qtrue : qfalse;
+		return;
+	}
+
 #ifdef _ADMINS
 	// Hook our commands above intermission
 	if ( Q_stricmp( cmd, "login" ) == 0 ) {
