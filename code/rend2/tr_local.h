@@ -2403,6 +2403,8 @@ FLARES
 */
 
 void R_ClearFlares( void );
+void R_InitFlareQueries( void );
+void R_ShutdownFlareQueries( void );
 
 void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float scale, vec3_t normal, int id, int flags ); // TTimo updated prototype
 void RB_AddDlightFlares( void );

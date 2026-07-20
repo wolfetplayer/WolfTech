@@ -1596,6 +1596,8 @@ void R_InitQueries(void)
 
 	if (r_drawSunRays->integer)
 		qglGenQueries(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
+
+	R_InitFlareQueries();
 }
 
 void R_ShutDownQueries(void)
@@ -1605,6 +1607,8 @@ void R_ShutDownQueries(void)
 
 	if (r_drawSunRays->integer)
 		qglDeleteQueries(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
+
+	R_ShutdownFlareQueries();
 }
 
 /*
