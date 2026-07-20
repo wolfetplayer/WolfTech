@@ -875,6 +875,54 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 		AISTATE_RELAXED
 	},
 
+	//AICHAR_TRENCH
+	{
+		"Trench",
+		{
+			220,        // running speed
+			90,         // walking speed
+			80,         // crouching speed
+			90,         // Field of View
+			200,        // Yaw Speed	// RF change
+			0.0,        // leader
+			0.5,        // aim skill
+			0.5,        // aim accuracy
+			0.75,       // attack skill
+			0.5,        // reaction time
+			0.4,        // attack crouch
+			0.0,        // idle crouch
+			0.5,        // aggression
+			0.8,        // tactical
+			0.0,        // camper
+			16000,      // alertness
+			100,        // starting health
+			1.0,        // hearing scale
+			0.9,        // not in pvs hearing scale
+			512,        // relaxed detection radius
+			1.0,        // pain threshold multiplier
+		},
+		{
+			"infantrySightPlayer",
+			"infantryAttackPlayer",
+			"infantryOrders",
+			"infantryDeath",
+			"infantrySilentDeath",				//----(SA)	added
+			"infantryFlameDeath",				//----(SA)	added
+			"infantryPain",
+			"infantryStay",						// stay - you're told to stay put
+			"infantryFollow",					// follow - go with ordering player ("i'm with you" rather than "yes sir!")
+			"infantryOrdersDeny",				// deny - refuse orders (doing something else)
+		},
+		AITEAM_NAZI,							// team
+		"trench/base1",							// default model/skin
+		{WP_M97,WP_GRENADE_LAUNCHER},			// starting weapons
+		BBOX_SMALL, {32,48},					// bbox, crouch/stand height
+		AIFL_CATCH_GRENADE | AIFL_STAND_IDLE2,	// flags
+		0, 0, 0,								// special attack routine
+		NULL,									// looping sound
+		AISTATE_RELAXED
+	},
+
 };
 //---------------------------------------------------------------------------
 
@@ -1701,6 +1749,23 @@ SP_ai_civilian
 */
 void SP_ai_civilian( gentity_t *ent ) {
 	AICast_DelayedSpawnCast( ent, AICHAR_CIVILIAN );
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+/*QUAKED ai_trench (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
+soldier entity
+"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'trench/base1' is used)
+"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
+"ainame" name of AI
+*/
+
+/*
+============
+SP_ai_trench
+============
+*/
+void SP_ai_trench( gentity_t *ent ) {
+	AICast_DelayedSpawnCast( ent, AICHAR_TRENCH );
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

@@ -584,6 +584,7 @@ typedef enum
 
 	AICHAR_PARTISAN,
 	AICHAR_CIVILIAN,
+	AICHAR_TRENCH,
 
 	NUM_CHARACTERS
 } AICharacters_t;

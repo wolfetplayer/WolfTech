@@ -325,6 +325,7 @@ void SP_ai_blackguard( gentity_t *ent );
 void SP_ai_protosoldier( gentity_t *ent );
 void SP_ai_partisan( gentity_t *ent );
 void SP_ai_civilian( gentity_t *ent );
+void SP_ai_trench( gentity_t *ent );
 void SP_ai_loper_special( gentity_t *ent );
 // done.
 
@@ -595,6 +596,7 @@ spawn_t spawns[] = {
 	{"ai_blackguard", SP_ai_blackguard},
 	{"ai_partisan", SP_ai_partisan},
 	{"ai_civilian", SP_ai_civilian},
+	{"ai_trench", SP_ai_trench},
 	{"ai_loper_special", SP_ai_loper_special},
 
 

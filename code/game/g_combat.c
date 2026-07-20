@@ -1273,6 +1273,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 							break;
 						}
 					case AICHAR_SOLDIER:
+					case AICHAR_TRENCH:
 					case AICHAR_AMERICAN:
 					case AICHAR_ELITEGUARD:
 					case AICHAR_PARTISAN:
@@ -1300,6 +1301,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			if ( ( mod == MOD_SNOOPERSCOPE || mod == MOD_SNOOPER ) && !( attacker->aiCharacter ) ) {
 				switch ( targ->aiCharacter ) {
 				case AICHAR_SOLDIER:
+				case AICHAR_TRENCH:
 				case AICHAR_AMERICAN:
 				case AICHAR_ELITEGUARD:
 				case AICHAR_BLACKGUARD:

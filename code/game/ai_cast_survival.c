@@ -60,6 +60,7 @@ void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client b
 #define FRIENDLY_SPAWN_TIME 15
 
 #define WAVE_EG 3
+#define WAVE_TRENCH 4
 #define WAVE_BG 5
 #define WAVE_VENOM 7
 #define WAVE_PROTO 9
@@ -83,6 +84,9 @@ void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client b
 
 #define MAX_ELITES_SURVIVAL 4
 #define ELITES_INCREASE 1
+
+#define MAX_TRENCH_SURVIVAL 4
+#define TRENCH_INCREASE 1
 
 #define MAX_BLACKGUARDS_SURVIVAL 4
 #define BLACKGUARDS_INCREASE 1
@@ -130,6 +134,7 @@ void AICast_InitSurvival(void) {
     svParams.lastSpecialWave      = 0;
 
 	svParams.maxActiveAI[AICHAR_SOLDIER] = 5;
+	svParams.maxActiveAI[AICHAR_TRENCH] = 0;
 	svParams.maxActiveAI[AICHAR_ZOMBIE_SURV] = 5;
 	svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] = 0;
 	svParams.maxActiveAI[AICHAR_WARZOMBIE] = 0;
@@ -640,6 +645,12 @@ void AICast_UpdateMaxActiveAI(void)
         svParams.maxActiveAI[AICHAR_SOLDIER] = MAX_SOLDIERS_SURVIVAL;
     }
 
+    // Trench
+    svParams.maxActiveAI[AICHAR_TRENCH] += TRENCH_INCREASE;
+    if (svParams.maxActiveAI[AICHAR_TRENCH] > MAX_TRENCH_SURVIVAL) {
+        svParams.maxActiveAI[AICHAR_TRENCH] = MAX_TRENCH_SURVIVAL;
+    }
+
     // Elite Guards
     if (svParams.waveCount >= WAVE_EG) {
         svParams.maxActiveAI[AICHAR_ELITEGUARD] += ELITES_INCREASE;
@@ -763,6 +774,9 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 	case AICHAR_LOPER:
 		waveAppeared = WAVE_LOPERS;
 		break;
+	case AICHAR_TRENCH:
+		waveAppeared = WAVE_TRENCH;
+		break;
 	case AICHAR_SOLDIER:
 	case AICHAR_ZOMBIE_SURV:
 	    waveAppeared = 1;
@@ -796,6 +810,7 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 
 	switch (cs->aiCharacter) {
 		case AICHAR_SOLDIER:
+		case AICHAR_TRENCH:
 			if (svParams.waveCount < 10)
 			{
 				newHealth = 20 + rawSteps * 10;
@@ -1026,6 +1041,7 @@ void BG_SetBehaviorForSurvival(AICharacters_t characterNum) {
 		case AICHAR_VENOM:        waveAppeared = WAVE_VENOM; break;
 		case AICHAR_PROTOSOLDIER: waveAppeared = WAVE_PROTO; break;
 		case AICHAR_SOLDIER: waveAppeared = 1; break;
+		case AICHAR_TRENCH: waveAppeared = WAVE_TRENCH; break;
 		default:  waveAppeared = 0; break;
 	}
 
@@ -1042,6 +1058,7 @@ void BG_SetBehaviorForSurvival(AICharacters_t characterNum) {
 
 	switch (characterNum) {
 		case AICHAR_SOLDIER:
+		case AICHAR_TRENCH:
 			if (g_survivalDifficulty.integer == 1) {
 				aimSkill     = fminf(0.4f + delta, 0.8f);
 				aimAccuracy  = fminf(0.4f + delta, 0.8f);
