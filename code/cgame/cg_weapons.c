@@ -193,6 +193,10 @@ static void CG_PistolEjectBrass( centity_t *cent ) {
 		return;
 	}
 
+	if ( cent->currentState.weapon == WP_REVOLVER ) {
+		return; // no brass for revolver
+	}
+
 	firstPersonBrass =
 		!cg.snap->ps.persistant[PERS_HWEAPON_USE] &&
 		cent->currentState.clientNum == cg.snap->ps.clientNum;

@@ -50,6 +50,7 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 		case WP_SILENCER:     return 30;
 		case WP_COLT:         return 30;
 		case WP_AKIMBO:       return 60;
+		case WP_REVOLVER:     return 80;
 
 		// SMGs
 		case WP_STEN:         return 90;
@@ -99,7 +100,7 @@ qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, ch
 
 	static const weapon_t random_box_weapons[] = {
 		WP_LUGER, WP_SILENCER, WP_COLT,
-		WP_AKIMBO, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34,
+		WP_AKIMBO, WP_REVOLVER, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34,
 		WP_MAUSER, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
 		WP_M1GARAND, WP_MP44, WP_BAR, WP_M97,
 		WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA,

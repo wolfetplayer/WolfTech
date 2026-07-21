@@ -629,6 +629,7 @@ typedef enum {
 	WP_MP34,
 	WP_MP44,
 	WP_M97,
+	WP_REVOLVER,
 
 	WP_DYNAMITE,
 
@@ -731,7 +732,7 @@ extern ammotable_t ammoTable[WP_NUM_WEAPONS];
 #define WP_BEGINSECONDARY   WP_SNIPERRIFLE
 #define WP_LASTSECONDARY    WP_M7
 
-#define WEAPS_ONE_HANDED    ( ( 1 << WP_KNIFE ) | ( 1 << WP_LUGER ) | ( 1 << WP_COLT ) | ( 1 << WP_SILENCER ) | ( 1 << WP_GRENADE_LAUNCHER ) | ( 1 << WP_GRENADE_PINEAPPLE ) )
+#define WEAPS_ONE_HANDED    ( ( 1 << WP_KNIFE ) | ( 1 << WP_LUGER ) | ( 1 << WP_COLT ) | ( 1 << WP_SILENCER ) | ( 1 << WP_REVOLVER ) | ( 1 << WP_GRENADE_LAUNCHER ) | ( 1 << WP_GRENADE_PINEAPPLE ) )
 //----(SA)	end
 
 typedef enum {
@@ -1296,6 +1297,7 @@ typedef enum {
 	MOD_M7,
 	MOD_SILENCER,   //----(SA)
 	MOD_AKIMBO,     //----(SA)
+	MOD_REVOLVER,
 	MOD_BAR,    //----(SA)
 	MOD_FG42,
 	MOD_FG42SCOPE,

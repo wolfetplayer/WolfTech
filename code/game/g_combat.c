@@ -279,6 +279,7 @@ char    *modNames[] = {
 	"MOD_M7",
 	"MOD_SILENCER", //----(SA)
 	"MOD_AKIMBO",    //----(SA)
+	"MOD_REVOLVER",
 	"MOD_BAR",   //----(SA)
 	"MOD_FG42",
 	"MOD_FG42SCOPE",
@@ -640,6 +641,7 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_LUGER:
 	case MOD_COLT:
 	case MOD_AKIMBO:
+	case MOD_REVOLVER:
 	case MOD_MP40:
 	case MOD_MP34:
 	case MOD_THOMPSON:

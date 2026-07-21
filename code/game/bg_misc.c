@@ -58,7 +58,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{0,                     0,                      0           },  //	0 (empty)
 
 	{WP_KNIFE,              0,                      0           },  //	1
-	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO   },  //	2
+	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_REVOLVER },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
@@ -733,6 +733,38 @@ ammotable_t ammoTable[] = {
 		.shotgunPumpLoop    = 250,
 		.shotgunPumpEnd     = 275,
 		.weapFile           = "ithaca.weap",
+    },
+    [WP_REVOLVER] = {
+		.weaponindex        = WP_REVOLVER,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_PISTOL,
+        .maxammo            = 60,
+        .uses               = 1,
+        .maxclip            = 6,
+        .reloadTime         = 3600,
+        .reloadTimeFull     = 3600,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 380,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 18,
+		.weaponSpread       = 300,
+		.spreadScale        = 0.4f,
+		.spreadScaleAdd     = 35,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.3f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_REVOLVER,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
+		.weapFile           = "revolver.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -2101,6 +2133,29 @@ gitem_t bg_itemlist[] =
 		WP_M97,
 		WP_M97,
 		WP_M97,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_revolver",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/pistols/revolver/revolver_3rd.md3",
+			"models/weapons/pistols/revolver/v_revolver.md3",
+			"models/weapons/pistols/revolver/revolver_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_revolver",  // icon
+		"icons/ammo2",           // ammo icon
+		"Revolver",              // pickup
+		30,
+		IT_WEAPON,
+		WP_REVOLVER,
+		WP_REVOLVER,
+		WP_REVOLVER,
+		WP_REVOLVER,
+		WP_REVOLVER,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
