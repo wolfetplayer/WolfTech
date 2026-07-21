@@ -13,12 +13,16 @@ menuDef
 	style 1
 	border 1
 	onClose { uiScript saveControls }
-	onOpen { 
+	onOpen {
 		setitemcolor fadebox backcolor 0 0 0 1;
 		fadeout fadebox;
 		hide grpControls;
 		show look;
-		uiScript loadControls
+		uiScript loadControls;
+		setitemcolor ctr_look backcolor .3 0.5 0.2 .5;
+		setitemcolor ctr_move backcolor .1 .1 .1 .3;
+		setitemcolor ctr_shoot backcolor .1 .1 .1 .3;
+		setitemcolor ctr_miscellaneous backcolor .1 .1 .1 .3
 		}
 
 	onEsc {
@@ -54,20 +58,6 @@ menuDef
 		decoration
 	}
 
-	itemDef 
-	{
-		name window
-		group ingamebox2
-		rect 2 4 439 20	
-		style WINDOW_STYLE_FILLED
-		border 1
-		bordercolor .5 .5 .5 .5
-		forecolor 1 1 1 1
-		backcolor .3 0.5 0.2 .25
-		visible 1
-		decoration
-	}
-
 	itemDef {
 		name keyBindStatus
 		rect 0 322 640 30 
@@ -97,23 +87,22 @@ itemDef {
 	name ctr_look
 	text "@CONTROLS_LOOK"
 	textfont UI_FONT_BIG	// RealRTCWCoop
-	type 1
+	type ITEM_TYPE_BUTTON
 	textscale .23
 	group grpControlbutton
-	type ITEM_TYPE_BUTTON
 	style WINDOW_STYLE_FILLED
-	rect 30 3.5 45 20
-	textalign 1
-	textalignx 22
+	rect 2 4 107 20
+	textalign ITEM_ALIGN_CENTER
+	textalignx 53
 	textaligny 14
 	border 1
-	bordercolor .1 .1 .1 0
+	bordercolor .5 .5 .5 .5
 	forecolor 1 1 1 1
+	backcolor .3 0.5 0.2 .5
 	visible 1
-	action { play "sound/misc/kcaction.wav" ; 
-	hide grpControls ; show look }
-	mouseEnter { show message_look ; setitemcolor ctr_look backcolor .3 .6 .3 .0 } 
-	mouseExit { hide message_look ; setitemcolor ctr_look backcolor .1 .1 .1 0 } 
+	action { play "sound/misc/kcaction.wav" ;
+	hide grpControls ; show look ;
+	setitemcolor ctr_look backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_move backcolor .1 .1 .1 .3 ; setitemcolor ctr_shoot backcolor .1 .1 .1 .3 ; setitemcolor ctr_miscellaneous backcolor .1 .1 .1 .3 }
 	}
 	
 
@@ -368,25 +357,22 @@ itemDef {
 	name ctr_move
 	text "@CONTROLS_MOVE"
 		textfont UI_FONT_BIG	// RealRTCWCoop
-	type 1
+	type ITEM_TYPE_BUTTON
 	textscale .23
 	group grpControlbutton
-	type ITEM_TYPE_BUTTON
 	style WINDOW_STYLE_FILLED
-	background "ui/assets/button_back.tga"
-	rect 146 3.5 45 20
-	textalign 1
-	textalignx 22
+	rect 112 4 107 20
+	textalign ITEM_ALIGN_CENTER
+	textalignx 53
 	textaligny 14
 	border 1
-	bordercolor .1 .1 .1 0
-	forecolor 1 1 1 1 
-	backcolor .1 .1 .1 0
+	bordercolor .5 .5 .5 .5
+	forecolor 1 1 1 1
+	backcolor .1 .1 .1 .3
 	visible 1
-	action { play "sound/misc/kcaction.wav" ; 
-	hide grpControls ; show move }
-	mouseEnter { show message_move ; setitemcolor ctr_move backcolor .3 .3 .3 0  } 
-	mouseExit { hide message_move ; setitemcolor ctr_move backcolor .1 .1 .1 0 } 
+	action { play "sound/misc/kcaction.wav" ;
+	hide grpControls ; show move ;
+	setitemcolor ctr_move backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_look backcolor .1 .1 .1 .3 ; setitemcolor ctr_shoot backcolor .1 .1 .1 .3 ; setitemcolor ctr_miscellaneous backcolor .1 .1 .1 .3 }
 	}
 
 
@@ -700,26 +686,22 @@ itemDef {
 	name ctr_shoot
 	text "@CONTROLS_SHOOT"
 		textfont UI_FONT_BIG	// RealRTCWCoop
-		textfont UI_FONT_BIG	// RealRTCWCoop
-	type 1
+	type ITEM_TYPE_BUTTON
 	textscale .23
 	group grpControlbutton
-	type ITEM_TYPE_BUTTON
 	style WINDOW_STYLE_FILLED
-	background "ui/assets/button_back.tga"
-	rect 260 3.5 47 20
-	textalign 1
-	textalignx 22
+	rect 222 4 107 20
+	textalign ITEM_ALIGN_CENTER
+	textalignx 53
 	textaligny 14
 	border 1
-	bordercolor .1 .1 .1 0
+	bordercolor .5 .5 .5 .5
 	forecolor 1 1 1 1
-	backcolor .1 .1 .1 0 
+	backcolor .1 .1 .1 .3
 	visible 1
-	action { play "sound/misc/kcaction.wav" ; 
-	hide grpControls ; show shoot; show ctr_shoot_advanced }
-	mouseEnter { show message_shoot ; setitemcolor ctr_shoot backcolor .3 .3 .3 0 } 
-	mouseExit { hide message_shoot ; setitemcolor ctr_shoot backcolor .1 .1 .1 0 }
+	action { play "sound/misc/kcaction.wav" ;
+	hide grpControls ; show shoot ; show ctr_shoot_advanced ;
+	setitemcolor ctr_shoot backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_look backcolor .1 .1 .1 .3 ; setitemcolor ctr_move backcolor .1 .1 .1 .3 ; setitemcolor ctr_miscellaneous backcolor .1 .1 .1 .3 }
 	}
 	
 	itemDef {
@@ -1053,23 +1035,22 @@ itemDef {
 	name ctr_miscellaneous
 	text "@CONTROLS_MISC"
 	textfont UI_FONT_BIG	// RealRTCWCoop
-	type 1
+	type ITEM_TYPE_BUTTON
 	textscale .23
 	group grpControlbutton
 	style WINDOW_STYLE_FILLED
-	rect 372 3.5 45 20
-	textalign 1
-	textalignx 22
+	rect 332 4 107 20
+	textalign ITEM_ALIGN_CENTER
+	textalignx 53
 	textaligny 14
 	border 1
-	bordercolor .1 .1 .1 0
+	bordercolor .5 .5 .5 .5
 	forecolor 1 1 1 1
-	backcolor .1 .1 .1 0 
+	backcolor .1 .1 .1 .3
 	visible 1
-	action { play "sound/misc/kcaction.wav" ; 
-	hide grpControls ; show misc }
-	mouseEnter { show message_misc ; setitemcolor ctr_miscellaneous backcolor .3 .3 .3 0 } 
-	mouseExit { hide message_misc ; setitemcolor ctr_miscellaneous backcolor .1 .1 .1 0} 
+	action { play "sound/misc/kcaction.wav" ;
+	hide grpControls ; show misc ;
+	setitemcolor ctr_miscellaneous backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_look backcolor .1 .1 .1 .3 ; setitemcolor ctr_move backcolor .1 .1 .1 .3 ; setitemcolor ctr_shoot backcolor .1 .1 .1 .3 }
 	}
 
 

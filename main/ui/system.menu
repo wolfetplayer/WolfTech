@@ -14,7 +14,7 @@ menuDef {
 	focusColor 1 .75 0 1
 	style 1
 	border 1
-	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; fadeout fadebox ; hide grpSystem ; hide grpapplysystem ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show graphics ; show graphicsapply }
+	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; fadeout fadebox ; hide grpSystem ; hide grpapplysystem ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show graphics ; show graphicsapply ; setitemcolor ctr_graphics backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .3 ; setitemcolor ctr_other backcolor .1 .1 .1 .3 }
 	onEsc { close system_menu ; close setup_menu ; open main }
 
 
@@ -42,35 +42,23 @@ menuDef {
 itemDef {
 	name ctr_graphics
 	text "@SYSTEM_GRAPHICS"
-	textfont UI_FONT_BIG	// RealRTCWCoop  
+	textfont UI_FONT_BIG	// RealRTCWCoop
 	type ITEM_TYPE_BUTTON
 	textscale .22
 	group grpSystembutton
 	style WINDOW_STYLE_FILLED
-	rect 18 10 100 12
-	textalign 1
-	textalignx 50
-	textaligny 10
+	rect 2 4 145 20
+	textalign ITEM_ALIGN_CENTER
+	textalignx 72
+	textaligny 14
+	border 1
+	bordercolor .5 .5 .5 .5
 	forecolor 1 1 1 1
+	backcolor .3 0.5 0.2 .5
  	visible 1
 	action { play "sound/misc/kcaction.wav" ;
-	hide grpSystem ; hide grpapplysystem ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show graphics ; show graphicsapply }
-	mouseEnter { show message_graphics  }
-	mouseExit { hide message_graphics  }
-	}
-
-	itemDef 
-	{
-		name ctr_graphics
-		group grpControlbutton
-		rect 2 4 439 20	
-		style WINDOW_STYLE_FILLED
-		border 1
-		bordercolor .1 .1 .1 .2
-		forecolor 1 1 1 1
-		backcolor .3 0.5 0.2 .25
-		visible 1
-		decoration
+	hide grpSystem ; hide grpapplysystem ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show graphics ; show graphicsapply ;
+	setitemcolor ctr_graphics backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .3 ; setitemcolor ctr_other backcolor .1 .1 .1 .3 }
 	}
 
 //itemDef {
@@ -467,39 +455,6 @@ itemDef {
 
 
 
-//
-// ATI
-//
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_ATITRUFORM_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_ext_ATI_pntriangles"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-// would be nice to be able to do an extension check from the menu
-//		extensionTest "GL_ATIX_pn_triangles"
-
-		rect 82 267 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .22 
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
-      	forecolor 1 1 1 1
-      	visible 0 
-		action { uiScript glCustom }
-   		}
-
-//cvar_t	*r_ext_ATI_pntriangles;
-//cvar_t	*r_ati_truform_tess;
-//cvar_t	*r_ati_truform_mode;
-
-
-
-
 
 
 
@@ -538,18 +493,19 @@ itemDef {
 	textscale .22
 	group grpSystembutton
 	style WINDOW_STYLE_FILLED
-	rect 125 10 100 12
-	textalign 1
-	textalignx 50
-	textaligny 10
-	forecolor .9 .9 .9 .8
-	backcolor .1 .1 .1 0
+	rect 149 4 145 20
+	textalign ITEM_ALIGN_CENTER
+	textalignx 72
+	textaligny 14
+	border 1
+	bordercolor .5 .5 .5 .5
+	forecolor 1 1 1 1
+	backcolor .1 .1 .1 .3
 	visible 1
 	action { play "sound/misc/kcaction.wav" ;
 	hide grpSystem ; hide grpapplysystem ; hide graphicsapply ;
-	show rend2p1 ; hide rend2p2 ; hide rend2p3 ; show rend2nav ; show rend2apply }
-	mouseEnter { setitemcolor ctr_rend2 backcolor .3 .3 .3 0 }
-	mouseExit { setitemcolor ctr_rend2 backcolor .1 .1 .1 0 }
+	show rend2p1 ; hide rend2p2 ; hide rend2p3 ; show rend2nav ; show rend2apply ;
+	setitemcolor ctr_rend2 backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .3 ; setitemcolor ctr_other backcolor .1 .1 .1 .3 }
 	}
 
 
@@ -1554,70 +1510,25 @@ itemDef {
 	}
 
 itemDef {
-	name ctr_driver
-	text "@SYSTEM_DRIVERINFO"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	type 1
-//	textfont UI_FONT_NORMAL
-	textscale .22
-	group grpSystembutton
-	style WINDOW_STYLE_FILLED
-	background "ui/assets/button_back.tga"
-	rect 232 10 100 12
-	textalign 1
-	textalignx 50
-	textaligny 10
-	forecolor .9 .9 .9 .8
-	backcolor .1 .1 .1 0
-	visible 1
-	action { play "sound/misc/kcaction.wav" ;
-	hide grpSystem ; hide graphicsapply ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show driver }
-	mouseEnter { show message_driver ; setitemcolor  ctr_driver backcolor .3 .3 .3 0 } 
-	mouseExit { hide message_driver ; setitemcolor 	ctr_driver backcolor .1 .1 .1 0 } 
-	}
-
-
-
-	
-itemDef {
-		name driver
-		group grpSystem
-		rect 10 30 400 300	
-		ownerdraw UI_GLINFO
-		textalign 0
-		textalignx 0
-		textaligny 23
-		textscale .15
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		forecolor 1 1 1 1
-		visible 0
-		decoration
-		style 1
-		
-	}
- 	
-
-
-itemDef {
 	name ctr_other
 	text "@SYSTEM_SOUND"
 	textfont UI_FONT_BIG	// RealRTCWCoop
-	type 1
-//	textfont UI_FONT_NORMAL
+	type ITEM_TYPE_BUTTON
 	textscale .22
 	group grpSystembutton
 	style WINDOW_STYLE_FILLED
-	rect 339 10 100 12
-	textalign 1
-	textalignx 50
-	textaligny 10
-	forecolor .9 .9 .9 .8
-	backcolor .1 .1 .1 0
+	rect 296 4 145 20
+	textalign ITEM_ALIGN_CENTER
+	textalignx 72
+	textaligny 14
+	border 1
+	bordercolor .5 .5 .5 .5
+	forecolor 1 1 1 1
+	backcolor .1 .1 .1 .3
 	visible 1
 	action { play "sound/misc/kcaction.wav" ;
-	hide grpSystem ; hide graphicsapply ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show other }
-	mouseEnter { show message_other ; setitemcolor ctr_other backcolor .3 .3 .3 0 } 
-	mouseExit { hide message_other ; setitemcolor ctr_other backcolor .1 .1 .1 0} 	
+	hide grpSystem ; hide graphicsapply ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show other ;
+	setitemcolor ctr_other backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .3 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .3 }
 	}
 
 
@@ -1674,50 +1585,63 @@ itemDef {
 		visible 0 
     		}
 
+// subtitles - moved from options_menu Hit Feedback tab
 	itemDef {
 		name other
 		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_SOUNDQUALITY_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "s_khz"
-		cvarFloatList { "@SYSTEM_SOUNDQUAL_HIGH" 22 "@SYSTEM_SOUNDQUAL_LOW" 11 }
 		rect 82 120 290 12
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_SUBTITLES"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "cg_drawSubtitles"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .22
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
 		textaligny 10
-		textscale .22 
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
-		visible 0 
-		action { show applysystem }
-    		}
-
+		visible 0
+		}
 
 	itemDef {
-		name applysystem
-		group grpapplySystem
-		text "@SYSTEM_APPLY"
+		name other
+		group grpSystem
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_SUBTITLESIZE"
 		textfont UI_FONT_BIG	// RealRTCWCoop
-		type 1
-		style WINDOW_STYLE_FILLED	
-		textscale .25
-		rect 181 140 100 20
-		textalign 1
-		textalignx 50
-		textaligny 15
+		cvarfloat "cg_subtitleSize" 7 4 16
+		rect 82 150 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
-		backcolor .1 .1 .1 .1 
-		visible 1
-		border 1
-		bordercolor .5 .5 .5 .5
-		action { play "sound/misc/kcaction.wav" ; 
-open snd_restart_popmenu ; hide other ; hide applysystem }
-		mouseEnter { setitemcolor applysystem backcolor .3 .5 .2 .25 }
-      	mouseExit { setitemcolor applysystem backcolor .1 .1 .1 .1 }
-
+		visible 0
 		}
+
+	itemDef {
+		name other
+		group grpSystem
+		rect 82 180 290 12
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_SUBTITLESHADOW"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "cg_subtitleShadow"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+// end subtitles
 
 	itemDef
 	{

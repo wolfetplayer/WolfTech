@@ -11,16 +11,16 @@ menuDef {
 	focusColor 1 .75 0 1
 	style 1
 	border 1
-	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; fadeout fadebox ; show performance }
+	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; fadeout fadebox ; hide hitfeedback ; show performance ; setitemcolor ctr_hud backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_hitfeedback backcolor .1 .1 .1 .3 }
 	onEsc { close options_menu ; close setup_menu ; open main }
 
-	
-	
-itemDef 
+
+
+itemDef
 	{
 	name window
 	group grpSystembutton
-	rect 0 2 443 300	
+	rect 0 2 443 300
 	style WINDOW_STYLE_FILLED
 	border 1
 	bordercolor .5 .5 .5 .5
@@ -33,22 +33,43 @@ itemDef
 //////// START OF PASTE
 
 itemDef {
-		name performance
-		group grpSystembutton
+		name ctr_hud
+		group grpOptionsTab
 		text "@OPTIONS_HUDSETTINGS"
-		textfont UI_FONT_BIG	// RealRTCWCoop 
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		type ITEM_TYPE_BUTTON
 		textalign ITEM_ALIGN_CENTER
-		textalignx 145
+		textalignx 72
 		textaligny 14
-		textscale .25
-		rect 82 15 290 20
+		textscale .23
+		rect 82 15 145 20
 		style WINDOW_STYLE_FILLED
 		border			1
 		bordercolor		.5 .5 .5 .5
 		forecolor		1 1 1 1
 		backcolor		.3 0.5 0.2 .5
 		visible			1
-		decoration
+		action { play "sound/misc/kcaction.wav" ; hide hitfeedback ; show performance ; setitemcolor ctr_hud backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_hitfeedback backcolor .1 .1 .1 .3 }
+	}
+
+	itemDef {
+		name ctr_hitfeedback
+		group grpOptionsTab
+		text "@OPTIONS_HITFEEDBACK"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		type ITEM_TYPE_BUTTON
+		textalign ITEM_ALIGN_CENTER
+		textalignx 72
+		textaligny 14
+		textscale .23
+		rect 227 15 145 20
+		style WINDOW_STYLE_FILLED
+		border			1
+		bordercolor		.5 .5 .5 .5
+		forecolor		1 1 1 1
+		backcolor		.1 .1 .1 .3
+		visible			1
+		action { play "sound/misc/kcaction.wav" ; hide performance ; show hitfeedback ; setitemcolor ctr_hitfeedback backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_hud backcolor .1 .1 .1 .3 }
 	}
 
 	itemDef {
@@ -294,7 +315,122 @@ itemDef {
 		forecolor		1 1 1 1
 		visible			1
 	}
-		
+
+// hit markers / subtitles - added (separate tab)
+	itemDef {
+		name			hitfeedback
+		group			grpOptions
+		rect			82 45 290 12
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_HITSOUNDS"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_hitSounds"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.23
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		142
+		textaligny		10
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+	}
+
+	itemDef {
+		name			hitfeedback
+		group			grpOptions
+		rect			82 60 290 12
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_HITMARKER"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_drawHitMarker"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.23
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		142
+		textaligny		10
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+	}
+
+	itemDef {
+		name			hitfeedback
+		group			grpOptions
+		type			ITEM_TYPE_SLIDER
+		text			"@OPTIONS_HITMARKERSIZE"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat		"cg_hitMarkerSize" 24 8 64
+		rect			82 75 290 12
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		142
+		textaligny		10
+		textscale		.23
+		style			WINDOW_STYLE_FILLED
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+	}
+
+	itemDef {
+		name			hitfeedback
+		group			grpOptions
+		type			ITEM_TYPE_SLIDER
+		text			"@OPTIONS_HITMARKERALPHA"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat		"cg_hitMarkerAlpha" .75 0 1
+		rect			82 90 290 12
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		142
+		textaligny		10
+		textscale		.23
+		style			WINDOW_STYLE_FILLED
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+	}
+
+	itemDef {
+		name			hitfeedback
+		group			grpOptions
+		rect			82 105 290 12
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_SOLIDHITMARKER"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_solidHitMarker"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.23
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		142
+		textaligny		10
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+	}
+
+	itemDef {
+		name			hitfeedback
+		group			grpOptions
+		rect			82 120 290 12
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_SCOREPOP"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_drawScorePop"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.23
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		142
+		textaligny		10
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+	}
+
+// end hit markers / subtitles
+
 //////// END OF PASTE
 
 }

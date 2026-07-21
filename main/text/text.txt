@@ -159,6 +159,7 @@ DEFAULT_MSG_DONE2                  "to their original default values."
 //=============================================================
 
 OPTIONS_HUDSETTINGS                "HUD Settings"
+OPTIONS_HITFEEDBACK                "Hit Feedback"
 OPTIONS_HUDALPHA                   "HUD Alpha:"
 OPTIONS_CURSORHINTS                "Cursor Hints:"
 OPTIONS_CURSORHINTS_STROBE         "strobe pulse"
@@ -186,6 +187,15 @@ OPTIONS_TIME_24S                   "24 sec"
 OPTIONS_CROSSHAIRNAMES             "Crosshairnames:"
 OPTIONS_TEAMOVERLAY                "Team-Overlay:"
 OPTIONS_COMPASS                    "Compass:"
+OPTIONS_HITSOUNDS                  "Hit Sounds:"
+OPTIONS_HITMARKER                  "Hit Marker:"
+OPTIONS_HITMARKERSIZE              "Hit Marker Size:"
+OPTIONS_HITMARKERALPHA             "Hit Marker Alpha:"
+OPTIONS_SOLIDHITMARKER             "Solid Hit Marker:"
+OPTIONS_SCOREPOP                   "Score Pop:"
+OPTIONS_SUBTITLES                  "Subtitles:"
+OPTIONS_SUBTITLESIZE               "Subtitle Size:"
+OPTIONS_SUBTITLESHADOW             "Subtitle Shadow:"
 
 //=============================================================
 // CREDITS (credit.menu)
