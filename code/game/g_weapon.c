@@ -1859,6 +1859,7 @@ void FireWeapon( gentity_t *ent ) {
 	switch (ent->s.weapon)
 	{
 	case WP_M97:
+	case WP_AUTO5:
 		if (!ent->aiCharacter)
 		{
 			vec3_t vec_forward, vec_vangle;

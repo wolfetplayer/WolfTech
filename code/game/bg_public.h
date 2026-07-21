@@ -529,7 +529,7 @@ typedef enum {
 	HI_BOOK2,   //----(SA)	added
 	HI_BOOK3,   //----(SA)	added
 	HI_M97,     // not a real holdable pickup - reuses this networked slot for the M97 pump-reload sub-state (m97state_t)
-	HI_12,
+	HI_AUTO5,   // not a real holdable pickup - reuses this networked slot for the Auto-5 pump-reload sub-state (auto5state_t)
 	HI_13,
 	HI_14,
 //	HI_15,	// ?
@@ -545,6 +545,15 @@ typedef enum {
 	M97_RELOADING_AFTER_PUMP,   // reload first shell and pump to loop
 	M97_RELOADING_LOOP      // reload normal shell loop
 } m97state_t;
+
+// Auto-5 pump-reload sub-state, stored in ps->holdable[HI_AUTO5]
+typedef enum {
+	AUTO5_READY,              // not reloading
+	AUTO5_RELOADING_BEGIN,        // reload normal shell start
+	AUTO5_RELOADING_BEGIN_PUMP,   // reload first shell and pump start
+	AUTO5_RELOADING_AFTER_PUMP,   // reload first shell and pump to loop
+	AUTO5_RELOADING_LOOP      // reload normal shell loop
+} auto5state_t;
 
 
 typedef enum {
@@ -635,6 +644,7 @@ typedef enum {
 	WP_MOSIN,
 	WP_TT33,
 	WP_DUAL_TT33,
+	WP_AUTO5,
 
 	WP_DYNAMITE,
 
@@ -1275,6 +1285,7 @@ typedef enum {
 typedef enum {
 	MOD_UNKNOWN,
 	MOD_SHOTGUN,
+	MOD_AUTO5,
 	MOD_MONSTER_MELEE,
 	MOD_MACHINEGUN,
 	MOD_GRENADE,

@@ -2076,6 +2076,8 @@ static void PM_WaterEvents( void ) {        // FIXME?
 
 static void PM_BeginM97Reload( void );
 static void PM_M97Reload( void );
+static void PM_BeginAuto5Reload( void );
+static void PM_Auto5Reload( void );
 static void PM_ReloadClip( int weapon );
 
 /*
@@ -2110,6 +2112,12 @@ static void PM_BeginWeaponReload( int weapon ) {
 	// M97 pump-action: shell-by-shell reload has its own state machine (AI use the generic path below)
 	if ( !pm->ps->aiChar && weapon == WP_M97 ) {
 		PM_BeginM97Reload();
+		return;
+	}
+
+	// Auto-5: same shell-by-shell reload state machine as M97 (AI use the generic path below)
+	if ( !pm->ps->aiChar && weapon == WP_AUTO5 ) {
+		PM_BeginAuto5Reload();
 		return;
 	}
 
@@ -2442,8 +2450,8 @@ static void PM_ReloadClip( int weapon ) {
 
 	ammomove = ammoTable[weapon].maxclip - ammoclip;
 
-	// M97 pump-action: only one shell (two with PERK_WEAPONHANDLING, one more if upgraded) goes in per reload step
-	if ( !pm->ps->aiChar && weapon == WP_M97 ) {
+	// M97/Auto-5 pump-action: only one shell (two with PERK_WEAPONHANDLING, one more if upgraded) goes in per reload step
+	if ( !pm->ps->aiChar && ( weapon == WP_M97 || weapon == WP_AUTO5 ) ) {
 		ammomove = 1;
 
 		if ( pm->ps->perks[PERK_WEAPONHANDLING] ) {
@@ -2561,6 +2569,96 @@ static void PM_M97Reload( void ) {
 
 /*
 ==============
+PM_BeginAuto5Reload
+==============
+*/
+static void PM_BeginAuto5Reload( void ) {
+	int anim;
+	qboolean fastReload = (qboolean)( pm->ps->perks[PERK_WEAPONHANDLING] != 0 );
+
+	// choose which first person animation to play
+	if ( pm->ps->ammoclip[BG_FindClipForWeapon( WP_AUTO5 )] == 0 ) {
+		anim = fastReload ? WEAP_ALTSWITCHFROM_FAST : WEAP_ALTSWITCHFROM;
+		PM_AddEvent( EV_M97_PUMP );
+		pm->ps->weaponTime += fastReload ? ( ammoTable[WP_AUTO5].shotgunPumpStart / 2 ) : ammoTable[WP_AUTO5].shotgunPumpStart;
+		pm->ps->holdable[HI_AUTO5] = AUTO5_RELOADING_BEGIN_PUMP;
+	} else {
+		anim = fastReload ? WEAP_RELOAD1_FAST : WEAP_RELOAD1;
+		pm->ps->weaponTime += fastReload ? ( ammoTable[WP_AUTO5].shotgunReloadStart / 2 ) : ammoTable[WP_AUTO5].shotgunReloadStart;
+		pm->ps->holdable[HI_AUTO5] = AUTO5_RELOADING_BEGIN;
+	}
+
+	PM_StartWeaponAnim( anim );
+
+	pm->pmext->m97reloadInterrupt = qfalse;
+
+	pm->ps->weaponstate = WEAPON_RELOADING;
+}
+
+/*
+==============
+PM_Auto5Reload
+==============
+*/
+static void PM_Auto5Reload( void ) {
+	qboolean fastReload = (qboolean)( pm->ps->perks[PERK_WEAPONHANDLING] != 0 );
+	int maxclip, ammoIndex;
+
+	// transition from shell + pump
+	if ( pm->ps->holdable[HI_AUTO5] == AUTO5_RELOADING_BEGIN_PUMP ) {
+
+		PM_ReloadClip( WP_AUTO5 );
+
+		ammoIndex = BG_FindAmmoForWeapon( WP_AUTO5 );
+
+		if ( !pm->ps->ammo[ammoIndex] || pm->pmext->m97reloadInterrupt ) {
+			// no more shells, or the player fired/interrupted - break back to ready position
+			PM_StartWeaponAnim( fastReload ? WEAP_DROP2_FAST : WEAP_DROP2 );
+			pm->ps->weaponTime += fastReload ? ( ammoTable[WP_AUTO5].shotgunPumpEnd / 2 ) : ammoTable[WP_AUTO5].shotgunPumpEnd;
+			pm->ps->weaponstate = WEAPON_READY;
+		} else {
+			// keep pumping to load another shell
+			PM_StartWeaponAnim( fastReload ? WEAP_ALTSWITCHTO_FAST : WEAP_ALTSWITCHTO );
+			pm->ps->weaponTime += fastReload ? ( ammoTable[WP_AUTO5].shotgunPumpLoop / 2 ) : ammoTable[WP_AUTO5].shotgunPumpLoop;
+			pm->ps->holdable[HI_AUTO5] = AUTO5_RELOADING_AFTER_PUMP;
+		}
+		return;
+	}
+
+	// load a shell on most states
+	if ( pm->ps->holdable[HI_AUTO5] != AUTO5_RELOADING_AFTER_PUMP && pm->ps->holdable[HI_AUTO5] != AUTO5_RELOADING_BEGIN ) {
+		PM_ReloadClip( WP_AUTO5 );
+	}
+
+	// interrupted - but must load at least one shell first
+	if ( pm->pmext->m97reloadInterrupt && pm->ps->holdable[HI_AUTO5] != AUTO5_RELOADING_BEGIN ) {
+		PM_StartWeaponAnim( fastReload ? WEAP_RELOAD3_FAST : WEAP_RELOAD3 );
+		pm->ps->weaponTime += fastReload ? ( ammoTable[WP_AUTO5].shotgunReloadEnd / 2 ) : ammoTable[WP_AUTO5].shotgunReloadEnd;
+		pm->ps->weaponstate = WEAPON_READY;
+		return;
+	}
+
+	// NOTE: matches PM_ReloadClip's own (non-upgrade-aware) bound above, so this loop
+	// always terminates - BG_GetMaxClip() would promise a bigger clip on an upgraded
+	// weapon that PM_ReloadClip can never actually fill.
+	maxclip = ammoTable[WP_AUTO5].maxclip;
+	ammoIndex = BG_FindAmmoForWeapon( WP_AUTO5 );
+
+	if ( pm->ps->ammoclip[WP_AUTO5] < maxclip && pm->ps->ammo[ammoIndex] ) {
+		// clip isn't full and there's more ammo - load another shell
+		PM_AddEvent( EV_FILL_CLIP );
+		PM_StartWeaponAnim( fastReload ? WEAP_RELOAD2_FAST : WEAP_RELOAD2 );
+		pm->ps->weaponTime += fastReload ? ( ammoTable[WP_AUTO5].shotgunReloadLoop / 2 ) : ammoTable[WP_AUTO5].shotgunReloadLoop;
+		pm->ps->holdable[HI_AUTO5] = AUTO5_RELOADING_LOOP;
+	} else {
+		PM_StartWeaponAnim( fastReload ? WEAP_RELOAD3_FAST : WEAP_RELOAD3 );
+		pm->ps->weaponTime += fastReload ? ( ammoTable[WP_AUTO5].shotgunReloadEnd / 2 ) : ammoTable[WP_AUTO5].shotgunReloadEnd;
+		pm->ps->weaponstate = WEAPON_READY;
+	}
+}
+
+/*
+==============
 PM_FinishWeaponReload
 ==============
 */
@@ -2569,6 +2667,12 @@ static void PM_FinishWeaponReload( void ) {
 	// M97 pump-action reload continues its own state machine instead of a single-step reload
 	if ( !pm->ps->aiChar && pm->ps->weapon == WP_M97 ) {
 		PM_M97Reload();
+		return;
+	}
+
+	// Auto-5: same, continues its own state machine instead of a single-step reload
+	if ( !pm->ps->aiChar && pm->ps->weapon == WP_AUTO5 ) {
+		PM_Auto5Reload();
 		return;
 	}
 
@@ -2608,8 +2712,8 @@ void PM_CheckForReload( int weapon ) {
 		return;
 		break;
 	case WEAPON_RELOADING:
-		// M97 pump-action: pulling the trigger again cuts the reload short at the next opportunity
-		if ( !pm->ps->aiChar && weapon == WP_M97 ) {
+		// M97/Auto-5 pump-action: pulling the trigger again cuts the reload short at the next opportunity
+		if ( !pm->ps->aiChar && ( weapon == WP_M97 || weapon == WP_AUTO5 ) ) {
 			if ( ( pm->cmd.buttons & BUTTON_ATTACK ) || ( pm->cmd.wbuttons & WBUTTON_ATTACK2 ) ) {
 				pm->pmext->m97reloadInterrupt = qtrue;
 			}

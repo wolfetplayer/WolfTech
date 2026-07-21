@@ -65,7 +65,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
 	{WP_TESLA,              WP_VENOM,               0           },  //	8
-	{WP_M97,                0,                      0           },  //	9
+	{WP_M97,                WP_AUTO5,               0           },  //	9
 	{WP_MG42M,              WP_BROWNING,            0           }   //	10
 };
 
@@ -925,6 +925,44 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, 0.0f },
 		.weapFile           = "dualtt33.weap",
+    },
+    [WP_AUTO5] = {
+		.weaponindex        = WP_AUTO5,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_SHOTGUN,
+        .maxammo            = 100,
+        .uses               = 1,
+        .maxclip            = 6,
+        .reloadTime         = 2300,
+        .reloadTimeFull     = 2300,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 300,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 10,
+		.weaponSpread       = 4000,
+		.spreadScale        = 0.6f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 100,
+        .weapRecoilPitch    = { 0.1f, 0.2f },
+        .weapRecoilYaw      = { 0.5f, 0.5f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_SHOTGUN,
+        .moveSpeed          = 0.90f,
+        .mod                = MOD_AUTO5,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -4.0f, -1.0f, -1.0f },
+		.shotgunReloadStart = 580,
+		.shotgunReloadLoop  = 850,
+		.shotgunReloadEnd   = 250,
+		.shotgunPumpStart   = 2100,
+		.shotgunPumpLoop    = 580,
+		.shotgunPumpEnd     = 1,
+		.weapFile           = "auto5.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -2339,6 +2377,29 @@ gitem_t bg_itemlist[] =
 		WP_M97,
 		WP_M97,
 		WP_M97,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_auto5",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/shotguns/auto5/auto5_3rd.md3",
+			"models/weapons/shotguns/auto5/v_auto5.md3",
+			"models/weapons/shotguns/auto5/auto5_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_auto5",      // icon
+		"icons/ammo10",           // ammo icon
+		"Auto-5",                 // pickup
+		30,
+		IT_WEAPON,
+		WP_AUTO5,
+		WP_AUTO5,
+		WP_AUTO5,
+		WP_AUTO5,
+		WP_AUTO5,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
