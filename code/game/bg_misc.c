@@ -60,7 +60,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_KNIFE,              0,                      0           },  //	1
 	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_REVOLVER },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
-	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND },  //	4
+	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43 },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
@@ -765,6 +765,38 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, 0.0f },
 		.weapFile           = "revolver.weap",
+    },
+    [WP_G43] = {
+		.weaponindex        = WP_G43,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_RIFLE_AUTO,
+        .maxammo            = 200,
+        .uses               = 1,
+        .maxclip            = 10,
+        .reloadTime         = 2300,
+        .reloadTimeFull     = 2300,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 300,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 20,
+		.weaponSpread       = 350,
+		.spreadScale        = 0.4f,
+		.spreadScaleAdd     = 40,
+        .weapRecoilDuration = 40,
+        .weapRecoilPitch    = { 0.2f, 0.2f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 2000,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_G43,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 1.0f, 0.0f, -1.0f },
+		.weapFile           = "g43.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -2156,6 +2188,29 @@ gitem_t bg_itemlist[] =
 		WP_REVOLVER,
 		WP_REVOLVER,
 		WP_REVOLVER,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_g43",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/auto_rifles/g43/g43_3rd.md3",
+			"models/weapons/auto_rifles/g43/v_g43.md3",
+			"models/weapons/auto_rifles/g43/g43_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_g43",       // icon
+		"icons/ammo10",          // ammo icon
+		"G43 rifle",             // pickup
+		20,
+		IT_WEAPON,
+		WP_G43,
+		WP_G43,
+		WP_G43,
+		WP_G43,
+		WP_G43,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}

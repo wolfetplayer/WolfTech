@@ -630,6 +630,7 @@ typedef enum {
 	WP_MP44,
 	WP_M97,
 	WP_REVOLVER,
+	WP_G43,
 
 	WP_DYNAMITE,
 
@@ -1294,6 +1295,7 @@ typedef enum {
 	MOD_SNOOPER,
 	MOD_SNOOPERSCOPE,
 	MOD_M1GARAND,
+	MOD_G43,
 	MOD_M7,
 	MOD_SILENCER,   //----(SA)
 	MOD_AKIMBO,     //----(SA)
