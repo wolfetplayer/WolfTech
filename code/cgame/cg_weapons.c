@@ -2869,9 +2869,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	weapon = &cg_weapons[weaponNum];
 
 	if ( isPlayer ) {
-		akimboFire = BG_AkimboFireSequence( weaponNum, cg.predictedPlayerState.ammoclip[WP_AKIMBO] );
+		akimboFire = BG_AkimboFireSequence( weaponNum, cg.predictedPlayerState.ammoclip[weaponNum] );
 	} else if ( ps ) {
-		akimboFire = BG_AkimboFireSequence( weaponNum, ps->ammoclip[WP_AKIMBO] );
+		akimboFire = BG_AkimboFireSequence( weaponNum, ps->ammoclip[weaponNum] );
 	}
 
 	// add the weapon
@@ -2962,7 +2962,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 		// opposite tag in akimbo, since at this point the weapon
 		// has fired and the fire seq has switched over
-		if ( weaponNum == WP_AKIMBO && akimboFire ) {
+		if ( (GetWeaponTableData(weaponNum)->weaponClass & WEAPON_CLASS_AKIMBO) && akimboFire ) {
 			CG_PositionRotatedEntityOnTag( &brass, &gun, "tag_brass2" );
 		} else {
 			CG_PositionRotatedEntityOnTag( &brass, &gun, "tag_brass" );
@@ -3109,7 +3109,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	angles[ROLL]    = crandom() * 10;
 	AnglesToAxis( angles, flash.axis );
 
-	if ( weaponNum == WP_AKIMBO )
+	if ( GetWeaponTableData(weaponNum)->weaponClass & WEAPON_CLASS_AKIMBO )
 	{
 		if (!ps || cg.renderingThirdPerson)
 		{
@@ -3651,7 +3651,7 @@ static qboolean CG_WeaponSelectable( int i ) {
 
 	// if holding a melee weapon (chair/shield/etc.) only allow single-handed weapons
 	if ( cg.snap->ps.eFlags & EF_MELEE_ACTIVE ) {
-		if ( !( WEAPS_ONE_HANDED & ( 1 << i ) ) ) {
+		if ( !( WEAPS_ONE_HANDED & ( 1LL << i ) ) ) {
 			return qfalse;
 		}
 	}

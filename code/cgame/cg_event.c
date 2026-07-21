@@ -281,6 +281,14 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s akimbo pistols";
 				break;
+			case MOD_TT33:
+				message = "was killed by";
+				message2 = "'s TT-33";
+				break;
+			case MOD_DUAL_TT33:
+				message = "was killed by";
+				message2 = "'s akimbo TT-33s";
+				break;
 			case MOD_REVOLVER:
 				message = "was killed by";
 				message2 = "'s revolver";
@@ -531,6 +539,12 @@ static void CG_ItemPickup( int itemNum ) {
 			}
 		}
 
+		if ( weapon == WP_TT33 ) {
+			if ( COM_BitCheck( cg.snap->ps.weapons, weapon ) ) {
+				weapon = WP_DUAL_TT33; // you have tt33, now get dual tt33 (second)
+			}
+		}
+
 		if ( cg_autoswitch.integer && cg.predictedPlayerState.weaponstate != WEAPON_RELOADING ) {
 
 			//	0 - "Off"
@@ -602,7 +616,7 @@ static void CG_ItemPickup( int itemNum ) {
 
 		// only select one-handed weaps if you've got a chair
 		if ( cg.snap->ps.eFlags & EF_MELEE_ACTIVE ) {
-			if ( !( ( 1 << weapon ) & WEAPS_ONE_HANDED ) ) {
+			if ( !( ( 1LL << weapon ) & WEAPS_ONE_HANDED ) ) {
 				selectIt = qfalse;
 			}
 		}

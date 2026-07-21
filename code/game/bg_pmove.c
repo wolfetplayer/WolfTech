@@ -3043,7 +3043,7 @@ static void PM_Weapon( void ) {
 	// RF, remoed this, was preventing lava from hurting player
 	//pm->watertype = 0;
 
-	akimboFire = BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_AKIMBO] );
+	akimboFire = BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[pm->ps->weapon] );
 
 	if ( 0 ) {
 		switch ( pm->ps->weaponstate ) {
@@ -3617,7 +3617,7 @@ static void PM_Weapon( void ) {
 
 	// if this was the last round in the clip, play the 'lastshot' animation
 	// this animation has the weapon in a "ready to reload" state
-	if ( pm->ps->weapon == WP_AKIMBO ) {
+	if ( GetWeaponTableData( pm->ps->weapon )->weaponClass & WEAPON_CLASS_AKIMBO ) {
 		if ( akimboFire ) {
 			weapattackanim = WEAP_ATTACK1;      // attack1 is right hand
 		} else {
@@ -3645,9 +3645,9 @@ static void PM_Weapon( void ) {
 	}
 }
 
-	if ( pm->ps->weapon == WP_AKIMBO ) {
-		if ( pm->ps->weapon == WP_AKIMBO && !akimboFire ) {
-			PM_AddEvent( EV_FIRE_WEAPONB );     // really firing colt
+	if ( GetWeaponTableData( pm->ps->weapon )->weaponClass & WEAPON_CLASS_AKIMBO ) {
+		if ( !akimboFire ) {
+			PM_AddEvent( EV_FIRE_WEAPONB );     // really firing the "off-hand" gun
 		} else {
 			PM_AddEvent( EV_FIRE_WEAPON );
 		}

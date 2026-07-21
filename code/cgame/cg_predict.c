@@ -395,6 +395,13 @@ static void CG_TouchItem( centity_t *cent ) {
 				weapon = WP_AKIMBO;
 			}
 		}
+
+		if ( weapon == WP_TT33 ) {
+			if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_TT33 ) ) {
+				// you got the tt33, you gettin' another
+				weapon = WP_DUAL_TT33;
+			}
+		}
 //----(SA)	end
 
 		COM_BitSet( cg.predictedPlayerState.weapons, weapon );

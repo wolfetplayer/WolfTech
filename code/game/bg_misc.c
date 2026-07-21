@@ -58,7 +58,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{0,                     0,                      0           },  //	0 (empty)
 
 	{WP_KNIFE,              0,                      0           },  //	1
-	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_REVOLVER },  //	2
+	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_TT33,     WP_DUAL_TT33, WP_REVOLVER },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
@@ -227,9 +227,9 @@ ammotable_t ammoTable[] = {
 		.weapFile           = "colt.weap",
     },
     [WP_AKIMBO] = {
-		.weaponindex        = WP_AKIMBO,		
+		.weaponindex        = WP_AKIMBO,
 		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_PISTOL,
+		.weaponClass        = WEAPON_CLASS_PISTOL | WEAPON_CLASS_AKIMBO,
         .maxammo            = 112,
         .uses               = 1,
         .maxclip            = 14,
@@ -861,6 +861,70 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, -1.0f },
 		.weapFile           = "mosin.weap",
+    },
+    [WP_TT33] = {
+		.weaponindex        = WP_TT33,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_PISTOL,
+        .maxammo            = 400,
+        .uses               = 1,
+        .maxclip            = 8,
+        .reloadTime         = 1600,
+        .reloadTimeFull     = 1600,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 350,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 9,
+		.weaponSpread       = 450,
+		.spreadScale        = 0.3f,
+		.spreadScaleAdd     = 35,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 700,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_TT33,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, -1.0f },
+		.weapFile           = "tt33.weap",
+    },
+    [WP_DUAL_TT33] = {
+		.weaponindex        = WP_DUAL_TT33,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_PISTOL | WEAPON_CLASS_AKIMBO,
+        .maxammo            = 300,
+        .uses               = 1,
+        .maxclip            = 16,
+        .reloadTime         = 2000,
+        .reloadTimeFull     = 2000,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 220,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 9,
+		.weaponSpread       = 500,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 35,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 700,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_DUAL_TT33,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
+		.weapFile           = "dualtt33.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -2019,6 +2083,52 @@ gitem_t bg_itemlist[] =
 		WP_COLT,
 		WP_COLT,
 		WP_COLT,
+		"",                      // precache
+		"",                      // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_tt33",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/pistols/tt33/tt33_3rd.md3",
+			"models/weapons/pistols/tt33/v_tt33.md3",
+			"models/weapons/pistols/tt33/tt33_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_tt33",      // icon
+		"icons/ammo2",           // ammo icon
+		"TT-33",                 // pickup
+		50,
+		IT_WEAPON,
+		WP_TT33,
+		WP_TT33,
+		WP_TT33,
+		WP_TT33,
+		WP_TT33,
+		"",                      // precache
+		"",                      // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_dualtt33",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/pistols/tt33/tt33_3rd.md3",
+			"models/weapons/pistols/tt33_2/v_tt33_2.md3",
+			"models/weapons/pistols/tt33/tt33_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_dualtt33",  // icon
+		"icons/ammo2",           // ammo icon
+		"Dual TT-33s",           // pickup
+		50,
+		IT_WEAPON,
+		WP_DUAL_TT33,
+		WP_DUAL_TT33,
+		WP_TT33,
+		WP_DUAL_TT33,
+		WP_DUAL_TT33,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -3804,7 +3914,7 @@ BG_AkimboFireSequence
 qboolean BG_AkimboFireSequence( int weapon, int akimboClip ) {
 	// NOTE: this doesn't work when clips are turned off (dmflags 64)
 
-	if ( weapon != WP_AKIMBO ) {
+	if ( weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS || !( GetWeaponTableData( weapon )->weaponClass & WEAPON_CLASS_AKIMBO ) ) {
 		return qfalse;
 	}
 

@@ -222,7 +222,7 @@ void AICast_InputToUserCommand( cast_state_t *cs, bot_input_t *bi, usercmd_t *uc
 	//
 	// relaxed mode show no weapons
 	if ( cs->aiState <= AISTATE_QUERY ) {
-		if ( WEAPS_ONE_HANDED & ( 1 << ucmd->weapon ) ) { // one-handed wepons don't draw, others do
+		if ( WEAPS_ONE_HANDED & ( 1LL << ucmd->weapon ) ) { // one-handed wepons don't draw, others do
 			ucmd->weapon = WP_NONE;
 		}
 	}
