@@ -60,7 +60,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_KNIFE,              0,                      0           },  //	1
 	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_REVOLVER },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
-	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43 },  //	4
+	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
@@ -829,6 +829,38 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, 0.0f },
 		.weapFile           = "ppsh.weap",
+    },
+    [WP_MOSIN] = {
+		.weaponindex        = WP_MOSIN,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_RIFLE_BOLTACTION,
+        .maxammo            = 150,
+        .uses               = 1,
+        .maxclip            = 5,
+        .reloadTime         = 2250,
+        .reloadTimeFull     = 2250,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 1400,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 30,
+		.weaponSpread       = 300,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 50,
+        .weapRecoilDuration = 60,
+        .weapRecoilPitch    = { 1.0f, 1.0f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 2000,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_MOSIN,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, -1.0f },
+		.weapFile           = "mosin.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -2266,6 +2298,29 @@ gitem_t bg_itemlist[] =
 		WP_PPSH,
 		WP_PPSH,
 		WP_PPSH,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_mosin",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/rifles/mosin/mosin_3rd.md3",
+			"models/weapons/rifles/mosin/v_mosin.md3",
+			"models/weapons/rifles/mosin/mosin_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_mosin",     // icon
+		"icons/ammo3",           // ammo icon
+		"Mosin-Nagant",          // pickup
+		50,
+		IT_WEAPON,
+		WP_MOSIN,
+		WP_MOSIN,
+		WP_MOSIN,
+		WP_MOSIN,
+		WP_MOSIN,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
