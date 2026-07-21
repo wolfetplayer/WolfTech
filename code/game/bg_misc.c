@@ -59,7 +59,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 
 	{WP_KNIFE,              0,                      0           },  //	1
 	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_REVOLVER },  //	2
-	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
+	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43 },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
@@ -797,6 +797,38 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 1.0f, 0.0f, -1.0f },
 		.weapFile           = "g43.weap",
+    },
+    [WP_PPSH] = {
+		.weaponindex        = WP_PPSH,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_SMG,
+        .maxammo            = 400,
+        .uses               = 1,
+        .maxclip            = 71,
+        .reloadTime         = 2600,
+        .reloadTimeFull     = 2600,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 65,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 6,
+		.weaponSpread       = 1000,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 30,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_PPSH,
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
+		.weapFile           = "ppsh.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -2211,6 +2243,29 @@ gitem_t bg_itemlist[] =
 		WP_G43,
 		WP_G43,
 		WP_G43,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_ppsh",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/smgs/ppsh/ppsh_3rd.md3",
+			"models/weapons/smgs/ppsh/v_ppsh.md3",
+			"models/weapons/smgs/ppsh/ppsh_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_ppsh_1",    // icon
+		"icons/ammo2",           // ammo icon
+		"PPSh-41",               // pickup
+		30,
+		IT_WEAPON,
+		WP_PPSH,
+		WP_PPSH,
+		WP_PPSH,
+		WP_PPSH,
+		WP_PPSH,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
