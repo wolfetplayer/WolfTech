@@ -2443,12 +2443,13 @@ PM_ReloadClip
 ==============
 */
 static void PM_ReloadClip( int weapon ) {
-	int ammoreserve, ammoclip, ammomove;
+	int ammoreserve, ammoclip, ammomove, maxclip;
 
 	ammoreserve = pm->ps->ammo[ BG_FindAmmoForWeapon( weapon )];
 	ammoclip    = pm->ps->ammoclip[BG_FindClipForWeapon( weapon )];
+	maxclip     = BG_GetMaxClip( pm->ps, weapon );
 
-	ammomove = ammoTable[weapon].maxclip - ammoclip;
+	ammomove = maxclip - ammoclip;
 
 	// M97/Auto-5 pump-action: only one shell (two with PERK_WEAPONHANDLING, one more if upgraded) goes in per reload step
 	if ( !pm->ps->aiChar && ( weapon == WP_M97 || weapon == WP_AUTO5 ) ) {
@@ -2462,8 +2463,8 @@ static void PM_ReloadClip( int weapon ) {
 			ammomove++;
 		}
 
-		if ( ammomove > ( ammoTable[weapon].maxclip - ammoclip ) ) {
-			ammomove = ammoTable[weapon].maxclip - ammoclip;
+		if ( ammomove > ( maxclip - ammoclip ) ) {
+			ammomove = maxclip - ammoclip;
 		}
 	}
 
@@ -2548,10 +2549,7 @@ static void PM_M97Reload( void ) {
 		return;
 	}
 
-	// NOTE: matches PM_ReloadClip's own (non-upgrade-aware) bound above, so this loop
-	// always terminates - BG_GetMaxClip() would promise a bigger clip on an upgraded
-	// weapon that PM_ReloadClip can never actually fill.
-	maxclip = ammoTable[WP_M97].maxclip;
+	maxclip = BG_GetMaxClip( pm->ps, WP_M97 );
 	ammoIndex = BG_FindAmmoForWeapon( WP_M97 );
 
 	if ( pm->ps->ammoclip[WP_M97] < maxclip && pm->ps->ammo[ammoIndex] ) {
@@ -2638,10 +2636,7 @@ static void PM_Auto5Reload( void ) {
 		return;
 	}
 
-	// NOTE: matches PM_ReloadClip's own (non-upgrade-aware) bound above, so this loop
-	// always terminates - BG_GetMaxClip() would promise a bigger clip on an upgraded
-	// weapon that PM_ReloadClip can never actually fill.
-	maxclip = ammoTable[WP_AUTO5].maxclip;
+	maxclip = BG_GetMaxClip( pm->ps, WP_AUTO5 );
 	ammoIndex = BG_FindAmmoForWeapon( WP_AUTO5 );
 
 	if ( pm->ps->ammoclip[WP_AUTO5] < maxclip && pm->ps->ammo[ammoIndex] ) {
@@ -2756,7 +2751,7 @@ void PM_CheckForReload( int weapon ) {
 	if ( reloadRequested ) {
 		// don't allow a force reload if it won't have any effect (no more ammo reserves or full clip)
 		if ( pm->ps->ammo[ammoWeap] ) {
-			if ( pm->ps->ammoclip[clipWeap] < ammoTable[weapon].maxclip ) {
+			if ( pm->ps->ammoclip[clipWeap] < BG_GetMaxClip( pm->ps, weapon ) ) {
 				doReload = qtrue;
 			}
 		}
@@ -3784,6 +3779,18 @@ static void PM_Weapon( void ) {
 			addTime = wtRate->nextShotTime2;
 		} else {
 			addTime = wtRate->nextShotTime;
+		}
+
+		if ( pm->ps->weaponUpgraded[pm->ps->weapon] >= 1 ) {
+			float upgradeRateMultiplier = 1.15f;
+
+			if ( pm->ps->weaponUpgraded[pm->ps->weapon] == 2 ) {
+				upgradeRateMultiplier = 1.3f;
+			} else if ( pm->ps->weaponUpgraded[pm->ps->weapon] >= 3 ) {
+				upgradeRateMultiplier = 1.5f;
+			}
+
+			addTime /= upgradeRateMultiplier;
 		}
 	}
 	aimSpreadScaleAdd = GetWeaponTableData(pm->ps->weapon)->spreadScaleAdd;

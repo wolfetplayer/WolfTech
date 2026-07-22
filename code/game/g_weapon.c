@@ -366,11 +366,29 @@ void SnapVectorTowards( vec3_t v, vec3_t to ) {
 
 int G_GetWeaponDamage(int weapon, gentity_t *ent)
 {
+	int damage;
+	int upgradeLevel;
 
 	if (weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS || !ent)
 		return 0;
 
-	return GetWeaponTableData(weapon)->weaponDamage;
+	damage = GetWeaponTableData(weapon)->weaponDamage;
+
+	upgradeLevel = ent->client ? ent->client->ps.weaponUpgraded[weapon] : 0;
+
+	if (upgradeLevel >= 1) {
+		float multiplier = 1.5f;
+
+		if (upgradeLevel == 2) {
+			multiplier = 2.0f;
+		} else if (upgradeLevel >= 3) {
+			multiplier = 2.5f;
+		}
+
+		damage = (int)(damage * multiplier);
+	}
+
+	return damage;
 }
 
 

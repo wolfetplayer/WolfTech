@@ -282,7 +282,7 @@ void Fill_Clip( playerState_t *ps, int weapon ) {
 	}
 
 	inclip  = ps->ammoclip[BG_FindClipForWeapon( weapon )];
-	maxclip = ammoTable[weapon].maxclip;
+	maxclip = BG_GetMaxClip( ps, weapon );
 
 	ammomove = maxclip - inclip;    // max amount that can be moved into the clip
 
@@ -342,8 +342,10 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 	if ( noPack ) {
 		ent->client->ps.ammo[ammoweap] = 0;
 	} else {
-		if ( ent->client->ps.ammo[ammoweap] > ammoTable[ammoweap].maxammo ) {
-			ent->client->ps.ammo[ammoweap] = ammoTable[ammoweap].maxammo;
+		int maxammo = BG_GetMaxAmmo( &ent->client->ps, ammoweap, LT_AMMO_BONUS_MULTIPLIER );
+
+		if ( ent->client->ps.ammo[ammoweap] > maxammo ) {
+			ent->client->ps.ammo[ammoweap] = maxammo;
 		}
 
 		if ( count >= 999 ) { // 'really, give /all/'
@@ -351,8 +353,8 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 		}
 	}
 
-	if ( ent->client->ps.ammoclip[ammoweap] > ammoTable[ammoweap].maxclip ) {
-		ent->client->ps.ammoclip[ammoweap] = ammoTable[ammoweap].maxclip;
+	if ( ent->client->ps.ammoclip[ammoweap] > BG_GetMaxClip( &ent->client->ps, ammoweap ) ) {
+		ent->client->ps.ammoclip[ammoweap] = BG_GetMaxClip( &ent->client->ps, ammoweap );
 	}
 
 }

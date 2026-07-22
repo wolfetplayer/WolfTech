@@ -315,6 +315,26 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 
 
 		CG_DrawPic( x, y, w, h, icon );
+
+		// upgrade level badge - small roman numeral in the icon's corner, hidden while manning a mounted gun
+		if ( !cg.snap->ps.persistant[PERS_HWEAPON_USE] && CG_WeaponIsUpgraded( realweap ) ) {
+			static const char *upgradeNumerals[4] = { "", "I", "II", "III" };
+			int upgradeLevel = cg.snap->ps.weaponUpgraded[ realweap ];
+
+			if ( upgradeLevel < 0 ) {
+				upgradeLevel = 0;
+			} else if ( upgradeLevel > 3 ) {
+				upgradeLevel = 3;
+			}
+
+			if ( upgradeLevel > 0 ) {
+				const char *numeral = upgradeNumerals[ upgradeLevel ];
+				float badgeX = x + w - ( (float)strlen( numeral ) * TINYCHAR_WIDTH ) - 2;
+				float badgeY = y + h - TINYCHAR_HEIGHT - 2;
+
+				CG_DrawStringExt( (int)badgeX, (int)badgeY, numeral, colorWhite, qtrue, qtrue, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+			}
+		}
 	}
 }
 
@@ -1007,7 +1027,7 @@ float CG_GetValue( int ownerDraw, int type ) {
 		if ( cent->currentState.weapon ) {
 			if ( type == RANGETYPE_RELATIVE ) {
 				int weap = BG_FindAmmoForWeapon( cent->currentState.weapon );
-				return (float)ps->ammo[weap] / (float)ammoTable[weap].maxammo;
+				return (float)ps->ammo[weap] / (float)BG_GetMaxAmmo( ps, weap, LT_AMMO_BONUS_MULTIPLIER );
 			} else {
 				return ps->ammo[BG_FindAmmoForWeapon( cent->currentState.weapon )];
 			}
@@ -1016,7 +1036,7 @@ float CG_GetValue( int ownerDraw, int type ) {
 	case CG_PLAYER_AMMOCLIP_VALUE:
 		if ( cent->currentState.weapon ) {
 			if ( type == RANGETYPE_RELATIVE ) {
-				return (float)ps->ammoclip[BG_FindClipForWeapon( cent->currentState.weapon )] / (float)ammoTable[cent->currentState.weapon].maxclip;
+				return (float)ps->ammoclip[BG_FindClipForWeapon( cent->currentState.weapon )] / (float)BG_GetMaxClip( ps, cent->currentState.weapon );
 			} else {
 				return ps->ammoclip[BG_FindClipForWeapon( cent->currentState.weapon )];
 			}

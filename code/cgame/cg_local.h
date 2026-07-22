@@ -2263,6 +2263,7 @@ void CG_MortarEFX( centity_t *cent );
 
 // Ridah
 qboolean CG_MonsterUsingWeapon( centity_t *cent, int aiChar, int weaponNum );
+qboolean CG_WeaponIsUpgraded( weapon_t weaponNum );
 
 // Rafael
 void CG_MissileHitWall2( int weapon, int clientNum, vec3_t origin, vec3_t dir );
