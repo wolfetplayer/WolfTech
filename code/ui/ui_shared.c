@@ -153,7 +153,15 @@ translateString_t translateStrings[] = {
 	{"months"},                  //
 	{"year"},                    //
 	{"years"},                   //
-	{"or"}                       //
+	{"or"},                       //
+	{"item"},
+	{"weapon"},
+	{"price"},
+	{"ammo_price"},
+    {"survival_gameover"},
+	{"usedcross"},
+	{"usedemp"},
+	{"usedshield"}
 };
 
 // map-specific subtitle translations, populated at runtime from text/EnglishUSA/maps/<mapname>.txt

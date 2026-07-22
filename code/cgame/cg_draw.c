@@ -1992,7 +1992,7 @@ void CG_BuyPrint( const char *str, int y, int charWidth ) {
 				Q_strncpyz( token, s, p - s + 1 );
 
 				// get translation
-				trToken = CG_translateString( token );
+				trToken = CG_translateTextString( token );
 
 				lenTrToken = strlen( trToken );
 
