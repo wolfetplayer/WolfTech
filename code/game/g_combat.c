@@ -1498,10 +1498,17 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 		// only fires if the target was alive and damage actually landed
 		if ( hitEventType != HIT_NONE && oldHealth > 0 && targ->health < oldHealth ) {
+			char *dmgNumCmd;
+
 			if ( targ->health <= 0 ) {
 				hitEventType = HIT_DEATHSHOT;
 			}
 			trap_SendServerCommand( attacker - g_entities, va( "hitFeedback %d", hitEventType ) );
+
+			// damage dealt + hit location, for optional client-side floating damage numbers
+			dmgNumCmd = va( "dmgNum %d %d %d %.1f %.1f %.1f", targ->s.number, oldHealth - targ->health,
+							 targ->client->ps.stats[STAT_MAX_HEALTH], point[0], point[1], point[2] );
+			trap_SendServerCommand( attacker - g_entities, dmgNumCmd );
 
 			// relay to anyone spectating/following the attacker
 			for ( i = 0 ; i < level.maxclients ; i++ ) {
@@ -1509,6 +1516,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 					&& level.clients[i].sess.spectatorState == SPECTATOR_FOLLOW
 					&& level.clients[i].sess.spectatorClient == attacker->s.number ) {
 					trap_SendServerCommand( i, va( "hitFeedback %d", hitEventType ) );
+					trap_SendServerCommand( i, dmgNumCmd );
 				}
 			}
 		}

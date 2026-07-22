@@ -167,6 +167,37 @@ static void CG_ParseCoopInfo( void ) {
 	}
 }
 
+// periodic AICastHealthInfoMessage broadcast (g_coop.c), feeds CG_SetAIHealth for cg_drawEnemyHealthbars
+#define AIHEALTHINFO_ITEMS 3
+static void CG_ParseAIHealthInfo( void ) {
+	int i, cnt;
+
+	cnt = atoi( CG_Argv( 1 ) );
+
+	for ( i = 0 ; i < cnt ; i++ ) {
+		int entnum = atoi( CG_Argv( i * AIHEALTHINFO_ITEMS + 2 ) );
+		int health = atoi( CG_Argv( i * AIHEALTHINFO_ITEMS + 3 ) );
+		int healthMax = atoi( CG_Argv( i * AIHEALTHINFO_ITEMS + 4 ) );
+
+		CG_SetAIHealth( entnum, health, healthMax );
+	}
+}
+
+// periodic AICastNameInfoMessage broadcast (g_coop.c), debug only, feeds CG_SetAIName for cg_showAINames
+#define AINAMEINFO_ITEMS 2
+static void CG_ParseAINameInfo( void ) {
+	int i, cnt;
+
+	cnt = atoi( CG_Argv( 1 ) );
+
+	for ( i = 0 ; i < cnt ; i++ ) {
+		int entnum = atoi( CG_Argv( i * AINAMEINFO_ITEMS + 2 ) );
+		const char *name = CG_Argv( i * AINAMEINFO_ITEMS + 3 );
+
+		CG_SetAIName( entnum, name );
+	}
+}
+
 /*
 ================
 CG_ParseServerinfo
@@ -1505,6 +1536,19 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	if ( !strcmp( cmd, "dmgNum" ) ) {
+		int amount = atoi( CG_Argv( 2 ) );
+		int maxHealth = atoi( CG_Argv( 3 ) );
+		vec3_t point;
+
+		point[0] = atof( CG_Argv( 4 ) );
+		point[1] = atof( CG_Argv( 5 ) );
+		point[2] = atof( CG_Argv( 6 ) );
+
+		CG_AddDamageNumber( point, amount, maxHealth );
+		return;
+	}
+
 	if ( !strcmp( cmd, "cp" ) ) {
 		// NERVE - SMF
 		int args = trap_Argc();
@@ -1627,6 +1671,16 @@ static void CG_ServerCommand( void ) {
 
 	if ( !strcmp( cmd, "coopinfo" ) ) {
 		CG_ParseCoopInfo();
+		return;
+	}
+
+	if ( !strcmp( cmd, "aiHealth" ) ) {
+		CG_ParseAIHealthInfo();
+		return;
+	}
+
+	if ( !strcmp( cmd, "aiNames" ) ) {
+		CG_ParseAINameInfo();
 		return;
 	}
 

@@ -166,7 +166,8 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace, int impactDamage, vec3_t d
 			// removed yet, causing a bounce.
 			if ( other->takedamage ) {
 				BG_EvaluateTrajectoryDelta( &ent->s.pos, level.time, velocity );
-				G_Damage( other, ent, &g_entities[ent->r.ownerNum], velocity, ent->s.origin, impactDamage, 0, ent->methodOfDeath );
+				// s.origin is never set for missiles (they use r.currentOrigin) -- use the actual impact point instead of (0,0,0)
+				G_Damage( other, ent, &g_entities[ent->r.ownerNum], velocity, trace->endpos, impactDamage, 0, ent->methodOfDeath );
 			}
 
 			// its possible of the func_explosive not to die from this and it
@@ -216,8 +217,9 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace, int impactDamage, vec3_t d
 			if ( VectorLength( velocity ) == 0 ) {
 				velocity[2] = 1;    // stepped on a grenade
 			}
+			// s.origin is never set for missiles (they use r.currentOrigin) -- use the actual impact point instead of (0,0,0)
 			G_Damage( other, ent, &g_entities[ent->r.ownerNum], velocity,
-					  ent->s.origin, ent->damage,
+					  trace->endpos, ent->damage,
 					  0, ent->methodOfDeath );
 		} else    // if no damage value, then this is a splash damage grenade only
 		{

@@ -98,6 +98,91 @@ void SetCoopSpawnWeapons( gclient_t *client ) {
 }
 
 
+#define AI_HEALTHINFO_UPDATE_TIME  200     // faster than TEAM_LOCATION_UPDATE_TIME so health bars feel live
+#define AI_HEALTHINFO_MAX_ENTRIES  32
+
+// broadcasts entnum/health/maxHealth for active AI cast entities, for cg_drawEnemyHealthbars (mirrors CoopInfoMessage below)
+void AICastHealthInfoMessage( void ) {
+	char entry[32];
+	char string[1400];
+	int stringlength;
+	int i, j, cnt;
+	gentity_t *ent;
+
+	if ( level.time - level.lastAICastHealthInfoTime < AI_HEALTHINFO_UPDATE_TIME ) {
+		return;
+	}
+	level.lastAICastHealthInfoTime = level.time;
+
+	string[0] = 0;
+	stringlength = 0;
+
+	for ( i = 0, cnt = 0; i < level.maxclients && cnt < AI_HEALTHINFO_MAX_ENTRIES; i++ ) {
+		int health;
+
+		ent = g_entities + i;
+		if ( !ent->inuse || !ent->client || !( ent->r.svFlags & SVF_CASTAI ) ) {
+			continue;
+		}
+
+		// keep reporting through death (clamped to 0) so the client sees health reach empty, not freeze at the last value before the kill
+		health = ( ent->health > 0 ) ? ent->health : 0;
+
+		Com_sprintf( entry, sizeof( entry ), " %i %i %i", i, health, ent->client->ps.stats[STAT_MAX_HEALTH] );
+		j = strlen( entry );
+		if ( stringlength + j > sizeof( string ) ) {
+			break;
+		}
+		strcpy( string + stringlength, entry );
+		stringlength += j;
+		cnt++;
+
+		if ( g_debugDamage.integer ) {
+			G_Printf( "AIHealth: broadcasting ent %i health %i/%i\n", i, health, ent->client->ps.stats[STAT_MAX_HEALTH] );
+		}
+	}
+
+	trap_SendServerCommand( -1, va( "aiHealth %i%s", cnt, string ) );
+}
+
+#define AI_NAMEINFO_UPDATE_TIME  3000      // aiName is static, no need to spam this like health
+#define AI_NAMEINFO_MAX_ENTRIES  32
+
+// broadcasts entnum/aiName for active AI cast entities -- debug only, lets scripters see an NPC's "ainame" via cg_showAINames
+void AICastNameInfoMessage( void ) {
+	char entry[64];
+	char string[1400];
+	int stringlength;
+	int i, j, cnt;
+	gentity_t *ent;
+
+	if ( level.time - level.lastAICastNameInfoTime < AI_NAMEINFO_UPDATE_TIME ) {
+		return;
+	}
+	level.lastAICastNameInfoTime = level.time;
+
+	string[0] = 0;
+	stringlength = 0;
+
+	for ( i = 0, cnt = 0; i < level.maxclients && cnt < AI_NAMEINFO_MAX_ENTRIES; i++ ) {
+		ent = g_entities + i;
+		if ( !ent->inuse || !ent->client || !( ent->r.svFlags & SVF_CASTAI ) ) {
+			continue;
+		}
+
+		Com_sprintf( entry, sizeof( entry ), " %i \"%s\"", i, ( ent->aiName && ent->aiName[0] ) ? ent->aiName : "" );
+		j = strlen( entry );
+		if ( stringlength + j > sizeof( string ) ) {
+			break;
+		}
+		strcpy( string + stringlength, entry );
+		stringlength += j;
+		cnt++;
+	}
+
+	trap_SendServerCommand( -1, va( "aiNames %i%s", cnt, string ) );
+}
+
 void CoopInfoMessage( gentity_t *ent ) {
 	char entry[1024];
 	char string[1400];

@@ -3281,6 +3281,11 @@ void G_RunFrame( int levelTime ) {
 		CheckTeamStatus();         // update to team status?
 	}
 
+	// periodic health broadcast for optional client-side enemy health bars
+	AICastHealthInfoMessage();
+	// periodic aiName broadcast for AI scripting debug (cg_showAINames)
+	AICastNameInfoMessage();
+
 	// cancel vote if timed out
 	CheckVote();
 

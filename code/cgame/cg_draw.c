@@ -2945,6 +2945,335 @@ static void CG_DrawHitMarker( void ) {
 }
 
 
+// damage numbers / enemy health bars (optional HUD features)
+#define MAX_DAMAGE_NUMBERS     24
+#define DAMAGE_NUMBER_DURATION 900     // ms
+#define DAMAGE_NUMBER_RISE     28.0f   // units risen over its lifetime
+
+typedef struct {
+	qboolean active;
+	int spawnTime;
+	vec3_t origin;
+	int amount;
+	float ratio;        // amount / target maxHealth, clamped 0..1
+} damageNumber_t;
+
+static damageNumber_t cg_damageNumbers[MAX_DAMAGE_NUMBERS];
+static int cg_nextDamageNumber = 0;
+
+void CG_AddDamageNumber( vec3_t origin, int amount, int maxHealth ) {
+	damageNumber_t *dn;
+
+	if ( amount <= 0 ) {
+		return;
+	}
+
+	dn = &cg_damageNumbers[ cg_nextDamageNumber ];
+	cg_nextDamageNumber = ( cg_nextDamageNumber + 1 ) % MAX_DAMAGE_NUMBERS;
+
+	dn->active = qtrue;
+	dn->spawnTime = cg.time;
+	VectorCopy( origin, dn->origin );
+	// small random offset so stacked hits (eg. shotgun pellets) don't perfectly overlap
+	dn->origin[0] += crandom() * 6.0f;
+	dn->origin[1] += crandom() * 6.0f;
+	// lift off world geometry a bit so the pre-rise visibility check below doesn't false-negative on explosive hits
+	dn->origin[2] += 8.0f;
+	dn->amount = amount;
+	dn->ratio = ( maxHealth > 0 ) ? ( (float)amount / (float)maxHealth ) : 0.0f;
+	if ( dn->ratio > 1.0f ) {
+		dn->ratio = 1.0f;
+	}
+}
+
+// white for chip damage, ramping through yellow/orange to red for hits that take a big bite out of max health
+static void CG_ColorForDamageRatio( float ratio, vec4_t color ) {
+	color[3] = 1.0f;
+	if ( ratio < 0.15f ) {
+		color[0] = 1.0f; color[1] = 1.0f; color[2] = 1.0f;
+	} else if ( ratio < 0.35f ) {
+		color[0] = 1.0f; color[1] = 1.0f; color[2] = 0.2f;
+	} else if ( ratio < 0.6f ) {
+		color[0] = 1.0f; color[1] = 0.55f; color[2] = 0.1f;
+	} else {
+		color[0] = 1.0f; color[1] = 0.15f; color[2] = 0.1f;
+	}
+}
+
+void CG_DrawDamageNumbers( void ) {
+	int i;
+	fontInfo_t *font = &cgDC.Assets.bigFont;
+
+	if ( !cg_drawDamageNumbers.integer ) {
+		return;
+	}
+
+	for ( i = 0; i < MAX_DAMAGE_NUMBERS; i++ ) {
+		damageNumber_t *dn = &cg_damageNumbers[i];
+		float progress, x, y, alpha, scale;
+		vec4_t color;
+		vec3_t drawOrigin;
+		char text[16];
+
+		if ( !dn->active ) {
+			continue;
+		}
+
+		progress = (float)( cg.time - dn->spawnTime ) / (float)DAMAGE_NUMBER_DURATION;
+		if ( progress >= 1.0f ) {
+			dn->active = qfalse;
+			continue;
+		}
+
+		VectorCopy( dn->origin, drawOrigin );
+		drawOrigin[2] += DAMAGE_NUMBER_RISE * progress;
+
+		// check LOS against the risen point we draw, not the raw impact point sitting right on world geometry
+		if ( !CG_WorldToScreen( drawOrigin, &x, &y ) || !PointVisible( drawOrigin ) ) {
+			continue;
+		}
+
+		alpha = ( progress < 0.6f ) ? 1.0f : 1.0f - ( progress - 0.6f ) / 0.4f;
+
+		CG_ColorForDamageRatio( dn->ratio, color );
+		color[3] = alpha;
+
+		scale = 0.22f + 0.1f * dn->ratio;   // bigger hits get slightly bigger numbers
+		Com_sprintf( text, sizeof( text ), "%i", dn->amount );
+
+		CG_Text_Paint_Ext( x - CG_Text_Width_Ext( text, scale, 0, font ) * 0.5f, y, scale, scale,
+							color, text, 0, 0, ITEM_TEXTSTYLE_NORMAL, font );
+	}
+
+	trap_R_SetColor( NULL );
+}
+
+// red-yellow-green ramp based on the fraction of health remaining
+static void CG_ColorForHealthbar( float frac, vec4_t color ) {
+	const float dim = 0.75f;    // pull the saturated primaries down a notch
+	const float desat = 0.2f;   // blend a little toward neutral gray so it isn't neon
+	float gray;
+
+	if ( frac < 0.0f ) {
+		frac = 0.0f;
+	} else if ( frac > 1.0f ) {
+		frac = 1.0f;
+	}
+
+	if ( frac < 0.5f ) {
+		color[0] = 1.0f;
+		color[1] = frac / 0.5f;
+		color[2] = 0.0f;
+	} else {
+		color[0] = 1.0f - ( frac - 0.5f ) / 0.5f;
+		color[1] = 1.0f;
+		color[2] = 0.0f;
+	}
+
+	gray = ( color[0] + color[1] + color[2] ) / 3.0f;
+	color[0] = ( color[0] * ( 1.0f - desat ) + gray * desat ) * dim;
+	color[1] = ( color[1] * ( 1.0f - desat ) + gray * desat ) * dim;
+	color[2] = ( color[2] * ( 1.0f - desat ) + gray * desat ) * dim;
+	color[3] = 1.0f;
+}
+
+#define ENEMY_HEALTHBAR_HEIGHT  56.0f
+#define ENEMY_HEALTHBAR_WIDTH   48.0f
+#define ENEMY_HEALTHBAR_THICK   5.0f
+#define ENEMY_HEALTHBAR_PAD     2.0f
+#define AI_HEALTHINFO_STALE_TIME 2000  // drop entries the server hasn't refreshed in a while
+#define AI_HEALTHINFO_DEATH_LINGER 400 // keep showing an empty bar this long after death, then hide
+
+typedef struct {
+	int health;
+	int healthMax;
+	int updateTime;
+	int deathTime;      // cg.time health first reached 0, or 0 while still alive
+} aiHealthInfo_t;
+
+static aiHealthInfo_t cg_aiHealthInfo[MAX_CLIENTS];
+
+// fed by the "aiHealth" server command (CG_ParseAIHealthInfo), broadcast periodically by AICastHealthInfoMessage in g_coop.c
+void CG_SetAIHealth( int entnum, int health, int healthMax ) {
+	aiHealthInfo_t *hi;
+
+	if ( entnum < 0 || entnum >= MAX_CLIENTS ) {
+		return;
+	}
+	hi = &cg_aiHealthInfo[entnum];
+
+	if ( health > 0 ) {
+		hi->deathTime = 0;              // alive (or a fresh spawn reusing this slot)
+	} else if ( hi->deathTime == 0 ) {
+		hi->deathTime = cg.time;        // just dropped to 0 -- start the linger countdown
+	}
+
+	hi->health = health;
+	hi->healthMax = healthMax;
+	hi->updateTime = cg.time;
+
+	if ( cg_debugEvents.integer ) {
+		CG_Printf( "AIHealth: received ent %i health %i/%i\n", entnum, health, healthMax );
+	}
+}
+
+#define AI_NAME_MAXLEN 32
+
+static char cg_aiNames[MAX_CLIENTS][AI_NAME_MAXLEN];
+
+// debug only -- fed by the "aiNames" server command (CG_ParseAINameInfo), broadcast periodically by AICastNameInfoMessage in g_coop.c
+void CG_SetAIName( int entnum, const char *name ) {
+	if ( entnum < 0 || entnum >= MAX_CLIENTS ) {
+		return;
+	}
+	Q_strncpyz( cg_aiNames[entnum], name, AI_NAME_MAXLEN );
+}
+
+// debug only: prints the scripting aiName above whatever AI is under the crosshair, regardless of distance
+void CG_DrawAINameDebug( void ) {
+	trace_t trace;
+	vec3_t start, end, namePos;
+	centity_t *cent;
+	entityState_t *es;
+	const char *name;
+	char text[64];
+	float x, y, scale;
+	vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	if ( !cg_showAINames.integer ) {
+		return;
+	}
+
+	VectorCopy( cg.refdef.vieworg, start );
+	VectorMA( start, 8192, cg.refdef.viewaxis[0], end );
+	CG_Trace( &trace, start, vec3_origin, vec3_origin, end, cg.snap->ps.clientNum,
+			  CONTENTS_SOLID | CONTENTS_BODY | CONTENTS_ITEM );
+
+	if ( trace.entityNum < 0 || trace.entityNum >= MAX_CLIENTS ) {
+		return;
+	}
+
+	cent = &cg_entities[ trace.entityNum ];
+	es = &cent->currentState;
+	if ( es->aiChar == AICHAR_NONE ) {
+		return;
+	}
+
+	VectorCopy( cent->lerpOrigin, namePos );
+	namePos[2] += ENEMY_HEALTHBAR_HEIGHT + 14.0f;
+
+	if ( !CG_WorldToScreen( namePos, &x, &y ) ) {
+		return;
+	}
+
+	name = cg_aiNames[ trace.entityNum ];
+	Com_sprintf( text, sizeof( text ), "ainame: %s  (ent %i)", name[0] ? name : "<none>", trace.entityNum );
+
+	scale = 0.2f;
+	CG_Text_Paint_Ext( x - CG_Text_Width_Ext( text, scale, 0, &cgDC.Assets.bigFont ) * 0.5f, y,
+						scale, scale, color, text, 0, 0, ITEM_TEXTSTYLE_NORMAL, &cgDC.Assets.bigFont );
+}
+
+// draws a small health bar above the head of any AI that's close and near the crosshair, or directly aimed at regardless of range
+void CG_DrawEnemyHealthbars( void ) {
+	int num;
+	float range, rangeSquared, radiusSquared;
+	trace_t crosshairTrace;
+	vec3_t traceStart, traceEnd;
+	int crosshairEntNum;
+
+	if ( !cg_drawEnemyHealthbars.integer ) {
+		return;
+	}
+
+	range = cg_enemyHealthbarRange.value;
+	rangeSquared = range * range;
+	radiusSquared = cg_enemyHealthbarAimRadius.value * cg_enemyHealthbarAimRadius.value;
+
+	// whatever's directly under the crosshair shows its bar regardless of distance
+	VectorCopy( cg.refdef.vieworg, traceStart );
+	VectorMA( traceStart, 8192, cg.refdef.viewaxis[0], traceEnd );
+	CG_Trace( &crosshairTrace, traceStart, vec3_origin, vec3_origin, traceEnd,
+			  cg.snap->ps.clientNum, CONTENTS_SOLID | CONTENTS_BODY | CONTENTS_ITEM );
+	crosshairEntNum = crosshairTrace.entityNum;
+
+	for ( num = 0; num < cg.snap->numEntities; num++ ) {
+		centity_t *cent = &cg_entities[ cg.snap->entities[num].number ];
+		entityState_t *es = &cent->currentState;
+		aiHealthInfo_t *hi;
+		qboolean isCrosshairTarget;
+		vec3_t headOrigin;
+		float distSquared, x, y, dx, dy, frac, alpha;
+		vec4_t color;
+
+		if ( es->aiChar == AICHAR_NONE || es->number < 0 || es->number >= MAX_CLIENTS ) {
+			continue;
+		}
+
+		hi = &cg_aiHealthInfo[ es->number ];
+		if ( hi->healthMax <= 0 || cg.time - hi->updateTime > AI_HEALTHINFO_STALE_TIME ) {
+			continue;
+		}
+		// dead: show an empty bar briefly so the kill reads as "reached 0", then get out of the way
+		if ( hi->health <= 0 && cg.time - hi->deathTime > AI_HEALTHINFO_DEATH_LINGER ) {
+			continue;
+		}
+
+		isCrosshairTarget = ( es->number == crosshairEntNum );
+
+		distSquared = DistanceSquared( cent->lerpOrigin, cg.refdef.vieworg );
+		if ( !isCrosshairTarget && distSquared > rangeSquared ) {
+			continue;
+		}
+
+		VectorCopy( cent->lerpOrigin, headOrigin );
+		headOrigin[2] += ENEMY_HEALTHBAR_HEIGHT;
+
+		if ( !CG_WorldToScreen( headOrigin, &x, &y ) || !PointVisible( headOrigin ) ) {
+			continue;
+		}
+
+		dx = x - 320.0f;
+		dy = y - 240.0f;
+		if ( !isCrosshairTarget && ( dx * dx + dy * dy ) > radiusSquared ) {
+			continue;
+		}
+
+		frac = ( hi->health > 0 ) ? (float)hi->health / (float)hi->healthMax : 0.0f;
+		if ( frac > 1.0f ) {
+			frac = 1.0f;
+		}
+
+		CG_ColorForHealthbar( frac, color );
+
+		// fade out over the last 20% of range instead of popping abruptly into view (skipped for the crosshair target)
+		alpha = 1.0f;
+		if ( !isCrosshairTarget && distSquared > rangeSquared * 0.64f ) {
+			alpha = 1.0f - ( sqrt( distSquared / rangeSquared ) - 0.8f ) / 0.2f;
+		}
+		// also fade the lingering empty bar out instead of having it just vanish
+		if ( hi->health <= 0 ) {
+			alpha *= 1.0f - (float)( cg.time - hi->deathTime ) / (float)AI_HEALTHINFO_DEATH_LINGER;
+		}
+		color[3] = alpha;
+
+		// solid backing drawn explicitly instead of BAR_BG, whose full-width translucent box hides small fill changes
+		{
+			vec4_t bgColor = { 0.0f, 0.0f, 0.0f, 0.45f * alpha };
+			CG_FillRect( x - ENEMY_HEALTHBAR_WIDTH * 0.5f - ENEMY_HEALTHBAR_PAD,
+						 y - ENEMY_HEALTHBAR_THICK * 0.5f - ENEMY_HEALTHBAR_PAD,
+						 ENEMY_HEALTHBAR_WIDTH + ENEMY_HEALTHBAR_PAD * 2.0f,
+						 ENEMY_HEALTHBAR_THICK + ENEMY_HEALTHBAR_PAD * 2.0f, bgColor );
+		}
+
+		CG_FilledBar( x - ENEMY_HEALTHBAR_WIDTH * 0.5f, y - ENEMY_HEALTHBAR_THICK * 0.5f,
+					  ENEMY_HEALTHBAR_WIDTH, ENEMY_HEALTHBAR_THICK, color, NULL, NULL, frac, 8 ); // BAR_NOHUDALPHA (alpha already applied above)
+	}
+
+	trap_R_SetColor( NULL );
+}
+
+
 /*
 =================
 CG_DrawCrosshair3D
@@ -4513,6 +4842,9 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawDynamiteStatus();
 			CG_DrawGrenadeCount();
 			CG_DrawCoopCrosshairNames();
+			CG_DrawEnemyHealthbars();
+			CG_DrawDamageNumbers();
+			CG_DrawAINameDebug();
 			CG_DrawWeaponSelect();
 			CG_DrawHoldableSelect();
 			CG_DrawPickupItem();

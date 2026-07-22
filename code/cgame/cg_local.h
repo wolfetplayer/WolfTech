@@ -1823,6 +1823,11 @@ extern vmCvar_t cg_hitMarkerSize;
 extern vmCvar_t cg_hitMarkerAlpha;
 extern vmCvar_t cg_solidHitMarker;
 extern vmCvar_t cg_drawScorePop;
+extern vmCvar_t cg_drawEnemyHealthbars;
+extern vmCvar_t cg_enemyHealthbarRange;
+extern vmCvar_t cg_enemyHealthbarAimRadius;
+extern vmCvar_t cg_drawDamageNumbers;
+extern vmCvar_t cg_showAINames;
 extern vmCvar_t cg_drawStatus;
 extern vmCvar_t cg_draw2D;
 extern vmCvar_t cg_drawFrags;
@@ -2046,6 +2051,16 @@ void CG_Concussive( centity_t *cent );
 void CG_PlayHitSound( hitEvent_t hitType );
 void CG_HitMarker( hitEvent_t hitType );
 void CG_AddScorePop( int amount );
+qboolean CG_WorldToScreen( vec3_t point, float *x, float *y );
+void CG_AddDamageNumber( vec3_t origin, int amount, int maxHealth );
+void CG_DrawDamageNumbers( void );
+void CG_DrawEnemyHealthbars( void );
+void CG_SetAIHealth( int entnum, int health, int healthMax );
+void CG_SetAIName( int entnum, const char *name );
+void CG_DrawAINameDebug( void );
+int CG_Text_Width_Ext( const char *text, float scale, int limit, fontInfo_t* font );
+int CG_Text_Height_Ext( const char *text, float scale, int limit, fontInfo_t* font );
+void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font );
 
 // cg_atmospheric
 void CG_EffectParse(const char *effectstr);
