@@ -1,0 +1,54 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/auto_rifles/g43/g43_3rd.md3"
+
+		weaponConfig		"models/weapons/auto_rifles/g43/weapon.cfg"
+		handsModel			"models/weapons/auto_rifles/g43/v_g43_hand.md3"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/g43/g43_fire.wav"
+		flashEchoSound	    "sound/weapons/g43/g43_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/g43/g43_reload.wav"
+		reloadSoundFast		"sound/weapons/g43/g43_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/auto_rifle_reload.wav"
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_g43"
+		weaponSelectedIcon	"icons/iconw_g43_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/auto_rifles/g43/v_g43.md3"
+			flashModel		"models/weapons/auto_rifles/g43/v_g43_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/auto_rifles/g43/v_g43_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/auto_rifles/g43/v_g43_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/auto_rifles/g43/v_g43_barrel3.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/auto_rifles/g43/g43_3rd.md3"
+			flashModel		"models/weapons/auto_rifles/g43/g43_3rd_flash.md3"
+		}
+	}
+}

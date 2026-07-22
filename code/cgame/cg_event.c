@@ -245,9 +245,17 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s Sten";
 				break;
+			case MOD_PPSH:
+				message = "was killed by";
+				message2 = "'s PPSh-41";
+				break;
 			case MOD_MAUSER:
 				message = "was killed by";
 				message2 = "'s Mauser";
+				break;
+			case MOD_MOSIN:
+				message = "was killed by";
+				message2 = "'s Mosin-Nagant";
 				break;
 			case MOD_SNIPERRIFLE:
 				message = "was killed by";
@@ -265,9 +273,25 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s M1 Garand";
 				break;
+			case MOD_G43:
+				message = "was killed by";
+				message2 = "'s G43";
+				break;
 			case MOD_AKIMBO:
 				message = "was killed by";
 				message2 = "'s akimbo pistols";
+				break;
+			case MOD_TT33:
+				message = "was killed by";
+				message2 = "'s TT-33";
+				break;
+			case MOD_DUAL_TT33:
+				message = "was killed by";
+				message2 = "'s akimbo TT-33s";
+				break;
+			case MOD_REVOLVER:
+				message = "was killed by";
+				message2 = "'s revolver";
 				break;
 			// JPW NERVE - per atvi req
 			case MOD_DYNAMITE:
@@ -353,6 +377,10 @@ static void CG_Obituary( entityState_t *ent ) {
 			case MOD_SHOTGUN:
 				message = "was blasted by";
 				message2 = "'s shotgun";
+				break;
+			case MOD_AUTO5:
+				message = "was blasted by";
+				message2 = "'s Auto-5";
 				break;
 			default:
 				message = "was killed by";
@@ -515,6 +543,12 @@ static void CG_ItemPickup( int itemNum ) {
 			}
 		}
 
+		if ( weapon == WP_TT33 ) {
+			if ( COM_BitCheck( cg.snap->ps.weapons, weapon ) ) {
+				weapon = WP_DUAL_TT33; // you have tt33, now get dual tt33 (second)
+			}
+		}
+
 		if ( cg_autoswitch.integer && cg.predictedPlayerState.weaponstate != WEAPON_RELOADING ) {
 
 			//	0 - "Off"
@@ -586,7 +620,7 @@ static void CG_ItemPickup( int itemNum ) {
 
 		// only select one-handed weaps if you've got a chair
 		if ( cg.snap->ps.eFlags & EF_MELEE_ACTIVE ) {
-			if ( !( ( 1 << weapon ) & WEAPS_ONE_HANDED ) ) {
+			if ( !( ( 1LL << weapon ) & WEAPS_ONE_HANDED ) ) {
 				selectIt = qfalse;
 			}
 		}

@@ -1616,6 +1616,7 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 		VectorMA( muzzlePoint, 20, right, muzzlePoint );
 		break;
 	case WP_AKIMBO:     // left side rather than right
+	case WP_DUAL_TT33:
 		VectorMA( muzzlePoint, -6, right, muzzlePoint );
 		VectorMA( muzzlePoint, -4, up, muzzlePoint );
 		break;
@@ -1858,6 +1859,7 @@ void FireWeapon( gentity_t *ent ) {
 	switch (ent->s.weapon)
 	{
 	case WP_M97:
+	case WP_AUTO5:
 		if (!ent->aiCharacter)
 		{
 			vec3_t vec_forward, vec_vangle;

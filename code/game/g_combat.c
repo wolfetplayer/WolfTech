@@ -252,6 +252,7 @@ void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 char    *modNames[] = {
 	"MOD_UNKNOWN",
 	"MOD_SHOTGUN",
+	"MOD_AUTO5",
 	"MOD_MONSTER_MELEE",
 	"MOD_MACHINEGUN",
 	"MOD_GRENADE",
@@ -271,14 +272,20 @@ char    *modNames[] = {
 	"MOD_MP34",
 	"MOD_THOMPSON",
 	"MOD_STEN",
+	"MOD_PPSH",
+	"MOD_MOSIN",
 	"MOD_MAUSER",
 	"MOD_SNIPERRIFLE",
 	"MOD_SNOOPER",
 	"MOD_SNOOPERSCOPE",
 	"MOD_M1GARAND",
+	"MOD_G43",
 	"MOD_M7",
 	"MOD_SILENCER", //----(SA)
 	"MOD_AKIMBO",    //----(SA)
+	"MOD_TT33",
+	"MOD_DUAL_TT33",
+	"MOD_REVOLVER",
 	"MOD_BAR",   //----(SA)
 	"MOD_FG42",
 	"MOD_FG42SCOPE",
@@ -640,16 +647,22 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_LUGER:
 	case MOD_COLT:
 	case MOD_AKIMBO:
+	case MOD_TT33:
+	case MOD_DUAL_TT33:
+	case MOD_REVOLVER:
 	case MOD_MP40:
 	case MOD_MP34:
 	case MOD_THOMPSON:
 	case MOD_STEN:
+	case MOD_PPSH:
 	case MOD_BAR:
 	case MOD_FG42:
 	case MOD_MP44:
 	case MOD_MAUSER:
+	case MOD_MOSIN:
 	case MOD_SNOOPER:
 	case MOD_M1GARAND:
+	case MOD_G43:
 	case MOD_SILENCER:
 	case MOD_FG42SCOPE:
 	case MOD_SNOOPERSCOPE:

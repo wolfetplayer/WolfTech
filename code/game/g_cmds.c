@@ -2235,7 +2235,7 @@ qboolean G_canPickupMelee( gentity_t *ent ) {
 	}
 
 //	if( WEAPS_ONE_HANDED & (1<<(ent->s.weapon)) )
-	if ( WEAPS_ONE_HANDED & ( 1 << ( ent->client->pers.cmd.weapon ) ) ) {
+	if ( WEAPS_ONE_HANDED & ( 1LL << ( ent->client->pers.cmd.weapon ) ) ) {
 		return qtrue;
 	}
 

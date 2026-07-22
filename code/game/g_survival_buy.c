@@ -50,18 +50,24 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 		case WP_SILENCER:     return 30;
 		case WP_COLT:         return 30;
 		case WP_AKIMBO:       return 60;
+		case WP_TT33:         return 35;
+		case WP_DUAL_TT33:    return 70;
+		case WP_REVOLVER:     return 80;
 
 		// SMGs
 		case WP_STEN:         return 90;
 		case WP_MP40:         return 100;
 		case WP_MP34:         return 120;
 		case WP_THOMPSON:     return 120;
+		case WP_PPSH:         return 130;
 
 		// Rifles
 		case WP_MAUSER:       return 50;
+		case WP_MOSIN:        return 60;
 		case WP_SNIPERRIFLE:  return 100;
 		case WP_SNOOPERSCOPE: return 150;
 		case WP_M1GARAND:     return 150;
+		case WP_G43:          return 150;
 
 		// Auto Rifles
 
@@ -72,6 +78,7 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 
 		// Shotguns
 		case WP_M97:          return 200;
+		case WP_AUTO5:        return 225;
 
 		// Heavy
 		case WP_PANZERFAUST:  return 400;
@@ -99,9 +106,9 @@ qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, ch
 
 	static const weapon_t random_box_weapons[] = {
 		WP_LUGER, WP_SILENCER, WP_COLT,
-		WP_AKIMBO, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34,
-		WP_MAUSER, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
-		WP_M1GARAND, WP_MP44, WP_BAR, WP_M97,
+		WP_AKIMBO, WP_TT33, WP_DUAL_TT33, WP_REVOLVER, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34, WP_PPSH,
+		WP_MAUSER, WP_MOSIN, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
+		WP_M1GARAND, WP_G43, WP_MP44, WP_BAR, WP_M97, WP_AUTO5,
 		WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA,
 		WP_MG42M, WP_BROWNING
 	};

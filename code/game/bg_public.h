@@ -529,7 +529,7 @@ typedef enum {
 	HI_BOOK2,   //----(SA)	added
 	HI_BOOK3,   //----(SA)	added
 	HI_M97,     // not a real holdable pickup - reuses this networked slot for the M97 pump-reload sub-state (m97state_t)
-	HI_12,
+	HI_AUTO5,   // not a real holdable pickup - reuses this networked slot for the Auto-5 pump-reload sub-state (auto5state_t)
 	HI_13,
 	HI_14,
 //	HI_15,	// ?
@@ -545,6 +545,15 @@ typedef enum {
 	M97_RELOADING_AFTER_PUMP,   // reload first shell and pump to loop
 	M97_RELOADING_LOOP      // reload normal shell loop
 } m97state_t;
+
+// Auto-5 pump-reload sub-state, stored in ps->holdable[HI_AUTO5]
+typedef enum {
+	AUTO5_READY,              // not reloading
+	AUTO5_RELOADING_BEGIN,        // reload normal shell start
+	AUTO5_RELOADING_BEGIN_PUMP,   // reload first shell and pump start
+	AUTO5_RELOADING_AFTER_PUMP,   // reload first shell and pump to loop
+	AUTO5_RELOADING_LOOP      // reload normal shell loop
+} auto5state_t;
 
 
 typedef enum {
@@ -629,6 +638,13 @@ typedef enum {
 	WP_MP34,
 	WP_MP44,
 	WP_M97,
+	WP_REVOLVER,
+	WP_G43,
+	WP_PPSH,
+	WP_MOSIN,
+	WP_TT33,
+	WP_DUAL_TT33,
+	WP_AUTO5,
 
 	WP_DYNAMITE,
 
@@ -731,7 +747,7 @@ extern ammotable_t ammoTable[WP_NUM_WEAPONS];
 #define WP_BEGINSECONDARY   WP_SNIPERRIFLE
 #define WP_LASTSECONDARY    WP_M7
 
-#define WEAPS_ONE_HANDED    ( ( 1 << WP_KNIFE ) | ( 1 << WP_LUGER ) | ( 1 << WP_COLT ) | ( 1 << WP_SILENCER ) | ( 1 << WP_GRENADE_LAUNCHER ) | ( 1 << WP_GRENADE_PINEAPPLE ) )
+#define WEAPS_ONE_HANDED    ( ( 1LL << WP_KNIFE ) | ( 1LL << WP_LUGER ) | ( 1LL << WP_COLT ) | ( 1LL << WP_SILENCER ) | ( 1LL << WP_REVOLVER ) | ( 1LL << WP_TT33 ) | ( 1LL << WP_GRENADE_LAUNCHER ) | ( 1LL << WP_GRENADE_PINEAPPLE ) )
 //----(SA)	end
 
 typedef enum {
@@ -1269,6 +1285,7 @@ typedef enum {
 typedef enum {
 	MOD_UNKNOWN,
 	MOD_SHOTGUN,
+	MOD_AUTO5,
 	MOD_MONSTER_MELEE,
 	MOD_MACHINEGUN,
 	MOD_GRENADE,
@@ -1288,14 +1305,20 @@ typedef enum {
 	MOD_MP34,
 	MOD_THOMPSON,
 	MOD_STEN,
+	MOD_PPSH,
+	MOD_MOSIN,
 	MOD_MAUSER,
 	MOD_SNIPERRIFLE,
 	MOD_SNOOPER,
 	MOD_SNOOPERSCOPE,
 	MOD_M1GARAND,
+	MOD_G43,
 	MOD_M7,
 	MOD_SILENCER,   //----(SA)
 	MOD_AKIMBO,     //----(SA)
+	MOD_TT33,
+	MOD_DUAL_TT33,
+	MOD_REVOLVER,
 	MOD_BAR,    //----(SA)
 	MOD_FG42,
 	MOD_FG42SCOPE,

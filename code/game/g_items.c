@@ -451,6 +451,13 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 			weapon = WP_AKIMBO;
 		}
 	}
+
+	// check for special tt33->dual tt33 add (if you've got a tt33 already, add the second now)
+	if ( weapon == WP_TT33 ) {
+		if ( COM_BitCheck( other->client->ps.weapons, WP_TT33 ) ) {
+			weapon = WP_DUAL_TT33;
+		}
+	}
 //----(SA)	end
 
 	// check if player already had the weapon
@@ -685,6 +692,13 @@ int Pickup_Weapon_New_Inventory( gentity_t *ent, gentity_t *other ) {
 	if ( weapon == WP_COLT ) {
 		if ( COM_BitCheck( other->client->ps.weapons, WP_COLT ) ) {
 			weapon = WP_AKIMBO;
+		}
+	}
+
+	// check for special tt33->dual tt33 add (if you've got a tt33 already, add the second now)
+	if ( weapon == WP_TT33 ) {
+		if ( COM_BitCheck( other->client->ps.weapons, WP_TT33 ) ) {
+			weapon = WP_DUAL_TT33;
 		}
 	}
 

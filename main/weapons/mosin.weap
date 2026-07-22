@@ -1,0 +1,54 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/rifles/mosin/mosin_3rd.md3"
+
+		weaponConfig		"models/weapons/rifles/mosin/weapon.cfg"
+		handsModel			"models/weapons/rifles/mosin/v_mosin_hand.mdc"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/mosin/mosin_fire.wav"
+		flashEchoSound	    "sound/weapons/mosin/mosin_far.wav"
+		lastShotSound		"sound/weapons/mosin/mosin_fire_last.wav"
+
+		reloadSound			"sound/weapons/mosin/mosin_reload.wav"
+		reloadSoundFast		"sound/weapons/mosin/mosin_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/rifle_reload.wav"
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_mosin"
+		weaponSelectedIcon	"icons/iconw_mosin_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/rifles/mosin/v_mosin.md3"
+			flashModel		"models/weapons/rifles/mosin/v_mosin_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/rifles/mosin/v_mosin_barrel.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/rifles/mosin/v_mosin_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/rifles/mosin/v_mosin_barrel4.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/rifles/mosin/mosin_3rd.md3"
+			flashModel		"models/weapons/rifles/mosin/mosin_3rd_flash.md3"
+		}
+	}
+}

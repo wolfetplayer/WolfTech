@@ -1823,6 +1823,13 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		}
 	}
 
+	if ( weapon == WP_TT33 ) {
+		// if you had the tt33 already, now you've got two!
+		if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_TT33 ) ) {
+			weapon = WP_DUAL_TT33;
+		}
+	}
+
 	if (!ent->aiCharacter)
 	{
 		if (g_gametype.integer == GT_COOP_SURVIVAL)
@@ -1966,6 +1973,13 @@ qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params ) {
 		}
 	}
 
+	// if you had the tt33 already, now you've got two!
+	if ( weapon == WP_TT33 ) {
+		if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_TT33 ) ) {
+			weapon = WP_DUAL_TT33;
+		}
+	}
+
 	if ( weapon != WP_NONE ) {
 		COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, weapon );
 
@@ -2071,6 +2085,14 @@ qboolean AICast_ScriptAction_TakeWeapon( cast_state_t *cs, char *params ) {
 				// take 'akimbo' first if it's there, then take 'colt'
 				if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_AKIMBO ) ) {
 					weapon = WP_AKIMBO;
+				}
+			} else if ( weapon == WP_DUAL_TT33 ) {
+				// take both the tt33 /and/ the dual tt33 weapons when 'dual tt33' is specified
+				COM_BitClear( g_entities[cs->entityNum].client->ps.weapons, WP_TT33 );
+			} else if ( weapon == WP_TT33 ) {
+				// take 'dual tt33' first if it's there, then take 'tt33'
+				if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_DUAL_TT33 ) ) {
+					weapon = WP_DUAL_TT33;
 				}
 			}
 

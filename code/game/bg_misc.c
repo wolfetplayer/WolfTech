@@ -58,14 +58,14 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{0,                     0,                      0           },  //	0 (empty)
 
 	{WP_KNIFE,              0,                      0           },  //	1
-	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO   },  //	2
-	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34     },  //	3
-	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND },  //	4
+	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_TT33,     WP_DUAL_TT33, WP_REVOLVER },  //	2
+	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
+	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
 	{WP_TESLA,              WP_VENOM,               0           },  //	8
-	{WP_M97,                0,                      0           },  //	9
+	{WP_M97,                WP_AUTO5,               0           },  //	9
 	{WP_MG42M,              WP_BROWNING,            0           }   //	10
 };
 
@@ -227,9 +227,9 @@ ammotable_t ammoTable[] = {
 		.weapFile           = "colt.weap",
     },
     [WP_AKIMBO] = {
-		.weaponindex        = WP_AKIMBO,		
+		.weaponindex        = WP_AKIMBO,
 		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_PISTOL,
+		.weaponClass        = WEAPON_CLASS_PISTOL | WEAPON_CLASS_AKIMBO,
         .maxammo            = 112,
         .uses               = 1,
         .maxclip            = 14,
@@ -733,6 +733,236 @@ ammotable_t ammoTable[] = {
 		.shotgunPumpLoop    = 250,
 		.shotgunPumpEnd     = 275,
 		.weapFile           = "ithaca.weap",
+    },
+    [WP_REVOLVER] = {
+		.weaponindex        = WP_REVOLVER,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_PISTOL,
+        .maxammo            = 60,
+        .uses               = 1,
+        .maxclip            = 6,
+        .reloadTime         = 3600,
+        .reloadTimeFull     = 3600,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 380,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 18,
+		.weaponSpread       = 300,
+		.spreadScale        = 0.4f,
+		.spreadScaleAdd     = 35,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.3f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_REVOLVER,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
+		.weapFile           = "revolver.weap",
+    },
+    [WP_G43] = {
+		.weaponindex        = WP_G43,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_RIFLE_AUTO,
+        .maxammo            = 200,
+        .uses               = 1,
+        .maxclip            = 10,
+        .reloadTime         = 2300,
+        .reloadTimeFull     = 2300,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 300,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 20,
+		.weaponSpread       = 350,
+		.spreadScale        = 0.4f,
+		.spreadScaleAdd     = 40,
+        .weapRecoilDuration = 40,
+        .weapRecoilPitch    = { 0.2f, 0.2f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 2000,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_G43,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 1.0f, 0.0f, -1.0f },
+		.weapFile           = "g43.weap",
+    },
+    [WP_PPSH] = {
+		.weaponindex        = WP_PPSH,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_SMG,
+        .maxammo            = 400,
+        .uses               = 1,
+        .maxclip            = 71,
+        .reloadTime         = 2600,
+        .reloadTimeFull     = 2600,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 65,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 6,
+		.weaponSpread       = 1000,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 30,
+        .weapRecoilPitch    = { 0.1f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1000,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_PPSH,
+		.rndTriggerRelease  = qtrue,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
+		.weapFile           = "ppsh.weap",
+    },
+    [WP_MOSIN] = {
+		.weaponindex        = WP_MOSIN,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_RIFLE_BOLTACTION,
+        .maxammo            = 150,
+        .uses               = 1,
+        .maxclip            = 5,
+        .reloadTime         = 2250,
+        .reloadTimeFull     = 2250,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 1400,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 30,
+		.weaponSpread       = 300,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 50,
+        .weapRecoilDuration = 60,
+        .weapRecoilPitch    = { 1.0f, 1.0f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 2000,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_MOSIN,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, -1.0f },
+		.weapFile           = "mosin.weap",
+    },
+    [WP_TT33] = {
+		.weaponindex        = WP_TT33,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_PISTOL,
+        .maxammo            = 400,
+        .uses               = 1,
+        .maxclip            = 8,
+        .reloadTime         = 1600,
+        .reloadTimeFull     = 1600,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 350,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 9,
+		.weaponSpread       = 450,
+		.spreadScale        = 0.3f,
+		.spreadScaleAdd     = 35,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 700,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_TT33,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, -1.0f },
+		.weapFile           = "tt33.weap",
+    },
+    [WP_DUAL_TT33] = {
+		.weaponindex        = WP_DUAL_TT33,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_PISTOL | WEAPON_CLASS_AKIMBO,
+        .maxammo            = 300,
+        .uses               = 1,
+        .maxclip            = 16,
+        .reloadTime         = 2000,
+        .reloadTimeFull     = 2000,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 220,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 9,
+		.weaponSpread       = 500,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 35,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 700,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_DUAL_TT33,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, 0.0f },
+		.weapFile           = "dualtt33.weap",
+    },
+    [WP_AUTO5] = {
+		.weaponindex        = WP_AUTO5,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_SHOTGUN,
+        .maxammo            = 100,
+        .uses               = 1,
+        .maxclip            = 6,
+        .reloadTime         = 2300,
+        .reloadTimeFull     = 2300,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 300,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 10,
+		.weaponSpread       = 4000,
+		.spreadScale        = 0.6f,
+		.spreadScaleAdd     = 15,
+        .weapRecoilDuration = 100,
+        .weapRecoilPitch    = { 0.1f, 0.2f },
+        .weapRecoilYaw      = { 0.5f, 0.5f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_SHOTGUN,
+        .moveSpeed          = 0.90f,
+        .mod                = MOD_AUTO5,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qtrue,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { -4.0f, -1.0f, -1.0f },
+		.shotgunReloadStart = 580,
+		.shotgunReloadLoop  = 850,
+		.shotgunReloadEnd   = 250,
+		.shotgunPumpStart   = 2100,
+		.shotgunPumpLoop    = 580,
+		.shotgunPumpEnd     = 1,
+		.weapFile           = "auto5.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -1896,6 +2126,52 @@ gitem_t bg_itemlist[] =
 		{0,0,0,0}
 	},
 
+	{
+		"weapon_tt33",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/pistols/tt33/tt33_3rd.md3",
+			"models/weapons/pistols/tt33/v_tt33.md3",
+			"models/weapons/pistols/tt33/tt33_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_tt33",      // icon
+		"icons/ammo2",           // ammo icon
+		"TT-33",                 // pickup
+		50,
+		IT_WEAPON,
+		WP_TT33,
+		WP_TT33,
+		WP_TT33,
+		WP_TT33,
+		WP_TT33,
+		"",                      // precache
+		"",                      // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_dualtt33",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/pistols/tt33/tt33_3rd.md3",
+			"models/weapons/pistols/tt33_2/v_tt33_2.md3",
+			"models/weapons/pistols/tt33/tt33_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_dualtt33",  // icon
+		"icons/ammo2",           // ammo icon
+		"Dual TT-33s",           // pickup
+		50,
+		IT_WEAPON,
+		WP_DUAL_TT33,
+		WP_DUAL_TT33,
+		WP_TT33,
+		WP_DUAL_TT33,
+		WP_DUAL_TT33,
+		"",                      // precache
+		"",                      // sounds
+		{0,0,0,0}
+	},
+
 
 	{
 		"NOT_weapon_garandRifle",    //----(SA)	modified so it can no longer be given individually
@@ -2101,6 +2377,121 @@ gitem_t bg_itemlist[] =
 		WP_M97,
 		WP_M97,
 		WP_M97,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_auto5",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/shotguns/auto5/auto5_3rd.md3",
+			"models/weapons/shotguns/auto5/v_auto5.md3",
+			"models/weapons/shotguns/auto5/auto5_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_auto5",      // icon
+		"icons/ammo10",           // ammo icon
+		"Auto-5",                 // pickup
+		30,
+		IT_WEAPON,
+		WP_AUTO5,
+		WP_AUTO5,
+		WP_AUTO5,
+		WP_AUTO5,
+		WP_AUTO5,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_revolver",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/pistols/revolver/revolver_3rd.md3",
+			"models/weapons/pistols/revolver/v_revolver.md3",
+			"models/weapons/pistols/revolver/revolver_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_revolver",  // icon
+		"icons/ammo2",           // ammo icon
+		"Revolver",              // pickup
+		30,
+		IT_WEAPON,
+		WP_REVOLVER,
+		WP_REVOLVER,
+		WP_REVOLVER,
+		WP_REVOLVER,
+		WP_REVOLVER,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_g43",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/auto_rifles/g43/g43_3rd.md3",
+			"models/weapons/auto_rifles/g43/v_g43.md3",
+			"models/weapons/auto_rifles/g43/g43_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_g43",       // icon
+		"icons/ammo10",          // ammo icon
+		"G43 rifle",             // pickup
+		20,
+		IT_WEAPON,
+		WP_G43,
+		WP_G43,
+		WP_G43,
+		WP_G43,
+		WP_G43,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_ppsh",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/smgs/ppsh/ppsh_3rd.md3",
+			"models/weapons/smgs/ppsh/v_ppsh.md3",
+			"models/weapons/smgs/ppsh/ppsh_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_ppsh_1",    // icon
+		"icons/ammo2",           // ammo icon
+		"PPSh-41",               // pickup
+		30,
+		IT_WEAPON,
+		WP_PPSH,
+		WP_PPSH,
+		WP_PPSH,
+		WP_PPSH,
+		WP_PPSH,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_mosin",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/rifles/mosin/mosin_3rd.md3",
+			"models/weapons/rifles/mosin/v_mosin.md3",
+			"models/weapons/rifles/mosin/mosin_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_mosin",     // icon
+		"icons/ammo3",           // ammo icon
+		"Mosin-Nagant",          // pickup
+		50,
+		IT_WEAPON,
+		WP_MOSIN,
+		WP_MOSIN,
+		WP_MOSIN,
+		WP_MOSIN,
+		WP_MOSIN,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
@@ -3584,7 +3975,7 @@ BG_AkimboFireSequence
 qboolean BG_AkimboFireSequence( int weapon, int akimboClip ) {
 	// NOTE: this doesn't work when clips are turned off (dmflags 64)
 
-	if ( weapon != WP_AKIMBO ) {
+	if ( weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS || !( GetWeaponTableData( weapon )->weaponClass & WEAPON_CLASS_AKIMBO ) ) {
 		return qfalse;
 	}
 
