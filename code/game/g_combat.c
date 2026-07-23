@@ -1273,34 +1273,37 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			take *= targ->headshotDamageScale;
 
 			// player only code
-			if ( !attacker->aiCharacter && g_gametype.integer > GT_COOP ) {
-				// (SA) id reqests one-shot kills for head shots on common humanoids
+			if ( !attacker->aiCharacter ) {
+				if ( g_gametype.integer > GT_COOP ) {
+					// (SA) id reqests one-shot kills for head shots on common humanoids
 
-				// (SA) except pistols.
-				// first pistol head shot does normal 2x damage and flings hat, second gets kill
-				//			if((mod != MOD_LUGER && mod != MOD_COLT ) || (targ->client->ps.eFlags & EF_HEADSHOT))	{	// (SA) DM requests removing double shot pistol head shots (3/19)
+					// (SA) except pistols.
+					// first pistol head shot does normal 2x damage and flings hat, second gets kill
+					//			if((mod != MOD_LUGER && mod != MOD_COLT ) || (targ->client->ps.eFlags & EF_HEADSHOT))	{	// (SA) DM requests removing double shot pistol head shots (3/19)
 
-				// (SA) removed BG for DM.
+					// (SA) removed BG for DM.
 
-				if ( !( dflags & DAMAGE_PASSTHRU ) ) {     // ignore headshot 2x damage and snooper-instant-death if the bullet passed through something.  just do reg damage.
-					switch ( targ->aiCharacter ) {
-					case AICHAR_BLACKGUARD:
-						if ( !( targ->client->ps.eFlags & EF_HEADSHOT ) ) { // only obliterate him after he's lost his helmet
+					if ( !( dflags & DAMAGE_PASSTHRU ) ) {     // ignore headshot 2x damage and snooper-instant-death if the bullet passed through something.  just do reg damage.
+						switch ( targ->aiCharacter ) {
+						case AICHAR_BLACKGUARD:
+							if ( !( targ->client->ps.eFlags & EF_HEADSHOT ) ) { // only obliterate him after he's lost his helmet
+								break;
+							}
+						case AICHAR_SOLDIER:
+						case AICHAR_TRENCH:
+						case AICHAR_AMERICAN:
+						case AICHAR_ELITEGUARD:
+						case AICHAR_PARTISAN:
+						case AICHAR_CIVILIAN:
+							take = 200;
+							break;
+						default:
 							break;
 						}
-					case AICHAR_SOLDIER:
-					case AICHAR_TRENCH:
-					case AICHAR_AMERICAN:
-					case AICHAR_ELITEGUARD:
-					case AICHAR_PARTISAN:
-					case AICHAR_CIVILIAN:
-						take = 200;
-						break;
-					default:
-						break;
 					}
 				}
 
+				// toss the hat regardless of coop vs single player, so it doesn't just vanish
 				if ( !( targ->client->ps.eFlags & EF_HEADSHOT ) ) {  // only toss hat on first headshot
 					G_AddEvent( targ, EV_LOSE_HAT, DirToByte( dir ) );
 				}
