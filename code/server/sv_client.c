@@ -708,6 +708,10 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	// Free all allocated data on the client structure
 	SV_FreeClient(drop);
 
+	// prevent SV_AddServerCommand() from recursively dropping this client
+	drop->reliableSequence = drop->reliableAcknowledge;
+	drop->gamestateMessageNum = -1;
+
 	// Ridah, no need to tell the player if an AI drops
 	if ( !( drop->gentity && drop->gentity->r.svFlags & SVF_CASTAI ) ) {
 		// tell everyone why they got dropped
@@ -2037,7 +2041,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	// NOTE: when the client message is fux0red the acknowledgement numbers
 	// can be out of range, this could cause the server to send thousands of server
 	// commands which the server thinks are not yet acknowledged in SV_UpdateServerCommandsToClient
-	if ( cl->reliableAcknowledge < cl->reliableSequence - MAX_RELIABLE_COMMANDS ) {
+	if ( ( cl->reliableSequence - cl->reliableAcknowledge >= MAX_RELIABLE_COMMANDS ) || ( cl->reliableSequence - cl->reliableAcknowledge < 0 ) ) {
 		// usually only hackers create messages like this
 		// it is more annoying for them to let them hanging
 #ifndef NDEBUG
