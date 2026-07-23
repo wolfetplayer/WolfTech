@@ -54,6 +54,8 @@ extern const char *fallbackShader_tonemap_vp;
 extern const char *fallbackShader_tonemap_fp;
 extern const char *fallbackShader_gamma_vp;
 extern const char *fallbackShader_gamma_fp;
+extern const char *fallbackShader_greyscale_vp;
+extern const char *fallbackShader_greyscale_fp;
 
 typedef struct uniformInfo_s
 {
@@ -158,6 +160,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_ZFadeHighest", GLSL_FLOAT },
 
 	{ "u_InvGamma", GLSL_FLOAT },
+
+	{ "u_Greyscale", GLSL_FLOAT },
 };
 
 typedef enum
@@ -1026,6 +1030,19 @@ void GLSL_InitGPUShaders(void)
 
 	numEtcShaders++;
 
+	if (!GLSL_InitGPUShader(&tr.greyscaleShader, "greyscale", attribs, qtrue, extradefines, qtrue, fallbackShader_greyscale_vp, fallbackShader_greyscale_fp))
+	{
+		ri.Error(ERR_FATAL, "Could not load greyscale shader!");
+	}
+
+	GLSL_InitUniforms(&tr.greyscaleShader);
+
+	GLSL_SetUniformInt(&tr.greyscaleShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+
+	GLSL_FinishGPUShader(&tr.greyscaleShader);
+
+	numEtcShaders++;
+
 	for (i = 0; i < FOGDEF_COUNT; i++)
 	{
 		if ((i & FOGDEF_USE_VERTEX_ANIMATION) && (i & FOGDEF_USE_BONE_ANIMATION))
@@ -1501,6 +1518,7 @@ void GLSL_ShutdownGPUShaders(void)
 
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
 	GLSL_DeleteGPUShader(&tr.gammaShader);
+	GLSL_DeleteGPUShader(&tr.greyscaleShader);
 
 	for ( i = 0; i < FOGDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.fogShader[i]);

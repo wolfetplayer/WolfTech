@@ -798,6 +798,8 @@ typedef enum
 
 	UNIFORM_INVGAMMA,
 
+	UNIFORM_GREYSCALE,
+
 	UNIFORM_COUNT
 } uniform_t;
 
@@ -1648,6 +1650,7 @@ typedef struct {
 	qboolean    colorMask[4];
 	qboolean    framePostProcessed;
 	qboolean    depthFill;
+	float       greyscale;
 } backEndState_t;
 
 /*
@@ -1760,6 +1763,7 @@ typedef struct {
 	shaderProgram_t genericShader[GENERICDEF_COUNT];
 	shaderProgram_t textureColorShader;
 	shaderProgram_t gammaShader;
+	shaderProgram_t greyscaleShader;
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];

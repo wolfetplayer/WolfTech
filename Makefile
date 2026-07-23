@@ -1965,6 +1965,8 @@ Q3R2STRINGOBJ = \
   $(B)/rend2/glsl/gamma_vp.o \
   $(B)/rend2/glsl/generic_fp.o \
   $(B)/rend2/glsl/generic_vp.o \
+  $(B)/rend2/glsl/greyscale_fp.o \
+  $(B)/rend2/glsl/greyscale_vp.o \
   $(B)/rend2/glsl/lightall_fp.o \
   $(B)/rend2/glsl/lightall_vp.o \
   $(B)/rend2/glsl/pshadow_fp.o \

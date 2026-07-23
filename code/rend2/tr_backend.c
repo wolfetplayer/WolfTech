@@ -311,6 +311,8 @@ static void SetViewportAndScissor( void ) {
 					backEnd.viewParms.viewportHeight );
 }
 
+static FBO_t *RB_PostProcessedTarget(void);
+
 /*
 =================
 RB_BeginDrawingView
@@ -343,6 +345,8 @@ void RB_BeginDrawingView( void ) {
 		// drawing more world check is in case of double renders, such as skyportals
 		if (fbo == NULL && !(backEnd.framePostProcessed && (backEnd.refdef.rdflags & RDF_NOWORLDMODEL)))
 			fbo = tr.renderFbo;
+		else if (fbo == NULL && backEnd.framePostProcessed)
+			fbo = RB_PostProcessedTarget();
 
 		if (tr.renderCubeFbo && fbo == tr.renderCubeFbo)
 		{
@@ -468,6 +472,9 @@ void RB_BeginDrawingView( void ) {
 
 	// we will only draw a sun if there was sky rendered in this view
 	backEnd.skyRenderedThisView = qfalse;
+
+	// cache the clamped greyscale value
+	backEnd.greyscale = Com_Clamp(0.0f, 1.0f, r_greyscale->value);
 
 	// clip to the plane of the portal
 	if ( backEnd.viewParms.isPortal ) {
@@ -1066,6 +1073,55 @@ void    RB_SetGL2D( void ) {
 	backEnd.refdef.floatTime = backEnd.refdef.time * 0.001;
 }
 
+/*
+=============
+RB_PostProcessedTarget
+
+Where the tonemap/gamma pass and any subsequent 2D/HUD draws should land
+once the world scene for this frame has already been post-processed.
+Normally that's the real screen (NULL); redirected into screenScratchFbo
+when greyscale is active so RB_PresentToScreen can still desaturate the
+composited HUD along with the world.
+=============
+*/
+static FBO_t *RB_PostProcessedTarget(void)
+{
+	return (backEnd.greyscale > 0.0f && tr.screenScratchFbo) ? tr.screenScratchFbo : NULL;
+}
+
+/*
+=============
+RB_DrawGreyscale
+
+=============
+*/
+static void RB_DrawGreyscale(const FBO_t *src)
+{
+	if (!src || !src->colorImage[0])
+		return;
+
+	FBO_Bind(NULL);
+	qglViewport(0, 0, glConfig.vidWidth, glConfig.vidHeight);
+	qglScissor(0, 0, glConfig.vidWidth, glConfig.vidHeight);
+	GL_State(GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+
+	GLSL_BindProgram(&tr.greyscaleShader);
+	GLSL_SetUniformInt(&tr.greyscaleShader, UNIFORM_TEXTUREMAP, 0);
+	GLSL_SetUniformFloat(&tr.greyscaleShader, UNIFORM_GREYSCALE, backEnd.greyscale);
+	GL_BindToTMU(src->colorImage[0], 0);
+
+	vec4_t quadVerts[4] = {
+		{ 0.0f,                      0.0f,                       0.0f, 1.0f },
+		{ (float)glConfig.vidWidth,  0.0f,                       0.0f, 1.0f },
+		{ (float)glConfig.vidWidth,  (float)glConfig.vidHeight,  0.0f, 1.0f },
+		{ 0.0f,                      (float)glConfig.vidHeight,  0.0f, 1.0f },
+	};
+
+	vec2_t texCoords[4] = { {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f} };
+
+	RB_InstantQuad2(quadVerts, texCoords);
+}
+
 
 /*
 =============
@@ -1119,7 +1175,7 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject)
 	{
-		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
+		FBO_Bind(backEnd.framePostProcessed ? RB_PostProcessedTarget() : tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -1206,7 +1262,7 @@ const void *RB_StretchPic( const void *data ) {
 
 	// FIXME: HUGE hack
 	if (glRefConfig.framebufferObject)
-		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
+		FBO_Bind(backEnd.framePostProcessed ? RB_PostProcessedTarget() : tr.renderFbo);
 
 	RB_SetGL2D();
 
@@ -1295,7 +1351,7 @@ const void *RB_RotatedPic( const void *data ) {
 	{
 		if (!tr.renderFbo || backEnd.framePostProcessed)
 		{
-			FBO_Bind(NULL);
+			FBO_Bind(backEnd.framePostProcessed ? RB_PostProcessedTarget() : NULL);
 		}
 		else
 		{
@@ -1392,7 +1448,7 @@ const void *RB_StretchPicGradient( const void *data ) {
 	{
 		if (!tr.renderFbo || backEnd.framePostProcessed)
 		{
-			FBO_Bind(NULL);
+			FBO_Bind(backEnd.framePostProcessed ? RB_PostProcessedTarget() : NULL);
 		}
 		else
 		{
@@ -1921,7 +1977,7 @@ const void *RB_ClearDepth(const void *data)
 	{
 		if (!tr.renderFbo || backEnd.framePostProcessed)
 		{
-			FBO_Bind(NULL);
+			FBO_Bind(backEnd.framePostProcessed ? RB_PostProcessedTarget() : NULL);
 		}
 		else
 		{
@@ -1939,6 +1995,50 @@ const void *RB_ClearDepth(const void *data)
 	}
 	
 	return (const void *)(cmd + 1);
+}
+
+
+/*
+=============
+RB_PresentToScreen
+
+=============
+*/
+static void RB_PresentToScreen(void)
+{
+	if (!glRefConfig.framebufferObject)
+		return;
+
+	if (backEnd.framePostProcessed)
+	{
+		// world + HUD were already composited this frame.
+		if (backEnd.greyscale > 0.0f && tr.screenScratchFbo)
+		{
+			// ...into screenScratchFbo instead of straight to the screen, so it can be desaturated here.
+			RB_DrawGreyscale(tr.screenScratchFbo);
+		}
+		// else: already blitted straight to the screen during RB_PostProcess.
+		return;
+	}
+
+	// post-process didn't touch the screen (r_postProcess 0) - blit the raw render target ourselves.
+	if (tr.msaaResolveFbo && r_hdr->integer)
+	{
+		// Resolving an RGB16F MSAA FBO to the screen messes with the brightness, so resolve to an RGB16F FBO first
+		FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		if (backEnd.greyscale > 0.0f)
+			RB_DrawGreyscale(tr.msaaResolveFbo);
+		else
+			FBO_FastBlit(tr.msaaResolveFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	}
+	else if (tr.renderFbo)
+	{
+		if (backEnd.greyscale > 0.0f)
+			RB_DrawGreyscale(tr.renderFbo);
+		else
+			FBO_FastBlit(tr.renderFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	}
 }
 
 
@@ -1981,22 +2081,7 @@ const void  *RB_SwapBuffers( const void *data ) {
 		ri.Hunk_FreeTempMemory( stencilReadback );
 	}
 
-	if (glRefConfig.framebufferObject)
-	{
-		if (!backEnd.framePostProcessed)
-		{
-			if (tr.msaaResolveFbo && r_hdr->integer)
-			{
-				// Resolving an RGB16F MSAA FBO to the screen messes with the brightness, so resolve to an RGB16F FBO first
-				FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-				FBO_FastBlit(tr.msaaResolveFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-			else if (tr.renderFbo)
-			{
-				FBO_FastBlit(tr.renderFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-		}
-	}
+	RB_PresentToScreen();
 
 	if ( !glState.finishCalled ) {
 		qglFinish();
@@ -2086,6 +2171,7 @@ const void *RB_PostProcess(const void *data)
 {
 	const postProcessCommand_t *cmd = data;
 	FBO_t *srcFbo;
+	FBO_t *postDst;
 	ivec4_t srcBox, dstBox;
 	qboolean autoExposure;
 
@@ -2134,12 +2220,16 @@ const void *RB_PostProcess(const void *data)
 	srcBox[2] = backEnd.viewParms.viewportWidth;
 	srcBox[3] = backEnd.viewParms.viewportHeight;
 
+	// normally the real screen (NULL); redirected into screenScratchFbo when
+	// greyscale is active so RB_PresentToScreen can desaturate the HUD too
+	postDst = RB_PostProcessedTarget();
+
 	if (srcFbo)
 	{
 		if (r_hdr->integer && (r_toneMap->integer || r_forceToneMap->integer))
 		{
 			autoExposure = r_autoExposure->integer || r_forceAutoExposure->integer;
-			RB_ToneMap(srcFbo, srcBox, NULL, dstBox, autoExposure);
+			RB_ToneMap(srcFbo, srcBox, postDst, dstBox, autoExposure);
 		}
 		else
 		{
@@ -2151,15 +2241,15 @@ const void *RB_PostProcess(const void *data)
 			color[3] = 1.0f;
 
 			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_INVGAMMA, tr.invGamma);
-			FBO_Blit(srcFbo, srcBox, NULL, NULL, dstBox, &tr.gammaShader, color, 0);
+			FBO_Blit(srcFbo, srcBox, NULL, postDst, dstBox, &tr.gammaShader, color, 0);
 		}
 	}
 
 	if (r_drawSunRays->integer)
-		RB_SunRays(NULL, srcBox, NULL, dstBox);
+		RB_SunRays(postDst, srcBox, postDst, dstBox);
 
 	if (1)
-		RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
+		RB_BokehBlur(postDst, srcBox, postDst, dstBox, backEnd.refdef.blurFactor);
 	else
 		RB_GaussianBlur(backEnd.refdef.blurFactor);
 
