@@ -3201,6 +3201,7 @@ void RE_LoadWorldMap( const char *name ) {
 
 	// reset last cascade sun direction so last shadow cascade is rerendered
 	VectorClear(tr.lastCascadeSunDirection);
+	Com_Memset(tr.cascadeBoundsValid, 0, sizeof(tr.cascadeBoundsValid));
 
 	tr.worldMapLoaded = qtrue;
 

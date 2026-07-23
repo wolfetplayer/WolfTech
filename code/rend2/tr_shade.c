@@ -327,6 +327,7 @@ static void ComputeDeformValues(int *deformGen, vec5_t deformParams)
 
 static void ProjectDlightTexture( void ) {
 	int		l;
+	int		drawnLights;
 	vec3_t	origin;
 	float	scale;
 	float	radius;
@@ -343,6 +344,8 @@ static void ProjectDlightTexture( void ) {
 
 	ComputeDeformValues(&deformGen, deformParams);
 
+	drawnLights = 0;
+
 	for ( l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
 		dlight_t	*dl;
 		shaderProgram_t *sp;
@@ -351,6 +354,12 @@ static void ProjectDlightTexture( void ) {
 		if ( !( tess.dlightBits & ( 1 << l ) ) ) {
 			continue;	// this surface definately doesn't have any of this light
 		}
+
+		// cap additive dlight draws per surface so overlapping explosions/muzzle flashes can't scale draw calls unbounded
+		if ( drawnLights >= r_maxDlightsPerSurface->integer ) {
+			break;
+		}
+		drawnLights++;
 
 		dl = &backEnd.refdef.dlights[l];
 		VectorCopy( dl->transformed, origin );

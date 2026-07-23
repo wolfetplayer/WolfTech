@@ -86,6 +86,7 @@ cvar_t  *r_drawSun;
 cvar_t  *r_dynamiclight;
 cvar_t  *r_dlightBacks;
 cvar_t  *r_dlightScale; //----(SA)	added
+cvar_t  *r_maxDlightsPerSurface;
 
 cvar_t  *r_waterFogColor;   //----(SA)	added
 cvar_t  *r_mapFogColor;
@@ -151,6 +152,7 @@ cvar_t  *r_autoExposure;
 cvar_t  *r_forceAutoExposure;
 cvar_t  *r_forceAutoExposureMin;
 cvar_t  *r_forceAutoExposureMax;
+cvar_t  *r_autoExposureInterval;
 
 cvar_t  *r_depthPrepass;
 cvar_t  *r_ssao;
@@ -1406,6 +1408,7 @@ void R_Register( void ) {
 
 	r_autoExposure = ri.Cvar_Get( "r_autoExposure", "1", CVAR_ARCHIVE );
 	r_forceAutoExposure = ri.Cvar_Get( "r_forceAutoExposure", "0", CVAR_CHEAT );
+	r_autoExposureInterval = ri.Cvar_Get( "r_autoExposureInterval", "20", CVAR_ARCHIVE );
 	r_forceAutoExposureMin = ri.Cvar_Get( "r_forceAutoExposureMin", "-2.0", CVAR_CHEAT );
 	r_forceAutoExposureMax = ri.Cvar_Get( "r_forceAutoExposureMax", "2.0", CVAR_CHEAT );
 
@@ -1482,6 +1485,7 @@ void R_Register( void ) {
 	r_dynamiclight = ri.Cvar_Get( "r_dynamiclight", "1", CVAR_ARCHIVE );
 	r_dlightScale = ri.Cvar_Get( "r_dlightScale", "1.0", CVAR_ARCHIVE );   //----(SA)	added
 	r_dlightBacks = ri.Cvar_Get( "r_dlightBacks", "1", CVAR_ARCHIVE );
+	r_maxDlightsPerSurface = ri.Cvar_Get( "r_maxDlightsPerSurface", "4", CVAR_ARCHIVE );
 	r_finish = ri.Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
 	r_textureMode = ri.Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
 

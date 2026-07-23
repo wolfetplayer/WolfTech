@@ -836,7 +836,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
 		if ( drawSurf->sort == oldSort && drawSurf->cubemapIndex == oldCubemapIndex) {
-			if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE)
+			// depth pre-pass only pays off for cheap-to-resubmit static world geometry, so skip entities here
+			if (backEnd.depthFill && shader && (shader->sort != SS_OPAQUE || entityNum != REFENTITYNUM_WORLD))
 				continue;
 
 			// fast path, same as previous sort
@@ -875,7 +876,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			oldCubemapIndex = cubemapIndex;
 		}
 
-		if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE)
+		if (backEnd.depthFill && shader && (shader->sort != SS_OPAQUE || entityNum != REFENTITYNUM_WORLD))
 			continue;
 
 		//

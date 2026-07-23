@@ -1799,6 +1799,12 @@ typedef struct {
 	vec3_t                  lastCascadeSunDirection;
 	float                   lastCascadeSunMvp[16];
 
+	// cached bounds/MVP for near sun shadow cascades (0-2), skips re-rendering a cascade whose bounds haven't shifted
+	qboolean                cascadeBoundsValid[3];
+	vec3_t                  cascadeBoundsMins[3];
+	vec3_t                  cascadeBoundsMaxs[3];
+	float                   cascadeMvp[3][16];
+
 //----(SA)	added
 	float lightGridMulAmbient;          // lightgrid multipliers specified in sky shader
 	float lightGridMulDirected;         //
@@ -1910,6 +1916,7 @@ extern cvar_t   *r_drawSun;             // controls drawing of sun quad
 extern cvar_t   *r_dynamiclight;        // dynamic lights enabled/disabled
 extern cvar_t   *r_dlightScale;         // global user attenuation of dlights
 extern cvar_t   *r_dlightBacks;         // dlight non-facing surfaces for continuity
+extern cvar_t   *r_maxDlightsPerSurface; // cap additive dlight draw passes per surface
 
 extern cvar_t  *r_norefresh;            // bypasses the ref rendering
 extern cvar_t  *r_drawentities;         // disable/enable entity rendering
@@ -2020,6 +2027,7 @@ extern  cvar_t  *r_autoExposure;
 extern  cvar_t  *r_forceAutoExposure;
 extern  cvar_t  *r_forceAutoExposureMin;
 extern  cvar_t  *r_forceAutoExposureMax;
+extern  cvar_t  *r_autoExposureInterval;
 
 extern  cvar_t  *r_cameraExposure;
 

@@ -30,7 +30,7 @@ void RB_ToneMap(FBO_t *hdrFbo, ivec4_t hdrBox, FBO_t *ldrFbo, ivec4_t ldrBox, in
 
 	if (autoExposure)
 	{
-		if (lastFrameCount == 0 || tr.frameCount < lastFrameCount || tr.frameCount - lastFrameCount > 5)
+		if (lastFrameCount == 0 || tr.frameCount < lastFrameCount || tr.frameCount - lastFrameCount > r_autoExposureInterval->integer)
 		{
 			// determine average log luminance
 			FBO_t *srcFbo, *dstFbo, *tmp;

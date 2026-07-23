@@ -2680,6 +2680,27 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		//ri.Printf(PRINT_ALL, "xmin %f xmax %f ymin %f ymax %f\n", lightviewBounds[0][1], lightviewBounds[1][1], -lightviewBounds[1][2], -lightviewBounds[0][2]);
 	}
 
+	// skip the traversal/draw and reuse last frame's cascade if its bounds haven't shifted by more than half a texel
+	if (level < 3)
+	{
+		float texelWorldSize = MAX(lightviewBounds[1][1] - lightviewBounds[0][1],
+			lightviewBounds[1][2] - lightviewBounds[0][2]) / tr.sunShadowFbo[level]->width;
+		float skipThreshold = texelWorldSize * 0.5f;
+
+		if (tr.cascadeBoundsValid[level] &&
+			fabs(lightviewBounds[0][1] - tr.cascadeBoundsMins[level][1]) < skipThreshold &&
+			fabs(lightviewBounds[0][2] - tr.cascadeBoundsMins[level][2]) < skipThreshold &&
+			fabs(lightviewBounds[1][1] - tr.cascadeBoundsMaxs[level][1]) < skipThreshold &&
+			fabs(lightviewBounds[1][2] - tr.cascadeBoundsMaxs[level][2]) < skipThreshold)
+		{
+			Mat4Copy(tr.cascadeMvp[level], tr.refdef.sunShadowMvp[level]);
+			return;
+		}
+
+		VectorCopy(lightviewBounds[0], tr.cascadeBoundsMins[level]);
+		VectorCopy(lightviewBounds[1], tr.cascadeBoundsMaxs[level]);
+		tr.cascadeBoundsValid[level] = qtrue;
+	}
 
 	{
 		int firstDrawSurf;
@@ -2744,6 +2765,9 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		}
 
 		Mat4Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.sunShadowMvp[level]);
+
+		if (level < 3)
+			Mat4Copy(tr.refdef.sunShadowMvp[level], tr.cascadeMvp[level]);
 	}
 }
 
