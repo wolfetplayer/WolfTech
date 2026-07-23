@@ -104,6 +104,13 @@ Cvars for HDR and tonemapping:
                                      0 - No.
                                      1 - Yes. (default)
 
+*  `r_greyscale`                    - Desaturate the final image, including HUD/UI.
+                                     0    - No. (default)
+                                     0-1  - Partial desaturation.
+                                     1    - Full greyscale.
+                                     2    - Selective-color grade: greys out
+                                          everything except reds (flags, blood, etc).
+
 *  `r_toneMap`                      - Enable tone mapping.  Requires 
                                    r_hdr and r_postProcess.
                                      0 - No.

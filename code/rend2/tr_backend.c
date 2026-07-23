@@ -474,7 +474,7 @@ void RB_BeginDrawingView( void ) {
 	backEnd.skyRenderedThisView = qfalse;
 
 	// cache the clamped greyscale value
-	backEnd.greyscale = Com_Clamp(0.0f, 1.0f, r_greyscale->value);
+	backEnd.greyscale = Com_Clamp(0.0f, 2.0f, r_greyscale->value);
 
 	// clip to the plane of the portal
 	if ( backEnd.viewParms.isPortal ) {
