@@ -329,6 +329,9 @@ void AICast_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 			BG_UpdateConditionValue( self->s.number, ANIM_COND_ENEMY_WEAPON, 0, qfalse );
 			if ( attacker && attacker->client ) {
 				BG_UpdateConditionValue( self->s.number, ANIM_COND_ENEMY_WEAPON, inflictor->s.weapon, qtrue );
+			} else if ( meansOfDeath == MOD_FLAMETHROWER || meansOfDeath == MOD_FLAMETRAP ) {
+				// non-client fire sources (props_flamethrower, flamechunks) still get the burn death anim
+				BG_UpdateConditionValue( self->s.number, ANIM_COND_ENEMY_WEAPON, WP_FLAMETHROWER, qtrue );
 			} else {
 				BG_UpdateConditionValue( self->s.number, ANIM_COND_ENEMY_WEAPON, 0, qfalse );
 			}

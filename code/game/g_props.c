@@ -4076,6 +4076,7 @@ NOSOUND - silent (duh)
 */
 void props_flamethrower_think( gentity_t *ent ) {
 	vec3_t vec, angles;
+	vec3_t forward;
 	gentity_t   *target = NULL;
 
 	if ( ent->spawnflags & 1 ) { // tracking
@@ -4127,6 +4128,10 @@ void props_flamethrower_think( gentity_t *ent ) {
 	} else {
 		ent->nextthink = level.time + 50;
 		ent->s.eFlags |= EF_FIRING;
+
+		// server-side flamechunk so AI (no cgame to self-report damage) actually gets hurt
+		AngleVectors( ent->s.apos.trBase, forward, NULL, NULL );
+		fire_flamechunk( ent, ent->r.currentOrigin, forward );
 	}
 
 }
@@ -4211,6 +4216,8 @@ void SP_props_flamethrower( gentity_t *ent ) {
 	if ( ent->spawnflags & 2 ) { // SILENT
 		ent->s.density = 1;
 	}
+
+	ent->s.weapon = WP_FLAMETHROWER; // so AI pain/death code recognizes this as fire damage
 
 	ent->s.eType = ET_FLAMETHROWER_PROP;
 	ent->r.svFlags |= SVF_BROADCAST;
