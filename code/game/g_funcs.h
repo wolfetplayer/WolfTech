@@ -1714,4 +1714,5 @@ If you have questions concerning this license or the applicable additional terms
 {"AICast_SetupClient", (byte *)AICast_SetupClient},
 {"AICast_GetCastState", (byte *)AICast_GetCastState},
 {"AICast_Printf", (byte *)AICast_Printf},
+{"Survival_RandomBox_Think", (byte *)Survival_RandomBox_Think},
 {0, 0}

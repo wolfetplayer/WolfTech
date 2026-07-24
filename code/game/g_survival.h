@@ -43,7 +43,6 @@ qboolean Survival_TrySpendMG42Points(gentity_t *player);
 
 // Purchase system
 void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator);
-qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, char *itemName, int *itemIndex);
 qboolean Survival_HandleRandomPerkBox(gentity_t *ent, gentity_t *activator, char **itemName, int *itemIndex);
 qboolean Survival_HandleAmmoPurchase(gentity_t *ent, gentity_t *activator, int price);
 qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gitem_t *item, int price);

@@ -97,95 +97,309 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 }
 
 /*
-============
-Survival_HandleRandomWeaponBox
-============
+===========================================================================
+Random weapon box (mystery box), survival mode
+
+Flow: RWB_IDLE --(USE, pays price)--> RWB_SPINNING --(lands)--> RWB_LANDED
+      RWB_LANDED --(USE, grants weapon)--> RWB_IDLE
+      RWB_LANDED --(decision time expires)--> RWB_IDLE (forfeited)
+
+State lives on the target_buy entity (see rwb* fields in g_local.h). The
+floating carousel model is a separate, non-solid ET_ITEM entity spawned
+above the target_buy's origin and despawned on pickup/reset.
+===========================================================================
 */
-qboolean Survival_HandleRandomWeaponBox(gentity_t *ent, gentity_t *activator, char *itemName, int *itemIndex) {
-	if (!activator || !activator->client) return qfalse;
 
-	static const weapon_t random_box_weapons[] = {
-		WP_LUGER, WP_SILENCER, WP_COLT,
-		WP_AKIMBO, WP_TT33, WP_DUAL_TT33, WP_REVOLVER, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34, WP_PPSH,
-		WP_MAUSER, WP_MOSIN, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
-		WP_M1GARAND, WP_G43, WP_MP44, WP_BAR, WP_M97, WP_AUTO5,
-		WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA,
-		WP_MG42M, WP_BROWNING
-	};
+#define RWB_IDLE     0
+#define RWB_SPINNING 1
+#define RWB_LANDED   2
 
+#define RWB_SPIN_DURATION     3200 // ms of cycling before landing
+#define RWB_SPIN_INTERVAL_MIN 70   // ms between model swaps, fastest (start)
+#define RWB_SPIN_INTERVAL_MAX 380  // ms between model swaps, right before landing
 
-    const weapon_t *selected_weapons = random_box_weapons;
-	int numWeapons = sizeof(random_box_weapons) / sizeof(random_box_weapons[0]);
+#define RWB_DECISION_TIME  15000 // ms to pick up the landed weapon before it's forfeited
+#define RWB_BLINK_START     10000 // ms into the decision window when blinking begins
+#define RWB_BLINK_INTERVAL    150  // ms per blink toggle
 
-	int price = ent->price > 0 ? ent->price : PRICE_RANDOM_WEAPON;
+#define RWB_FLOAT_HEIGHT 48 // units above the target_buy origin
+#define RWB_BOB_HEIGHT    6 // bob amplitude, units
+#define RWB_BOB_SPEED  1400 // ms per full bob cycle
 
-	if (activator->client->ps.persistant[PERS_SCORE] < price) {
-		trap_SendServerCommand(-1, "mu_play sound/items/use_nothing.wav 0\n");
-		return qfalse;
+static const weapon_t rwb_weapon_pool[] = {
+	WP_LUGER, WP_SILENCER, WP_COLT,
+	WP_AKIMBO, WP_TT33, WP_DUAL_TT33, WP_REVOLVER, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34, WP_PPSH,
+	WP_MAUSER, WP_MOSIN, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
+	WP_M1GARAND, WP_G43, WP_MP44, WP_BAR, WP_M97, WP_AUTO5,
+	WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA,
+	WP_MG42M, WP_BROWNING
+};
+static const int rwb_weapon_pool_count = sizeof( rwb_weapon_pool ) / sizeof( rwb_weapon_pool[0] );
+
+void Survival_RandomBox_Think( gentity_t *ent );
+
+static qboolean Survival_RandomBox_IsLateWave( void ) {
+	return (qboolean)( svParams.waveCount < 5 );
+}
+
+static qboolean Survival_RandomBox_IsHeavyWeapon( weapon_t weapon ) {
+	return (qboolean)( weapon == WP_TESLA || weapon == WP_VENOM || weapon == WP_FLAMETHROWER ||
+		weapon == WP_MG42M || weapon == WP_BROWNING );
+}
+
+static int Survival_RandomBox_ItemIndexForWeapon( weapon_t weapon ) {
+	for ( int i = 1; bg_itemlist[i].classname; i++ ) {
+		if ( bg_itemlist[i].giType == IT_WEAPON && bg_itemlist[i].giWeapon == weapon ) {
+			return i;
+		}
 	}
+	return 0;
+}
 
-	// Pick a random weapon the player doesn't have
+// Picks a weapon the activator doesn't already have, respecting the early-wave heavy weapon lockout
+static weapon_t Survival_RandomBox_PickFinalWeapon( gentity_t *activator ) {
 	weapon_t chosen;
 	int tries = 20;
+
 	do {
-		chosen = selected_weapons[rand() % numWeapons];
+		chosen = rwb_weapon_pool[rand() % rwb_weapon_pool_count];
 		tries--;
-
-		if ( svParams.waveCount < 5 &&
-			( chosen == WP_TESLA || chosen == WP_VENOM || chosen == WP_FLAMETHROWER || chosen == WP_MG42M || chosen == WP_BROWNING ) ) {
-			continue;
-		}
 	} while ( ( G_FindWeaponSlot( activator, chosen ) >= 0 ||
-		( svParams.waveCount < 5 &&
-		( chosen == WP_TESLA || chosen == WP_VENOM || chosen == WP_FLAMETHROWER || chosen == WP_MG42M || chosen == WP_BROWNING ) ) ) && tries > 0 );
+		( Survival_RandomBox_IsLateWave() && Survival_RandomBox_IsHeavyWeapon( chosen ) ) ) && tries > 0 );
 
-	if (tries <= 0) {
-		trap_SendServerCommand(-1, "mu_play sound/items/use_nothing.wav 0\n");
+	if ( tries <= 0 ) {
+		return WP_NONE;
+	}
+
+	return chosen;
+}
+
+static void Survival_RandomBox_SetGlow( gentity_t *display, int r, int g, int b, int intensity ) {
+	display->s.constantLight = r | ( g << 8 ) | ( b << 16 ) | ( intensity << 24 );
+}
+
+static void Survival_RandomBox_SetDisplayItem( gentity_t *display, int itemIndex ) {
+	display->item = &bg_itemlist[itemIndex];
+	display->s.modelindex = itemIndex;
+}
+
+static gentity_t *Survival_RandomBox_SpawnDisplay( gentity_t *box, int itemIndex ) {
+	gentity_t *display = G_Spawn();
+
+	display->classname = "random_weapon_display";
+	display->s.eType = ET_ITEM;
+	display->r.contents = 0;
+	display->clipmask = 0;
+
+	VectorSet( display->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS );
+	VectorSet( display->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
+
+	VectorCopy( box->s.origin, display->s.pos.trBase );
+	display->s.pos.trBase[2] += RWB_FLOAT_HEIGHT;
+	display->s.pos.trDelta[2] = RWB_BOB_HEIGHT;
+	display->s.pos.trDuration = RWB_BOB_SPEED;
+	display->s.pos.trTime = level.time;
+	display->s.pos.trType = TR_SINE;
+
+	VectorCopy( display->s.pos.trBase, display->r.currentOrigin );
+
+	Survival_RandomBox_SetDisplayItem( display, itemIndex );
+
+	trap_LinkEntity( display );
+
+	return display;
+}
+
+static void Survival_RandomBox_Reset( gentity_t *ent ) {
+	if ( ent->rwbDisplay ) {
+		G_FreeEntity( ent->rwbDisplay );
+		ent->rwbDisplay = NULL;
+	}
+
+	ent->rwbState = RWB_IDLE;
+	ent->rwbChosenWeapon = WP_NONE;
+	ent->rwbChosenItemIndex = 0;
+	ent->rwbBlinking = qfalse;
+	ent->think = NULL;
+	ent->nextthink = 0;
+}
+
+static void Survival_RandomBox_Land( gentity_t *ent ) {
+	if ( ent->rwbDisplay ) {
+		Survival_RandomBox_SetDisplayItem( ent->rwbDisplay, ent->rwbChosenItemIndex );
+		Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 220, 120, 4 );
+		G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/buy.wav" ) );
+	}
+
+	ent->rwbState = RWB_LANDED;
+	ent->rwbPhaseStartTime = level.time;
+	ent->rwbBlinking = qfalse;
+
+	ent->think = Survival_RandomBox_Think;
+	ent->nextthink = level.time + RWB_BLINK_START;
+}
+
+static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
+	int elapsed = level.time - ent->rwbPhaseStartTime;
+	float frac;
+	int interval;
+
+	if ( elapsed >= RWB_SPIN_DURATION || !ent->rwbDisplay ) {
+		Survival_RandomBox_Land( ent );
+		return;
+	}
+
+	// cosmetic swap: any pool weapon, just avoid an immediate repeat
+	int guard = 6;
+	int cosmeticIndex = 0;
+	do {
+		weapon_t cosmetic = rwb_weapon_pool[rand() % rwb_weapon_pool_count];
+		cosmeticIndex = Survival_RandomBox_ItemIndexForWeapon( cosmetic );
+		guard--;
+	} while ( cosmeticIndex > 0 && cosmeticIndex == ent->rwbDisplay->s.modelindex && guard > 0 );
+
+	if ( cosmeticIndex > 0 ) {
+		Survival_RandomBox_SetDisplayItem( ent->rwbDisplay, cosmeticIndex );
+		G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/w_pkup.wav" ) );
+	}
+
+	// ease the swap interval out from fast to slow as we approach landing
+	frac = elapsed / (float)RWB_SPIN_DURATION;
+	frac = frac * frac;
+	interval = RWB_SPIN_INTERVAL_MIN + (int)( ( RWB_SPIN_INTERVAL_MAX - RWB_SPIN_INTERVAL_MIN ) * frac );
+
+	ent->nextthink = level.time + interval;
+}
+
+static void Survival_RandomBox_ThinkLanded( gentity_t *ent ) {
+	int elapsed = level.time - ent->rwbPhaseStartTime;
+
+	if ( elapsed >= RWB_DECISION_TIME || !ent->rwbDisplay ) {
+		Survival_RandomBox_Reset( ent );
+		return;
+	}
+
+	ent->rwbBlinking = (qboolean)!ent->rwbBlinking;
+	if ( ent->rwbBlinking ) {
+		ent->rwbDisplay->s.eFlags |= EF_NODRAW;
+	} else {
+		ent->rwbDisplay->s.eFlags &= ~EF_NODRAW;
+	}
+
+	ent->nextthink = level.time + RWB_BLINK_INTERVAL;
+}
+
+void Survival_RandomBox_Think( gentity_t *ent ) {
+	if ( ent->rwbState == RWB_SPINNING ) {
+		Survival_RandomBox_ThinkSpin( ent );
+	} else if ( ent->rwbState == RWB_LANDED ) {
+		Survival_RandomBox_ThinkLanded( ent );
+	}
+}
+
+/*
+============
+Survival_RandomBox_Start
+Charges the price and kicks off the spin. Box must be RWB_IDLE.
+============
+*/
+qboolean Survival_RandomBox_Start( gentity_t *ent, gentity_t *activator ) {
+	int price;
+	weapon_t chosen;
+	int itemIndex;
+	int startIndex;
+
+	if ( !activator || !activator->client ) return qfalse;
+
+	if ( ent->rwbState != RWB_IDLE ) {
+		trap_SendServerCommand( -1, "mu_play sound/items/use_nothing.wav 0\n" );
 		return qfalse;
 	}
 
-	// Find the item
-	for (int i = 1; bg_itemlist[i].classname; i++)
-	{
-		if (bg_itemlist[i].giWeapon != chosen)
-			continue;
+	price = ent->price > 0 ? ent->price : PRICE_RANDOM_WEAPON;
 
-		*itemIndex = i;
-		itemName = bg_itemlist[i].classname;
-		gitem_t *item = &bg_itemlist[i];
-
-		// Give weapon
-		Give_Weapon_New_Inventory(activator, chosen, qfalse);
-
-		// Give full ammo (twice to fill both reserve and clip)
-		int maxAmmo = BG_GetMaxAmmo(&activator->client->ps, chosen, LT_AMMO_BONUS_MULTIPLIER);
-		Add_Ammo(activator, chosen, maxAmmo, qtrue);  // fill clip
-		Add_Ammo(activator, chosen, maxAmmo, qfalse); // top off reserve
-
-
-		// Bonus: give M7 for Garand
-		if (chosen == WP_M1GARAND)
-		{
-			Give_Weapon_New_Inventory(activator, WP_M7, qfalse);
-			int m7MaxAmmo = BG_GetMaxAmmo(&activator->client->ps, WP_M7, LT_AMMO_BONUS_MULTIPLIER);
-			Add_Ammo(activator, WP_M7, m7MaxAmmo, qfalse);
-		}
-
-		// Select weapon
-		activator->client->ps.weapon = chosen;
-		activator->client->ps.weaponstate = WEAPON_READY;
-
-		// Deduct points
-		Survival_AwardScore(activator, -price);
-
-		// SFX & confirmation
-		G_AddPredictableEvent(activator, EV_ITEM_PICKUP, item - bg_itemlist);
-		trap_SendServerCommand(-1, "mu_play sound/misc/buy.wav 0\n");
-
-		return qtrue;
+	if ( activator->client->ps.persistant[PERS_SCORE] < price ) {
+		trap_SendServerCommand( -1, "mu_play sound/items/use_nothing.wav 0\n" );
+		return qfalse;
 	}
 
-	return qfalse;
+	chosen = Survival_RandomBox_PickFinalWeapon( activator );
+	if ( chosen == WP_NONE ) {
+		trap_SendServerCommand( -1, "mu_play sound/items/use_nothing.wav 0\n" );
+		return qfalse;
+	}
+
+	itemIndex = Survival_RandomBox_ItemIndexForWeapon( chosen );
+	if ( itemIndex <= 0 ) {
+		return qfalse;
+	}
+
+	// Charged on activation - walking away forfeits it
+	Survival_AwardScore( activator, -price );
+
+	ent->rwbState = RWB_SPINNING;
+	ent->rwbPhaseStartTime = level.time;
+	ent->rwbChosenWeapon = chosen;
+	ent->rwbChosenItemIndex = itemIndex;
+	ent->rwbBlinking = qfalse;
+
+	startIndex = Survival_RandomBox_ItemIndexForWeapon( rwb_weapon_pool[rand() % rwb_weapon_pool_count] );
+	if ( startIndex <= 0 ) {
+		startIndex = itemIndex;
+	}
+
+	ent->rwbDisplay = Survival_RandomBox_SpawnDisplay( ent, startIndex );
+	Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 200, 80, 2 );
+
+	ent->think = Survival_RandomBox_Think;
+	ent->nextthink = level.time + RWB_SPIN_INTERVAL_MIN;
+
+	return qtrue;
+}
+
+/*
+============
+Survival_RandomBox_Pickup
+Grants the already-chosen weapon. Box must be RWB_LANDED. Any player can claim it.
+============
+*/
+qboolean Survival_RandomBox_Pickup( gentity_t *ent, gentity_t *activator ) {
+	gitem_t *item;
+	weapon_t chosen;
+	int maxAmmo;
+
+	if ( !activator || !activator->client ) return qfalse;
+	if ( ent->rwbState != RWB_LANDED ) return qfalse;
+
+	if ( ent->rwbChosenItemIndex <= 0 || !bg_itemlist[ent->rwbChosenItemIndex].classname ) {
+		Survival_RandomBox_Reset( ent );
+		return qfalse;
+	}
+
+	chosen = ent->rwbChosenWeapon;
+	item = &bg_itemlist[ent->rwbChosenItemIndex];
+
+	Give_Weapon_New_Inventory( activator, chosen, qfalse );
+
+	maxAmmo = BG_GetMaxAmmo( &activator->client->ps, chosen, LT_AMMO_BONUS_MULTIPLIER );
+	Add_Ammo( activator, chosen, maxAmmo, qtrue );  // fill clip
+	Add_Ammo( activator, chosen, maxAmmo, qfalse ); // top off reserve
+
+	if ( chosen == WP_M1GARAND ) {
+		Give_Weapon_New_Inventory( activator, WP_M7, qfalse );
+		int m7MaxAmmo = BG_GetMaxAmmo( &activator->client->ps, WP_M7, LT_AMMO_BONUS_MULTIPLIER );
+		Add_Ammo( activator, WP_M7, m7MaxAmmo, qfalse );
+	}
+
+	activator->client->ps.weapon = chosen;
+	activator->client->ps.weaponstate = WEAPON_READY;
+
+	G_AddPredictableEvent( activator, EV_ITEM_PICKUP, item - bg_itemlist );
+	trap_SendServerCommand( -1, "mu_play sound/misc/buy.wav 0\n" );
+
+	Survival_RandomBox_Reset( ent );
+
+	return qtrue;
 }
 
 /*
@@ -642,9 +856,16 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 		return;
 	}
 
-	// Special case: random weapon
+	// Special case: random weapon (mystery box)
 	if (!Q_stricmp(itemName, "random_weapon")) {
-		success = Survival_HandleRandomWeaponBox(ent, activator, itemName, &itemIndex);
+		if (ent->rwbState == RWB_IDLE) {
+			success = Survival_RandomBox_Start(ent, activator);
+		} else if (ent->rwbState == RWB_LANDED) {
+			success = Survival_RandomBox_Pickup(ent, activator);
+		} else {
+			// spinning: locked until it lands or resets
+			trap_SendServerCommand(-1, "mu_play sound/items/use_nothing.wav 0\n");
+		}
 		if (success) {
 			ClientUserinfoChanged(clientNum);
 		}
@@ -789,6 +1010,20 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 				return;
 			}
 		} else if (!Q_stricmp(techName, "random_weapon")) {
+			if (buyEnt && buyEnt->rwbState == RWB_LANDED) {
+				const char *pickupName = ( buyEnt->rwbChosenItemIndex > 0 && bg_itemlist[buyEnt->rwbChosenItemIndex].classname ) ?
+					bg_itemlist[buyEnt->rwbChosenItemIndex].pickup_name : "Weapon";
+
+				trap_SendServerCommand(other - g_entities, va(
+					"cpbuy \"Press USE to pickup\n%s\"",
+					pickupName));
+				return;
+			}
+
+			if (buyEnt && buyEnt->rwbState == RWB_SPINNING) {
+				return; // rolling - no tooltip
+			}
+
 			price = (price > 0) ? price : PRICE_RANDOM_WEAPON;
 			if (weaponName && price > 0) {
 				trap_SendServerCommand(other - g_entities, va(

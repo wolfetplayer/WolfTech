@@ -432,10 +432,18 @@ struct gentity_s {
 
 	int price;                 // item price, survival mode
     char  *buy_item;
-	int isWeapon;   
-	int lastPainMOD; // last meansOfDeath used in pain function  
+	int isWeapon;
+	int lastPainMOD; // last meansOfDeath used in pain function
 	int oneshot;
 	int wave;
+
+	// Random weapon box (mystery box), survival mode - see g_survival_buy.c
+	int rwbState;
+	int rwbPhaseStartTime;
+	weapon_t rwbChosenWeapon;
+	int rwbChosenItemIndex;
+	qboolean rwbBlinking;
+	gentity_t *rwbDisplay;
 };
 
 // Ridah
