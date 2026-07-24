@@ -4712,6 +4712,28 @@ void use_invisible_user( gentity_t *ent, gentity_t *other, gentity_t *activator 
 			trap_SendServerCommand(activator->s.number, "mu_play sound/misc/buy.wav 0\n");
 		}
 	}
+
+	if (ent->spawnflags & 16)
+	{
+		// Kill the linked trigger_objective_info if it targets this entity
+		gentity_t *e;
+		for (int i = 0; i < level.num_entities; i++)
+		{
+			e = &g_entities[i];
+			if (!e->inuse)
+				continue;
+
+			if (e->classname && Q_stricmp(e->classname, "trigger_objective_info") == 0)
+			{
+				if (e->target && ent->targetname && Q_stricmp(e->target, ent->targetname) == 0)
+				{
+					G_FreeEntity(e);
+				}
+			}
+		}
+
+		G_FreeEntity(ent);
+	}
 }
 
 

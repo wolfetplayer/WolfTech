@@ -184,6 +184,7 @@ field_t fields[] = {
 
 	{"scriptName",       FOFS( scriptName ),           F_STRING},
 
+	{"price",            FOFS( price ),                F_INT},
 	{"buy_item",         FOFS( buy_item ),           F_STRING},
 	{"isWeapon",         FOFS( isWeapon ),             F_INT},
 	{"oneshot",          FOFS( oneshot ),                F_INT},
