@@ -3487,6 +3487,31 @@ model="models/powerups/holdable/wine.md3"
 		{0,0,0,0}
 	},
 
+/*QUAKED item_quad (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+		{
+		"item_quad",
+		"sound/misc/powerup_quad.wav",
+		{
+		"models/powerups/survival/thule_b.md3",
+		0,
+		0
+		},
+		"",
+		NULL,                       // ammo icon
+		"Veil Empower",
+		30,
+		IT_POWERUP,
+		WP_NONE,
+		PW_QUAD,
+		0,
+		0,
+		0,
+		"",
+		"sound/items/damage2.wav sound/items/damage3.wav",
+		{0,0,0,0}
+	},
+
 /*QUAKED item_vampire (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 		{
