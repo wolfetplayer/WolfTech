@@ -241,7 +241,7 @@ static void Survival_RandomBox_Land( gentity_t *ent ) {
 
 	if ( ent->rwbDisplay ) {
 		Survival_RandomBox_SetDisplayItem( ent->rwbDisplay, ent->rwbChosenItemIndex );
-		Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 220, 120, 4 );
+		Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 220, 120, 70 );
 		G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/randombox_create.wav" ) );
 	}
 
@@ -253,6 +253,12 @@ static void Survival_RandomBox_Land( gentity_t *ent ) {
 	ent->nextthink = level.time + RWB_BLINK_START;
 }
 
+// warm-to-hot palette the spin light strobes through on every swap
+static const int rwb_pulse_r[] = { 255, 255, 255, 255 };
+static const int rwb_pulse_g[] = { 160, 210, 110, 60 };
+static const int rwb_pulse_b[] = { 60,  90,  190, 40 };
+static const int rwb_pulse_count = sizeof( rwb_pulse_r ) / sizeof( rwb_pulse_r[0] );
+
 static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
 	int elapsed = level.time - ent->rwbPhaseStartTime;
 	float frac;
@@ -262,6 +268,8 @@ static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
 		Survival_RandomBox_Land( ent );
 		return;
 	}
+
+	frac = elapsed / (float)RWB_SPIN_DURATION;
 
 	// cosmetic swap: any pool weapon, just avoid an immediate repeat
 	int guard = 6;
@@ -274,10 +282,17 @@ static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
 
 	if ( cosmeticIndex > 0 ) {
 		Survival_RandomBox_SetDisplayItem( ent->rwbDisplay, cosmeticIndex );
+
+		// dlight strobes a random hue each swap, brightening as landing nears
+		{
+			int hue = rand() % rwb_pulse_count;
+			int intensity = 20 + (int)( 55 * frac * frac );
+
+			Survival_RandomBox_SetGlow( ent->rwbDisplay, rwb_pulse_r[hue], rwb_pulse_g[hue], rwb_pulse_b[hue], intensity );
+		}
 	}
 
 	// ease the swap interval out from fast to slow as we approach landing
-	frac = elapsed / (float)RWB_SPIN_DURATION;
 	frac = frac * frac;
 	interval = RWB_SPIN_INTERVAL_MIN + (int)( ( RWB_SPIN_INTERVAL_MAX - RWB_SPIN_INTERVAL_MIN ) * frac );
 
@@ -362,7 +377,7 @@ qboolean Survival_RandomBox_Start( gentity_t *ent, gentity_t *activator ) {
 	}
 
 	ent->rwbDisplay = Survival_RandomBox_SpawnDisplay( ent, startIndex );
-	Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 200, 80, 2 );
+	Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 200, 80, 20 );
 
 	// spin jingle, plays once for the full spin duration instead of a per-swap tick
 	G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/randombox.wav" ) );
