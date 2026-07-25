@@ -114,7 +114,7 @@ above the target_buy's origin and despawned on pickup/reset.
 #define RWB_SPINNING 1
 #define RWB_LANDED   2
 
-#define RWB_SPIN_DURATION     3200 // ms of cycling before landing
+#define RWB_SPIN_DURATION     5000 // ms of cycling before landing (matches randombox.wav length)
 #define RWB_SPIN_INTERVAL_MIN 70   // ms between model swaps, fastest (start)
 #define RWB_SPIN_INTERVAL_MAX 380  // ms between model swaps, right before landing
 
@@ -242,7 +242,7 @@ static void Survival_RandomBox_Land( gentity_t *ent ) {
 	if ( ent->rwbDisplay ) {
 		Survival_RandomBox_SetDisplayItem( ent->rwbDisplay, ent->rwbChosenItemIndex );
 		Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 220, 120, 4 );
-		G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/buy.wav" ) );
+		G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/randombox_create.wav" ) );
 	}
 
 	ent->rwbState = RWB_LANDED;
@@ -274,7 +274,6 @@ static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
 
 	if ( cosmeticIndex > 0 ) {
 		Survival_RandomBox_SetDisplayItem( ent->rwbDisplay, cosmeticIndex );
-		G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/w_pkup.wav" ) );
 	}
 
 	// ease the swap interval out from fast to slow as we approach landing
@@ -365,6 +364,9 @@ qboolean Survival_RandomBox_Start( gentity_t *ent, gentity_t *activator ) {
 	ent->rwbDisplay = Survival_RandomBox_SpawnDisplay( ent, startIndex );
 	Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 200, 80, 2 );
 
+	// spin jingle, plays once for the full spin duration instead of a per-swap tick
+	G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/randombox.wav" ) );
+
 	ent->think = Survival_RandomBox_Think;
 	ent->nextthink = level.time + RWB_SPIN_INTERVAL_MIN;
 
@@ -380,6 +382,7 @@ Grants the already-chosen weapon. Box must be RWB_LANDED. Any player can claim i
 qboolean Survival_RandomBox_Pickup( gentity_t *ent, gentity_t *activator ) {
 	gitem_t *item;
 	weapon_t chosen;
+	weapon_t selectWeapon;
 	int maxAmmo;
 
 	if ( !activator || !activator->client ) return qfalse;
@@ -405,17 +408,23 @@ qboolean Survival_RandomBox_Pickup( gentity_t *ent, gentity_t *activator ) {
 		Add_Ammo( activator, WP_M7, m7MaxAmmo, qfalse );
 	}
 
+	// never auto-select into the scoped alt mode - land on the base weapon instead
+	selectWeapon = chosen;
+	if ( GetWeaponTableData( chosen )->weaponClass & WEAPON_CLASS_SCOPED ) {
+		selectWeapon = GetWeaponTableData( chosen )->weapAlts;
+	}
+
 	// force-switch to the new weapon, replicating PM_FinishWeaponChange's bookkeeping by hand
-	activator->client->ps.weapon = chosen;
+	activator->client->ps.weapon = selectWeapon;
 	activator->client->ps.weaponstate = WEAPON_RAISING;
 	activator->client->ps.weaponTime = 250;
 	activator->client->ps.weapAnimTimer = 0;
 	activator->client->ps.weapAnim = ( ( activator->client->ps.weapAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | WEAP_RAISE;
-	BG_UpdateConditionValue( activator->client->ps.clientNum, ANIM_COND_WEAPON, chosen, qtrue );
+	BG_UpdateConditionValue( activator->client->ps.clientNum, ANIM_COND_WEAPON, selectWeapon, qtrue );
 	BG_AnimScriptEvent( &activator->client->ps, ANIM_ET_RAISEWEAPON, qfalse, qfalse );
 
 	// sync cgame's weapon selection or the next usercmd re-requests the old weapon
-	trap_SendServerCommand( activator - g_entities, va( "selectweap %d\n", chosen ) );
+	trap_SendServerCommand( activator - g_entities, va( "selectweap %d\n", selectWeapon ) );
 
 	G_AddPredictableEvent( activator, EV_ITEM_PICKUP, item - bg_itemlist );
 	trap_SendServerCommand( -1, "mu_play sound/misc/buy.wav 0\n" );
