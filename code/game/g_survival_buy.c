@@ -122,9 +122,9 @@ above the target_buy's origin and despawned on pickup/reset.
 #define RWB_BLINK_START     10000 // ms into the decision window when blinking begins
 #define RWB_BLINK_INTERVAL    150  // ms per blink toggle
 
-#define RWB_FLOAT_HEIGHT 48 // units above the target_buy origin
-#define RWB_BOB_HEIGHT    6 // bob amplitude, units
-#define RWB_BOB_SPEED  1400 // ms per full bob cycle
+#define RWB_FLOAT_HEIGHT 28 // units above the target_buy origin
+#define RWB_BOB_HEIGHT    3 // bob amplitude, units
+#define RWB_BOB_SPEED  2200 // ms per full bob cycle
 
 static const weapon_t rwb_weapon_pool[] = {
 	WP_LUGER, WP_SILENCER, WP_COLT,
@@ -138,15 +138,6 @@ static const int rwb_weapon_pool_count = sizeof( rwb_weapon_pool ) / sizeof( rwb
 
 void Survival_RandomBox_Think( gentity_t *ent );
 
-static qboolean Survival_RandomBox_IsLateWave( void ) {
-	return (qboolean)( svParams.waveCount < 5 );
-}
-
-static qboolean Survival_RandomBox_IsHeavyWeapon( weapon_t weapon ) {
-	return (qboolean)( weapon == WP_TESLA || weapon == WP_VENOM || weapon == WP_FLAMETHROWER ||
-		weapon == WP_MG42M || weapon == WP_BROWNING );
-}
-
 static int Survival_RandomBox_ItemIndexForWeapon( weapon_t weapon ) {
 	for ( int i = 1; bg_itemlist[i].classname; i++ ) {
 		if ( bg_itemlist[i].giType == IT_WEAPON && bg_itemlist[i].giWeapon == weapon ) {
@@ -156,7 +147,7 @@ static int Survival_RandomBox_ItemIndexForWeapon( weapon_t weapon ) {
 	return 0;
 }
 
-// Picks a weapon the activator doesn't already have, respecting the early-wave heavy weapon lockout
+// Picks a weapon the activator doesn't already have
 static weapon_t Survival_RandomBox_PickFinalWeapon( gentity_t *activator ) {
 	weapon_t chosen;
 	int tries = 20;
@@ -164,8 +155,7 @@ static weapon_t Survival_RandomBox_PickFinalWeapon( gentity_t *activator ) {
 	do {
 		chosen = rwb_weapon_pool[rand() % rwb_weapon_pool_count];
 		tries--;
-	} while ( ( G_FindWeaponSlot( activator, chosen ) >= 0 ||
-		( Survival_RandomBox_IsLateWave() && Survival_RandomBox_IsHeavyWeapon( chosen ) ) ) && tries > 0 );
+	} while ( G_FindWeaponSlot( activator, chosen ) >= 0 && tries > 0 );
 
 	if ( tries <= 0 ) {
 		return WP_NONE;
@@ -190,6 +180,9 @@ static gentity_t *Survival_RandomBox_SpawnDisplay( gentity_t *box, int itemIndex
 	display->s.eType = ET_ITEM;
 	display->r.contents = 0;
 	display->clipmask = 0;
+
+	// side-on display, no stand model, no touch-pickup prediction
+	display->s.eFlags = EF_ITEM_FACE_SIDE | EF_ITEM_NO_PREDICT | EF_ITEM_FORCE_NO_STAND;
 
 	VectorSet( display->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS );
 	VectorSet( display->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
@@ -224,7 +217,28 @@ static void Survival_RandomBox_Reset( gentity_t *ent ) {
 	ent->nextthink = 0;
 }
 
+// clears the linked func_invisible_user's mapper-set reuse delay so landing doesn't leave it debounced
+static void Survival_RandomBox_ClearActivatorDebounce( gentity_t *box ) {
+	if ( !box->targetname ) {
+		return;
+	}
+
+	for ( int i = 0; i < level.num_entities; i++ ) {
+		gentity_t *e = &g_entities[i];
+
+		if ( !e->inuse || Q_stricmp( e->classname, "func_invisible_user" ) != 0 ) {
+			continue;
+		}
+
+		if ( e->target && Q_stricmp( e->target, box->targetname ) == 0 ) {
+			e->wait = level.time - 1;
+		}
+	}
+}
+
 static void Survival_RandomBox_Land( gentity_t *ent ) {
+	Survival_RandomBox_ClearActivatorDebounce( ent );
+
 	if ( ent->rwbDisplay ) {
 		Survival_RandomBox_SetDisplayItem( ent->rwbDisplay, ent->rwbChosenItemIndex );
 		Survival_RandomBox_SetGlow( ent->rwbDisplay, 255, 220, 120, 4 );
@@ -391,8 +405,17 @@ qboolean Survival_RandomBox_Pickup( gentity_t *ent, gentity_t *activator ) {
 		Add_Ammo( activator, WP_M7, m7MaxAmmo, qfalse );
 	}
 
+	// force-switch to the new weapon, replicating PM_FinishWeaponChange's bookkeeping by hand
 	activator->client->ps.weapon = chosen;
-	activator->client->ps.weaponstate = WEAPON_READY;
+	activator->client->ps.weaponstate = WEAPON_RAISING;
+	activator->client->ps.weaponTime = 250;
+	activator->client->ps.weapAnimTimer = 0;
+	activator->client->ps.weapAnim = ( ( activator->client->ps.weapAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | WEAP_RAISE;
+	BG_UpdateConditionValue( activator->client->ps.clientNum, ANIM_COND_WEAPON, chosen, qtrue );
+	BG_AnimScriptEvent( &activator->client->ps, ANIM_ET_RAISEWEAPON, qfalse, qfalse );
+
+	// sync cgame's weapon selection or the next usercmd re-requests the old weapon
+	trap_SendServerCommand( activator - g_entities, va( "selectweap %d\n", chosen ) );
 
 	G_AddPredictableEvent( activator, EV_ITEM_PICKUP, item - bg_itemlist );
 	trap_SendServerCommand( -1, "mu_play sound/misc/buy.wav 0\n" );

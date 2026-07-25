@@ -433,8 +433,11 @@ typedef enum {
 #define EF_BREATH           EF_SPINNING     // Characters will not have EF_SPINNING set, hijack for drawing character breath
 
 #define EF_MELEE_ACTIVE     0x00000800      // (SA) added for client knowledge of melee items held (chair/etc.)
+#define EF_ITEM_FACE_SIDE   EF_MELEE_ACTIVE // ET_ITEM only: side-on to viewer, no spin
 #define EF_TALK             0x00001000      // draw a talk balloon
+#define EF_ITEM_FORCE_NO_STAND EF_TALK      // ET_ITEM only: skip stand model
 #define EF_CONNECTION       0x00002000      // draw a connection trouble sprite
+#define EF_ITEM_NO_PREDICT  EF_CONNECTION   // ET_ITEM only: skip pickup prediction
 #define EF_MONSTER_EFFECT2  0x00004000      // show the secondary special effect for this character
 #define EF_HEADSHOT         0x00008000      // last hit to player was head shot
 #define EF_MONSTER_EFFECT3  0x00010000      // show the third special effect for this character

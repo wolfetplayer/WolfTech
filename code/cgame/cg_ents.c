@@ -987,7 +987,7 @@ static void CG_Item( centity_t *cent ) {
 	if ( item->giType == IT_WEAPON ) {
 		weaponInfo = &cg_weapons[item->giTag];
 
-		if ( weaponInfo->standModel ) {
+		if ( weaponInfo->standModel && !( es->eFlags & EF_ITEM_FORCE_NO_STAND ) ) {
 			hasStand = qtrue;
 		}
 
@@ -1030,6 +1030,23 @@ static void CG_Item( centity_t *cent ) {
 				cent->lerpAngles[2] += 90;
 			}
 
+			if ( es->eFlags & EF_ITEM_FACE_SIDE ) {  // static yaw, side-on to viewer, no spin
+				vec3_t toView;
+				float yaw;
+
+				VectorSubtract( cg.refdef.vieworg, cent->lerpOrigin, toView );
+				yaw = RAD2DEG( atan2( toView[1], toView[0] ) ) + 90;
+
+				cent->lerpAngles[YAW] = yaw;
+			} else if ( es->eFlags & EF_SPINNING ) {  // spinning will override the angles set by a stand
+				if ( es->groundEntityNum == -1 || !es->groundEntityNum ) { // (SA) spinning with a stand will spin the stand and the attached weap (only when in the air)
+					VectorCopy( cg.autoAnglesSlow, cent->lerpAngles );
+					VectorCopy( cg.autoAnglesSlow, cent->lastLerpAngles );
+				} else {
+					VectorCopy( cent->lastLerpAngles, cent->lerpAngles );   // make a tossed weapon sit on the ground in a position that matches how it was yawed
+				}
+			}
+
 			AnglesToAxis( cent->lerpAngles, ent.axis );
 
 			// increase the size of the weapons when they are presented as items
@@ -1040,15 +1057,6 @@ static void CG_Item( centity_t *cent ) {
 
 			VectorCopy( cent->lerpOrigin, ent.origin );
 			VectorCopy( cent->lerpOrigin, ent.oldorigin );
-
-			if ( es->eFlags & EF_SPINNING ) {  // spinning will override the angles set by a stand
-				if ( es->groundEntityNum == -1 || !es->groundEntityNum ) { // (SA) spinning with a stand will spin the stand and the attached weap (only when in the air)
-					VectorCopy( cg.autoAnglesSlow, cent->lerpAngles );
-					VectorCopy( cg.autoAnglesSlow, cent->lastLerpAngles );
-				} else {
-					VectorCopy( cent->lastLerpAngles, cent->lerpAngles );   // make a tossed weapon sit on the ground in a position that matches how it was yawed
-				}
-			}
 		}
 
 	} else {

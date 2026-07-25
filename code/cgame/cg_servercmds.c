@@ -1573,6 +1573,13 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	// server forced our weapon; sync local selection so our next usercmd doesn't revert it
+	if ( !strcmp( cmd, "selectweap" ) ) {
+		cg.weaponSelect = atoi( CG_Argv( 1 ) );
+		cg.weaponSelectTime = cg.time;
+		return;
+	}
+
 	if ( !strcmp( cmd, "cpst" ) ) {    // dialogue subtitle print
 		if ( cg_drawSubtitles.value != 0 ) {
 			CG_SubtitlePrint( CG_Argv( 1 ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), cg_subtitleSize.integer );

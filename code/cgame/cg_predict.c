@@ -333,6 +333,10 @@ static void CG_TouchItem( centity_t *cent ) {
 		return;
 	}
 
+	if ( cent->currentState.eFlags & EF_ITEM_NO_PREDICT ) {
+		return;
+	}
+
 //----(SA) wolf -- not allowing this for single player games
 //	if( cgs.gametype == GT_SINGLE_PLAYER) {
 //		return;
