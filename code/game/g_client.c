@@ -90,6 +90,7 @@ Targets will be fired when someone spawns in on them.
 "nobots" will prevent bots from using this spot.
 "nohumans" will prevent non-bots from using this spot.
 If the start position is targeting an entity, the players camera will start out facing that ent (like an info_notnull)
+"survivalzone" optionally tags this spot's zone (eg. "surv_entry_z1") so AI spawned here scope gotomarker prefix* searches to that zone
 */
 void SP_info_ai_respawn( gentity_t *ent ) {
     int i;
@@ -111,6 +112,14 @@ void SP_info_ai_respawn( gentity_t *ent ) {
         ent->aiName = G_NewString( s );
     } else {
         ent->aiName = NULL;
+    }
+
+    // Optional survival zone tag, scopes gotomarker prefix* searches for AI spawned here
+    G_SpawnString( "survivalzone", "", &s );
+    if ( s && s[0] ) {
+        ent->survivalZone = G_NewString( s );
+    } else {
+        ent->survivalZone = NULL;
     }
 
     ent->enemy = G_PickTarget( ent->target );

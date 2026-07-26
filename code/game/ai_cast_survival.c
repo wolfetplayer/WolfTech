@@ -1466,6 +1466,7 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
    float oldmaxZ;
    int i;
    gentity_t *player;
+   gentity_t *spawnSpot;
    vec3_t spawn_origin, spawn_angles;
 
    if (ent->aiTeam != 1 && (svParams.spawnedThisWave >= svParams.killCountRequirement || !svParams.waveInProgress))
@@ -1544,27 +1545,38 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				player = AICast_FindEntityForName( "player" );
 
                 // Selecting the spawn point for the AI
-				SelectSpawnPoint_AI( player, ent, spawn_origin, spawn_angles );
+				spawnSpot = SelectSpawnPoint_AI( player, ent, spawn_origin, spawn_angles );
 				G_SetOrigin( ent, spawn_origin );
 				VectorCopy( spawn_origin, ent->client->ps.origin );
 				SetClientViewAngle( ent, spawn_angles );
+
+				// tag this life with its spawn point's zone, so gotomarker prefix* can scope to it
+				if ( spawnSpot && spawnSpot->survivalZone && spawnSpot->survivalZone[0] ) {
+					Q_strncpyz( cs->survivalZonePrefix, spawnSpot->survivalZone, sizeof( cs->survivalZonePrefix ) );
+				} else {
+					cs->survivalZonePrefix[0] = '\0';
+				}
 
 		        // Refresh now so script actions that read our position this frame see where we actually are
 				VectorCopy( ent->client->ps.origin, cs->bs->origin );
 				VectorCopy( ent->client->ps.origin, cs->bs->eye );
 				cs->bs->eye[2] += ent->client->ps.viewheight;
+				// make sure we're using the right AAS world - this can run outside cs's own AICast_Think
+				trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
 				cs->bs->areanum = BotPointAreaNum( cs->bs->origin );
 				if ( cs->bs->areanum ) {
 					cs->lastValidAreaNum[cs->aasWorldIndex] = cs->bs->areanum;
 					cs->lastValidAreaTime[cs->aasWorldIndex] = level.time;
 				}
 
+				// clear stale goto target BEFORE the respawn script runs, not after (it may gotomarker itself)
+				cs->castScriptStatus.scriptGotoId = -1;
+				cs->castScriptStatus.scriptGotoEnt = -1;
+
 				// Activate respawn scripts for AI
 				AICast_ScriptEvent(cs, "respawn", "");
 
 				// Clear leftover vanilla/script movement state after respawn script.
-				cs->castScriptStatus.scriptGotoId = -1;
-				cs->castScriptStatus.scriptGotoEnt = -1;
 				cs->followEntity = -1;
 				cs->enemyNum = -1;
 				cs->lastEnemy = -1;

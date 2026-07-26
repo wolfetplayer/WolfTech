@@ -94,15 +94,22 @@ void AICast_NoAttackIfNotHurtSinceLastScriptAction( cast_state_t *cs ) {
 ===============
 AICast_TravelTimeToPoint
 
-  Used by the "gotomarker" prefix/group support to rank candidate markers.
-  Uses cs->bs->areanum (already resolved via BotPointAreaNum() this frame)
-  and BotPointAreaNum() for the goal, rather than raw trap_AAS_PointAreaNum(),
-  since a marker sitting right on a floor edge/ledge can fail the raw lookup
-  and would otherwise look unreachable even when it's the closest one.
+  Checks whether goalOrg is reachable via AAS from cs's current position; returns 0 if not.
 ===============
 */
 int AICast_TravelTimeToPoint( cast_state_t *cs, const vec3_t goalOrg ) {
-	int toArea = BotPointAreaNum( (float *)goalOrg );
+	int toArea;
+
+	// make sure we're using the right AAS world - this can run outside cs's own AICast_Think
+	trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
+
+	// cs may not have had a normal think frame yet (eg. freshly activated by a script trigger)
+	if ( !cs->bs->areanum ) {
+		VectorCopy( g_entities[cs->entityNum].client->ps.origin, cs->bs->origin );
+		cs->bs->areanum = BotPointAreaNum( cs->bs->origin );
+	}
+
+	toArea = BotPointAreaNum( (float *)goalOrg );
 
 	if ( !cs->bs->areanum || !toArea ) {
 		return 0;
@@ -154,19 +161,9 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 		G_Error( "AI Scripting: gotomarker must have an targetname\n" );
 	}
 
-	// if we've already picked a marker for this command, stick with that same entity,
-	// even if we get interrupted (eg. by combat) in between calls. This matters most
-	// for "prefix*" markers: re-deriving "closest" from our CURRENT position could
-	// otherwise send us to a completely different (and much further) marker in the
-	// group after we've moved away from where we started. scriptGotoEnt is only reset
-	// to -1 when the script advances to a new command, so finding it still set here
-	// reliably means this command already chose a marker.
-	if ( cs->castScriptStatus.scriptGotoEnt >= 0 ) {
-		gentity_t *cached = &g_entities[cs->castScriptStatus.scriptGotoEnt];
-		if ( cs->castScriptStatus.scriptGotoIsGroup ||
-			 ( cached->targetname && !Q_strcasecmp( cached->targetname, token ) ) ) {
-			ent = cached;
-		}
+	// same token as last call to this command? stick with the marker we already picked
+	if ( cs->castScriptStatus.scriptGotoEnt >= 0 && !Q_stricmp( cs->castScriptStatus.scriptGotoToken, token ) ) {
+		ent = &g_entities[cs->castScriptStatus.scriptGotoEnt];
 	}
 
 	// if that marker is still being chased without interruption, just check proximity /
@@ -248,6 +245,12 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 			groupMode = qtrue;
 			prefix[prefixLen - 1] = '\0'; // strip trailing '*'
 			prefixLen--;
+
+			// scope to our current survival spawn zone if it refines the script's own prefix
+			if ( cs->survivalZonePrefix[0] && !Q_stricmpn( cs->survivalZonePrefix, prefix, prefixLen ) ) {
+				Q_strncpyz( prefix, cs->survivalZonePrefix, sizeof( prefix ) );
+				prefixLen = strlen( prefix );
+			}
 		}
 
 		if ( !groupMode ) {
@@ -258,44 +261,62 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 				}
 			}
 		} else {
-			// group/prefix mode: pick the closest reachable marker sharing the prefix
-			gentity_t *best = NULL;
-			int bestTT = 0x7fffffff;
-			float bestDistSq = 0.0f;
-			qboolean haveTT = qfalse;
+			// group/prefix mode: rank same-prefix markers by real AAS travel time (straight-line
+			// distance alone is misleading across floors/walls) - falls back to nearest straight-line
+			// distance only if none of them resolve a route at all
+#define GOTOMARKER_MAXCHOICES  32
+			gentity_t *candidates[GOTOMARKER_MAXCHOICES];
+			float candDist[GOTOMARKER_MAXCHOICES];
+			int numCandidates;
+			int bestIdx, bestTTIdx, bestTT, tt;
+			qboolean reachable;
+
+			numCandidates = 0;
 
 			while ( ( ent = G_Find( ent, FOFS( classname ), "ai_marker" ) ) ) {
-				vec3_t d;
-				float distSq;
-				int tt;
-
-				if ( !ent->targetname ) {
+				if ( !ent->targetname || Q_stricmpn( ent->targetname, prefix, prefixLen ) ) {
 					continue;
 				}
-				if ( Q_stricmpn( ent->targetname, prefix, prefixLen ) ) {
-					continue;
+				if ( numCandidates == GOTOMARKER_MAXCHOICES ) {
+					break;
 				}
 
-				tt = AICast_TravelTimeToPoint( cs, ent->r.currentOrigin );
-				if ( tt > 0 ) {
-					// prefer real travel time (AAS) when the marker is reachable
-					if ( tt < bestTT ) {
-						bestTT = tt;
-						best = ent;
-						haveTT = qtrue;
-					}
-				} else if ( !haveTT ) {
-					// no reachable candidate found yet, fall back to straight-line distance
-					VectorSubtract( ent->r.currentOrigin, cs->bs->origin, d );
-					distSq = VectorLengthSquared( d );
-					if ( !best || distSq < bestDistSq ) {
-						bestDistSq = distSq;
-						best = ent;
+				candidates[numCandidates] = ent;
+				candDist[numCandidates] = Distance( ent->r.currentOrigin, cs->bs->origin );
+				numCandidates++;
+			}
+
+			// take the true minimum AAS travel time across all candidates
+			bestTTIdx = -1;
+			bestTT = 0x7fffffff;
+			for ( i = 0; i < numCandidates; i++ ) {
+				tt = AICast_TravelTimeToPoint( cs, candidates[i]->r.currentOrigin );
+				if ( tt > 0 && tt < bestTT ) {
+					bestTT = tt;
+					bestTTIdx = i;
+				}
+			}
+
+			reachable = ( bestTTIdx >= 0 );
+			if ( reachable ) {
+				bestIdx = bestTTIdx;
+			} else {
+				bestIdx = -1;
+				for ( i = 0; i < numCandidates; i++ ) {
+					if ( bestIdx < 0 || candDist[i] < candDist[bestIdx] ) {
+						bestIdx = i;
 					}
 				}
 			}
 
-			ent = best;
+			ent = ( bestIdx >= 0 ) ? candidates[bestIdx] : NULL;
+
+			if ( ent && aicast_debug.integer ) {
+				G_Printf( "AI Scripting: gotomarker \"%s*\" -> \"%s\" (%d candidate%s, dist %.0f%s, selfarea %d)\n",
+						  prefix, ent->targetname, numCandidates, ( numCandidates == 1 ) ? "" : "s",
+						  candDist[bestIdx], reachable ? "" : ", unreachable via AAS", cs->bs->areanum );
+			}
+#undef GOTOMARKER_MAXCHOICES
 		}
 
 		if ( !ent ) {
@@ -306,9 +327,8 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 			}
 		}
 
-		// remember which mode picked this marker, so the cache check above knows whether
-		// to trust it outright (group) or re-verify the exact targetname (non-group)
-		cs->castScriptStatus.scriptGotoIsGroup = groupMode;
+		// remember the token that resolved this marker, for the cache check above
+		Q_strncpyz( cs->castScriptStatus.scriptGotoToken, token, sizeof( cs->castScriptStatus.scriptGotoToken ) );
 	}
 
 	if ( Distance( cs->bs->origin, ent->r.currentOrigin ) < SCRIPT_REACHGOAL_DIST ) { // we made it

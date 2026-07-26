@@ -292,7 +292,7 @@ typedef struct
 	int scriptAttackEnt;            // we should always attack this AI if they are alive
 	vec3_t playanim_viewangles;
 	const cast_script_stack_action_t *currentAction;
-	qboolean scriptGotoIsGroup;     // scriptGotoEnt was chosen from a "prefix*" marker group, not an exact targetname
+	char scriptGotoToken[64];       // raw gotomarker token (targetname or "prefix*") that resolved scriptGotoEnt
 } cast_script_status_t;
 //
 typedef struct
@@ -566,10 +566,11 @@ typedef struct cast_state_s
 	qboolean defendReturning; 
 	vec3_t defendOrigin;
 	float defendRadius;	 
-	float defendLeash;	
-	int defendExpireTime; 
+	float defendLeash;
+	int defendExpireTime;
 	int defendRepathTime;
 
+	char survivalZonePrefix[32];    // marker prefix from our current spawn point's "message" key, refines gotomarker prefix* searches
 
 } cast_state_t;
 //

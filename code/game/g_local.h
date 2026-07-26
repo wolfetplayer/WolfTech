@@ -320,6 +320,7 @@ struct gentity_s {
 	// Ridah, AI fields
 	char        *aiAttributes;
 	char        *aiName;
+	char        *survivalZone;      // info_ai_respawn: marker prefix AI spawned here should scope gotomarker prefix* to
 	int aiTeam;
 	void ( *AIScript_AlertEntity )( gentity_t *ent );
 	qboolean aiInactive;
