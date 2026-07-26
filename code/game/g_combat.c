@@ -95,6 +95,7 @@ void TossClientWeapons( gentity_t *self )
 		switch (self->aiCharacter)
 		{
 		case AICHAR_ZOMBIE:
+		case AICHAR_ZOMBIE_GHOST:
 		case AICHAR_WARZOMBIE:
 		case AICHAR_LOPER:
 		case AICHAR_LOPER_SPECIAL:

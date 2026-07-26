@@ -71,16 +71,18 @@ game_manager
         alertentity war5
         alertentity war6
         alertentity war7
-		alertentity loper1
-		alertentity loper2
-		alertentity loper3
-		alertentity loper4
-		alertentity loper5
-		alertentity loper6
-		alertentity loper7
-		alertentity loper8
-		alertentity loper9
-		alertentity loper10
+		alertentity ghost1
+		alertentity ghost2
+		alertentity ghost3
+		alertentity ghost4
+		alertentity ghost5
+		alertentity ghost6
+		alertentity ghost7
+		alertentity ghost8
+		alertentity ghost9
+		alertentity ghost10
+		alertentity flame_zomb1
+		alertentity flame_zomb2
 	}
 }
 

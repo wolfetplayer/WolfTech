@@ -34,9 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "../renderer/tr_types.h"
 #include "../client/keycodes.h"
 
-//#include "../../main/ui/menudef.h"
+#include "../../main/ui/menudef.h"
 // after every release we have to change this
-#include "../../media/sp_pak_coop1/ui/menudef.h"
+//#include "../../media/sp_pak_coop1/ui/menudef.h"
 
 #define MAX_COUNT_TRANSLATE_TABLE_ELEMENTS 1000
 

@@ -68,7 +68,7 @@ void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client b
 #define WAVE_HELGA 10
 #define WAVE_HEINRICH 15
 #define WAVE_LOPERS 5
-#define WAVE_FLAMERS 4
+#define WAVE_FLAMERS 8
 
 #define MAX_SOLDIERS_SURVIVAL 10
 #define SOLDIERS_INCREASE 1
@@ -110,9 +110,9 @@ void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client b
 #define SPECIAL_WAVE_MIN_START 4
 #define SPECIAL_WAVE_MIN_GAP 2
 #define SPECIAL_WAVE_MAX_GAP 5
-#define SPECIAL_WAVE_LOPERS_INITIAL 3
-#define SPECIAL_WAVE_LOPERS_INCREASE 1
-#define SPECIAL_WAVE_LOPERS_MAX 8
+#define SPECIAL_WAVE_COUNT_INITIAL 3
+#define SPECIAL_WAVE_COUNT_INCREASE 1
+#define SPECIAL_WAVE_COUNT_MAX 8
 
 /*
 ============
@@ -132,6 +132,8 @@ void AICast_InitSurvival(void) {
     // Special wave defaults
     svParams.specialWaveActive    = qfalse;
     svParams.lastSpecialWave      = 0;
+    svParams.numSpecialWaveTypes  = 0;
+    svParams.currentSpecialWaveType = AICHAR_LOPER_SPECIAL;
 
 	svParams.maxActiveAI[AICHAR_SOLDIER] = 5;
 	svParams.maxActiveAI[AICHAR_TRENCH] = 0;
@@ -190,13 +192,13 @@ void AIChar_AIScript_AlertEntity_Survival( gentity_t *ent ) {
 
 	cs = AICast_GetCastState( ent->s.number );
 
-	if (svParams.specialWaveActive && ent->aiTeam != 1 && ent->aiCharacter != AICHAR_LOPER_SPECIAL)
+	if (svParams.specialWaveActive && ent->aiTeam != 1 && ent->aiCharacter != svParams.currentSpecialWaveType)
 	{
 		cs->aiFlags |= AIFL_WAITINGTOSPAWN;
 		return;
 	}
 
-	if (!svParams.specialWaveActive && ent->aiTeam != 1 && ent->aiCharacter == AICHAR_LOPER_SPECIAL)
+	if (!svParams.specialWaveActive && ent->aiTeam != 1 && AICast_IsSpecialWaveChar(ent->aiCharacter))
 	{
 		cs->aiFlags |= AIFL_WAITINGTOSPAWN;
 		return;
@@ -473,7 +475,7 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 	if ( self->client->ps.pm_type == PM_DEAD ) {
 		// already dead
 		if ( self->health < GIB_HEALTH ) {
-			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV || self->aiCharacter == AICHAR_ZOMBIE_FLAME  ) {
+			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV || self->aiCharacter == AICHAR_ZOMBIE_FLAME || self->aiCharacter == AICHAR_ZOMBIE_GHOST  ) {
 				// RF, changed this so Zombies always gib now
 				GibEntity( self, killer );
 				nogib = qfalse;
@@ -538,7 +540,7 @@ void AICast_Die_Survival( gentity_t *self, gentity_t *inflictor, gentity_t *atta
 
 		// never gib in a nodrop
 		if ( self->health <= GIB_HEALTH ) {
-			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV || self->aiCharacter == AICHAR_ZOMBIE_FLAME  ) {
+			if ( self->aiCharacter == AICHAR_ZOMBIE || self->aiCharacter == AICHAR_ZOMBIE_SURV || self->aiCharacter == AICHAR_ZOMBIE_FLAME || self->aiCharacter == AICHAR_ZOMBIE_GHOST  ) {
 				// RF, changed this so Zombies always gib now
 				GibEntity( self, killer );
 				nogib = qfalse;
@@ -914,6 +916,7 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 
 		case AICHAR_ZOMBIE_SURV:
 		case AICHAR_ZOMBIE_FLAME:
+		case AICHAR_ZOMBIE_GHOST:
 			if (svParams.waveCount < 10)
 			{
 				newHealth = 20 + rawSteps * 10;
@@ -1147,6 +1150,7 @@ void BG_SetBehaviorForSurvival(AICharacters_t characterNum) {
 			break;
 		case AICHAR_ZOMBIE_SURV:
 		case AICHAR_ZOMBIE_FLAME:
+		case AICHAR_ZOMBIE_GHOST:
 		case AICHAR_WARZOMBIE:
 		case AICHAR_LOPER:
 		case AICHAR_LOPER_SPECIAL:
@@ -1219,6 +1223,94 @@ static qboolean AICast_ShouldStartSpecialWave(void) {
     // Otherwise randomized
     int roll = rand() % 100; // 0..99
     return (roll < SPECIAL_WAVE_CHANCE) ? qtrue : qfalse;
+}
+
+/*
+============
+AICast_IsSpecialWaveChar
+
+  Is this AICharacters_t inherently a special-wave-only enemy (regardless of
+  whether the current map has it selected in its specialWaveTypes pool)?
+============
+*/
+qboolean AICast_IsSpecialWaveChar( int aiChar ) {
+	switch ( aiChar ) {
+	case AICHAR_LOPER_SPECIAL:
+	case AICHAR_ZOMBIE_GHOST:
+		return qtrue;
+	default:
+		return qfalse;
+	}
+}
+
+typedef struct {
+	const char *name;
+	AICharacters_t type;
+} specialWaveTypeName_t;
+
+static const specialWaveTypeName_t specialWaveTypeNames[] = {
+	{ "loper_special", AICHAR_LOPER_SPECIAL },
+	{ "zombie_ghost",  AICHAR_ZOMBIE_GHOST  },
+};
+#define NUM_SPECIAL_WAVE_TYPE_NAMES ( sizeof( specialWaveTypeNames ) / sizeof( specialWaveTypeNames[0] ) )
+
+/*
+============
+Survival_ParseSpecialWaveTypes
+
+  Parses a space-separated list of special-wave enemy names (e.g. "loper_special
+  zombie_ghost") from the game_manager entity's "specialWaveType" key into
+  svParams.specialWaveTypes[]. Called once at map spawn time; if str is empty or
+  no recognized names are found, numSpecialWaveTypes stays 0 and
+  AICast_PickSpecialWaveType() falls back to AICHAR_LOPER_SPECIAL.
+============
+*/
+void Survival_ParseSpecialWaveTypes( const char *str ) {
+	char buf[256];
+	char *p, *token;
+	int i;
+
+	svParams.numSpecialWaveTypes = 0;
+
+	if ( !str || !str[0] ) {
+		return;
+	}
+
+	Q_strncpyz( buf, str, sizeof( buf ) );
+	p = buf;
+
+	while ( svParams.numSpecialWaveTypes < MAX_SPECIAL_WAVE_TYPES ) {
+		token = COM_ParseExt( &p, qfalse );
+		if ( !token[0] ) {
+			break;
+		}
+
+		for ( i = 0; i < NUM_SPECIAL_WAVE_TYPE_NAMES; i++ ) {
+			if ( !Q_stricmp( token, specialWaveTypeNames[i].name ) ) {
+				svParams.specialWaveTypes[svParams.numSpecialWaveTypes++] = specialWaveTypeNames[i].type;
+				break;
+			}
+		}
+		if ( i == NUM_SPECIAL_WAVE_TYPE_NAMES ) {
+			G_Printf( "Survival: unknown specialWaveType '%s' on game_manager, ignoring\n", token );
+		}
+	}
+}
+
+/*
+============
+AICast_PickSpecialWaveType
+
+  Picks which AICharacters_t is featured for a newly-starting special wave, from
+  the mapper-configured pool. Falls back to AICHAR_LOPER_SPECIAL if the map's
+  game_manager didn't set a "specialWaveType" key (preserves old behavior).
+============
+*/
+static AICharacters_t AICast_PickSpecialWaveType( void ) {
+	if ( svParams.numSpecialWaveTypes <= 0 ) {
+		return AICHAR_LOPER_SPECIAL;
+	}
+	return (AICharacters_t)svParams.specialWaveTypes[rand() % svParams.numSpecialWaveTypes];
 }
 
 /*
@@ -1408,22 +1500,23 @@ if ( wave == 1 ) {
 	svParams.specialWaveActive = qfalse;
 
 	if ( AICast_ShouldStartSpecialWave() ) {
-		int lopers;
+		int count;
 
 		svParams.specialWaveActive = qtrue;
 		svParams.lastSpecialWave = wave;
+		svParams.currentSpecialWaveType = AICast_PickSpecialWaveType();
 
-		lopers = SPECIAL_WAVE_LOPERS_INITIAL +
-			SPECIAL_WAVE_LOPERS_INCREASE * ( wave - SPECIAL_WAVE_MIN_START );
+		count = SPECIAL_WAVE_COUNT_INITIAL +
+			SPECIAL_WAVE_COUNT_INCREASE * ( wave - SPECIAL_WAVE_MIN_START );
 
-		if ( lopers < SPECIAL_WAVE_LOPERS_INITIAL ) {
-			lopers = SPECIAL_WAVE_LOPERS_INITIAL;
+		if ( count < SPECIAL_WAVE_COUNT_INITIAL ) {
+			count = SPECIAL_WAVE_COUNT_INITIAL;
 		}
 
-		svParams.killCountRequirement = lopers;
+		svParams.killCountRequirement = count;
 
-		svParams.maxActiveAI[AICHAR_LOPER_SPECIAL] =
-			( lopers < SPECIAL_WAVE_LOPERS_MAX ) ? lopers : SPECIAL_WAVE_LOPERS_MAX;
+		svParams.maxActiveAI[svParams.currentSpecialWaveType] =
+			( count < SPECIAL_WAVE_COUNT_MAX ) ? count : SPECIAL_WAVE_COUNT_MAX;
 	} else {
 		svParams.killCountRequirement = killReq;
 
@@ -1480,12 +1573,12 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
     }
 
 	// Same block for respawns
-	if (svParams.specialWaveActive && ent->aiTeam != 1 && ent->aiCharacter != AICHAR_LOPER_SPECIAL)
+	if (svParams.specialWaveActive && ent->aiTeam != 1 && ent->aiCharacter != svParams.currentSpecialWaveType)
 	{
 		return;
 	}
 
-	if (!svParams.specialWaveActive && ent->aiTeam != 1 && ent->aiCharacter == AICHAR_LOPER_SPECIAL)
+	if (!svParams.specialWaveActive && ent->aiTeam != 1 && AICast_IsSpecialWaveChar(ent->aiCharacter))
 	{
 		return;
 	}

@@ -36,6 +36,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "../qcommon/q_shared.h"
+#include "g_survival.h"
 
 /*
 Scripting that allows the designers to control the behaviour of entities
@@ -889,6 +890,10 @@ void SP_script_camera( gentity_t *ent ) {
   This is used to script multiplayer maps.  Entity not displayed in game.
 
 "scriptname" name used for scripting purposes (REQUIRED)
+"specialWaveType" (game_manager only, GT_COOP_SURVIVAL) space-separated list of special-wave
+	enemies this map should feature, e.g. "loper_special zombie_ghost" (one is picked at random
+	each special wave). Recognized names: loper_special, zombie_ghost. Omit to keep the default
+	(loper_special only).
 */
 void SP_script_multiplayer( gentity_t *ent ) {
 	if ( !ent->scriptName ) {
@@ -898,7 +903,14 @@ void SP_script_multiplayer( gentity_t *ent ) {
 	if ( Q_stricmp( ent->scriptName, "game_manager" ) ) {
 		G_Error( "%s must have a \"scriptname\" of 'game_manager'\n", ent->classname );
 	}
- 
+
+	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		char *specialWaveType;
+
+		G_SpawnString( "specialWaveType", "", &specialWaveType );
+		Survival_ParseSpecialWaveTypes( specialWaveType );
+	}
+
 	ent->s.eType = ET_INVISIBLE;
 
 	ent->r.svFlags |= SVF_NOCLIENT;     // only broadcast when in use

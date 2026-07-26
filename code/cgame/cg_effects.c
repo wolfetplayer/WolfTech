@@ -338,7 +338,7 @@ void CG_Bleed( vec3_t origin, int entityNum ) {
 
 	cent = &cg_entities[entityNum];
 
-	if ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_SURV || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME ) {
+	if ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_SURV || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME || cent->currentState.aiChar == AICHAR_ZOMBIE_GHOST ) {
 		CG_ParticleBloodCloudZombie( cent, origin, vec3_origin );
 		return;
 	}
@@ -434,6 +434,7 @@ void CG_LaunchGib( centity_t *cent, vec3_t origin, vec3_t angles, vec3_t velocit
 	case AICHAR_ZOMBIE:
 	case AICHAR_ZOMBIE_SURV:
 	case AICHAR_ZOMBIE_FLAME:
+	case AICHAR_ZOMBIE_GHOST:
 		le->pos.trType = TR_GRAVITY_LOW;
 		le->angles.trDelta[0] = 400 * crandom();
 		le->angles.trDelta[1] = 400 * crandom();
@@ -490,7 +491,7 @@ void CG_LaunchGib( centity_t *cent, vec3_t origin, vec3_t angles, vec3_t velocit
 	if ( cent && CG_EntOnFire( cent ) ) {
 		le->onFireStart = cent->currentState.onFireStart;
 		le->onFireEnd = re->fadeEndTime + 1000;
-	} else if ( ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_SURV || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME ) && IS_FLAMING_ZOMBIE( cent->currentState ) ) {
+	} else if ( ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_SURV || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME || cent->currentState.aiChar == AICHAR_ZOMBIE_GHOST ) && IS_FLAMING_ZOMBIE( cent->currentState ) ) {
 		le->onFireStart = cg.time - 1000;
 		le->onFireEnd = re->fadeEndTime + 1000;
 	}
@@ -754,7 +755,8 @@ void CG_GibPlayer( centity_t *cent, vec3_t playerOrigin, vec3_t gdir ) {
 				 ( cent->currentState.aiChar == AICHAR_HELGA ) ||
 				 ( cent->currentState.aiChar == AICHAR_HEINRICH ) ||
 				 ( cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME ) ||
-				 ( cent->currentState.aiChar == AICHAR_ZOMBIE_SURV ) ) {
+				 ( cent->currentState.aiChar == AICHAR_ZOMBIE_SURV ) ||
+				 ( cent->currentState.aiChar == AICHAR_ZOMBIE_GHOST ) ) {
 				//VectorScale( velocity, 4, velocity );
 				size = 0.6 + 0.4 * random();
 				if ( ( cent->currentState.aiChar == AICHAR_HELGA ) || ( cent->currentState.aiChar == AICHAR_HEINRICH ) ) {
@@ -794,7 +796,7 @@ void CG_GibPlayer( centity_t *cent, vec3_t playerOrigin, vec3_t gdir ) {
 						VectorSubtract( junctionOrigin[i], junctionOrigin[j], dir );
 
 						// ok now lets spawn a little blood
-						if ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_SURV || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME ) {
+						if ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_SURV || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME || cent->currentState.aiChar == AICHAR_ZOMBIE_GHOST ) {
 							CG_ParticleBloodCloudZombie( cent, junctionOrigin[i], dir );
 						} else {
 							CG_ParticleBloodCloud( cent, junctionOrigin[i], dir );
@@ -802,7 +804,7 @@ void CG_GibPlayer( centity_t *cent, vec3_t playerOrigin, vec3_t gdir ) {
 
 						// RF, also spawn some blood in this direction
 						VectorMA( junctionOrigin[i], 2.0, dir, origin );
-						if ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_SURV || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME ) {
+						if ( cent->currentState.aiChar == AICHAR_ZOMBIE || cent->currentState.aiChar == AICHAR_ZOMBIE_SURV || cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME || cent->currentState.aiChar == AICHAR_ZOMBIE_GHOST ) {
 							CG_ParticleBloodCloudZombie( cent, origin, dir );
 						} else {
 							CG_ParticleBloodCloud( cent, origin, dir );
@@ -813,7 +815,8 @@ void CG_GibPlayer( centity_t *cent, vec3_t playerOrigin, vec3_t gdir ) {
 							 ( cent->currentState.aiChar == AICHAR_HEINRICH ) ||
 							 ( cent->currentState.aiChar == AICHAR_HELGA ) ||
 							 ( cent->currentState.aiChar == AICHAR_ZOMBIE_FLAME ) ||
-							( cent->currentState.aiChar == AICHAR_ZOMBIE_SURV )  ) {
+							( cent->currentState.aiChar == AICHAR_ZOMBIE_SURV ) ||
+							( cent->currentState.aiChar == AICHAR_ZOMBIE_GHOST )  ) {
 							// spawn a gib
 							VectorCopy( junctionOrigin[i], origin );
 

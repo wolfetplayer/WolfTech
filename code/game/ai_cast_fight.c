@@ -520,6 +520,7 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 
 		case AICHAR_ZOMBIE: // zombie spirit attack
 		case AICHAR_ZOMBIE_SURV:
+		case AICHAR_ZOMBIE_GHOST:
 			return 1000;
 
 		case AICHAR_HELGA:  // zombie spirit attack
@@ -545,6 +546,7 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 
 		case AICHAR_ZOMBIE:
 		case AICHAR_ZOMBIE_SURV:
+		case AICHAR_ZOMBIE_GHOST:
 			return 44;
 		}
 		break;
@@ -990,6 +992,7 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 			break;
 		case AICHAR_ZOMBIE:
 		case AICHAR_ZOMBIE_SURV:
+		case AICHAR_ZOMBIE_GHOST:
 			delay = 6000;
 			// zombie "flying spirit" attack
 			if ( dist < 64 ) {
@@ -1068,6 +1071,7 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 			break;
 		case AICHAR_ZOMBIE:
 		case AICHAR_ZOMBIE_SURV:
+		case AICHAR_ZOMBIE_GHOST:
 			return qtrue;   // always usable
 		default:
 			delay = -1;

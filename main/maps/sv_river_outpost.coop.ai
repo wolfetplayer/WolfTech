@@ -207,17 +207,8 @@ war7
 
 }
 
-
-loper1
-loper2
-loper3
-loper4
-loper5
-loper6
-loper7
-loper8
-loper9
-loper10
+flame_zomb1
+flame_zomb2
 {
 
 	attributes
@@ -233,6 +224,68 @@ loper10
 	gotomarker surv_entry_*
 	sight
 	setmovespeed default
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+
+ghost1
+ghost2
+ghost3
+ghost4
+ghost5
+ghost6
+ghost7
+ghost8
+ghost9
+ghost10
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	statetype alert
+	nosight 99999
+	setmovespeed veryfast
+	gotomarker surv_entry_*
+	sight
 	}
 	
 	enemysight

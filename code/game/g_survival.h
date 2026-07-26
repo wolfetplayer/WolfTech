@@ -60,6 +60,12 @@ gentity_t *SelectSpawnPoint_AI ( gentity_t *player, gentity_t *ent, vec3_t origi
 void AICast_TickSurvivalWave( void );
 void Survival_CheckWipe( void );
 
+// Mapper-configurable special-wave enemy pool (set via the "specialWaveType" key
+// on the game_manager entity, e.g. "loper_special zombie_ghost")
+#define MAX_SPECIAL_WAVE_TYPES 4
+void Survival_ParseSpecialWaveTypes( const char *str );
+qboolean AICast_IsSpecialWaveChar( int aiChar );
+
 
 // Survival parameters
 typedef struct svParams_s
@@ -74,12 +80,16 @@ typedef struct svParams_s
 
 	int spawnedThisWave;
 	int spawnedThisWaveFriendly;
-	qboolean wavePending;              
+	qboolean wavePending;
     int waveChangeTime;
 	qboolean waveInProgress;
 
 	qboolean specialWaveActive;
 	int lastSpecialWave;
+
+	int specialWaveTypes[MAX_SPECIAL_WAVE_TYPES];  // AICharacters_t pool, mapper-configurable
+	int numSpecialWaveTypes;
+	int currentSpecialWaveType;                    // AICharacters_t featured in the active special wave
 
 	qboolean waveGameOver;              // all players died mid-wave, game over triggered
 
