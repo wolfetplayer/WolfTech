@@ -86,6 +86,7 @@ typedef struct svParams_s
 
 	qboolean specialWaveActive;
 	int lastSpecialWave;
+	qboolean forceSpecialWaveNext;       // dev/test override, set by "forcespecialwave" client command
 
 	int specialWaveTypes[MAX_SPECIAL_WAVE_TYPES];  // AICharacters_t pool, mapper-configurable
 	int numSpecialWaveTypes;

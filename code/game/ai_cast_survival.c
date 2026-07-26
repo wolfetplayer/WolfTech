@@ -1193,8 +1193,15 @@ static void Survival_GameManagerEvent( const char *event ) {
 
 
 static qboolean AICast_ShouldStartSpecialWave(void) {
+    // dev/test override via "forcespecialwave" client command, bypasses all
+    // normal gating below (cooldown, min-start, g_specialWaves toggle). One-shot.
+    if (svParams.forceSpecialWaveNext) {
+        svParams.forceSpecialWaveNext = qfalse;
+        return qtrue;
+    }
+
     // 0 = disabled → never start special waves
-    if (g_specialWaves.integer == 0 || SPECIAL_WAVE_CHANCE <= 0) 
+    if (g_specialWaves.integer == 0 || SPECIAL_WAVE_CHANCE <= 0)
         return qfalse;
 
     int wave = svParams.waveCount; // wave we’re starting now

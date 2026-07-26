@@ -1194,6 +1194,7 @@ If you have questions concerning this license or the applicable additional terms
 {"Cmd_Noclip_f", (byte *)Cmd_Noclip_f},
 {"Cmd_SetCoopSpawn_f", (byte *)Cmd_SetCoopSpawn_f},
 {"Cmd_Notarget_f", (byte *)Cmd_Notarget_f},
+{"Cmd_ForceSpecialWave_f", (byte *)Cmd_ForceSpecialWave_f},
 {"Cmd_Nofatigue_f", (byte *)Cmd_Nofatigue_f},
 {"Cmd_God_f", (byte *)Cmd_God_f},
 {"Cmd_Give_f", (byte *)Cmd_Give_f},

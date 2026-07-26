@@ -27,6 +27,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "g_local.h"
+#include "g_survival.h"
 
 /*
 ==================
@@ -873,6 +874,26 @@ void Cmd_Notarget_f( gentity_t *ent ) {
 	}
 
 	trap_SendServerCommand( ent - g_entities, va( "print \"%s\"", msg ) );
+}
+
+/*
+==================
+Cmd_ForceSpecialWave_f
+
+Dev/test command: forces the next survival wave to start as a special wave,
+bypassing the normal cooldown/chance gating. One-shot.
+
+argv(0) forcespecialwave
+==================
+*/
+void Cmd_ForceSpecialWave_f( gentity_t *ent ) {
+	if ( !CheatsOk( ent ) ) {
+		return;
+	}
+
+	svParams.forceSpecialWaveNext = qtrue;
+
+	trap_SendServerCommand( ent - g_entities, "print \"next wave will be a special wave\n\"" );
 }
 
 void Cmd_SetCoopSpawn_f( gentity_t *ent ) {
@@ -3638,6 +3659,8 @@ void ClientCommand( int clientNum ) {
 		Cmd_Nofatigue_f( ent );
 	} else if ( Q_stricmp( cmd, "notarget" ) == 0 )  {
 		Cmd_Notarget_f( ent );
+	} else if ( Q_stricmp( cmd, "forcespecialwave" ) == 0 )  {
+		Cmd_ForceSpecialWave_f( ent );
 	} else if ( Q_stricmp( cmd, "noclip" ) == 0 )  {
 		Cmd_Noclip_f( ent );
 	} else if ( Q_stricmp( cmd, "spawnpoint" ) == 0 ) {
