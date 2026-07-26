@@ -1516,7 +1516,8 @@ void CG_UpdateFlamethrowerSounds( void ) {
 	// send client damage updates if required
 	i = cg.snap->ps.clientNum;
 	
-	if ( cg_entities[centFlameInfo[i].lastDmgEnemy].currentState.aiChar != AICHAR_ZOMBIE ) { // Just from zombies + props_flamethrower (CG_FlamethrowerProp)
+	if ( cg_entities[centFlameInfo[i].lastDmgEnemy].currentState.aiChar != AICHAR_ZOMBIE &&
+		 cg_entities[centFlameInfo[i].lastDmgEnemy].currentState.aiChar != AICHAR_ZOMBIE_FLAME ) { // Just from zombies + props_flamethrower (CG_FlamethrowerProp)
 		return;
 	}
 
