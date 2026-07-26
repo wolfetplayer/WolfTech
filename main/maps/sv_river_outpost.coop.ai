@@ -1,0 +1,589 @@
+player
+{
+
+	spawn
+	{
+        #if g_survivalDifficulty == 0
+		applyloadout survival_default
+		#endif
+		
+        #if g_survivalDifficulty == 1
+		applyloadout survival_hardcore
+		#endif
+		
+		mu_start sound/music/l_briefing_2
+	}
+	
+	trigger map_start
+	{
+		//If something breaks at late player joining, move it here
+        accum 0 set 0     // number of friendlies already spawned
+		globalaccum 0 set 0
+	}
+	
+	playerstart
+	{
+		mu_stop 0 1000
+		wait 2000
+		mu_play sound/misc/prepare
+	}
+	
+	trigger reinforce
+	{
+       accum 1 inc 1
+	   alertentity friendly1
+	   trigger player reinforce2
+	}
+	
+	trigger reinforce2
+	{
+       accum 1 abort_if_less_than 2
+	   alertentity friendly2
+	   trigger player reinforce3
+	}
+	
+	trigger reinforce3
+	{
+       accum 1 abort_if_less_than 3
+	   alertentity friendly3
+	   trigger player reinforce4
+	}
+	
+	trigger reinforce4
+	{
+       accum 1 abort_if_less_than 4
+	   alertentity friendly4
+	   trigger player reinforce5
+	}
+	
+	trigger reinforce5
+	{
+       accum 1 abort_if_less_than 5
+	   alertentity friendly5
+	   alertentity kill_reinforce1_relay
+	   alertentity kill_reinforce2_relay
+	}
+	
+	trigger player_using_radio
+    {
+        trigger radio static
+    }
+
+}
+
+zomb1
+zomb2
+zomb3
+zomb4
+zomb5
+zomb6
+zomb7
+zomb8
+zomb9
+zomb10
+zomb11
+zomb12
+zomb13
+zomb14
+zomb15
+zomb16
+zomb17
+zomb18
+zomb19
+zomb20
+zomb21
+zomb22
+zomb23
+zomb24
+zomb25
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	statetype alert
+	nosight 99999
+	setmovespeed fast
+	gotomarker surv_entry_*
+	sight
+	setmovespeed default
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+war1
+war2
+war3
+war4
+war5
+war6
+war7
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	statetype alert
+	nosight 99999
+	setmovespeed fast
+	gotomarker surv_entry_*
+	sight
+	setmovespeed default
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+
+loper1
+loper2
+loper3
+loper4
+loper5
+loper6
+loper7
+loper8
+loper9
+loper10
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	statetype alert
+	nosight 99999
+	setmovespeed fast
+	gotomarker surv_entry_*
+	sight
+	setmovespeed default
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+
+
+
+friendly1
+{
+
+	attributes
+	{
+	attack_crouch 0.0
+	aim_skill 1.0
+	aim_accuracy 1.0
+	attack_skill 1.0
+	fov 360
+	}
+	
+	spawn
+	{
+	resetscript
+	giveweaponfull weapon_sniperScope
+	statetype alert
+	notarget on
+	godmode on
+	//defend marker_def1 32 0
+	}
+	
+	activate
+	{
+	deny
+	}
+	
+	enemysight
+	{
+
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+friendly2
+{
+
+	attributes
+	{
+	attack_crouch 0.0
+	aim_skill 1.0
+	aim_accuracy 1.0
+	attack_skill 1.0
+	fov 360
+	}
+	
+	spawn
+	{
+	resetscript
+	giveweaponfull weapon_thompson
+	statetype alert
+	notarget on
+	godmode on
+	//defend marker_def2 32 0
+	}
+	
+	activate
+	{
+	deny
+	}
+	
+	enemysight
+	{
+
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+friendly3
+{
+
+	attributes
+	{
+	attack_crouch 0.0
+	aim_skill 1.0
+	aim_accuracy 1.0
+	attack_skill 1.0
+	fov 360
+	}
+	
+	spawn
+	{
+	resetscript
+	giveweaponfull weapon_thompson
+	statetype alert
+	notarget on
+	godmode on
+	//defend marker_def3 32 0
+	}
+	
+	activate
+	{
+	deny
+	}
+	
+	enemysight
+	{
+
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+friendly4
+{
+
+	attributes
+	{
+	attack_crouch 0.0
+	aim_skill 1.0
+	aim_accuracy 1.0
+	attack_skill 1.0
+	fov 360
+	}
+	
+	spawn
+	{
+	resetscript
+	giveweaponfull weapon_thompson
+	statetype alert
+	notarget on
+	godmode on
+	//defend marker_def4 32 0
+	}
+	
+	activate
+	{
+	deny
+	}
+	
+	enemysight
+	{
+
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+friendly5
+{
+
+	attributes
+	{
+	attack_crouch 0.0
+	aim_skill 1.0
+	aim_accuracy 1.0
+	attack_skill 1.0
+	fov 360
+	}
+	
+	spawn
+	{
+	resetscript
+	giveweaponfull weapon_sniperScope
+	statetype alert
+	notarget on
+	godmode on
+	//defend marker_def5 32 0
+	}
+	
+	activate
+	{
+	deny
+	}
+	
+	enemysight
+	{
+
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}

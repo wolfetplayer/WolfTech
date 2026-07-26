@@ -1,0 +1,148 @@
+//
+//Brush Scripting
+//Map: River Outpost
+//Last edited by: WolfETPlayer
+//
+
+game_manager
+{
+	spawn
+	{
+		trigger player map_start	//Prevents late players affecting the game
+	}
+	
+	wave_start
+	{
+	   mu_play sound/misc/wave_start
+	   wait 11000
+	   mu_queue sound/music/c_atmos sound/music/c_chant sound/music/c_military sound/music/x_atmos
+	}
+	
+	wave_end
+	{
+	  mu_stop 500
+	  mu_play sound/misc/wave_end
+	}
+	
+	specialwave_start
+	{
+	   mu_play sound/music/s_longout
+	   wait 11000
+	   mu_queue sound/music/x_action
+	}
+	
+	specialwave_end
+	{
+	  mu_stop 500
+	  mu_play sound/misc/wave_end
+	}
+	
+	start_survival
+	{
+		alertentity zomb1
+		alertentity zomb2
+		alertentity zomb3
+		alertentity zomb4
+		alertentity zomb5
+		alertentity zomb6
+		alertentity zomb7
+		alertentity zomb8
+		alertentity zomb9
+		alertentity zomb10
+		alertentity zomb11
+		alertentity zomb12
+		alertentity zomb13
+		alertentity zomb14
+		alertentity zomb15
+		alertentity zomb16
+		alertentity zomb17
+		alertentity zomb18
+		alertentity zomb19
+		alertentity zomb20
+		alertentity zomb21
+		alertentity zomb22
+		alertentity zomb23
+		alertentity zomb24
+		alertentity zomb25
+        alertentity war1
+        alertentity war2
+        alertentity war3
+        alertentity war4
+        alertentity war5
+        alertentity war6
+        alertentity war7
+		alertentity loper1
+		alertentity loper2
+		alertentity loper3
+		alertentity loper4
+		alertentity loper5
+		alertentity loper6
+		alertentity loper7
+		alertentity loper8
+		alertentity loper9
+		alertentity loper10
+	}
+}
+
+radio	
+{
+	spawn
+	{
+		accum 5 set 0
+	}
+
+	trigger static 
+	{
+		stopsound
+		playsound sound/scenaric/dam/radiostaticloop.wav looping
+		wait 1500
+		stopsound
+		trigger radio choose_tunes	
+	}
+
+	trigger choose_tunes
+	{
+		accum 5 random 4
+		resetscript
+		wait 5
+		trigger radio radio1
+		wait 5
+		trigger radio radio2
+		wait 5
+		trigger radio radio3
+		wait 5
+		trigger radio radio4
+	}
+
+	trigger radio1	
+	{
+		accum 5 abort_if_not_equal 0
+		resetscript 
+		stopsound
+		playsound sound/scenaric/village2/beethoven.wav looping
+	}
+
+	trigger radio2
+	{
+		accum 5 abort_if_not_equal 1
+		resetscript
+		stopsound
+		playsound sound/scenaric/village2/beethoven_9_2.wav looping	
+	}
+	
+	trigger radio3
+	{
+		accum 5 abort_if_not_equal 2
+		resetscript
+		stopsound
+	}
+	
+	trigger radio4
+	{
+		accum 5 abort_if_not_equal 3
+		resetscript
+		stopsound
+		playsound sound/scenaric/dam/cafemusic.wav looping	
+	}
+
+}

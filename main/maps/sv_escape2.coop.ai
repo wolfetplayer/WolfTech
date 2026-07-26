@@ -1,0 +1,349 @@
+player
+{
+
+	spawn
+	{
+
+        #if g_survivalDifficulty == 0
+		applyloadout survival_default
+		#endif
+		
+        #if g_survivalDifficulty == 1
+		applyloadout survival_hardcore
+		#endif
+		
+		abort_if_loadgame
+		mu_start sound/music/l_briefing_2
+	}
+	
+	playerstart
+	{
+		mu_stop 0 1000
+		wait 2000
+		mu_play sound/misc/prepare
+	}
+	
+	trigger map_start
+	{
+		//If something breaks at late player joining, move it here
+		accum 1 set 0
+		accum 2 set 0
+		globalaccum 0 set 0
+	}
+
+}
+
+nazi1
+nazi2
+nazi3
+nazi4
+nazi5
+nazi6
+nazi7
+nazi8
+nazi9
+nazi10
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	statetype alert
+	giveweaponfull weapon_mp40 weapon_luger weapon_mauserrifle
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+eg1
+eg2
+eg3
+eg4
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	giveweaponfull weapon_sten weapon_silencer
+	statetype alert
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+bg1
+bg2
+bg3
+bg4
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	giveweaponfull weapon_fg42
+	statetype alert
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+v1
+v2
+v3
+v4
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	giveweaponfull weapon_flamethrower weapon_venom
+	statetype alert
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+proto1
+proto2
+{
+	attributes
+	{
+	}
+
+	respawn
+	{
+		knockback off
+		statetype alert
+        giveweaponfull weapon_panzerfaust weapon_venom
+	}
+	
+	inspectfriendlycombatstart
+	{
+		deny
+	}
+
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	enemysight player
+	{
+		attrib yaw_speed 300
+	}
+
+	death
+	{
+	}
+}
+
+loper1
+loper2
+loper3
+loper4
+loper5
+loper6
+loper7
+loper8
+loper9
+loper10
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	statetype alert
+	}
+	
+	enemysight
+	{
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}

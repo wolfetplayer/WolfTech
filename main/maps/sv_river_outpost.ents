@@ -1,0 +1,9 @@
+
+{
+"classname" "script_multiplayer"
+"scriptname" "game_manager"
+}
+
+{
+"classname" "info_player_intermission"
+"origin" "-964 955 194"

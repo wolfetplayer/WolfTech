@@ -1,0 +1,73 @@
+game_manager
+{
+	spawn
+	{
+		trigger player map_start	//Prevents late players affecting the game
+	}
+	
+
+	wave_start
+	{
+	   mu_play sound/misc/wave_start
+	   wait 11000
+	   mu_queue sound/music/m_action sound/music/m_alarm sound/music/m_moving sound/music/m_situation sound/music/x_action sound/music/m_assault
+	}
+	
+	wave_end 
+	{
+	  mu_stop 500
+	  mu_play sound/misc/wave_end
+	}
+
+	specialwave_start
+	{
+	   mu_play sound/music/s_longout
+	   wait 11000
+	   mu_queue sound/music/x_action
+	}
+	
+	specialwave_end
+	{
+	  mu_stop 500
+	  mu_play sound/misc/wave_end
+	}
+	
+	start_survival
+	{
+		alertentity nazi1
+		alertentity nazi2
+		alertentity nazi3
+		alertentity nazi4
+		alertentity nazi5
+		alertentity nazi6
+		alertentity nazi7
+		alertentity nazi8
+		alertentity nazi9
+		alertentity nazi10
+        alertentity eg1
+        alertentity eg2
+        alertentity eg3
+        alertentity eg4
+        alertentity bg1
+        alertentity bg2
+        alertentity bg3
+        alertentity bg4
+        alertentity v1
+        alertentity v2
+		alertentity v3
+		alertentity v4
+		alertentity proto1
+		alertentity proto2
+		alertentity loper1
+		alertentity loper2
+		alertentity loper3
+		alertentity loper4
+		alertentity loper5
+		alertentity loper6
+		alertentity loper7
+		alertentity loper8
+		alertentity loper9
+		alertentity loper10	
+	}
+	
+}
