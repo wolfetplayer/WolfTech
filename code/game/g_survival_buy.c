@@ -32,17 +32,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_survival.h"
 
 
-#define PRICE_RANDOM_WEAPON 150
-#define PRICE_RANDOM_PERK   250
-#define PRICE_WEAPON_UPGRADE 1000
-#define PRICE_AMMO_UPGRADED 500
+// Prices, perk limits, and mystery-box timing below all come from survCfg (see g_survival.h / g_survival_config.c).
 
-#define PERKS_LIMIT_ENGINEER 4
-#define PERKS_LIMIT          3
-
-#define PRICE_ARMOR 150
-
-int Survival_GetDefaultWeaponPrice(int weapon) {
+static int Survival_GetCompiledInWeaponPrice(int weapon) {
 	switch (weapon) {
 		case WP_KNIFE:        return 10;
 		// Pistols
@@ -97,6 +89,21 @@ int Survival_GetDefaultWeaponPrice(int weapon) {
 }
 
 /*
+============
+Survival_GetDefaultWeaponPrice
+
+  survCfg.weaponPrice[] override (set via "weapon_price.<name>" in a .surv
+  file) takes priority; otherwise falls back to the compiled-in table above.
+============
+*/
+int Survival_GetDefaultWeaponPrice(int weapon) {
+	if (weapon > WP_NONE && weapon < WP_NUM_WEAPONS && survCfg.weaponPrice[weapon] >= 0) {
+		return survCfg.weaponPrice[weapon];
+	}
+	return Survival_GetCompiledInWeaponPrice(weapon);
+}
+
+/*
 ===========================================================================
 Random weapon box (mystery box), survival mode
 
@@ -114,17 +121,7 @@ above the target_buy's origin and despawned on pickup/reset.
 #define RWB_SPINNING 1
 #define RWB_LANDED   2
 
-#define RWB_SPIN_DURATION     5000 // ms of cycling before landing (matches randombox.wav length)
-#define RWB_SPIN_INTERVAL_MIN 70   // ms between model swaps, fastest (start)
-#define RWB_SPIN_INTERVAL_MAX 380  // ms between model swaps, right before landing
-
-#define RWB_DECISION_TIME  15000 // ms to pick up the landed weapon before it's forfeited
-#define RWB_BLINK_START     10000 // ms into the decision window when blinking begins
-#define RWB_BLINK_INTERVAL    150  // ms per blink toggle
-
-#define RWB_FLOAT_HEIGHT 28 // units above the target_buy origin
-#define RWB_BOB_HEIGHT    3 // bob amplitude, units
-#define RWB_BOB_SPEED  2200 // ms per full bob cycle
+// Timing below comes from survCfg.rwb* (ms/units, see g_survival_config.c)
 
 static const weapon_t rwb_weapon_pool[] = {
 	WP_LUGER, WP_SILENCER, WP_COLT,
@@ -188,9 +185,9 @@ static gentity_t *Survival_RandomBox_SpawnDisplay( gentity_t *box, int itemIndex
 	VectorSet( display->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
 
 	VectorCopy( box->s.origin, display->s.pos.trBase );
-	display->s.pos.trBase[2] += RWB_FLOAT_HEIGHT;
-	display->s.pos.trDelta[2] = RWB_BOB_HEIGHT;
-	display->s.pos.trDuration = RWB_BOB_SPEED;
+	display->s.pos.trBase[2] += survCfg.rwbFloatHeight;
+	display->s.pos.trDelta[2] = survCfg.rwbBobHeight;
+	display->s.pos.trDuration = survCfg.rwbBobSpeed;
 	display->s.pos.trTime = level.time;
 	display->s.pos.trType = TR_SINE;
 
@@ -250,7 +247,7 @@ static void Survival_RandomBox_Land( gentity_t *ent ) {
 	ent->rwbBlinking = qfalse;
 
 	ent->think = Survival_RandomBox_Think;
-	ent->nextthink = level.time + RWB_BLINK_START;
+	ent->nextthink = level.time + survCfg.rwbBlinkStart;
 }
 
 // warm-to-hot palette the spin light strobes through on every swap
@@ -264,12 +261,12 @@ static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
 	float frac;
 	int interval;
 
-	if ( elapsed >= RWB_SPIN_DURATION || !ent->rwbDisplay ) {
+	if ( elapsed >= survCfg.rwbSpinDuration || !ent->rwbDisplay ) {
 		Survival_RandomBox_Land( ent );
 		return;
 	}
 
-	frac = elapsed / (float)RWB_SPIN_DURATION;
+	frac = elapsed / (float)survCfg.rwbSpinDuration;
 
 	// cosmetic swap: any pool weapon, just avoid an immediate repeat
 	int guard = 6;
@@ -294,7 +291,7 @@ static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
 
 	// ease the swap interval out from fast to slow as we approach landing
 	frac = frac * frac;
-	interval = RWB_SPIN_INTERVAL_MIN + (int)( ( RWB_SPIN_INTERVAL_MAX - RWB_SPIN_INTERVAL_MIN ) * frac );
+	interval = survCfg.rwbSpinIntervalMin + (int)( ( survCfg.rwbSpinIntervalMax - survCfg.rwbSpinIntervalMin ) * frac );
 
 	ent->nextthink = level.time + interval;
 }
@@ -302,7 +299,7 @@ static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
 static void Survival_RandomBox_ThinkLanded( gentity_t *ent ) {
 	int elapsed = level.time - ent->rwbPhaseStartTime;
 
-	if ( elapsed >= RWB_DECISION_TIME || !ent->rwbDisplay ) {
+	if ( elapsed >= survCfg.rwbDecisionTime || !ent->rwbDisplay ) {
 		Survival_RandomBox_Reset( ent );
 		return;
 	}
@@ -314,7 +311,7 @@ static void Survival_RandomBox_ThinkLanded( gentity_t *ent ) {
 		ent->rwbDisplay->s.eFlags &= ~EF_NODRAW;
 	}
 
-	ent->nextthink = level.time + RWB_BLINK_INTERVAL;
+	ent->nextthink = level.time + survCfg.rwbBlinkInterval;
 }
 
 void Survival_RandomBox_Think( gentity_t *ent ) {
@@ -344,7 +341,7 @@ qboolean Survival_RandomBox_Start( gentity_t *ent, gentity_t *activator ) {
 		return qfalse;
 	}
 
-	price = ent->price > 0 ? ent->price : PRICE_RANDOM_WEAPON;
+	price = ent->price > 0 ? ent->price : survCfg.priceRandomWeapon;
 
 	if ( activator->client->ps.persistant[PERS_SCORE] < price ) {
 		trap_SendServerCommand( -1, "mu_play sound/items/use_nothing.wav 0\n" );
@@ -383,7 +380,7 @@ qboolean Survival_RandomBox_Start( gentity_t *ent, gentity_t *activator ) {
 	G_Sound( ent->rwbDisplay, G_SoundIndex( "sound/misc/randombox.wav" ) );
 
 	ent->think = Survival_RandomBox_Think;
-	ent->nextthink = level.time + RWB_SPIN_INTERVAL_MIN;
+	ent->nextthink = level.time + survCfg.rwbSpinIntervalMin;
 
 	return qtrue;
 }
@@ -462,7 +459,7 @@ qboolean Survival_HandleRandomPerkBox(gentity_t *ent, gentity_t *activator, char
 		"perk_weaponhandling", "perk_rifling", "perk_secondchance"
 	};
 
-	int price = (ent->price > 0) ? ent->price : PRICE_RANDOM_PERK;
+	int price = (ent->price > 0) ? ent->price : survCfg.priceRandomPerk;
 	const int numPerks = sizeof(random_perks) / sizeof(random_perks[0]);
 
 	// Perk count limit (only matters for NEW perks, upgrades do not consume a slot)
@@ -471,7 +468,7 @@ qboolean Survival_HandleRandomPerkBox(gentity_t *ent, gentity_t *activator, char
 		if (activator->client->ps.perks[i] > 0)
 			perkCount++;
 	}
-	int maxPerks = (activator->client->ps.stats[STAT_PLAYER_CLASS] == PC_ENGINEER) ? PERKS_LIMIT_ENGINEER : PERKS_LIMIT;
+	int maxPerks = (activator->client->ps.stats[STAT_PLAYER_CLASS] == PC_ENGINEER) ? survCfg.perksLimitEngineer : survCfg.perksLimit;
 
 	// Not enough score?
 	if (activator->client->ps.persistant[PERS_SCORE] < price) {
@@ -561,7 +558,7 @@ qboolean Survival_HandleAmmoPurchase(gentity_t *ent, gentity_t *activator, int p
 	// Upgrade modifier
 	if (price <= 0) {
 		if (upgradeLevel >= 1) {
-			ammoPrice = PRICE_AMMO_UPGRADED* upgradeLevel;
+			ammoPrice = survCfg.priceAmmoUpgraded * upgradeLevel;
 		}
 	}
 
@@ -621,7 +618,7 @@ qboolean Survival_HandleWeaponUpgrade(gentity_t *ent, gentity_t *activator, int 
 	}
 
 	// Use fallback base price
-	baseUpgradePrice = PRICE_WEAPON_UPGRADE;
+	baseUpgradePrice = survCfg.priceWeaponUpgrade;
 
 	// Mapper override
 	if (price > 0)
@@ -693,7 +690,7 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 
 		if (COM_BitCheck(activator->client->ps.weapons, weapon)) {
 			if (upgradeLevel >= 1) {
-				price = PRICE_AMMO_UPGRADED* upgradeLevel;
+				price = survCfg.priceAmmoUpgraded * upgradeLevel;
 			} else {
 				price /= 2; // Discount if already owned
 			}
@@ -718,7 +715,7 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 	if (COM_BitCheck(activator->client->ps.weapons, weapon)) {
 		// Adjust refill price
 		if (upgradeLevel >= 1) {
-			price = PRICE_AMMO_UPGRADED * upgradeLevel;
+			price = survCfg.priceAmmoUpgraded * upgradeLevel;
 		} else {
 			price /= 2;
 		}
@@ -777,7 +774,7 @@ qboolean Survival_HandleArmorPurchase(gentity_t *activator, gitem_t *item, int p
 
 	// Fallback price if not set by mapper
 	if (price <= 0)
-		price = PRICE_ARMOR;
+		price = survCfg.priceArmor;
 
 	// Check score
 	if (activator->client->ps.persistant[PERS_SCORE] < price) {
@@ -800,7 +797,7 @@ qboolean Survival_HandleArmorPurchase(gentity_t *activator, gitem_t *item, int p
 Survival_GetDefaultPerkPrice
 ============
 */
-int Survival_GetDefaultPerkPrice(int perk) {
+static int Survival_GetCompiledInPerkPrice(int perk) {
 	switch (perk) {
 		case PERK_SECONDCHANCE:    return 150;
 		case PERK_RUNNER:          return 200;
@@ -810,6 +807,21 @@ int Survival_GetDefaultPerkPrice(int perk) {
 		case PERK_RESILIENCE:      return 400;
 		default:                   return 200;
 	}
+}
+
+/*
+============
+Survival_GetDefaultPerkPrice
+
+  survCfg.perkPrice[] override (set via "perk_price.<name>" in a .surv file)
+  takes priority; otherwise falls back to the compiled-in table above.
+============
+*/
+int Survival_GetDefaultPerkPrice(int perk) {
+	if (perk > PERK_NONE && perk < NUM_PERKS && survCfg.perkPrice[perk] >= 0) {
+		return survCfg.perkPrice[perk];
+	}
+	return Survival_GetCompiledInPerkPrice(perk);
 }
 
 #define PERK_LEVEL_NONE  0
@@ -847,7 +859,7 @@ qboolean Survival_HandlePerkPurchase(gentity_t *activator, gitem_t *item, int pr
         }
 
         int maxPerks = (activator->client->ps.stats[STAT_PLAYER_CLASS] == PC_ENGINEER) ?
-            PERKS_LIMIT_ENGINEER : PERKS_LIMIT;
+            survCfg.perksLimitEngineer : survCfg.perksLimit;
 
         if (perkCount >= maxPerks)
             return qfalse;
@@ -1047,7 +1059,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 
 			if (upgradeLevel >= 1)
 			{
-				price = PRICE_AMMO_UPGRADED * upgradeLevel;
+				price = survCfg.priceAmmoUpgraded * upgradeLevel;
 			}
 
 			if (weaponName && price > 0) {
@@ -1071,7 +1083,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 				return; // rolling - no tooltip
 			}
 
-			price = (price > 0) ? price : PRICE_RANDOM_WEAPON;
+			price = (price > 0) ? price : survCfg.priceRandomWeapon;
 			if (weaponName && price > 0) {
 				trap_SendServerCommand(other - g_entities, va(
 					"cpbuy \"%s\nprice: %d\"",
@@ -1088,7 +1100,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 
 			if (price <= 0)
 			{
-				price = PRICE_WEAPON_UPGRADE * (upgradeLevel + 1);
+				price = survCfg.priceWeaponUpgrade * (upgradeLevel + 1);
 			}
 
 			if (weaponName && price > 0)
@@ -1101,7 +1113,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 		}
 		else if (!Q_stricmp(techName, "random_perk"))
 		{
-			price = (price > 0) ? price : PRICE_RANDOM_PERK;
+			price = (price > 0) ? price : survCfg.priceRandomPerk;
 			if (weaponName && price > 0)
 			{
 				trap_SendServerCommand(other - g_entities, va(
@@ -1133,7 +1145,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 		} else if (item->giType == IT_PERK) {
 			price = Survival_GetDefaultPerkPrice(item->giTag);
 		} else if (item->giType == IT_ARMOR) {
-			price = PRICE_ARMOR;
+			price = survCfg.priceArmor;
 		}
 	}
 
@@ -1142,7 +1154,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 
 	if (upgradeLevel >= 1)
 	{
-		ammoPrice = PRICE_AMMO_UPGRADED * upgradeLevel;
+		ammoPrice = survCfg.priceAmmoUpgraded * upgradeLevel;
 	}
 
 	// Perk PRO tip override (dynamic string + dynamic price)

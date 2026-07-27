@@ -46,6 +46,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
+#include "g_survival.h"
 
 /*
 Support routines for the Decision Making layer.
@@ -512,7 +513,7 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 			return ZOMBIE_FLAME_RADIUS - 50;      // get well within range before starting
 
 		case AICHAR_ZOMBIE_GHOST:  // teleport strike
-			return ZOMBIE_GHOST_TELEPORT_MAX_RANGE;
+			return survCfg.ghostTeleportMaxRange;
 		}
 		break;
 
@@ -981,8 +982,8 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 			}
 			break;
 		case AICHAR_ZOMBIE_GHOST:  // teleport strike
-			delay = ZOMBIE_GHOST_TELEPORT_DELAY;
-			if ( dist < ZOMBIE_GHOST_TELEPORT_MIN_RANGE || dist > ZOMBIE_GHOST_TELEPORT_MAX_RANGE ) {
+			delay = survCfg.ghostTeleportDelay;
+			if ( dist < survCfg.ghostTeleportMinRange || dist > survCfg.ghostTeleportMaxRange ) {
 				return qfalse;
 			}
 			if ( cs->enemyNum < 0 ) {

@@ -2675,6 +2675,7 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/g_survival_buy.o \
   $(B)/$(BASEGAME)/game/g_survival_score.o \
   $(B)/$(BASEGAME)/game/g_survival_misc.o \
+  $(B)/$(BASEGAME)/game/g_survival_config.o \
   $(B)/$(BASEGAME)/game/g_target.o \
   $(B)/$(BASEGAME)/game/g_team.o \
   $(B)/$(BASEGAME)/game/g_tramcar.o \

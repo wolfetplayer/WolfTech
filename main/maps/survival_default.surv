@@ -1,0 +1,453 @@
+// survival_default.surv
+//
+// Default balance values for GT_COOP_SURVIVAL, applied to every survival map.
+// A map can override any subset of these keys with its own maps/<mapname>.surv
+// file - anything the map file doesn't mention keeps the value set here.
+//
+// Format: one "key value" pair per line. // starts a line or trailing comment.
+// This file is read server-side only (like .ai/.script/.ents); clients never
+// read or trust it, so there's nothing here for a player to usefully edit
+// on their own end.
+
+// ---- Wave pacing ----
+prepare_time            15   // seconds before wave 1 starts
+intermission_time       15   // seconds between waves
+initial_killcount_req    5   // kills required to clear wave 1
+friendly_spawn_time     15   // seconds before a dead friendly AI can respawn
+
+// ---- Wave each enemy type first appears on ----
+wave_eliteguard   3
+wave_trench       4
+wave_blackguard   5
+wave_venom        7
+wave_proto        9
+wave_warriors     3
+wave_helga       10
+wave_heinrich    15
+wave_lopers       5
+wave_flamers      8
+
+// ---- Starting active-AI counts (wave 1) ----
+initial_soldiers      5
+initial_trench        0
+initial_zombies       5
+initial_flamers       0
+initial_warriors      0
+initial_protos        0
+initial_partisan      2   // friendly AI
+initial_elites        0
+initial_blackguards   0
+initial_venoms        0
+initial_lopers        0
+initial_helgas        0
+initial_heinrichs     0
+
+// ---- Per-wave increase / hard cap on active AI ----
+max_soldiers         10
+soldiers_increase     1
+max_zombies          20
+zombies_increase      1
+max_flamers           3
+flamers_increase      1
+max_warriors          5
+warriors_increase     1
+max_elites            4
+elites_increase       1
+max_trench            4
+trench_increase       1
+max_blackguards       4
+blackguards_increase  1
+max_helgas            1
+helgas_increase       1
+max_heinrichs         1
+heinrichs_increase    1
+max_lopers            3
+lopers_increase       1
+max_venoms            4
+venoms_increase       1
+max_protos            2
+protos_increase       1
+
+// ---- Special waves ----
+special_wave_chance          30   // % chance per eligible wave
+special_wave_min_start        4   // earliest wave a special can occur
+special_wave_min_gap          2   // minimum waves between specials (cooldown)
+special_wave_max_gap          5   // waves without a special before one is forced
+special_wave_count_initial    3   // enemy count on the first special wave
+special_wave_count_increase   1   // count added per further special wave
+special_wave_count_max        8   // hard cap on special wave enemy count
+
+// ---- Zombie Ghost teleport strike ----
+ghost_teleport_min_range   200   // closer than this, it melees instead
+ghost_teleport_max_range   900
+ghost_teleport_delay      7000   // ms cooldown between teleports
+
+// ---- Buy system ----
+perks_limit             3   // max perks a non-Engineer can hold
+perks_limit_engineer    4
+price_armor           150
+price_weapon_upgrade 1000
+price_ammo_upgraded   500   // multiplied by upgrade level
+price_random_weapon   150   // mystery box, no entity-level price override
+price_random_perk     250   // random perk box, no entity-level price override
+
+// ---- Mystery box (random weapon box) timing ----
+rwb_spin_duration      5000   // ms of cycling before landing
+rwb_spin_interval_min    70   // ms between model swaps, fastest
+rwb_spin_interval_max   380   // ms between model swaps, right before landing
+rwb_decision_time      15000  // ms to claim the landed weapon before it's forfeited
+rwb_blink_start        10000  // ms into decision window when blinking starts
+rwb_blink_interval       150  // ms per blink toggle
+rwb_float_height          28  // units above the target_buy origin
+rwb_bob_height             3  // bob amplitude, units
+rwb_bob_speed            2200  // ms per full bob cycle
+
+// ---- Per-character health/speed growth curves ----
+//
+// Health before growth_curve_wave_threshold: health_base_early + rawSteps*health_per_step
+// Health from that wave on:  (health_growth_base + (threshold-1)*health_per_step) * health_growth_rate^(rawSteps-(threshold-1))
+// health_cap only applies when g_survivalAiHealthCap is 1 (0 = no cap).
+//
+// run/sprint/crouch_speed_* only matter for the zombie-type characters below;
+// leave a character's *_speed_cap at 0 (the default for anyone not listed
+// here) and it simply won't get speed scaling.
+//
+// Key shape: <charname>.<field> value, e.g. "zombie_ghost.health_cap 300"
+
+growth_curve_wave_threshold 10   // wave where the formula switches from linear to exponential
+
+// g_survivalDifficulty 1 padding added to rawSteps before the health formula
+// runs: rawSteps += base + rawSteps/divisor. "early" applies while
+// waveCount < growth_curve_wave_threshold, "late" from then on.
+hard_steps_bonus_base_early      2
+hard_steps_bonus_divisor_early   2
+hard_steps_bonus_base_late       4
+hard_steps_bonus_divisor_late    3
+
+soldier.health_base_early     20
+soldier.health_per_step       10
+soldier.health_growth_base    20
+soldier.health_growth_rate    1.12
+soldier.health_cap           100
+
+trench.health_base_early      20
+trench.health_per_step        10
+trench.health_growth_base     20
+trench.health_growth_rate     1.12
+trench.health_cap            100
+
+eliteguard.health_base_early    30
+eliteguard.health_per_step      12
+eliteguard.health_growth_base   30
+eliteguard.health_growth_rate   1.13
+eliteguard.health_cap          150
+
+// NOTE: helga/heinrich/zombie_ghost's health_growth_base intentionally does not
+// match health_base_early - that mismatch predates this file (the original
+// compiled-in formula had the same gap), so it's preserved rather than "fixed".
+helga.health_base_early    4000
+helga.health_per_step        14
+helga.health_growth_base     50
+helga.health_growth_rate   1.13
+helga.health_cap          20000
+
+heinrich.health_base_early   8000
+heinrich.health_per_step       14
+heinrich.health_growth_base     50
+heinrich.health_growth_rate   1.13
+heinrich.health_cap          40000
+
+blackguard.health_base_early    80
+blackguard.health_per_step      16
+blackguard.health_growth_base   80
+blackguard.health_growth_rate   1.14
+blackguard.health_cap          200
+
+venom.health_base_early    100
+venom.health_per_step       18
+venom.health_growth_base   100
+venom.health_growth_rate   1.15
+venom.health_cap           500
+
+zombie.health_base_early     20
+zombie.health_per_step       10
+zombie.health_growth_base    20
+zombie.health_growth_rate    1.12
+zombie.health_cap           200
+zombie.run_speed_base        0.8
+zombie.run_speed_per_step    0.03
+zombie.run_speed_cap         1.2
+zombie.sprint_speed_base     1.2
+zombie.sprint_speed_per_step 0.04
+zombie.sprint_speed_cap      1.6
+zombie.crouch_speed_base     0.25
+zombie.crouch_speed_per_step 0.02
+zombie.crouch_speed_cap      0.5
+
+zombie_flame.health_base_early     20
+zombie_flame.health_per_step       10
+zombie_flame.health_growth_base    20
+zombie_flame.health_growth_rate    1.12
+zombie_flame.health_cap           200
+zombie_flame.run_speed_base        0.8
+zombie_flame.run_speed_per_step    0.03
+zombie_flame.run_speed_cap         1.2
+zombie_flame.sprint_speed_base     1.2
+zombie_flame.sprint_speed_per_step 0.04
+zombie_flame.sprint_speed_cap      1.6
+zombie_flame.crouch_speed_base     0.25
+zombie_flame.crouch_speed_per_step 0.02
+zombie_flame.crouch_speed_cap      0.5
+
+zombie_ghost.health_base_early     80
+zombie_ghost.health_per_step       10
+zombie_ghost.health_growth_base    20
+zombie_ghost.health_growth_rate    1.12
+zombie_ghost.health_cap           300
+zombie_ghost.run_speed_base        0.8
+zombie_ghost.run_speed_per_step    0.03
+zombie_ghost.run_speed_cap         1.2
+zombie_ghost.sprint_speed_base     1.2
+zombie_ghost.sprint_speed_per_step 0.04
+zombie_ghost.sprint_speed_cap      1.6
+zombie_ghost.crouch_speed_base     0.25
+zombie_ghost.crouch_speed_per_step 0.02
+zombie_ghost.crouch_speed_cap      0.5
+
+warzombie.health_base_early     50
+warzombie.health_per_step       14
+warzombie.health_growth_base    50
+warzombie.health_growth_rate    1.14
+warzombie.health_cap           500
+warzombie.run_speed_base        0.8
+warzombie.run_speed_per_step    0.04
+warzombie.run_speed_cap         1.6
+warzombie.sprint_speed_base     1.2
+warzombie.sprint_speed_per_step 0.05
+warzombie.sprint_speed_cap      2.0
+warzombie.crouch_speed_base     0.25
+warzombie.crouch_speed_per_step 0.03
+warzombie.crouch_speed_cap      0.75
+
+protosoldier.health_base_early     1000
+protosoldier.health_per_step       25
+protosoldier.health_growth_base    1000
+protosoldier.health_growth_rate    1.18
+protosoldier.health_cap           2000
+protosoldier.run_speed_base        0.8
+protosoldier.run_speed_per_step    0.04
+protosoldier.run_speed_cap         1.6
+protosoldier.sprint_speed_base     1.2
+protosoldier.sprint_speed_per_step 0.03
+protosoldier.sprint_speed_cap      1.5
+protosoldier.crouch_speed_base     0.25
+protosoldier.crouch_speed_per_step 0.03
+protosoldier.crouch_speed_cap      0.75
+
+partisan.health_base_early    500
+partisan.health_per_step       20
+partisan.health_growth_base   500
+partisan.health_growth_rate   1.16
+partisan.health_cap          1000
+
+loper.health_base_early    250
+loper.health_per_step       18
+loper.health_growth_base   250
+loper.health_growth_rate   1.16
+loper.health_cap           500
+
+loper_special.health_base_early   25
+loper_special.health_per_step     12
+loper_special.health_growth_base  25
+loper_special.health_growth_rate  1.13
+loper_special.health_cap         250
+
+// ---- Per-weapon prices ----
+// Key shape: weapon_price.<name> value
+
+weapon_price.knife               10
+weapon_price.luger                30
+weapon_price.silencer             30
+weapon_price.colt                 30
+weapon_price.akimbo               60
+weapon_price.tt33                 35
+weapon_price.dual_tt33             70
+weapon_price.revolver              80
+weapon_price.sten                  90
+weapon_price.mp40                 100
+weapon_price.mp34                 120
+weapon_price.thompson             120
+weapon_price.ppsh                 130
+weapon_price.mauser                50
+weapon_price.mosin                 60
+weapon_price.sniperrifle          100
+weapon_price.snooperscope         150
+weapon_price.m1garand              150
+weapon_price.g43                   150
+weapon_price.fg42                  250
+weapon_price.mp44                  250
+weapon_price.bar                   250
+weapon_price.m97                  200
+weapon_price.auto5                225
+weapon_price.panzerfaust           400
+weapon_price.flamethrower         500
+weapon_price.venom                500
+weapon_price.tesla                 500
+weapon_price.mg42m                500
+weapon_price.browning             500
+weapon_price.grenade_launcher     100
+weapon_price.grenade_pineapple    100
+
+// ---- Per-perk prices ----
+// Key shape: perk_price.<name> value
+
+perk_price.secondchance     150
+perk_price.runner           200
+perk_price.scavenger        250
+perk_price.weaponhandling   300
+perk_price.rifling          350
+perk_price.resilience       400
+
+// ---- Per-character AI skill (g_survivalDifficulty easy/hard tiers) ----
+//
+// Used by BG_SetBehaviorForSurvival for the 6 characters below only - every
+// other character (Partisan, all zombie-types) is fixed at max skill in code
+// and ignores g_survivalDifficulty entirely.
+//
+// Each wave: delta = rawSteps * 0.05. aim_skill/aim_accuracy/attack_skill all
+// move together (same base/cap) in every default below, but are still 3
+// independently overridable fields if you want to split them apart.
+// *_base + delta, capped at *_cap (reaction_time_base - delta, floored at
+// reaction_time_floor, since faster reaction is a smaller number).
+//
+// Key shape: <charname>.easy_<field> / <charname>.hard_<field> value
+
+soldier.easy_aim_skill_base        0.1
+soldier.easy_aim_skill_cap         0.7
+soldier.easy_aim_accuracy_base     0.1
+soldier.easy_aim_accuracy_cap      0.7
+soldier.easy_attack_skill_base     0.1
+soldier.easy_attack_skill_cap      0.7
+soldier.easy_aggression_base       0.1
+soldier.easy_aggression_cap        1.0
+soldier.easy_reaction_time_base    1.0
+soldier.easy_reaction_time_floor   0.4
+soldier.hard_aim_skill_base        0.4
+soldier.hard_aim_skill_cap         0.8
+soldier.hard_aim_accuracy_base     0.4
+soldier.hard_aim_accuracy_cap      0.8
+soldier.hard_attack_skill_base     0.4
+soldier.hard_attack_skill_cap      0.8
+soldier.hard_aggression_base       0.4
+soldier.hard_aggression_cap        1.0
+soldier.hard_reaction_time_base    0.8
+soldier.hard_reaction_time_floor   0.4
+
+trench.easy_aim_skill_base        0.1
+trench.easy_aim_skill_cap         0.7
+trench.easy_aim_accuracy_base     0.1
+trench.easy_aim_accuracy_cap      0.7
+trench.easy_attack_skill_base     0.1
+trench.easy_attack_skill_cap      0.7
+trench.easy_aggression_base       0.1
+trench.easy_aggression_cap        1.0
+trench.easy_reaction_time_base    1.0
+trench.easy_reaction_time_floor   0.4
+trench.hard_aim_skill_base        0.4
+trench.hard_aim_skill_cap         0.8
+trench.hard_aim_accuracy_base     0.4
+trench.hard_aim_accuracy_cap      0.8
+trench.hard_attack_skill_base     0.4
+trench.hard_attack_skill_cap      0.8
+trench.hard_aggression_base       0.4
+trench.hard_aggression_cap        1.0
+trench.hard_reaction_time_base    0.8
+trench.hard_reaction_time_floor   0.4
+
+eliteguard.easy_aim_skill_base        0.4
+eliteguard.easy_aim_skill_cap         0.8
+eliteguard.easy_aim_accuracy_base     0.4
+eliteguard.easy_aim_accuracy_cap      0.8
+eliteguard.easy_attack_skill_base     0.4
+eliteguard.easy_attack_skill_cap      0.8
+eliteguard.easy_aggression_base       0.4
+eliteguard.easy_aggression_cap        1.0
+eliteguard.easy_reaction_time_base    1.0
+eliteguard.easy_reaction_time_floor   0.3
+eliteguard.hard_aim_skill_base        0.5
+eliteguard.hard_aim_skill_cap         0.9
+eliteguard.hard_aim_accuracy_base     0.5
+eliteguard.hard_aim_accuracy_cap      0.9
+eliteguard.hard_attack_skill_base     0.5
+eliteguard.hard_attack_skill_cap      0.9
+eliteguard.hard_aggression_base       0.5
+eliteguard.hard_aggression_cap        1.0
+eliteguard.hard_reaction_time_base    0.6
+eliteguard.hard_reaction_time_floor   0.2
+
+// NOTE: blackguard's easy aggression_base (0.5) intentionally does not match
+// the other easy skill fields (0.4) - that's how the original code had it.
+blackguard.easy_aim_skill_base        0.4
+blackguard.easy_aim_skill_cap         0.9
+blackguard.easy_aim_accuracy_base     0.4
+blackguard.easy_aim_accuracy_cap      0.9
+blackguard.easy_attack_skill_base     0.4
+blackguard.easy_attack_skill_cap      0.9
+blackguard.easy_aggression_base       0.5
+blackguard.easy_aggression_cap        1.0
+blackguard.easy_reaction_time_base    1.0
+blackguard.easy_reaction_time_floor   0.3
+blackguard.hard_aim_skill_base        0.55
+blackguard.hard_aim_skill_cap         0.9
+blackguard.hard_aim_accuracy_base     0.55
+blackguard.hard_aim_accuracy_cap      0.9
+blackguard.hard_attack_skill_base     0.55
+blackguard.hard_attack_skill_cap      0.9
+blackguard.hard_aggression_base       0.55
+blackguard.hard_aggression_cap        1.0
+blackguard.hard_reaction_time_base    0.7
+blackguard.hard_reaction_time_floor   0.3
+
+// NOTE: venom's aggression_base doesn't match its aim/accuracy/attack base on
+// either tier - same as blackguard, that's inherited from the original code.
+venom.easy_aim_skill_base        0.4
+venom.easy_aim_skill_cap         0.8
+venom.easy_aim_accuracy_base     0.4
+venom.easy_aim_accuracy_cap      0.8
+venom.easy_attack_skill_base     0.4
+venom.easy_attack_skill_cap      0.8
+venom.easy_aggression_base       0.5
+venom.easy_aggression_cap        1.0
+venom.easy_reaction_time_base    1.0
+venom.easy_reaction_time_floor   0.3
+venom.hard_aim_skill_base        0.5
+venom.hard_aim_skill_cap         0.8
+venom.hard_aim_accuracy_base     0.5
+venom.hard_aim_accuracy_cap      0.8
+venom.hard_attack_skill_base     0.5
+venom.hard_attack_skill_cap      0.8
+venom.hard_aggression_base       0.6
+venom.hard_aggression_cap        1.0
+venom.hard_reaction_time_base    0.7
+venom.hard_reaction_time_floor   0.3
+
+protosoldier.easy_aim_skill_base        0.4
+protosoldier.easy_aim_skill_cap         0.9
+protosoldier.easy_aim_accuracy_base     0.4
+protosoldier.easy_aim_accuracy_cap      0.9
+protosoldier.easy_attack_skill_base     0.4
+protosoldier.easy_attack_skill_cap      0.9
+protosoldier.easy_aggression_base       0.5
+protosoldier.easy_aggression_cap        1.0
+protosoldier.easy_reaction_time_base    1.0
+protosoldier.easy_reaction_time_floor   0.2
+protosoldier.hard_aim_skill_base        0.6
+protosoldier.hard_aim_skill_cap         0.9
+protosoldier.hard_aim_accuracy_base     0.6
+protosoldier.hard_aim_accuracy_cap      0.9
+protosoldier.hard_attack_skill_base     0.6
+protosoldier.hard_attack_skill_cap      0.9
+protosoldier.hard_aggression_base       0.6
+protosoldier.hard_aggression_cap        1.0
+protosoldier.hard_reaction_time_base    0.8
+protosoldier.hard_reaction_time_floor   0.2

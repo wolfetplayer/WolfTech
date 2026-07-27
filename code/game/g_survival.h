@@ -66,6 +66,135 @@ void Survival_CheckWipe( void );
 void Survival_ParseSpecialWaveTypes( const char *str );
 qboolean AICast_IsSpecialWaveChar( int aiChar );
 
+// Per-character health/speed-scaling curve used by AICast_ApplySurvivalAttributes(); leave runSpeedCap at 0 to skip speed scaling for a character.
+typedef struct survCharCurve_s
+{
+	int healthBaseEarly;
+	int healthPerStep;
+	int healthGrowthBase;
+	float healthGrowthRate;
+	int healthCap;      // 0 = no cap configured (still gated by g_survivalAiHealthCap)
+
+	float runSpeedBase, runSpeedPerStep, runSpeedCap;
+	float sprintSpeedBase, sprintSpeedPerStep, sprintSpeedCap;
+	float crouchSpeedBase, crouchSpeedPerStep, crouchSpeedCap;
+} survCharCurve_t;
+
+// One g_survivalDifficulty tier of a character's AI skill values, used by BG_SetBehaviorForSurvival().
+typedef struct survCharSkillTier_s
+{
+	float aimSkillBase, aimSkillCap;
+	float aimAccuracyBase, aimAccuracyCap;
+	float attackSkillBase, attackSkillCap;
+	float aggressionBase, aggressionCap;
+	float reactionTimeBase, reactionTimeFloor;
+} survCharSkillTier_t;
+
+typedef struct survCharSkill_s
+{
+	survCharSkillTier_t easy;   // g_survivalDifficulty 0
+	survCharSkillTier_t hard;   // g_survivalDifficulty 1
+} survCharSkill_t;
+
+// Survival balance config, loaded server-side only from maps/survival_default.surv + maps/<mapname>.surv - see g_survival_config.c.
+typedef struct survConfig_s
+{
+	int prepareTime;
+	int intermissionTime;
+	int initialKillCountReq;
+	int friendlySpawnTime;
+
+	int waveEliteGuard;
+	int waveTrench;
+	int waveBlackguard;
+	int waveVenom;
+	int waveProto;
+	int waveWarriors;
+	int waveHelga;
+	int waveHeinrich;
+	int waveLopers;
+	int waveFlamers;
+
+	int initialSoldiers;
+	int initialTrench;
+	int initialZombies;
+	int initialFlamers;
+	int initialWarriors;
+	int initialProtos;
+	int initialPartisan;
+	int initialElites;
+	int initialBlackguards;
+	int initialVenoms;
+	int initialLopers;
+	int initialHelgas;
+	int initialHeinrichs;
+
+	int maxSoldiers, soldiersIncrease;
+	int maxZombies, zombiesIncrease;
+	int maxFlamers, flamersIncrease;
+	int maxWarriors, warriorsIncrease;
+	int maxElites, elitesIncrease;
+	int maxTrench, trenchIncrease;
+	int maxBlackguards, blackguardsIncrease;
+	int maxHelgas, helgasIncrease;
+	int maxHeinrichs, heinrichsIncrease;
+	int maxLopers, lopersIncrease;
+	int maxVenoms, venomsIncrease;
+	int maxProtos, protosIncrease;
+
+	int specialWaveChance;
+	int specialWaveMinStart;
+	int specialWaveMinGap;
+	int specialWaveMaxGap;
+	int specialWaveCountInitial;
+	int specialWaveCountIncrease;
+	int specialWaveCountMax;
+
+	int ghostTeleportMinRange;
+	int ghostTeleportMaxRange;
+	int ghostTeleportDelay;
+
+	int perksLimit;
+	int perksLimitEngineer;
+	int priceArmor;
+	int priceWeaponUpgrade;
+	int priceAmmoUpgraded;
+	int priceRandomWeapon;
+	int priceRandomPerk;
+
+	int rwbSpinDuration;
+	int rwbSpinIntervalMin;
+	int rwbSpinIntervalMax;
+	int rwbDecisionTime;
+	int rwbBlinkStart;
+	int rwbBlinkInterval;
+	int rwbFloatHeight;
+	int rwbBobHeight;
+	int rwbBobSpeed;
+
+	// Wave count where each character's health formula switches from linear to exponential; also used for the hard-mode rawSteps bonus below.
+	int growthCurveWaveThreshold;
+
+	// g_survivalDifficulty==1 padding added to rawSteps before the health formula runs: rawSteps += base + rawSteps/divisor.
+	int hardStepsBonusBaseEarly, hardStepsBonusDivisorEarly;
+	int hardStepsBonusBaseLate, hardStepsBonusDivisorLate;
+
+	// Per-character health/speed curves, indexed by AICharacters_t; set via "<charname>.<field>" keys, e.g. "zombie_ghost.health_cap 300".
+	survCharCurve_t charCurve[NUM_CHARACTERS];
+
+	// Per-character AI skill tiers, indexed by AICharacters_t; set via "<charname>.easy_<field>"/"<charname>.hard_<field>" keys.
+	survCharSkill_t charSkill[NUM_CHARACTERS];
+
+	// -1 = no override; set via "weapon_price.<name> <price>" / "perk_price.<name> <price>".
+	int weaponPrice[WP_NUM_WEAPONS];
+	int perkPrice[NUM_PERKS];
+} survConfig_t;
+
+extern survConfig_t survCfg;
+
+// Loads survCfg; call once before anything reads it (currently: top of AICast_InitSurvival).
+void Survival_LoadConfig( void );
+
 
 // Survival parameters
 typedef struct svParams_s
