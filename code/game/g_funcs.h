@@ -1608,6 +1608,7 @@ If you have questions concerning this license or the applicable additional terms
 {"AIFunc_ZombieAttack2", (byte *)AIFunc_ZombieAttack2},
 {"AIFunc_ZombieFlameAttackStart", (byte *)AIFunc_ZombieFlameAttackStart},
 {"AIFunc_ZombieFlameAttack", (byte *)AIFunc_ZombieFlameAttack},
+{"AIFunc_ZombieGhostTeleportStrikeStart", (byte *)AIFunc_ZombieGhostTeleportStrikeStart},
 {"AICast_AudibleEvent", (byte *)AICast_AudibleEvent},
 {"AICast_ProcessBullet", (byte *)AICast_ProcessBullet},
 {"AICast_AllowFlameDamage", (byte *)AICast_AllowFlameDamage},

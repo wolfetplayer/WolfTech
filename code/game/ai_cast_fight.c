@@ -510,6 +510,9 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 		case AICHAR_ZOMBIE: // zombie flaming attack
 		case AICHAR_ZOMBIE_FLAME:
 			return ZOMBIE_FLAME_RADIUS - 50;      // get well within range before starting
+
+		case AICHAR_ZOMBIE_GHOST:  // teleport strike
+			return ZOMBIE_GHOST_TELEPORT_MAX_RANGE;
 		}
 		break;
 
@@ -974,6 +977,15 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 		case AICHAR_BLACKGUARD:
 			delay = 5000;
 			if ( dist < 0 || dist > BLACKGUARD_MELEE_RANGE ) {
+				return qfalse;
+			}
+			break;
+		case AICHAR_ZOMBIE_GHOST:  // teleport strike
+			delay = ZOMBIE_GHOST_TELEPORT_DELAY;
+			if ( dist < ZOMBIE_GHOST_TELEPORT_MIN_RANGE || dist > ZOMBIE_GHOST_TELEPORT_MAX_RANGE ) {
+				return qfalse;
+			}
+			if ( cs->enemyNum < 0 ) {
 				return qfalse;
 			}
 			break;

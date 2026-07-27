@@ -1608,6 +1608,7 @@ extern char * AIFunc_ZombieAttack2Start ( cast_state_t * cs ) ;
 extern char * AIFunc_ZombieAttack2 ( cast_state_t * cs ) ;
 extern char * AIFunc_ZombieFlameAttackStart ( cast_state_t * cs ) ;
 extern char * AIFunc_ZombieFlameAttack ( cast_state_t * cs ) ;
+extern char * AIFunc_ZombieGhostTeleportStrikeStart ( cast_state_t * cs ) ;
 extern void AICast_AudibleEvent ( int srcnum , vec3_t pos , float range ) ;
 extern void AICast_ProcessBullet ( gentity_t * attacker , vec3_t start , vec3_t end ) ;
 extern qboolean AICast_AllowFlameDamage ( int entNum ) ;

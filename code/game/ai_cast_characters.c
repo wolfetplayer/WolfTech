@@ -333,10 +333,10 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 		},
 		AITEAM_MONSTER,
 		"zombie/ghost",
-		{ WP_MONSTER_ATTACK2, WP_MONSTER_ATTACK3},
+		{ WP_MONSTER_ATTACK1, WP_MONSTER_ATTACK2, WP_MONSTER_ATTACK3},
 		BBOX_SMALL, {32,48},
 		/*AIFL_NOPAIN|AIFL_WALKFORWARD|*/ AIFL_NO_RELOAD,
-		AIFunc_ZombieFlameAttackStart, AIFunc_ZombieAttack2Start, AIFunc_ZombieMeleeStart,
+		AIFunc_ZombieGhostTeleportStrikeStart, AIFunc_ZombieAttack2Start, AIFunc_ZombieMeleeStart,
 		NULL,
 		AISTATE_ALERT
 	},

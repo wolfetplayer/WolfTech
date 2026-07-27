@@ -40,3 +40,7 @@ If you have questions concerning this license or the applicable additional terms
 #define LOPER_GROUND_RANGE              200
 #define BLACKGUARD_MELEE_RANGE          48
 #define REJECT_MELEE_RANGE              90  //----(SA)	added
+
+#define ZOMBIE_GHOST_TELEPORT_MIN_RANGE 200     // too close, just melee normally
+#define ZOMBIE_GHOST_TELEPORT_MAX_RANGE 900
+#define ZOMBIE_GHOST_TELEPORT_DELAY     7000     // cooldown between blinks

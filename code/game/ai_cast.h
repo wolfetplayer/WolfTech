@@ -666,6 +666,7 @@ char    *AIFunc_BattleHuntStart( cast_state_t *cs );
 char    *AIFunc_ZombieFlameAttackStart( cast_state_t *cs );
 char    *AIFunc_ZombieAttack2Start( cast_state_t *cs );
 char    *AIFunc_ZombieMeleeStart( cast_state_t *cs );
+char    *AIFunc_ZombieGhostTeleportStrikeStart( cast_state_t *cs );
 char    *AIFunc_LoperAttack1Start( cast_state_t *cs );
 char    *AIFunc_LoperAttack2Start( cast_state_t *cs );
 char    *AIFunc_LoperAttack3Start( cast_state_t *cs );

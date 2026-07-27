@@ -449,7 +449,7 @@ void AICast_SpecialFunc( cast_state_t *cs ) {
 	case AICHAR_ZOMBIE:
 	case AICHAR_ZOMBIE_SURV:
 	case AICHAR_ZOMBIE_FLAME:
-	case AICHAR_ZOMBIE_GHOST:
+		// Ghost also carries WP_MONSTER_ATTACK1 (for its teleport strike), but isn't on fire, so it's excluded here
 		if ( COM_BitCheck( cs->bs->cur_ps.weapons, WP_MONSTER_ATTACK1 ) ) { // flaming zombie, run
 			BG_UpdateConditionValue( cs->entityNum, ANIM_COND_CHARGING, 1, qfalse );
 		}

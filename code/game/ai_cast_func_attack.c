@@ -342,6 +342,86 @@ char *AIFunc_ZombieMeleeStart( cast_state_t *cs ) {
 
 //=================================================================================
 //
+// ZOMBIE GHOST TELEPORT STRIKE
+//
+//=================================================================================
+
+extern gentity_t *G_TestEntityPosition( gentity_t *ent );
+
+#define ZOMBIE_GHOST_TELEPORT_ARRIVE_DIST   64
+
+/*
+================
+AIFunc_ZombieGhostTeleportStrikeStart
+================
+*/
+char *AIFunc_ZombieGhostTeleportStrikeStart( cast_state_t *cs ) {
+	gentity_t *ent, *enemy, *blocker;
+	vec3_t dir, dest, saveOrigin, angles;
+
+	if ( cs->enemyNum < 0 ) {
+		return AIFunc_DefaultStart( cs );
+	}
+
+	ent = &g_entities[cs->entityNum];
+	enemy = &g_entities[cs->enemyNum];
+
+	VectorCopy( ent->client->ps.origin, saveOrigin );
+
+	// try to land behind the enemy, relative to the way they're facing
+	AngleVectors( enemy->client->ps.viewangles, dir, NULL, NULL );
+	VectorMA( enemy->r.currentOrigin, -ZOMBIE_GHOST_TELEPORT_ARRIVE_DIST, dir, dest );
+	dest[2] = enemy->r.currentOrigin[2];
+	VectorCopy( dest, ent->client->ps.origin );
+	blocker = G_TestEntityPosition( ent );
+
+	if ( blocker ) {
+		// behind them is blocked, try landing on the side we're already approaching from
+		VectorSubtract( saveOrigin, enemy->r.currentOrigin, dir );
+		dir[2] = 0;
+		VectorNormalize( dir );
+		VectorMA( enemy->r.currentOrigin, ZOMBIE_GHOST_TELEPORT_ARRIVE_DIST, dir, dest );
+		dest[2] = enemy->r.currentOrigin[2];
+		VectorCopy( dest, ent->client->ps.origin );
+		blocker = G_TestEntityPosition( ent );
+	}
+
+	if ( blocker ) {
+		// nowhere clear to land, cancel the blink and just chase normally
+		VectorCopy( saveOrigin, ent->client->ps.origin );
+		return AIFunc_BattleChaseStart( cs );
+	}
+
+	// vanish from the old spot
+	G_TempEntity( saveOrigin, EV_PLAYER_TELEPORT_OUT );
+
+	trap_UnlinkEntity( ent );
+
+	// toggle the teleport bit so the client doesn't lerp the move
+	ent->client->ps.eFlags ^= EF_TELEPORT_BIT;
+
+	// face the enemy immediately on arrival
+	VectorSubtract( enemy->r.currentOrigin, dest, dir );
+	vectoangles( dir, angles );
+	SetClientViewAngle( ent, angles );
+
+	BG_PlayerStateToEntityState( &ent->client->ps, &ent->s, qtrue );
+	VectorCopy( ent->client->ps.origin, ent->r.currentOrigin );
+	trap_LinkEntity( ent );
+
+	// reappear with a burst
+	G_TempEntity( dest, EV_PLAYER_TELEPORT_IN );
+
+	AICast_AimAtEnemy( cs );
+
+	// long cooldown before it can blink again
+	cs->weaponFireTimes[WP_MONSTER_ATTACK1] = level.time;
+
+	return AIFunc_BattleChaseStart( cs );
+}
+
+//=================================================================================
+//
 // LOPER MELEE ATTACK
 //
 //=================================================================================
