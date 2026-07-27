@@ -4197,6 +4197,18 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, int powerups, int team, enti
 
 	backupRefEnt = *ent;
 
+	// Ghosts are near invisible
+	if ( cent->currentState.aiChar == AICHAR_ZOMBIE_GHOST ) {
+		float minAlpha, maxAlpha, pulse;
+
+
+			minAlpha = 0.15f;
+			maxAlpha = 0.45f;
+
+		pulse = 0.5f + 0.5f * sin( ( cg.time + es->number * 311 ) * 0.0025f );
+		ent->shaderRGBA[3] = (unsigned char)( 255.0f * ( minAlpha + ( maxAlpha - minAlpha ) * pulse ) );
+	}
+
 	if ( powerups & ( 1 << PW_INVIS ) ) {
 		ent->customShader = cgs.media.invisShader;
 		trap_R_AddRefEntityToScene( ent );
