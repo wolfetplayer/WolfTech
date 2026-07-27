@@ -92,45 +92,9 @@ void AICast_NoAttackIfNotHurtSinceLastScriptAction( cast_state_t *cs ) {
 
 /*
 ===============
-AICast_TravelTimeToPoint
-
-  Checks whether goalOrg is reachable via AAS from cs's current position; returns 0 if not.
-===============
-*/
-int AICast_TravelTimeToPoint( cast_state_t *cs, const vec3_t goalOrg ) {
-	int toArea;
-
-	// make sure we're using the right AAS world - this can run outside cs's own AICast_Think
-	trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
-
-	// cs may not have had a normal think frame yet (eg. freshly activated by a script trigger)
-	if ( !cs->bs->areanum ) {
-		VectorCopy( g_entities[cs->entityNum].client->ps.origin, cs->bs->origin );
-		cs->bs->areanum = BotPointAreaNum( cs->bs->origin );
-	}
-
-	toArea = BotPointAreaNum( (float *)goalOrg );
-
-	if ( !cs->bs->areanum || !toArea ) {
-		return 0;
-	}
-
-	return trap_AAS_AreaTravelTimeToGoalArea(
-		cs->bs->areanum,
-		cs->bs->origin,
-		toArea,
-		cs->travelflags
-	);
-}
-
-/*
-===============
 AICast_ScriptAction_GotoMarker
 
-  syntax: gotomarker <targetname|prefix*> [firetarget [noattack]] [nostop] OR runtomarker <targetname|prefix*> [firetarget [noattack]] [nostop]
-
-  a trailing '*' treats the name as a prefix and picks the closest reachable
-  ai_marker sharing it (once per command - see the cache check below)
+  syntax: gotomarker <targetname> [firetarget [noattack]] [nostop] OR runtomarker <targetname> [firetarget [noattack]] [nostop]
 ===============
 */
 qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
@@ -140,9 +104,6 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 	vec3_t vec, org;
 	int i, diff;
 	qboolean slowApproach;
-	qboolean groupMode = qfalse;
-	char prefix[64];
-	int prefixLen;
 
 	ent = NULL;
 
@@ -161,174 +122,88 @@ qboolean AICast_ScriptAction_GotoMarker( cast_state_t *cs, char *params ) {
 		G_Error( "AI Scripting: gotomarker must have an targetname\n" );
 	}
 
-	// same token as last call to this command? stick with the marker we already picked
-	if ( cs->castScriptStatus.scriptGotoEnt >= 0 && !Q_stricmp( cs->castScriptStatus.scriptGotoToken, token ) ) {
+	// if we already are going to the marker, just use that, and check if we're in range
+	if ( cs->castScriptStatus.scriptGotoEnt >= 0 && cs->castScriptStatus.scriptGotoId == cs->thinkFuncChangeTime ) {
 		ent = &g_entities[cs->castScriptStatus.scriptGotoEnt];
-	}
-
-	// if that marker is still being chased without interruption, just check proximity /
-	// firetarget handling - the chase itself is already running, nothing more to set up
-	if ( ent && cs->castScriptStatus.scriptGotoId == cs->thinkFuncChangeTime )
-	{
-		// if we're not slowing down, then check for passing the marker, otherwise check distance only
-		VectorSubtract( ent->r.currentOrigin, cs->bs->origin, vec );
-		//
-		if ( cs->followSlowApproach && VectorLength( vec ) < cs->followDist ) {
-			cs->followTime = 0;
-			AIFunc_IdleStart( cs );   // resume normal AI
-			return qtrue;
-		} else if ( !cs->followSlowApproach && VectorLength( vec ) < 64 /*&& DotProduct(cs->bs->cur_ps.velocity, vec) < 0*/ )       {
-			cs->followTime = 0;
-			AIFunc_IdleStart( cs );   // resume normal AI
-			return qtrue;
-		} else
-		{
-			// do we have a firetarget ?
-			token = COM_ParseExt( &pString, qfalse );
-			if ( !token[0] || !Q_stricmp( token,"nostop" ) ) {
-				AICast_NoAttackIfNotHurtSinceLastScriptAction( cs );
-			} else {    // yes we do
-				// find this targetname
-				ent = G_Find( NULL, FOFS( targetname ), token );
-				if ( !ent ) {
-					ent = AICast_FindEntityForName( token );
-					if ( !ent ) {
-						G_Error( "AI Scripting: gotomarker cannot find targetname \"%s\"\n", token );
-					}
-				}
-				// set the view angle manually
-				BG_EvaluateTrajectory( &ent->s.pos, level.time, org );
-				VectorSubtract( org, cs->bs->origin, vec );
-				VectorNormalize( vec );
-				vectoangles( vec, cs->ideal_viewangles );
-				// noattack?
+		if ( ent->targetname && !Q_strcasecmp( ent->targetname, token ) ) {
+			// if we're not slowing down, then check for passing the marker, otherwise check distance only
+			VectorSubtract( ent->r.currentOrigin, cs->bs->origin, vec );
+			//
+			if ( cs->followSlowApproach && VectorLength( vec ) < cs->followDist ) {
+				cs->followTime = 0;
+				AIFunc_IdleStart( cs );   // resume normal AI
+				return qtrue;
+			} else if ( !cs->followSlowApproach && VectorLength( vec ) < 64 /*&& DotProduct(cs->bs->cur_ps.velocity, vec) < 0*/ )       {
+				cs->followTime = 0;
+				AIFunc_IdleStart( cs );   // resume normal AI
+				return qtrue;
+			} else
+			{
+				// do we have a firetarget ?
 				token = COM_ParseExt( &pString, qfalse );
-				if ( !token[0] || Q_stricmp( token,"noattack" ) ) {
-					qboolean fire = qtrue;
-					// if it's an AI, and they aren't visible, dont shoot
-					if ( ent->r.svFlags & SVF_CASTAI ) {
-						if ( cs->vislist[ent->s.number].real_visible_timestamp != cs->vislist[ent->s.number].lastcheck_timestamp ) {
-							fire = qfalse;
+				if ( !token[0] || !Q_stricmp( token,"nostop" ) ) {
+					AICast_NoAttackIfNotHurtSinceLastScriptAction( cs );
+				} else {    // yes we do
+					// find this targetname
+					ent = G_Find( NULL, FOFS( targetname ), token );
+					if ( !ent ) {
+						ent = AICast_FindEntityForName( token );
+						if ( !ent ) {
+							G_Error( "AI Scripting: gotomarker cannot find targetname \"%s\"\n", token );
 						}
 					}
-					if ( fire ) {
-						for ( i = 0; i < 2; i++ ) {
-							diff = fabs( AngleDifference( cs->viewangles[i], cs->ideal_viewangles[i] ) );
-							if ( diff < 20 ) {
-								// dont reload prematurely
-								cs->noReloadTime = level.time + 1000;
-								// force fire
-								trap_EA_Attack( cs->bs->client );
-								//
-								cs->bFlags |= BFL_ATTACKED;
-								// dont reload prematurely
-								cs->noReloadTime = level.time + 200;
+					// set the view angle manually
+					BG_EvaluateTrajectory( &ent->s.pos, level.time, org );
+					VectorSubtract( org, cs->bs->origin, vec );
+					VectorNormalize( vec );
+					vectoangles( vec, cs->ideal_viewangles );
+					// noattack?
+					token = COM_ParseExt( &pString, qfalse );
+					if ( !token[0] || Q_stricmp( token,"noattack" ) ) {
+						qboolean fire = qtrue;
+						// if it's an AI, and they aren't visible, dont shoot
+						if ( ent->r.svFlags & SVF_CASTAI ) {
+							if ( cs->vislist[ent->s.number].real_visible_timestamp != cs->vislist[ent->s.number].lastcheck_timestamp ) {
+								fire = qfalse;
+							}
+						}
+						if ( fire ) {
+							for ( i = 0; i < 2; i++ ) {
+								diff = fabs( AngleDifference( cs->viewangles[i], cs->ideal_viewangles[i] ) );
+								if ( diff < 20 ) {
+									// dont reload prematurely
+									cs->noReloadTime = level.time + 1000;
+									// force fire
+									trap_EA_Attack( cs->bs->client );
+									//
+									cs->bFlags |= BFL_ATTACKED;
+									// dont reload prematurely
+									cs->noReloadTime = level.time + 200;
+								}
 							}
 						}
 					}
 				}
+				cs->followTime = level.time + 500;
+				return qfalse;
 			}
-			cs->followTime = level.time + 500;
-			return qfalse;
+		} else
+		{
+			ent = NULL;
+		}
+	}
+
+	// find the ai_marker with the given "targetname"
+
+	while ( ( ent = G_Find( ent, FOFS( classname ), "ai_marker" ) ) )
+	{
+		if ( ent->targetname && !Q_strcasecmp( ent->targetname, token ) ) {
+			break;
 		}
 	}
 
 	if ( !ent ) {
-		// find the ai_marker with the given "targetname", or if it ends in '*', treat it
-		// as a prefix and pick the closest reachable marker sharing that prefix, once,
-		// for the life of this command (see the cache check above)
-
-		Q_strncpyz( prefix, token, sizeof( prefix ) );
-
-		prefixLen = strlen( prefix );
-		if ( prefixLen > 0 && prefix[prefixLen - 1] == '*' ) {
-			groupMode = qtrue;
-			prefix[prefixLen - 1] = '\0'; // strip trailing '*'
-			prefixLen--;
-
-			// scope to our current survival spawn zone if it refines the script's own prefix
-			if ( cs->survivalZonePrefix[0] && !Q_stricmpn( cs->survivalZonePrefix, prefix, prefixLen ) ) {
-				Q_strncpyz( prefix, cs->survivalZonePrefix, sizeof( prefix ) );
-				prefixLen = strlen( prefix );
-			}
-		}
-
-		if ( !groupMode ) {
-			// original exact-match behaviour
-			while ( ( ent = G_Find( ent, FOFS( classname ), "ai_marker" ) ) ) {
-				if ( ent->targetname && !Q_strcasecmp( ent->targetname, prefix ) ) {
-					break;
-				}
-			}
-		} else {
-			// group/prefix mode: rank same-prefix markers by real AAS travel time (straight-line
-			// distance alone is misleading across floors/walls) - falls back to nearest straight-line
-			// distance only if none of them resolve a route at all
-#define GOTOMARKER_MAXCHOICES  32
-			gentity_t *candidates[GOTOMARKER_MAXCHOICES];
-			float candDist[GOTOMARKER_MAXCHOICES];
-			int numCandidates;
-			int bestIdx, bestTTIdx, bestTT, tt;
-			qboolean reachable;
-
-			numCandidates = 0;
-
-			while ( ( ent = G_Find( ent, FOFS( classname ), "ai_marker" ) ) ) {
-				if ( !ent->targetname || Q_stricmpn( ent->targetname, prefix, prefixLen ) ) {
-					continue;
-				}
-				if ( numCandidates == GOTOMARKER_MAXCHOICES ) {
-					break;
-				}
-
-				candidates[numCandidates] = ent;
-				candDist[numCandidates] = Distance( ent->r.currentOrigin, cs->bs->origin );
-				numCandidates++;
-			}
-
-			// take the true minimum AAS travel time across all candidates
-			bestTTIdx = -1;
-			bestTT = 0x7fffffff;
-			for ( i = 0; i < numCandidates; i++ ) {
-				tt = AICast_TravelTimeToPoint( cs, candidates[i]->r.currentOrigin );
-				if ( tt > 0 && tt < bestTT ) {
-					bestTT = tt;
-					bestTTIdx = i;
-				}
-			}
-
-			reachable = ( bestTTIdx >= 0 );
-			if ( reachable ) {
-				bestIdx = bestTTIdx;
-			} else {
-				bestIdx = -1;
-				for ( i = 0; i < numCandidates; i++ ) {
-					if ( bestIdx < 0 || candDist[i] < candDist[bestIdx] ) {
-						bestIdx = i;
-					}
-				}
-			}
-
-			ent = ( bestIdx >= 0 ) ? candidates[bestIdx] : NULL;
-
-			if ( ent && aicast_debug.integer ) {
-				G_Printf( "AI Scripting: gotomarker \"%s*\" -> \"%s\" (%d candidate%s, dist %.0f%s, selfarea %d)\n",
-						  prefix, ent->targetname, numCandidates, ( numCandidates == 1 ) ? "" : "s",
-						  candDist[bestIdx], reachable ? "" : ", unreachable via AAS", cs->bs->areanum );
-			}
-#undef GOTOMARKER_MAXCHOICES
-		}
-
-		if ( !ent ) {
-			if ( !groupMode ) {
-				G_Error( "AI Scripting: gotomarker can't find ai_marker with \"targetname\" = \"%s\"\n", prefix );
-			} else {
-				G_Error( "AI Scripting: gotomarker can't find ai_marker with prefix \"%s*\"\n", prefix );
-			}
-		}
-
-		// remember the token that resolved this marker, for the cache check above
-		Q_strncpyz( cs->castScriptStatus.scriptGotoToken, token, sizeof( cs->castScriptStatus.scriptGotoToken ) );
+		G_Error( "AI Scripting: gotomarker can't find ai_marker with \"targetname\" = \"%s\"\n", token );
 	}
 
 	if ( Distance( cs->bs->origin, ent->r.currentOrigin ) < SCRIPT_REACHGOAL_DIST ) { // we made it

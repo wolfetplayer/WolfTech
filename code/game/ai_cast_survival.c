@@ -1667,13 +1667,6 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				VectorCopy( spawn_origin, ent->client->ps.origin );
 				SetClientViewAngle( ent, spawn_angles );
 
-				// tag this life with its spawn point's zone, so gotomarker prefix* can scope to it
-				if ( spawnSpot && spawnSpot->survivalZone && spawnSpot->survivalZone[0] ) {
-					Q_strncpyz( cs->survivalZonePrefix, spawnSpot->survivalZone, sizeof( cs->survivalZonePrefix ) );
-				} else {
-					cs->survivalZonePrefix[0] = '\0';
-				}
-
 		        // Refresh now so script actions that read our position this frame see where we actually are
 				VectorCopy( ent->client->ps.origin, cs->bs->origin );
 				VectorCopy( ent->client->ps.origin, cs->bs->eye );

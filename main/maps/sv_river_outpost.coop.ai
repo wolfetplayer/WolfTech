@@ -106,11 +106,6 @@ zomb25
 	{
 	resetscript
 	statetype alert
-	nosight 99999
-	setmovespeed fast
-	gotomarker surv_entry_*
-	sight
-	setmovespeed default
 	}
 	
 	enemysight
@@ -165,11 +160,6 @@ war7
 	{
 	resetscript
 	statetype alert
-	nosight 99999
-	setmovespeed fast
-	gotomarker surv_entry_*
-	sight
-	setmovespeed default
 	}
 	
 	enemysight
@@ -219,11 +209,6 @@ flame_zomb2
 	{
 	resetscript
 	statetype alert
-	nosight 99999
-	setmovespeed fast
-	gotomarker surv_entry_*
-	sight
-	setmovespeed default
 	}
 	
 	enemysight
@@ -282,10 +267,6 @@ ghost10
 	{
 	resetscript
 	statetype alert
-	nosight 99999
-	setmovespeed veryfast
-	gotomarker surv_entry_*
-	sight
 	}
 	
 	enemysight
