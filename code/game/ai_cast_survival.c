@@ -916,7 +916,6 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 
 		case AICHAR_ZOMBIE_SURV:
 		case AICHAR_ZOMBIE_FLAME:
-		case AICHAR_ZOMBIE_GHOST:
 			if (svParams.waveCount < 10)
 			{
 				newHealth = 20 + rawSteps * 10;
@@ -929,6 +928,24 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 			if (g_survivalAiHealthCap.integer == 1)
 			{
 			if (newHealth > 200) newHealth = 200;
+			}
+			runSpeedScale    = fminf(0.8f + rawSteps * 0.03f, 1.2f);
+			sprintSpeedScale = fminf(1.2f + rawSteps * 0.04f, 1.6f);
+			crouchSpeedScale = fminf(0.25f + rawSteps * 0.02f, 0.5f);
+			break;
+		case AICHAR_ZOMBIE_GHOST:
+			if (svParams.waveCount < 10)
+			{
+				newHealth = 80 + rawSteps * 10;
+			}
+			else
+			{
+				float growth = powf(1.12f, (float)(rawSteps - 9));
+				newHealth = (int)((20 + 9 * 10) * growth);
+			}
+			if (g_survivalAiHealthCap.integer == 1)
+			{
+			if (newHealth > 300) newHealth = 300;
 			}
 			runSpeedScale    = fminf(0.8f + rawSteps * 0.03f, 1.2f);
 			sprintSpeedScale = fminf(1.2f + rawSteps * 0.04f, 1.6f);
