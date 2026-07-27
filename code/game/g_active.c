@@ -1174,7 +1174,7 @@ void ClientThink_real( gentity_t *ent ) {
 	pm.trace = trap_TraceCapsule; //trap_Trace;
 	pm.pointcontents = trap_PointContents;
 	pm.debugLevel = g_debugMove.integer;
-	pm.noFootsteps = ( g_dmflags.integer & DF_NO_FOOTSTEPS ) > 0;
+	pm.noFootsteps = ( ( g_dmflags.integer & DF_NO_FOOTSTEPS ) > 0 ) || ( ent->aiCharacter == AICHAR_ZOMBIE_GHOST );
 
 	pm.pmove_fixed = pmove_fixed.integer | client->pers.pmoveFixed;
 	pm.pmove_msec = pmove_msec.integer;
