@@ -72,6 +72,24 @@ int steamCheckHostLeft(void);
 
 /*
 ===============
+Player identity (pre-game lobby: SteamID + persona name for player slots)
+===============
+*/
+
+/* Fire-and-forget; call once at startup. Answered (synchronously, from the shim's
+   point of view) via SHIMEVENT_LOCAL_IDENTITY, then available via the two getters below. */
+void steamRequestLocalIdentity(void);
+uint64_t steamLocalSteamID(void);
+const char *steamLocalPersonaName(void);
+
+/* Requests another player's persona name by steamID; poll steamGetCachedFriendName()
+   afterwards. Resolves from Steam's local cache, already populated for lobby members. */
+void steamRequestFriendName(uint64_t steamID);
+/* Returns the cached name for steamID, or "" if steamRequestFriendName() hasn't resolved yet. */
+const char *steamGetCachedFriendName(uint64_t steamID);
+
+/*
+===============
 Steam P2P net transport (used by NA_STEAM_P2P in qcommon/net_ip.c)
 ===============
 */

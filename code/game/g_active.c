@@ -1117,6 +1117,19 @@ void ClientThink_real( gentity_t *ent ) {
 			client->ps.pm_type = PM_FREEZE;
 		}
 
+	} else if ( g_gamestate.integer == GS_LOBBY || g_gamestate.integer == GS_LOBBY_COUNTDOWN ) {
+
+		// pre-game lobby: freeze everyone in place until the host starts the match
+		ucmd->buttons = 0;
+		ucmd->forwardmove = 0;
+		ucmd->rightmove = 0;
+		ucmd->upmove = 0;
+		ucmd->wbuttons = 0;
+		ucmd->wolfkick = 0;
+
+		VectorClear( client->ps.velocity );
+		client->ps.pm_type = PM_FREEZE;
+
 	} else if ( client->noclip ) {
 		client->ps.pm_type = PM_NOCLIP;
 	} else if ( client->ps.stats[STAT_HEALTH] <= 0 ) {

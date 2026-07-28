@@ -15,6 +15,7 @@
 //   SERVERINFO  - serverinfo.menu / ingame_serverinfo.menu
 //   PLAY        - play.menu
 //   CREATE      - create.menu
+//   LOBBY       - pregame.menu / lobby_settings.menu
 //=============================================================
 
 //=============================================================
@@ -469,6 +470,7 @@ CREATE_SHAREDLIVES                 "Shared Lives:"
 CREATE_SHAREDLIVES_YES             "yes (no bonus life!)"
 CREATE_SHAREDLIVES_NO              "no"
 CREATE_STARTGAME                   "Start Game"
+CREATE_STARTLOBBY                  "Start Lobby"
 CREATE_MSG_GAMETYPE                "Set GameType"
 CREATE_MSG_SKILL                   "Select a Skill Level"
 CREATE_MSG_ARENA                   "Choose Your Map"
@@ -497,5 +499,17 @@ CREATE_MSG_SPECIALWAVES            "Enable special AI waves during Survival roun
 CREATE_MSG_REALISM                 "Enables realistic gameplay tweaks (movement, and more)"
 CREATE_MSG_SURVIVALDIFFICULTY      "Increases AI aim, accuracy and attack skill in Survival"
 CREATE_MSG_SURVIVALAIHEALTHCAP     "Caps AI health growth during long Survival matches"
+
+//=============================================================
+// PRE-GAME LOBBY (pregame.menu / lobby_settings.menu)
+//=============================================================
+
+LOBBY_TITLE                        "LOBBY"
+LOBBY_PLAYERS                      "Players"
+LOBBY_EDITSETTINGS                 "Edit Game Settings"
+LOBBY_INVITEFRIENDS                "Invite Friends"
+LOBBY_LEAVE                        "Leave This Lobby"
+LOBBY_STARTGAME                    "Start The Game"
+LOBBY_SETTINGS_DONE                "Done"
 
 }

@@ -14,6 +14,41 @@ static uint64_t s_steamCurrentLobby = 0;
 static uint64_t s_steamCurrentLobbyOwner = 0;
 static int s_steamHostLeft = 0;
 
+static uint64_t s_localSteamID = 0;
+static char s_localPersonaName[64] = "";
+
+// Small cache of other players' persona names, keyed by steamID; populated from
+// SHIMEVENT_FRIEND_NAME replies to steamRequestFriendName(). Plenty for a 4-player lobby.
+#define STEAM_FRIENDNAME_CACHE_MAX 16
+typedef struct {
+	uint64_t steamID;
+	char name[64];
+} steamFriendNameEntry_t;
+static steamFriendNameEntry_t s_friendNameCache[STEAM_FRIENDNAME_CACHE_MAX];
+static int s_friendNameCacheCount = 0;
+
+static void steamCacheFriendName(uint64_t steamID, const char *name)
+{
+	int i;
+
+	for (i = 0; i < s_friendNameCacheCount; i++) {
+		if (s_friendNameCache[i].steamID == steamID) {
+			Q_strncpyz(s_friendNameCache[i].name, name, sizeof(s_friendNameCache[i].name));
+			return;
+		}
+	}
+
+	if (s_friendNameCacheCount >= STEAM_FRIENDNAME_CACHE_MAX) {
+		// Cache full (shouldn't happen with MAX_COOP_PLAYERS this small) - overwrite oldest.
+		memmove(&s_friendNameCache[0], &s_friendNameCache[1], sizeof(s_friendNameCache[0]) * (STEAM_FRIENDNAME_CACHE_MAX - 1));
+		s_friendNameCacheCount = STEAM_FRIENDNAME_CACHE_MAX - 1;
+	}
+
+	s_friendNameCache[s_friendNameCacheCount].steamID = steamID;
+	Q_strncpyz(s_friendNameCache[s_friendNameCacheCount].name, name, sizeof(s_friendNameCache[s_friendNameCacheCount].name));
+	s_friendNameCacheCount++;
+}
+
 // Steam lobby list cache for the server browser; filled in from SHIMEVENT_LOBBY_LIST events, polled via steamLobbyListDirty().
 #define STEAM_LOBBYLIST_MAX 128
 
@@ -250,6 +285,21 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 		printf("Steam lobby host %llu has left/disconnected\n", (unsigned long long)ev->uvalue);
 		break;
 
+	case SHIMEVENT_LOCAL_IDENTITY:
+		if (ev->okay) {
+			s_localSteamID = ev->uvalue;
+			Q_strncpyz(s_localPersonaName, ev->name, sizeof(s_localPersonaName));
+			printf("Steam local identity: %llu '%s'\n", (unsigned long long)s_localSteamID, s_localPersonaName);
+		}
+		break;
+
+	case SHIMEVENT_FRIEND_NAME:
+		if (ev->okay) {
+			steamCacheFriendName(ev->uvalue, ev->name);
+			printf("Steam friend name: %llu '%s'\n", (unsigned long long)ev->uvalue, ev->name);
+		}
+		break;
+
 	case SHIMEVENT_LOBBY_CREATED:
 		if (ev->okay) {
 			s_steamCurrentLobby = ev->uvalue;
@@ -312,6 +362,8 @@ static const char *SteamEventName(STEAMSHIM_EventType type)
 	case SHIMEVENT_LOBBY_DATA:        return "LOBBY_DATA";
 	case SHIMEVENT_LOBBY_OWNER:       return "LOBBY_OWNER";
 	case SHIMEVENT_LOBBY_HOSTLEFT:    return "LOBBY_HOSTLEFT";
+	case SHIMEVENT_LOCAL_IDENTITY:    return "LOCAL_IDENTITY";
+	case SHIMEVENT_FRIEND_NAME:       return "FRIEND_NAME";
 	case SHIMEVENT_NET_CONNECTED:     return "NET_CONNECTED";
 	case SHIMEVENT_NET_DISCONNECTED:  return "NET_DISCONNECTED";
 	case SHIMEVENT_NET_DATA:          return "NET_DATA";
@@ -430,6 +482,38 @@ int steamCheckHostLeft(void)
 	return 1;
 }
 
+void steamRequestLocalIdentity(void)
+{
+	STEAMSHIM_getLocalIdentity();
+}
+
+uint64_t steamLocalSteamID(void)
+{
+	return s_localSteamID;
+}
+
+const char *steamLocalPersonaName(void)
+{
+	return s_localPersonaName;
+}
+
+void steamRequestFriendName(uint64_t steamID)
+{
+	STEAMSHIM_getFriendName(steamID);
+}
+
+const char *steamGetCachedFriendName(uint64_t steamID)
+{
+	int i;
+
+	for (i = 0; i < s_friendNameCacheCount; i++) {
+		if (s_friendNameCache[i].steamID == steamID) {
+			return s_friendNameCache[i].name;
+		}
+	}
+	return "";
+}
+
 #else
 
 static uint64_t s_steamCurrentLobby = 0;
@@ -511,6 +595,31 @@ uint64_t steamLobbyOwner(void)
 int steamCheckHostLeft(void)
 {
 	return 0;
+}
+
+void steamRequestLocalIdentity(void)
+{
+}
+
+uint64_t steamLocalSteamID(void)
+{
+	return 0;
+}
+
+const char *steamLocalPersonaName(void)
+{
+	return "";
+}
+
+void steamRequestFriendName(uint64_t steamID)
+{
+	(void)steamID;
+}
+
+const char *steamGetCachedFriendName(uint64_t steamID)
+{
+	(void)steamID;
+	return "";
 }
 
 void steamLobbySetData(const char *key, const char *value)

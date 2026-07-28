@@ -212,6 +212,9 @@ typedef enum ShimCmd
     SHIMCMD_LOBBY_SETDATA,
     SHIMCMD_LOBBY_INVITE,
 
+    SHIMCMD_GET_LOCAL_IDENTITY,
+    SHIMCMD_GET_FRIEND_NAME,
+
     /* Steam P2P net transport (per-frame game traffic). */
     SHIMCMD_NET_LISTEN,
     SHIMCMD_NET_CONNECT,
@@ -379,6 +382,8 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
     PRINTGOTEVENT(SHIMEVENT_LOBBY_INVITE);
     PRINTGOTEVENT(SHIMEVENT_LOBBY_OWNER);
     PRINTGOTEVENT(SHIMEVENT_LOBBY_HOSTLEFT);
+    PRINTGOTEVENT(SHIMEVENT_LOCAL_IDENTITY);
+    PRINTGOTEVENT(SHIMEVENT_FRIEND_NAME);
     PRINTGOTEVENT(SHIMEVENT_NET_CONNECTED);
     PRINTGOTEVENT(SHIMEVENT_NET_DISCONNECTED);
     /* NET_DATA happens every frame; too noisy to log here. */
@@ -451,6 +456,8 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
         case SHIMEVENT_LOBBY_DATA:
         case SHIMEVENT_LOBBY_CHAT:
         case SHIMEVENT_LOBBY_INVITE:
+        case SHIMEVENT_LOCAL_IDENTITY:
+        case SHIMEVENT_FRIEND_NAME:
         {
             uint64_t lobbyID = 0;
 
@@ -796,6 +803,36 @@ void STEAMSHIM_lobbyInvite(uint64_t lobbyID)
 
 	memcpy(ptr, &lobbyID, sizeof(lobbyID));
 	ptr += sizeof(lobbyID);
+
+	buf[0] = (uint8)((ptr - 1) - buf);
+	writePipe(GPipeWrite, buf, buf[0] + 1);
+}
+
+void STEAMSHIM_getLocalIdentity(void)
+{
+	if (isDead()) {
+		return;
+	}
+
+	dbgpipe("Child sending SHIMCMD_GET_LOCAL_IDENTITY().\n");
+	write1ByteCmd(SHIMCMD_GET_LOCAL_IDENTITY);
+}
+
+void STEAMSHIM_getFriendName(uint64_t steamID)
+{
+	uint8 buf[16];
+	uint8 *ptr = buf + 1;
+
+	if (isDead()) {
+		return;
+	}
+
+	dbgpipe("Child sending SHIMCMD_GET_FRIEND_NAME(%llu).\n", (unsigned long long) steamID);
+
+	*(ptr++) = (uint8)SHIMCMD_GET_FRIEND_NAME;
+
+	memcpy(ptr, &steamID, sizeof(steamID));
+	ptr += sizeof(steamID);
 
 	buf[0] = (uint8)((ptr - 1) - buf);
 	writePipe(GPipeWrite, buf, buf[0] + 1);

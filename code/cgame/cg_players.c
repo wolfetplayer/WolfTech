@@ -1542,6 +1542,10 @@ void CG_NewClientInfo( int clientNum ) {
 	v = Info_ValueForKey( configstring, "t" );
 	newInfo.team = atoi( v );
 
+	// steamID (pre-game lobby / future avatar lookup)
+	v = Info_ValueForKey( configstring, "steamid" );
+	newInfo.steamID = strtoull( v, NULL, 10 );
+
 //----(SA) modified this for head separation
 
 	// (SA) note to Ryan: The problem I see with having the model set for cg_forceModel in the game (g_forcemodel)

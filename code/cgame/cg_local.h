@@ -578,6 +578,8 @@ typedef struct {
 	char name[MAX_QPATH];
 	team_t team;
 
+	uint64_t steamID;                // 0 if unknown (bots, or steam builds where it hasn't propagated yet)
+
 	int botSkill;                   // 0 = not bot, 1-5 = bot
 
 	vec3_t color;
@@ -974,6 +976,9 @@ typedef struct {
 	// warmup countdown
 	int warmup;
 	int warmupCount;
+
+	// pre-game lobby countdown (CS_LOBBY_COUNTDOWN)
+	int lobbyCountdown;
 
 	// message icon popup time	//----(SA)	added
 	int yougotmailTime;

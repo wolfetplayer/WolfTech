@@ -2103,6 +2103,36 @@ static void UI_DrawCreateMapPreview( rectDef_t *rect, float scale, vec4_t color 
 	}
 }
 
+/*
+===============
+UI_DrawLobbySlot
+
+Pre-game lobby: draws slotIndex's connected player's name, or a
+"Player Slot Available" placeholder if nobody has connected into that
+client slot yet. Reads CS_PLAYERS directly (same source cg_players.c's
+CG_NewClientInfo parses) since the UI VM has no access to cgame's
+clientinfo_t cache.
+===============
+*/
+static void UI_DrawLobbySlot( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle, int slotIndex ) {
+	char info[MAX_INFO_STRING];
+	const char *name;
+
+	trap_GetConfigString( CS_PLAYERS + slotIndex, info, sizeof( info ) );
+
+	if ( info[0] ) {
+		name = Info_ValueForKey( info, "n" );
+	} else {
+#ifdef LOCALISATION
+		name = DC->translateString( "Player Slot Available" );
+#else
+		name = DC->getTranslatedString( "Player Slot Available" );
+#endif
+	}
+
+	Text_Paint( rect->x, rect->y, font, scale, color, name, 0, 0, textStyle );
+}
+
 
 static void UI_DrawNetMapPreview( rectDef_t *rect, float scale, vec4_t color ) {
 
@@ -2894,6 +2924,12 @@ static void UI_OwnerDraw( float x, float y, float w, float h, float text_x, floa
 		break;
 	case UI_CREATEMAPPREVIEW_SMALL2:
 		UI_DrawSmallCreateMapPreview( &rect, scale, color, 2 );
+		break;
+	case UI_LOBBYSLOT1:
+	case UI_LOBBYSLOT2:
+	case UI_LOBBYSLOT3:
+	case UI_LOBBYSLOT4:
+		UI_DrawLobbySlot( &rect, font, scale, color, textStyle, ownerDraw - UI_LOBBYSLOT1 );
 		break;
 	case UI_NETMAPCINEMATIC:
 		UI_DrawNetMapCinematic( &rect, scale, color );
@@ -4697,6 +4733,9 @@ static void UI_RunMenuScript( char **args ) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
 
+			// Freeze into the pre-game lobby instead of straight into play once the map loads.
+			trap_Cvar_Set("g_lobbyPending", "1");
+
 			if (gt == GT_COOP_SURVIVAL)
 			{
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; svmap %s\n", mapName));
@@ -4704,6 +4743,41 @@ static void UI_RunMenuScript( char **args ) {
 			else
 			{
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; coopmap %s\n", mapName));
+			}
+		}
+		else if (Q_stricmp(name, "ApplyLobbySettings") == 0)
+		{
+			// Host re-applying settings from the pregame lobby's "Edit Game Settings"
+			// overlay. Non-map settings (gametype, difficulty, etc.) are plain
+			// CVAR_SERVERINFO cvars already bound directly by lobby_settings.menu's
+			// itemDefs, so they take effect live with no extra work here. Only a
+			// changed map needs a reload - same sequence as the initial "Start Lobby"
+			// flow, just re-entering GS_LOBBY on arrival instead of GS_WARMUP/PLAYING.
+			int gt;
+			const char *mapName;
+			char currentMap[MAX_QPATH];
+
+			gt = uiInfo.gameTypes[ui_netGameType.integer].gtEnum;
+			trap_Cvar_SetValue("g_gametype", gt);
+
+			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
+			trap_Cvar_VariableStringBuffer("mapname", currentMap, sizeof(currentMap));
+
+			if (Q_stricmp(mapName, currentMap) != 0)
+			{
+				trap_Cvar_Set("g_lobbyPending", "1");
+
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
+
+				if (gt == GT_COOP_SURVIVAL)
+				{
+					trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; svmap %s\n", mapName));
+				}
+				else
+				{
+					trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; coopmap %s\n", mapName));
+				}
 			}
 		}
 		else if (Q_stricmp(name, "updateSPMenu") == 0)

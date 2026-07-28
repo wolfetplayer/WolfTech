@@ -331,6 +331,12 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_FREEZE                   268
 #define UI_UISKILL                  269
 
+// pre-game lobby: one ownerdraw per fixed player slot (name + "Player Slot Available" placeholder)
+#define UI_LOBBYSLOT1               270
+#define UI_LOBBYSLOT2               271
+#define UI_LOBBYSLOT3               272
+#define UI_LOBBYSLOT4               273
+
 #define VOICECHAT_GETFLAG           "getflag"                // command someone to get the flag
 #define VOICECHAT_OFFENSE           "offense"                // command someone to go on offense
 #define VOICECHAT_DEFEND            "defend"             // command someone to go on defense

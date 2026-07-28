@@ -2186,6 +2186,20 @@ void CL_SteamHost_f(void)
 	steamLobbyCreate(maxPlayers);
 }
 
+void CL_SteamInvite_f(void)
+{
+	if (!steamAlive()) {
+		return;
+	}
+
+	if (steamLobbyCurrent() == 0) {
+		Com_Printf("steam_invite: not in a lobby\n");
+		return;
+	}
+
+	steamLobbyInvite();
+}
+
 void CL_SteamJoin_f(void)
 {
 	if (Cmd_Argc() < 2) {
@@ -3351,6 +3365,29 @@ void CL_Frame( int msec ) {
 		CL_UpdateSteamServers();
 		CL_FlushPendingSteamLobbyData();
 
+		// Pre-game lobby: fetch our own SteamID/persona name once, tether "name" to it
+		// (unless the player already customized it away from the default), and expose
+		// the raw SteamID to the server via cl_steamid so lobby slots can key off it.
+		{
+			static qboolean requestedLocalIdentity = qfalse;
+			static qboolean appliedLocalIdentity = qfalse;
+
+			if ( !requestedLocalIdentity ) {
+				requestedLocalIdentity = qtrue;
+				steamRequestLocalIdentity();
+			}
+
+			if ( !appliedLocalIdentity && steamLocalSteamID() != 0 ) {
+				appliedLocalIdentity = qtrue;
+
+				Cvar_Set( "cl_steamid", va( "%llu", (unsigned long long) steamLocalSteamID() ) );
+
+				if ( steamLocalPersonaName()[0] && !Q_stricmp( Cvar_VariableString( "name" ), "WolfPlayer" ) ) {
+					Cvar_Set( "name", steamLocalPersonaName() );
+				}
+			}
+		}
+
 		// Leave the lobby when the local server actually stops (not on map changes - those don't call SV_Shutdown).
 		isHostingServer = com_sv_running->integer ? qtrue : qfalse;
 		if ( wasHostingServer && !isHostingServer ) {
@@ -4421,6 +4458,7 @@ void CL_Init( void ) {
 
 	// userinfo
 	Cvar_Get( "name", "WolfPlayer", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get( "cl_steamid", "0", CVAR_USERINFO | CVAR_ROM );   // pre-game lobby: raw SteamID64, tethered in CL_Frame once Steam resolves it
 	cl_rate = Cvar_Get( "rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );     // NERVE - SMF - changed from 3000
 	Cvar_Get( "skin", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "snaps", "20", CVAR_USERINFO | CVAR_ARCHIVE );
@@ -4553,6 +4591,8 @@ void CL_Init( void ) {
 	Cmd_AddCommand("steam_join", CL_SteamJoin_f);
 
 	Cmd_AddCommand("steam_host", CL_SteamHost_f);
+
+	Cmd_AddCommand("steam_invite", CL_SteamInvite_f);
 
 	Cmd_AddCommand("steam_setdata", CL_SteamSetData_f);
 

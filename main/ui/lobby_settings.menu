@@ -1,0 +1,276 @@
+#include "ui/menudef.h"
+
+{
+// PRE-GAME LOBBY - "Edit Game Settings" overlay (host only).
+// Reuses the exact same cvar bindings as create.menu's fields, so toggle/
+// hostname changes take effect live (they're CVAR_SERVERINFO already);
+// only a changed map needs the "Done" button's ApplyLobbySettings uiScript
+// to trigger a reload.
+
+menuDef {
+	name "lobby_settings"
+	visible 0
+	fullscreen 0
+	rect 170 30 300 420
+	focusColor .9 .9 .9 1
+	style 1
+	border 1
+
+	onOpen {
+		uiScript loadArenas
+		}
+
+	onEsc {
+		close lobby_settings ;
+		open pregame
+		}
+
+	itemDef {
+		name window
+		group grpLobbySettings
+		rect 0 0 300 420
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor 0 0 0 .7
+		visible 1
+		decoration
+		}
+
+	itemDef {
+		name title
+		group grpLobbySettings
+		text "@LOBBY_EDITSETTINGS"
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_CENTER
+		textalignx 150
+		textaligny 14
+		textscale .28
+		rect 0 4 300 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .3 .5 .2 .25
+		visible 1
+		decoration
+		}
+
+	itemDef {
+		name hostname
+		group grpLobbySettings
+		type ITEM_TYPE_EDITFIELD
+		text "@CREATE_LOBBYNAME"
+		cvar "sv_hostname"
+		maxChars 16
+		maxPaintChars 16
+		rect 10 32 280 12
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 140
+		textaligny 10
+		textscale .22
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		}
+
+	itemDef {
+		name gametype
+		group grpLobbySettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_GAMEMODE"
+		ownerdraw UI_NETGAMETYPE
+		rect 10 48 280 12
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 140
+		textaligny 10
+		textscale .22
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		}
+
+	itemDef {
+		name maplistlabel
+		group grpLobbySettings
+		text "@CREATE_MAPSELECTION"
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_LEFT
+		textalignx 10
+		textaligny 12
+		textscale .2
+		rect 10 66 280 14
+		visible 1
+		decoration
+		}
+
+	itemDef {
+		name maplist
+		group grpLobbySettings
+		rect 10 82 280 90
+		type ITEM_TYPE_LISTBOX
+		style WINDOW_STYLE_FILLED
+		elementwidth 280
+		elementheight 15
+		textfont UI_FONT_NORMAL
+		textscale .2
+		elementtype LISTBOX_TEXT
+		feeder FEEDER_ALLMAPS
+		textstyle 6
+		textaligny 0
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor 0 0 0 0
+		outlinecolor .7 .7 .0 .25
+		visible 1
+		}
+
+	itemDef {
+		name specialwaves
+		group grpLobbySettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_SPECIALWAVES"
+		cvar "g_specialwaves"
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+		rect 10 178 280 12
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 140
+		textaligny 10
+		textscale .22
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		}
+
+	itemDef {
+		name realism
+		group grpLobbySettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_REALISM"
+		cvar "g_realism"
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+		rect 10 194 280 12
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 140
+		textaligny 10
+		textscale .22
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		}
+
+	itemDef {
+		name survivaldifficulty
+		group grpLobbySettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_SURVIVALDIFFICULTY"
+		cvar "g_survivalDifficulty"
+		cvarFloatList { "@CREATE_DIFFICULTY_NORMAL" 0 "@CREATE_DIFFICULTY_HARD" 1 }
+		rect 10 210 280 12
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 140
+		textaligny 10
+		textscale .22
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		}
+
+	itemDef {
+		name survivalaihealthcap
+		group grpLobbySettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_SURVIVALAIHEALTHCAP"
+		cvar "g_survivalAiHealthCap"
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+		rect 10 226 280 12
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 140
+		textaligny 10
+		textscale .22
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		}
+
+	itemDef {
+		name friendlyfire
+		group grpLobbySettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_FRIENDLYFIRE"
+		cvar "g_friendlyFire"
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 "@GENERAL_ONANDHEALTH" 2 }
+		rect 10 242 280 12
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 140
+		textaligny 10
+		textscale .22
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		}
+
+	itemDef {
+		name sharedlives
+		group grpLobbySettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_SHAREDLIVES"
+		cvar "g_sharedlives"
+		cvarFloatList { "@CREATE_SHAREDLIVES_YES" 1 "@CREATE_SHAREDLIVES_NO" 0 }
+		rect 10 258 280 12
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 140
+		textaligny 10
+		textscale .22
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		cvarTest "g_maxlives"
+		hidecvar { "0" }
+		}
+
+	itemDef {
+		name done
+		group grpLobbySettings
+		text "@LOBBY_SETTINGS_DONE"
+		type ITEM_TYPE_BUTTON
+		textfont UI_FONT_NORMAL
+		textscale .27
+		style WINDOW_STYLE_FILLED
+		rect 10 386 280 24
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 17
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .2 .5 .2 .5
+		visible 1
+		mouseEnter { setitemcolor done backcolor .2 .5 .2 .8 }
+		mouseExit { setitemcolor done backcolor .2 .5 .2 .5 }
+		action {
+			uiScript ApplyLobbySettings ;
+			close lobby_settings ;
+			open pregame
+			}
+		}
+	}
+}

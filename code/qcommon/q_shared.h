@@ -1899,7 +1899,9 @@ typedef enum {
 	GS_WARMUP,
 	GS_INTERMISSION,
 	GS_WAITING_FOR_PLAYERS,
-	GS_RESET
+	GS_RESET,
+	GS_LOBBY,           // pre-game lobby: players frozen, waiting on host to start the match
+	GS_LOBBY_COUNTDOWN  // host has started the match; short countdown before unfreezing into GS_PLAYING
 } gamestate_t;
 
 #define VOTEFLAGS_RESTART	( 1 << 0 )

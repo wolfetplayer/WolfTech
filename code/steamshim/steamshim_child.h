@@ -32,6 +32,9 @@ typedef enum STEAMSHIM_EventType
 	SHIMEVENT_LOBBY_OWNER,	/* uvalue = owning steamID of the current lobby */
 	SHIMEVENT_LOBBY_HOSTLEFT,	/* uvalue = steamID of the host that just left/disconnected */
 
+	SHIMEVENT_LOCAL_IDENTITY,	/* uvalue = local user's steamID, name = local persona name */
+	SHIMEVENT_FRIEND_NAME,	/* uvalue = the steamID that was asked about, name = their persona name */
+
 	/* Steam P2P net transport (per-frame game traffic). */
 	SHIMEVENT_NET_CONNECTED,
 	SHIMEVENT_NET_DISCONNECTED,
@@ -79,6 +82,11 @@ void STEAMSHIM_lobbyJoin(uint64_t lobbyID);
 void STEAMSHIM_lobbyLeave(void);
 void STEAMSHIM_lobbySetData(const char *key, const char *value);
 void STEAMSHIM_lobbyInvite(uint64_t lobbyID);
+
+/* Local user's own steamID + persona name; answered synchronously (both are already known by the time initSteamworks() returns). */
+void STEAMSHIM_getLocalIdentity(void);
+/* Another player's persona name by steamID; answered from Steam's cache, which is already populated for anyone in our current lobby. */
+void STEAMSHIM_getFriendName(uint64_t steamID);
 
 /* Steam P2P net transport, used by NA_STEAM_P2P in qcommon/net_ip.c.
    The host can have multiple simultaneous peers, so send/close are

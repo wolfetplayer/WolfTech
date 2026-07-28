@@ -1,0 +1,271 @@
+#include "ui/menudef.h"
+
+{
+// PRE-GAME LOBBY
+// Shown automatically (see cgame's CG_ParseServerinfo) whenever gamestate is
+// GS_LOBBY or GS_LOBBY_COUNTDOWN. Fills the UIMENU_PREGAME hook.
+
+menuDef {
+	name "pregame"
+	visible 0
+	fullscreen 0
+	rect 20 60 300 340
+	focusColor .9 .9 .9 1
+	style 1
+	border 1
+
+	itemDef {
+		name window
+		group grpLobby
+		rect 0 0 300 340
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor 0 0 0 .6
+		visible 1
+		decoration
+		}
+
+	itemDef {
+		name title
+		group grpLobby
+		text "@LOBBY_TITLE"
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_CENTER
+		textalignx 150
+		textaligny 14
+		textscale .3
+		rect 0 4 300 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .3 .5 .2 .25
+		visible 1
+		decoration
+		}
+
+	// Player slots //
+
+	itemDef {
+		name slotsheader
+		group grpLobby
+		text "@LOBBY_PLAYERS"
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_LEFT
+		textalignx 12
+		textaligny 12
+		textscale .2
+		rect 0 32 300 16
+		visible 1
+		decoration
+		}
+
+	itemDef {
+		name slot1box
+		group grpLobby
+		rect 10 50 280 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .4 .4 .4 .4
+		backcolor .1 .1 .1 .4
+		visible 1
+		decoration
+		}
+	itemDef {
+		name slot1
+		group grpLobby
+		ownerdraw UI_LOBBYSLOT1
+		textfont UI_FONT_NORMAL
+		textscale .22
+		textstyle 6
+		rect 16 50 268 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	itemDef {
+		name slot2box
+		group grpLobby
+		rect 10 74 280 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .4 .4 .4 .4
+		backcolor .1 .1 .1 .4
+		visible 1
+		decoration
+		}
+	itemDef {
+		name slot2
+		group grpLobby
+		ownerdraw UI_LOBBYSLOT2
+		textfont UI_FONT_NORMAL
+		textscale .22
+		textstyle 6
+		rect 16 74 268 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	itemDef {
+		name slot3box
+		group grpLobby
+		rect 10 98 280 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .4 .4 .4 .4
+		backcolor .1 .1 .1 .4
+		visible 1
+		decoration
+		}
+	itemDef {
+		name slot3
+		group grpLobby
+		ownerdraw UI_LOBBYSLOT3
+		textfont UI_FONT_NORMAL
+		textscale .22
+		textstyle 6
+		rect 16 98 268 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	itemDef {
+		name slot4box
+		group grpLobby
+		rect 10 122 280 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .4 .4 .4 .4
+		backcolor .1 .1 .1 .4
+		visible 1
+		decoration
+		}
+	itemDef {
+		name slot4
+		group grpLobby
+		ownerdraw UI_LOBBYSLOT4
+		textfont UI_FONT_NORMAL
+		textscale .22
+		textstyle 6
+		rect 16 122 268 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	// Menu actions //
+	// "Edit Game Settings" and "Start The Game" are host-only: sv_running is
+	// only "1" on the machine actually running the (listen) server.
+
+	itemDef {
+		name editsettings
+		group grpLobby
+		text "@LOBBY_EDITSETTINGS"
+		type ITEM_TYPE_BUTTON
+		textfont UI_FONT_NORMAL
+		textscale .25
+		style WINDOW_STYLE_FILLED
+		rect 10 170 280 20
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 14
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .3 .5 .2 .3
+		visible 1
+		cvarTest "sv_running"
+		hidecvar { "0" }
+		mouseEnter { setitemcolor editsettings backcolor .3 .5 .2 .6 }
+		mouseExit { setitemcolor editsettings backcolor .3 .5 .2 .3 }
+		action {
+			close pregame ;
+			open lobby_settings
+			}
+		}
+
+	itemDef {
+		name invite
+		group grpLobby
+		text "@LOBBY_INVITEFRIENDS"
+		type ITEM_TYPE_BUTTON
+		textfont UI_FONT_NORMAL
+		textscale .25
+		style WINDOW_STYLE_FILLED
+		rect 10 196 280 20
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 14
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .3 .5 .2 .3
+		visible 1
+		mouseEnter { setitemcolor invite backcolor .3 .5 .2 .6 }
+		mouseExit { setitemcolor invite backcolor .3 .5 .2 .3 }
+		action {
+			exec "steam_invite"
+			}
+		}
+
+	itemDef {
+		name leave
+		group grpLobby
+		text "@LOBBY_LEAVE"
+		type ITEM_TYPE_BUTTON
+		textfont UI_FONT_NORMAL
+		textscale .25
+		style WINDOW_STYLE_FILLED
+		rect 10 222 280 20
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 14
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .5 .2 .2 .3
+		visible 1
+		mouseEnter { setitemcolor leave backcolor .5 .2 .2 .6 }
+		mouseExit { setitemcolor leave backcolor .5 .2 .2 .3 }
+		action {
+			close pregame ;
+			exec "disconnect"
+			}
+		}
+
+	itemDef {
+		name startgame
+		group grpLobby
+		text "@LOBBY_STARTGAME"
+		type ITEM_TYPE_BUTTON
+		textfont UI_FONT_NORMAL
+		textscale .27
+		style WINDOW_STYLE_FILLED
+		rect 10 300 280 24
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 17
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .2 .5 .2 .5
+		visible 1
+		cvarTest "sv_running"
+		hidecvar { "0" }
+		mouseEnter { setitemcolor startgame backcolor .2 .5 .2 .8 }
+		mouseExit { setitemcolor startgame backcolor .2 .5 .2 .5 }
+		action {
+			exec "lobbystart"
+			}
+		}
+	}
+}

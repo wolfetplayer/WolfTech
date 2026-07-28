@@ -509,6 +509,9 @@ typedef enum ShimCmd
 	SHIMCMD_LOBBY_SETDATA,
 	SHIMCMD_LOBBY_INVITE,
 
+	SHIMCMD_GET_LOCAL_IDENTITY,
+	SHIMCMD_GET_FRIEND_NAME,
+
 	// Steam P2P net transport (per-frame game traffic).
 	SHIMCMD_NET_LISTEN,
 	SHIMCMD_NET_CONNECT,
@@ -542,6 +545,9 @@ typedef enum ShimEvent
 	SHIMEVENT_LOBBY_INVITE,
 	SHIMEVENT_LOBBY_OWNER,	// uvalue = owning steamID of the current lobby
 	SHIMEVENT_LOBBY_HOSTLEFT,	// uvalue = steamID of the host that just left/disconnected
+
+	SHIMEVENT_LOCAL_IDENTITY,	// uvalue = local user's steamID, text = local persona name
+	SHIMEVENT_FRIEND_NAME,	// uvalue = the steamID that was asked about, text = their persona name
 
 	// Steam P2P net transport (per-frame game traffic).
 	SHIMEVENT_NET_CONNECTED,
@@ -793,6 +799,7 @@ SteamBridge::SteamBridge(PipeType _fd)
     , m_CallbackUserStatsStored(this, &SteamBridge::OnUserStatsStored)
     , m_CallbackLobbyEnter(this, &SteamBridge::OnLobbyEnter)
     , m_CallbackLobbyDataUpdate(this, &SteamBridge::OnLobbyDataUpdate)
+    , m_CallbackLobbyChatUpdate(this, &SteamBridge::OnLobbyChatUpdate)
     , m_CallbackNetConnStatusChanged(this, &SteamBridge::OnNetConnectionStatusChanged)
     , m_CallbackGameLobbyJoinRequested(this, &SteamBridge::OnGameLobbyJoinRequested)
     , fd(_fd)
@@ -1424,6 +1431,39 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
             writeLobbyEvent(fd, SHIMEVENT_LOBBY_INVITE, true, lobbyID, "");
             break;
         }
+
+        case SHIMCMD_GET_LOCAL_IDENTITY:
+        {
+            if (!GSteamFriends || !GSteamUser)
+            {
+                writeLobbyEvent(fd, SHIMEVENT_LOCAL_IDENTITY, false, 0, "");
+                break;
+            }
+
+            writeLobbyEvent(fd, SHIMEVENT_LOCAL_IDENTITY, true, GUserID, GSteamFriends->GetPersonaName());
+            break;
+        }
+
+        case SHIMCMD_GET_FRIEND_NAME:
+        {
+            uint64 steamID = 0;
+
+            if (buflen >= sizeof(uint64))
+            {
+                memcpy(&steamID, buf, sizeof(steamID));
+            }
+
+            if (!GSteamFriends || steamID == 0)
+            {
+                writeLobbyEvent(fd, SHIMEVENT_FRIEND_NAME, false, steamID, "");
+                break;
+            }
+
+            // Resolves from Steam's local cache; already populated for anyone in our lobby.
+            writeLobbyEvent(fd, SHIMEVENT_FRIEND_NAME, true, steamID, GSteamFriends->GetFriendPersonaName(CSteamID(steamID)));
+            break;
+        }
+
         case SHIMCMD_NET_LISTEN:
         {
             if (!GSteamNetworkingSockets)
@@ -1648,7 +1688,8 @@ static bool initSteamworks(PipeType fd)
 	GUserID = GSteamUser ? GSteamUser->GetSteamID().ConvertToUint64() : 0;
     GSteamBridge = new SteamBridge(fd);
 
-    SteamFriends()->SetRichPresence("steam_display", "#status_mainmenu");
+    GSteamFriends = SteamFriends();
+    GSteamFriends->SetRichPresence("steam_display", "#status_mainmenu");
     GSteamMatchmaking = SteamMatchmaking();
     GSteamNetworkingSockets = SteamNetworkingSockets();
 
@@ -1681,6 +1722,7 @@ static void deinitSteamworks(void)
     GSteamStats = NULL;
     GSteamUtils= NULL;
     GSteamUser = NULL;
+    GSteamFriends = NULL;
     GSteamMatchmaking = NULL;
     GSteamNetworkingSockets = NULL;
     GCurrentLobby.Clear();

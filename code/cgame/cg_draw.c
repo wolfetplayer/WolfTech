@@ -4181,6 +4181,39 @@ static void CG_DrawWarmup( void ) {
 					  qfalse, qtrue, cw, (int)( cw * 1.5 ), 0 );
 }
 
+/*
+=================
+CG_DrawLobbyCountdown
+
+Pre-game lobby's 5-second "Start The Game" countdown. Same timestamp-diff
+shape as CG_DrawWarmup above, but reading CS_LOBBY_COUNTDOWN so it doesn't
+interact with that unrelated warmup-vote system.
+=================
+*/
+static void CG_DrawLobbyCountdown( void ) {
+	int w;
+	int sec;
+	int cw;
+	const char *s;
+
+	if ( cgs.gamestate != GS_LOBBY_COUNTDOWN || !cg.lobbyCountdown ) {
+		return;
+	}
+
+	sec = ( cg.lobbyCountdown - cg.time ) / 1000;
+	if ( sec < 0 ) {
+		sec = 0;
+	}
+
+	s = va( "Game starts in: %i", sec + 1 );
+
+	cw = 16;
+
+	w = CG_DrawStrlen( s );
+	CG_DrawStringExt( 320 - w * cw / 2, 120, s, colorWhite,
+					  qfalse, qtrue, cw, (int)( cw * 1.5 ), 0 );
+}
+
 //==================================================================================
 
 /*
@@ -4822,6 +4855,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 
 	if ( !CG_DrawFollow() ) {
 		CG_DrawWarmup();
+		CG_DrawLobbyCountdown();
 	}
 
 	// don't draw center string if scoreboard is up
