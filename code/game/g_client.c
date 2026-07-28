@@ -527,7 +527,7 @@ void limbo( gentity_t *ent, qboolean makeCorpse ) {
 	//int startclient = ent->client->sess.spectatorClient;
 	int startclient = ent->client->ps.clientNum;
 
-	if ( g_gametype.integer != GT_COOP_SPEEDRUN && g_gametype.integer != GT_COOP_SURVIVAL && g_spawnpoints.integer != 2 ) {
+	if ( g_gametype.integer != GT_COOP_SURVIVAL && g_spawnpoints.integer != 2 ) {
 		G_Printf( "FIXME: limbo called from wrong gametype. Shouldn't see this\n" );
 		return;
 	}
@@ -608,7 +608,7 @@ void reinforce( gentity_t *ent ) {
 	int i = 0;
 	gclient_t *rclient;
 
-	if ( g_gametype.integer != GT_COOP_SPEEDRUN && g_gametype.integer != GT_COOP_SURVIVAL && g_spawnpoints.integer != 2 ) {
+	if ( g_gametype.integer != GT_COOP_SURVIVAL && g_spawnpoints.integer != 2 ) {
 		G_Printf( "FIXME: reinforce called from wrong gametype. Shouldn't see this\n" );
 		return;
 	}
@@ -706,7 +706,7 @@ void ClientRespawn( gentity_t *ent ) {
 	}
 
 	// DHM - Nerve :: Already handled in 'limbo()'
-	if ( g_gametype.integer != GT_COOP_SPEEDRUN && g_gametype.integer != GT_COOP_SURVIVAL ) {
+	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
 		CopyToBodyQue( ent );
 	}
 
@@ -1686,13 +1686,11 @@ void ClientSpawn( gentity_t *ent ) {
 					// moved this down
 					//client->pers.initialSpawn = qtrue;
 					if ( client->sess.sessionTeam == TEAM_RED ) {
-						if ( g_gametype.integer != GT_COOP_BATTLE ) {
-							spawnPoint = SelectRandomAntiCoopSpawnPoint( ent, spawn_origin, spawn_angles );
-							if ( !spawnPoint ) { // we need spawnpoints for the axis
-								spawnPoint = SelectSpawnPoint(
-									client->ps.origin,
-									spawn_origin, spawn_angles );
-							}
+						spawnPoint = SelectRandomAntiCoopSpawnPoint( ent, spawn_origin, spawn_angles );
+						if ( !spawnPoint ) { // we need spawnpoints for the axis
+							spawnPoint = SelectSpawnPoint(
+								client->ps.origin,
+								spawn_origin, spawn_angles );
 						}
 					} else {
 						if ( g_gametype.integer <= GT_COOP ) {
@@ -1710,7 +1708,7 @@ void ClientSpawn( gentity_t *ent ) {
 				} else {
 					// note: on a dedicated server when the first player arrives and he's axis
 					// no bots are alive, so no spawnpoint (bot) can be found
-					if ( client->sess.sessionTeam == TEAM_RED && g_gametype.integer != GT_COOP_BATTLE ) {
+					if ( client->sess.sessionTeam == TEAM_RED ) {
 						spawnPoint = SelectRandomAntiCoopSpawnPoint( ent, spawn_origin, spawn_angles );
 						if ( !spawnPoint ) { // we need spawnpoints for the axis
 							spawnPoint = SelectSpawnPoint( client->ps.origin, spawn_origin, spawn_angles );

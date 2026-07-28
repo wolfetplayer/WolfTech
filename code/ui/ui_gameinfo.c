@@ -199,12 +199,6 @@ void UI_LoadArenasIntoMapList( void ) {
 			if ( strstr( type, "coop_normal" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= ( 1 << GT_COOP );
 			}
-			if ( strstr( type, "coop_speedrun" ) ) {
-				uiInfo.mapList[uiInfo.mapCount].typeBits |= ( 1 << GT_COOP_SPEEDRUN );
-			}
-			if ( strstr( type, "coop_battle" ) ) {
-				uiInfo.mapList[uiInfo.mapCount].typeBits |= ( 1 << GT_COOP_BATTLE );
-			}
 			if ( strstr( type, "coop_survival" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= ( 1 << GT_COOP_SURVIVAL );
 			}

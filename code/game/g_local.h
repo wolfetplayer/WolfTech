@@ -840,8 +840,6 @@ typedef struct {
 	// every x seconds save the current location of the players to use as a future spawnpoint
 	int lastSpawnSave;
 
-	int lastBattleScorecheck;
-
 	int numFinalDead;
 	int motdTime;
 

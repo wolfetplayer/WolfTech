@@ -1383,14 +1383,6 @@ qboolean AICast_ScriptAction_SuggestWeapon( cast_state_t *cs, char *params ) {
 	int i;
 	//int		suggestedweaps = 0; // TTimo: unused
 
-#ifdef MONEY
-	gentity_t   *ent = &g_entities[cs->entityNum];
-
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
-
 	weapon = WP_NONE;
 
 	for ( i = 1; bg_itemlist[i].classname; i++ )
@@ -1475,14 +1467,6 @@ qboolean AICast_ScriptAction_SelectWeapon( cast_state_t *cs, char *params ) {
 	int weapon;
 	int i;
 
-#ifdef MONEY
-	gentity_t   *ent = &g_entities[cs->entityNum];
-
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
-
 	weapon = WP_NONE;
 
 	for ( i = 1; bg_itemlist[i].classname; i++ )
@@ -1532,12 +1516,6 @@ qboolean AICast_ScriptAction_SetMoveSpeed( cast_state_t *cs, char *params ) {
 
 	ent = &g_entities[cs->entityNum];
 
-#ifdef MONEY
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
-
 	if ( !params || !params[0] ) {
 		G_Error( "AI Scripting: setmovespeed requires a movespeed value" );
 	}
@@ -1577,19 +1555,9 @@ AICast_ScriptAction_GiveArmor
 ==============
 */
 qboolean AICast_ScriptAction_SetArmor( cast_state_t *cs, char *params ) {
-#ifdef MONEY
-	gentity_t   *ent = &g_entities[cs->entityNum];
-#endif
-
 	if ( !params || !params[0] ) {
 		G_Error( "AI Scripting: setarmor requires an armor value" );
 	}
-
-#ifdef MONEY
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
 
 	g_entities[cs->entityNum].client->ps.stats[STAT_ARMOR] += atoi( params );
 
@@ -1609,14 +1577,6 @@ AICast_ScriptAction_GiveArmor
 qboolean AICast_ScriptAction_GiveArmor( cast_state_t *cs, char *params ) {
 	int i;
 	gitem_t     *item = 0;
-
-#ifdef MONEY
-	gentity_t   *ent = &g_entities[cs->entityNum];
-
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
 
 	for ( i = 1; bg_itemlist[i].classname; i++ ) {
 		//----(SA)	first try the name they see in the editor, then the pickup name
@@ -1938,14 +1898,6 @@ qboolean AICast_ScriptAction_TakeWeapon( cast_state_t *cs, char *params ) {
 	int weapon;
 	int i;
 
-#ifdef MONEY
-	gentity_t   *ent = &g_entities[cs->entityNum];
-
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
-
 	weapon = WP_NONE;
 
 	if ( !Q_stricmp( params, "all" ) ) {
@@ -2188,14 +2140,6 @@ AICast_ScriptAction_GiveInventory
 qboolean AICast_ScriptAction_GiveInventory( cast_state_t *cs, char *params ) {
 	int i;
 	gitem_t     *item = 0;
-
-#ifdef MONEY
-	gentity_t   *ent = &g_entities[cs->entityNum];
-
-	if ( g_gametype.integer == GT_COOP_BATTLE && !( ent->r.svFlags & SVF_CASTAI ) ) {
-		return qtrue;
-	}
-#endif
 
 	for ( i = 1; bg_itemlist[i].classname; i++ ) {
 		//----(SA)	first try the name they see in the editor, then the pickup name
@@ -3408,7 +3352,6 @@ AICast_ScriptAction_ChangeLevel
 
 ====================
 */
-// TODO: speedrun needs to restart the map, so they can 'try again' ?
 qboolean AICast_ScriptAction_ChangeLevel( cast_state_t *cs, char *params ) {
 	int i;
 	char *pch, *pch2, *newstr;
@@ -3429,32 +3372,6 @@ qboolean AICast_ScriptAction_ChangeLevel( cast_state_t *cs, char *params ) {
 	}
 
 	if ( level.intermissionQueued ) {
-		return qtrue;
-	}
-
-	if ( g_gametype.integer == GT_COOP_BATTLE ) {
-
-		if ( level.numPlayingCoopClients < 2 ) {
-			return qtrue;
-		}
-
-		// check for missing objectives
-		for ( i = 0; i < level.numObjectives; i++ ) {
-			if ( !( level.missionObjectives & ( 1 << i ) ) ) {
-#ifdef LOCALISATION
-				trap_SendServerCommand( -1, "cp \"Objectives not complete\"" );
-#else
-				trap_SendServerCommand( -1, "cp objectivesnotcomplete" );
-#endif
-				return qtrue;
-			}
-		}
-
-		if ( level.intermissiontime ) {
-			return qtrue;
-		}
-
-		LogExit( "Battle EndRound." );
 		return qtrue;
 	}
 
@@ -3558,7 +3475,7 @@ qboolean AICast_ScriptAction_ChangeLevel( cast_state_t *cs, char *params ) {
 		// Give the players a point for finishing the map
 		// we need to do this because, existing players don't receive
 		// the weapons and ammo from the ai scripts on a mapchange
-		if ( g_gametype.integer <= GT_COOP && g_gametype.integer != GT_COOP_BATTLE ) {
+		if ( g_gametype.integer <= GT_COOP ) {
 			gentity_t *ent;
 
 			for ( i = 0; i < g_maxclients.integer; i++ ) {
@@ -3571,37 +3488,32 @@ qboolean AICast_ScriptAction_ChangeLevel( cast_state_t *cs, char *params ) {
 		return qtrue;
 	}
 
-	// battle gametype just reloads the current level
-	if ( g_gametype.integer == GT_COOP_BATTLE ) {
-		trap_Cvar_VariableStringBuffer( "mapname", level.nextMap, sizeof( level.nextMap ) );
-	} else {
-		if (!strcmp(newstr, "campaign_end")) {
-			char currentmap[MAX_STRING_CHARS];
-			int i = 0;
-			qboolean found = qfalse;
+	if (!strcmp(newstr, "campaign_end")) {
+		char currentmap[MAX_STRING_CHARS];
+		int i = 0;
+		qboolean found = qfalse;
 
-			trap_Cvar_VariableStringBuffer( "mapname", currentmap, sizeof( currentmap ) );
+		trap_Cvar_VariableStringBuffer( "mapname", currentmap, sizeof( currentmap ) );
 
-			for (i=0;i<MAX_MAPS;i++) {
-				if (level.maplist[i] && !strcmp(level.maplist[i], currentmap)) {
-					if ( (i+1) > MAX_MAPS || !level.maplist[i+1]) {
-						Q_strncpyz( level.nextMap, level.maplist[0], sizeof( level.nextMap ) );
+		for (i=0;i<MAX_MAPS;i++) {
+			if (level.maplist[i] && !strcmp(level.maplist[i], currentmap)) {
+				if ( (i+1) > MAX_MAPS || !level.maplist[i+1]) {
+					Q_strncpyz( level.nextMap, level.maplist[0], sizeof( level.nextMap ) );
+					found = qtrue;
+				} else {
+					if (level.maplist[i+1]) {
+						Q_strncpyz( level.nextMap, level.maplist[i+1], sizeof( level.nextMap ) );
 						found = qtrue;
-					} else {
-						if (level.maplist[i+1]) {
-							Q_strncpyz( level.nextMap, level.maplist[i+1], sizeof( level.nextMap ) );
-							found = qtrue;
-						}
 					}
 				}
 			}
+		}
 
-			if (!found) {
-				Q_strncpyz( level.nextMap, newstr, sizeof( level.nextMap ) );
-			}
-		} else {
+		if (!found) {
 			Q_strncpyz( level.nextMap, newstr, sizeof( level.nextMap ) );
 		}
+	} else {
+		Q_strncpyz( level.nextMap, newstr, sizeof( level.nextMap ) );
 	}
 
 	return qtrue;

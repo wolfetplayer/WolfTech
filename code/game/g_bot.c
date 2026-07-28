@@ -549,17 +549,7 @@ static void G_AddBot( const char *name, int skill, const char *team, int delay )
 
 	// set default team
 	if( !team || !*team ) {
-		if( g_gametype.integer == GT_COOP_BATTLE ) {
-			if( PickTeam(clientNum) == TEAM_RED) {
-				team = "red";
-			}
-			else {
-				team = "blue";
-			}
-		}
-		else {
-			team = "free";
-		}
+		team = "free";
 	}
 
 	// get the botinfo from bots.txt

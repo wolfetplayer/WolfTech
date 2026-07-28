@@ -1,10 +1,10 @@
-/*
+﻿/*
 ===========================================================================
 
 Return to Castle Wolfenstein single player GPL Source Code
 Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company. 
 
-This file is part of the Return to Castle Wolfenstein single player GPL Source Code (RTCW SP Source Code).  
+This file is part of the Return to Castle Wolfenstein single player GPL Source Code (В“RTCW SP Source CodeВ”).  
 
 RTCW SP Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -280,348 +280,6 @@ void Cmd_Fogswitch_f( void ) {
 }
 
 //----(SA)	end
-
-#ifdef MONEY
-struct product_s {
-	const char *name;
-	int weapon;
-	int price;
-	int ammoprice;
-};
-
-typedef struct product_s product_t;
-
-product_t products[] =
-{
-	{"Luger",               WP_LUGER, 50, 1},
-	{"Mauser Rifle",        WP_MAUSER, 150, 2},
-	{"Thompson",            WP_THOMPSON, 100, 1},
-	{"Sten",                WP_STEN, 160, 1},
-	{"Dual Colts",          WP_AKIMBO, 100, 2},
-	{"Colt",                WP_COLT, 50, 1},
-	{"Snooper Rifle",       WP_SNOOPERSCOPE, 200, 2},
-	{"M1 Garand",           WP_M1GARAND, 175, 2},
-	{"MP40",                WP_MP40, 100, 1},
-	{"FG42 Paratroop Rifle", WP_FG42, 150, 2},
-	{"sp5 pistol",          WP_SILENCER, 50, 2},
-	{"Panzerfaust",         WP_PANZERFAUST, 300, 100},
-	{"Grenade",             WP_GRENADE_LAUNCHER, 50, 50},
-	{"Pineapple",           WP_GRENADE_PINEAPPLE, 50, 50},
-	{"Dynamite Weapon",     WP_DYNAMITE, 300, 300},
-	{"Venom",               WP_VENOM, 300, 5},
-	{"Flamethrower",        WP_FLAMETHROWER, 300, 1},
-	{"Sniper Scope",        WP_SNIPERRIFLE, 200, 2},
-	{"FG42 Scope",          WP_FG42SCOPE, 200, 2},
-	{NULL}
-};
-
-int numProducts = sizeof( products ) / sizeof( products[0] ) - 1;
-
-int G_GetAmmoPrice( int weapon ) {
-	int i;
-
-	for ( i = 0; i < numProducts; i++ ) {
-		if ( products[i].weapon == weapon ) {
-			return products[i].ammoprice;
-		}
-	}
-
-	return 0;
-}
-
-int G_GetWeaponPrice( int weapon ) {
-	int i;
-
-	for ( i = 0; i < numProducts; i++ ) {
-		if ( products[i].weapon == weapon ) {
-			return products[i].price;
-		}
-	}
-
-	return 0;
-}
-
-void Cmd_Buy_f( gentity_t *ent ) {
-	char        *name, *amt;
-	gitem_t     *it;
-	gentity_t       *it_ent;
-	int amount;
-	int i;
-	int money = 0;
-	trace_t trace;
-
-	// TODO: players should be able to go below zero
-	// but if they are below zero, at map end, they loose, no matter what
-
-	if ( g_gametype.integer != GT_COOP_BATTLE ) {
-		return;
-	}
-
-	if ( trap_Argc() == 1 ) {
-		trap_SendServerCommand( ent - g_entities, "print \"Usage: \nbuy health <value>\nbuy ammo <value>\nbuy <productname> (see list below)\n\"" );
-		for ( i = 0; i < numProducts; i++ ) {
-			if ( products[i].name ) {
-				trap_SendServerCommand( ent - g_entities, va( "print \"%-20s ^3%3d ^3%3d\n\"", products[i].name, products[i].price, products[i].ammoprice ) );
-			}
-		}
-		return;
-	}
-
-	money = ent->client->ps.persistant[PERS_SCORE];
-
-	/*if ( money <= 0 ) {
-	        trap_SendServerCommand( ent-g_entities, "print \"Not enough money\n\"");
-	        return;
-	}*/
-
-	// check for an amount (like "give health 30")
-	amt = ConcatArgs( 2 );
-	amount = atoi( amt );
-
-	name = ConcatArgs( 1 );
-
-	if ( !name || !strlen( name ) ) {
-		return;
-	}
-
-	if ( Q_stricmpn( name, "stamina", 7 ) == 0 ) {
-		// TODO: check if at max stamina
-		it = BG_FindItem( "stamina" );
-		if ( !it ) {
-			trap_SendServerCommand( ent - g_entities, "print \"Cannot buy an item that does not exist\n\"" );
-			return;
-		}
-
-		/*if ( money < 20) {
-		        trap_SendServerCommand( ent-g_entities, "print \"Not enough money\n\"");
-		        return;
-		}*/
-
-		it_ent = G_Spawn();
-		VectorCopy( ent->r.currentOrigin, it_ent->s.origin );
-		it_ent->classname = it->classname;
-		G_SpawnItem( it_ent, it );
-		FinishSpawningItem( it_ent );
-		memset( &trace, 0, sizeof( trace ) );
-		it_ent->active = qtrue;
-		Touch_Item( it_ent, ent, &trace );
-		it_ent->active = qfalse;
-		if ( it_ent->inuse ) {
-			G_FreeEntity( it_ent );
-		}
-
-		ent->client->ps.persistant[PERS_SCORE] -= 20;;
-		return;
-	}
-
-	if ( Q_stricmpn( name, "health", 6 ) == 0 ) {
-		if ( amount ) {
-			/*if (money < amount) {
-			        trap_SendServerCommand( ent-g_entities, "print \"Not enough money\n\"");
-			        return;
-			}*/
-
-			ent->health += amount;
-			ent->client->ps.persistant[PERS_SCORE] -= amount;
-		} else {
-			int cost = ent->client->ps.stats[STAT_MAX_HEALTH] - ent->health;
-			if ( money < cost ) {
-				ent->health += money;
-				ent->client->ps.persistant[PERS_SCORE] = 0;
-				trap_SendServerCommand( ent - g_entities, "print \"Filled up your health with all your available money\n\"" );
-				return;
-			}
-
-			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH];
-			ent->client->ps.persistant[PERS_SCORE] -= cost;
-		}
-
-		return;
-	}
-
-	if ( Q_stricmpn( name, "ammo", 4 ) == 0 ) {
-		int cost;
-		int inclip, maxclip;
-		// TODO: play sound
-		for ( i = 0; i < numProducts; i++ ) {
-			if ( ent->client->ps.weapon == products[i].weapon ) {
-				if ( amount ) {
-					cost = amount * products[i].ammoprice;
-					/*if (money < cost) {
-					        trap_SendServerCommand( ent-g_entities, "print \"Not enough money\n\"");
-					        return;
-					}*/
-					Add_Ammo( ent, ent->client->ps.weapon, amount, qtrue );
-				} else {                 // todo if no amount is given, just fill the current clip
-
-					inclip  = ent->client->ps.ammoclip[BG_FindClipForWeapon( products[i].weapon )];
-					maxclip = ammoTable[products[i].weapon].maxclip;
-
-					amount = maxclip - inclip;                        // max amount that can be moved into the clip
-					cost = products[i].ammoprice * amount;
-
-					/*if (money < cost) {
-					        trap_SendServerCommand( ent-g_entities, "print \"Not enough money\n\"");
-					        return;
-					}*/
-
-					Add_Ammo( ent, ent->client->ps.weapon, amount, qtrue );
-				}
-				ent->client->ps.persistant[PERS_SCORE] -= cost;
-			}
-		}
-
-		return;
-	}
-
-
-	for ( i = 0; i < numProducts; i++ ) {
-		if ( products[i].name && Q_stricmp( products[i].name, name ) == 0 ) {
-			it = BG_FindItem( name );
-			if ( !it ) {
-				trap_SendServerCommand( ent - g_entities, "print \"Cannot buy an item that does not exist\n\"" );
-				return;
-			}
-
-			/*if ( money < products[i].price) {
-			        trap_SendServerCommand( ent-g_entities, "print \"Not enough money\n\"");
-			        return;
-			}*/
-
-			if ( COM_BitCheck( ent->client->ps.weapons, products[i].weapon ) ) {
-				trap_SendServerCommand( ent - g_entities, "print \"You already have this item\n\"" );
-				return;
-			}
-
-			if ( products[i].weapon == WP_THOMPSON ) {
-				COM_BitSet( ent->client->ps.weapons, WP_THOMPSON );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_THOMPSON )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_THOMPSON )] += 6;
-			}
-
-			if ( products[i].weapon == WP_STEN ) {
-				COM_BitSet( ent->client->ps.weapons, WP_STEN );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_STEN )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_STEN )] += 6;
-			}
-
-			if ( products[i].weapon == WP_LUGER ) {
-				COM_BitSet( ent->client->ps.weapons, WP_LUGER );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_LUGER )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_LUGER )] += 6;
-			}
-
-			if ( products[i].weapon == WP_COLT ) {
-				COM_BitSet( ent->client->ps.weapons, WP_COLT );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_COLT )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_COLT )] += 6;
-			}
-
-			if ( products[i].weapon == WP_AKIMBO ) {
-				COM_BitSet( ent->client->ps.weapons, WP_AKIMBO );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_AKIMBO )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_AKIMBO )] += 6;
-			}
-
-			if ( products[i].weapon == WP_SILENCER ) {
-				COM_BitSet( ent->client->ps.weapons, WP_SILENCER );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_SILENCER )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_SILENCER )] += 6;
-			}
-
-			if ( products[i].weapon == WP_MAUSER ) {
-				COM_BitSet( ent->client->ps.weapons, WP_MAUSER );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_MAUSER )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_MAUSER )] += 3;
-			}
-
-			if ( products[i].weapon == WP_M1GARAND ) {
-				COM_BitSet( ent->client->ps.weapons, WP_M1GARAND );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_M1GARAND )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_M1GARAND )] += 3;
-			}
-
-			if ( products[i].weapon == WP_FG42 ) {
-				COM_BitSet( ent->client->ps.weapons, WP_FG42 );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_FG42 )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_FG42 )] += 6;
-			}
-
-			if ( products[i].weapon == WP_SNOOPERSCOPE ) {
-				COM_BitSet( ent->client->ps.weapons, WP_SNOOPER );
-				COM_BitSet( ent->client->ps.weapons, WP_SNOOPERSCOPE );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_SNOOPERSCOPE )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_SNOOPERSCOPE )] += 3;
-			}
-
-			if ( products[i].weapon == WP_FG42SCOPE ) {
-				COM_BitSet( ent->client->ps.weapons, WP_FG42SCOPE );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_FG42SCOPE )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_FG42SCOPE )] += 3;
-			}
-
-			if ( products[i].weapon == WP_SNIPERRIFLE ) {
-				COM_BitSet( ent->client->ps.weapons, WP_SNIPERRIFLE );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_SNIPERRIFLE )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_SNIPERRIFLE )] += 3;
-			}
-
-			if ( products[i].weapon == WP_GRENADE_PINEAPPLE ) {
-				COM_BitSet( ent->client->ps.weapons, WP_GRENADE_PINEAPPLE );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_GRENADE_PINEAPPLE )] = 1;
-			}
-
-			if ( products[i].weapon == WP_GRENADE_LAUNCHER ) {
-				COM_BitSet( ent->client->ps.weapons, WP_GRENADE_LAUNCHER );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_GRENADE_LAUNCHER )] = 1;
-			}
-
-			if ( products[i].weapon == WP_DYNAMITE ) {
-				COM_BitSet( ent->client->ps.weapons, WP_DYNAMITE );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_DYNAMITE )] = 1;
-			}
-
-			if ( products[i].weapon == WP_VENOM ) {
-				COM_BitSet( ent->client->ps.weapons, WP_VENOM );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_VENOM )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_VENOM )] += 3;
-			}
-
-			if ( products[i].weapon == WP_FLAMETHROWER ) {
-				COM_BitSet( ent->client->ps.weapons, WP_FLAMETHROWER );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_FLAMETHROWER )] += 20;
-			}
-
-			if ( products[i].weapon == WP_PANZERFAUST ) {
-				COM_BitSet( ent->client->ps.weapons, WP_PANZERFAUST );
-				ent->client->ps.ammoclip[BG_FindClipForWeapon( WP_PANZERFAUST )] += 0;
-				ent->client->ps.ammo[BG_FindAmmoForWeapon( WP_PANZERFAUST )] += 1;
-			}
-
-/*
-                        it_ent = G_Spawn();
-                        VectorCopy( ent->r.currentOrigin, it_ent->s.origin );
-                        it_ent->classname = it->classname;
-                        G_SpawnItem( it_ent, it );
-                        FinishSpawningItem( it_ent );
-                        memset( &trace, 0, sizeof( trace ) );
-                        it_ent->active = qtrue;
-                        Touch_Item( it_ent, ent, &trace );
-                        it_ent->active = qfalse;
-                        if ( it_ent->inuse ) {
-                                G_FreeEntity( it_ent );
-                        }
-*/
-			ent->client->ps.persistant[PERS_SCORE] -= products[i].price;
-			trap_SendServerCommand( ent - g_entities, va( "cp \"You bought a %s\n\"", products[i].name ) );
-			return;
-		}
-
-	}
-
-
-}
-#endif
 
 /*
 ==================
@@ -1045,12 +703,6 @@ void Cmd_Kill_f( gentity_t *ent ) {
 		return;
 	}
 
-#ifdef MONEY
-	if ( g_gametype.integer == GT_COOP_BATTLE ) {
-		ent->client->ps.persistant[PERS_SCORE] -= ent->health;
-	}
-#endif
-
 	ent->flags &= ~FL_GODMODE;
 	ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
 	player_die( ent, ent, ent, 100000, MOD_SUICIDE );
@@ -1099,73 +751,6 @@ void SetTeam( gentity_t *ent, const char *s, qboolean force ) {
 	} else if ( !Q_stricmp( s, "spectator" ) || !Q_stricmp( s, "s" ) ) {
 		team = TEAM_SPECTATOR;
 		specState = SPECTATOR_FREE;
-	} else if ( g_gametype.integer == GT_COOP_BATTLE ) {
-		// if running a team game, assign player to one of the teams
-		specState = SPECTATOR_NOT;
-		if ( !Q_stricmp( s, "red" ) || !Q_stricmp( s, "r" ) ) {
-			team = TEAM_RED;
-		} else if ( !Q_stricmp( s, "blue" ) || !Q_stricmp( s, "b" ) ) {
-			team = TEAM_BLUE;
-		} else {
-			// pick the team with the least number of players
-			team = PickTeam( clientNum );
-		}
-
-		// NERVE - SMF - merge from team arena
-		if ( g_teamForceBalance.integer && !client->pers.localClient && !( ent->r.svFlags & SVF_BOT ) ) {
-			int counts[TEAM_NUM_TEAMS];
-
-			counts[TEAM_BLUE] = TeamCount( clientNum, TEAM_BLUE );
-			counts[TEAM_RED] = TeamCount( clientNum, TEAM_RED );
-
-			// We allow a spread of one
-			if ( team == TEAM_RED && counts[TEAM_RED] - counts[TEAM_BLUE] >= 1 ) {
-				trap_SendServerCommand( clientNum,
-										"cp \"The Axis has too many players.\n\"" );
-				return; // ignore the request
-			}
-			if ( team == TEAM_BLUE && counts[TEAM_BLUE] - counts[TEAM_RED] >= 1 ) {
-				trap_SendServerCommand( clientNum,
-										"cp \"The Allies have too many players.\n\"" );
-				return; // ignore the request
-			}
-
-			// It's ok, the team we are switching to has less or same number of players
-		}
-		// -NERVE - SMF
-#if 0
-	} else if ( g_gametype.integer != GT_COOP_BATTLE ) {
-		int counts[TEAM_NUM_TEAMS];
-		int numAxis = 1;
-		// if running a team game, assign player to one of the teams
-		specState = SPECTATOR_NOT;
-		if ( !Q_stricmp( s, "red" ) || !Q_stricmp( s, "r" ) ) {
-			team = TEAM_RED;
-		} else if ( !Q_stricmp( s, "blue" ) || !Q_stricmp( s, "b" ) ) {
-			team = TEAM_BLUE;
-		} else {
-			// pick the team with the least number of players
-			team = TEAM_FREE;
-		}
-
-		counts[TEAM_RED] = TeamCount( ent - g_entities, TEAM_RED );
-		if ( level.numPlayingClients == 8 ) {
-			numAxis = 2;
-		} else {
-			numAxis = 1;
-		}
-
-		if ( team == TEAM_RED && counts[TEAM_RED] >= numAxis && !force ) {        // cvar this ?
-			trap_SendServerCommand( clientNum, "cp \"The Axis team has too many players.\n\"" );
-			return;
-		}
-
-		// NERVE - SMF
-		/*if ( team != ent->client->sess.sessionTeam && g_gamestate.integer == GS_PLAYING && !force ) {
-			trap_SendServerCommand( clientNum, "cp \"You cannot switch during a match.\nplease wait until the round ends.\n\"" );
-			return;	// ignore the request
-		}*/
-#endif
 	} else {
 		// force them to spectators if there aren't any spots free
 		team = TEAM_FREE;
@@ -1212,15 +797,7 @@ void SetTeam( gentity_t *ent, const char *s, qboolean force ) {
 	} else {
 		// if you have a very low score, and you go to spectator and back to the game you get one point
 		// this can be abused to reset your score in case its bad, need to fix this
-#ifdef MONEY
-		if ( g_gametype.integer != GT_COOP_BATTLE ) {
-			ent->client->ps.persistant[PERS_SCORE] = 1;
-		} else {
-			ent->client->ps.persistant[PERS_SCORE] = 0;
-		}
-#else
 		ent->client->ps.persistant[PERS_SCORE] = 1;
-#endif
 	}
 
 	client->sess.sessionTeam = team;
@@ -1883,10 +1460,8 @@ void Cmd_Where_f( gentity_t *ent ) {
 }
 
 static const char *gameNames[] = {
-	"Battle",
-	"Speedrun",
-	"Cooperative",
-	"Single Player"
+	"Survival",
+	"Cooperative"
 };
 
 /*
@@ -2321,11 +1896,9 @@ void Cmd_Teleport_f( gentity_t *ent ) {
 	qboolean foundPlayer = qtrue;
 	gentity_t *clients[MAX_COOP_CLIENTS];
 
-	if ( g_gametype.integer == GT_COOP_SPEEDRUN || g_gametype.integer == GT_SINGLE_PLAYER ) {
+	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
 		return;
 	}
-
-	// FIXME: in speedrun, we need to teleport to somewhere else ..
 
 	// not for dead people !
 	if ( ent->client->ps.eFlags & EF_DEAD ) {
@@ -2974,15 +2547,6 @@ ClientDamage
 void ClientDamage( gentity_t *clent, int entnum, int enemynum, int id ) {
 	gentity_t *enemy, *ent;
 	vec3_t vec;
-
-#ifdef MONEY
-		// no no no no no no no no no no no
-		// aka: I dont want this in a competitive gametype
-		// yes this breaks the tesla and the spirits and others in battle gametype
-		if ( g_gametype.integer == GT_COOP_BATTLE || g_gametype.integer == GT_COOP_SPEEDRUN ) {
-			return;
-		}
-#endif
 
 	ent = &g_entities[entnum];
 
@@ -3674,10 +3238,6 @@ void ClientCommand( int clientNum ) {
 
 	if ( Q_stricmp( cmd, "give" ) == 0 ) {
 		Cmd_Give_f( ent );
-#ifdef MONEY
-	} else if ( Q_stricmp( cmd, "buy" ) == 0 ) {
-		Cmd_Buy_f( ent );
-#endif
 	} else if ( Q_stricmp( cmd, "god" ) == 0 )  {
 		Cmd_God_f( ent );
 	} else if ( Q_stricmp( cmd, "nofatigue" ) == 0 )  {

@@ -1209,34 +1209,6 @@ static float CG_DrawCoopOverlay( float y ) {
 	return y;
 }
 
-static void CG_DrawTimeLeft( void ) {
-
-	const char *s;
-	int msec, mins, seconds, tens;
-	float color[4] = {1, 1, 1, 1};
-
-
-	if ( cgs.gametype != GT_COOP_SPEEDRUN ) {
-		return;
-	}
-
-	if ( cg_fixedAspect.integer == 2 ) {
-		CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
-	}
-
-	msec = ( cgs.timelimit * 60.f * 1000.f ) - ( cg.time - cgs.levelStartTime );
-
-	seconds = msec / 1000;
-	mins = seconds / 60;
-	seconds -= mins * 60;
-	tens = seconds / 10;
-	seconds -= tens * 10;
-
-	s = va( "%2.0f:%i%i", (float)mins, tens, seconds );
-
-	CG_DrawStringExt( 5, 105, s, color, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
-}
-
 /*
 =====================
 CG_DrawUpperRight
@@ -4185,22 +4157,6 @@ static void CG_DrawWarmup( void ) {
 	}
 
 	if ( sec < 0 ) {
-		if ( cgs.gametype == GT_COOP_BATTLE ) {
-			s = "Waiting for 1 player";
-		} else {
-			return;
-		}
-
-		// s = "Waiting for players";
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-		CG_DrawBigString( 320 - w / 2, 40, s, 1.0F );
-#ifdef MONEY
-		s = "buy items with /buy and /quickbuy";
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-		s = "buy items with ^2/buy^7 and ^2/quickbuy^7";
-		CG_DrawBigString( 320 - w / 2, 80, s, 1.0F );
-#endif
-		cg.warmupCount = 0;
 		return;
 	}
 	
@@ -4863,8 +4819,6 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 	if ( !cg_paused.integer ) {
 		CG_DrawUpperRight(stereoFrame);
 	}
-
-	CG_DrawTimeLeft();
 
 	if ( !CG_DrawFollow() ) {
 		CG_DrawWarmup();

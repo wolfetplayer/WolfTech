@@ -171,7 +171,6 @@ typedef enum {
 #define CS_MULTI_MAPDESC    16
 #define CS_MULTI_OBJECTIVE1 17
 //#define CS_MULTI_OBJECTIVE2 18
-#define CS_BATTLE_INFO 18
 #define CS_MULTI_OBJECTIVE3 19
 #define CS_MULTI_OBJECTIVE4 20
 #define CS_MULTI_OBJECTIVE5 21
@@ -219,8 +218,6 @@ typedef enum {
 #endif
 
 typedef enum {
-	GT_COOP_BATTLE,     // 1vs1
-	GT_COOP_SPEEDRUN,
 	GT_COOP_SURVIVAL,
 
 	// other coop variations should come before this one, because we will

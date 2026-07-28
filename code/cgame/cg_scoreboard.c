@@ -42,11 +42,7 @@ void CG_DrawCoopScoreboard( void ) {
 	long score;
 	int ping;
 #ifdef MONEY
-	int deaths = 0;
-	float damage_ratio = 0.0f;
 	int highest_score;
-	float highest_damage_ratio;
-	int lowest_deaths;
 	float green[4] = {0, 1, 0, 1};
 #endif
 	const char *s;
@@ -64,26 +60,6 @@ void CG_DrawCoopScoreboard( void ) {
 
 	if ( !color ) {     // currently faded out, don't draw
 		return;
-	}
-
-	// draw winner
-	if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION && cgs.gametype == GT_COOP_BATTLE ) {
-		const char *s, *buf;
-		int w;
-
-		s = CG_ConfigString( CS_BATTLE_INFO );
-		buf = Info_ValueForKey( s, "winner" );
-#ifdef LOCALISATION
-		w = CG_DrawStrlen( va( CG_TranslateString( "%s wins!" ), buf ) ) * BIGCHAR_WIDTH;
-		CG_DrawBigString( 320 - ( w / 2 ), 40, va( CG_TranslateString( "%s wins !" ), buf ), 1.0F );
-#else
-		w = CG_DrawStrlen( va( "%s wins!", buf ) ) * BIGCHAR_WIDTH;
-		CG_DrawBigString( 320 - ( w / 2 ), 40, va( "%s wins !", buf ), 1.0F );
-#endif
-		if ( !cg.latchVictorySound ) {
-			cg.latchVictorySound = qtrue;
-			trap_S_StartLocalSound( trap_S_RegisterSound( "sound/multiplayer/music/l_complete_2.wav" ), CHAN_LOCAL_SOUND );
-		}
 	}
 
 	color2[3] = color[3];
@@ -111,15 +87,6 @@ void CG_DrawCoopScoreboard( void ) {
 #else
 	CG_DrawStringExt( 175, 130, va( "Name" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #endif
-#ifdef MONEY
-	if ( cgs.gametype == GT_COOP_BATTLE ) {
-		w = strlen( "Ratio" ) * SMALLCHAR_WIDTH;
-		CG_DrawStringExt( 170 + 140 - w, 130, va( "Ratio" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
-
-		w = strlen( "Deaths" ) * SMALLCHAR_WIDTH;
-		CG_DrawStringExt( 170 + 210 - w, 130, va( "Deaths" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
-	}
-#endif
 	w = strlen( "Score" ) * SMALLCHAR_WIDTH;
 #ifdef LOCALISATION
 	CG_DrawStringExt( 170 + 255 - w, 130, CG_TranslateString( "Score" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
@@ -139,28 +106,10 @@ void CG_DrawCoopScoreboard( void ) {
 
 #ifdef MONEY
 	highest_score = 0;
-	highest_damage_ratio = 0.0;
-	lowest_deaths = 99;
 
 	for ( i = 0; i < MAX_COOP_CLIENTS; i++ ) {
-		float tmp = 0.0;
-
 		if ( cg.scores[i].score > highest_score ) {
 			highest_score = cg.scores[i].score;
-		}
-
-		if ( cg.scores[i].deaths < lowest_deaths ) {
-			lowest_deaths = cg.scores[i].deaths;
-		}
-
-		if ( cg.scores[i].damage_received > 0 ) {
-			tmp = (float)cg.scores[i].damage_given / (float)cg.scores[i].damage_received;
-		} else {
-			tmp = (float)cg.scores[i].damage_given;
-		}
-
-		if ( tmp > highest_damage_ratio ) {
-			highest_damage_ratio = tmp;
 		}
 	}
 #endif
@@ -177,18 +126,6 @@ void CG_DrawCoopScoreboard( void ) {
 		if ( i < cg.numScores ) {
 			ping = cg.scores[i].ping;
 			score = cg.scores[i].score;
-#ifdef MONEY
-			if ( cgs.gametype == GT_COOP_BATTLE ) {
-				deaths = cg.scores[i].deaths;
-
-				if ( cg.scores[i].damage_received > 0 ) {
-					damage_ratio = (float)cg.scores[i].damage_given / (float)cg.scores[i].damage_received;
-				} else {
-					damage_ratio = (float)cg.scores[i].damage_given;
-				}
-			}
-#endif
-
 
 			place++;
 			if ( ci->team == TEAM_SPECTATOR ) {
@@ -202,30 +139,6 @@ void CG_DrawCoopScoreboard( void ) {
 			} else {
 				CG_DrawStringExt( 175, 154 + ( 28 * i ) + 1, va( "%i. %s", place, ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
 			}
-
-#ifdef MONEY
-			if ( cgs.gametype == GT_COOP_BATTLE ) {
-				w = strlen( va( "%.2f", damage_ratio ) ) * SMALLCHAR_WIDTH;
-				if ( ci->team != TEAM_SPECTATOR ) {
-					if ( damage_ratio == highest_damage_ratio ) {
-						CG_DrawStringExt( 170 + 140 - w, 154 + ( 28 * i ) + 1, va( "%.2f", damage_ratio ), green, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
-					} else {
-						CG_DrawStringExt( 170 + 140 - w, 154 + ( 28 * i ) + 1, va( "%.2f", damage_ratio ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
-					}
-				}
-
-
-				w = strlen( va( "%d", deaths ) ) * SMALLCHAR_WIDTH;
-				if ( ci->team != TEAM_SPECTATOR ) {
-					if ( cg.scores[i].deaths == lowest_deaths ) {
-						CG_DrawStringExt( 170 + 210 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].deaths ), green, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
-					} else {
-						CG_DrawStringExt( 170 + 210 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].deaths ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
-					}
-				}
-			}
-#endif
-
 
 			if ( maxlives )
 			{
@@ -290,11 +203,7 @@ void CG_DrawCoopScoreboard( void ) {
 
 
 
-	if ( cgs.gametype == GT_COOP_SPEEDRUN ) {
-		msec = ( cgs.timelimit * 60.f * 1000.f ) - ( cg.time - cgs.levelStartTime );
-	} else {
-		msec = ( cg.time - cgs.levelStartTime );
-	}
+	msec = ( cg.time - cgs.levelStartTime );
 
 	seconds = msec / 1000;
 	mins = seconds / 60;
@@ -302,15 +211,7 @@ void CG_DrawCoopScoreboard( void ) {
 	tens = seconds / 10;
 	seconds -= tens * 10;
 
-	if ( cgs.gametype == GT_COOP_SPEEDRUN )
-#ifdef LOCALISATION
-	{ s = va( CG_TranslateString( "Time to beat: %2.0f:%i%i" ), (float)mins, tens, seconds ); }
-#else
-	{ s = va( "Time to beat: %2.0f:%i%i", (float)mins, tens, seconds ); }
-#endif
-	else {
-		s = va( "%2.0f:%i%i", (float)mins, tens, seconds );
-	}
+	s = va( "%2.0f:%i%i", (float)mins, tens, seconds );
 
 	CG_DrawStringExt( 170, 105, s, color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 

@@ -178,29 +178,19 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 	}
 
 	// initial team determination
-	if ( g_gametype.integer == GT_COOP_BATTLE ) {
- 		// always spawn as spectator in team games
- 		sess->sessionTeam = TEAM_SPECTATOR;
-		sess->spectatorState = SPECTATOR_FREE;
-
-		if ( value[0] || g_teamAutoJoin.integer ) {
-			SetTeam( &g_entities[client - level.clients], value, qfalse );
- 		}
- 	} else {
-		if ( value[0] == 's' ) {
-		// a willing spectator, not a waiting-in-line
-		sess->sessionTeam = TEAM_SPECTATOR;
+	if ( value[0] == 's' ) {
+	// a willing spectator, not a waiting-in-line
+	sess->sessionTeam = TEAM_SPECTATOR;
+	} else {
+		if ( g_maxGameClients.integer > 0 &&
+			level.numNonSpectatorClients >= g_maxGameClients.integer ) {
+			sess->sessionTeam = TEAM_SPECTATOR;
 		} else {
-			if ( g_maxGameClients.integer > 0 &&
-				level.numNonSpectatorClients >= g_maxGameClients.integer ) {
-				sess->sessionTeam = TEAM_SPECTATOR;
-			} else {
-				sess->sessionTeam = TEAM_FREE;
-			}
+			sess->sessionTeam = TEAM_FREE;
 		}
-
-		sess->spectatorState = SPECTATOR_FREE;
 	}
+
+	sess->spectatorState = SPECTATOR_FREE;
 
 	AddTournamentQueue(client);
 

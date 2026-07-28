@@ -209,7 +209,7 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_restarted, "g_restarted", "0", CVAR_ROM, 0, qfalse  },
 
 	// latched vars
-	{ &g_gametype, "g_gametype", "2", CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse  },
+	{ &g_gametype, "g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse  },
 
 	// Rafael gameskill
 	{ &g_gameskill, "g_gameskill", "2", CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse  },   // (SA) new default '2' (was '1')
@@ -529,9 +529,6 @@ static qboolean G_CanShowExitHint( gentity_t *entity, gentity_t *brush ) {
 		return qfalse;
 	}
 
-	if ( g_gametype.integer == GT_COOP_BATTLE ) {
-		return qfalse;
-	}
 	return qtrue;
 }
 
@@ -1256,9 +1253,6 @@ int G_SendMissionStats( void ) {
 	gentity_t   *player;
 	int i, j, attempts = 0, playtime = 0, minutes, objs = 0, sec = 0, treas = 0;
 	int canExit = 0;
-	vmCvar_t maptime;
-	char mapname[MAX_QPATH];
-	static qboolean maptime_saved = qfalse;
 	int max_prop_damage = 0;
 	int max_airtime = 0;
 	int max_pickups = 0;
@@ -1295,17 +1289,6 @@ int G_SendMissionStats( void ) {
 
 	memset( cmd, 0, sizeof( cmd ) );
 	Q_strcat( cmd, sizeof( cmd ), "s=" );
-
-	// store the maptime in a cvar
-	if ( !maptime_saved && objs >= level.numObjectives && g_gametype.integer == GT_COOP_SPEEDRUN ) {
-		float newtime = ( level.time - level.startTime ) / 60000.f;
-
-		trap_Cvar_VariableStringBuffer( "mapname", mapname, sizeof( mapname ) );
-		//trap_Cvar_Register( &maptime, va("g_%s_timelimit", mapname), va("%d", playtime), CVAR_ROM | CVAR_ARCHIVE);
-		trap_Cvar_Register( &maptime, va( "g_%s_timelimit", mapname ), "20", CVAR_ROM | CVAR_ARCHIVE );
-		maptime.value = newtime;
-		maptime_saved = qtrue;
-	}
 
 	// 'kills' no longer tracked
 
@@ -1439,7 +1422,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	level.startTime = levelTime;
 
 	level.lastSpawnSave = levelTime;
-	level.lastBattleScorecheck = levelTime;
 
 	level.numSecrets = 0;   //----(SA)	added
 
@@ -1520,40 +1502,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	if ( fps > 0 && g_limbotime.integer <= ( 1000 / fps ) ) {
 		trap_Cvar_Set( "g_limbotime", "1000" );
 		G_Printf( "WARNING: g_limbotime <= (1000 / sv_fps), forcing to 1000 (one second)\n" );
-	}
-
-	if ( g_gametype.integer == GT_COOP_BATTLE ) {
-		trap_Cvar_Set( "g_friendlyfire", "2" );
-		//trap_Cvar_Set("g_spawnpoints", "1");
-#ifdef INGAME_CUTSCENES
-		trap_Cvar_Set( "g_skipcutscenes", "1" );
-#endif
-		trap_Cvar_Set( "g_freeze", "0" );
-		//trap_Cvar_Set("g_warmup", "20");
-		//trap_Cvar_Set("g_reinforce", "0");
-		trap_Cvar_Set( "sv_maxcoopclients", "2" );
-		trap_Cvar_Set( "g_teleporttime", "30000" );
-	} else {
-		//trap_Cvar_Set("g_warmup", "0");
-		//trap_Cvar_Set("g_warmup", "20");
-	}
-
-	if ( g_gametype.integer == GT_COOP_SPEEDRUN ) {
-		char mapname[MAX_QPATH];
-		char maptimelimit[MAX_QPATH];
-		float newtimelimit = 0.0;
-
-		trap_Cvar_VariableStringBuffer( "mapname", mapname, sizeof( mapname ) );
-		trap_Cvar_VariableStringBuffer( va( "g_%s_timelimit", mapname ), maptimelimit, sizeof( maptimelimit ) );
-
-		newtimelimit = atof( maptimelimit );
-
-		if ( newtimelimit ) {
-			trap_Cvar_Set( "timelimit", va( "%f", newtimelimit ) );
-		} else {
-			trap_Cvar_Set( "timelimit", "20" );
-		}
-		G_Printf( "Timelimit is: %f\n", g_timelimit.value );
 	}
 
 	G_Script_ScriptLoad();
@@ -1880,11 +1828,6 @@ void CalculateRanks( void ) {
 	int score;
 	int newScore;
 	gclient_t *cl;
-	
-
-#ifndef MONEY
-	int time = ( level.time - level.startTime ) / 1000;
-#endif
 
 	level.follow1 = -1;
 	level.follow2 = -1;
@@ -1913,38 +1856,6 @@ void CalculateRanks( void ) {
 					if ( !( g_entities[i].r.svFlags & SVF_BOT ) ) {
 						level.numVotingClients++;
 						level.numPlayingCoopClients++;
-
-						if ( !( g_entities[i].r.svFlags & SVF_CASTAI ) && g_gametype.integer == GT_COOP_BATTLE && !level.intermissiontime ) {
-							// TODO:
-							// in future versions we will track: dg/dr ratio, deaths (or accuracy, we can decide on this later) and "money"
-							// the player who has the best numbers of those three will win the round
-							// players will start with one gun, and a bit of ammo, every hit will result in "money"
-							// with their money they can buy new guns or they can save it up to maybe win the round
-							// bullets need to be bought too
-							// so for example: player A has a dg/dr ratio of 1.5, 3 deaths and 500moneys
-							// player B has: 1.4, 2 and 400
-							// player B will win the game
-#ifndef MONEY
-							float dr = (float)level.clients[i].sess.damage_received;
-							float dg = (float)level.clients[i].sess.damage_given;
-							float score = 0.0;
-
-							if ( dr == 0 && dg == 0 ) {
-								level.clients[i].ps.persistant[PERS_SCORE] = 0;;
-							} else {
-								if ( dr == 0 ) {
-									dr = 1.0;
-								}
-								if ( dg == 0 ) {
-									dg = 1.0;
-								}
-
-								score = ( dg / ( dr * time ) ) * 1000.0;
-								level.clients[i].ps.persistant[PERS_SCORE] = (int)score;
-								//G_Printf("%f: %f %f %d\n", score, dg, dr, time);
-							}
-#endif
-						}
 
 						if ( g_gametype.integer == GT_COOP && g_maxlives.integer && !g_sharedlives.integer ) { // every 1000 points, bonus life !
 							int value = level.clients[i].ps.persistant[PERS_SCORE];
@@ -2205,13 +2116,6 @@ void ExitLevel( void ) {
 	char nextmap[MAX_STRING_CHARS];
 	char d1[MAX_STRING_CHARS];
 
-	if ( g_gametype.integer <= GT_COOP_SPEEDRUN ) {
-		//char mapname[1024];
-		//trap_Cvar_VariableStringBuffer( "mapname", mapname, sizeof( mapname ) );
-		//trap_Cvar_Set( "nextmap", va("coopmap %s", mapname) );
-		trap_Cvar_Set( "nextmap", "map_restart 0" );
-	}
-
 	trap_Cvar_VariableStringBuffer( "nextmap", nextmap, sizeof(nextmap) );
 	trap_Cvar_VariableStringBuffer( "d1", d1, sizeof(d1) );
 
@@ -2308,12 +2212,7 @@ Append information about this game to the log file
 void LogExit( const char *string ) {
 	int i, numSorted;
 	gclient_t       *cl;
-#ifdef MONEY
-	gclient_t       *a;
-	gclient_t       *b;
-#endif
-	char cs[MAX_INFO_STRING];
- 
+
 	// NERVE - SMF - do not allow LogExit to be called in non-playing gamestate
 	if ( g_gamestate.integer != GS_PLAYING ) {
 		return;
@@ -2352,87 +2251,8 @@ void LogExit( const char *string ) {
 					 cl->pers.netname );
 	}
 
-	if ( g_gametype.integer == GT_COOP_BATTLE ) {
-#ifdef MONEY
-		int a_score = 0;
-		int b_score = 0;
-
-		trap_GetConfigstring( CS_BATTLE_INFO, cs, sizeof( cs ) );
-		// only for 2 players
-		a = &level.clients[level.sortedClients[0]];
-		b = &level.clients[level.sortedClients[1]];
-
-		// if a player score is below 0 he looses
-		if ( a->ps.persistant[PERS_SCORE] < 0 && b->ps.persistant[PERS_SCORE] > 0 ) {
-			Info_SetValueForKey( cs, "winner", va( "%s", b->pers.netname ) ); // todo, clientnum of real winner
-		} else if ( b->ps.persistant[PERS_SCORE] < 0 && a->ps.persistant[PERS_SCORE] > 0 ) {
-			Info_SetValueForKey( cs, "winner", va( "%s", a->pers.netname ) ); // todo, clientnum of real winner
-		} else { // both are below or above zero, so lets count their other skills
-			int a_dmgr = ( a->sess.damage_received ) ? a->sess.damage_received : 1;
-			int b_dmgr = ( b->sess.damage_received ) ? b->sess.damage_received : 1;
-			int a_dmdg_ratio = a->sess.damage_given / a_dmgr;
-			int b_dmdg_ratio = b->sess.damage_given / b_dmgr;
-			int a_deaths = a->sess.deaths;
-			int b_deaths = b->sess.deaths;
-
-			if ( a_dmdg_ratio > b_dmdg_ratio ) {
-				a_score++;
-			}
-			if ( a_dmdg_ratio < b_dmdg_ratio ) {
-				b_score++;
-			}
-
-			if ( a_deaths < b_deaths ) {
-				a_score++;
-			}
-			if ( a_deaths > b_deaths ) {
-				b_score++;
-			}
-
-			if ( a->ps.persistant[PERS_SCORE] > b->ps.persistant[PERS_SCORE] ) {
-				a_score++;
-			}
-			if ( a->ps.persistant[PERS_SCORE] < b->ps.persistant[PERS_SCORE] ) {
-				b_score++;
-			}
-
-			if ( a_score > b_score ) {
-				Info_SetValueForKey( cs, "winner", va( "%s", a->pers.netname ) );
-			} else if ( a_score < b_score ) {
-				Info_SetValueForKey( cs, "winner", va( "%s", b->pers.netname ) );
-			} else {
-				if ( a->ps.persistant[PERS_SCORE] > b->ps.persistant[PERS_SCORE] ) {
-					Info_SetValueForKey( cs, "winner", va( "%s", a->pers.netname ) );
-				} else if ( a->ps.persistant[PERS_SCORE] < b->ps.persistant[PERS_SCORE] ) {
-					Info_SetValueForKey( cs, "winner", va( "%s", b->pers.netname ) );
-				} else {
-					if ( a_deaths < b_deaths ) {
-						Info_SetValueForKey( cs, "winner", va( "%s", a->pers.netname ) );
-					} else if ( a_deaths > b_deaths ) {
-						Info_SetValueForKey( cs, "winner", va( "%s", b->pers.netname ) );
-					} else {
-						if ( a_dmdg_ratio > b_dmdg_ratio ) {
-							Info_SetValueForKey( cs, "winner", va( "%s", a->pers.netname ) );
-						} else if ( a_dmdg_ratio < b_dmdg_ratio ) {
-							Info_SetValueForKey( cs, "winner", va( "%s", b->pers.netname ) );
-						} else {
-							Info_SetValueForKey( cs, "winner", "nobody" );
-						}
-					}
-				}
-			}
-		}
-		trap_SetConfigstring( CS_BATTLE_INFO, cs );
-#else
-		trap_GetConfigstring( CS_BATTLE_INFO, cs, sizeof( cs ) );
-		cl = &level.clients[level.sortedClients[0]];
-		Info_SetValueForKey( cs, "winner", va( "%s", cl->pers.netname ) ); // todo, clientnum of real winner
-		trap_SetConfigstring( CS_BATTLE_INFO, cs );
-#endif
-	}
-
 	// an empty server needs to be restarted, or new connecting clients get disconnected
-	if ( g_maxlives.integer || ( g_gametype.integer == GT_COOP_SPEEDRUN && level.numPlayingCoopClients == 0 ) ) {
+	if ( g_maxlives.integer ) {
 		trap_SendConsoleCommand( EXEC_NOW, "map_restart 15\n" );
 	}
 }
@@ -2583,26 +2403,6 @@ void CheckExitRules( void ) {
 		trap_Cvar_Update( &g_timelimit );
 	}
 
-	if ( g_timelimit.integer && !level.warmupTime && g_gametype.integer == GT_COOP_SPEEDRUN ) {
-		if ( level.time - level.startTime >= g_timelimit.integer * 60000 ) {
-			// check for sudden death
-			// DHM - Nerve :: exclude GT_WOLF
-			//if ( g_gametype.integer != GT_WOLF && g_gametype.integer != GT_CTF && ScoreIsTied() ) {
-			// score is tied, so don't end the game
-			//	return;
-			//}
-
-			// NERVE - SMF - do not allow LogExit to be called in non-playing gamestate
-			// - This already happens in LogExit, but we need it for the print command
-			if ( g_gamestate.integer != GS_PLAYING ) {
-				return;
-			}
-			trap_SendServerCommand( -1, "print \"Timelimit hit.\n\"" );
-			LogExit( "Timelimit hit." );
-			return;
-		}
-	}
-
 	if ( g_gametype.integer <= GT_COOP && g_maxlives.integer ) {
 		if ( level.numFinalDead >= level.numVotingClients && level.numVotingClients > 0 ) {
 			trap_SendServerCommand( -1, "cp \"Every one is dead.\n\"" );
@@ -2658,72 +2458,6 @@ FUNCTIONS CALLED EVERY FRAME
 
 ========================================================================
 */
-
-void SetBattleScore( void ) {
-	if ( level.lastBattleScorecheck + 1000 < level.time ) {
-		CalculateRanks();
-		level.lastBattleScorecheck = level.time;
-	}
-
-}
-
-void CheckCoopBattle( void ) {
-
-	if ( level.numPlayingCoopClients == 0 ) {
-		return;
-	}
-
-	if ( g_gametype.integer == GT_COOP_BATTLE ) {
-
-		// pull in a spectator if needed
-		if ( level.numPlayingCoopClients < 2 ) {
-			AddTournamentPlayer();
-		}
-
-		// if we don't have two players, go back to "waiting for players"
-		if ( level.numPlayingCoopClients != 2 ) {
-			if ( level.warmupTime != -1 ) {
-				level.warmupTime = -1;
-				trap_SetConfigstring( CS_WARMUP, va( "%i", level.warmupTime ) );
-				G_LogPrintf( "Warmup:\n" );
-			}
-			return;
-		}
-
-		if ( level.warmupTime == 0 ) {
-			return;
-		}
-
-		// if the warmup is changed at the console, restart it
-		if ( g_warmup.modificationCount != level.warmupModificationCount ) {
-			level.warmupModificationCount = g_warmup.modificationCount;
-			level.warmupTime = -1;
-		}
-
-		// if all players have arrived, start the countdown
-		if ( level.warmupTime < 0 ) {
-			if ( level.numPlayingCoopClients == 2 ) {
-				// fudge by -1 to account for extra delays
-				if ( g_warmup.integer > 1 ) {
-					level.warmupTime = level.time + ( g_warmup.integer - 1 ) * 1000;
-				} else {
-					level.warmupTime = 0;
-				}
-
-				trap_SetConfigstring( CS_WARMUP, va( "%i", level.warmupTime ) );
-			}
-			return;
-		}
-		// if the warmup time has counted down, restart
-		if ( level.time > level.warmupTime ) {
-			level.warmupTime += 10000;
-			trap_Cvar_Set( "g_restarted", "1" );
-			trap_SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
-			level.restarted = qtrue;
-			return;
-		}
-	}
-}
 
 /*
 =============
@@ -3256,21 +2990,13 @@ void G_RunFrame( int levelTime ) {
 	CheckGameState();
 
 	// NERVE - SMF - check game state
-	if (g_gametype.integer == GT_COOP || g_gametype.integer == GT_COOP_SPEEDRUN )
+	if (g_gametype.integer == GT_COOP)
 	{
 		CheckCoop();
-	}
-	else if (g_gametype.integer == GT_COOP_BATTLE)
-	{
-		// wait for 2 players
-		CheckCoopBattle();
 	} else if (g_gametype.integer == GT_COOP_SURVIVAL)
 	{
 		CheckCoopSurvival();
 	}
-
-
-	SetBattleScore();
 
 	// see if it is time to end the level
 	CheckExitRules();

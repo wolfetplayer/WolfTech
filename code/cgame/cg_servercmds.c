@@ -1605,10 +1605,6 @@ static void CG_ServerCommand( void ) {
 	if ( !strcmp( cmd, "chat" ) ) {
 		const char *s;
 
-		if ( cgs.gametype == GT_COOP_BATTLE && cg_teamChatsOnly.integer ) {
-			return;
-		}
-
 		if ( atoi( CG_Argv( 2 ) ) ) {
 			s = CG_LocalizeServerCommand( CG_Argv( 1 ) );
 		} else {

@@ -1076,8 +1076,6 @@ extern void CheckVote ( void ) ;
 extern void CheckCoop ( void ) ;
 extern void CheckCoopSurvival (void);
 extern void CheckGameState ( void ) ;
-extern void CheckCoopBattle ( void ) ;
-extern void SetBattleScore ( void ) ;
 extern void CheckExitRules ( void ) ;
 extern qboolean ScoreIsTied ( void ) ;
 extern void CheckIntermissionExit ( void ) ;
@@ -1200,9 +1198,6 @@ extern void Cmd_God_f ( gentity_t * ent ) ;
 extern void Cmd_Give_f ( gentity_t * ent ) ;
 
 #ifdef MONEY
-extern void Cmd_Buy_f ( gentity_t * ent ) ;
-extern int G_GetWeaponPrice ( int weapon ) ;
-extern int G_GetAmmoPrice ( int weapon ) ;
 #endif
 
 extern void Cmd_Fogswitch_f ( void ) ;

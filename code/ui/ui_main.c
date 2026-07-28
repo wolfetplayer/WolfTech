@@ -95,8 +95,6 @@ static const serverFilter_t serverFilters[] = {
 static const int numServerFilters = ARRAY_LEN( serverFilters );
 
 static const char *coopGameTypes[] = {
-	"Battle",
-	"Speedrun",
 	"Survival",
 	"Cooperative"
 };
@@ -7475,26 +7473,6 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			Menus_CloseAll();
 			Menus_OpenByName( "wm_quickmessageAlt" );
 			return;
-#ifdef MONEY
-		case UIMENU_WM_QUICKBUY:
-			// FYI this offests cursor otherwise it's just there
-			// where you left it - eg can end up showing in middle
-			// of screen when quickbuy or quickmessage is visible..
-			DC->cursorx = 639;
-			DC->cursory = 479;
-			trap_Key_SetCatcher( KEYCATCH_UI );
-			Menus_CloseAll();
-			Menus_OpenByName( "wm_quickbuy" );
-			return;
-
-		case UIMENU_WM_QUICKBUYALT:
-			DC->cursorx = 639;
-			DC->cursory = 479;
-			trap_Key_SetCatcher( KEYCATCH_UI );
-			Menus_CloseAll();
-			Menus_OpenByName( "wm_quickbuyAlt" );
-			return;
-#endif
 
 		case UIMENU_WM_LIMBO:
 			trap_Key_SetCatcher( KEYCATCH_UI );

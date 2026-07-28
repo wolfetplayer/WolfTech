@@ -1076,8 +1076,6 @@ If you have questions concerning this license or the applicable additional terms
 {"CheckCoop", (byte *)CheckCoop},
 {"CheckCoopSurvival", (byte *)CheckCoopSurvival},
 {"CheckGameState", (byte *)CheckGameState},
-{"CheckCoopBattle", (byte *)CheckCoopBattle},
-{"SetBattleScore", (byte *)SetBattleScore},
 {"CheckExitRules", (byte *)CheckExitRules},
 {"ScoreIsTied", (byte *)ScoreIsTied},
 {"CheckIntermissionExit", (byte *)CheckIntermissionExit},
@@ -1200,9 +1198,6 @@ If you have questions concerning this license or the applicable additional terms
 {"Cmd_Give_f", (byte *)Cmd_Give_f},
 
 #ifdef MONEY
-{"Cmd_Buy_f", (byte *)Cmd_Buy_f},
-{"G_GetWeaponPrice", (byte *)G_GetWeaponPrice},
-{"G_GetAmmoPrice", (byte *)G_GetAmmoPrice},
 #endif
 
 {"Cmd_Fogswitch_f", (byte *)Cmd_Fogswitch_f},

@@ -328,19 +328,6 @@ static void CG_TeamVoiceChat_f( void ) {
 	trap_SendConsoleCommand( va( "cmd vsay_team %s\n", chatCmd ) );
 }
 
-#ifdef MONEY
-static void CG_QuickBuy_f( void ) {
-	if ( cgs.gametype != GT_COOP_BATTLE ) {
-		return;
-	}
-	if ( cg_quickMessageAlt.integer ) {
-		trap_UI_Popup( "UIMENU_WM_QUICKBUYALT" );
-	} else {
-		trap_UI_Popup( "UIMENU_WM_QUICKBUY" );
-	}
-}
-#endif
-
 static void CG_QuickMessage_f( void ) {
 	if ( cgs.gametype == GT_SINGLE_PLAYER  ) {
 		return;
@@ -915,10 +902,7 @@ static consoleCommand_t commands[] = {
 	{ "dumpsound", CG_DumpSound_f },
 	{ "listsounds", CG_ListSounds_f },
 	{ "deletesound", CG_DeleteSound_f },
-#ifdef MONEY
-	{ "quickbuy", CG_QuickBuy_f },
-#endif
-	{ "nodebuglines", CG_DisableDebugLines_f },	
+	{ "nodebuglines", CG_DisableDebugLines_f },
 	// -NERVE - SMF
 
 	// Coop 

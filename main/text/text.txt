@@ -13,7 +13,6 @@
 //   QUICK       - ingame_quick.menu
 //   SYSTEM      - system.menu / ingame_system.menu
 //   SERVERINFO  - serverinfo.menu / ingame_serverinfo.menu
-//   QUICKBUY    - wm_quickbuy.menu / wm_quickbuyAlt.menu
 //   PLAY        - play.menu
 //   CREATE      - create.menu
 //=============================================================
@@ -436,69 +435,6 @@ SERVERINFO_GOTOURL                 "Go to server URL"
 SERVERINFO_GOTOMODURL              "Go to mod URL"
 SERVERINFO_EXIT                    "Exit"
 SERVERINFO_REFRESH                 "Refresh"
-
-//=============================================================
-// QUICK BUY (wm_quickbuy.menu / wm_quickbuyAlt.menu)
-//=============================================================
-
-QUICKBUY_BUY                       "Buy"
-QUICKBUY_BUYPISTOLS                "Buy Pistols"
-QUICKBUY_BUYSMG                    "Buy smg"
-QUICKBUY_BUYRIFLE                  "Buy Rifle"
-QUICKBUY_BUYHEAVY                  "Buy Heavy"
-QUICKBUY_BUYBOMBS                  "Buy Bombs"
-QUICKBUY_TAB_PISTOLS               "P. Pistols"
-QUICKBUY_TAB_SMG                   "S. SMG"
-QUICKBUY_TAB_RIFLES                "R. Rifles"
-QUICKBUY_TAB_HEAVY                 "H. Heavy"
-QUICKBUY_TAB_EXPLOSIVES            "E. Explosives"
-QUICKBUY_TAB_AMMO                  "A. Ammo"
-QUICKBUY_TAB_HEALTH                "M. Health"
-QUICKBUY_TAB_STAMINA               "D. Stamina"
-QUICKBUY_ITEM_LUGER                "L. Luger"
-QUICKBUY_ITEM_COLT                 "C. Colt"
-QUICKBUY_ITEM_SILENCER             "S. Silencer"
-QUICKBUY_ITEM_DUALCOLTS            "D. Dual Colts"
-QUICKBUY_ITEM_THOMPSON             "T. Thompson"
-QUICKBUY_ITEM_MP40                 "M. MP40"
-QUICKBUY_ITEM_STEN                 "S. Sten"
-QUICKBUY_ITEM_MAUSER               "M. Mauser Rifle"
-QUICKBUY_ITEM_FG42PARA             "F. FG42 Paratroop Rifle"
-QUICKBUY_ITEM_SNOOPER              "S. Snooper Rifle"
-QUICKBUY_ITEM_SNIPERSCOPE          "t. Sniper Scope"
-QUICKBUY_ITEM_FG42SCOPE            "G. FG42 Scope"
-QUICKBUY_ITEM_VENOM                "V. Venom"
-QUICKBUY_ITEM_FLAMETHROWER         "F. Flamethrower"
-QUICKBUY_ITEM_PANZERFAUST          "P. Panzerfaust"
-QUICKBUY_ITEM_GRENADE              "G. Grenade"
-QUICKBUY_ITEM_PINEAPPLE            "P. Pineapple"
-QUICKBUY_ITEM_DYNAMITE             "D. Dynamite"
-QUICKBUY_ALT_TAB_PISTOLS           "1. Pistols"
-QUICKBUY_ALT_TAB_SMG               "2. SMG"
-QUICKBUY_ALT_TAB_RIFLES            "3. Rifles"
-QUICKBUY_ALT_TAB_HEAVY             "4. Heavy"
-QUICKBUY_ALT_TAB_EXPLOSIVES        "5. Explosives"
-QUICKBUY_ALT_TAB_AMMO              "6. Ammo"
-QUICKBUY_ALT_TAB_HEALTH            "7. Health"
-QUICKBUY_ALT_TAB_STAMINA           "8. Stamina"
-QUICKBUY_ALT_ITEM_LUGER            "1. Luger"
-QUICKBUY_ALT_ITEM_COLT             "2. Colt"
-QUICKBUY_ALT_ITEM_SILENCER         "3. Silencer"
-QUICKBUY_ALT_ITEM_DUALCOLTS        "4. Dual Colts"
-QUICKBUY_ALT_ITEM_THOMPSON         "1. Thompson"
-QUICKBUY_ALT_ITEM_MP40             "2. MP40"
-QUICKBUY_ALT_ITEM_STEN             "3. Sten"
-QUICKBUY_ALT_ITEM_MAUSER           "1. Mauser Rifle"
-QUICKBUY_ALT_ITEM_FG42PARA         "2. FG42 Paratroop Rifle"
-QUICKBUY_ALT_ITEM_SNOOPER          "3. Snooper Rifle"
-QUICKBUY_ALT_ITEM_SNIPERSCOPE      "4. Sniper Scope"
-QUICKBUY_ALT_ITEM_FG42SCOPE        "5. FG42 Scope"
-QUICKBUY_ALT_ITEM_VENOM            "1. Venom"
-QUICKBUY_ALT_ITEM_FLAMETHROWER     "2. Flamethrower"
-QUICKBUY_ALT_ITEM_PANZERFAUST      "3. Panzerfaust"
-QUICKBUY_ALT_ITEM_GRENADE          "1. Grenade"
-QUICKBUY_ALT_ITEM_PINEAPPLE        "2. Pineapple"
-QUICKBUY_ALT_ITEM_DYNAMITE         "3. Dynamite"
 
 //=============================================================
 // SKILL SELECT (play.menu)

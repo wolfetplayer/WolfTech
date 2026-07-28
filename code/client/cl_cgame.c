@@ -509,12 +509,6 @@ static uiMenuCommand_t CL_GetUIMenuCommand( const char *type ) {
 		return UIMENU_WM_QUICKMESSAGE;
 	} else if ( !Q_stricmp( type, "UIMENU_WM_QUICKMESSAGEALT" ) ) {
 		return UIMENU_WM_QUICKMESSAGEALT;
-#ifdef MONEY
-	} else if ( !Q_stricmp( type, "UIMENU_WM_QUICKBUY" ) ) {
-		return UIMENU_WM_QUICKBUY;
-	} else if ( !Q_stricmp( type, "UIMENU_WM_QUICKBUYALT" ) ) {
-		return UIMENU_WM_QUICKBUYALT;
-#endif
 	} else if ( !Q_stricmp( type, "UIMENU_WM_LIMBO" ) ) { // -NERVE - SMF
 		return UIMENU_WM_LIMBO;
 	} else if ( !Q_stricmp( type, "hbook1" ) ) { //----(SA)
