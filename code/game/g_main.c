@@ -338,7 +338,7 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_votesPerUser, "g_votesPerUser", "1", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_bannedMSG, "g_bannedMSG", "You are ^jBanned ^7from this server!", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_needpass, "g_needpass", "0", CVAR_ARCHIVE, 0, qfalse },
-	{ &g_shove, "g_shove", "0", CVAR_ARCHIVE, 0, qtrue},
+	{ &g_shove, "g_shove", "1", CVAR_ARCHIVE, 0, qtrue},
 	{ &g_shoveAmount, "g_shoveAmount", "0.8", CVAR_ARCHIVE, 0, qtrue}, // Don't give to much...
 	{ &g_throwKnives, "g_throwKnives", "0", CVAR_ARCHIVE, 0, qtrue },
 

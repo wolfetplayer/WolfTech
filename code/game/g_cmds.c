@@ -3354,14 +3354,12 @@ void Cmd_AlertEntity_f( void ) {
 /*
 =================
 Shove players away
-
-Ported from BOTW source.
 =================
 */
 void Cmd_Push_f( gentity_t* ent ) {
 	gentity_t *target;
 	trace_t tr;
-	vec3_t start, end, forward;
+	vec3_t start, end, forward, push;
 	float shoveAmount;
 
 	if ( !g_shove.integer ) {
@@ -3403,12 +3401,39 @@ void Cmd_Push_f( gentity_t* ent ) {
 		return;
 	}
 
-	shoveAmount = 512 * g_shoveAmount.value;
-	VectorMA( target->client->ps.velocity, shoveAmount, forward, target->client->ps.velocity );
-	// it's broadcasted globaly but only to near by players
-	G_AddEvent( target, EV_GENERAL_SOUND, G_SoundIndex( "sound/multiplayer/vo_revive.wav" ) ); // Do we need a new sound for this?
+	// exploit fix - don't push players who are lagged out or still connecting
+	if ( target->client->pers.connected != CON_CONNECTED || target->client->ps.ping >= 999 ) {
+		return;
+	}
+
+	// don't let people boost a just-spawned (invulnerable) teammate around
+	if ( target->client->ps.powerups[PW_INVULNERABLE] >= level.time ) {
+		return;
+	}
+
+	// don't yank someone off their mounted mg42
+	if ( target->client->ps.persistant[PERS_HWEAPON_USE] ) {
+		return;
+	}
 
 	ent->lastPushTime = level.time;
+
+	shoveAmount = 512 * g_shoveAmount.value;
+	VectorScale( forward, shoveAmount, push );
+
+	// keep a minimum amount of vertical lift so the shove doesn't just skim along the ground
+	if ( push[2] < 64 ) {
+		push[2] = 64;
+	}
+
+	VectorAdd( target->client->ps.velocity, push, target->client->ps.velocity );
+
+	// like knockback from an explosion - stops ground friction from instantly eating the push
+	target->client->ps.pm_time = 100;
+	target->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
+
+	// it's broadcasted globaly but only to near by players
+	G_AddEvent( target, EV_GENERAL_SOUND, G_SoundIndex( "sound/multiplayer/vo_revive.wav" ) ); // Do we need a new sound for this?
 }
 
 /*
