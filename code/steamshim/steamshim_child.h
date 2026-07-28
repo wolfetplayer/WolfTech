@@ -30,6 +30,7 @@ typedef enum STEAMSHIM_EventType
 	SHIMEVENT_LOBBY_CHAT,
 	SHIMEVENT_LOBBY_INVITE,
 	SHIMEVENT_LOBBY_OWNER,	/* uvalue = owning steamID of the current lobby */
+	SHIMEVENT_LOBBY_HOSTLEFT,	/* uvalue = steamID of the host that just left/disconnected */
 
 	/* Steam P2P net transport (per-frame game traffic). */
 	SHIMEVENT_NET_CONNECTED,

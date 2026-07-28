@@ -67,6 +67,9 @@ for the common join-a-lobby case.
 */
 uint64_t steamLobbyOwner(void);
 
+/* Polls whether the current lobby's host has left/disconnected; returns 1 once (clearing the flag), else 0. */
+int steamCheckHostLeft(void);
+
 /*
 ===============
 Steam P2P net transport (used by NA_STEAM_P2P in qcommon/net_ip.c)

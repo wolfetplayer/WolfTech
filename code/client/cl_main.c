@@ -3343,6 +3343,9 @@ void CL_Frame( int msec ) {
 		uint64_t owner;
 		uint64_t peerSteamID;
 		int peerConnected;
+#ifdef LOCALISATION
+		const char *message;
+#endif
 
 		steamRun();
 		CL_UpdateSteamServers();
@@ -3367,10 +3370,30 @@ void CL_Frame( int msec ) {
 			lastAutoConnectOwner = 0;
 		}
 
+		// Lobby membership notices the host leaving well before the P2P poll below would.
+		if ( steamCheckHostLeft() && !isHostingServer && clc.state != CA_DISCONNECTED ) {
+#ifdef LOCALISATION
+			message = CL_TranslateStringBuf( "Host has disconnected from the game.\n" );
+			Com_Printf( "%s", message );
+			Cvar_Set( "com_errorMessage", message );
+#else
+			Com_Printf( "Host has disconnected from the game.\n" );
+			Cvar_Set( "com_errorMessage", "Host has disconnected from the game.\n" );
+#endif
+			CL_Disconnect( qtrue );
+		}
+
 		while ( steamNetPollConnEvent( &peerSteamID, &peerConnected ) ) {
 			if ( !peerConnected && clc.serverAddress.type == NA_STEAM_P2P &&
 				 clc.serverAddress.steamID == peerSteamID ) {
-				Com_Printf( "Steam P2P connection to server lost.\n" );
+#ifdef LOCALISATION
+				message = CL_TranslateStringBuf( "Lost connection to the host.\n" );
+				Com_Printf( "%s", message );
+				Cvar_Set( "com_errorMessage", message );
+#else
+				Com_Printf( "Lost connection to the host.\n" );
+				Cvar_Set( "com_errorMessage", "Lost connection to the host.\n" );
+#endif
 				CL_Disconnect( qtrue );
 			}
 		}

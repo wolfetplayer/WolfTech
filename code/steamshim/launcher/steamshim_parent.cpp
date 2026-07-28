@@ -37,6 +37,9 @@ static ISteamMatchmaking *GSteamMatchmaking = NULL;
 static CSteamID GCurrentLobby;
 static ISteamFriends *GSteamFriends = NULL;
 
+// steamID of GCurrentLobby's owner as of the last OnLobbyEnter; lets OnLobbyChatUpdate spot the host leaving.
+static uint64 GLastKnownOwner = 0;
+
 static const uint32_t steam_app_id = 4909280u;
 
 #define DEBUGPIPE 1
@@ -469,6 +472,7 @@ public:
 
     STEAM_CALLBACK(SteamBridge, OnLobbyEnter, LobbyEnter_t, m_CallbackLobbyEnter);
     STEAM_CALLBACK(SteamBridge, OnLobbyDataUpdate, LobbyDataUpdate_t, m_CallbackLobbyDataUpdate);
+    STEAM_CALLBACK(SteamBridge, OnLobbyChatUpdate, LobbyChatUpdate_t, m_CallbackLobbyChatUpdate);
     STEAM_CALLBACK(SteamBridge, OnNetConnectionStatusChanged, SteamNetConnectionStatusChangedCallback_t, m_CallbackNetConnStatusChanged);
     STEAM_CALLBACK(SteamBridge, OnGameLobbyJoinRequested, GameLobbyJoinRequested_t, m_CallbackGameLobbyJoinRequested);
 
@@ -537,6 +541,7 @@ typedef enum ShimEvent
 	SHIMEVENT_LOBBY_CHAT,
 	SHIMEVENT_LOBBY_INVITE,
 	SHIMEVENT_LOBBY_OWNER,	// uvalue = owning steamID of the current lobby
+	SHIMEVENT_LOBBY_HOSTLEFT,	// uvalue = steamID of the host that just left/disconnected
 
 	// Steam P2P net transport (per-frame game traffic).
 	SHIMEVENT_NET_CONNECTED,
@@ -945,6 +950,8 @@ void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 		const CSteamID ownerID = GSteamMatchmaking->GetLobbyOwner(GCurrentLobby);
 		const uint64 ownerSteamID = ownerID.ConvertToUint64();
 
+		GLastKnownOwner = ownerSteamID;
+
 		if (ownerSteamID == GUserID)
 		{
 			// We're the host. The client side of the engine reaches its
@@ -987,6 +994,26 @@ void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
 		lobbyID,
 		""
 	);
+}
+
+// Fires on any lobby member joining/leaving/disconnecting/getting kicked; we only care when it's the host.
+void SteamBridge::OnLobbyChatUpdate(LobbyChatUpdate_t *pCallback)
+{
+	if (!GCurrentLobby.IsValid() || pCallback->m_ulSteamIDLobby != GCurrentLobby.ConvertToUint64())
+		return;
+
+	if (!BChatMemberStateChangeRemoved(pCallback->m_rgfChatMemberStateChange))
+		return; // someone joined, not a departure - nothing to do.
+
+	// GLastKnownOwner == GUserID guards against ever misfiring on our own account.
+	if (pCallback->m_ulSteamIDUserChanged != GLastKnownOwner || GLastKnownOwner == GUserID)
+		return;
+
+	dbgpipe("OnLobbyChatUpdate: lobby owner %llu left/disconnected (state=0x%x)\n",
+		(unsigned long long) GLastKnownOwner,
+		(unsigned int) pCallback->m_rgfChatMemberStateChange);
+
+	writeNetConnEvent(fd, SHIMEVENT_LOBBY_HOSTLEFT, GLastKnownOwner);
 }
 
 void SteamBridge::OnNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t *pCallback)
@@ -1334,6 +1361,7 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
             {
                 GSteamMatchmaking->LeaveLobby(GCurrentLobby);
                 GCurrentLobby.Clear();
+                GLastKnownOwner = 0;
             }
 
             break;

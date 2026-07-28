@@ -12,6 +12,7 @@
 
 static uint64_t s_steamCurrentLobby = 0;
 static uint64_t s_steamCurrentLobbyOwner = 0;
+static int s_steamHostLeft = 0;
 
 // Steam lobby list cache for the server browser; filled in from SHIMEVENT_LOBBY_LIST events, polled via steamLobbyListDirty().
 #define STEAM_LOBBYLIST_MAX 128
@@ -244,6 +245,11 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 		printf("Steam lobby owner: %llu\n", (unsigned long long)s_steamCurrentLobbyOwner);
 		break;
 
+	case SHIMEVENT_LOBBY_HOSTLEFT:
+		s_steamHostLeft = 1;
+		printf("Steam lobby host %llu has left/disconnected\n", (unsigned long long)ev->uvalue);
+		break;
+
 	case SHIMEVENT_LOBBY_CREATED:
 		if (ev->okay) {
 			s_steamCurrentLobby = ev->uvalue;
@@ -305,6 +311,7 @@ static const char *SteamEventName(STEAMSHIM_EventType type)
 	case SHIMEVENT_LOBBY_JOINED:      return "LOBBY_JOINED";
 	case SHIMEVENT_LOBBY_DATA:        return "LOBBY_DATA";
 	case SHIMEVENT_LOBBY_OWNER:       return "LOBBY_OWNER";
+	case SHIMEVENT_LOBBY_HOSTLEFT:    return "LOBBY_HOSTLEFT";
 	case SHIMEVENT_NET_CONNECTED:     return "NET_CONNECTED";
 	case SHIMEVENT_NET_DISCONNECTED:  return "NET_DISCONNECTED";
 	case SHIMEVENT_NET_DATA:          return "NET_DATA";
@@ -388,6 +395,7 @@ void steamLobbyLeave(void)
 	STEAMSHIM_lobbyLeave();
 	s_steamCurrentLobby = 0;
 	s_steamCurrentLobbyOwner = 0;
+	s_steamHostLeft = 0;
 	steamNetClose(0);
 }
 
@@ -411,6 +419,15 @@ uint64_t steamLobbyCurrent(void)
 uint64_t steamLobbyOwner(void)
 {
 	return s_steamCurrentLobbyOwner;
+}
+
+int steamCheckHostLeft(void)
+{
+	if (!s_steamHostLeft) {
+		return 0;
+	}
+	s_steamHostLeft = 0;
+	return 1;
 }
 
 #else
@@ -487,6 +504,11 @@ void steamLobbyListClearDirty(void)
 }
 
 uint64_t steamLobbyOwner(void)
+{
+	return 0;
+}
+
+int steamCheckHostLeft(void)
 {
 	return 0;
 }
