@@ -17,27 +17,31 @@ friendly_spawn_time     15   // seconds before a dead friendly AI can respawn
 
 // ---- Wave each enemy type first appears on ----
 wave_eliteguard   3
-wave_trench       4
-wave_blackguard   5
-wave_venom        7
-wave_proto        9
+wave_trench       5
+wave_blackguard   7
+wave_venom        9
+wave_proto        10
+//
 wave_warriors     3
+wave_flamers      5
+//
 wave_helga       10
 wave_heinrich    15
 wave_lopers       5
-wave_flamers      8
 
 // ---- Starting active-AI counts (wave 1) ----
 initial_soldiers      5
-initial_trench        0
-initial_zombies       5
-initial_flamers       0
-initial_warriors      0
-initial_protos        0
-initial_partisan      2   // friendly AI
 initial_elites        0
+initial_trench        0
 initial_blackguards   0
 initial_venoms        0
+initial_protos        0
+//
+initial_zombies       5
+initial_warriors      0
+initial_flamers       0
+//
+initial_partisan      2   // friendly AI
 initial_lopers        0
 initial_helgas        0
 initial_heinrichs     0
@@ -45,26 +49,37 @@ initial_heinrichs     0
 // ---- Per-wave increase / hard cap on active AI ----
 max_soldiers         10
 soldiers_increase     1
-max_zombies          20
+//
+max_zombies          25
 zombies_increase      1
+//
 max_flamers           3
 flamers_increase      1
+//
 max_warriors          5
 warriors_increase     1
+//
 max_elites            4
 elites_increase       1
+//
 max_trench            4
 trench_increase       1
+//
 max_blackguards       4
 blackguards_increase  1
+//
 max_helgas            1
 helgas_increase       1
+//
 max_heinrichs         1
 heinrichs_increase    1
+//
 max_lopers            3
 lopers_increase       1
+//
 max_venoms            4
 venoms_increase       1
+//
 max_protos            2
 protos_increase       1
 
@@ -174,12 +189,12 @@ zombie.health_per_step       10
 zombie.health_growth_base    20
 zombie.health_growth_rate    1.12
 zombie.health_cap           200
-zombie.run_speed_base        0.8
+zombie.run_speed_base        0.9
 zombie.run_speed_per_step    0.03
-zombie.run_speed_cap         1.2
-zombie.sprint_speed_base     1.2
+zombie.run_speed_cap         1.35
+zombie.sprint_speed_base     1.35
 zombie.sprint_speed_per_step 0.04
-zombie.sprint_speed_cap      1.6
+zombie.sprint_speed_cap      1.8
 zombie.crouch_speed_base     0.25
 zombie.crouch_speed_per_step 0.02
 zombie.crouch_speed_cap      0.5
