@@ -4682,8 +4682,8 @@ static void UI_RunMenuScript( char **args ) {
 
 			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
 
-			// sv_maxcoopclients is what create.menu's "Max Players" field and the real server both use.
-			clients = (int)Com_Clamp( 1, MAX_COOP_CLIENTS, trap_Cvar_VariableValue( "sv_maxcoopclients" ) );
+			// Coop max players is fixed and not host-configurable; sv_maxcoopclients enforces the same cap server-side.
+			clients = MAX_COOP_PLAYERS;
 
 			trap_Cvar_Set("sv_maxClients", va("%d", clients));
 

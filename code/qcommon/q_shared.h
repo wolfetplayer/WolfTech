@@ -91,6 +91,9 @@ If you have questions concerning this license or the applicable additional terms
 
 #define MAX_COOP_CLIENTS 8
 
+// hard cap on human players in coop/coop-survival; not host-configurable
+#define MAX_COOP_PLAYERS 4
+
 #define MAX_MAPS 128
 
 #define MAX_TEAMNAME		32

@@ -260,13 +260,11 @@ SV_BoundMaxCoopClients
 ===============
 */
 void SV_BoundMaxCoopClients( int minimum ) {
-	// get the current maxcoopclients value
-	Cvar_Get( "sv_maxcoopclients", "8", 0 );
+	// coop player count is fixed and not host-configurable
+	Cvar_Get( "sv_maxcoopclients", va( "%d", MAX_COOP_PLAYERS ), 0 );
 
-	if ( sv_maxcoopclients->integer < minimum ) {
-		Cvar_Set( "sv_maxcoopclients", va( "%i", minimum ) );
-	} else if ( sv_maxcoopclients->integer > MAX_COOP_CLIENTS ) {
-		Cvar_Set( "sv_maxcoopclients", va( "%i", MAX_COOP_CLIENTS ) );
+	if ( sv_maxcoopclients->integer != MAX_COOP_PLAYERS ) {
+		Cvar_Set( "sv_maxcoopclients", va( "%d", MAX_COOP_PLAYERS ) );
 	}
 }
 
@@ -543,15 +541,12 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 			}
 		}
 		if ( g_gametype->integer <= GT_COOP ) {
+			// coop player count is fixed and not host-configurable
 			if ( sv_maxcoopclients->latchedString ) {
-				// it's been modified, so grab the new value
-				Cvar_Get( "sv_maxcoopclients", "8", 0 );
+				Cvar_Get( "sv_maxcoopclients", va( "%d", MAX_COOP_PLAYERS ), 0 );
 			}
-			if ( sv_maxcoopclients->integer > MAX_COOP_CLIENTS ) {
-				Cvar_SetValue( "sv_maxcoopclients", MAX_COOP_CLIENTS );
-			}
-			if ( sv_maxcoopclients->integer < 1 ) {
-				Cvar_SetValue( "sv_maxcoopclients", 1 );
+			if ( sv_maxcoopclients->integer != MAX_COOP_PLAYERS ) {
+				Cvar_SetValue( "sv_maxcoopclients", MAX_COOP_PLAYERS );
 			}
 		}
 	}
@@ -929,7 +924,7 @@ void SV_Init (void)
 	sv_privateClients = Cvar_Get( "sv_privateClients", "0", CVAR_SERVERINFO );
 	sv_hostname = Cvar_Get( "sv_hostname", "WULF Lobby", CVAR_SERVERINFO | CVAR_ARCHIVE );
 	sv_maxclients = Cvar_Get( "sv_maxclients", "128", CVAR_SERVERINFO | CVAR_LATCH );
-	sv_maxcoopclients = Cvar_Get( "sv_maxcoopclients", "4", CVAR_SERVERINFO | CVAR_LATCH );
+	sv_maxcoopclients = Cvar_Get( "sv_maxcoopclients", va( "%d", MAX_COOP_PLAYERS ), CVAR_SERVERINFO | CVAR_LATCH | CVAR_ROM );
 
 	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	sv_maxRate = Cvar_Get( "sv_maxRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
