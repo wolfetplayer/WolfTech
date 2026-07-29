@@ -4861,21 +4861,26 @@ menuDef_t *Menus_ActivateByName( const char *p ) {
 	int i;
 	menuDef_t *m = NULL;
 	menuDef_t *focus = Menu_GetFocused();
-	// Only activate the FIRST menu matching this name - UI_LoadNonIngame's reset=false reload can leave duplicate same-named menuDef_t's, and painting all of them (not just the one receiving keystrokes) is what caused the pregame chat cursor bug.
+
+	// Clear focus on every menu before activating the target, not interleaved - otherwise a nested Menus_ActivateByName() from the target's onOpen script (e.g. "open ingame_quick") gets its focus wiped by this loop reaching that menu's index later.
+	// Only the FIRST menu matching this name gets activated - UI_LoadNonIngame's reset=false reload can leave duplicate same-named menuDef_t's, which caused the pregame chat cursor bug.
 	for ( i = 0; i < menuCount; i++ ) {
 		if ( !m && Q_stricmp( Menus[i].window.name, p ) == 0 ) {
 			m = &Menus[i];
-			Menus_Activate( m );
-			if ( modalStack && m->window.flags & WINDOW_MODAL ) {
-				if ( modalMenuCount >= MAX_MODAL_MENUS ) {
-					Com_Error( ERR_DROP, "MAX_MODAL_MENUS exceeded\n" );
-				}
-				modalMenuStack[modalMenuCount++] = focus;
+		}
+		Menus[i].window.flags &= ~WINDOW_HASFOCUS;
+	}
+
+	if ( m ) {
+		Menus_Activate( m );
+		if ( modalStack && m->window.flags & WINDOW_MODAL ) {
+			if ( modalMenuCount >= MAX_MODAL_MENUS ) {
+				Com_Error( ERR_DROP, "MAX_MODAL_MENUS exceeded\n" );
 			}
-		} else {
-			Menus[i].window.flags &= ~WINDOW_HASFOCUS;
+			modalMenuStack[modalMenuCount++] = focus;
 		}
 	}
+
 	Display_CloseCinematics();
 	return m;
 }

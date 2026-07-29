@@ -2318,6 +2318,11 @@ void CL_KeyDownEvent( int key, unsigned time )
 
 	// escape is always handled special
 	if ( key == K_ESCAPE ) {
+		// Ignore OS key-repeat for Escape, same as the K_ALT+K_ENTER guard above - it's a toggle, not a holdable action.
+		if ( keys[K_ESCAPE].repeats > 1 ) {
+			return;
+		}
+
 		if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 			// clear message mode
 			Message_Key( key );
