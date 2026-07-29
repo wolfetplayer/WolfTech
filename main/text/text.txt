@@ -505,6 +505,8 @@ CREATE_MSG_SURVIVALAIHEALTHCAP     "Caps AI health growth during long Survival m
 //=============================================================
 
 LOBBY_TITLE                        "PRE-GAME LOBBY"
+LOBBY_MAP                          "Map:"
+LOBBY_CHAT                         "Chat"
 LOBBY_PLAYERS                      "Players"
 LOBBY_EDITSETTINGS                 "Edit Game Settings"
 LOBBY_INVITEFRIENDS                "Invite Friends"

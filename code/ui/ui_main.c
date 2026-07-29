@@ -2179,6 +2179,27 @@ static void UI_DrawLobbyMapPreview( rectDef_t *rect, float scale, vec4_t color )
 
 /*
 ===============
+UI_DrawLobbySmallMapPreview
+
+Pre-game lobby: the two extra thumbnail previews alongside the main one, same
+idea as create.menu's UI_DrawSmallCreateMapPreview ("levelshots/ui_<map>_s<n>"),
+just sourced from cl_lobbyMapName so guests see them too.
+===============
+*/
+static void UI_DrawLobbySmallMapPreview( rectDef_t *rect, float scale, vec4_t color, int number ) {
+	char mapName[MAX_QPATH];
+
+	trap_Cvar_VariableStringBuffer( "cl_lobbyMapName", mapName, sizeof( mapName ) );
+
+	if ( mapName[0] ) {
+		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip( va( "levelshots/ui_%s_s%d", mapName, number ) ) );
+	} else {
+		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip( "menu/art/unknownmap" ) );
+	}
+}
+
+/*
+===============
 UI_DrawLobbyGameType
 
 Pre-game lobby: resolves cl_lobbyGameType (a raw gametype_t enum value, mirrored
@@ -2218,6 +2239,194 @@ static void UI_DrawLobbyChatLine( rectDef_t *rect, int font, float scale, vec4_t
 	if ( line[0] ) {
 		Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
 	}
+}
+
+/*
+===============
+UI_LobbyMapDisplayName
+
+Pre-game lobby: resolves a map's internal load name (as mirrored via
+cl_lobbyMapName) back to its friendly display name via uiInfo.mapList[], the
+same table create.menu's own map list is built from. Falls back to the raw
+load name if it's not found there yet (e.g. the very first frame or two after
+joining, before the map list has loaded).
+===============
+*/
+static const char *UI_LobbyMapDisplayName( const char *loadName ) {
+	int i;
+
+	if ( !loadName[0] ) {
+		return "";
+	}
+
+	for ( i = 0; i < uiInfo.mapCount; i++ ) {
+		if ( uiInfo.mapList[i].mapLoadName && Q_stricmp( uiInfo.mapList[i].mapLoadName, loadName ) == 0 ) {
+			return uiInfo.mapList[i].mapName;
+		}
+	}
+
+	return loadName;
+}
+
+/*
+===============
+UI_LobbyString
+
+Looks up a main/text/text.txt "@KEY" string from C code (pass the key without
+the leading @) - the same table ItemParse_text() resolves an itemDef's "text"
+field through, via translateTable[]/countTranslate (populated by
+UI_LoadTranslateFile at startup). NOT the same table as DC->getTranslatedString/
+DC->translateString, which look up a small separate set of hardcoded literal
+strings (e.g. "Lobby Leader:", "pleasewait") and would silently return an
+unresolved "@KEY" back unchanged if used here instead.
+===============
+*/
+static const char *UI_LobbyString( const char *key ) {
+	int i;
+
+	for ( i = 0; i < countTranslate; i++ ) {
+		if ( !Q_stricmp( translateTable[i][0], key ) ) {
+			return translateTable[i][1];
+		}
+	}
+
+	return key;
+}
+
+/*
+===============
+UI_DrawLobbyMapName
+
+Pre-game lobby: "Map: <name>" - passive label under the map preview (both host
+and guest), and the guest's read-only version of the "Map" tuning row. Sourced
+from cl_lobbyMapName, same as UI_DrawLobbyMapPreview - works for guests too.
+===============
+*/
+static void UI_DrawLobbyMapName( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	char mapName[MAX_QPATH];
+	char line[128];
+	int width;
+
+	trap_Cvar_VariableStringBuffer( "cl_lobbyMapName", mapName, sizeof( mapName ) );
+
+	Com_sprintf( line, sizeof( line ), "%s %s", UI_LobbyString( "LOBBY_MAP" ), UI_LobbyMapDisplayName( mapName ) );
+
+	// Centered on the rect (same width as the preview images above it), not left-anchored.
+	width = DC->textWidth( line, font, scale, 0 );
+	Text_Paint( rect->x + ( rect->w - width ) / 2, rect->y, font, scale, color, line, 0, 0, textStyle );
+}
+
+/*
+===============
+UI_DrawLobbyGameTypeLabeled
+
+Pre-game lobby: guest's read-only "Gamemode: <name>" tuning row. Same data as
+UI_DrawLobbyGameType, just with the label create.menu's own gametype row uses
+prefixed on (that row has no "text" field, so it never gets one automatically).
+===============
+*/
+static void UI_DrawLobbyGameTypeLabeled( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	int gt = (int)trap_Cvar_VariableValue( "cl_lobbyGameType" );
+	const char *name = "";
+	char line[128];
+	int i;
+
+	for ( i = 0; i < uiInfo.numGameTypes; i++ ) {
+		if ( uiInfo.gameTypes[i].gtEnum == gt ) {
+			name = uiInfo.gameTypes[i].gameType;
+			break;
+		}
+	}
+
+	Com_sprintf( line, sizeof( line ), "%s %s", UI_LobbyString( "CREATE_GAMEMODE" ), name );
+
+	Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
+}
+
+/*
+===============
+UI_DrawLobbyFriendlyFire, UI_DrawLobbyRealism, UI_DrawLobbySpecialWaves,
+UI_DrawLobbyDifficulty, UI_DrawLobbyAiHealthCap
+
+Pre-game lobby: guest's read-only tuning rows, mirrored from the host's
+create.menu-style cvars via cl_lobby* (see cl_main.c) - none of these guests
+ever have a meaningful local copy of, unlike map/gametype which at least have
+their own UI selection state.
+===============
+*/
+static void UI_DrawLobbyFriendlyFire( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	static const char *keys[] = { "GENERAL_OFF", "GENERAL_ON", "GENERAL_ONANDHEALTH" };
+	int val = (int)trap_Cvar_VariableValue( "cl_lobbyFriendlyFire" );
+	char line[128];
+
+	if ( val < 0 || val > 2 ) {
+		val = 0;
+	}
+
+	Com_sprintf( line, sizeof( line ), "%s %s", UI_LobbyString( "CREATE_FRIENDLYFIRE" ), UI_LobbyString( keys[val] ) );
+	Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
+}
+
+static void UI_DrawLobbyRealism( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	int val = (int)trap_Cvar_VariableValue( "cl_lobbyRealism" );
+	char line[128];
+
+	Com_sprintf( line, sizeof( line ), "%s %s", UI_LobbyString( "CREATE_REALISM" ),
+		UI_LobbyString( val ? "GENERAL_ON" : "GENERAL_OFF" ) );
+	Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
+}
+
+static void UI_DrawLobbySpecialWaves( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	int val = (int)trap_Cvar_VariableValue( "cl_lobbySpecialWaves" );
+	char line[128];
+
+	Com_sprintf( line, sizeof( line ), "%s %s", UI_LobbyString( "CREATE_SPECIALWAVES" ),
+		UI_LobbyString( val ? "GENERAL_ON" : "GENERAL_OFF" ) );
+	Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
+}
+
+static void UI_DrawLobbyDifficulty( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	int val = (int)trap_Cvar_VariableValue( "cl_lobbyDifficulty" );
+	char line[128];
+
+	Com_sprintf( line, sizeof( line ), "%s %s", UI_LobbyString( "CREATE_SURVIVALDIFFICULTY" ),
+		UI_LobbyString( val ? "CREATE_DIFFICULTY_HARD" : "CREATE_DIFFICULTY_NORMAL" ) );
+	Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
+}
+
+static void UI_DrawLobbyAiHealthCap( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	int val = (int)trap_Cvar_VariableValue( "cl_lobbyAiHealthCap" );
+	char line[128];
+
+	Com_sprintf( line, sizeof( line ), "%s %s", UI_LobbyString( "CREATE_SURVIVALAIHEALTHCAP" ),
+		UI_LobbyString( val ? "GENERAL_ON" : "GENERAL_OFF" ) );
+	Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
+}
+
+/*
+===============
+UI_DrawLobbyEditMap
+
+Pre-game lobby, host only: "Map: <name>" for the clickable map-cycle row (see
+UI_LobbyEditMap_HandleKey below). Reads the host's own local ui_currentNetMap
+selection directly, same as create.menu, instead of the mirrored cvar the
+read-only row uses - avoids waiting on a Steam round trip to see your own click.
+===============
+*/
+static void UI_DrawLobbyEditMap( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	char line[128];
+	const char *name = "";
+	int width;
+
+	if ( ui_currentNetMap.integer >= 0 && ui_currentNetMap.integer < uiInfo.mapCount ) {
+		name = uiInfo.mapList[ui_currentNetMap.integer].mapName;
+	}
+
+	Com_sprintf( line, sizeof( line ), "%s %s", UI_LobbyString( "LOBBY_MAP" ), name );
+
+	// Centered on the rect, same as UI_DrawLobbyMapName's guest-side version.
+	width = DC->textWidth( line, font, scale, 0 );
+	Text_Paint( rect->x + ( rect->w - width ) / 2, rect->y, font, scale, color, line, 0, 0, textStyle );
 }
 
 
@@ -3025,6 +3234,33 @@ static void UI_OwnerDraw( float x, float y, float w, float h, float text_x, floa
 	case UI_LOBBYCHAT5:
 		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, ownerDraw - UI_LOBBYCHAT1 );
 		break;
+	case UI_LOBBYCHAT6:
+		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, 5 );
+		break;
+	case UI_LOBBYCHAT7:
+		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, 6 );
+		break;
+	case UI_LOBBYCHAT8:
+		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, 7 );
+		break;
+	case UI_LOBBYCHAT9:
+		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, 8 );
+		break;
+	case UI_LOBBYCHAT10:
+		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, 9 );
+		break;
+	case UI_LOBBYCHAT11:
+		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, 10 );
+		break;
+	case UI_LOBBYCHAT12:
+		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, 11 );
+		break;
+	case UI_LOBBYMAPPREVIEW_SMALL1:
+		UI_DrawLobbySmallMapPreview( &rect, scale, color, 1 );
+		break;
+	case UI_LOBBYMAPPREVIEW_SMALL2:
+		UI_DrawLobbySmallMapPreview( &rect, scale, color, 2 );
+		break;
 	case UI_LOBBYMAPPREVIEW:
 		UI_DrawLobbyMapPreview( &rect, scale, color );
 		break;
@@ -3033,6 +3269,30 @@ static void UI_OwnerDraw( float x, float y, float w, float h, float text_x, floa
 		break;
 	case UI_LOBBYLEADERNAME:
 		UI_DrawLobbyLeaderName( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYMAPNAME:
+		UI_DrawLobbyMapName( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYGAMETYPELABELED:
+		UI_DrawLobbyGameTypeLabeled( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYFRIENDLYFIRE:
+		UI_DrawLobbyFriendlyFire( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYREALISM:
+		UI_DrawLobbyRealism( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYSPECIALWAVES:
+		UI_DrawLobbySpecialWaves( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYDIFFICULTY:
+		UI_DrawLobbyDifficulty( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYAIHEALTHCAP:
+		UI_DrawLobbyAiHealthCap( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYEDITMAP:
+		UI_DrawLobbyEditMap( &rect, font, scale, color, textStyle );
 		break;
 	case UI_NETMAPCINEMATIC:
 		UI_DrawNetMapCinematic( &rect, scale, color );
@@ -3316,6 +3576,45 @@ static qboolean UI_NetGameType_HandleKey( int flags, float *special, int key ) {
 		trap_Cvar_SetValue( "ui_currentNetMap", 0 );
 		UI_MapCountByGameType( qfalse );
 		Menu_SetFeederSelection( NULL, FEEDER_ALLMAPS, 0, NULL );
+		return qtrue;
+	}
+	return qfalse;
+}
+
+/*
+===============
+UI_LobbyEditMap_HandleKey
+
+Pre-game lobby, host only: clicking the "Map: <name>" tuning row cycles
+ui_currentNetMap through the maps active for the current gametype - the same
+uiInfo.mapList[].active filtering/UI_SelectedMap()/UI_GetIndexFromSelection()
+create.menu's own map listbox uses, just driven by a click instead of a feeder
+selection (the .menu format has no way to enumerate a dynamic map list into a
+static cvarFloatList, so this can't just be a plain ITEM_TYPE_MULTI like the
+other tuning rows).
+===============
+*/
+static qboolean UI_LobbyEditMap_HandleKey( int flags, float *special, int key ) {
+	int select = UI_SelectForKey( key );
+	int count;
+
+	if ( select != 0 ) {
+		count = UI_MapCountByGameType( qfalse );
+
+		if ( count > 0 ) {
+			int current = UI_GetIndexFromSelection( ui_currentNetMap.integer ) + select;
+			int actual;
+
+			if ( current < 0 ) {
+				current = count - 1;
+			} else if ( current >= count ) {
+				current = 0;
+			}
+
+			UI_SelectedMap( current, &actual );
+			ui_currentNetMap.integer = actual;
+			trap_Cvar_SetValue( "ui_currentNetMap", actual );
+		}
 		return qtrue;
 	}
 	return qfalse;
@@ -3629,6 +3928,9 @@ static qboolean UI_OwnerDrawHandleKey( int ownerDraw, int flags, float *special,
 		break;
 	case UI_NETGAMETYPE:
 		return UI_NetGameType_HandleKey( flags, special, key );
+		break;
+	case UI_LOBBYEDITMAP:
+		return UI_LobbyEditMap_HandleKey( flags, special, key );
 		break;
 	case UI_UISKILL:
 		return UI_UISkill_HandleKey( flags, special, key );
@@ -4839,21 +5141,32 @@ static void UI_RunMenuScript( char **args ) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
 
+			// Push the tuning settings too, so guests joining before the host touches a row still see the true values.
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata friendlyfire %d\n", (int)trap_Cvar_VariableValue("g_friendlyFire")));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata realism %d\n", (int)trap_Cvar_VariableValue("g_realism")));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata specialwaves %d\n", (int)trap_Cvar_VariableValue("g_specialwaves")));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata difficulty %d\n", (int)trap_Cvar_VariableValue("g_survivalDifficulty")));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata aihealthcap %d\n", (int)trap_Cvar_VariableValue("g_survivalAiHealthCap")));
+
 			// Open the lobby screen ourselves, right now - don't wait on cl_main.c to
 			// notice the Steam lobby exists (that's still there too, as a fallback/for
 			// guests, but the host shouldn't be left on a blank screen if that round
 			// trip is ever slow or doesn't fire).
 			_UI_SetActiveMenu( UIMENU_PREGAME );
 		}
+		else if (Q_stricmp(name, "LobbyGameTypeChanged") == 0)
+		{
+			// Gamemode changed - redo what UI_NetGameType_HandleKey normally does: reset map index and recompute which maps are valid.
+			trap_Cvar_SetValue( "ui_currentNetMap", 0 );
+			ui_currentNetMap.integer = 0;
+			UI_MapCountByGameType( qfalse );
+		}
 		else if (Q_stricmp(name, "ApplyLobbySettings") == 0)
 		{
-			// Host adjusting settings from the pregame lobby's "Edit Game Settings"
-			// overlay. Nothing is connected/loaded yet at this point, so this just
-			// updates the pending choices (re-read by LobbyStartGame below whenever
-			// the host actually starts the match) and refreshes what the Steam lobby
-			// list shows everyone else in the meantime.
+			// Host changed a tuning row - push current values so guests' mirrored cl_lobby* cvars update immediately.
 			int gt;
 			const char *mapName;
+			char hostName[MAX_NAME_LENGTH];
 
 			gt = uiInfo.gameTypes[ui_netGameType.integer].gtEnum;
 			trap_Cvar_SetValue("g_gametype", gt);
@@ -4862,6 +5175,17 @@ static void UI_RunMenuScript( char **args ) {
 
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata friendlyfire %d\n", (int)trap_Cvar_VariableValue("g_friendlyFire")));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata realism %d\n", (int)trap_Cvar_VariableValue("g_realism")));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata specialwaves %d\n", (int)trap_Cvar_VariableValue("g_specialwaves")));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata difficulty %d\n", (int)trap_Cvar_VariableValue("g_survivalDifficulty")));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata aihealthcap %d\n", (int)trap_Cvar_VariableValue("g_survivalAiHealthCap")));
+
+			// Re-push the lobby name too, defensive against SteamBridge::OnLobbyCreated's hardcoded placeholder racing StartServer's own push.
+			trap_Cvar_VariableStringBuffer( "sv_hostname", hostName, sizeof( hostName ) );
+			if ( hostName[0] ) {
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata name \"%s\"\n", hostName));
+			}
 		}
 		else if (Q_stricmp(name, "LobbyStartGame") == 0)
 		{
@@ -4872,12 +5196,19 @@ static void UI_RunMenuScript( char **args ) {
 			// instead of the old "load it first, then freeze in place" flow.
 			int gt;
 			const char *mapName;
+			char hostName[MAX_NAME_LENGTH];
 
 			gt = uiInfo.gameTypes[ui_netGameType.integer].gtEnum;
 			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
 
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
+
+			trap_Cvar_VariableStringBuffer( "sv_hostname", hostName, sizeof( hostName ) );
+			if ( hostName[0] ) {
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata name \"%s\"\n", hostName));
+			}
+
 			trap_Cmd_ExecuteText(EXEC_APPEND, "steam_setdata started 1\n");
 
 			if (gt == GT_COOP_SURVIVAL)

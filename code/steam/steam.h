@@ -105,6 +105,16 @@ int steamLobbyStarted(void);
 const char *steamLobbyMapName(void);
 int steamLobbyGameType(void);
 
+/* Raw g_friendlyFire/g_realism/g_specialwaves/g_survivalDifficulty/g_survivalAiHealthCap, mirrored from lobby data; 0 if not known yet. */
+int steamLobbyFriendlyFire(void);
+int steamLobbyRealism(void);
+int steamLobbySpecialWaves(void);
+int steamLobbyDifficulty(void);
+int steamLobbyAiHealthCap(void);
+
+/* The lobby's configured name (create.menu's "Lobby Name:" / sv_hostname), mirrored the same way; "" if not known yet. */
+const char *steamLobbyName(void);
+
 /* Sends a text message to every member of the current lobby (ourselves included -
    Steam echoes it back the same as everyone else's, so the log stays in one place). */
 void steamLobbySendChatMsg(const char *text);

@@ -1021,24 +1021,35 @@ void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
 	const char *started = "";
 	const char *map = "";
 	const char *gametype = "";
-	char payload[256];
+	const char *friendlyfire = "";
+	const char *realism = "";
+	const char *specialwaves = "";
+	const char *difficulty = "";
+	const char *aihealthcap = "";
+	const char *name = "";
+	char payload[350];
 
 	dbgpipe("Lobby data updated: %llu\n", lobbyID);
 
-	// Pre-game lobby: piggyback "started" plus the chosen map/gametype onto every data
-	// update so the child doesn't need a round trip to read them - guests use "started"
-	// to know when to auto-connect, and map/gametype to show the same lobby info panel
-	// the host sees, without needing their own map/gametype selection to be set.
+	// Piggyback "started"/map/gametype/tuning settings on every update so the child doesn't need a round trip to read them.
 	if (GSteamMatchmaking && GCurrentLobby.IsValid() && lobbyID == GCurrentLobby.ConvertToUint64())
 	{
 		started = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "started");
 		map = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "map");
 		gametype = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "gametype");
+		friendlyfire = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "friendlyfire");
+		realism = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "realism");
+		specialwaves = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "specialwaves");
+		difficulty = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "difficulty");
+		aihealthcap = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "aihealthcap");
+		name = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "name");
 	}
 
 	// steamLobbyListParseEntry()-style \x01-delimited fields; steam.c splits this back apart.
-	snprintf(payload, sizeof(payload), "%s\x01%s\x01%s",
-		started ? started : "", map ? map : "", gametype ? gametype : "");
+	snprintf(payload, sizeof(payload), "%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s",
+		started ? started : "", map ? map : "", gametype ? gametype : "",
+		friendlyfire ? friendlyfire : "", realism ? realism : "", specialwaves ? specialwaves : "",
+		difficulty ? difficulty : "", aihealthcap ? aihealthcap : "", name ? name : "");
 
 	writeLobbyEvent(
 		fd,

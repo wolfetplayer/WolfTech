@@ -2544,6 +2544,12 @@ qboolean Item_TextField_HandleKey( itemDef_t *item, int key ) {
 		if ( editPtr->maxChars && len > editPtr->maxChars ) {
 			len = editPtr->maxChars;
 		}
+
+		// Cvar can change out from under this field (e.g. CL_LobbyChatSend_f clearing it) - clamp so a stale cursorPos can't underflow the memmove below.
+		if ( item->cursorPos > len ) {
+			item->cursorPos = len;
+		}
+
 		if ( key & K_CHAR_FLAG ) {
 			key &= ~K_CHAR_FLAG;
 
@@ -3642,6 +3648,7 @@ void Item_TextField_Paint( itemDef_t *item ) {
 	}
 
 	offset = ( item->text && *item->text ) ? 8 : 0;
+
 	if ( item->window.flags & WINDOW_HASFOCUS && g_editingField ) {
 		char cursor = DC->getOverstrikeMode() ? '_' : '|';
 		DC->drawTextWithCursor( item->textRect.x + item->textRect.w + offset, item->textRect.y, item->font, item->textscale, newColor, buff + editPtr->paintOffset, item->cursorPos - editPtr->paintOffset, cursor, editPtr->maxPaintChars, item->textStyle );
@@ -4854,8 +4861,9 @@ menuDef_t *Menus_ActivateByName( const char *p ) {
 	int i;
 	menuDef_t *m = NULL;
 	menuDef_t *focus = Menu_GetFocused();
+	// Only activate the FIRST menu matching this name - UI_LoadNonIngame's reset=false reload can leave duplicate same-named menuDef_t's, and painting all of them (not just the one receiving keystrokes) is what caused the pregame chat cursor bug.
 	for ( i = 0; i < menuCount; i++ ) {
-		if ( Q_stricmp( Menus[i].window.name, p ) == 0 ) {
+		if ( !m && Q_stricmp( Menus[i].window.name, p ) == 0 ) {
 			m = &Menus[i];
 			Menus_Activate( m );
 			if ( modalStack && m->window.flags & WINDOW_MODAL ) {

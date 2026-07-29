@@ -3375,10 +3375,8 @@ void CL_CheckUserinfo( void ) {
 	}
 }
 
-// Pre-game lobby: how many of the most recent chat lines to mirror into
-// cl_lobbyChatLineN cvars for the UI (must match the number of cvars registered
-// in CL_Init and the number of ownerdraw slots in pregame.menu).
-#define LOBBY_CHAT_DISPLAY_LINES 5
+// Chat lines mirrored into cl_lobbyChatLineN cvars; must match cvars registered in CL_Init and ownerdraw slots in pregame.menu.
+#define LOBBY_CHAT_DISPLAY_LINES 12
 
 /*
 ==================
@@ -3450,6 +3448,12 @@ void CL_Frame( int msec ) {
 			Cvar_Set( "cl_lobbyLeaderName", steamLobbyOwnerName() );
 			Cvar_Set( "cl_lobbyMapName", steamLobbyMapName() );
 			Cvar_Set( "cl_lobbyGameType", va( "%d", steamLobbyGameType() ) );
+			Cvar_Set( "cl_lobbyFriendlyFire", va( "%d", steamLobbyFriendlyFire() ) );
+			Cvar_Set( "cl_lobbyRealism", va( "%d", steamLobbyRealism() ) );
+			Cvar_Set( "cl_lobbySpecialWaves", va( "%d", steamLobbySpecialWaves() ) );
+			Cvar_Set( "cl_lobbyDifficulty", va( "%d", steamLobbyDifficulty() ) );
+			Cvar_Set( "cl_lobbyAiHealthCap", va( "%d", steamLobbyAiHealthCap() ) );
+			Cvar_Set( "cl_lobbyName", steamLobbyName() );
 
 			if ( steamLobbyMembersDirty() ) {
 				int i;
@@ -4576,6 +4580,12 @@ void CL_Init( void ) {
 	Cvar_Get( "cl_lobbyLeaderName", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbyMapName", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbyGameType", "-1", CVAR_ROM );
+	Cvar_Get( "cl_lobbyFriendlyFire", "0", CVAR_ROM );
+	Cvar_Get( "cl_lobbyRealism", "0", CVAR_ROM );
+	Cvar_Get( "cl_lobbySpecialWaves", "0", CVAR_ROM );
+	Cvar_Get( "cl_lobbyDifficulty", "0", CVAR_ROM );
+	Cvar_Get( "cl_lobbyAiHealthCap", "0", CVAR_ROM );
+	Cvar_Get( "cl_lobbyName", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbySlot0", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbySlot1", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbySlot2", "", CVAR_ROM );
@@ -4585,6 +4595,13 @@ void CL_Init( void ) {
 	Cvar_Get( "cl_lobbyChatLine2", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbyChatLine3", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbyChatLine4", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine5", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine6", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine7", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine8", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine9", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine10", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine11", "", CVAR_ROM );
 	Cvar_Get( "ui_lobbyChatInput", "", 0 );   // not ROM - the pregame menu's "Say:" editfield writes this directly
 	cl_rate = Cvar_Get( "rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );     // NERVE - SMF - changed from 3000
 	Cvar_Get( "skin", "0", CVAR_USERINFO | CVAR_ARCHIVE );

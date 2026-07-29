@@ -72,6 +72,12 @@ static int s_lobbyMembersBuildingCount = 0;
 static int s_steamLobbyStarted = 0;
 static char s_lobbyMapName[64] = "";
 static int s_lobbyGameType = -1;
+static int s_lobbyFriendlyFire = 0;
+static int s_lobbyRealism = 0;
+static int s_lobbySpecialWaves = 0;
+static int s_lobbyDifficulty = 0;
+static int s_lobbyAiHealthCap = 0;
+static char s_lobbyName[64] = "";
 
 // Pre-game lobby text chat: oldest-first ring of received lines (sender resolved from
 // the roster above at receive time). Old entries just shift out once full - plenty for
@@ -89,12 +95,19 @@ static void steamResetLobbyRosterState(void)
 {
 	s_lobbyMemberCount = 0;
 	s_lobbyMembersBuildingCount = 0;
-	s_lobbyMembersDirty = 0;
+	// Dirty on purpose: cl_main.c only re-mirrors cl_lobbySlotN/cl_lobbyChatLineN when it sees these flags set.
+	s_lobbyMembersDirty = 1;
 	s_steamLobbyStarted = 0;
 	s_lobbyMapName[0] = '\0';
 	s_lobbyGameType = -1;
+	s_lobbyFriendlyFire = 0;
+	s_lobbyRealism = 0;
+	s_lobbySpecialWaves = 0;
+	s_lobbyDifficulty = 0;
+	s_lobbyAiHealthCap = 0;
+	s_lobbyName[0] = '\0';
 	s_lobbyChatCount = 0;
-	s_lobbyChatDirty = 0;
+	s_lobbyChatDirty = 1;
 }
 
 // Steam lobby list cache for the server browser; filled in from SHIMEVENT_LOBBY_LIST events, polled via steamLobbyListDirty().
@@ -404,31 +417,38 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 
 	case SHIMEVENT_LOBBY_DATA:
 		{
-			// "<started>\x01<map>\x01<gametype>" - see SteamBridge::OnLobbyDataUpdate.
-			char buf[256];
-			char *started, *map, *gametype, *p;
+			// "<started>\x01<map>\x01<gametype>\x01<friendlyfire>\x01<realism>\x01<specialwaves>\x01<difficulty>\x01<aihealthcap>\x01<name>" - see SteamBridge::OnLobbyDataUpdate.
+			char buf[350];
+			char *field[9] = { "", "", "", "", "", "", "", "", "" };
+			char *p, *next;
+			int i;
 
 			Q_strncpyz(buf, ev->name, sizeof(buf));
 
-			started = buf;
-			map = "";
-			gametype = "";
-
-			p = strchr(buf, '\x01');
-			if (p) {
-				*p = '\0';
-				map = p + 1;
-
-				p = strchr(map, '\x01');
-				if (p) {
-					*p = '\0';
-					gametype = p + 1;
+			p = buf;
+			for (i = 0; i < 9 && p; i++) {
+				field[i] = p;
+				next = strchr(p, '\x01');
+				if (next) {
+					*next = '\0';
+					p = next + 1;
+				} else {
+					p = NULL;
 				}
 			}
 
-			s_steamLobbyStarted = (started[0] == '1');
-			Q_strncpyz(s_lobbyMapName, map, sizeof(s_lobbyMapName));
-			s_lobbyGameType = gametype[0] ? atoi(gametype) : -1;
+			s_steamLobbyStarted = (field[0][0] == '1');
+			Q_strncpyz(s_lobbyMapName, field[1], sizeof(s_lobbyMapName));
+			s_lobbyGameType = field[2][0] ? atoi(field[2]) : -1;
+			s_lobbyFriendlyFire = atoi(field[3]);
+			s_lobbyRealism = atoi(field[4]);
+			s_lobbySpecialWaves = atoi(field[5]);
+			s_lobbyDifficulty = atoi(field[6]);
+			s_lobbyAiHealthCap = atoi(field[7]);
+			Q_strncpyz(s_lobbyName, field[8], sizeof(s_lobbyName));
+
+			// TEMP DIAGNOSTIC - remove once "Lobby Name" not showing is root-caused.
+			printf("lobbydata parsed: name='%s' map='%s' started=%d\n", s_lobbyName, s_lobbyMapName, s_steamLobbyStarted);
 		}
 		printf("Steam lobby data updated: %llu '%s'\n",
 			(unsigned long long)ev->uvalue,
@@ -656,6 +676,36 @@ int steamLobbyGameType(void)
 	return s_lobbyGameType;
 }
 
+int steamLobbyFriendlyFire(void)
+{
+	return s_lobbyFriendlyFire;
+}
+
+int steamLobbyRealism(void)
+{
+	return s_lobbyRealism;
+}
+
+int steamLobbySpecialWaves(void)
+{
+	return s_lobbySpecialWaves;
+}
+
+int steamLobbyDifficulty(void)
+{
+	return s_lobbyDifficulty;
+}
+
+int steamLobbyAiHealthCap(void)
+{
+	return s_lobbyAiHealthCap;
+}
+
+const char *steamLobbyName(void)
+{
+	return s_lobbyName;
+}
+
 void steamLobbySendChatMsg(const char *text)
 {
 	STEAMSHIM_lobbySendChat(text);
@@ -851,6 +901,36 @@ const char *steamLobbyMapName(void)
 int steamLobbyGameType(void)
 {
 	return -1;
+}
+
+int steamLobbyFriendlyFire(void)
+{
+	return 0;
+}
+
+int steamLobbyRealism(void)
+{
+	return 0;
+}
+
+int steamLobbySpecialWaves(void)
+{
+	return 0;
+}
+
+int steamLobbyDifficulty(void)
+{
+	return 0;
+}
+
+int steamLobbyAiHealthCap(void)
+{
+	return 0;
+}
+
+const char *steamLobbyName(void)
+{
+	return "";
 }
 
 void steamLobbySendChatMsg(const char *text)

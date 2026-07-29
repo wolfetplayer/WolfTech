@@ -352,6 +352,29 @@ If you have questions concerning this license or the applicable additional terms
 // pre-game lobby: "Lobby Leader: <name>" subtitle
 #define UI_LOBBYLEADERNAME          281
 
+// pre-game lobby: guest/read-only "Label: Value" tuning rows, mirrored from Steam lobby data
+#define UI_LOBBYMAPNAME             282 // "Map: <name>" - preview label and guest's map row
+#define UI_LOBBYGAMETYPELABELED     283 // "Gamemode: <name>" - UI_LOBBYGAMETYPE has no label of its own
+#define UI_LOBBYFRIENDLYFIRE        284
+#define UI_LOBBYREALISM             285
+#define UI_LOBBYSPECIALWAVES        286
+#define UI_LOBBYDIFFICULTY          287
+#define UI_LOBBYAIHEALTHCAP         288
+#define UI_LOBBYEDITMAP             289 // host-editable map cycle button (local ui_currentNetMap)
+
+// pre-game lobby: chat log extended past UI_LOBBYCHAT1-5, non-contiguous so each gets its own dispatch case
+#define UI_LOBBYCHAT6               290
+#define UI_LOBBYCHAT7               291
+#define UI_LOBBYCHAT8               292
+#define UI_LOBBYCHAT9               293
+#define UI_LOBBYCHAT10              294
+#define UI_LOBBYCHAT11              295
+#define UI_LOBBYCHAT12              296
+
+// pre-game lobby: two extra map preview thumbnails, like create.menu's SMALL1/2 but from cl_lobbyMapName
+#define UI_LOBBYMAPPREVIEW_SMALL1   297
+#define UI_LOBBYMAPPREVIEW_SMALL2   298
+
 #define VOICECHAT_GETFLAG           "getflag"                // command someone to get the flag
 #define VOICECHAT_OFFENSE           "offense"                // command someone to go on offense
 #define VOICECHAT_DEFEND            "defend"             // command someone to go on defense
