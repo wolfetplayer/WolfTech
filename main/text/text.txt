@@ -15,7 +15,7 @@
 //   SERVERINFO  - serverinfo.menu / ingame_serverinfo.menu
 //   PLAY        - play.menu
 //   CREATE      - create.menu
-//   LOBBY       - pregame.menu / lobby_settings.menu
+//   LOBBY       - pregame.menu
 //=============================================================
 
 //=============================================================
@@ -501,15 +501,16 @@ CREATE_MSG_SURVIVALDIFFICULTY      "Increases AI aim, accuracy and attack skill 
 CREATE_MSG_SURVIVALAIHEALTHCAP     "Caps AI health growth during long Survival matches"
 
 //=============================================================
-// PRE-GAME LOBBY (pregame.menu / lobby_settings.menu)
+// PRE-GAME LOBBY (pregame.menu)
 //=============================================================
 
-LOBBY_TITLE                        "LOBBY"
+LOBBY_TITLE                        "PRE-GAME LOBBY"
 LOBBY_PLAYERS                      "Players"
 LOBBY_EDITSETTINGS                 "Edit Game Settings"
 LOBBY_INVITEFRIENDS                "Invite Friends"
 LOBBY_LEAVE                        "Leave This Lobby"
 LOBBY_STARTGAME                    "Start The Game"
 LOBBY_SETTINGS_DONE                "Done"
+LOBBY_SAY                          "Say:"
 
 }

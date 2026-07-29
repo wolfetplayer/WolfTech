@@ -220,6 +220,9 @@ typedef enum ShimCmd
     SHIMCMD_NET_CONNECT,
     SHIMCMD_NET_SEND,
     SHIMCMD_NET_CLOSE,
+
+    /* Pre-game lobby text chat. */
+    SHIMCMD_LOBBY_SENDCHAT,
 } ShimCmd;
 
 /* Pipe framing: buf[0] is normally the payload length (cmd byte + data).
@@ -387,6 +390,8 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
     PRINTGOTEVENT(SHIMEVENT_NET_CONNECTED);
     PRINTGOTEVENT(SHIMEVENT_NET_DISCONNECTED);
     /* NET_DATA happens every frame; too noisy to log here. */
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_MEMBER);
+    PRINTGOTEVENT(SHIMEVENT_LOBBY_CHATMSG);
 #undef PRINTGOTEVENT
     else printf("Child got unknown shimevent %d.\n", (int) type);
     #endif
@@ -458,6 +463,8 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
         case SHIMEVENT_LOBBY_INVITE:
         case SHIMEVENT_LOCAL_IDENTITY:
         case SHIMEVENT_FRIEND_NAME:
+        case SHIMEVENT_LOBBY_MEMBER:
+        case SHIMEVENT_LOBBY_CHATMSG:
         {
             uint64_t lobbyID = 0;
 
@@ -788,6 +795,26 @@ void STEAMSHIM_lobbyLeave(void)
 
 	dbgpipe("Child sending SHIMCMD_LOBBY_LEAVE().\n");
 	write1ByteCmd(SHIMCMD_LOBBY_LEAVE);
+}
+
+void STEAMSHIM_lobbySendChat(const char *text)
+{
+	uint8 buf[256];
+	uint8 *ptr = buf + 1;
+	uint8 *end = buf + sizeof(buf);
+
+	if (isDead()) {
+		return;
+	}
+
+	*(ptr++) = (uint8)SHIMCMD_LOBBY_SENDCHAT;
+
+	if (!writeStringToBuffer(&ptr, end, text)) {
+		return;
+	}
+
+	buf[0] = (uint8)((ptr - 1) - buf);
+	writePipe(GPipeWrite, buf, buf[0] + 1);
 }
 
 void STEAMSHIM_lobbyInvite(uint64_t lobbyID)

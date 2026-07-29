@@ -70,7 +70,6 @@ vmCvar_t g_limbotime;
 vmCvar_t g_reinforce;
 vmCvar_t g_freeze;
 vmCvar_t g_gamestate;
-vmCvar_t g_lobbyPending;
 
 // Rafael gameskill
 vmCvar_t g_gameskill;
@@ -239,7 +238,6 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_maxGameClients, "g_maxGameClients", "0", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qfalse  },
 	{ &g_spawnpoints, "g_spawnpoints", "0", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse  },
 	{ &g_gamestate, "gamestate", "-1", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse  },
-	{ &g_lobbyPending, "g_lobbyPending", "0", CVAR_ROM, 0, qfalse  },
 
 	// change anytime vars
 	{ &g_dmflags, "dmflags", "0", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },
@@ -1414,14 +1412,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 		//if ( g_noTeamSwitching.integer ) {
 		//        trap_Cvar_Set( "gamestate", va( "%i", GS_WAITING_FOR_PLAYERS ) );
 		//} else {
-		if ( g_lobbyPending.integer ) {
-			// host just clicked "Start Lobby" (or re-applied settings/map from inside the lobby) -
-			// freeze on this map in the pre-game lobby instead of going straight to warmup/play.
-			trap_Cvar_Set( "gamestate", va( "%i", GS_LOBBY ) );
-			trap_Cvar_Set( "g_lobbyPending", "0" );
-		} else {
-			trap_Cvar_Set( "gamestate", va( "%i", GS_WARMUP ) );
-		}
+		trap_Cvar_Set( "gamestate", va( "%i", GS_WARMUP ) );
 		//}
 	}
 
@@ -2526,47 +2517,6 @@ void CheckGameState( void ) {
 	}
 }
 
-#define LOBBY_COUNTDOWN_MSEC 5000
-
-/*
-=============
-G_StartLobbyCountdown
-
-Called when the host issues the "lobbystart" client command from GS_LOBBY.
-Begins the 5-second countdown; CheckLobbyCountdown() flips to GS_PLAYING once
-it elapses, so every connected client enters gameplay on the same server frame.
-=============
-*/
-void G_StartLobbyCountdown( void ) {
-	if ( g_gamestate.integer != GS_LOBBY ) {
-		return;
-	}
-
-	level.lobbyCountdownTime = level.time + LOBBY_COUNTDOWN_MSEC;
-	trap_SetConfigstring( CS_LOBBY_COUNTDOWN, va( "%i", level.lobbyCountdownTime ) );
-	trap_Cvar_Set( "gamestate", va( "%i", GS_LOBBY_COUNTDOWN ) );
-}
-
-/*
-=============
-CheckLobbyCountdown
-
-Pre-game lobby countdown -> unfreeze into GS_PLAYING once it elapses. Kept
-separate from CheckGameState's CS_WARMUP countdown above so it doesn't
-interact with the unrelated g_warmup/g_doWarmup vote-restart system.
-=============
-*/
-void CheckLobbyCountdown( void ) {
-	if ( g_gamestate.integer != GS_LOBBY_COUNTDOWN ) {
-		return;
-	}
-
-	if ( level.time > level.lobbyCountdownTime ) {
-		level.lobbyCountdownTime = 0;
-		trap_Cvar_Set( "gamestate", va( "%i", GS_PLAYING ) );
-	}
-}
-
 void CheckCoop( void ) {
 	// check because we run 3 game frames before calling Connect and/or ClientBegin
 	// for clients on a map_restart
@@ -3038,9 +2988,6 @@ void G_RunFrame( int levelTime ) {
 
 	// NERVE - SMF - check game state
 	CheckGameState();
-
-	// pre-game lobby countdown -> unfreeze into GS_PLAYING
-	CheckLobbyCountdown();
 
 	// NERVE - SMF - check game state
 	if (g_gametype.integer == GT_COOP)

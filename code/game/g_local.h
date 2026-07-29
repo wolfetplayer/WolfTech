@@ -712,8 +712,6 @@ typedef struct {
 
 	int warmupTime;                 // restart match at this time
 
-	int lobbyCountdownTime;         // pre-game lobby: unfreeze into GS_PLAYING at this time (0 = not counting down)
-
 	fileHandle_t logFile;
 
 	// store latched cvars here that we want to get at often
@@ -1112,7 +1110,6 @@ void FireWeapon( gentity_t *ent );
 //
 void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message ); // JPW NERVE removed static declaration so it would link
 void DeathmatchScoreboardMessage( gentity_t *ent );
-void Cmd_LobbyStart_f( gentity_t *ent );
 
 
 //
@@ -1132,7 +1129,6 @@ void G_EndGame( void );
 int G_SendMissionStats( void );   // return '0' if objectives not met, '1' if met
 void G_ChangeLevel( char *mapName );
 void LogExit( const char *string );
-void G_StartLobbyCountdown( void );  // pre-game lobby: host-only, begins the countdown out of GS_LOBBY
 //----(SA)	end
 
 //
@@ -1261,7 +1257,6 @@ extern vmCvar_t g_limbotime;
 extern vmCvar_t g_reinforce;
 extern vmCvar_t g_freeze;
 extern vmCvar_t g_gamestate;
-extern vmCvar_t g_lobbyPending;    // set by the UI just before hosting a map, so G_InitGame knows to enter GS_LOBBY
 
 // Rafael gameskill
 extern vmCvar_t g_gameskill;

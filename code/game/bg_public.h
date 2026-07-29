@@ -208,13 +208,10 @@ typedef enum {
 // RF
 #define CS_TAGCONNECTS      ( CS_SPLINES + MAX_SPLINE_CONFIGSTRINGS )
 
-// pre-game lobby: server time when the match will actually start (GS_LOBBY_COUNTDOWN)
-#define CS_LOBBY_COUNTDOWN  ( CS_TAGCONNECTS + MAX_TAGCONNECTS )
-
 //#define CS_MAX			(CS_LOCATIONS+MAX_LOCATIONS)
 //#define CS_MAX			(CS_PARTICLES+MAX_PARTICLES_AREAS)
 //#define CS_MAX				(CS_DLIGHTS+MAX_DLIGHT_CONFIGSTRINGS)			//----(SA)
-#define CS_MAX              ( CS_LOBBY_COUNTDOWN + 1 )
+#define CS_MAX              ( CS_TAGCONNECTS + MAX_TAGCONNECTS )
 
 #if ( CS_MAX ) > MAX_CONFIGSTRINGS
 #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS

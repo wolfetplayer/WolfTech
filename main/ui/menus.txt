@@ -12,7 +12,6 @@
 	loadMenu { "ui/create.menu" }
 	loadMenu { "ui/serverinfo.menu" }
 	loadMenu { "ui/pregame.menu" }
-	loadMenu { "ui/lobby_settings.menu" }
 
 // OPTIONS menu
 

@@ -1436,8 +1436,14 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		return;
 	}
 
-	// Leave any Steam lobby we were part of; safe no-op if we weren't in one.
-	if ( steamAlive() ) {
+	// Leave any Steam lobby we were part of - but only if we were actually connected
+	// to something. CL_MapLoading() calls CL_Disconnect() unconditionally as a
+	// defensive reset whenever the client isn't already on "localhost", which also
+	// fires the very first time the host's own svmap/coopmap spawns their listen
+	// server straight out of the pre-game lobby (clc.state is still CA_DISCONNECTED
+	// then, since nobody had connected to anything yet) - leaving the lobby at that
+	// exact moment stranded every guest still waiting to auto-connect.
+	if ( steamAlive() && clc.state != CA_DISCONNECTED ) {
 		steamLobbyLeave();
 	}
 
@@ -1735,6 +1741,12 @@ void CL_Disconnect_f( void ) {
 	Cvar_Set( "g_reloading", "0" );
 	if ( clc.state != CA_DISCONNECTED && clc.state != CA_CINEMATIC ) {
 		Com_Error( ERR_DISCONNECT, "Disconnected from server" );
+	} else if ( steamAlive() ) {
+		// Pre-game lobby: the front-end lobby's "Leave" button also runs
+		// "disconnect", but at this point we're already CA_DISCONNECTED (never
+		// actually connected to a game server), so CL_Disconnect() above never
+		// runs to leave the Steam lobby on its own - do it directly instead.
+		steamLobbyLeave();
 	}
 }
 
@@ -2198,6 +2210,32 @@ void CL_SteamInvite_f(void)
 	}
 
 	steamLobbyInvite();
+}
+
+/*
+====================
+CL_LobbyChatSend_f
+
+Pre-game lobby "Say:" box. Deliberately takes no console arguments - it reads the
+message straight out of the ui_lobbyChatInput cvar instead, so a message containing
+a '"' can't break out of a quoted console command and inject something else.
+====================
+*/
+void CL_LobbyChatSend_f(void)
+{
+	char text[256];
+
+	if (!steamAlive() || steamLobbyCurrent() == 0) {
+		return;
+	}
+
+	Cvar_VariableStringBuffer( "ui_lobbyChatInput", text, sizeof( text ) );
+	if ( !text[0] ) {
+		return;
+	}
+
+	steamLobbySendChatMsg(text);
+	Cvar_Set( "ui_lobbyChatInput", "" );
 }
 
 void CL_SteamJoin_f(void)
@@ -3337,6 +3375,11 @@ void CL_CheckUserinfo( void ) {
 	}
 }
 
+// Pre-game lobby: how many of the most recent chat lines to mirror into
+// cl_lobbyChatLineN cvars for the UI (must match the number of cvars registered
+// in CL_Init and the number of ownerdraw slots in pregame.menu).
+#define LOBBY_CHAT_DISPLAY_LINES 5
+
 /*
 ==================
 CL_Frame
@@ -3395,12 +3438,79 @@ void CL_Frame( int msec ) {
 		}
 		wasHostingServer = isHostingServer;
 
+		// Pre-game lobby: mirror "am I this lobby's host" and the member roster into
+		// cvars the (disconnected, unconnected-to-any-game) UI VM can read directly -
+		// it has no access to steam.c's getters across the trap boundary.
+		{
+			uint64_t localID = steamLocalSteamID();
+			uint64_t lobbyOwner = steamLobbyOwner();
+			qboolean isHost = ( steamLobbyCurrent() != 0 && localID != 0 && lobbyOwner == localID ) ? qtrue : qfalse;
+
+			Cvar_Set( "cl_lobbyIsHost", isHost ? "1" : "0" );
+			Cvar_Set( "cl_lobbyLeaderName", steamLobbyOwnerName() );
+			Cvar_Set( "cl_lobbyMapName", steamLobbyMapName() );
+			Cvar_Set( "cl_lobbyGameType", va( "%d", steamLobbyGameType() ) );
+
+			if ( steamLobbyMembersDirty() ) {
+				int i;
+				int count = steamLobbyMemberCount();
+
+				for ( i = 0; i < MAX_COOP_PLAYERS; i++ ) {
+					Cvar_Set( va( "cl_lobbySlot%d", i ), ( i < count ) ? steamLobbyMemberName( i ) : "" );
+				}
+				steamLobbyMembersClearDirty();
+			}
+		}
+
+		// Pre-game lobby chat: mirror the last few lines into fixed cvars for the UI,
+		// same fixed-slot approach as the roster above (no scrolling feeder needed for
+		// a handful of lines in a short-lived lobby).
+		if ( steamLobbyChatDirty() ) {
+			int i;
+			int count = steamLobbyChatCount();
+			int first = ( count > LOBBY_CHAT_DISPLAY_LINES ) ? count - LOBBY_CHAT_DISPLAY_LINES : 0;
+
+			for ( i = 0; i < LOBBY_CHAT_DISPLAY_LINES; i++ ) {
+				int src = first + i;
+
+				if ( src < count ) {
+					Cvar_Set( va( "cl_lobbyChatLine%d", i ),
+						va( "%s: %s", steamLobbyChatSenderName( src ), steamLobbyChatText( src ) ) );
+				} else {
+					Cvar_Set( va( "cl_lobbyChatLine%d", i ), "" );
+				}
+			}
+			steamLobbyChatClearDirty();
+		}
+
+		// Once we've joined a lobby (host or guest) and haven't connected to a game
+		// yet, force the front-end "pregame" roster screen open instead of leaving
+		// players on whatever menu they happened to be on when the join completed -
+		// covers the cold-start "+connect_lobby <id>" relaunch case, where no menu
+		// script ever ran to open it.
+		{
+			static uint64_t lastPregameLobby = 0;
+			uint64_t currentLobby = steamLobbyCurrent();
+
+			if ( currentLobby != 0 && clc.state == CA_DISCONNECTED ) {
+				if ( currentLobby != lastPregameLobby && uivm ) {
+					lastPregameLobby = currentLobby;
+					VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_PREGAME );
+				}
+			} else {
+				lastPregameLobby = 0;
+			}
+		}
+
 		// Once we've joined someone else's lobby, the shim already starts
 		// the Steam P2P handshake to the owner on its own (see
 		// SteamBridge::OnLobbyEnter) - this just triggers the matching
-		// "connect steam:<id>" on the engine side, once per lobby.
+		// "connect steam:<id>" on the engine side, once per lobby, and only once the
+		// host has actually clicked "Start The Game" (steamLobbyStarted()) - joining
+		// the Steam lobby itself no longer loads any map.
 		owner = steamLobbyOwner();
-		if ( owner != 0 && owner != lastAutoConnectOwner && clc.state == CA_DISCONNECTED ) {
+		if ( owner != 0 && owner != steamLocalSteamID() && steamLobbyStarted() &&
+			 owner != lastAutoConnectOwner && clc.state == CA_DISCONNECTED ) {
 			lastAutoConnectOwner = owner;
 			Cbuf_AddText( va( "connect steam:%llu\n", (unsigned long long) owner ) );
 		} else if ( owner == 0 ) {
@@ -4459,6 +4569,23 @@ void CL_Init( void ) {
 	// userinfo
 	Cvar_Get( "name", "WolfPlayer", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "cl_steamid", "0", CVAR_USERINFO | CVAR_ROM );   // pre-game lobby: raw SteamID64, tethered in CL_Frame once Steam resolves it
+
+	// Pre-game lobby: front-end-only (nobody's connected to a game yet), so no
+	// CVAR_USERINFO here - the disconnected UI VM just reads these back directly.
+	Cvar_Get( "cl_lobbyIsHost", "0", CVAR_ROM );
+	Cvar_Get( "cl_lobbyLeaderName", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyMapName", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyGameType", "-1", CVAR_ROM );
+	Cvar_Get( "cl_lobbySlot0", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbySlot1", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbySlot2", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbySlot3", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine0", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine1", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine2", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine3", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyChatLine4", "", CVAR_ROM );
+	Cvar_Get( "ui_lobbyChatInput", "", 0 );   // not ROM - the pregame menu's "Say:" editfield writes this directly
 	cl_rate = Cvar_Get( "rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );     // NERVE - SMF - changed from 3000
 	Cvar_Get( "skin", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "snaps", "20", CVAR_USERINFO | CVAR_ARCHIVE );
@@ -4595,6 +4722,8 @@ void CL_Init( void ) {
 	Cmd_AddCommand("steam_invite", CL_SteamInvite_f);
 
 	Cmd_AddCommand("steam_setdata", CL_SteamSetData_f);
+
+	Cmd_AddCommand("lobby_chat_send", CL_LobbyChatSend_f);
 
 	Cmd_AddCommand("connect_lobby", CL_ConnectLobby_f);
 

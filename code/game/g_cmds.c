@@ -682,28 +682,6 @@ void Cmd_LevelShot_f(gentity_t *ent)
 
 /*
 =================
-Cmd_LobbyStart_f
-
-Host-only: begins the pre-game lobby's 5-second countdown. Host identity is
-checked authoritatively via the server-assigned "ip" userinfo key, which reads
-"loopback" only for the listen server's own local connection (same signal
-sv_ccmds.c's kick-guard already relies on for "is this client the host").
-=================
-*/
-void Cmd_LobbyStart_f( gentity_t *ent ) {
-	char userinfo[MAX_INFO_STRING];
-
-	trap_GetUserinfo( ent - g_entities, userinfo, sizeof( userinfo ) );
-
-	if ( Q_stricmp( Info_ValueForKey( userinfo, "ip" ), "loopback" ) != 0 ) {
-		return; // only the host can start the match
-	}
-
-	G_StartLobbyCountdown();
-}
-
-/*
-=================
 Cmd_Kill_f
 =================
 */
@@ -3215,11 +3193,6 @@ void ClientCommand( int clientNum ) {
 	}
 	if ( Q_stricmp( cmd, "playerstart" ) == 0 ) {
 		Cmd_PlayerStart_f( ent );
-		return;
-	}
-
-	if ( Q_stricmp( cmd, "lobbystart" ) == 0 ) {
-		Cmd_LobbyStart_f( ent );
 		return;
 	}
 

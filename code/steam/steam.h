@@ -72,6 +72,56 @@ int steamCheckHostLeft(void);
 
 /*
 ===============
+Pre-game lobby: member roster + started flag
+
+Nobody connects to a game server at all until the host clicks "Start The
+Game" - until then, players sit in the front-end "pregame" UI, which is fed
+by these two things instead of any in-game player list.
+===============
+*/
+
+/* Number of players currently in the lobby (host included), from the last roster push. */
+int steamLobbyMemberCount(void);
+
+/* SteamID/persona name of the member at index, or 0/"" if out of range. */
+uint64_t steamLobbyMemberSteamID(int index);
+const char *steamLobbyMemberName(int index);
+
+/* Persona name of the lobby's owner ("Lobby Leader"), resolved from the roster
+   above; "" if not (yet) known. Works whether we're the owner or a guest. */
+const char *steamLobbyOwnerName(void);
+
+/* True if the roster changed (join/leave) since the last steamLobbyMembersClearDirty(). */
+int steamLobbyMembersDirty(void);
+void steamLobbyMembersClearDirty(void);
+
+/* True once the host has set the lobby's "started" flag (see steamLobbySetData),
+   i.e. it's time for guests to auto-connect and load the map alongside the host. */
+int steamLobbyStarted(void);
+
+/* The lobby's currently chosen map/gametype (mirrored from lobby data), for the lobby
+   info panel - works for guests too, without needing their own selection to be set.
+   steamLobbyGameType() returns -1 if not known yet. */
+const char *steamLobbyMapName(void);
+int steamLobbyGameType(void);
+
+/* Sends a text message to every member of the current lobby (ourselves included -
+   Steam echoes it back the same as everyone else's, so the log stays in one place). */
+void steamLobbySendChatMsg(const char *text);
+
+/* Number of received lobby chat lines cached (oldest first). */
+int steamLobbyChatCount(void);
+
+/* Sender's display name / message text for the line at index, or "" if out of range. */
+const char *steamLobbyChatSenderName(int index);
+const char *steamLobbyChatText(int index);
+
+/* True if a new chat line arrived since the last steamLobbyChatClearDirty(). */
+int steamLobbyChatDirty(void);
+void steamLobbyChatClearDirty(void);
+
+/*
+===============
 Player identity (pre-game lobby: SteamID + persona name for player slots)
 ===============
 */

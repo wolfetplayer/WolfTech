@@ -2,27 +2,70 @@
 
 {
 // PRE-GAME LOBBY
-// Shown automatically (see cgame's CG_ParseServerinfo) whenever gamestate is
-// GS_LOBBY or GS_LOBBY_COUNTDOWN. Fills the UIMENU_PREGAME hook.
+// Front-end only - nobody's connected to a game server or has any map loaded
+// while this is up. Opened directly by cl_main.c (UIMENU_PREGAME) as soon as
+// we're in a Steam lobby (host or guest) and not yet connected to a game.
+//
+// Left column is a vertical action menu (host-only items gated on
+// cl_lobbyIsHost); right column swaps between two groups instead of ever
+// closing this menu: grpLobbyMain (game info / player list / character
+// select / chat) and grpEditSettings (host-only game settings, adapted from
+// the old standalone lobby_settings.menu). Cross-menu "close pregame ; open
+// lobby_settings" turned out to leave the client in a stuck, unresponsive
+// state (the engine's active-menu tracking doesn't get updated by plain
+// close/open script commands), so settings are just a show/hide toggle
+// within this same always-open menu instead.
 
 menuDef {
 	name "pregame"
 	visible 0
-	fullscreen 0
-	rect 20 60 300 340
+	fullscreen 1
+	rect 0 0 640 480
 	focusColor .9 .9 .9 1
 	style 1
-	border 1
+	border 0
+
+	// ui_lobbyChatInput is cleared in C (_UI_SetActiveMenu's UIMENU_PREGAME case)
+	// instead of here: this script system's String_Parse() treats an empty quoted
+	// string "" as a parse failure, so "setcvar ui_lobbyChatInput \"\"" silently
+	// never ran.
+	onOpen {
+		show grpLobbyMain ;
+		hide grpEditSettings
+		}
+
+	// Same shared backdrop art as main/create/multi.menu (this menu's own origin is
+	// 0 0, unlike theirs, so the rect here is adjusted to land in the same absolute
+	// screen position their -120-origin menus get from "rect -120 -9.25 917 500").
+	itemDef {
+		name realrtcw_background
+		group grpLobby
+		style WINDOW_STYLE_SHADER
+		rect -240 -9.25 917 500
+		background "realrtcw_background"
+		visible 1
+		decoration
+		}
+
+	itemDef {
+		name dimmer
+		group grpLobby
+		rect 0 0 640 480
+		style WINDOW_STYLE_FILLED
+		backcolor 0 0 0 .55
+		visible 1
+		decoration
+		}
 
 	itemDef {
 		name window
 		group grpLobby
-		rect 0 0 300 340
+		rect 40 30 560 420
 		style WINDOW_STYLE_FILLED
 		border 1
 		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
-		backcolor 0 0 0 .6
+		backcolor .08 .08 .08 .9
 		visible 1
 		decoration
 		}
@@ -33,138 +76,38 @@ menuDef {
 		text "@LOBBY_TITLE"
 		textfont UI_FONT_NORMAL
 		textalign ITEM_ALIGN_CENTER
-		textalignx 150
-		textaligny 14
-		textscale .3
-		rect 0 4 300 20
+		textalignx 280
+		textaligny 18
+		textscale .32
+		rect 40 30 560 26
 		style WINDOW_STYLE_FILLED
 		border 1
 		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
-		backcolor .3 .5 .2 .25
+		backcolor .3 .5 .2 .35
 		visible 1
 		decoration
 		}
 
-	// Player slots //
-
 	itemDef {
-		name slotsheader
+		name leadername
 		group grpLobby
-		text "@LOBBY_PLAYERS"
+		ownerdraw UI_LOBBYLEADERNAME
 		textfont UI_FONT_NORMAL
+		textscale .22
+		rect 50 60 300 16
 		textalign ITEM_ALIGN_LEFT
-		textalignx 12
 		textaligny 12
-		textscale .2
-		rect 0 32 300 16
-		visible 1
-		decoration
-		}
-
-	itemDef {
-		name slot1box
-		group grpLobby
-		rect 10 50 280 20
-		style WINDOW_STYLE_FILLED
-		border 1
-		bordercolor .4 .4 .4 .4
-		backcolor .1 .1 .1 .4
-		visible 1
-		decoration
-		}
-	itemDef {
-		name slot1
-		group grpLobby
-		ownerdraw UI_LOBBYSLOT1
-		textfont UI_FONT_NORMAL
-		textscale .22
-		textstyle 6
-		rect 16 50 268 20
-		textalign ITEM_ALIGN_LEFT
-		textaligny 14
-		forecolor .9 .9 .9 1
+		forecolor .8 .8 .8 1
 		visible 1
 		}
 
-	itemDef {
-		name slot2box
-		group grpLobby
-		rect 10 74 280 20
-		style WINDOW_STYLE_FILLED
-		border 1
-		bordercolor .4 .4 .4 .4
-		backcolor .1 .1 .1 .4
-		visible 1
-		decoration
-		}
-	itemDef {
-		name slot2
-		group grpLobby
-		ownerdraw UI_LOBBYSLOT2
-		textfont UI_FONT_NORMAL
-		textscale .22
-		textstyle 6
-		rect 16 74 268 20
-		textalign ITEM_ALIGN_LEFT
-		textaligny 14
-		forecolor .9 .9 .9 1
-		visible 1
-		}
-
-	itemDef {
-		name slot3box
-		group grpLobby
-		rect 10 98 280 20
-		style WINDOW_STYLE_FILLED
-		border 1
-		bordercolor .4 .4 .4 .4
-		backcolor .1 .1 .1 .4
-		visible 1
-		decoration
-		}
-	itemDef {
-		name slot3
-		group grpLobby
-		ownerdraw UI_LOBBYSLOT3
-		textfont UI_FONT_NORMAL
-		textscale .22
-		textstyle 6
-		rect 16 98 268 20
-		textalign ITEM_ALIGN_LEFT
-		textaligny 14
-		forecolor .9 .9 .9 1
-		visible 1
-		}
-
-	itemDef {
-		name slot4box
-		group grpLobby
-		rect 10 122 280 20
-		style WINDOW_STYLE_FILLED
-		border 1
-		bordercolor .4 .4 .4 .4
-		backcolor .1 .1 .1 .4
-		visible 1
-		decoration
-		}
-	itemDef {
-		name slot4
-		group grpLobby
-		ownerdraw UI_LOBBYSLOT4
-		textfont UI_FONT_NORMAL
-		textscale .22
-		textstyle 6
-		rect 16 122 268 20
-		textalign ITEM_ALIGN_LEFT
-		textaligny 14
-		forecolor .9 .9 .9 1
-		visible 1
-		}
-
-	// Menu actions //
-	// "Edit Game Settings" and "Start The Game" are host-only: sv_running is
-	// only "1" on the machine actually running the (listen) server.
+	// Left column: action menu (always visible, regardless of grpLobbyMain/
+	// grpEditSettings) //
+	// "Edit Game Settings" and "Start The Game" are host-only: cl_lobbyIsHost is
+	// kept mirrored by the client from the Steam lobby's owner steamID, since
+	// nobody's connected to a game server yet at this point (sv_running wouldn't
+	// distinguish host from guest here - neither has a server running).
 
 	itemDef {
 		name editsettings
@@ -172,24 +115,24 @@ menuDef {
 		text "@LOBBY_EDITSETTINGS"
 		type ITEM_TYPE_BUTTON
 		textfont UI_FONT_NORMAL
-		textscale .25
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		rect 10 170 280 20
+		rect 50 90 130 24
 		textalign ITEM_ALIGN_CENTER
-		textalignx 140
-		textaligny 14
+		textalignx 65
+		textaligny 16
 		border 1
 		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
 		backcolor .3 .5 .2 .3
 		visible 1
-		cvarTest "sv_running"
+		cvarTest "cl_lobbyIsHost"
 		hidecvar { "0" }
 		mouseEnter { setitemcolor editsettings backcolor .3 .5 .2 .6 }
 		mouseExit { setitemcolor editsettings backcolor .3 .5 .2 .3 }
 		action {
-			close pregame ;
-			open lobby_settings
+			hide grpLobbyMain ;
+			show grpEditSettings
 			}
 		}
 
@@ -199,12 +142,12 @@ menuDef {
 		text "@LOBBY_INVITEFRIENDS"
 		type ITEM_TYPE_BUTTON
 		textfont UI_FONT_NORMAL
-		textscale .25
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		rect 10 196 280 20
+		rect 50 118 130 24
 		textalign ITEM_ALIGN_CENTER
-		textalignx 140
-		textaligny 14
+		textalignx 65
+		textaligny 16
 		border 1
 		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
@@ -223,12 +166,12 @@ menuDef {
 		text "@LOBBY_LEAVE"
 		type ITEM_TYPE_BUTTON
 		textfont UI_FONT_NORMAL
-		textscale .25
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		rect 10 222 280 20
+		rect 50 146 130 24
 		textalign ITEM_ALIGN_CENTER
-		textalignx 140
-		textaligny 14
+		textalignx 65
+		textaligny 16
 		border 1
 		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
@@ -237,8 +180,7 @@ menuDef {
 		mouseEnter { setitemcolor leave backcolor .5 .2 .2 .6 }
 		mouseExit { setitemcolor leave backcolor .5 .2 .2 .3 }
 		action {
-			close pregame ;
-			exec "disconnect"
+			uiScript LeaveLobby
 			}
 		}
 
@@ -248,23 +190,497 @@ menuDef {
 		text "@LOBBY_STARTGAME"
 		type ITEM_TYPE_BUTTON
 		textfont UI_FONT_NORMAL
-		textscale .27
+		textscale .25
 		style WINDOW_STYLE_FILLED
-		rect 10 300 280 24
+		rect 50 396 130 28
 		textalign ITEM_ALIGN_CENTER
-		textalignx 140
-		textaligny 17
+		textalignx 65
+		textaligny 19
 		border 1
 		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
 		backcolor .2 .5 .2 .5
 		visible 1
-		cvarTest "sv_running"
+		cvarTest "cl_lobbyIsHost"
 		hidecvar { "0" }
 		mouseEnter { setitemcolor startgame backcolor .2 .5 .2 .8 }
 		mouseExit { setitemcolor startgame backcolor .2 .5 .2 .5 }
 		action {
-			exec "lobbystart"
+			uiScript LobbyStartGame
+			}
+		}
+
+	// Right column, view 1: game info / player list / character select / chat //
+
+	itemDef {
+		name mappreview
+		group grpLobbyMain
+		ownerdraw UI_LOBBYMAPPREVIEW
+		rect 200 90 110 82
+		border 1
+		bordercolor .4 .4 .4 .4
+		visible 1
+		}
+
+	itemDef {
+		name gametype
+		group grpLobbyMain
+		ownerdraw UI_LOBBYGAMETYPE
+		textfont UI_FONT_NORMAL
+		textscale .3
+		rect 320 92 260 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 15
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	itemDef {
+		name slotsheader
+		group grpLobbyMain
+		text "@LOBBY_PLAYERS"
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_LEFT
+		textaligny 12
+		textscale .2
+		rect 200 178 380 16
+		visible 1
+		decoration
+		}
+
+	itemDef {
+		name slot1box
+		group grpLobbyMain
+		rect 200 196 380 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .4 .4 .4 .4
+		backcolor .1 .1 .1 .4
+		visible 1
+		decoration
+		}
+	itemDef {
+		name slot1
+		group grpLobbyMain
+		ownerdraw UI_LOBBYSLOT1
+		textfont UI_FONT_NORMAL
+		textscale .22
+		textstyle 6
+		rect 206 196 368 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	itemDef {
+		name slot2box
+		group grpLobbyMain
+		rect 200 220 380 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .4 .4 .4 .4
+		backcolor .1 .1 .1 .4
+		visible 1
+		decoration
+		}
+	itemDef {
+		name slot2
+		group grpLobbyMain
+		ownerdraw UI_LOBBYSLOT2
+		textfont UI_FONT_NORMAL
+		textscale .22
+		textstyle 6
+		rect 206 220 368 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	itemDef {
+		name slot3box
+		group grpLobbyMain
+		rect 200 244 380 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .4 .4 .4 .4
+		backcolor .1 .1 .1 .4
+		visible 1
+		decoration
+		}
+	itemDef {
+		name slot3
+		group grpLobbyMain
+		ownerdraw UI_LOBBYSLOT3
+		textfont UI_FONT_NORMAL
+		textscale .22
+		textstyle 6
+		rect 206 244 368 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	itemDef {
+		name slot4box
+		group grpLobbyMain
+		rect 200 268 380 20
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .4 .4 .4 .4
+		backcolor .1 .1 .1 .4
+		visible 1
+		decoration
+		}
+	itemDef {
+		name slot4
+		group grpLobbyMain
+		ownerdraw UI_LOBBYSLOT4
+		textfont UI_FONT_NORMAL
+		textscale .22
+		textstyle 6
+		rect 206 268 368 20
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		forecolor .9 .9 .9 1
+		visible 1
+		}
+
+	// character select (own skin, not host-gated - everyone picks their own) //
+
+	itemDef {
+		name characterselect
+		group grpLobbyMain
+		visible 1
+		rect 200 296 380 20
+		forecolor 1 1 1 1
+		backcolor 0 0 0 0
+		outlinecolor 1 1 0 .5
+		textfont UI_FONT_NORMAL
+		type ITEM_TYPE_MULTI
+		style 0
+		textstyle 6
+		text "@MULTI_MODEL_LABEL"
+		cvar "skin"
+		cvarFloatList { "@MULTI_MODEL_YANKEE" 1 "@MULTI_MODEL_AFRO" 2 "@MULTI_MODEL_EURO" 3 }
+		textscale .22
+		textalign ITEM_ALIGN_LEFT
+		textaligny 14
+		}
+
+	// chat //
+
+	itemDef {
+		name chatline1
+		group grpLobbyMain
+		ownerdraw UI_LOBBYCHAT1
+		textfont UI_FONT_NORMAL
+		textscale .18
+		rect 200 322 380 13
+		textalign ITEM_ALIGN_LEFT
+		textaligny 10
+		forecolor .8 .8 .8 1
+		visible 1
+		}
+	itemDef {
+		name chatline2
+		group grpLobbyMain
+		ownerdraw UI_LOBBYCHAT2
+		textfont UI_FONT_NORMAL
+		textscale .18
+		rect 200 335 380 13
+		textalign ITEM_ALIGN_LEFT
+		textaligny 10
+		forecolor .8 .8 .8 1
+		visible 1
+		}
+	itemDef {
+		name chatline3
+		group grpLobbyMain
+		ownerdraw UI_LOBBYCHAT3
+		textfont UI_FONT_NORMAL
+		textscale .18
+		rect 200 348 380 13
+		textalign ITEM_ALIGN_LEFT
+		textaligny 10
+		forecolor .8 .8 .8 1
+		visible 1
+		}
+	itemDef {
+		name chatline4
+		group grpLobbyMain
+		ownerdraw UI_LOBBYCHAT4
+		textfont UI_FONT_NORMAL
+		textscale .18
+		rect 200 361 380 13
+		textalign ITEM_ALIGN_LEFT
+		textaligny 10
+		forecolor .8 .8 .8 1
+		visible 1
+		}
+	itemDef {
+		name chatline5
+		group grpLobbyMain
+		ownerdraw UI_LOBBYCHAT5
+		textfont UI_FONT_NORMAL
+		textscale .18
+		rect 200 374 380 13
+		textalign ITEM_ALIGN_LEFT
+		textaligny 10
+		forecolor .8 .8 .8 1
+		visible 1
+		}
+
+	// Label and input are the SAME itemDef (like create.menu's hostname field) - the
+	// typed text is drawn starting right after wherever the "Say:" label's own
+	// right-aligned textRect ends, so it never overlaps. A separate decoration item
+	// for the label doesn't work here: ITEM_TYPE_EDITFIELD always paints the raw
+	// cvar value as its own "label" when it has no text of its own, which is what
+	// caused the overlap.
+	itemDef {
+		name chatinput
+		group grpLobbyMain
+		type ITEM_TYPE_EDITFIELD
+		text "@LOBBY_SAY"
+		cvar "ui_lobbyChatInput"
+		maxChars 100
+		maxPaintChars 48
+		rect 200 396 380 16
+		style WINDOW_STYLE_FILLED
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 40
+		textaligny 12
+		textfont UI_FONT_NORMAL
+		textscale .2
+		border 1
+		bordercolor .4 .4 .4 .4
+		forecolor 1 1 1 1
+		backcolor .1 .1 .1 .6
+		visible 1
+		accept {
+			exec "lobby_chat_send"
+			}
+		}
+
+	// Right column, view 2: host-only game settings, same cvar bindings as
+	// create.menu (so they take effect live the same way - most of these are
+	// plain CVAR_SERVERINFO cvars; only the map needs LobbyStartGame to read it
+	// again when the host actually starts). Hidden by default (see onOpen above).
+
+	itemDef {
+		name settingshostname
+		group grpEditSettings
+		type ITEM_TYPE_EDITFIELD
+		text "@CREATE_LOBBYNAME"
+		cvar "sv_hostname"
+		maxChars 16
+		maxPaintChars 16
+		rect 200 90 380 14
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 190
+		textaligny 11
+		textscale .22
+		backcolor 1 1 1 .15
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name settingsgametype
+		group grpEditSettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_GAMEMODE"
+		ownerdraw UI_NETGAMETYPE
+		rect 200 106 380 14
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 190
+		textaligny 11
+		textscale .22
+		backcolor 1 1 1 .15
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name settingsmaplistlabel
+		group grpEditSettings
+		text "@CREATE_MAPSELECTION"
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_LEFT
+		textaligny 12
+		textscale .2
+		rect 200 122 380 14
+		visible 0
+		decoration
+		}
+
+	itemDef {
+		name settingsmaplist
+		group grpEditSettings
+		rect 200 138 380 68
+		type ITEM_TYPE_LISTBOX
+		style WINDOW_STYLE_FILLED
+		elementwidth 380
+		elementheight 14
+		textfont UI_FONT_NORMAL
+		textscale .2
+		elementtype LISTBOX_TEXT
+		feeder FEEDER_ALLMAPS
+		textstyle 6
+		textaligny 0
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor 0 0 0 0
+		outlinecolor .7 .7 .0 .25
+		visible 0
+		}
+
+	itemDef {
+		name settingsspecialwaves
+		group grpEditSettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_SPECIALWAVES"
+		cvar "g_specialwaves"
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+		rect 200 210 380 14
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 190
+		textaligny 11
+		textscale .22
+		backcolor 1 1 1 .15
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name settingsrealism
+		group grpEditSettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_REALISM"
+		cvar "g_realism"
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+		rect 200 226 380 14
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 190
+		textaligny 11
+		textscale .22
+		backcolor 1 1 1 .15
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name settingsdifficulty
+		group grpEditSettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_SURVIVALDIFFICULTY"
+		cvar "g_survivalDifficulty"
+		cvarFloatList { "@CREATE_DIFFICULTY_NORMAL" 0 "@CREATE_DIFFICULTY_HARD" 1 }
+		rect 200 242 380 14
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 190
+		textaligny 11
+		textscale .22
+		backcolor 1 1 1 .15
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name settingsaihealthcap
+		group grpEditSettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_SURVIVALAIHEALTHCAP"
+		cvar "g_survivalAiHealthCap"
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
+		rect 200 258 380 14
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 190
+		textaligny 11
+		textscale .22
+		backcolor 1 1 1 .15
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name settingsfriendlyfire
+		group grpEditSettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_FRIENDLYFIRE"
+		cvar "g_friendlyFire"
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 "@GENERAL_ONANDHEALTH" 2 }
+		rect 200 274 380 14
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 190
+		textaligny 11
+		textscale .22
+		backcolor 1 1 1 .15
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name settingssharedlives
+		group grpEditSettings
+		type ITEM_TYPE_MULTI
+		text "@CREATE_SHAREDLIVES"
+		cvar "g_sharedlives"
+		cvarFloatList { "@CREATE_SHAREDLIVES_YES" 1 "@CREATE_SHAREDLIVES_NO" 0 }
+		rect 200 290 380 14
+		style WINDOW_STYLE_FILLED
+		textfont UI_FONT_NORMAL
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 190
+		textaligny 11
+		textscale .22
+		backcolor 1 1 1 .15
+		forecolor 1 1 1 1
+		visible 0
+		cvarTest "g_maxlives"
+		hidecvar { "0" }
+		}
+
+	itemDef {
+		name settingsdone
+		group grpEditSettings
+		text "@LOBBY_SETTINGS_DONE"
+		type ITEM_TYPE_BUTTON
+		textfont UI_FONT_NORMAL
+		textscale .25
+		style WINDOW_STYLE_FILLED
+		rect 200 396 380 20
+		textalign ITEM_ALIGN_CENTER
+		textalignx 190
+		textaligny 14
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .2 .5 .2 .5
+		visible 0
+		mouseEnter { setitemcolor settingsdone backcolor .2 .5 .2 .8 }
+		mouseExit { setitemcolor settingsdone backcolor .2 .5 .2 .5 }
+		action {
+			uiScript ApplyLobbySettings ;
+			hide grpEditSettings ;
+			show grpLobbyMain
 			}
 		}
 	}

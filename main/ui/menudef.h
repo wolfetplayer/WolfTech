@@ -337,6 +337,21 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_LOBBYSLOT3               272
 #define UI_LOBBYSLOT4               273
 
+// pre-game lobby: one ownerdraw per fixed chat log line (most recent N lines)
+#define UI_LOBBYCHAT1               274
+#define UI_LOBBYCHAT2               275
+#define UI_LOBBYCHAT3               276
+#define UI_LOBBYCHAT4               277
+#define UI_LOBBYCHAT5               278
+
+// pre-game lobby: map thumbnail + gametype name, sourced from the Steam lobby's data
+// instead of the host-only ui_currentNetMap/ui_netGameType selection cvars
+#define UI_LOBBYMAPPREVIEW          279
+#define UI_LOBBYGAMETYPE            280
+
+// pre-game lobby: "Lobby Leader: <name>" subtitle
+#define UI_LOBBYLEADERNAME          281
+
 #define VOICECHAT_GETFLAG           "getflag"                // command someone to get the flag
 #define VOICECHAT_OFFENSE           "offense"                // command someone to go on offense
 #define VOICECHAT_DEFEND            "defend"             // command someone to go on defense

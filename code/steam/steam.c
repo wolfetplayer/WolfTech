@@ -49,6 +49,54 @@ static void steamCacheFriendName(uint64_t steamID, const char *name)
 	s_friendNameCacheCount++;
 }
 
+// Pre-game lobby roster: current lobby members (steamID + persona name), pushed
+// unprompted by the shim on join/leave (SHIMEVENT_LOBBY_MEMBER, terminated by a
+// uvalue==0 "DONE" entry). Built into s_lobbyMembersBuilding[] as entries stream in,
+// then swapped into s_lobbyMembers[] atomically on "DONE" so readers never see a
+// half-built list.
+#define STEAM_LOBBY_MEMBERS_MAX 8
+typedef struct {
+	uint64_t steamID;
+	char name[64];
+} steamLobbyMemberEntry_t;
+static steamLobbyMemberEntry_t s_lobbyMembers[STEAM_LOBBY_MEMBERS_MAX];
+static int s_lobbyMemberCount = 0;
+static int s_lobbyMembersDirty = 0;
+static steamLobbyMemberEntry_t s_lobbyMembersBuilding[STEAM_LOBBY_MEMBERS_MAX];
+static int s_lobbyMembersBuildingCount = 0;
+
+// Pre-game lobby: sticky "has the host clicked Start The Game" flag, plus the chosen
+// map/gametype for the lobby info panel - all three mirrored from lobby data key/value
+// pairs the host writes (see SHIMEVENT_LOBBY_DATA), so guests can show the same panel
+// the host does without needing their own map/gametype selection to be set.
+static int s_steamLobbyStarted = 0;
+static char s_lobbyMapName[64] = "";
+static int s_lobbyGameType = -1;
+
+// Pre-game lobby text chat: oldest-first ring of received lines (sender resolved from
+// the roster above at receive time). Old entries just shift out once full - plenty for
+// a short-lived pre-match lobby.
+#define STEAM_LOBBY_CHAT_MAX 32
+typedef struct {
+	char senderName[64];
+	char text[256];
+} steamLobbyChatEntry_t;
+static steamLobbyChatEntry_t s_lobbyChat[STEAM_LOBBY_CHAT_MAX];
+static int s_lobbyChatCount = 0;
+static int s_lobbyChatDirty = 0;
+
+static void steamResetLobbyRosterState(void)
+{
+	s_lobbyMemberCount = 0;
+	s_lobbyMembersBuildingCount = 0;
+	s_lobbyMembersDirty = 0;
+	s_steamLobbyStarted = 0;
+	s_lobbyMapName[0] = '\0';
+	s_lobbyGameType = -1;
+	s_lobbyChatCount = 0;
+	s_lobbyChatDirty = 0;
+}
+
 // Steam lobby list cache for the server browser; filled in from SHIMEVENT_LOBBY_LIST events, polled via steamLobbyListDirty().
 #define STEAM_LOBBYLIST_MAX 128
 
@@ -255,6 +303,19 @@ int steamNetPollConnEvent(uint64_t *outSteamID, int *outConnected)
 	return 1;
 }
 
+// Resolves a lobby member's display name from the roster cache, "" if not (yet) known.
+static const char *steamLookupLobbyMemberName(uint64_t steamID)
+{
+	int i;
+
+	for (i = 0; i < s_lobbyMemberCount; i++) {
+		if (s_lobbyMembers[i].steamID == steamID) {
+			return s_lobbyMembers[i].name;
+		}
+	}
+	return "";
+}
+
 static void steamHandleEvent(const STEAMSHIM_Event *ev)
 {
 	if (!ev) {
@@ -342,9 +403,66 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 		break;
 
 	case SHIMEVENT_LOBBY_DATA:
+		{
+			// "<started>\x01<map>\x01<gametype>" - see SteamBridge::OnLobbyDataUpdate.
+			char buf[256];
+			char *started, *map, *gametype, *p;
+
+			Q_strncpyz(buf, ev->name, sizeof(buf));
+
+			started = buf;
+			map = "";
+			gametype = "";
+
+			p = strchr(buf, '\x01');
+			if (p) {
+				*p = '\0';
+				map = p + 1;
+
+				p = strchr(map, '\x01');
+				if (p) {
+					*p = '\0';
+					gametype = p + 1;
+				}
+			}
+
+			s_steamLobbyStarted = (started[0] == '1');
+			Q_strncpyz(s_lobbyMapName, map, sizeof(s_lobbyMapName));
+			s_lobbyGameType = gametype[0] ? atoi(gametype) : -1;
+		}
 		printf("Steam lobby data updated: %llu '%s'\n",
 			(unsigned long long)ev->uvalue,
 			ev->name);
+		break;
+
+	case SHIMEVENT_LOBBY_MEMBER:
+		if (ev->uvalue == 0) {
+			// "DONE" sentinel - the roster we've been building is complete; swap it in.
+			memcpy(s_lobbyMembers, s_lobbyMembersBuilding,
+				sizeof(s_lobbyMembers[0]) * s_lobbyMembersBuildingCount);
+			s_lobbyMemberCount = s_lobbyMembersBuildingCount;
+			s_lobbyMembersBuildingCount = 0;
+			s_lobbyMembersDirty = 1;
+		} else if (s_lobbyMembersBuildingCount < STEAM_LOBBY_MEMBERS_MAX) {
+			s_lobbyMembersBuilding[s_lobbyMembersBuildingCount].steamID = ev->uvalue;
+			Q_strncpyz(s_lobbyMembersBuilding[s_lobbyMembersBuildingCount].name, ev->name,
+				sizeof(s_lobbyMembersBuilding[0].name));
+			s_lobbyMembersBuildingCount++;
+		}
+		break;
+
+	case SHIMEVENT_LOBBY_CHATMSG:
+		if (s_lobbyChatCount >= STEAM_LOBBY_CHAT_MAX) {
+			// Full - drop the oldest line to make room, same as the friend name cache.
+			memmove(&s_lobbyChat[0], &s_lobbyChat[1], sizeof(s_lobbyChat[0]) * (STEAM_LOBBY_CHAT_MAX - 1));
+			s_lobbyChatCount = STEAM_LOBBY_CHAT_MAX - 1;
+		}
+
+		Q_strncpyz(s_lobbyChat[s_lobbyChatCount].senderName, steamLookupLobbyMemberName(ev->uvalue),
+			sizeof(s_lobbyChat[0].senderName));
+		Q_strncpyz(s_lobbyChat[s_lobbyChatCount].text, ev->name, sizeof(s_lobbyChat[0].text));
+		s_lobbyChatCount++;
+		s_lobbyChatDirty = 1;
 		break;
 
 	default:
@@ -362,6 +480,8 @@ static const char *SteamEventName(STEAMSHIM_EventType type)
 	case SHIMEVENT_LOBBY_DATA:        return "LOBBY_DATA";
 	case SHIMEVENT_LOBBY_OWNER:       return "LOBBY_OWNER";
 	case SHIMEVENT_LOBBY_HOSTLEFT:    return "LOBBY_HOSTLEFT";
+	case SHIMEVENT_LOBBY_MEMBER:      return "LOBBY_MEMBER";
+	case SHIMEVENT_LOBBY_CHATMSG:     return "LOBBY_CHATMSG";
 	case SHIMEVENT_LOCAL_IDENTITY:    return "LOCAL_IDENTITY";
 	case SHIMEVENT_FRIEND_NAME:       return "FRIEND_NAME";
 	case SHIMEVENT_NET_CONNECTED:     return "NET_CONNECTED";
@@ -427,6 +547,7 @@ void steamSetRichPresence(const char *key, const char *value)
 void steamLobbyCreate(int maxPlayers)
 {
 	Com_Printf("steamLobbyCreate: maxPlayers=%d\n", maxPlayers);
+	steamResetLobbyRosterState();
 	STEAMSHIM_lobbyCreate(maxPlayers);
 }
 
@@ -439,6 +560,7 @@ void steamLobbyList(void)
 
 void steamLobbyJoin(uint64_t lobbyID)
 {
+	steamResetLobbyRosterState();
 	STEAMSHIM_lobbyJoin(lobbyID);
 }
 
@@ -448,6 +570,7 @@ void steamLobbyLeave(void)
 	s_steamCurrentLobby = 0;
 	s_steamCurrentLobbyOwner = 0;
 	s_steamHostLeft = 0;
+	steamResetLobbyRosterState();
 	steamNetClose(0);
 }
 
@@ -480,6 +603,93 @@ int steamCheckHostLeft(void)
 	}
 	s_steamHostLeft = 0;
 	return 1;
+}
+
+int steamLobbyMemberCount(void)
+{
+	return s_lobbyMemberCount;
+}
+
+uint64_t steamLobbyMemberSteamID(int index)
+{
+	if (index < 0 || index >= s_lobbyMemberCount) {
+		return 0;
+	}
+	return s_lobbyMembers[index].steamID;
+}
+
+const char *steamLobbyMemberName(int index)
+{
+	if (index < 0 || index >= s_lobbyMemberCount) {
+		return "";
+	}
+	return s_lobbyMembers[index].name;
+}
+
+const char *steamLobbyOwnerName(void)
+{
+	return steamLookupLobbyMemberName(s_steamCurrentLobbyOwner);
+}
+
+int steamLobbyMembersDirty(void)
+{
+	return s_lobbyMembersDirty;
+}
+
+void steamLobbyMembersClearDirty(void)
+{
+	s_lobbyMembersDirty = 0;
+}
+
+int steamLobbyStarted(void)
+{
+	return s_steamLobbyStarted;
+}
+
+const char *steamLobbyMapName(void)
+{
+	return s_lobbyMapName;
+}
+
+int steamLobbyGameType(void)
+{
+	return s_lobbyGameType;
+}
+
+void steamLobbySendChatMsg(const char *text)
+{
+	STEAMSHIM_lobbySendChat(text);
+}
+
+int steamLobbyChatCount(void)
+{
+	return s_lobbyChatCount;
+}
+
+const char *steamLobbyChatSenderName(int index)
+{
+	if (index < 0 || index >= s_lobbyChatCount) {
+		return "";
+	}
+	return s_lobbyChat[index].senderName;
+}
+
+const char *steamLobbyChatText(int index)
+{
+	if (index < 0 || index >= s_lobbyChatCount) {
+		return "";
+	}
+	return s_lobbyChat[index].text;
+}
+
+int steamLobbyChatDirty(void)
+{
+	return s_lobbyChatDirty;
+}
+
+void steamLobbyChatClearDirty(void)
+{
+	s_lobbyChatDirty = 0;
 }
 
 void steamRequestLocalIdentity(void)
@@ -595,6 +805,83 @@ uint64_t steamLobbyOwner(void)
 int steamCheckHostLeft(void)
 {
 	return 0;
+}
+
+int steamLobbyMemberCount(void)
+{
+	return 0;
+}
+
+uint64_t steamLobbyMemberSteamID(int index)
+{
+	(void)index;
+	return 0;
+}
+
+const char *steamLobbyMemberName(int index)
+{
+	(void)index;
+	return "";
+}
+
+const char *steamLobbyOwnerName(void)
+{
+	return "";
+}
+
+int steamLobbyMembersDirty(void)
+{
+	return 0;
+}
+
+void steamLobbyMembersClearDirty(void)
+{
+}
+
+int steamLobbyStarted(void)
+{
+	return 0;
+}
+
+const char *steamLobbyMapName(void)
+{
+	return "";
+}
+
+int steamLobbyGameType(void)
+{
+	return -1;
+}
+
+void steamLobbySendChatMsg(const char *text)
+{
+	(void)text;
+}
+
+int steamLobbyChatCount(void)
+{
+	return 0;
+}
+
+const char *steamLobbyChatSenderName(int index)
+{
+	(void)index;
+	return "";
+}
+
+const char *steamLobbyChatText(int index)
+{
+	(void)index;
+	return "";
+}
+
+int steamLobbyChatDirty(void)
+{
+	return 0;
+}
+
+void steamLobbyChatClearDirty(void)
+{
 }
 
 void steamRequestLocalIdentity(void)

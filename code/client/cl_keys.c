@@ -2370,10 +2370,6 @@ void CL_KeyDownEvent( int key, unsigned time )
 		if ( activeMenu == UIMENU_CLIPBOARD ) {
 			// any key gets out of clipboard
 			key = K_ESCAPE;
-		} else if ( activeMenu == UIMENU_PREGAME ) {
-			if ( key != K_MOUSE1 ) {
-				return; // eat all keys except mouse click
-			}
 		} else {
 
 			// when in the notebook, check for the key bound to "notebook" and allow that as an escape key

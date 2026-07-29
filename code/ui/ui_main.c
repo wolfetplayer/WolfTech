@@ -2107,30 +2107,117 @@ static void UI_DrawCreateMapPreview( rectDef_t *rect, float scale, vec4_t color 
 ===============
 UI_DrawLobbySlot
 
-Pre-game lobby: draws slotIndex's connected player's name, or a
-"Player Slot Available" placeholder if nobody has connected into that
-client slot yet. Reads CS_PLAYERS directly (same source cg_players.c's
-CG_NewClientInfo parses) since the UI VM has no access to cgame's
-clientinfo_t cache.
+Pre-game lobby: draws slotIndex's lobby member's name, or a
+"Player Slot Available" placeholder if nobody's taken that slot yet. Reads
+cl_lobbySlotN, which cl_main.c keeps mirrored from the Steam lobby roster -
+nobody's connected to any game yet at this point, so CS_PLAYERS doesn't exist.
 ===============
 */
 static void UI_DrawLobbySlot( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle, int slotIndex ) {
-	char info[MAX_INFO_STRING];
-	const char *name;
+	char name[64];
 
-	trap_GetConfigString( CS_PLAYERS + slotIndex, info, sizeof( info ) );
+	trap_Cvar_VariableStringBuffer( va( "cl_lobbySlot%d", slotIndex ), name, sizeof( name ) );
 
-	if ( info[0] ) {
-		name = Info_ValueForKey( info, "n" );
-	} else {
+	if ( !name[0] ) {
 #ifdef LOCALISATION
-		name = DC->translateString( "Player Slot Available" );
+		Q_strncpyz( name, DC->translateString( "Player Slot Available" ), sizeof( name ) );
 #else
-		name = DC->getTranslatedString( "Player Slot Available" );
+		Q_strncpyz( name, DC->getTranslatedString( "Player Slot Available" ), sizeof( name ) );
 #endif
 	}
 
 	Text_Paint( rect->x, rect->y, font, scale, color, name, 0, 0, textStyle );
+}
+
+/*
+===============
+UI_DrawLobbyLeaderName
+
+Pre-game lobby: paints "Lobby Leader: <name>" - cl_lobbyLeaderName is mirrored by
+cl_main.c from the Steam lobby owner's persona name, so this works for guests too.
+===============
+*/
+static void UI_DrawLobbyLeaderName( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	char leaderName[64];
+	char line[128];
+	const char *label;
+
+#ifdef LOCALISATION
+	label = DC->translateString( "Lobby Leader:" );
+#else
+	label = DC->getTranslatedString( "Lobby Leader:" );
+#endif
+
+	trap_Cvar_VariableStringBuffer( "cl_lobbyLeaderName", leaderName, sizeof( leaderName ) );
+
+	Com_sprintf( line, sizeof( line ), "%s %s", label, leaderName );
+
+	Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
+}
+
+/*
+===============
+UI_DrawLobbyMapPreview
+
+Pre-game lobby: same shader-registration trick as UI_DrawCreateMapPreview, but
+sourced from cl_lobbyMapName (mirrored from the Steam lobby's data by cl_main.c)
+instead of the host's own ui_currentNetMap selection index - works for guests too,
+who never went through create.menu's map picker at all.
+===============
+*/
+static void UI_DrawLobbyMapPreview( rectDef_t *rect, float scale, vec4_t color ) {
+	char mapName[MAX_QPATH];
+
+	trap_Cvar_VariableStringBuffer( "cl_lobbyMapName", mapName, sizeof( mapName ) );
+
+	if ( mapName[0] ) {
+		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip( va( "levelshots/ui_%s", mapName ) ) );
+	} else {
+		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip( "menu/art/unknownmap" ) );
+	}
+}
+
+/*
+===============
+UI_DrawLobbyGameType
+
+Pre-game lobby: resolves cl_lobbyGameType (a raw gametype_t enum value, mirrored
+from the Steam lobby's data) back to its localized display name via uiInfo.gameTypes[],
+the same table create.menu's own gametype selector is built from.
+===============
+*/
+static void UI_DrawLobbyGameType( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	int gt = (int)trap_Cvar_VariableValue( "cl_lobbyGameType" );
+	const char *name = "";
+	int i;
+
+	for ( i = 0; i < uiInfo.numGameTypes; i++ ) {
+		if ( uiInfo.gameTypes[i].gtEnum == gt ) {
+			name = uiInfo.gameTypes[i].gameType;
+			break;
+		}
+	}
+
+	Text_Paint( rect->x, rect->y, font, scale, color, name, 0, 0, textStyle );
+}
+
+/*
+===============
+UI_DrawLobbyChatLine
+
+Pre-game lobby: draws one of the last few chat lines (cl_lobbyChatLineN, kept
+mirrored by cl_main.c from the Steam lobby's chat messages), or nothing if that
+slot hasn't been filled yet.
+===============
+*/
+static void UI_DrawLobbyChatLine( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle, int lineIndex ) {
+	char line[300];
+
+	trap_Cvar_VariableStringBuffer( va( "cl_lobbyChatLine%d", lineIndex ), line, sizeof( line ) );
+
+	if ( line[0] ) {
+		Text_Paint( rect->x, rect->y, font, scale, color, line, 0, 0, textStyle );
+	}
 }
 
 
@@ -2930,6 +3017,22 @@ static void UI_OwnerDraw( float x, float y, float w, float h, float text_x, floa
 	case UI_LOBBYSLOT3:
 	case UI_LOBBYSLOT4:
 		UI_DrawLobbySlot( &rect, font, scale, color, textStyle, ownerDraw - UI_LOBBYSLOT1 );
+		break;
+	case UI_LOBBYCHAT1:
+	case UI_LOBBYCHAT2:
+	case UI_LOBBYCHAT3:
+	case UI_LOBBYCHAT4:
+	case UI_LOBBYCHAT5:
+		UI_DrawLobbyChatLine( &rect, font, scale, color, textStyle, ownerDraw - UI_LOBBYCHAT1 );
+		break;
+	case UI_LOBBYMAPPREVIEW:
+		UI_DrawLobbyMapPreview( &rect, scale, color );
+		break;
+	case UI_LOBBYGAMETYPE:
+		UI_DrawLobbyGameType( &rect, font, scale, color, textStyle );
+		break;
+	case UI_LOBBYLEADERNAME:
+		UI_DrawLobbyLeaderName( &rect, font, scale, color, textStyle );
 		break;
 	case UI_NETMAPCINEMATIC:
 		UI_DrawNetMapCinematic( &rect, scale, color );
@@ -4723,6 +4826,9 @@ static void UI_RunMenuScript( char **args ) {
 
 			trap_Cvar_Set("sv_maxClients", va("%d", clients));
 
+			// Pre-game lobby: this only creates the Steam lobby - nobody connects to
+			// any game server or loads any map until the host hits "Start The Game"
+			// (see LobbyStartGame below).
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_host %d\n", clients));
 
 			// push name/map/gametype to the lobby; steam_setdata queues until it's ready
@@ -4733,8 +4839,46 @@ static void UI_RunMenuScript( char **args ) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
 
-			// Freeze into the pre-game lobby instead of straight into play once the map loads.
-			trap_Cvar_Set("g_lobbyPending", "1");
+			// Open the lobby screen ourselves, right now - don't wait on cl_main.c to
+			// notice the Steam lobby exists (that's still there too, as a fallback/for
+			// guests, but the host shouldn't be left on a blank screen if that round
+			// trip is ever slow or doesn't fire).
+			_UI_SetActiveMenu( UIMENU_PREGAME );
+		}
+		else if (Q_stricmp(name, "ApplyLobbySettings") == 0)
+		{
+			// Host adjusting settings from the pregame lobby's "Edit Game Settings"
+			// overlay. Nothing is connected/loaded yet at this point, so this just
+			// updates the pending choices (re-read by LobbyStartGame below whenever
+			// the host actually starts the match) and refreshes what the Steam lobby
+			// list shows everyone else in the meantime.
+			int gt;
+			const char *mapName;
+
+			gt = uiInfo.gameTypes[ui_netGameType.integer].gtEnum;
+			trap_Cvar_SetValue("g_gametype", gt);
+
+			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
+
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
+		}
+		else if (Q_stricmp(name, "LobbyStartGame") == 0)
+		{
+			// Host clicked "Start The Game" in the pregame lobby. Flip the Steam
+			// lobby's "started" flag first - every guest is watching for that
+			// (steamLobbyStarted()) and auto-connects the instant they see it - then
+			// load the actual map ourselves, so everyone ends up loading it together
+			// instead of the old "load it first, then freeze in place" flow.
+			int gt;
+			const char *mapName;
+
+			gt = uiInfo.gameTypes[ui_netGameType.integer].gtEnum;
+			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
+
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
+			trap_Cmd_ExecuteText(EXEC_APPEND, "steam_setdata started 1\n");
 
 			if (gt == GT_COOP_SURVIVAL)
 			{
@@ -4745,40 +4889,17 @@ static void UI_RunMenuScript( char **args ) {
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; coopmap %s\n", mapName));
 			}
 		}
-		else if (Q_stricmp(name, "ApplyLobbySettings") == 0)
+		else if (Q_stricmp(name, "LeaveLobby") == 0)
 		{
-			// Host re-applying settings from the pregame lobby's "Edit Game Settings"
-			// overlay. Non-map settings (gametype, difficulty, etc.) are plain
-			// CVAR_SERVERINFO cvars already bound directly by lobby_settings.menu's
-			// itemDefs, so they take effect live with no extra work here. Only a
-			// changed map needs a reload - same sequence as the initial "Start Lobby"
-			// flow, just re-entering GS_LOBBY on arrival instead of GS_WARMUP/PLAYING.
-			int gt;
-			const char *mapName;
-			char currentMap[MAX_QPATH];
-
-			gt = uiInfo.gameTypes[ui_netGameType.integer].gtEnum;
-			trap_Cvar_SetValue("g_gametype", gt);
-
-			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
-			trap_Cvar_VariableStringBuffer("mapname", currentMap, sizeof(currentMap));
-
-			if (Q_stricmp(mapName, currentMap) != 0)
-			{
-				trap_Cvar_Set("g_lobbyPending", "1");
-
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
-
-				if (gt == GT_COOP_SURVIVAL)
-				{
-					trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; svmap %s\n", mapName));
-				}
-				else
-				{
-					trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; coopmap %s\n", mapName));
-				}
-			}
+			// "Leave This Lobby": a plain "close pregame ; exec disconnect" menu
+			// script leaves the client stuck on a dead, non-interactive pregame
+			// screen - closing a menu via the "close" script command doesn't touch
+			// the KEYCATCH_UI catcher, and nothing else ever clears it once pregame
+			// is gone, so the usual "no menu open -> show main menu" fallback in
+			// cl_main.c never fires. Drive the transition directly instead, the
+			// same proven-correct path UIMENU_MAIN itself uses.
+			trap_Cmd_ExecuteText(EXEC_APPEND, "disconnect\n");
+			_UI_SetActiveMenu( UIMENU_MAIN );
 		}
 		else if (Q_stricmp(name, "updateSPMenu") == 0)
 		{
@@ -7477,6 +7598,10 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 
 		case UIMENU_PREGAME:
 			trap_Cvar_Set( "cl_paused", "1" );
+			// Clear any stale chat draft here in C - pregame.menu's onOpen can't do
+			// this itself, since this script system's String_Parse() treats an empty
+			// quoted string "" as a parse failure rather than a valid empty value.
+			trap_Cvar_Set( "ui_lobbyChatInput", "" );
 			trap_Key_SetCatcher( KEYCATCH_UI );
 			Menus_CloseAll();
 			Menus_ActivateByName( "pregame", qtrue );

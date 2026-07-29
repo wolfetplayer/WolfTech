@@ -119,7 +119,14 @@ void AICastHealthInfoMessage( void ) {
 		}
 	}
 
-	trap_SendServerCommand( -1, va( "aiHealth %i%s", cnt, string ) );
+	// Per-client, not a -1 broadcast: a client still loading the map (CON_CONNECTING)
+	// hasn't sent any usercmds yet, so it can't ack reliable commands - broadcasting
+	// this every 200ms would flood and drop it before it ever finishes connecting.
+	for ( i = 0; i < level.maxclients; i++ ) {
+		if ( level.clients[i].pers.connected == CON_CONNECTED ) {
+			trap_SendServerCommand( i, va( "aiHealth %i%s", cnt, string ) );
+		}
+	}
 }
 
 #define AI_NAMEINFO_UPDATE_TIME  3000      // aiName is static, no need to spam this like health
@@ -157,7 +164,12 @@ void AICastNameInfoMessage( void ) {
 		cnt++;
 	}
 
-	trap_SendServerCommand( -1, va( "aiNames %i%s", cnt, string ) );
+	// Per-client, not a -1 broadcast - see the same comment in AICastHealthInfoMessage above.
+	for ( i = 0; i < level.maxclients; i++ ) {
+		if ( level.clients[i].pers.connected == CON_CONNECTED ) {
+			trap_SendServerCommand( i, va( "aiNames %i%s", cnt, string ) );
+		}
+	}
 }
 
 void CoopInfoMessage( gentity_t *ent ) {

@@ -236,26 +236,9 @@ void CG_ParseServerinfo( void ) {
 	trap_Cvar_Set( "cg_maxspawnpoints", Info_ValueForKey( info, "g_maxspawnpoints" ) );
 	trap_Cvar_Set( "cg_maxlives", Info_ValueForKey( info, "g_maxlives" ) );
 
-	{
-		int oldGamestate = cgs.gamestate;
-
-		cgs.gamestate = atoi( Info_ValueForKey( info, "gamestate" ) );
-		if ( !cgs.localServer ) {
-			trap_Cvar_Set( "gamestate", va( "%i", cgs.gamestate ) );
-		}
-
-		// pre-game lobby: pop the lobby screen up/down as we enter/leave GS_LOBBY(_COUNTDOWN),
-		// same mechanism the (currently content-less) UIMENU_PREGAME hook was always meant for.
-		if ( cgs.gamestate != oldGamestate ) {
-			qboolean wasLobby = ( oldGamestate == GS_LOBBY || oldGamestate == GS_LOBBY_COUNTDOWN );
-			qboolean isLobby = ( cgs.gamestate == GS_LOBBY || cgs.gamestate == GS_LOBBY_COUNTDOWN );
-
-			if ( isLobby && !wasLobby ) {
-				trap_UI_Popup( "pregame" );
-			} else if ( wasLobby && !isLobby ) {
-				trap_UI_ClosePopup( "pregame" );
-			}
-		}
+	cgs.gamestate = atoi( Info_ValueForKey( info, "gamestate" ) );
+	if ( !cgs.localServer ) {
+		trap_Cvar_Set( "gamestate", va( "%i", cgs.gamestate ) );
 	}
 
 	// TTimo - make this available for ingame_callvote
@@ -356,19 +339,6 @@ static void CG_ParseWarmup( void ) {
 	}
 
 	cg.warmup = warmup;
-}
-
-/*
-==================
-CG_ParseLobbyCountdown
-==================
-*/
-static void CG_ParseLobbyCountdown( void ) {
-	const char *info;
-
-	info = CG_ConfigString( CS_LOBBY_COUNTDOWN );
-
-	cg.lobbyCountdown = atoi( info );
 }
 
 /*
@@ -556,8 +526,6 @@ static void CG_ConfigStringModified( void ) {
 		CG_ParseServerinfo();
 	} else if ( num == CS_WARMUP ) {
 		CG_ParseWarmup();
-	} else if ( num == CS_LOBBY_COUNTDOWN ) {
-		CG_ParseLobbyCountdown();
 	} else if ( num == CS_SCORES1 ) {
 		cgs.scores1 = atoi( str );
 	} else if ( num == CS_SCORES2 ) {

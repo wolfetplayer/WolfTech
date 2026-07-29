@@ -977,9 +977,6 @@ typedef struct {
 	int warmup;
 	int warmupCount;
 
-	// pre-game lobby countdown (CS_LOBBY_COUNTDOWN)
-	int lobbyCountdown;
-
 	// message icon popup time	//----(SA)	added
 	int yougotmailTime;
 
