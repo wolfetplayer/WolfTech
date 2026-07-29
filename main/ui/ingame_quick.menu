@@ -59,9 +59,11 @@ menuDef {
 			text			"@MULTI_NAME_LABEL"
 			cvar			"name"
 			textscale		.22
-			textalign		ITEM_ALIGN_RIGHT	
+			textalign		ITEM_ALIGN_RIGHT
 			textalignx		126
 			textaligny		11
+			cvarTest		"cl_steamActive"
+			disableCvar		{ "1" }
 			}
 			
 		itemDef {

@@ -13,6 +13,7 @@ menuDef {
 		outOfBoundsClick			// this closes the window if it gets a click out of the rectangle
 		rect 20 115 605 335
 		focusColor 1 .75 0 1
+		disableColor .5 .5 .5 1
 		style 1
 		border 1
 
@@ -281,9 +282,11 @@ menuDef {
 			text			"@MULTI_NAME_LABEL"
 			cvar			"name"
 			textscale		.25
-			textalign		ITEM_ALIGN_LEFT	
+			textalign		ITEM_ALIGN_LEFT
 			textalignx		0
 			textaligny		14
+			cvarTest		"cl_steamActive"
+			disableCvar		{ "1" }
 			}
 
       itemDef {

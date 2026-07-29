@@ -3406,26 +3406,24 @@ void CL_Frame( int msec ) {
 		CL_UpdateSteamServers();
 		CL_FlushPendingSteamLobbyData();
 
-		// Pre-game lobby: fetch our own SteamID/persona name once, tether "name" to it
-		// (unless the player already customized it away from the default), and expose
-		// the raw SteamID to the server via cl_steamid so lobby slots can key off it.
+		// Pre-game lobby: keep "name" permanently tethered to the Steam persona name every frame - players don't get to override it.
 		{
 			static qboolean requestedLocalIdentity = qfalse;
-			static qboolean appliedLocalIdentity = qfalse;
 
 			if ( !requestedLocalIdentity ) {
 				requestedLocalIdentity = qtrue;
 				steamRequestLocalIdentity();
 			}
 
-			if ( !appliedLocalIdentity && steamLocalSteamID() != 0 ) {
-				appliedLocalIdentity = qtrue;
-
+			if ( steamLocalSteamID() != 0 ) {
 				Cvar_Set( "cl_steamid", va( "%llu", (unsigned long long) steamLocalSteamID() ) );
+				Cvar_Set( "cl_steamActive", "1" );
 
-				if ( steamLocalPersonaName()[0] && !Q_stricmp( Cvar_VariableString( "name" ), "WolfPlayer" ) ) {
+				if ( steamLocalPersonaName()[0] && Q_stricmp( Cvar_VariableString( "name" ), steamLocalPersonaName() ) ) {
 					Cvar_Set( "name", steamLocalPersonaName() );
 				}
+			} else {
+				Cvar_Set( "cl_steamActive", "0" );
 			}
 		}
 
@@ -4573,6 +4571,7 @@ void CL_Init( void ) {
 	// userinfo
 	Cvar_Get( "name", "WolfPlayer", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "cl_steamid", "0", CVAR_USERINFO | CVAR_ROM );   // pre-game lobby: raw SteamID64, tethered in CL_Frame once Steam resolves it
+	Cvar_Get( "cl_steamActive", "0", CVAR_ROM );   // mirrors whether Steam identity is resolved, for UI gating
 
 	// Pre-game lobby: front-end-only (nobody's connected to a game yet), so no
 	// CVAR_USERINFO here - the disconnected UI VM just reads these back directly.
