@@ -473,11 +473,17 @@ public:
     STEAM_CALLBACK(SteamBridge, OnLobbyEnter, LobbyEnter_t, m_CallbackLobbyEnter);
     STEAM_CALLBACK(SteamBridge, OnLobbyDataUpdate, LobbyDataUpdate_t, m_CallbackLobbyDataUpdate);
     STEAM_CALLBACK(SteamBridge, OnLobbyChatUpdate, LobbyChatUpdate_t, m_CallbackLobbyChatUpdate);
+    STEAM_CALLBACK(SteamBridge, OnLobbyChatMsg, LobbyChatMsg_t, m_CallbackLobbyChatMsg);
     STEAM_CALLBACK(SteamBridge, OnNetConnectionStatusChanged, SteamNetConnectionStatusChangedCallback_t, m_CallbackNetConnStatusChanged);
     STEAM_CALLBACK(SteamBridge, OnGameLobbyJoinRequested, GameLobbyJoinRequested_t, m_CallbackGameLobbyJoinRequested);
 
     void OnLobbyCreated(LobbyCreated_t *pCallback, bool bIOFailure);
     void OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure);
+
+    // Pre-game lobby: pushes the current lobby's member list (steamID + persona name)
+    // to the child, terminated by a uvalue==0 "DONE" entry. Called whenever membership
+    // changes so the child never has to poll for it.
+    void SendLobbyMemberRoster(void);
 
     CCallResult<SteamBridge, LobbyCreated_t> m_CallResultLobbyCreated;
     CCallResult<SteamBridge, LobbyMatchList_t> m_CallResultLobbyMatchList;
@@ -517,6 +523,9 @@ typedef enum ShimCmd
 	SHIMCMD_NET_CONNECT,
 	SHIMCMD_NET_SEND,
 	SHIMCMD_NET_CLOSE,
+
+	// Pre-game lobby text chat.
+	SHIMCMD_LOBBY_SENDCHAT,
 } ShimCmd;
 
 #define SHIM_LEN_ESCAPE 0xFF
@@ -553,6 +562,14 @@ typedef enum ShimEvent
 	SHIMEVENT_NET_CONNECTED,
 	SHIMEVENT_NET_DISCONNECTED,
 	SHIMEVENT_NET_DATA,
+
+	// Pre-game lobby roster; see steamshim_child.h for the wire format (shared with
+	// SHIMEVENT_LOBBY_LIST's per-entry + uvalue==0 "DONE" terminator convention).
+	// Appended here so existing event values line up with steamshim_child.h.
+	SHIMEVENT_LOBBY_MEMBER,
+
+	// Pre-game lobby text chat: uvalue = sender's steamID, text = message body.
+	SHIMEVENT_LOBBY_CHATMSG,
 } ShimEvent;
 
 static bool write1ByteCmd(PipeType fd, const uint8 b1)
@@ -800,6 +817,7 @@ SteamBridge::SteamBridge(PipeType _fd)
     , m_CallbackLobbyEnter(this, &SteamBridge::OnLobbyEnter)
     , m_CallbackLobbyDataUpdate(this, &SteamBridge::OnLobbyDataUpdate)
     , m_CallbackLobbyChatUpdate(this, &SteamBridge::OnLobbyChatUpdate)
+    , m_CallbackLobbyChatMsg(this, &SteamBridge::OnLobbyChatMsg)
     , m_CallbackNetConnStatusChanged(this, &SteamBridge::OnNetConnectionStatusChanged)
     , m_CallbackGameLobbyJoinRequested(this, &SteamBridge::OnGameLobbyJoinRequested)
     , fd(_fd)
@@ -837,6 +855,11 @@ SteamParentLog("PARENT: OnLobbyCreated called");
 	if (GSteamMatchmaking && GCurrentLobby.IsValid()) {
 		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "game", "wolftech");
 		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "name", "WolfTech Lobby");
+
+		// Pre-game lobby: "0" until the host clicks "Start The Game" (see
+		// SHIMCMD_LOBBY_SETDATA); guests watch this via OnLobbyDataUpdate to know
+		// when to stop waiting and auto-connect.
+		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "started", "0");
 
 		/*
 		Temporary.
@@ -959,12 +982,16 @@ void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 
 		GLastKnownOwner = ownerSteamID;
 
+		// Pre-game lobby: the pregame UI needs to know who the host is (to gate the
+		// "Start The Game" button) whether we're that host or a joining guest, so
+		// report it unconditionally now instead of only to guests.
+		writeNetConnEvent(fd, SHIMEVENT_LOBBY_OWNER, ownerSteamID);
+
 		if (ownerSteamID == GUserID)
 		{
 			// We're the host. The client side of the engine reaches its
 			// own listen server over loopback like it always has, so it
-			// has no use for the owner steamID here - only report it (and
-			// auto-connect) to joining clients below.
+			// has no use for the owner steamID here for connecting purposes.
 			if (GP2PListenSocket == k_HSteamListenSocket_Invalid)
 			{
 				GP2PListenSocket = GSteamNetworkingSockets->CreateListenSocketP2P(0, 0, NULL);
@@ -974,8 +1001,6 @@ void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 		}
 		else
 		{
-			writeNetConnEvent(fd, SHIMEVENT_LOBBY_OWNER, ownerSteamID);
-
 			if (P2P_FindConnBySteamID(ownerSteamID) == k_HSteamNetConnection_Invalid)
 			{
 				SteamNetworkingIdentity identity;
@@ -986,31 +1011,75 @@ void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 			}
 		}
 	}
+
+	SendLobbyMemberRoster();
 }
 
 void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
 {
 	const uint64 lobbyID = pCallback->m_ulSteamIDLobby;
+	const char *started = "";
+	const char *map = "";
+	const char *gametype = "";
+	char payload[256];
 
 	dbgpipe("Lobby data updated: %llu\n", lobbyID);
+
+	// Pre-game lobby: piggyback "started" plus the chosen map/gametype onto every data
+	// update so the child doesn't need a round trip to read them - guests use "started"
+	// to know when to auto-connect, and map/gametype to show the same lobby info panel
+	// the host sees, without needing their own map/gametype selection to be set.
+	if (GSteamMatchmaking && GCurrentLobby.IsValid() && lobbyID == GCurrentLobby.ConvertToUint64())
+	{
+		started = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "started");
+		map = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "map");
+		gametype = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "gametype");
+	}
+
+	// steamLobbyListParseEntry()-style \x01-delimited fields; steam.c splits this back apart.
+	snprintf(payload, sizeof(payload), "%s\x01%s\x01%s",
+		started ? started : "", map ? map : "", gametype ? gametype : "");
 
 	writeLobbyEvent(
 		fd,
 		SHIMEVENT_LOBBY_DATA,
 		true,
 		lobbyID,
-		""
+		payload
 	);
 }
 
-// Fires on any lobby member joining/leaving/disconnecting/getting kicked; we only care when it's the host.
+// Pre-game lobby: enumerates the current lobby's members and pushes them to the child
+// as a burst of SHIMEVENT_LOBBY_MEMBER events terminated by a uvalue==0 "DONE" entry.
+void SteamBridge::SendLobbyMemberRoster(void)
+{
+	if (!GSteamMatchmaking || !GCurrentLobby.IsValid())
+		return;
+
+	const int numMembers = GSteamMatchmaking->GetNumLobbyMembers(GCurrentLobby);
+
+	for (int i = 0; i < numMembers; i++)
+	{
+		const CSteamID member = GSteamMatchmaking->GetLobbyMemberByIndex(GCurrentLobby, i);
+		const char *name = GSteamFriends ? GSteamFriends->GetFriendPersonaName(member) : "";
+
+		writeLobbyEvent(fd, SHIMEVENT_LOBBY_MEMBER, true, member.ConvertToUint64(), name ? name : "");
+	}
+
+	writeLobbyEvent(fd, SHIMEVENT_LOBBY_MEMBER, true, 0, "DONE");
+}
+
+// Fires on any lobby member joining/leaving/disconnecting/getting kicked.
 void SteamBridge::OnLobbyChatUpdate(LobbyChatUpdate_t *pCallback)
 {
 	if (!GCurrentLobby.IsValid() || pCallback->m_ulSteamIDLobby != GCurrentLobby.ConvertToUint64())
 		return;
 
+	// Pre-game lobby: refresh the roster on every membership change, join or leave.
+	SendLobbyMemberRoster();
+
 	if (!BChatMemberStateChangeRemoved(pCallback->m_rgfChatMemberStateChange))
-		return; // someone joined, not a departure - nothing to do.
+		return; // someone joined, not a departure - nothing further to do.
 
 	// GLastKnownOwner == GUserID guards against ever misfiring on our own account.
 	if (pCallback->m_ulSteamIDUserChanged != GLastKnownOwner || GLastKnownOwner == GUserID)
@@ -1021,6 +1090,29 @@ void SteamBridge::OnLobbyChatUpdate(LobbyChatUpdate_t *pCallback)
 		(unsigned int) pCallback->m_rgfChatMemberStateChange);
 
 	writeNetConnEvent(fd, SHIMEVENT_LOBBY_HOSTLEFT, GLastKnownOwner);
+}
+
+// Pre-game lobby text chat: fires for every member (sender included) whenever anyone
+// sends a lobby chat message; look up the actual text via GetLobbyChatEntry.
+void SteamBridge::OnLobbyChatMsg(LobbyChatMsg_t *pCallback)
+{
+	char text[256];
+	EChatEntryType entryType;
+	CSteamID senderID;
+
+	if (!GSteamMatchmaking || !GCurrentLobby.IsValid() || pCallback->m_ulSteamIDLobby != GCurrentLobby.ConvertToUint64())
+		return;
+
+	if (GSteamMatchmaking->GetLobbyChatEntry(GCurrentLobby, (int) pCallback->m_iChatID, &senderID,
+			text, sizeof(text), &entryType) <= 0)
+		return;
+
+	if (entryType != k_EChatEntryTypeChatMsg)
+		return; // not a plain text message (typing indicator, kick/ban notice, etc.)
+
+	text[sizeof(text) - 1] = '\0';
+
+	writeLobbyEvent(fd, SHIMEVENT_LOBBY_CHATMSG, true, senderID.ConvertToUint64(), text);
 }
 
 void SteamBridge::OnNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t *pCallback)
@@ -1397,6 +1489,27 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
             GSteamMatchmaking->SetLobbyData(GCurrentLobby, key, value);
 
             dbgpipe("Lobby set data: %s=%s\n", key, value);
+            break;
+        }
+
+        case SHIMCMD_LOBBY_SENDCHAT:
+        {
+            if (!GSteamMatchmaking || !GCurrentLobby.IsValid())
+            {
+                break;
+            }
+
+            const char *text = (const char *)buf;
+            size_t textLen = strlen(text) + 1;
+
+            if (textLen > buflen)
+            {
+                break;
+            }
+
+            GSteamMatchmaking->SendLobbyChatMsg(GCurrentLobby, text, (int)textLen);
+
+            dbgpipe("Lobby chat sent: %s\n", text);
             break;
         }
 
