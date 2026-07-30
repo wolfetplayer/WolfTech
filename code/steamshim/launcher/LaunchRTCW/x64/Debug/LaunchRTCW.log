@@ -1,2 +1,0 @@
-﻿  steamshim_parent.cpp
-C:\Users\user\Documents\GitHub\WolfTech\code\steamshim\launcher\steamshim_parent.cpp(25,10): error C1083: Не удается открыть файл включение: unistd.h: No such file or directory,

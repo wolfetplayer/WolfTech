@@ -38,3 +38,19 @@ profile
 # Microsoft Visual Studio
 ####################
 *.sdf
+*.suo
+*.vsidx
+*.idb
+*.pdb
+*.obj
+*.iobj
+*.ipdb
+*.tlog
+*.lastbuildstate
+*.recipe
+*.vcxproj.FileListAbsolute.txt
+unsuccessfulbuild
+code/steamshim/launcher/.vs/
+code/steamshim/launcher/x64/
+code/steamshim/launcher/LaunchRTCW/
+code/steamshim/launcher/LaunchRTCW.vcxproj
