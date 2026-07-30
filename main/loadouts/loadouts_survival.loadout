@@ -1,6 +1,8 @@
-loadout survival_default
+// Every survival player has a class - AICast_ScriptAction_ApplyLoadout looks up
+// "<loadout>_<class>" (soldier/medic/engineer/lt), there is no classless loadout.
+
+loadout survival_default_soldier
 {
-        // No class	
 		givescore 500
 		giveweapon weapon_knife
 		giveweapon weapon_thompson
@@ -12,9 +14,50 @@ loadout survival_default
 		setammo weapon_grenadepineapple full
 }
 
-loadout survival_hardcore
+loadout survival_default_medic
 {
-         // No class	
+		givescore 500
+		giveweapon weapon_knife
+		giveweapon weapon_thompson
+		setammo weapon_thompson 128
+		setclip weapon_thompson full
+		selectweapon weapon_thompson
+
+		giveweapon weapon_grenadepineapple
+		setammo weapon_grenadepineapple full
+}
+
+loadout survival_default_engineer
+{
+		givescore 500
+		giveweapon weapon_knife
+		giveweapon weapon_thompson
+		setammo weapon_thompson 128
+		setclip weapon_thompson full
+		selectweapon weapon_thompson
+
+		giveweapon weapon_grenadepineapple
+		setammo weapon_grenadepineapple full
+}
+
+loadout survival_default_lt
+{
+		givescore 500
+		giveweapon weapon_knife
+		giveweapon weapon_thompson
+		setammo weapon_thompson 128
+		setclip weapon_thompson full
+		selectweapon weapon_thompson
+
+		giveweapon weapon_grenadepineapple
+		setammo weapon_grenadepineapple full
+
+		giveweapon weapon_airstrike
+		giveweapon weapon_arty
+}
+
+loadout survival_hardcore_soldier
+{
 		givescore 50
 		giveweapon weapon_knife
 		giveweapon weapon_akimbo
@@ -24,4 +67,46 @@ loadout survival_hardcore
 
 		giveweapon weapon_grenadepineapple
 		setammo weapon_grenadepineapple full
+}
+
+loadout survival_hardcore_medic
+{
+		givescore 50
+		giveweapon weapon_knife
+		giveweapon weapon_akimbo
+		setammo weapon_akimbo 128
+		setclip weapon_akimbo full
+		selectweapon weapon_akimbo
+
+		giveweapon weapon_grenadepineapple
+		setammo weapon_grenadepineapple full
+}
+
+loadout survival_hardcore_engineer
+{
+		givescore 50
+		giveweapon weapon_knife
+		giveweapon weapon_akimbo
+		setammo weapon_akimbo 128
+		setclip weapon_akimbo full
+		selectweapon weapon_akimbo
+
+		giveweapon weapon_grenadepineapple
+		setammo weapon_grenadepineapple full
+}
+
+loadout survival_hardcore_lt
+{
+		givescore 50
+		giveweapon weapon_knife
+		giveweapon weapon_akimbo
+		setammo weapon_akimbo 128
+		setclip weapon_akimbo full
+		selectweapon weapon_akimbo
+
+		giveweapon weapon_grenadepineapple
+		setammo weapon_grenadepineapple full
+
+		giveweapon weapon_airstrike
+		giveweapon weapon_arty
 }

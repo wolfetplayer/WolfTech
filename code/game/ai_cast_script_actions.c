@@ -1608,6 +1608,8 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 	gentity_t *player;
 	qboolean appliedAny = qfalse;
 	int i;
+	// Every survival player has a class, so the loadout is always "<loadout>_<class>" (see loadouts_survival.loadout).
+	static const char *classSuffixes[4] = { "soldier", "medic", "engineer", "lt" };
 
 	if ( !params || !params[0] ) {
 		G_Error( "AI Scripting: applyloadout requires loadout name\n" );
@@ -1615,6 +1617,9 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 
 	if ( g_gametype.integer == GT_COOP_SURVIVAL || g_gametype.integer == GT_COOP ) {
 		for ( i = 0; i < MAX_CLIENTS; i++ ) {
+			int classNum;
+			char classLoadoutName[128];
+
 			player = &g_entities[i];
 
 			if ( !player->inuse || !player->client ) {
@@ -1627,15 +1632,14 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 				continue;   // skip bots/AI-controlled entities
 			}
 
-			if ( AICast_Loadouts_ApplyToEnt( cs, player, params ) ) {
-				appliedAny = qtrue;
+			classNum = player->client->ps.stats[STAT_PLAYER_CLASS];
+			if ( classNum < PC_SOLDIER || classNum > PC_LT ) {
+				classNum = PC_SOLDIER;
 			}
+			Com_sprintf( classLoadoutName, sizeof( classLoadoutName ), "%s_%s", params, classSuffixes[classNum] );
 
-			// Lieutenant class bonus: layers "<loadout>_lt" on top of the base loadout (see loadouts_survival_lt.loadout).
-			if ( player->client->ps.stats[STAT_PLAYER_CLASS] == PC_LT ) {
-				char ltLoadoutName[128];
-				Com_sprintf( ltLoadoutName, sizeof( ltLoadoutName ), "%s_lt", params );
-				AICast_Loadouts_ApplyToEnt( cs, player, ltLoadoutName );
+			if ( AICast_Loadouts_ApplyToEnt( cs, player, classLoadoutName ) ) {
+				appliedAny = qtrue;
 			}
 		}
 
