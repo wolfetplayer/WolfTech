@@ -329,6 +329,7 @@ typedef struct {
 	qboolean noFootsteps;           // if the game is setup for no footsteps by the server
 	qboolean noWeapClips;               // if the game is setup for no weapon clips by the server
 	qboolean gauntletHit;           // true if a gauntlet attack would actually hit something
+	int ltChargeTime;                // JPW NERVE -- g_LTChargeTime/cg_LTChargeTime mirror, so pmove can gate WP_AIRSTRIKE without a bg-side cvar
 
 	// results (out)
 	int numtouch;
@@ -648,6 +649,9 @@ typedef enum {
 	WP_AUTO5,
 
 	WP_DYNAMITE,
+	WP_AIRSTRIKE,
+	WP_ARTY,
+	WP_SMOKETRAIL,      // cosmetic-only "weapon" tag for artillery spotter-round smoke debris, never carried/fired directly
 
 	WP_MONSTER_ATTACK1,
 	WP_MONSTER_ATTACK2,
@@ -1343,6 +1347,7 @@ typedef enum {
 	MOD_DYNAMITE,
 	MOD_DYNAMITE_SPLASH,
 	MOD_AIRSTRIKE, // JPW NERVE
+	MOD_ARTY,
 	MOD_WATER,
 	MOD_SLIME,
 	MOD_LAVA,

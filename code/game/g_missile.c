@@ -1384,6 +1384,10 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->classname             = "grenade";
 		bolt->s.eFlags              = EF_BOUNCE_HALF;
 		break;
+	case WP_AIRSTRIKE:
+		bolt->classname             = "grenade";
+		bolt->s.eFlags              = EF_BOUNCE_HALF;
+		break;
 // jpw
 	case WP_DYNAMITE:
 		// oh, this is /so/ cheap...

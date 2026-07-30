@@ -2245,6 +2245,7 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 	if ( oldweapon == WP_GRENADE_LAUNCHER ||
 		 oldweapon == WP_GRENADE_PINEAPPLE ||
 		 oldweapon == WP_DYNAMITE ||
+		 oldweapon == WP_AIRSTRIKE ||
 		 oldweapon == WP_PANZERFAUST ) {
 		if ( !pm->ps->ammoclip[oldweapon] ) {  // you're empty, don't show grenade '0'
 			showdrop = qfalse;
@@ -3271,7 +3272,7 @@ static void PM_Weapon( void ) {
 
 	delayedFire = qfalse;
 
-	if ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE ) {
+	if ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ) {
 		// (SA) AI's don't set grenadeTimeLeft on +attack, so I don't check for (pm->ps->aiChar) here
 		if ( pm->ps->grenadeTimeLeft > 0 ) {
 			if ( pm->ps->weapon == WP_DYNAMITE ) {
@@ -3563,6 +3564,14 @@ static void PM_Weapon( void ) {
 	{
 		PM_AddEvent(EV_NOFIRE_UNDERWATER);
 		pm->ps->weaponTime = 500;
+		return;
+	}
+
+	// JPW NERVE -- airstrike marker is on LT cooldown - no fire (predicted-side mirror of
+	// the server's gate in g_weapon.c FireWeapon, so the throw animation doesn't wind up
+	// only for the server to silently ignore the actual grenade)
+	if ( pm->ps->weapon == WP_AIRSTRIKE && pm->ps->grenadeTimeLeft <= 0 &&
+		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->ltChargeTime ) {
 		return;
 	}
 
@@ -3895,7 +3904,8 @@ static void PM_QuickGrenade( void ) {
 
 	// already cooking - keep ticking regardless of the gates below, same as a held grenade weapon.
 	if ( pm->ps->grenadeTimeLeft > 0 &&
-		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE )
+		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE &&
+		 pm->ps->weapon != WP_AIRSTRIKE )
 	{
 		pm->ps->grenadeTimeLeft -= pml.msec;
 
@@ -3928,7 +3938,7 @@ static void PM_QuickGrenade( void ) {
 		return;
 	}
 
-	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE ||
+	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ||
 		pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE || pm->ps->weapon == WP_SNOOPERSCOPE )
 	{
 		return;
@@ -4577,7 +4587,7 @@ void PmoveSingle( pmove_t *pmove ) {
 			}
 
 			// don't allow binocs if in the middle of throwing grenade
-			if ( ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE ) && pm->ps->grenadeTimeLeft > 0 ) {
+			if ( ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ) && pm->ps->grenadeTimeLeft > 0 ) {
 				pm->ps->eFlags &= ~EF_ZOOMING;
 			}
 		}

@@ -769,6 +769,8 @@ void CG_PredictPlayerState( void ) {
 			}
 		}
 
+		cg_pmove.ltChargeTime = (int)cg_LTChargeTime.value;
+
 		Pmove( &cg_pmove );
 
 		moved = qtrue;

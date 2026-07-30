@@ -310,6 +310,7 @@ char    *modNames[] = {
 	"MOD_DYNAMITE",
 	"MOD_DYNAMITE_SPLASH",
 	"MOD_AIRSTRIKE", // JPW NERVE
+	"MOD_ARTY",
 	"MOD_WATER",
 	"MOD_SLIME",
 	"MOD_LAVA",
@@ -1040,6 +1041,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			case MOD_ROCKET:
 			case MOD_ROCKET_SPLASH:
 			case MOD_AIRSTRIKE:
+			case MOD_ARTY:
 			case MOD_GRENADE_PINEAPPLE:
 			case MOD_MORTAR:
 			case MOD_MORTAR_SPLASH:

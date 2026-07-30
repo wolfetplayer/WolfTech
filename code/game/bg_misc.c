@@ -62,7 +62,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
-	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE },  //	6
+	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_AIRSTRIKE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
 	{WP_TESLA,              WP_VENOM,               0           },  //	8
 	{WP_M97,                WP_AUTO5,               0           },  //	9
@@ -1326,9 +1326,105 @@ ammotable_t ammoTable[] = {
         .mod                = 0,
 		.rndTriggerRelease  = qfalse,
 	    .iconDrawSize       = WEAPON_ICON_NORMAL,
-		.bulletBased        = qfalse,	
-		.hasMuzzle          = qfalse,	
+		.bulletBased        = qfalse,
+		.hasMuzzle          = qfalse,
 		.underwaterFire     = qfalse,
+    },
+
+	// JPW NERVE -- Lieutenant call-in weapons, ported from RealRTCW.
+	// Both are cooldown-gated (classWeaponTime / g_LTChargeTime) rather than
+	// ammo-gated, so ammo/clip are effectively unlimited (matches the "uses 0"
+	// airstrike/arty .weap ammo blocks these were transcribed from).
+    [WP_AIRSTRIKE] = {
+		.weaponindex        = WP_AIRSTRIKE,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_GRENADE,
+        .maxammo            = 999,
+        .uses               = 0,
+        .maxclip            = 999,
+        .reloadTime         = 0,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 1000,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 400,
+		.weaponSpread       = 0,
+		.spreadScale        = 0.0f,
+		.spreadScaleAdd     = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 800,
+		.aiRange            = AI_WEAPON_RANGE_GRENADE,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_AIRSTRIKE,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
+		.weapFile           = "airstrike.weap",
+    },
+    [WP_ARTY] = {
+		.weaponindex        = WP_ARTY,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_NONE, // fired via the binocular call-in hook, never the normal weapon-fire dispatch
+        .maxammo            = 1,
+        .uses               = 0,
+        .maxclip            = 1,
+        .reloadTime         = 3000,
+        .reloadTimeFull     = 3000,
+        .fireDelayTime      = 50,
+        .nextShotTime       = 1000,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 400,
+		.weaponSpread       = 0,
+		.spreadScale        = 0.0f,
+		.spreadScaleAdd     = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 0,
+		.aiRange            = AI_WEAPON_RANGE_GRENADE,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_ARTY,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
+		// no weapFile: never carried/rendered, fired purely via binoculars (see CG_RegisterWeapon skip list)
+    },
+    [WP_SMOKETRAIL] = {
+		.weaponindex        = WP_SMOKETRAIL,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_NONE,
+        .maxammo            = 0,
+        .uses               = 0,
+        .maxclip            = 0,
+        .reloadTime         = 0,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 0,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 0,
+		.weaponSpread       = 0,
+		.spreadScale        = 0.0f,
+		.spreadScaleAdd     = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 0,
+		.aiRange            = 0,
+        .moveSpeed          = 1.0f,
+        .mod                = 0,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
+		// no weapFile: purely a visual debris tag on non-player missile entities, never registered as a real weapon
     },
 };
 
@@ -2609,6 +2705,49 @@ gitem_t bg_itemlist[] =
 		WP_DYNAMITE,
 		"",                      // precache
 		"",                      // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_airstrike",
+		"sound/misc/w_pkup.wav",
+		{ "", "", "", 0, 0 },
+
+		"icons/iconw_airstrike_1",    // icon
+		"icons/ammo9",           // ammo icon
+		"Airstrike Signal",      // pickup
+		1,
+		IT_WEAPON,
+		WP_AIRSTRIKE,
+		WP_AIRSTRIKE,
+		WP_AIRSTRIKE,
+		WP_AIRSTRIKE,
+		WP_AIRSTRIKE,
+		"",                      // precache
+		"sound/weapons/airstrike/throw.wav sound/weapons/airstrike/airstrike_01.wav",             // sounds
+		{0,0,0,0}
+	},
+
+	{
+		// JPW NERVE -- never actually spawned/picked up; fired via the LT binocular
+		// call-in hook (see Weapon_Artillery in g_weapon.c). Exists so BG_FindItemForWeapon
+		// and similar lookups have something to resolve for WP_ARTY.
+		"weapon_arty",
+		"sound/misc/w_pkup.wav",
+		{ "", "", "", 0, 0 },
+
+		"",                      // icon
+		"icons/ammo9",           // ammo icon
+		"Artillery",             // pickup
+		1,
+		IT_WEAPON,
+		WP_ARTY,
+		WP_ARTY,
+		WP_ARTY,
+		WP_ARTY,
+		WP_ARTY,
+		"",                      // precache
+		"sound/multiplayer/allies/a-firing.wav sound/multiplayer/axis/g-firing.wav sound/multiplayer/allies/a-art_abort.wav sound/multiplayer/axis/g-art_abort.wav",             // sounds
 		{0,0,0,0}
 	},
 

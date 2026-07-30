@@ -534,9 +534,9 @@ qboolean Survival_HandleAmmoPurchase(gentity_t *ent, gentity_t *activator, int p
 	if (heldWeap <= WP_NONE || heldWeap >= WP_NUM_WEAPONS)
 		return qfalse;
 
-	// Skip utility weapons
-	//if (heldWeap == WP_DYNAMITE_ENG || heldWeap == WP_AIRSTRIKE || heldWeap == WP_POISONGAS || heldWeap == WP_SMOKE_BOMB)
-	//	return qfalse;
+	// Skip Lieutenant call-in weapons: cooldown-gated class abilities, not ammo-limited buys
+	if (heldWeap == WP_AIRSTRIKE || heldWeap == WP_ARTY)
+		return qfalse;
 
 	int ammoIndex = BG_FindAmmoForWeapon(heldWeap);
 	if (ammoIndex < 0)
@@ -1050,10 +1050,10 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 	if (techName) {
 		if (!Q_stricmp(techName, "ammo")) {
 
-		// Do not show price if holding dynamite
-	//	if (other->client->ps.weapon == WP_DYNAMITE_ENG || other->client->ps.weapon == WP_POISONGAS || other->client->ps.weapon == WP_AIRSTRIKE ||  other->client->ps.weapon == WP_SMOKE_BOMB ) {
-		//	return;
-		//}
+		// Do not show a price for Lieutenant call-in weapons: not purchasable
+		if (other->client->ps.weapon == WP_AIRSTRIKE || other->client->ps.weapon == WP_ARTY) {
+			return;
+		}
 		
 			price = (price > 0) ? price : Survival_GetDefaultWeaponPrice(other->client->ps.weapon) / 2;
 

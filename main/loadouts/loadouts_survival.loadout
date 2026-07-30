@@ -1,0 +1,27 @@
+loadout survival_default
+{
+        // No class	
+		givescore 500
+		giveweapon weapon_knife
+		giveweapon weapon_thompson
+		setammo weapon_thompson 128
+		setclip weapon_thompson full
+		selectweapon weapon_thompson
+
+		giveweapon weapon_grenadepineapple
+		setammo weapon_grenadepineapple full
+}
+
+loadout survival_hardcore
+{
+         // No class	
+		givescore 50
+		giveweapon weapon_knife
+		giveweapon weapon_akimbo
+		setammo weapon_akimbo 128
+		setclip weapon_akimbo full
+		selectweapon weapon_akimbo
+
+		giveweapon weapon_grenadepineapple
+		setammo weapon_grenadepineapple full
+}

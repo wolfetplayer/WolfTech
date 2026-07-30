@@ -359,7 +359,11 @@ static void CG_Obituary( entityState_t *ent ) {
 			// JPW NERVE
 			case MOD_AIRSTRIKE:
 				message = "was blasted by";
-				message2 = "'s support fire"; // JPW NERVE changed since it gets called for both air strikes and artillery
+				message2 = "'s support fire";
+				break;
+			case MOD_ARTY:
+				message = "was hit by";
+				message2 = "'s artillery barrage";
 				break;
 			case MOD_ROCKET:
 				message = "ate";
@@ -413,6 +417,9 @@ static void CG_Obituary( entityState_t *ent ) {
 				break;
 			case MOD_AIRSTRIKE:
 				message = "obliterated himself";
+				break;
+			case MOD_ARTY:
+				message = "called in artillery on his own position";
 				break;
 			case MOD_EXPLOSIVE:
 				message = "died in his own explosion";

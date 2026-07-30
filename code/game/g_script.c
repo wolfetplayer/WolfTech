@@ -674,6 +674,7 @@ void script_mover_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 		case MOD_ROCKET:
 		case MOD_ROCKET_SPLASH:
 		case MOD_AIRSTRIKE:
+		case MOD_ARTY:
 			break;
 		default:    // no death from this weapon
 			self->health += damage;

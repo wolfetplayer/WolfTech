@@ -1630,6 +1630,14 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 			if ( AICast_Loadouts_ApplyToEnt( cs, player, params ) ) {
 				appliedAny = qtrue;
 			}
+
+			// Lieutenant class bonus: airstrike/artillery call-in, layered on top of the base
+			// loadout via a "<loadout>_lt" companion block (see loadouts_survival_lt.loadout).
+			if ( player->client->ps.stats[STAT_PLAYER_CLASS] == PC_LT ) {
+				char ltLoadoutName[128];
+				Com_sprintf( ltLoadoutName, sizeof( ltLoadoutName ), "%s_lt", params );
+				AICast_Loadouts_ApplyToEnt( cs, player, ltLoadoutName );
+			}
 		}
 
 		return appliedAny;
@@ -1710,7 +1718,7 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		{
 			if (g_gametype.integer == GT_COOP_SURVIVAL)
 			{
-				if (weapon != WP_GRENADE_LAUNCHER && weapon != WP_GRENADE_PINEAPPLE && weapon != WP_DYNAMITE) // Skip WP_AIRSTRIKE and WP_ARTY	
+				if (weapon != WP_GRENADE_LAUNCHER && weapon != WP_GRENADE_PINEAPPLE && weapon != WP_DYNAMITE && weapon != WP_AIRSTRIKE && weapon != WP_ARTY) // Skip WP_AIRSTRIKE and WP_ARTY
 				{
 					if (ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_SOLDIER)
 					{

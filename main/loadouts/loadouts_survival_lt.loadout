@@ -1,0 +1,16 @@
+// Lieutenant class bonus: airstrike/artillery call-in abilities, granted on top of
+// whichever base loadout (survival_default / survival_hardcore) was just applied.
+// See AICast_ScriptAction_ApplyLoadout in ai_cast_script_actions.c - it tries
+// "<loadout>_lt" for Lieutenant players after applying the base loadout by name.
+
+loadout survival_default_lt
+{
+		giveweapon weapon_airstrike
+		giveweapon weapon_arty
+}
+
+loadout survival_hardcore_lt
+{
+		giveweapon weapon_airstrike
+		giveweapon weapon_arty
+}
