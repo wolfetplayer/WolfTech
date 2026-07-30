@@ -564,11 +564,11 @@ void steamSetRichPresence(const char *key, const char *value)
 	STEAMSHIM_setRichPresence(key, value);
 }
 
-void steamLobbyCreate(int maxPlayers)
+void steamLobbyCreate(int maxPlayers, int lobbyType)
 {
-	Com_Printf("steamLobbyCreate: maxPlayers=%d\n", maxPlayers);
+	Com_Printf("steamLobbyCreate: maxPlayers=%d lobbyType=%d\n", maxPlayers, lobbyType);
 	steamResetLobbyRosterState();
-	STEAMSHIM_lobbyCreate(maxPlayers);
+	STEAMSHIM_lobbyCreate(maxPlayers, lobbyType);
 }
 
 void steamLobbyList(void)
@@ -808,9 +808,10 @@ void steamSetRichPresence(const char *key, const char *value)
 	(void)value;
 }
 
-void steamLobbyCreate(int maxPlayers)
+void steamLobbyCreate(int maxPlayers, int lobbyType)
 {
 	(void)maxPlayers;
+	(void)lobbyType;
 }
 
 void steamLobbyList(void)

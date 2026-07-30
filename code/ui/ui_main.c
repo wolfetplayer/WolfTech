@@ -5128,31 +5128,46 @@ static void UI_RunMenuScript( char **args ) {
 
 			trap_Cvar_Set("sv_maxClients", va("%d", clients));
 
-			// Pre-game lobby: this only creates the Steam lobby - nobody connects to
-			// any game server or loads any map until the host hits "Start The Game"
-			// (see LobbyStartGame below).
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_host %d\n", clients));
-
-			// push name/map/gametype to the lobby; steam_setdata queues until it's ready
-			trap_Cvar_VariableStringBuffer( "sv_hostname", hostName, sizeof( hostName ) );
-			if ( hostName[0] ) {
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata name \"%s\"\n", hostName));
+			if ( ui_lobbyType.integer == 2 )
+			{
+				// Offline: skip Steam, load the map now instead of opening the pregame lobby.
+				if (gt == GT_COOP_SURVIVAL)
+				{
+					trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; svmap %s\n", mapName));
+				}
+				else
+				{
+					trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; coopmap %s\n", mapName));
+				}
 			}
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
+			else
+			{
+				// Pre-game lobby: this only creates the Steam lobby - nobody connects to
+				// any game server or loads any map until the host hits "Start The Game"
+				// (see LobbyStartGame below).
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_host %d %d\n", clients, ui_lobbyType.integer));
 
-			// Push the tuning settings too, so guests joining before the host touches a row still see the true values.
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata friendlyfire %d\n", (int)trap_Cvar_VariableValue("g_friendlyFire")));
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata realism %d\n", (int)trap_Cvar_VariableValue("g_realism")));
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata specialwaves %d\n", (int)trap_Cvar_VariableValue("g_specialwaves")));
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata difficulty %d\n", (int)trap_Cvar_VariableValue("g_survivalDifficulty")));
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata aihealthcap %d\n", (int)trap_Cvar_VariableValue("g_survivalAiHealthCap")));
+				// push name/map/gametype to the lobby; steam_setdata queues until it's ready
+				trap_Cvar_VariableStringBuffer( "sv_hostname", hostName, sizeof( hostName ) );
+				if ( hostName[0] ) {
+					trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata name \"%s\"\n", hostName));
+				}
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
 
-			// Open the lobby screen ourselves, right now - don't wait on cl_main.c to
-			// notice the Steam lobby exists (that's still there too, as a fallback/for
-			// guests, but the host shouldn't be left on a blank screen if that round
-			// trip is ever slow or doesn't fire).
-			_UI_SetActiveMenu( UIMENU_PREGAME );
+				// Push the tuning settings too, so guests joining before the host touches a row still see the true values.
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata friendlyfire %d\n", (int)trap_Cvar_VariableValue("g_friendlyFire")));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata realism %d\n", (int)trap_Cvar_VariableValue("g_realism")));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata specialwaves %d\n", (int)trap_Cvar_VariableValue("g_specialwaves")));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata difficulty %d\n", (int)trap_Cvar_VariableValue("g_survivalDifficulty")));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata aihealthcap %d\n", (int)trap_Cvar_VariableValue("g_survivalAiHealthCap")));
+
+				// Open the lobby screen ourselves, right now - don't wait on cl_main.c to
+				// notice the Steam lobby exists (that's still there too, as a fallback/for
+				// guests, but the host shouldn't be left on a blank screen if that round
+				// trip is ever slow or doesn't fire).
+				_UI_SetActiveMenu( UIMENU_PREGAME );
+			}
 		}
 		else if (Q_stricmp(name, "LobbyGameTypeChanged") == 0)
 		{
@@ -8281,6 +8296,7 @@ vmCvar_t ui_netSource;
 vmCvar_t ui_menuFiles;
 vmCvar_t ui_gameType;
 vmCvar_t ui_netGameType;
+vmCvar_t ui_lobbyType;
 vmCvar_t ui_reinforce;
 vmCvar_t ui_freeze;
 vmCvar_t ui_skill;
@@ -8410,6 +8426,7 @@ cvarTable_t cvarTable[] = {
 	{ &ui_gameType, "ui_gametype", "3", CVAR_ARCHIVE },
 	{ &ui_joinGameType, "ui_joinGametype", "0", CVAR_ARCHIVE },
 	{ &ui_netGameType, "ui_netGametype", "1", CVAR_ARCHIVE },
+	{ &ui_lobbyType, "ui_lobbyType", "0", CVAR_ARCHIVE },
 	{ &ui_reinforce, "ui_reinforce", "0", CVAR_ARCHIVE },
 	{ &ui_freeze, "ui_freeze", "0", CVAR_ARCHIVE },
 	{ &ui_skill, "ui_skill", "1", CVAR_ARCHIVE },

@@ -1412,13 +1412,14 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
 
             SteamParentLog("PARENT: got SHIMCMD_LOBBY_CREATE");
 
-            if (!GSteamMatchmaking || buflen < 1)
+            if (!GSteamMatchmaking || buflen < 2)
             {
                 writeLobbyEvent(fd, SHIMEVENT_LOBBY_CREATED, false, 0, "");
                 break;
             }
 
             int maxPlayers = *(buf++);
+            int lobbyTypeRaw = *(buf++);
 
             if (maxPlayers < 1)
             {
@@ -1429,7 +1430,10 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
                 maxPlayers = 250;
             }
 
-            SteamAPICall_t call = GSteamMatchmaking->CreateLobby(k_ELobbyTypePublic, maxPlayers);
+            // lobbyTypeRaw: 0 = public, 1 = private (friends/invite only, hidden from the list); anything else falls back to public.
+            ELobbyType lobbyType = (lobbyTypeRaw == 1) ? k_ELobbyTypeFriendsOnly : k_ELobbyTypePublic;
+
+            SteamAPICall_t call = GSteamMatchmaking->CreateLobby(lobbyType, maxPlayers);
             GSteamBridge->m_CallResultLobbyCreated.Set(call, GSteamBridge, &SteamBridge::OnLobbyCreated);
             break;
         }

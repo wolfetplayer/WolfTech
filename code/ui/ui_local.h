@@ -105,6 +105,7 @@ extern vmCvar_t ui_netSource;
 extern vmCvar_t ui_menuFiles;
 extern vmCvar_t ui_gameType;
 extern vmCvar_t ui_netGameType;
+extern vmCvar_t ui_lobbyType;
 extern vmCvar_t ui_reinforce;
 extern vmCvar_t ui_freeze;
 extern vmCvar_t ui_skill;

@@ -243,26 +243,25 @@ itemDef
 				itemDef {
 					name			expert
 					group			grpCreate
-					type			4
-					text			"@CREATE_LOBBYPASSWORD"
+					type			ITEM_TYPE_MULTI
 					textfont		UI_FONT_NORMAL
-					cvar			"g_password"
-					rect			295 175 290 12
+					text			"@CREATE_LOBBYTYPE"
+					cvar			"ui_lobbyType"
+					cvarFloatList	{ "@CREATE_LOBBYTYPE_PUBLIC" 0 "@CREATE_LOBBYTYPE_PRIVATE" 1 "@CREATE_LOBBYTYPE_OFFLINE" 2 }
+					rect			295 160 290 12
 				//	origin			ORIGIN_WINDOW2
-					maxchars		12
-					maxpaintchars	12
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
 					textalignx		145
 					textaligny		10
 					textscale		.25
-					backcolor		1 1 1 .07       
+					backcolor		1 1 1 .07
 					forecolor		1 1 1 1
 					visible			1
-					mouseenter		{ show message_password_create }
-					mouseexit		{ hide message_password_create } 
-					}		
-					
+					mouseenter		{ show message_lobbytype }
+					mouseexit		{ hide message_lobbytype }
+					}
+
 				itemDef {
 					name			expert
 					group			grpCreate
@@ -271,7 +270,7 @@ itemDef
 					text			"@CREATE_GAMEMODE"
 					//cvar			"g_GameType"
 					ownerdraw		UI_NETGAMETYPE
-					rect			295 190 290 12
+					rect			295 175 290 12
 				//	origin			ORIGIN_WINDOW2
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
@@ -294,7 +293,7 @@ itemDef
 					text			"@CREATE_DOWNLOADS"
 					cvar			"sv_allowDownload"
 					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
-					rect			295 220 290 12
+					rect			295 190 290 12
 				//	origin			ORIGIN_WINDOW1
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
@@ -316,7 +315,7 @@ itemDef
 					text			"@CREATE_PURESERVER"
 					cvar			"sv_pure"
 					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
-					rect			295 235 290 12
+					rect			295 205 290 12
 				//	origin			ORIGIN_WINDOW1
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
@@ -339,7 +338,7 @@ itemDef
 					textalignx		145
 					textaligny		14
 					textscale		.25
-					rect			294 255 290 20
+					rect			294 225 290 20
 					style			WINDOW_STYLE_FILLED
 					border			1
 					bordercolor		.5 .5 .5 .5
@@ -357,7 +356,7 @@ itemDef
 					text			"@CREATE_SPECIALWAVES"
 					cvar			"g_specialwaves"
 					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
-					rect			295 280 290 12
+					rect			295 250 290 12
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
 					textalignx		145
@@ -378,7 +377,7 @@ itemDef
 					text			"@CREATE_REALISM"
 					cvar			"g_realism"
 					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
-					rect			295 295 290 12
+					rect			295 265 290 12
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
 					textalignx		145
@@ -399,7 +398,7 @@ itemDef
 					text			"@CREATE_SURVIVALDIFFICULTY"
 					cvar			"g_survivalDifficulty"
 					cvarFloatList	{ "@CREATE_DIFFICULTY_NORMAL" 0 "@CREATE_DIFFICULTY_HARD" 1 }
-					rect			295 310 290 12
+					rect			295 280 290 12
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
 					textalignx		145
@@ -420,7 +419,7 @@ itemDef
 					text			"@CREATE_SURVIVALAIHEALTHCAP"
 					cvar			"g_survivalAiHealthCap"
 					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
-					rect			295 325 290 12
+					rect			295 295 290 12
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
 					textalignx		145
@@ -442,7 +441,7 @@ itemDef
 					textalignx		145
 					textaligny		14
 					textscale		.25
-					rect			294 345 290 20
+					rect			294 315 290 20
 					style			WINDOW_STYLE_FILLED
 					border			1
 					bordercolor		.5 .5 .5 .5
@@ -460,7 +459,7 @@ itemDef
 					text			"@CREATE_FRIENDLYFIRE"
 					cvar			"g_friendlyFire"
 					cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1 "@GENERAL_ONANDHEALTH" 2 }
-					rect			295 370 290 12
+					rect			295 340 290 12
 				//	origin			ORIGIN_WINDOW1
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
@@ -482,7 +481,7 @@ itemDef
 					text			"@CREATE_SHAREDLIVES"
 					cvar			"g_sharedlives"
 					cvarFloatList	{ "@CREATE_SHAREDLIVES_YES" 1 "@CREATE_SHAREDLIVES_NO" 0 }
-					rect			295 400 290 12
+					rect			295 370 290 12
 				//	origin			ORIGIN_WINDOW2
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
@@ -828,9 +827,9 @@ itemDef {
 				}
 
 			itemDef {
-				name message_password_create
+				name message_lobbytype
 				group grpmessage
-				style 0 
+				style 0
 				rect 320 437 128 30
 				textalign 1
 				textfont	UI_FONT_NORMAL
@@ -838,9 +837,9 @@ itemDef {
 				textstyle 1
 				textaligny 25
 				textscale .25
-				text "@CREATE_MSG_PASSWORD"
+				text "@CREATE_MSG_LOBBYTYPE"
 				forecolor 1 1 1 1
-				decoration 
+				decoration
 				visible 0
 				}
 								

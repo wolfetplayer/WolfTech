@@ -707,7 +707,7 @@ void STEAMSHIM_setRichPresence(const char* key, const char* value)
 } /* STEAMSHIM_setRichPresence */
 
 
-void STEAMSHIM_lobbyCreate(int maxPlayers)
+void STEAMSHIM_lobbyCreate(int maxPlayers, int lobbyType)
 {
 	uint8 buf[8];
 	uint8 *ptr = buf + 1;
@@ -719,11 +719,12 @@ void STEAMSHIM_lobbyCreate(int maxPlayers)
 		SteamDebugLog("STEAMSHIM_lobbyCreate: shim says dead, trying anyway");
 	}
 
-	snprintf(msg, sizeof(msg), "STEAMSHIM_lobbyCreate: sending maxPlayers=%d", maxPlayers);
+	snprintf(msg, sizeof(msg), "STEAMSHIM_lobbyCreate: sending maxPlayers=%d lobbyType=%d", maxPlayers, lobbyType);
 	SteamDebugLog(msg);
 
 	*(ptr++) = (uint8)SHIMCMD_LOBBY_CREATE;
 	*(ptr++) = (uint8)maxPlayers;
+	*(ptr++) = (uint8)lobbyType;
 
 	buf[0] = (uint8)((ptr - 1) - buf);
 

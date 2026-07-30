@@ -18,7 +18,8 @@ void steamSetRichPresence(const char* key, const char* value);
 Steam lobbies
 ===============
 */
-void steamLobbyCreate(int maxPlayers);
+// lobbyType: 0 = public (visible in the lobby list), 1 = private (friends/invite only, hidden from the list)
+void steamLobbyCreate(int maxPlayers, int lobbyType);
 void steamLobbyList(void);
 void steamLobbyJoin(uint64_t lobbyID);
 void steamLobbyLeave(void);

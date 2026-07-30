@@ -2129,7 +2129,7 @@ void CL_SteamLobbyCreate_f(void)
 	Com_Printf("steam_create: steamAlive=%d\n", steamAlive());
 
 	Com_Printf("steam_create: requesting lobby create anyway\n");
-	steamLobbyCreate(8);
+	steamLobbyCreate(8, 0);
 }
 
 void CL_SteamLobbyList_f(void)
@@ -2178,6 +2178,7 @@ void CL_UpdateSteamServers(void) {
 void CL_SteamHost_f(void)
 {
 	int maxPlayers = 8;
+	int lobbyType = 0;
 
 	if (!steamAlive()) {
 		return;
@@ -2190,12 +2191,16 @@ void CL_SteamHost_f(void)
 		}
 	}
 
+	if (Cmd_Argc() >= 3) {
+		lobbyType = atoi(Cmd_Argv(2));
+	}
+
 	// Leave any stale lobby first so steamLobbyCurrent() can't fool the readiness check below.
 	if (steamLobbyCurrent() != 0) {
 		steamLobbyLeave();
 	}
 
-	steamLobbyCreate(maxPlayers);
+	steamLobbyCreate(maxPlayers, lobbyType);
 }
 
 void CL_SteamInvite_f(void)

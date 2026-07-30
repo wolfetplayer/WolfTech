@@ -87,7 +87,7 @@ void STEAMSHIM_getStatF(const char *name);
 void STEAMSHIM_restartIfNecessary(unsigned int unOwnAppID);
 void STEAMSHIM_setRichPresence(const char *key, const char *value);
 
-void STEAMSHIM_lobbyCreate(int maxPlayers);
+void STEAMSHIM_lobbyCreate(int maxPlayers, int lobbyType);
 void STEAMSHIM_lobbyList(void);
 void STEAMSHIM_lobbyJoin(uint64_t lobbyID);
 void STEAMSHIM_lobbyLeave(void);
