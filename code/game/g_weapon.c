@@ -157,8 +157,7 @@ void G_ExplodeMissile( gentity_t *ent );
 #define BOMBSPREAD 150
 extern void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message );
 
-// bombs spawn hidden (SVF_NOCLIENT) while "falling" so they pop in only at the moment they
-// detonate; this think reveals them and hands off to the normal explosion think.
+// bombs spawn hidden (SVF_NOCLIENT) while falling; this think reveals them at the moment they detonate.
 void G_AirStrikeExplode( gentity_t *self ) {
 	self->r.svFlags &= ~SVF_NOCLIENT;
 	self->r.svFlags |= SVF_BROADCAST;
@@ -267,8 +266,7 @@ void weapon_callAirStrike( gentity_t *ent ) {
 	}
 }
 
-// JPW NERVE -- WP_ARTY: Lieutenant binocular call-in, ported from RealRTCW. Fired via the
-// EF_ZOOMING + INV_BINOCS hook in FireWeapon(), not through the normal weapon-fire dispatch.
+// JPW NERVE -- WP_ARTY: Lieutenant binocular call-in, fired via the EF_ZOOMING + INV_BINOCS hook in FireWeapon(), not the normal dispatch.
 
 // plays a random falling-shell sound just ahead of a real bomb's impact
 void artilleryThink_real( gentity_t *ent ) {
@@ -2005,10 +2003,7 @@ void FireWeapon( gentity_t *ent ) {
 		aimSpreadScale = 1.0f;
 	}
 
-	// JPW NERVE -- Lieutenant binocular call-in: zooming binoculars and firing calls in
-	// artillery directly, bypassing the normal weapon-fire dispatch below entirely (ported
-	// from RealRTCW's Weapon_Artillery hook). Excludes scoped weapons since they also set
-	// EF_ZOOMING for their own scope zoom.
+	// JPW NERVE -- Lieutenant binocular call-in: bypasses normal weapon-fire dispatch; excludes scoped weapons (they also set EF_ZOOMING).
 	if ( g_gametype.integer == GT_COOP_SURVIVAL && !ent->aiCharacter ) {
 		if ( ( ent->client->ps.eFlags & EF_ZOOMING ) &&
 			 ( ent->client->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) &&
@@ -2092,8 +2087,7 @@ void FireWeapon( gentity_t *ent ) {
 	}
 	else if (wc & WEAPON_CLASS_GRENADE)
 	{
-		// JPW NERVE -- airstrike marker is a Lieutenant class ability on a cooldown, not an
-		// ammo-limited throw like the other grenade-class weapons in this branch.
+		// JPW NERVE -- airstrike marker is a Lieutenant cooldown ability, not an ammo-limited throw like its siblings here.
 		if (ent->s.weapon == WP_AIRSTRIKE && level.time - ent->client->ps.classWeaponTime < g_LTChargeTime.integer)
 		{
 			return;

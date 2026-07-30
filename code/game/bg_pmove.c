@@ -3567,9 +3567,7 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-	// JPW NERVE -- airstrike marker is on LT cooldown - no fire (predicted-side mirror of
-	// the server's gate in g_weapon.c FireWeapon, so the throw animation doesn't wind up
-	// only for the server to silently ignore the actual grenade)
+	// JPW NERVE -- airstrike marker on LT cooldown: no fire (predicted-side mirror of the server gate in g_weapon.c FireWeapon).
 	if ( pm->ps->weapon == WP_AIRSTRIKE && pm->ps->grenadeTimeLeft <= 0 &&
 		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->ltChargeTime ) {
 		return;

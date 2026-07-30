@@ -498,9 +498,28 @@ itemDef
 					mouseenter		{ show message_commonlives }
 					mouseexit		{ hide message_commonlives }
 					}
-									
 
-					
+				itemDef {
+					name			normal
+					group			grpCreate
+					type			ITEM_TYPE_MULTI
+					textfont		UI_FONT_NORMAL
+					text			"Your Class"
+					cvar			"cl_survivalClass"
+					cvarFloatList	{ "Soldier" 0 "Medic" 1 "Engineer" 2 "Lieutenant" 3 }
+					rect			295 385 290 12
+					style			WINDOW_STYLE_FILLED
+					textalign		ITEM_ALIGN_RIGHT
+					textalignx		145
+					textaligny		10
+					textscale		.25
+					backcolor		1 1 1 .07
+					forecolor		1 1 1 1
+					visible			1
+					}
+
+
+
 				itemDef {
 					name				start
 					group				grpCreate

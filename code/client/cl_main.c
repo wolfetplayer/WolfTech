@@ -3590,17 +3590,35 @@ void CL_Frame( int msec ) {
 			if ( steamLobbyMembersDirty() ) {
 				int i;
 				int count = steamLobbyMemberCount();
+				static const char *classLabels[4] = { "Soldier", "Medic", "Engineer", "Lieutenant" };
 
 				for ( i = 0; i < MAX_COOP_PLAYERS; i++ ) {
 					if ( i < count ) {
 						char coloredName[80];
+						int classValue = steamLobbyMemberClass( i );
 						Com_sprintf( coloredName, sizeof( coloredName ), "%s%s", steamPlayerColorForSlot( i ), steamLobbyMemberName( i ) );
 						Cvar_Set( va( "cl_lobbySlot%d", i ), coloredName );
+						Cvar_Set( va( "cl_lobbySlotClass%d", i ),
+							( classValue >= 0 && classValue < 4 ) ? classLabels[classValue] : "" );
 					} else {
 						Cvar_Set( va( "cl_lobbySlot%d", i ), "" );
+						Cvar_Set( va( "cl_lobbySlotClass%d", i ), "" );
 					}
 				}
 				steamLobbyMembersClearDirty();
+			}
+
+			// Broadcast our own class pick to the lobby whenever it changes, same push-on-change idiom as the countdown above.
+			{
+				static int lastPushedClass = -1;
+				int myClass = Cvar_VariableValue( "cl_survivalClass" );
+
+				if ( myClass != lastPushedClass ) {
+					if ( steamLobbyCurrent() != 0 ) {
+						steamLobbySetMyClass( myClass );
+					}
+					lastPushedClass = myClass;
+				}
 			}
 
 			// Avatars resolve async, so mirror them every frame (not gated on the roster-dirty flag above).
@@ -4754,6 +4772,11 @@ void CL_Init( void ) {
 	Cvar_Get( "cl_lobbySlot1", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbySlot2", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbySlot3", "", CVAR_ROM );
+	// Pre-game lobby: each slot's chosen survival class, mirrored from steamLobbyMemberClass().
+	Cvar_Get( "cl_lobbySlotClass0", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbySlotClass1", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbySlotClass2", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbySlotClass3", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbyChatLine0", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbyChatLine1", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbyChatLine2", "", CVAR_ROM );
@@ -4769,6 +4792,8 @@ void CL_Init( void ) {
 	Cvar_Get( "ui_lobbyChatInput", "", 0 );   // not ROM - the pregame menu's "Say:" editfield writes this directly
 	cl_rate = Cvar_Get( "rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );     // NERVE - SMF - changed from 3000
 	Cvar_Get( "skin", "0", CVAR_USERINFO | CVAR_ARCHIVE );
+	// Survival class pick (PC_SOLDIER..PC_LT): reaches the server via userinfo, see ClientUserinfoChanged.
+	Cvar_Get( "cl_survivalClass", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "snaps", "20", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "model", "bj2", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "head", "default", CVAR_USERINFO | CVAR_ARCHIVE );

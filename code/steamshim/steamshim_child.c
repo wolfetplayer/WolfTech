@@ -226,6 +226,9 @@ typedef enum ShimCmd
 
     /* Appended at the end so existing command values don't shift - see SHIMCMD_GET_FRIEND_NAME. */
     SHIMCMD_GET_FRIEND_AVATAR,
+
+    /* Per-member lobby data, writable by any member (unlike owner-only SHIMCMD_LOBBY_SETDATA). */
+    SHIMCMD_LOBBY_SETMEMBERDATA,
 } ShimCmd;
 
 /* Pipe framing: buf[0] is normally the payload length (cmd byte + data).
@@ -793,6 +796,30 @@ void STEAMSHIM_lobbySetData(const char *key, const char *value)
 	}
 
 	*(ptr++) = (uint8)SHIMCMD_LOBBY_SETDATA;
+
+	if (!writeStringToBuffer(&ptr, end, key)) {
+		return;
+	}
+
+	if (!writeStringToBuffer(&ptr, end, value)) {
+		return;
+	}
+
+	buf[0] = (uint8)((ptr - 1) - buf);
+	writePipe(GPipeWrite, buf, buf[0] + 1);
+}
+
+void STEAMSHIM_lobbySetMemberData(const char *key, const char *value)
+{
+	uint8 buf[256];
+	uint8 *ptr = buf + 1;
+	uint8 *end = buf + sizeof(buf);
+
+	if (isDead()) {
+		return;
+	}
+
+	*(ptr++) = (uint8)SHIMCMD_LOBBY_SETMEMBERDATA;
 
 	if (!writeStringToBuffer(&ptr, end, key)) {
 		return;

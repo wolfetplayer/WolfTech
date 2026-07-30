@@ -2148,6 +2148,25 @@ static void UI_DrawLobbyAvatar( rectDef_t *rect, float scale, vec4_t color, int 
 
 /*
 ===============
+UI_DrawLobbySlotClass
+
+Pre-game lobby: draws slotIndex's chosen survival class from cl_lobbySlotClassN
+(mirrored live from the Steam lobby's per-member data), blank if nobody's in that
+slot or they haven't picked yet.
+===============
+*/
+static void UI_DrawLobbySlotClass( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle, int slotIndex ) {
+	char className[32];
+
+	trap_Cvar_VariableStringBuffer( va( "cl_lobbySlotClass%d", slotIndex ), className, sizeof( className ) );
+
+	if ( className[0] ) {
+		Text_Paint( rect->x, rect->y, font, scale, color, className, 0, 0, textStyle );
+	}
+}
+
+/*
+===============
 UI_DrawLobbyLeaderName
 
 Pre-game lobby: paints "Lobby Leader: <name>" - cl_lobbyLeaderName is mirrored by
@@ -3249,6 +3268,12 @@ static void UI_OwnerDraw( float x, float y, float w, float h, float text_x, floa
 	case UI_LOBBYAVATAR3:
 	case UI_LOBBYAVATAR4:
 		UI_DrawLobbyAvatar( &rect, scale, color, ownerDraw - UI_LOBBYAVATAR1 );
+		break;
+	case UI_LOBBYSLOTCLASS1:
+	case UI_LOBBYSLOTCLASS2:
+	case UI_LOBBYSLOTCLASS3:
+	case UI_LOBBYSLOTCLASS4:
+		UI_DrawLobbySlotClass( &rect, font, scale, color, textStyle, ownerDraw - UI_LOBBYSLOTCLASS1 );
 		break;
 	case UI_LOBBYCHAT1:
 	case UI_LOBBYCHAT2:

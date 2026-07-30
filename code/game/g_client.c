@@ -1186,6 +1186,12 @@ void ClientUserinfoChanged( int clientNum ) {
 	}
 
 	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		// Per-player class pick from the lobby (cl_survivalClass) - client-supplied, so clamp to the valid PC_* range.
+		int wantClass = atoi( Info_ValueForKey( userinfo, "cl_survivalClass" ) );
+		if ( wantClass >= PC_SOLDIER && wantClass <= PC_LT ) {
+			client->sess.playerType = wantClass;
+		}
+
 		// To communicate it to cgame
 		client->ps.stats[ STAT_PLAYER_CLASS ] = client->sess.playerType;
 	}
@@ -1929,9 +1935,7 @@ void ClientSpawn( gentity_t *ent ) {
 	}
 	// dhm - end
 */
-	if ( !( ent->r.svFlags & SVF_CASTAI ) && ( g_gametype.integer == GT_COOP_SURVIVAL ) ) {  
-         client->sess.playerType = g_playerSurvivalClass.integer;
-	}
+	// Per-player class is set from userinfo in ClientUserinfoChanged - no longer force-overwritten here.
 
 	// give the player some basic stuff
 	if ( g_gametype.integer <= GT_COOP ) {

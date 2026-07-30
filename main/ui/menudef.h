@@ -381,6 +381,12 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_LOBBYAVATAR3             301
 #define UI_LOBBYAVATAR4             302
 
+// pre-game lobby: each slot's chosen survival class, read-only, shown next to each UI_LOBBYSLOTn
+#define UI_LOBBYSLOTCLASS1          303
+#define UI_LOBBYSLOTCLASS2          304
+#define UI_LOBBYSLOTCLASS3          305
+#define UI_LOBBYSLOTCLASS4          306
+
 #define VOICECHAT_GETFLAG           "getflag"                // command someone to get the flag
 #define VOICECHAT_OFFENSE           "offense"                // command someone to go on offense
 #define VOICECHAT_DEFEND            "defend"             // command someone to go on defense

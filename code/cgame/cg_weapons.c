@@ -1778,8 +1778,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 // (SA) i don't know about these, but we don't have models for 'em
 	case WP_GRENADE_SMOKE:
 	case WP_MEDIC_HEAL:
-	// JPW NERVE -- WP_ARTY is never carried/rendered (fired via binoculars); WP_SMOKETRAIL
-	// is a cosmetic-only tag stamped on artillery spotter debris entities, not a real weapon.
+	// JPW NERVE -- WP_ARTY is never carried/rendered; WP_SMOKETRAIL is a cosmetic-only debris tag, not a real weapon.
 	case WP_ARTY:
 	case WP_SMOKETRAIL:
 		return;

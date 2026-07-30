@@ -40,11 +40,7 @@ typedef enum STEAMSHIM_EventType
 	SHIMEVENT_NET_DISCONNECTED,
 	SHIMEVENT_NET_DATA,
 
-	/* Pre-game lobby roster: one per current lobby member (uvalue = their steamID,
-	   name = persona name), pushed unprompted whenever membership changes, terminated
-	   by a uvalue==0 "DONE" entry - same convention as SHIMEVENT_LOBBY_LIST. Appended
-	   here (rather than grouped with the other LOBBY_* events above) so existing event
-	   values don't shift. */
+	/* Pre-game lobby roster: one per member (uvalue = steamID, name = "<persona name>\x01<class>"), terminated by uvalue==0 "DONE". */
 	SHIMEVENT_LOBBY_MEMBER,
 
 	/* Pre-game lobby text chat: uvalue = sender's steamID, name = message text.
@@ -101,6 +97,8 @@ void STEAMSHIM_lobbyList(void);
 void STEAMSHIM_lobbyJoin(uint64_t lobbyID);
 void STEAMSHIM_lobbyLeave(void);
 void STEAMSHIM_lobbySetData(const char *key, const char *value);
+/* Per-member lobby data: unlike STEAMSHIM_lobbySetData (owner-only), any member can set their own entry here. */
+void STEAMSHIM_lobbySetMemberData(const char *key, const char *value);
 void STEAMSHIM_lobbyInvite(uint64_t lobbyID);
 
 /* Pre-game lobby text chat: sends a message to every member of the current lobby

@@ -1331,10 +1331,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
 
-	// JPW NERVE -- Lieutenant call-in weapons, ported from RealRTCW.
-	// Both are cooldown-gated (classWeaponTime / g_LTChargeTime) rather than
-	// ammo-gated, so ammo/clip are effectively unlimited (matches the "uses 0"
-	// airstrike/arty .weap ammo blocks these were transcribed from).
+	// JPW NERVE -- Lieutenant call-in weapons, cooldown-gated (classWeaponTime/g_LTChargeTime) so ammo/clip are unlimited.
     [WP_AIRSTRIKE] = {
 		.weaponindex        = WP_AIRSTRIKE,
 		.weapAlts           = WP_NONE,
@@ -2729,9 +2726,7 @@ gitem_t bg_itemlist[] =
 	},
 
 	{
-		// JPW NERVE -- never actually spawned/picked up; fired via the LT binocular
-		// call-in hook (see Weapon_Artillery in g_weapon.c). Exists so BG_FindItemForWeapon
-		// and similar lookups have something to resolve for WP_ARTY.
+		// JPW NERVE -- never spawned/picked up; fired via the LT binocular hook, exists only so item lookups resolve WP_ARTY.
 		"weapon_arty",
 		"sound/misc/w_pkup.wav",
 		{ "", "", "", 0, 0 },

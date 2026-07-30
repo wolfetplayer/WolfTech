@@ -529,6 +529,9 @@ typedef enum ShimCmd
 
 	// Appended at the end so existing command values don't shift - see SHIMCMD_GET_FRIEND_NAME.
 	SHIMCMD_GET_FRIEND_AVATAR,
+
+	// Per-member lobby data, writable by any member (unlike owner-only SHIMCMD_LOBBY_SETDATA).
+	SHIMCMD_LOBBY_SETMEMBERDATA,
 } ShimCmd;
 
 #define SHIM_LEN_ESCAPE 0xFF
@@ -1066,6 +1069,17 @@ void SteamBridge::OnLobbyEnter(LobbyEnter_t *pCallback)
 void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
 {
 	const uint64 lobbyID = pCallback->m_ulSteamIDLobby;
+
+	// Steamworks also fires this for a single member's data changing (m_ulSteamIDMember != lobby); refresh the roster instead.
+	if (pCallback->m_ulSteamIDMember != lobbyID)
+	{
+		if (GCurrentLobby.IsValid() && lobbyID == GCurrentLobby.ConvertToUint64())
+		{
+			SendLobbyMemberRoster();
+		}
+		return;
+	}
+
 	const char *started = "";
 	const char *map = "";
 	const char *gametype = "";
@@ -1124,8 +1138,13 @@ void SteamBridge::SendLobbyMemberRoster(void)
 	{
 		const CSteamID member = GSteamMatchmaking->GetLobbyMemberByIndex(GCurrentLobby, i);
 		const char *name = GSteamFriends ? GSteamFriends->GetFriendPersonaName(member) : "";
+		const char *classValue = GSteamMatchmaking->GetLobbyMemberData(GCurrentLobby, member, "class");
+		char payload[300];
 
-		writeLobbyEvent(fd, SHIMEVENT_LOBBY_MEMBER, true, member.ConvertToUint64(), name ? name : "");
+		// "<persona name>\x01<class>" - see SHIMEVENT_LOBBY_MEMBER's doc comment in steamshim_child.h.
+		snprintf(payload, sizeof(payload), "%s\x01%s", name ? name : "", classValue ? classValue : "");
+
+		writeLobbyEvent(fd, SHIMEVENT_LOBBY_MEMBER, true, member.ConvertToUint64(), payload);
 	}
 
 	writeLobbyEvent(fd, SHIMEVENT_LOBBY_MEMBER, true, 0, "DONE");
@@ -1555,6 +1574,32 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
             GSteamMatchmaking->SetLobbyData(GCurrentLobby, key, value);
 
             dbgpipe("Lobby set data: %s=%s\n", key, value);
+            break;
+        }
+
+        case SHIMCMD_LOBBY_SETMEMBERDATA:
+        {
+            if (!GSteamMatchmaking || !GCurrentLobby.IsValid())
+            {
+                break;
+            }
+
+            const char *key = (const char *)buf;
+            size_t keyLen = strlen(key) + 1;
+
+            if (keyLen >= buflen)
+            {
+                break;
+            }
+
+            buf += keyLen;
+            buflen -= (unsigned int)keyLen;
+
+            const char *value = (const char *)buf;
+
+            GSteamMatchmaking->SetLobbyMemberData(GCurrentLobby, key, value);
+
+            dbgpipe("Lobby set member data: %s=%s\n", key, value);
             break;
         }
 

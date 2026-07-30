@@ -1631,8 +1631,7 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 				appliedAny = qtrue;
 			}
 
-			// Lieutenant class bonus: airstrike/artillery call-in, layered on top of the base
-			// loadout via a "<loadout>_lt" companion block (see loadouts_survival_lt.loadout).
+			// Lieutenant class bonus: layers "<loadout>_lt" on top of the base loadout (see loadouts_survival_lt.loadout).
 			if ( player->client->ps.stats[STAT_PLAYER_CLASS] == PC_LT ) {
 				char ltLoadoutName[128];
 				Com_sprintf( ltLoadoutName, sizeof( ltLoadoutName ), "%s_lt", params );

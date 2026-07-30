@@ -88,6 +88,12 @@ int steamLobbyMemberCount(void);
 uint64_t steamLobbyMemberSteamID(int index);
 const char *steamLobbyMemberName(int index);
 
+/* That member's chosen survival class (PC_SOLDIER..PC_LT), or 0 if out of range or not yet picked. */
+int steamLobbyMemberClass(int index);
+
+/* Sets our own per-member "class" data - unlike steamLobbySetData, any member can call this for their own entry. */
+void steamLobbySetMyClass(int classValue);
+
 /* Persona name of the lobby's owner ("Lobby Leader"), resolved from the roster
    above; "" if not (yet) known. Works whether we're the owner or a guest. */
 const char *steamLobbyOwnerName(void);

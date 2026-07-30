@@ -119,6 +119,7 @@ static void steamWriteAvatarTGA(const char *qpathNoExt, const unsigned char *rgb
 typedef struct {
 	uint64_t steamID;
 	char name[64];
+	int classValue;   // that member's SetLobbyMemberData "class" pick, see SHIMEVENT_LOBBY_MEMBER
 } steamLobbyMemberEntry_t;
 static steamLobbyMemberEntry_t s_lobbyMembers[STEAM_LOBBY_MEMBERS_MAX];
 static int s_lobbyMemberCount = 0;
@@ -556,9 +557,23 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 			s_lobbyMembersBuildingCount = 0;
 			s_lobbyMembersDirty = 1;
 		} else if (s_lobbyMembersBuildingCount < STEAM_LOBBY_MEMBERS_MAX) {
+			// "<persona name>\x01<class>" - see SteamBridge::SendLobbyMemberRoster.
+			char buf[256];
+			char *classField;
+
+			Q_strncpyz(buf, ev->name, sizeof(buf));
+			classField = strchr(buf, '\x01');
+
+			if (classField) {
+				*classField = '\0';
+				classField++;
+			}
+
 			s_lobbyMembersBuilding[s_lobbyMembersBuildingCount].steamID = ev->uvalue;
-			Q_strncpyz(s_lobbyMembersBuilding[s_lobbyMembersBuildingCount].name, ev->name,
+			Q_strncpyz(s_lobbyMembersBuilding[s_lobbyMembersBuildingCount].name, buf,
 				sizeof(s_lobbyMembersBuilding[0].name));
+			s_lobbyMembersBuilding[s_lobbyMembersBuildingCount].classValue =
+				(classField && classField[0]) ? atoi(classField) : 0;
 			s_lobbyMembersBuildingCount++;
 		}
 		break;
@@ -733,6 +748,22 @@ const char *steamLobbyMemberName(int index)
 		return "";
 	}
 	return s_lobbyMembers[index].name;
+}
+
+int steamLobbyMemberClass(int index)
+{
+	if (index < 0 || index >= s_lobbyMemberCount) {
+		return 0;
+	}
+	return s_lobbyMembers[index].classValue;
+}
+
+void steamLobbySetMyClass(int classValue)
+{
+	char buf[16];
+
+	Com_sprintf(buf, sizeof(buf), "%d", classValue);
+	STEAMSHIM_lobbySetMemberData("class", buf);
 }
 
 int steamLobbyMemberIndexOf(uint64_t steamID)
@@ -1027,6 +1058,17 @@ const char *steamLobbyMemberName(int index)
 {
 	(void)index;
 	return "";
+}
+
+int steamLobbyMemberClass(int index)
+{
+	(void)index;
+	return 0;
+}
+
+void steamLobbySetMyClass(int classValue)
+{
+	(void)classValue;
 }
 
 int steamLobbyMemberIndexOf(uint64_t steamID)
