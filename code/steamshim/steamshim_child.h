@@ -50,10 +50,16 @@ typedef enum STEAMSHIM_EventType
 	/* Pre-game lobby text chat: uvalue = sender's steamID, name = message text.
 	   Pushed unprompted whenever another lobby member's message arrives. */
 	SHIMEVENT_LOBBY_CHATMSG,
+
+	SHIMEVENT_FRIEND_AVATAR,	/* uvalue = the steamID asked about, avatarRGBA/avatarLen = raw 32x32 RGBA pixels (avatarLen==0 if !okay) */
 } STEAMSHIM_EventType;
 
 /* must match qcommon's MAX_PACKETLEN (net_chan.c). Raise both together. */
 #define STEAMSHIM_MAX_NET_PACKET 2048
+
+/* Steam's "small" friend avatar is a fixed 32x32 RGBA image. */
+#define STEAMSHIM_AVATAR_DIM 32
+#define STEAMSHIM_AVATAR_RGBA_SIZE (STEAMSHIM_AVATAR_DIM * STEAMSHIM_AVATAR_DIM * 4)
 
     /* not all of these fields make sense in a given event. */
 typedef struct STEAMSHIM_Event
@@ -68,6 +74,9 @@ typedef struct STEAMSHIM_Event
 
 	unsigned char data[STEAMSHIM_MAX_NET_PACKET];	/* raw payload for SHIMEVENT_NET_DATA */
 	int datalen;
+
+	unsigned char avatarRGBA[STEAMSHIM_AVATAR_RGBA_SIZE];	/* raw payload for SHIMEVENT_FRIEND_AVATAR */
+	int avatarLen;
 } STEAMSHIM_Event;
 
 int STEAMSHIM_init(void);
@@ -102,6 +111,8 @@ void STEAMSHIM_lobbySendChat(const char *text);
 void STEAMSHIM_getLocalIdentity(void);
 /* Another player's persona name by steamID; answered from Steam's cache, which is already populated for anyone in our current lobby. */
 void STEAMSHIM_getFriendName(uint64_t steamID);
+/* Another player's small (32x32) avatar by steamID; answered via SHIMEVENT_FRIEND_AVATAR. */
+void STEAMSHIM_getFriendAvatar(uint64_t steamID);
 
 /* Steam P2P net transport, used by NA_STEAM_P2P in qcommon/net_ip.c.
    The host can have multiple simultaneous peers, so send/close are

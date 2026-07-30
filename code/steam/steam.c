@@ -49,6 +49,67 @@ static void steamCacheFriendName(uint64_t steamID, const char *name)
 	s_friendNameCacheCount++;
 }
 
+// Cache of resolved avatar shader paths keyed by steamID; an entry existing (even with an empty path) means steamRequestFriendAvatar() already sent the request, so repeated per-frame calls don't spam it.
+#define STEAM_AVATAR_CACHE_MAX 8
+typedef struct {
+	uint64_t steamID;
+	char path[64];
+} steamAvatarCacheEntry_t;
+static steamAvatarCacheEntry_t s_avatarCache[STEAM_AVATAR_CACHE_MAX];
+static int s_avatarCacheCount = 0;
+
+static steamAvatarCacheEntry_t *steamFindAvatarEntry(uint64_t steamID)
+{
+	int i;
+
+	for (i = 0; i < s_avatarCacheCount; i++) {
+		if (s_avatarCache[i].steamID == steamID) {
+			return &s_avatarCache[i];
+		}
+	}
+	return NULL;
+}
+
+// Encodes a top-down RGBA buffer (like Steam's avatar data) as an uncompressed, bottom-up TGA (this engine's TGA loader ignores the top-down attribute flag) and writes it via FS_WriteFile.
+static void steamWriteAvatarTGA(const char *qpathNoExt, const unsigned char *rgba, int width, int height)
+{
+	char filename[80];
+	byte header[18];
+	byte *filebuf;
+	byte *out;
+	int row, col;
+
+	filebuf = (byte *)Z_Malloc(width * height * 4 + sizeof(header));
+
+	memset(header, 0, sizeof(header));
+	header[2] = 2;	// uncompressed truecolor
+	header[12] = (byte)(width & 255);
+	header[13] = (byte)((width >> 8) & 255);
+	header[14] = (byte)(height & 255);
+	header[15] = (byte)((height >> 8) & 255);
+	header[16] = 32;	// bits per pixel
+
+	memcpy(filebuf, header, sizeof(header));
+	out = filebuf + sizeof(header);
+
+	for (row = height - 1; row >= 0; row--) {
+		const unsigned char *in = rgba + row * width * 4;
+
+		for (col = 0; col < width; col++) {
+			*out++ = in[2];	// blue
+			*out++ = in[1];	// green
+			*out++ = in[0];	// red
+			*out++ = in[3];	// alpha
+			in += 4;
+		}
+	}
+
+	Com_sprintf(filename, sizeof(filename), "%s.tga", qpathNoExt);
+	FS_WriteFile(filename, filebuf, width * height * 4 + (int)sizeof(header));
+
+	Z_Free(filebuf);
+}
+
 // Pre-game lobby roster: current lobby members (steamID + persona name), pushed
 // unprompted by the shim on join/leave (SHIMEVENT_LOBBY_MEMBER, terminated by a
 // uvalue==0 "DONE" entry). Built into s_lobbyMembersBuilding[] as entries stream in,
@@ -374,6 +435,19 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 		}
 		break;
 
+	case SHIMEVENT_FRIEND_AVATAR:
+		if (ev->okay && ev->avatarLen == STEAMSHIM_AVATAR_RGBA_SIZE) {
+			steamAvatarCacheEntry_t *entry = steamFindAvatarEntry(ev->uvalue);
+			if (entry) {
+				char path[64];
+				Com_sprintf(path, sizeof(path), "gfx/steam_avatars/%llu", (unsigned long long)ev->uvalue);
+				steamWriteAvatarTGA(path, ev->avatarRGBA, STEAMSHIM_AVATAR_DIM, STEAMSHIM_AVATAR_DIM);
+				Q_strncpyz(entry->path, path, sizeof(entry->path));
+				printf("Steam friend avatar: %llu -> '%s'\n", (unsigned long long)ev->uvalue, entry->path);
+			}
+		}
+		break;
+
 	case SHIMEVENT_LOBBY_CREATED:
 		if (ev->okay) {
 			s_steamCurrentLobby = ev->uvalue;
@@ -478,8 +552,13 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 			s_lobbyChatCount = STEAM_LOBBY_CHAT_MAX - 1;
 		}
 
-		Q_strncpyz(s_lobbyChat[s_lobbyChatCount].senderName, steamLookupLobbyMemberName(ev->uvalue),
-			sizeof(s_lobbyChat[0].senderName));
+		{
+			// Colored sender name (reset to white before the ": " so only the name itself is tinted).
+			char colored[64];
+			Com_sprintf(colored, sizeof(colored), "%s%s" S_COLOR_WHITE,
+				steamPlayerColorForSlot(steamLobbyMemberIndexOf(ev->uvalue)), steamLookupLobbyMemberName(ev->uvalue));
+			Q_strncpyz(s_lobbyChat[s_lobbyChatCount].senderName, colored, sizeof(s_lobbyChat[0].senderName));
+		}
 		Q_strncpyz(s_lobbyChat[s_lobbyChatCount].text, ev->name, sizeof(s_lobbyChat[0].text));
 		s_lobbyChatCount++;
 		s_lobbyChatDirty = 1;
@@ -504,6 +583,7 @@ static const char *SteamEventName(STEAMSHIM_EventType type)
 	case SHIMEVENT_LOBBY_CHATMSG:     return "LOBBY_CHATMSG";
 	case SHIMEVENT_LOCAL_IDENTITY:    return "LOCAL_IDENTITY";
 	case SHIMEVENT_FRIEND_NAME:       return "FRIEND_NAME";
+	case SHIMEVENT_FRIEND_AVATAR:     return "FRIEND_AVATAR";
 	case SHIMEVENT_NET_CONNECTED:     return "NET_CONNECTED";
 	case SHIMEVENT_NET_DISCONNECTED:  return "NET_DISCONNECTED";
 	case SHIMEVENT_NET_DATA:          return "NET_DATA";
@@ -646,6 +726,29 @@ const char *steamLobbyMemberName(int index)
 	return s_lobbyMembers[index].name;
 }
 
+int steamLobbyMemberIndexOf(uint64_t steamID)
+{
+	int i;
+
+	for (i = 0; i < s_lobbyMemberCount; i++) {
+		if (s_lobbyMembers[i].steamID == steamID) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+const char *steamPlayerColorForSlot(int slotIndex)
+{
+	// Fixed red/green/blue/orange per slot, sized to MAX_COOP_PLAYERS - add another color here if that ever grows.
+	static const char *colors[MAX_COOP_PLAYERS] = { S_COLOR_RED, S_COLOR_GREEN, S_COLOR_BLUE, S_COLOR_ORANGE };
+
+	if (slotIndex < 0 || slotIndex >= MAX_COOP_PLAYERS) {
+		return "";
+	}
+	return colors[slotIndex];
+}
+
 const char *steamLobbyOwnerName(void)
 {
 	return steamLookupLobbyMemberName(s_steamCurrentLobbyOwner);
@@ -774,6 +877,38 @@ const char *steamGetCachedFriendName(uint64_t steamID)
 	return "";
 }
 
+void steamRequestFriendAvatar(uint64_t steamID)
+{
+	steamAvatarCacheEntry_t *entry;
+
+	if (steamID == 0) {
+		return;
+	}
+
+	if (steamFindAvatarEntry(steamID)) {
+		return;	// already requested (pending or resolved)
+	}
+
+	if (s_avatarCacheCount >= STEAM_AVATAR_CACHE_MAX) {
+		// Cache full (shouldn't happen with MAX_COOP_PLAYERS this small) - overwrite oldest.
+		memmove(&s_avatarCache[0], &s_avatarCache[1], sizeof(s_avatarCache[0]) * (STEAM_AVATAR_CACHE_MAX - 1));
+		s_avatarCacheCount = STEAM_AVATAR_CACHE_MAX - 1;
+	}
+
+	entry = &s_avatarCache[s_avatarCacheCount++];
+	entry->steamID = steamID;
+	entry->path[0] = '\0';
+
+	STEAMSHIM_getFriendAvatar(steamID);
+}
+
+const char *steamGetCachedFriendAvatarPath(uint64_t steamID)
+{
+	steamAvatarCacheEntry_t *entry = steamFindAvatarEntry(steamID);
+
+	return entry ? entry->path : "";
+}
+
 #else
 
 static uint64_t s_steamCurrentLobby = 0;
@@ -872,6 +1007,18 @@ uint64_t steamLobbyMemberSteamID(int index)
 const char *steamLobbyMemberName(int index)
 {
 	(void)index;
+	return "";
+}
+
+int steamLobbyMemberIndexOf(uint64_t steamID)
+{
+	(void)steamID;
+	return -1;
+}
+
+const char *steamPlayerColorForSlot(int slotIndex)
+{
+	(void)slotIndex;
 	return "";
 }
 
@@ -985,6 +1132,17 @@ void steamRequestFriendName(uint64_t steamID)
 }
 
 const char *steamGetCachedFriendName(uint64_t steamID)
+{
+	(void)steamID;
+	return "";
+}
+
+void steamRequestFriendAvatar(uint64_t steamID)
+{
+	(void)steamID;
+}
+
+const char *steamGetCachedFriendAvatarPath(uint64_t steamID)
 {
 	(void)steamID;
 	return "";

@@ -453,6 +453,8 @@ static void SanitizeChatText( char *text ) {
 			text[i] = ' ';
 		}
 	}
+
+	Q_StripColorCodes( text ); // players don't get to override their assigned name color mid-message
 }
 
 /*

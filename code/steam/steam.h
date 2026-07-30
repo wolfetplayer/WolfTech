@@ -92,6 +92,11 @@ const char *steamLobbyMemberName(int index);
    above; "" if not (yet) known. Works whether we're the owner or a guest. */
 const char *steamLobbyOwnerName(void);
 
+/* Position of steamID within the current lobby roster (see steamLobbyMemberSteamID()), or -1 if not a member. */
+int steamLobbyMemberIndexOf(uint64_t steamID);
+/* Fixed per-slot player color (red/green/blue/orange) for a lobby roster index, or "" if out of range. */
+const char *steamPlayerColorForSlot(int slotIndex);
+
 /* True if the roster changed (join/leave) since the last steamLobbyMembersClearDirty(). */
 int steamLobbyMembersDirty(void);
 void steamLobbyMembersClearDirty(void);
@@ -148,6 +153,11 @@ const char *steamLocalPersonaName(void);
 void steamRequestFriendName(uint64_t steamID);
 /* Returns the cached name for steamID, or "" if steamRequestFriendName() hasn't resolved yet. */
 const char *steamGetCachedFriendName(uint64_t steamID);
+
+/* Requests another player's small (32x32) avatar by steamID; safe to call every frame, no-ops after the first call per steamID. Poll steamGetCachedFriendAvatarPath() afterwards. */
+void steamRequestFriendAvatar(uint64_t steamID);
+/* Returns a virtual-FS path (no extension) for steamID's avatar, or "" if not resolved yet. */
+const char *steamGetCachedFriendAvatarPath(uint64_t steamID);
 
 /*
 ===============

@@ -667,12 +667,18 @@ itemDef {
 		decoration
 		}
 	itemDef {
+		name slot1avatar
+		ownerdraw UI_LOBBYAVATAR1
+		rect 498 160 20 20
+		visible 1
+		}
+	itemDef {
 		name slot1
 		ownerdraw UI_LOBBYSLOT1
 		textfont UI_FONT_NORMAL
 		textscale .18
 		textstyle 6
-		rect 498 159 110 22
+		rect 522 159 86 22
 		textalign ITEM_ALIGN_LEFT
 		textaligny 14
 		forecolor .9 .9 .9 1
@@ -690,12 +696,18 @@ itemDef {
 		decoration
 		}
 	itemDef {
+		name slot2avatar
+		ownerdraw UI_LOBBYAVATAR2
+		rect 498 186 20 20
+		visible 1
+		}
+	itemDef {
 		name slot2
 		ownerdraw UI_LOBBYSLOT2
 		textfont UI_FONT_NORMAL
 		textscale .18
 		textstyle 6
-		rect 498 185 110 22
+		rect 522 185 86 22
 		textalign ITEM_ALIGN_LEFT
 		textaligny 14
 		forecolor .9 .9 .9 1
@@ -713,12 +725,18 @@ itemDef {
 		decoration
 		}
 	itemDef {
+		name slot3avatar
+		ownerdraw UI_LOBBYAVATAR3
+		rect 498 212 20 20
+		visible 1
+		}
+	itemDef {
 		name slot3
 		ownerdraw UI_LOBBYSLOT3
 		textfont UI_FONT_NORMAL
 		textscale .18
 		textstyle 6
-		rect 498 211 110 22
+		rect 522 211 86 22
 		textalign ITEM_ALIGN_LEFT
 		textaligny 14
 		forecolor .9 .9 .9 1
@@ -736,12 +754,18 @@ itemDef {
 		decoration
 		}
 	itemDef {
+		name slot4avatar
+		ownerdraw UI_LOBBYAVATAR4
+		rect 498 238 20 20
+		visible 1
+		}
+	itemDef {
 		name slot4
 		ownerdraw UI_LOBBYSLOT4
 		textfont UI_FONT_NORMAL
 		textscale .18
 		textstyle 6
-		rect 498 237 110 22
+		rect 522 237 86 22
 		textalign ITEM_ALIGN_LEFT
 		textaligny 14
 		forecolor .9 .9 .9 1

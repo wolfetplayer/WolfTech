@@ -2131,6 +2131,23 @@ static void UI_DrawLobbySlot( rectDef_t *rect, int font, float scale, vec4_t col
 
 /*
 ===============
+UI_DrawLobbyAvatar
+
+Pre-game lobby: draws slotIndex's Steam avatar from cl_lobbySlotAvatarN, or nothing if not resolved yet.
+===============
+*/
+static void UI_DrawLobbyAvatar( rectDef_t *rect, float scale, vec4_t color, int slotIndex ) {
+	char path[MAX_QPATH];
+
+	trap_Cvar_VariableStringBuffer( va( "cl_lobbySlotAvatar%d", slotIndex ), path, sizeof( path ) );
+
+	if ( path[0] ) {
+		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip( path ) );
+	}
+}
+
+/*
+===============
 UI_DrawLobbyLeaderName
 
 Pre-game lobby: paints "Lobby Leader: <name>" - cl_lobbyLeaderName is mirrored by
@@ -3226,6 +3243,12 @@ static void UI_OwnerDraw( float x, float y, float w, float h, float text_x, floa
 	case UI_LOBBYSLOT3:
 	case UI_LOBBYSLOT4:
 		UI_DrawLobbySlot( &rect, font, scale, color, textStyle, ownerDraw - UI_LOBBYSLOT1 );
+		break;
+	case UI_LOBBYAVATAR1:
+	case UI_LOBBYAVATAR2:
+	case UI_LOBBYAVATAR3:
+	case UI_LOBBYAVATAR4:
+		UI_DrawLobbyAvatar( &rect, scale, color, ownerDraw - UI_LOBBYAVATAR1 );
 		break;
 	case UI_LOBBYCHAT1:
 	case UI_LOBBYCHAT2:

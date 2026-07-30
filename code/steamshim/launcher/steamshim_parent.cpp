@@ -526,10 +526,17 @@ typedef enum ShimCmd
 
 	// Pre-game lobby text chat.
 	SHIMCMD_LOBBY_SENDCHAT,
+
+	// Appended at the end so existing command values don't shift - see SHIMCMD_GET_FRIEND_NAME.
+	SHIMCMD_GET_FRIEND_AVATAR,
 } ShimCmd;
 
 #define SHIM_LEN_ESCAPE 0xFF
 #define SHIM_MAX_NET_PACKET 2048
+
+// Steam's "small" friend avatar is a fixed 32x32 RGBA image.
+#define SHIM_AVATAR_DIM 32
+#define SHIM_AVATAR_RGBA_SIZE (SHIM_AVATAR_DIM * SHIM_AVATAR_DIM * 4)
 
 typedef enum ShimEvent
 {
@@ -570,6 +577,8 @@ typedef enum ShimEvent
 
 	// Pre-game lobby text chat: uvalue = sender's steamID, text = message body.
 	SHIMEVENT_LOBBY_CHATMSG,
+
+	SHIMEVENT_FRIEND_AVATAR,	// reply to SHIMCMD_GET_FRIEND_AVATAR; uvalue = steamID, raw RGBA payload follows (empty if !okay)
 } ShimEvent;
 
 static bool write1ByteCmd(PipeType fd, const uint8 b1)
@@ -770,6 +779,45 @@ static bool writeNetDataEvent(PipeType fd, const uint64 steamID, const void *dat
 	ptr += sizeof(steamID);
 	memcpy(ptr, data, len);
 	ptr += len;
+
+	return writePipe(fd, buf, (unsigned int)(ptr - buf));
+}
+
+// SHIMEVENT_FRIEND_AVATAR: ev + okay + steamID + raw RGBA bytes; uses escape-length framing like writeNetDataEvent since it can exceed 254 bytes.
+static bool writeFriendAvatarEvent(PipeType fd, const bool okay, const uint64 steamID, const void *rgba, const int rgbaLen)
+{
+	static uint8 buf[3 + 1 + 1 + sizeof(uint64) + SHIM_AVATAR_RGBA_SIZE];
+	uint8 *ptr;
+	int totalLen;
+	int hdrlen;
+
+	if (rgbaLen < 0 || rgbaLen > SHIM_AVATAR_RGBA_SIZE) return false;
+
+	totalLen = 1 + 1 + (int)sizeof(uint64) + rgbaLen;  // ev byte + okay byte + steamID + payload
+
+	if (totalLen < SHIM_LEN_ESCAPE)
+	{
+		buf[0] = (uint8) totalLen;
+		hdrlen = 1;
+	}
+	else
+	{
+		buf[0] = SHIM_LEN_ESCAPE;
+		buf[1] = (uint8) (totalLen & 0xFF);
+		buf[2] = (uint8) ((totalLen >> 8) & 0xFF);
+		hdrlen = 3;
+	}
+
+	ptr = buf + hdrlen;
+	*(ptr++) = (uint8) SHIMEVENT_FRIEND_AVATAR;
+	*(ptr++) = okay ? 1 : 0;
+	memcpy(ptr, &steamID, sizeof(steamID));
+	ptr += sizeof(steamID);
+	if (rgbaLen > 0)
+	{
+		memcpy(ptr, rgba, rgbaLen);
+		ptr += rgbaLen;
+	}
 
 	return writePipe(fd, buf, (unsigned int)(ptr - buf));
 }
@@ -1589,6 +1637,40 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
 
             // Resolves from Steam's local cache; already populated for anyone in our lobby.
             writeLobbyEvent(fd, SHIMEVENT_FRIEND_NAME, true, steamID, GSteamFriends->GetFriendPersonaName(CSteamID(steamID)));
+            break;
+        }
+
+        case SHIMCMD_GET_FRIEND_AVATAR:
+        {
+            uint64 steamID = 0;
+
+            if (buflen >= sizeof(uint64))
+            {
+                memcpy(&steamID, buf, sizeof(steamID));
+            }
+
+            if (!GSteamFriends || !GSteamUtils || steamID == 0)
+            {
+                writeFriendAvatarEvent(fd, false, steamID, NULL, 0);
+                break;
+            }
+
+            {
+                static uint8 rgba[SHIM_AVATAR_RGBA_SIZE];
+                int avatarHandle = GSteamFriends->GetSmallFriendAvatar(CSteamID(steamID));
+                uint32 width = 0, height = 0;
+                bool okay = false;
+
+                if (avatarHandle != 0 &&
+                    GSteamUtils->GetImageSize(avatarHandle, &width, &height) &&
+                    width == SHIM_AVATAR_DIM && height == SHIM_AVATAR_DIM &&
+                    GSteamUtils->GetImageRGBA(avatarHandle, rgba, sizeof(rgba)))
+                {
+                    okay = true;
+                }
+
+                writeFriendAvatarEvent(fd, okay, steamID, okay ? rgba : NULL, okay ? sizeof(rgba) : 0);
+            }
             break;
         }
 

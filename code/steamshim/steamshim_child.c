@@ -223,6 +223,9 @@ typedef enum ShimCmd
 
     /* Pre-game lobby text chat. */
     SHIMCMD_LOBBY_SENDCHAT,
+
+    /* Appended at the end so existing command values don't shift - see SHIMCMD_GET_FRIEND_NAME. */
+    SHIMCMD_GET_FRIEND_AVATAR,
 } ShimCmd;
 
 /* Pipe framing: buf[0] is normally the payload length (cmd byte + data).
@@ -392,6 +395,7 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
     /* NET_DATA happens every frame; too noisy to log here. */
     PRINTGOTEVENT(SHIMEVENT_LOBBY_MEMBER);
     PRINTGOTEVENT(SHIMEVENT_LOBBY_CHATMSG);
+    PRINTGOTEVENT(SHIMEVENT_FRIEND_AVATAR);
 #undef PRINTGOTEVENT
     else printf("Child got unknown shimevent %d.\n", (int) type);
     #endif
@@ -511,6 +515,31 @@ static const STEAMSHIM_Event *processEvent(const uint8 *buf, size_t buflen)
             break;
         }
 
+        case SHIMEVENT_FRIEND_AVATAR:
+        {
+            uint64_t steamID = 0;
+            int rgbaLen;
+
+            if (buflen < 1 + sizeof (uint64_t)) return NULL;
+
+            event.okay = *(buf++) ? 1 : 0;
+            buflen--;
+
+            memcpy(&steamID, buf, sizeof (uint64_t));
+            buf += sizeof (uint64_t);
+            buflen -= sizeof (uint64_t);
+
+            event.uvalue = steamID;
+
+            rgbaLen = (int) buflen;
+            if (rgbaLen > (int) sizeof (event.avatarRGBA))
+                rgbaLen = (int) sizeof (event.avatarRGBA);
+            if (rgbaLen > 0)
+                memcpy(event.avatarRGBA, buf, rgbaLen);
+            event.avatarLen = rgbaLen;
+            break;
+        }
+
         default:  /* uh oh */
             return NULL;
     } /* switch */
@@ -539,11 +568,10 @@ static int parseShimHeader(const uint8 *buf, const int br, int *outEvlen)
     return 3;
 } /* parseShimHeader */
 
-/* header(3) + event type(1) + steamID(8) + payload, largest event is
- * SHIMEVENT_NET_DATA. */
+/* header(3) + event type(1) + okay(1) + steamID(8) + payload; largest event is now SHIMEVENT_FRIEND_AVATAR's RGBA data. */
 const STEAMSHIM_Event *STEAMSHIM_pump(void)
 {
-    static uint8 buf[3 + 1 + sizeof (uint64_t) + STEAMSHIM_MAX_NET_PACKET];
+    static uint8 buf[3 + 1 + 1 + sizeof (uint64_t) + STEAMSHIM_AVATAR_RGBA_SIZE];
     static int br = 0;
     int evlen = 0;
     int hdrlen = parseShimHeader(buf, br, &evlen);
@@ -858,6 +886,26 @@ void STEAMSHIM_getFriendName(uint64_t steamID)
 	dbgpipe("Child sending SHIMCMD_GET_FRIEND_NAME(%llu).\n", (unsigned long long) steamID);
 
 	*(ptr++) = (uint8)SHIMCMD_GET_FRIEND_NAME;
+
+	memcpy(ptr, &steamID, sizeof(steamID));
+	ptr += sizeof(steamID);
+
+	buf[0] = (uint8)((ptr - 1) - buf);
+	writePipe(GPipeWrite, buf, buf[0] + 1);
+}
+
+void STEAMSHIM_getFriendAvatar(uint64_t steamID)
+{
+	uint8 buf[16];
+	uint8 *ptr = buf + 1;
+
+	if (isDead()) {
+		return;
+	}
+
+	dbgpipe("Child sending SHIMCMD_GET_FRIEND_AVATAR(%llu).\n", (unsigned long long) steamID);
+
+	*(ptr++) = (uint8)SHIMCMD_GET_FRIEND_AVATAR;
 
 	memcpy(ptr, &steamID, sizeof(steamID));
 	ptr += sizeof(steamID);

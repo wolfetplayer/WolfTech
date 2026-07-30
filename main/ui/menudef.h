@@ -375,6 +375,12 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_LOBBYMAPPREVIEW_SMALL1   297
 #define UI_LOBBYMAPPREVIEW_SMALL2   298
 
+// pre-game lobby: player slot Steam avatar icons, drawn to the left of each UI_LOBBYSLOTn name
+#define UI_LOBBYAVATAR1             299
+#define UI_LOBBYAVATAR2             300
+#define UI_LOBBYAVATAR3             301
+#define UI_LOBBYAVATAR4             302
+
 #define VOICECHAT_GETFLAG           "getflag"                // command someone to get the flag
 #define VOICECHAT_OFFENSE           "offense"                // command someone to go on offense
 #define VOICECHAT_DEFEND            "defend"             // command someone to go on defense

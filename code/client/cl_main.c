@@ -2239,6 +2239,11 @@ void CL_LobbyChatSend_f(void)
 		return;
 	}
 
+	Q_StripColorCodes( text ); // players don't get to override their assigned name color mid-message
+	if ( !text[0] ) {
+		return;
+	}
+
 	steamLobbySendChatMsg(text);
 	Cvar_Set( "ui_lobbyChatInput", "" );
 }
@@ -3424,8 +3429,16 @@ void CL_Frame( int msec ) {
 				Cvar_Set( "cl_steamid", va( "%llu", (unsigned long long) steamLocalSteamID() ) );
 				Cvar_Set( "cl_steamActive", "1" );
 
-				if ( steamLocalPersonaName()[0] && Q_stricmp( Cvar_VariableString( "name" ), steamLocalPersonaName() ) ) {
-					Cvar_Set( "name", steamLocalPersonaName() );
+				// Tint with our own lobby slot color so it carries through userinfo into chat/scoreboard/obituaries once connected.
+				if ( steamLocalPersonaName()[0] ) {
+					char coloredName[80];
+
+					Com_sprintf( coloredName, sizeof( coloredName ), "%s%s",
+						steamPlayerColorForSlot( steamLobbyMemberIndexOf( steamLocalSteamID() ) ), steamLocalPersonaName() );
+
+					if ( Q_stricmp( Cvar_VariableString( "name" ), coloredName ) ) {
+						Cvar_Set( "name", coloredName );
+					}
 				}
 			} else {
 				Cvar_Set( "cl_steamActive", "0" );
@@ -3463,9 +3476,31 @@ void CL_Frame( int msec ) {
 				int count = steamLobbyMemberCount();
 
 				for ( i = 0; i < MAX_COOP_PLAYERS; i++ ) {
-					Cvar_Set( va( "cl_lobbySlot%d", i ), ( i < count ) ? steamLobbyMemberName( i ) : "" );
+					if ( i < count ) {
+						char coloredName[80];
+						Com_sprintf( coloredName, sizeof( coloredName ), "%s%s", steamPlayerColorForSlot( i ), steamLobbyMemberName( i ) );
+						Cvar_Set( va( "cl_lobbySlot%d", i ), coloredName );
+					} else {
+						Cvar_Set( va( "cl_lobbySlot%d", i ), "" );
+					}
 				}
 				steamLobbyMembersClearDirty();
+			}
+
+			// Avatars resolve async, so mirror them every frame (not gated on the roster-dirty flag above).
+			{
+				int i;
+				int count = steamLobbyMemberCount();
+
+				for ( i = 0; i < MAX_COOP_PLAYERS; i++ ) {
+					if ( i < count ) {
+						uint64_t memberID = steamLobbyMemberSteamID( i );
+						steamRequestFriendAvatar( memberID );
+						Cvar_Set( va( "cl_lobbySlotAvatar%d", i ), steamGetCachedFriendAvatarPath( memberID ) );
+					} else {
+						Cvar_Set( va( "cl_lobbySlotAvatar%d", i ), "" );
+					}
+				}
 			}
 		}
 
