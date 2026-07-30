@@ -1276,6 +1276,9 @@ extern vmCvar_t g_fraglimit;
 extern vmCvar_t g_timelimit;
 extern vmCvar_t g_friendlyFire;
 extern vmCvar_t g_LTChargeTime; // JPW NERVE -- Lieutenant airstrike/artillery call-in cooldown, ms
+extern vmCvar_t g_medicChargeTime;
+extern vmCvar_t g_engineerChargeTime;
+extern vmCvar_t g_soldierChargeTime;
 extern vmCvar_t g_password;
 extern vmCvar_t g_needpass;
 extern vmCvar_t g_gravity;

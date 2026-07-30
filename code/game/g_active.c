@@ -1181,6 +1181,9 @@ void ClientThink_real( gentity_t *ent ) {
 	pm.pmext = &client->pmext;
 
 	pm.ltChargeTime = g_LTChargeTime.integer;
+	pm.medicChargeTime = g_medicChargeTime.integer;
+	pm.engineerChargeTime = g_engineerChargeTime.integer;
+	pm.soldierChargeTime = g_soldierChargeTime.integer;
 
 	pm.noWeapClips = ( g_dmflags.integer & DF_NO_WEAPRELOAD ) > 0;
 	if ( ent->aiCharacter && AICast_NoReload( ent->s.number ) ) {
