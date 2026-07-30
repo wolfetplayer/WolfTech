@@ -1075,6 +1075,7 @@ void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
 	const char *difficulty = "";
 	const char *aihealthcap = "";
 	const char *name = "";
+	const char *countdown = "";
 	char payload[350];
 
 	dbgpipe("Lobby data updated: %llu\n", lobbyID);
@@ -1091,13 +1092,15 @@ void SteamBridge::OnLobbyDataUpdate(LobbyDataUpdate_t *pCallback)
 		difficulty = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "difficulty");
 		aihealthcap = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "aihealthcap");
 		name = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "name");
+		countdown = GSteamMatchmaking->GetLobbyData(GCurrentLobby, "countdown");
 	}
 
 	// steamLobbyListParseEntry()-style \x01-delimited fields; steam.c splits this back apart.
-	snprintf(payload, sizeof(payload), "%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s",
+	snprintf(payload, sizeof(payload), "%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s\x01%s",
 		started ? started : "", map ? map : "", gametype ? gametype : "",
 		friendlyfire ? friendlyfire : "", realism ? realism : "", specialwaves ? specialwaves : "",
-		difficulty ? difficulty : "", aihealthcap ? aihealthcap : "", name ? name : "");
+		difficulty ? difficulty : "", aihealthcap ? aihealthcap : "", name ? name : "",
+		countdown ? countdown : "");
 
 	writeLobbyEvent(
 		fd,

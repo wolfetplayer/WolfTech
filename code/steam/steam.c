@@ -139,6 +139,7 @@ static int s_lobbySpecialWaves = 0;
 static int s_lobbyDifficulty = 0;
 static int s_lobbyAiHealthCap = 0;
 static char s_lobbyName[64] = "";
+static int s_lobbyCountdown = 0;
 
 // Pre-game lobby text chat: oldest-first ring of received lines (sender resolved from
 // the roster above at receive time). Old entries just shift out once full - plenty for
@@ -167,6 +168,7 @@ static void steamResetLobbyRosterState(void)
 	s_lobbyDifficulty = 0;
 	s_lobbyAiHealthCap = 0;
 	s_lobbyName[0] = '\0';
+	s_lobbyCountdown = 0;
 	s_lobbyChatCount = 0;
 	s_lobbyChatDirty = 1;
 }
@@ -390,6 +392,21 @@ static const char *steamLookupLobbyMemberName(uint64_t steamID)
 	return "";
 }
 
+// Shared by the real chat path and steamLobbyChatAppendLocal()'s synthetic messages.
+static void steamLobbyChatAppend(const char *senderName, const char *text)
+{
+	if (s_lobbyChatCount >= STEAM_LOBBY_CHAT_MAX) {
+		// Full - drop the oldest line to make room, same as the friend name cache.
+		memmove(&s_lobbyChat[0], &s_lobbyChat[1], sizeof(s_lobbyChat[0]) * (STEAM_LOBBY_CHAT_MAX - 1));
+		s_lobbyChatCount = STEAM_LOBBY_CHAT_MAX - 1;
+	}
+
+	Q_strncpyz(s_lobbyChat[s_lobbyChatCount].senderName, senderName, sizeof(s_lobbyChat[0].senderName));
+	Q_strncpyz(s_lobbyChat[s_lobbyChatCount].text, text, sizeof(s_lobbyChat[0].text));
+	s_lobbyChatCount++;
+	s_lobbyChatDirty = 1;
+}
+
 static void steamHandleEvent(const STEAMSHIM_Event *ev)
 {
 	if (!ev) {
@@ -491,16 +508,16 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 
 	case SHIMEVENT_LOBBY_DATA:
 		{
-			// "<started>\x01<map>\x01<gametype>\x01<friendlyfire>\x01<realism>\x01<specialwaves>\x01<difficulty>\x01<aihealthcap>\x01<name>" - see SteamBridge::OnLobbyDataUpdate.
+			// "<started>\x01<map>\x01<gametype>\x01<friendlyfire>\x01<realism>\x01<specialwaves>\x01<difficulty>\x01<aihealthcap>\x01<name>\x01<countdown>" - see SteamBridge::OnLobbyDataUpdate.
 			char buf[350];
-			char *field[9] = { "", "", "", "", "", "", "", "", "" };
+			char *field[10] = { "", "", "", "", "", "", "", "", "", "" };
 			char *p, *next;
 			int i;
 
 			Q_strncpyz(buf, ev->name, sizeof(buf));
 
 			p = buf;
-			for (i = 0; i < 9 && p; i++) {
+			for (i = 0; i < 10 && p; i++) {
 				field[i] = p;
 				next = strchr(p, '\x01');
 				if (next) {
@@ -520,6 +537,7 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 			s_lobbyDifficulty = atoi(field[6]);
 			s_lobbyAiHealthCap = atoi(field[7]);
 			Q_strncpyz(s_lobbyName, field[8], sizeof(s_lobbyName));
+			s_lobbyCountdown = atoi(field[9]);
 
 			// TEMP DIAGNOSTIC - remove once "Lobby Name" not showing is root-caused.
 			printf("lobbydata parsed: name='%s' map='%s' started=%d\n", s_lobbyName, s_lobbyMapName, s_steamLobbyStarted);
@@ -546,22 +564,13 @@ static void steamHandleEvent(const STEAMSHIM_Event *ev)
 		break;
 
 	case SHIMEVENT_LOBBY_CHATMSG:
-		if (s_lobbyChatCount >= STEAM_LOBBY_CHAT_MAX) {
-			// Full - drop the oldest line to make room, same as the friend name cache.
-			memmove(&s_lobbyChat[0], &s_lobbyChat[1], sizeof(s_lobbyChat[0]) * (STEAM_LOBBY_CHAT_MAX - 1));
-			s_lobbyChatCount = STEAM_LOBBY_CHAT_MAX - 1;
-		}
-
 		{
 			// Colored sender name (reset to white before the ": " so only the name itself is tinted).
 			char colored[64];
 			Com_sprintf(colored, sizeof(colored), "%s%s" S_COLOR_WHITE,
 				steamPlayerColorForSlot(steamLobbyMemberIndexOf(ev->uvalue)), steamLookupLobbyMemberName(ev->uvalue));
-			Q_strncpyz(s_lobbyChat[s_lobbyChatCount].senderName, colored, sizeof(s_lobbyChat[0].senderName));
+			steamLobbyChatAppend(colored, ev->name);
 		}
-		Q_strncpyz(s_lobbyChat[s_lobbyChatCount].text, ev->name, sizeof(s_lobbyChat[0].text));
-		s_lobbyChatCount++;
-		s_lobbyChatDirty = 1;
 		break;
 
 	default:
@@ -779,6 +788,11 @@ int steamLobbyGameType(void)
 	return s_lobbyGameType;
 }
 
+int steamLobbyCountdown(void)
+{
+	return s_lobbyCountdown;
+}
+
 int steamLobbyFriendlyFire(void)
 {
 	return s_lobbyFriendlyFire;
@@ -812,6 +826,11 @@ const char *steamLobbyName(void)
 void steamLobbySendChatMsg(const char *text)
 {
 	STEAMSHIM_lobbySendChat(text);
+}
+
+void steamLobbyChatAppendLocal(const char *text)
+{
+	steamLobbyChatAppend("", text);
 }
 
 int steamLobbyChatCount(void)
@@ -1051,6 +1070,11 @@ int steamLobbyGameType(void)
 	return -1;
 }
 
+int steamLobbyCountdown(void)
+{
+	return 0;
+}
+
 int steamLobbyFriendlyFire(void)
 {
 	return 0;
@@ -1082,6 +1106,11 @@ const char *steamLobbyName(void)
 }
 
 void steamLobbySendChatMsg(const char *text)
+{
+	(void)text;
+}
+
+void steamLobbyChatAppendLocal(const char *text)
 {
 	(void)text;
 }

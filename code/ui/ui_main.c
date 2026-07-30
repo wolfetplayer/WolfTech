@@ -5165,9 +5165,9 @@ static void UI_RunMenuScript( char **args ) {
 			}
 			else
 			{
-				// Pre-game lobby: this only creates the Steam lobby - nobody connects to
-				// any game server or loads any map until the host hits "Start The Game"
-				// (see LobbyStartGame below).
+				// Pre-game lobby: this only creates the Steam lobby - nobody connects to any
+				// game server or loads any map until the host starts the countdown (see
+				// "lobby_countdown_start"/CL_LobbyCountdownFrame in cl_main.c).
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_host %d %d\n", clients, ui_lobbyType.integer));
 
 				// push name/map/gametype to the lobby; steam_setdata queues until it's ready
@@ -5223,39 +5223,6 @@ static void UI_RunMenuScript( char **args ) {
 			trap_Cvar_VariableStringBuffer( "sv_hostname", hostName, sizeof( hostName ) );
 			if ( hostName[0] ) {
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata name \"%s\"\n", hostName));
-			}
-		}
-		else if (Q_stricmp(name, "LobbyStartGame") == 0)
-		{
-			// Host clicked "Start The Game" in the pregame lobby. Flip the Steam
-			// lobby's "started" flag first - every guest is watching for that
-			// (steamLobbyStarted()) and auto-connects the instant they see it - then
-			// load the actual map ourselves, so everyone ends up loading it together
-			// instead of the old "load it first, then freeze in place" flow.
-			int gt;
-			const char *mapName;
-			char hostName[MAX_NAME_LENGTH];
-
-			gt = uiInfo.gameTypes[ui_netGameType.integer].gtEnum;
-			mapName = uiInfo.mapList[ui_currentNetMap.integer].mapLoadName;
-
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata map %s\n", mapName));
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata gametype %d\n", gt));
-
-			trap_Cvar_VariableStringBuffer( "sv_hostname", hostName, sizeof( hostName ) );
-			if ( hostName[0] ) {
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("steam_setdata name \"%s\"\n", hostName));
-			}
-
-			trap_Cmd_ExecuteText(EXEC_APPEND, "steam_setdata started 1\n");
-
-			if (gt == GT_COOP_SURVIVAL)
-			{
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; svmap %s\n", mapName));
-			}
-			else
-			{
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("wait ; wait ; coopmap %s\n", mapName));
 			}
 		}
 		else if (Q_stricmp(name, "LeaveLobby") == 0)

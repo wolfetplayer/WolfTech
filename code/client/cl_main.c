@@ -2348,6 +2348,100 @@ void CL_ConnectLobby_f(void)
 }
 
 /*
+====================
+Pre-game lobby countdown
+
+Host clicks "Start The Game" (now "lobby_countdown_start") -> this seeds the
+"countdown" lobby-data key with 5 and starts a local 1-second timer, ticked from
+CL_Frame (host only - see CL_LobbyCountdownFrame). Every client, including the
+host, reacts to the broadcast "countdown" value the same way (see the mirror
+block in CL_Frame): print a line into the lobby chat and play a tick sound. That
+keeps everyone's chat log/audio in sync with what's actually on the wire instead
+of the host reacting to its own local intent a frame early.
+
+At 0 the host commits to starting the game exactly like the old LobbyStartGame
+uiScript did: flip "started" (guests are already watching steamLobbyStarted() to
+auto-connect) then load the map itself.
+====================
+*/
+static qboolean s_countdownActive = qfalse;
+static int s_countdownValue = 0;
+static int s_countdownElapsedMsec = 0;
+
+void CL_LobbyCountdownStart_f(void)
+{
+	if ( Q_stricmp( Cvar_VariableString( "cl_lobbyIsHost" ), "1" ) != 0 ) {
+		return;
+	}
+	if ( steamLobbyCurrent() == 0 || s_countdownActive ) {
+		return;
+	}
+
+	s_countdownActive = qtrue;
+	s_countdownValue = 5;
+	s_countdownElapsedMsec = 0;
+	steamLobbySetData( "countdown", "5" );
+}
+
+void CL_LobbyCountdownStop_f(void)
+{
+	if ( !s_countdownActive ) {
+		return;
+	}
+
+	s_countdownActive = qfalse;
+	s_countdownValue = 0;
+	steamLobbySetData( "countdown", "0" );
+}
+
+// Cached handle for the countdown tick sound - registered once, reused every tick.
+static sfxHandle_t CL_LobbyCountdownTickSound(void)
+{
+	static sfxHandle_t sfx = 0;
+
+	if ( !sfx ) {
+		sfx = S_RegisterSound( "sound/misc/kcaction.wav", qfalse );
+	}
+	return sfx;
+}
+
+// Called every client frame from CL_Frame; no-ops unless we're the host and counting.
+static void CL_LobbyCountdownFrame( int msec )
+{
+	if ( !s_countdownActive ) {
+		return;
+	}
+
+	if ( steamLobbyCurrent() == 0 ) {
+		// Lobby went away out from under us (left/disconnected) - just stop, nothing left to broadcast to.
+		s_countdownActive = qfalse;
+		return;
+	}
+
+	s_countdownElapsedMsec += msec;
+	if ( s_countdownElapsedMsec < 1000 ) {
+		return;
+	}
+	s_countdownElapsedMsec -= 1000;
+
+	s_countdownValue--;
+	if ( s_countdownValue > 0 ) {
+		steamLobbySetData( "countdown", va( "%d", s_countdownValue ) );
+		return;
+	}
+
+	s_countdownActive = qfalse;
+	steamLobbySetData( "countdown", "0" );
+
+	Cbuf_AddText( "steam_setdata started 1\n" );
+	if ( steamLobbyGameType() == GT_COOP_SURVIVAL ) {
+		Cbuf_AddText( va( "wait ; wait ; svmap %s\n", steamLobbyMapName() ) );
+	} else {
+		Cbuf_AddText( va( "wait ; wait ; coopmap %s\n", steamLobbyMapName() ) );
+	}
+}
+
+/*
 ==================
 CL_PK3List_f
 ==================
@@ -3415,6 +3509,7 @@ void CL_Frame( int msec ) {
 		steamRun();
 		CL_UpdateSteamServers();
 		CL_FlushPendingSteamLobbyData();
+		CL_LobbyCountdownFrame( msec );
 
 		// Pre-game lobby: keep "name" permanently tethered to the Steam persona name every frame - players don't get to override it.
 		{
@@ -3471,6 +3566,27 @@ void CL_Frame( int msec ) {
 			Cvar_Set( "cl_lobbyAiHealthCap", va( "%d", steamLobbyAiHealthCap() ) );
 			Cvar_Set( "cl_lobbyName", steamLobbyName() );
 
+			// React locally to the broadcast "countdown" value - same for host and guests.
+			{
+				static int lastCountdown = -1;
+				int cd = steamLobbyCountdown();
+
+				Cvar_Set( "cl_lobbyCountdown", va( "%d", cd ) );
+				// Two booleans, not one tri-state cvar - itemDefs can only cvarTest one cvar each.
+				Cvar_Set( "cl_lobbyEditable", ( isHost && cd == 0 ) ? "1" : "0" );
+				Cvar_Set( "cl_lobbyCounting", ( isHost && cd > 0 ) ? "1" : "0" );
+
+				if ( cd != lastCountdown ) {
+					if ( cd > 0 ) {
+						steamLobbyChatAppendLocal( va( "%sGame starting in %d...", S_COLOR_YELLOW, cd ) );
+						S_StartLocalSound( CL_LobbyCountdownTickSound(), CHAN_LOCAL_SOUND );
+					} else if ( lastCountdown > 0 && steamLobbyCurrent() != 0 && !steamLobbyStarted() ) {
+						steamLobbyChatAppendLocal( va( "%sCountdown stopped.", S_COLOR_RED ) );
+					}
+					lastCountdown = cd;
+				}
+			}
+
 			if ( steamLobbyMembersDirty() ) {
 				int i;
 				int count = steamLobbyMemberCount();
@@ -3516,8 +3632,14 @@ void CL_Frame( int msec ) {
 				int src = first + i;
 
 				if ( src < count ) {
-					Cvar_Set( va( "cl_lobbyChatLine%d", i ),
-						va( "%s: %s", steamLobbyChatSenderName( src ), steamLobbyChatText( src ) ) );
+					const char *sender = steamLobbyChatSenderName( src );
+
+					// Empty sender = a local system line (see steamLobbyChatAppendLocal) - no "Name: " prefix.
+					if ( sender[0] ) {
+						Cvar_Set( va( "cl_lobbyChatLine%d", i ), va( "%s: %s", sender, steamLobbyChatText( src ) ) );
+					} else {
+						Cvar_Set( va( "cl_lobbyChatLine%d", i ), steamLobbyChatText( src ) );
+					}
 				} else {
 					Cvar_Set( va( "cl_lobbyChatLine%d", i ), "" );
 				}
@@ -4625,6 +4747,9 @@ void CL_Init( void ) {
 	Cvar_Get( "cl_lobbyDifficulty", "0", CVAR_ROM );
 	Cvar_Get( "cl_lobbyAiHealthCap", "0", CVAR_ROM );
 	Cvar_Get( "cl_lobbyName", "", CVAR_ROM );
+	Cvar_Get( "cl_lobbyCountdown", "0", CVAR_ROM );   // 0 = not counting, 5..1 while the start countdown runs
+	Cvar_Get( "cl_lobbyEditable", "0", CVAR_ROM );   // 1 = local host, no countdown running - can edit tuning rows / sees Start
+	Cvar_Get( "cl_lobbyCounting", "0", CVAR_ROM );   // 1 = local host, countdown running - tuning rows frozen / sees Stop
 	Cvar_Get( "cl_lobbySlot0", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbySlot1", "", CVAR_ROM );
 	Cvar_Get( "cl_lobbySlot2", "", CVAR_ROM );
@@ -4780,6 +4905,10 @@ void CL_Init( void ) {
 	Cmd_AddCommand("steam_setdata", CL_SteamSetData_f);
 
 	Cmd_AddCommand("lobby_chat_send", CL_LobbyChatSend_f);
+
+	Cmd_AddCommand("lobby_countdown_start", CL_LobbyCountdownStart_f);
+
+	Cmd_AddCommand("lobby_countdown_stop", CL_LobbyCountdownStop_f);
 
 	Cmd_AddCommand("connect_lobby", CL_ConnectLobby_f);
 

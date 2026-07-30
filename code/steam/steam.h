@@ -111,6 +111,9 @@ int steamLobbyStarted(void);
 const char *steamLobbyMapName(void);
 int steamLobbyGameType(void);
 
+/* The host's "Start The Game" countdown (mirrored from lobby data): 5..1 while counting down, 0 otherwise. */
+int steamLobbyCountdown(void);
+
 /* Raw g_friendlyFire/g_realism/g_specialwaves/g_survivalDifficulty/g_survivalAiHealthCap, mirrored from lobby data; 0 if not known yet. */
 int steamLobbyFriendlyFire(void);
 int steamLobbyRealism(void);
@@ -124,6 +127,9 @@ const char *steamLobbyName(void);
 /* Sends a text message to every member of the current lobby (ourselves included -
    Steam echoes it back the same as everyone else's, so the log stays in one place). */
 void steamLobbySendChatMsg(const char *text);
+
+/* Appends a line to the local lobby chat log only - nothing is sent to Steam/other members. Shown with no "Name: " prefix. */
+void steamLobbyChatAppendLocal(const char *text);
 
 /* Number of received lobby chat lines cached (oldest first). */
 int steamLobbyChatCount(void);

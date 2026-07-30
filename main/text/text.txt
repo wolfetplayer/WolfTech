@@ -517,6 +517,7 @@ LOBBY_EDITSETTINGS                 "Edit Game Settings"
 LOBBY_INVITEFRIENDS                "Invite Friends"
 LOBBY_LEAVE                        "Leave This Lobby"
 LOBBY_STARTGAME                    "Start The Game"
+LOBBY_STOPGAME                      "Stop"
 LOBBY_SETTINGS_DONE                "Done"
 LOBBY_SAY                          "Say:"
 
