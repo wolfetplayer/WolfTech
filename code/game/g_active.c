@@ -1150,6 +1150,10 @@ void ClientThink_real( gentity_t *ent ) {
 		}
 	}
 
+	if ( client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC ) {
+		client->ps.speed *= 1.15;
+	}
+
 
 	// set up for pmove
 	oldEventSequence = client->ps.eventSequence;
