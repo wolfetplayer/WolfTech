@@ -18,6 +18,11 @@ menuDef {
 
 	// ui_lobbyChatInput is cleared in C instead (_UI_SetActiveMenu's UIMENU_PREGAME case) - String_Parse() treats "" as a parse failure here.
 
+	// Guests never visit create.menu (the only other place that loads uiInfo.mapList), so reload it here too, or their map names show as raw load names.
+	onOpen {
+		uiScript loadArenas
+		}
+
 	// ESC acts the same as "Leave This Lobby" instead of leaving the Steam lobby membership dangling.
 	onEsc {
 		uiScript LeaveLobby
