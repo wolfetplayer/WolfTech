@@ -2628,6 +2628,9 @@ int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNam
 			return R_IQMLerpTag( tag, model->modelData,
 					startFrame, endFrame,
 					frac, tagName, startIndex );
+		} else if ( model->type == MOD_MDM ) {    // use bone lerping
+			retval = R_MDM_GetTag( tag, model->mdm, startIndex, refent, tagNameIn );
+			return retval;
 		} else {
 			start = end = NULL;
 		}

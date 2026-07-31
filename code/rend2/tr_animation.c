@@ -319,6 +319,182 @@ static int R_ComputeFogNum( mdsHeader_t *header, trRefEntity_t *ent ) {
 
 /*
 ==============
+R_MDM_ResolveSkeleton
+
+Looks up hModel and confirms it's a registered MDX skeleton. Returns
+qfalse (leaving *outHeader untouched) for an unset or invalid handle -
+callers fall back gracefully rather than treating it as an error, since
+an MDM entity with no skeleton linked yet is a normal, expected state
+(e.g. a raw testmodel before cgame wires up ent->e.frameModel).
+==============
+*/
+static qboolean R_MDM_ResolveSkeleton( qhandle_t hModel, mdxHeader_t **outHeader ) {
+	model_t *mod;
+
+	if ( !hModel ) {
+		return qfalse;
+	}
+	mod = R_GetModelByHandle( hModel );
+	if ( !mod || mod->type != MOD_MDX || !mod->mdx ) {
+		return qfalse;
+	}
+	*outHeader = mod->mdx;
+	return qtrue;
+}
+
+/*
+=============
+R_MDM_CullModel
+
+Same as R_CullModel (MDS), but frame bounds/radius come from the entity's
+linked MDX skeleton (ent->e.frameModel/oldframeModel) rather than the mesh
+itself, since MDM carries no frame data of its own. If no skeleton is
+linked yet, culling is skipped entirely (treated as CULL_CLIP) so the
+Phase 1 bind-pose fallback in RB_MDMSurfaceAnim still gets drawn.
+=============
+*/
+static int R_MDM_CullModel( trRefEntity_t *ent ) {
+	vec3_t bounds[2];
+	mdxHeader_t *legsHeader, *oldLegsHeader;
+	mdxFrame_t *newFrame, *oldFrame;
+	int i, frameSize;
+	qboolean cullSphere;
+	float radScale;
+
+	if ( !R_MDM_ResolveSkeleton( ent->e.frameModel, &legsHeader ) ) {
+		return CULL_CLIP;
+	}
+	if ( !R_MDM_ResolveSkeleton( ent->e.oldframeModel, &oldLegsHeader ) ) {
+		oldLegsHeader = legsHeader;
+	}
+
+	cullSphere = qtrue;
+	radScale = 1.0f;
+
+	if ( ent->e.nonNormalizedAxes ) {
+		cullSphere = qfalse;
+	}
+
+	frameSize = (int) ( sizeof( mdxFrame_t ) + legsHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+	newFrame = ( mdxFrame_t * )( ( byte * ) legsHeader + legsHeader->ofsFrames + ent->e.frame * frameSize );
+
+	frameSize = (int) ( sizeof( mdxFrame_t ) + oldLegsHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+	oldFrame = ( mdxFrame_t * )( ( byte * ) oldLegsHeader + oldLegsHeader->ofsFrames + ent->e.oldframe * frameSize );
+
+	if ( cullSphere ) {
+		if ( ent->e.frame == ent->e.oldframe && legsHeader == oldLegsHeader ) {
+			switch ( R_CullLocalPointAndRadius( newFrame->localOrigin, newFrame->radius * radScale ) )
+			{
+			case CULL_OUT:
+				tr.pc.c_sphere_cull_md3_out++;
+				return CULL_OUT;
+
+			case CULL_IN:
+				tr.pc.c_sphere_cull_md3_in++;
+				return CULL_IN;
+
+			case CULL_CLIP:
+				tr.pc.c_sphere_cull_md3_clip++;
+				break;
+			}
+		} else
+		{
+			int sphereCull, sphereCullB;
+
+			sphereCull  = R_CullLocalPointAndRadius( newFrame->localOrigin, newFrame->radius * radScale );
+			if ( newFrame == oldFrame ) {
+				sphereCullB = sphereCull;
+			} else {
+				sphereCullB = R_CullLocalPointAndRadius( oldFrame->localOrigin, oldFrame->radius * radScale );
+			}
+
+			if ( sphereCull == sphereCullB ) {
+				if ( sphereCull == CULL_OUT ) {
+					tr.pc.c_sphere_cull_md3_out++;
+					return CULL_OUT;
+				} else if ( sphereCull == CULL_IN )   {
+					tr.pc.c_sphere_cull_md3_in++;
+					return CULL_IN;
+				} else
+				{
+					tr.pc.c_sphere_cull_md3_clip++;
+				}
+			}
+		}
+	}
+
+	// calculate a bounding box in the current coordinate system
+	for ( i = 0 ; i < 3 ; i++ ) {
+		bounds[0][i] = oldFrame->bounds[0][i] < newFrame->bounds[0][i] ? oldFrame->bounds[0][i] : newFrame->bounds[0][i];
+		bounds[1][i] = oldFrame->bounds[1][i] > newFrame->bounds[1][i] ? oldFrame->bounds[1][i] : newFrame->bounds[1][i];
+
+		bounds[0][i] *= radScale;
+		bounds[1][i] *= radScale;
+	}
+
+	switch ( R_CullLocalBox( bounds ) )
+	{
+	case CULL_IN:
+		tr.pc.c_box_cull_md3_in++;
+		return CULL_IN;
+	case CULL_CLIP:
+		tr.pc.c_box_cull_md3_clip++;
+		return CULL_CLIP;
+	case CULL_OUT:
+	default:
+		tr.pc.c_box_cull_md3_out++;
+		return CULL_OUT;
+	}
+}
+
+/*
+=================
+R_MDM_ComputeFogNum
+
+Same as R_ComputeFogNum (MDS), but frame origin/radius come from the
+entity's linked MDX skeleton. Returns 0 (no fog) if no skeleton is
+linked yet.
+=================
+*/
+static int R_MDM_ComputeFogNum( trRefEntity_t *ent ) {
+	int i, j;
+	fog_t           *fog;
+	mdxHeader_t     *legsHeader;
+	mdxFrame_t      *mdxFrame;
+	vec3_t localOrigin;
+	int frameSize;
+
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return 0;
+	}
+
+	if ( !R_MDM_ResolveSkeleton( ent->e.frameModel, &legsHeader ) ) {
+		return 0;
+	}
+
+	frameSize = (int) ( sizeof( mdxFrame_t ) + legsHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+	mdxFrame = ( mdxFrame_t * )( ( byte * ) legsHeader + legsHeader->ofsFrames + frameSize * ent->e.frame );
+	VectorAdd( ent->e.origin, mdxFrame->localOrigin, localOrigin );
+	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
+		fog = &tr.world->fogs[i];
+		for ( j = 0 ; j < 3 ; j++ ) {
+			if ( localOrigin[j] - mdxFrame->radius >= fog->bounds[1][j] ) {
+				break;
+			}
+			if ( localOrigin[j] + mdxFrame->radius <= fog->bounds[0][j] ) {
+				break;
+			}
+		}
+		if ( j == 3 ) {
+			return i;
+		}
+	}
+
+	return 0;
+}
+
+/*
+==============
 R_AddAnimSurfaces
 ==============
 */
@@ -415,11 +591,10 @@ void R_AddAnimSurfaces( trRefEntity_t *ent ) {
 ==============
 R_AddMDMSurfaces
 
-Phase 1: MDM meshes have no frame/bounds data of their own (that lives in
-the linked MDX skeleton, referenced via ent->e.frameModel) so there's no
-cheap way to cull or fog yet - the mesh is always considered visible and
-unfogged for now. Bone posing is also not wired up yet; RB_MDMSurfaceAnim
-renders in bind pose. Both will be extended once MDX skeletons are consumed.
+Culls and fogs using the entity's linked MDX skeleton (R_MDM_CullModel/
+R_MDM_ComputeFogNum). If no skeleton is linked yet, culling is skipped
+(the mesh is always considered visible, unfogged) so a raw testmodel
+still renders in bind pose per RB_MDMSurfaceAnim's fallback.
 ==============
 */
 void R_AddMDMSurfaces( trRefEntity_t *ent ) {
@@ -427,7 +602,7 @@ void R_AddMDMSurfaces( trRefEntity_t *ent ) {
 	mdmSurface_t    *surface;
 	shader_t        *shader = 0;
 	int             cubemapIndex;
-	int i, j, fogNum;
+	int i, j, fogNum, cull;
 	qboolean personalModel;
 
 	// don't add third_person objects if not in a portal
@@ -436,11 +611,23 @@ void R_AddMDMSurfaces( trRefEntity_t *ent ) {
 
 	header = tr.currentModel->mdm;
 
+	//
+	// cull the entire model if merged bounding box of both frames
+	// is outside the view frustum. (no-op if no skeleton is linked yet)
+	//
+	cull = R_MDM_CullModel( ent );
+	if ( cull == CULL_OUT ) {
+		return;
+	}
+
 	if ( !personalModel || r_shadows->integer > 1 ) {
 		R_SetupEntityLighting( &tr.refdef, ent );
 	}
 
-	fogNum = 0;
+	//
+	// see if we are in a fog volume
+	//
+	fogNum = R_MDM_ComputeFogNum( ent );
 
 	cubemapIndex = R_CubemapForPoint(ent->e.origin);
 
@@ -620,7 +807,7 @@ static ID_INLINE void Matrix3Transpose( const vec3_t matrix[3], vec3_t transpose
 R_CalcBone
 ==============
 */
-void R_CalcBone( mdsHeader_t *header, const refEntity_t *refent, int boneNum ) {
+void R_CalcBone( int torsoParentBoneNum, const refEntity_t *refent, int boneNum ) {
 	int j;
 
 	thisBoneInfo = &boneInfo[boneNum];
@@ -756,7 +943,7 @@ void R_CalcBone( mdsHeader_t *header, const refEntity_t *refent, int boneNum ) {
 		bonePtr->translation[2] = frame->parentOffset[2];
 	}
 	//
-	if ( boneNum == header->torsoParent ) { // this is the torsoParent
+	if ( boneNum == torsoParentBoneNum ) { // this is the torsoParent
 		VectorCopy( bonePtr->translation, torsoParentOffset );
 	}
 	//
@@ -772,7 +959,7 @@ void R_CalcBone( mdsHeader_t *header, const refEntity_t *refent, int boneNum ) {
 R_CalcBoneLerp
 ==============
 */
-void R_CalcBoneLerp( mdsHeader_t *header, const refEntity_t *refent, int boneNum ) {
+void R_CalcBoneLerp( int torsoParentBoneNum, const refEntity_t *refent, int boneNum ) {
 	int j;
 
 	thisBoneInfo = &boneInfo[boneNum];
@@ -923,7 +1110,7 @@ void R_CalcBoneLerp( mdsHeader_t *header, const refEntity_t *refent, int boneNum
 
 	}
 	//
-	if ( boneNum == header->torsoParent ) { // this is the torsoParent
+	if ( boneNum == torsoParentBoneNum ) { // this is the torsoParent
 		VectorCopy( bonePtr->translation, torsoParentOffset );
 	}
 	validBones[boneNum] = 1;
@@ -941,11 +1128,12 @@ R_CalcBones
 	The list of bones[] should only be built and modified from within here
 ==============
 */
+static void R_ApplyTorsoBlend( int *boneList, int numBones, int totalSkeletonBones );
+
 void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList, int numBones ) {
 
 	int i;
 	int     *boneRefs;
-	float torsoWeight;
 
 	//
 	// if the entity has changed since the last time the bones were built, reset them
@@ -1025,10 +1213,10 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 
 			// find our parent, and make sure it has been calculated
 			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
-				R_CalcBone( header, refent, boneInfo[*boneRefs].parent );
+				R_CalcBone( header->torsoParent, refent, boneInfo[*boneRefs].parent );
 			}
 
-			R_CalcBone( header, refent, *boneRefs );
+			R_CalcBone( header->torsoParent, refent, *boneRefs );
 
 		}
 
@@ -1047,14 +1235,32 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 
 			// find our parent, and make sure it has been calculated
 			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
-				R_CalcBoneLerp( header, refent, boneInfo[*boneRefs].parent );
+				R_CalcBoneLerp( header->torsoParent, refent, boneInfo[*boneRefs].parent );
 			}
 
-			R_CalcBoneLerp( header, refent, *boneRefs );
+			R_CalcBoneLerp( header->torsoParent, refent, *boneRefs );
 
 		}
 
 	}
+
+	R_ApplyTorsoBlend( boneList, numBones, header->numBones );
+}
+
+/*
+==============
+R_ApplyTorsoBlend
+
+Second pass shared by R_CalcBones (MDS) and R_MDM_CalcBones (MDM/MDX):
+blends each torso-weighted bone's rotation/translation towards the
+entity's torsoAxis, then backs up the final bones[] for next call's cache.
+Operates entirely on the file-static bone-cache globals both setups populate.
+==============
+*/
+static void R_ApplyTorsoBlend( int *boneList, int numBones, int totalSkeletonBones ) {
+	int i;
+	int *boneRefs;
+	float torsoWeight;
 
 	// adjust for torso rotations
 	torsoWeight = 0;
@@ -1106,7 +1312,143 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	}
 
 	// backup the final bones
-	memcpy( oldBones, bones, sizeof( bones[0] ) * header->numBones );
+	memcpy( oldBones, bones, sizeof( bones[0] ) * totalSkeletonBones );
+}
+
+/*
+==============
+R_MDM_CalcBones
+
+Same algorithm as R_CalcBones (MDS), but bone/frame data comes from up to
+four separate MDX skeleton models (ent->frameModel/oldframeModel/
+torsoFrameModel/oldTorsoFrameModel) instead of one embedded header - legs
+and torso, current and old, can each reference a different .mdx, which is
+how ET's animation-group system blends across clips. All four must share
+the same bone hierarchy (only legsHeader's boneInfo/numBones/torsoParent
+are used). Returns qfalse if the entity has no legs skeleton linked yet,
+in which case the caller should fall back to a bind pose.
+
+mdxFrame_t's fixed portion (bounds/localOrigin/radius/parentOffset) is
+byte-identical to mdsFrame_t's, and mdxBoneInfo_t/mdxBoneFrameCompressed_t
+are byte-identical to their mds counterparts, so it's safe to alias
+through the existing mds-typed globals here rather than duplicating
+R_CalcBone/R_CalcBoneLerp/R_ApplyTorsoBlend for a parallel mdx type.
+==============
+*/
+qboolean R_MDM_CalcBones( const refEntity_t *refent, int *boneList, int numBones ) {
+	int i;
+	int *boneRefs;
+	mdxHeader_t *legsHeader, *oldLegsHeader, *torsoHeader, *oldTorsoHeader;
+	int legsFrameSize, oldLegsFrameSize, torsoFrameSize, oldTorsoFrameSize;
+
+	if ( !R_MDM_ResolveSkeleton( refent->frameModel, &legsHeader ) ) {
+		return qfalse;
+	}
+	if ( !R_MDM_ResolveSkeleton( refent->oldframeModel, &oldLegsHeader ) ) {
+		oldLegsHeader = legsHeader;
+	}
+	if ( !R_MDM_ResolveSkeleton( refent->torsoFrameModel, &torsoHeader ) ) {
+		torsoHeader = legsHeader;
+	}
+	if ( !R_MDM_ResolveSkeleton( refent->oldTorsoFrameModel, &oldTorsoHeader ) ) {
+		oldTorsoHeader = torsoHeader;
+	}
+
+	//
+	// if the entity has changed since the last time the bones were built, reset them
+	//
+	if ( memcmp( &lastBoneEntity, refent, sizeof( refEntity_t ) ) ) {
+		// different, cached bones are not valid
+		memset( validBones, 0, legsHeader->numBones );
+		lastBoneEntity = *refent;
+	}
+
+	memset( newBones, 0, legsHeader->numBones );
+
+	if ( refent->oldframe == refent->frame && oldLegsHeader == legsHeader ) {
+		backlerp = 0;
+		frontlerp = 1;
+	} else {
+		backlerp = refent->backlerp;
+		frontlerp = 1.0f - backlerp;
+	}
+
+	if ( refent->oldTorsoFrame == refent->torsoFrame && oldTorsoHeader == torsoHeader ) {
+		torsoBacklerp = 0;
+		torsoFrontlerp = 1;
+	} else {
+		torsoBacklerp = refent->torsoBacklerp;
+		torsoFrontlerp = 1.0f - torsoBacklerp;
+	}
+
+	legsFrameSize = (int) ( sizeof( mdxFrame_t ) + legsHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+	oldLegsFrameSize = (int) ( sizeof( mdxFrame_t ) + oldLegsHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+	torsoFrameSize = (int) ( sizeof( mdxFrame_t ) + torsoHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+	oldTorsoFrameSize = (int) ( sizeof( mdxFrame_t ) + oldTorsoHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+
+	frame = ( mdsFrame_t * )( (byte *)legsHeader + legsHeader->ofsFrames + refent->frame * legsFrameSize );
+	oldFrame = ( mdsFrame_t * )( (byte *)oldLegsHeader + oldLegsHeader->ofsFrames + refent->oldframe * oldLegsFrameSize );
+	torsoFrame = ( mdsFrame_t * )( (byte *)torsoHeader + torsoHeader->ofsFrames + refent->torsoFrame * torsoFrameSize );
+	oldTorsoFrame = ( mdsFrame_t * )( (byte *)oldTorsoHeader + oldTorsoHeader->ofsFrames + refent->oldTorsoFrame * oldTorsoFrameSize );
+
+	//
+	// lerp all the needed bones (torsoParent is always the first bone in the list)
+	//
+	cBoneList = ( mdsBoneFrameCompressed_t * )( (byte *)frame + sizeof( mdxFrame_t ) );
+	cBoneListTorso = ( mdsBoneFrameCompressed_t * )( (byte *)torsoFrame + sizeof( mdxFrame_t ) );
+
+	// mdxBoneInfo_t is byte-identical to mdsBoneInfo_t (name/parent/torsoWeight/parentDist/flags)
+	boneInfo = ( mdsBoneInfo_t * )( (byte *)legsHeader + legsHeader->ofsBones );
+	boneRefs = boneList;
+	//
+	Matrix3Transpose( refent->torsoAxis, torsoAxis );
+
+	if ( !backlerp && !torsoBacklerp ) {
+
+		for ( i = 0; i < numBones; i++, boneRefs++ ) {
+
+			if ( validBones[*boneRefs] ) {
+				// this bone is still in the cache
+				bones[*boneRefs] = rawBones[*boneRefs];
+				continue;
+			}
+
+			// find our parent, and make sure it has been calculated
+			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
+				R_CalcBone( legsHeader->torsoParent, refent, boneInfo[*boneRefs].parent );
+			}
+
+			R_CalcBone( legsHeader->torsoParent, refent, *boneRefs );
+
+		}
+
+	} else {    // interpolated
+
+		cOldBoneList = ( mdsBoneFrameCompressed_t * )( (byte *)oldFrame + sizeof( mdxFrame_t ) );
+		cOldBoneListTorso = ( mdsBoneFrameCompressed_t * )( (byte *)oldTorsoFrame + sizeof( mdxFrame_t ) );
+
+		for ( i = 0; i < numBones; i++, boneRefs++ ) {
+
+			if ( validBones[*boneRefs] ) {
+				// this bone is still in the cache
+				bones[*boneRefs] = rawBones[*boneRefs];
+				continue;
+			}
+
+			// find our parent, and make sure it has been calculated
+			if ( ( boneInfo[*boneRefs].parent >= 0 ) && ( !validBones[boneInfo[*boneRefs].parent] && !newBones[boneInfo[*boneRefs].parent] ) ) {
+				R_CalcBoneLerp( legsHeader->torsoParent, refent, boneInfo[*boneRefs].parent );
+			}
+
+			R_CalcBoneLerp( legsHeader->torsoParent, refent, *boneRefs );
+
+		}
+
+	}
+
+	R_ApplyTorsoBlend( boneList, numBones, legsHeader->numBones );
+
+	return qtrue;
 }
 
 #ifdef DBG_PROFILE_BONES
@@ -1367,53 +1709,127 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 ==============
 RB_MDMSurfaceAnim
 
-Phase 1: bind pose only. Each vertex is the weighted sum of its
-mdmWeight_t offsets with identity bone matrices - this doesn't yet
-consume the entity's linked MDX skeleton (ent->e.frameModel), and
-always renders at full LOD (no collapse-map reduction).
+Skins the mesh using the entity's linked MDX skeleton (R_MDM_CalcBones),
+same bone-matrix math as RB_SurfaceAnim (MDS), plus LOD collapse-map
+reduction using the MDM's own lodBias/lodScale. If the entity has no
+skeleton linked yet (e.g. a raw testmodel with frameModel unset), falls
+back to bind pose - the weighted sum of each vertex's offsets with
+identity bones - so Phase 1 test entities keep working unchanged.
 ==============
 */
 void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
 	int j, k;
+	refEntity_t *refent;
+	int *boneList;
+	mdmHeader_t *header;
+	qboolean skinned;
+	int render_count;
 	int *triangles;
-	int numIndexes;
+	int indexes;
 	int baseIndex, baseVertex;
 	glIndex_t *pIndexes;
 	mdmVertex_t *v;
 	mdmWeight_t *w;
 	float *tempVert;
 	int16_t *tempNormal;
+	vec3_t newNormal;
 
-	RB_CHECKOVERFLOW( surface->numVerts, surface->numTriangles * 3 );
+	refent = &backEnd.currentEntity->e;
+	boneList = ( int * )( (byte *)surface + surface->ofsBoneReferences );
+	header = ( mdmHeader_t * )( (byte *)surface + surface->ofsHeader );
 
+	skinned = R_MDM_CalcBones( refent, boneList, surface->numBoneReferences );
+
+	//
+	// calculate LOD
+	//
+	if ( skinned ) {
+		VectorAdd( refent->origin, frame->localOrigin, vec );
+		lodRadius = frame->radius;
+		lodScale = RB_CalcMDSLod( refent, vec, lodRadius, header->lodBias, header->lodScale );
+
+		render_count = (int)( (float) surface->numVerts * lodScale );
+		if ( render_count < surface->minLod ) {
+			render_count = surface->minLod;
+		}
+		if ( render_count > surface->numVerts ) {
+			render_count = surface->numVerts;
+		}
+	} else {
+		// no skeleton linked yet - render at full detail in bind pose
+		render_count = surface->numVerts;
+	}
+
+	RB_CHECKOVERFLOW( render_count, surface->numTriangles * 3 );
+
+	collapse_map = ( int * )( ( byte * )surface + surface->ofsCollapseMap );
 	triangles = ( int * )( (byte *)surface + surface->ofsTriangles );
-	numIndexes = surface->numTriangles * 3;
+	indexes = surface->numTriangles * 3;
 	baseIndex = tess.numIndexes;
 	baseVertex = tess.numVertexes;
 
-	tess.numVertexes += surface->numVerts;
+	tess.numVertexes += render_count;
 
 	pIndexes = (glIndex_t *)&tess.indexes[baseIndex];
-	for ( j = 0; j < numIndexes; j++ ) {
-		pIndexes[j] = triangles[j] + baseVertex;
+
+	if ( render_count == surface->numVerts ) {
+		for ( j = 0; j < indexes; j++ )
+			pIndexes[j] = triangles[j] + baseVertex;
+		tess.numIndexes += indexes;
+	} else {
+		int *collapseEnd;
+
+		pCollapse = collapse;
+		for ( j = 0; j < render_count; pCollapse++, j++ ) {
+			*pCollapse = j;
+		}
+
+		pCollapseMap = &collapse_map[render_count];
+		for ( collapseEnd = collapse + surface->numVerts ; pCollapse < collapseEnd; pCollapse++, pCollapseMap++ ) {
+			*pCollapse = collapse[ *pCollapseMap ];
+		}
+
+		for ( j = 0 ; j < indexes ; j += 3 ) {
+			p0 = collapse[ *( triangles++ ) ];
+			p1 = collapse[ *( triangles++ ) ];
+			p2 = collapse[ *( triangles++ ) ];
+
+			if ( p0 == p1 || p1 == p2 || p2 == p0 ) {
+				continue;
+			}
+
+			*( pIndexes++ ) = baseVertex + p0;
+			*( pIndexes++ ) = baseVertex + p1;
+			*( pIndexes++ ) = baseVertex + p2;
+			tess.numIndexes += 3;
+		}
+
+		baseIndex = tess.numIndexes;
 	}
-	tess.numIndexes += numIndexes;
 
 	//
-	// bind pose: sum each vertex's weighted offsets directly (identity bones)
+	// deform the vertexes
 	//
 	v = ( mdmVertex_t * )( (byte *)surface + surface->ofsVerts );
 	tempVert = ( float * )( tess.xyz + baseVertex );
 	tempNormal = ( int16_t * )( tess.normal + baseVertex );
-	for ( j = 0; j < surface->numVerts; j++, tempVert += 4, tempNormal += 4 ) {
+	for ( j = 0; j < render_count; j++, tempVert += 4, tempNormal += 4 ) {
 		VectorClear( tempVert );
 
 		w = v->weights;
-		for ( k = 0 ; k < v->numWeights ; k++, w++ ) {
-			VectorMA( tempVert, w->boneWeight, w->offset, tempVert );
+		if ( skinned ) {
+			for ( k = 0 ; k < v->numWeights ; k++, w++ ) {
+				bone = &bones[w->boneIndex];
+				LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
+			}
+			LocalMatrixTransformVector( v->normal, bones[v->weights[0].boneIndex].matrix, newNormal );
+			R_VaoPackNormal( tempNormal, newNormal );
+		} else {
+			for ( k = 0 ; k < v->numWeights ; k++, w++ ) {
+				VectorMA( tempVert, w->boneWeight, w->offset, tempVert );
+			}
+			R_VaoPackNormal( tempNormal, v->normal );
 		}
-
-		R_VaoPackNormal( tempNormal, v->normal );
 
 		tess.texCoords[baseVertex + j][0] = v->texCoords[0];
 		tess.texCoords[baseVertex + j][1] = v->texCoords[1];
@@ -1489,6 +1905,73 @@ int R_GetBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, co
 
 	memcpy( outTag->axis, bones[ pTag->boneIndex ].matrix, sizeof( outTag->axis ) );
 	VectorCopy( bones[ pTag->boneIndex ].translation, outTag->origin );
+
+	return i;
+}
+
+/*
+===============
+R_MDM_GetTag
+
+Same purpose as R_GetBoneTag (MDS), but mdmTag_t stores a fixed local
+axis/offset relative to an ordinary skeleton bone rather than naming a
+dedicated zero-length "tag bone" baked into the skeleton - MDX skeletons
+are shared across body meshes, so per-mesh tag placement can't live in
+the skeleton anymore. The bone-reference list needed to compute that
+bone is already precomputed in the file (tag->ofsBoneReferences), so no
+R_RecursiveBoneListAdd walk is needed here.
+===============
+*/
+int R_MDM_GetTag( orientation_t *outTag, mdmHeader_t *mdm, int startTagIndex, const refEntity_t *refent, const char *tagName ) {
+
+	int i;
+	mdmTag_t    *pTag;
+	int         *boneRefs;
+	mdsBoneFrame_t *bone;
+
+	if ( startTagIndex > mdm->numTags ) {
+		memset( outTag, 0, sizeof( *outTag ) );
+		return -1;
+	}
+
+	// find the correct tag (variable sized entries, walk by ofsEnd)
+
+	pTag = ( mdmTag_t * )( (byte *)mdm + mdm->ofsTags );
+
+	for ( i = 0; i < startTagIndex; i++ ) {
+		pTag = ( mdmTag_t * )( (byte *)pTag + pTag->ofsEnd );
+	}
+
+	for ( ; i < mdm->numTags; i++ ) {
+		if ( !strcmp( pTag->name, tagName ) ) {
+			break;
+		}
+		pTag = ( mdmTag_t * )( (byte *)pTag + pTag->ofsEnd );
+	}
+
+	if ( i >= mdm->numTags ) {
+		memset( outTag, 0, sizeof( *outTag ) );
+		return -1;
+	}
+
+	// the bones needed to compute this tag's bone are already listed in the file
+	boneRefs = ( int * )( (byte *)pTag + pTag->ofsBoneReferences );
+
+	if ( !R_MDM_CalcBones( refent, boneRefs, pTag->numBoneReferences ) ) {
+		// no skeleton linked yet
+		memset( outTag, 0, sizeof( *outTag ) );
+		return -1;
+	}
+
+	// compose the tag's local axis/offset onto the resolved bone's world transform
+	bone = &bones[ pTag->boneIndex ];
+
+	LocalMatrixTransformVector( pTag->axis[0], bone->matrix, outTag->axis[0] );
+	LocalMatrixTransformVector( pTag->axis[1], bone->matrix, outTag->axis[1] );
+	LocalMatrixTransformVector( pTag->axis[2], bone->matrix, outTag->axis[2] );
+
+	LocalMatrixTransformVector( pTag->offset, bone->matrix, outTag->origin );
+	VectorAdd( outTag->origin, bone->translation, outTag->origin );
 
 	return i;
 }
