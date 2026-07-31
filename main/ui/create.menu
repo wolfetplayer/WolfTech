@@ -478,6 +478,25 @@ itemDef
 					group			grpCreate
 					type			ITEM_TYPE_MULTI
 					textfont		UI_FONT_NORMAL
+					text			"@CREATE_PLAYERCLASS"
+					cvar			"cl_survivalClass"
+					cvarFloatList	{ "@CREATE_CLASS_SOLDIER" 0 "@CREATE_CLASS_MEDIC" 1 "@CREATE_CLASS_ENGINEER" 2 "@CREATE_CLASS_LIEUTENANT" 3 }
+					rect			295 355 290 12
+					style			WINDOW_STYLE_FILLED
+					textalign		ITEM_ALIGN_RIGHT
+					textalignx		145
+					textaligny		10
+					textscale		.25
+					backcolor		1 1 1 .07
+					forecolor		1 1 1 1
+					visible			1
+					}
+
+				itemDef {
+					name			normal
+					group			grpCreate
+					type			ITEM_TYPE_MULTI
+					textfont		UI_FONT_NORMAL
 					text			"@CREATE_SHAREDLIVES"
 					cvar			"g_sharedlives"
 					cvarFloatList	{ "@CREATE_SHAREDLIVES_YES" 1 "@CREATE_SHAREDLIVES_NO" 0 }
@@ -497,25 +516,6 @@ itemDef
 
 					mouseenter		{ show message_commonlives }
 					mouseexit		{ hide message_commonlives }
-					}
-
-				itemDef {
-					name			normal
-					group			grpCreate
-					type			ITEM_TYPE_MULTI
-					textfont		UI_FONT_NORMAL
-					text			"Your Class"
-					cvar			"cl_survivalClass"
-					cvarFloatList	{ "Soldier" 0 "Medic" 1 "Engineer" 2 "Lieutenant" 3 }
-					rect			295 385 290 12
-					style			WINDOW_STYLE_FILLED
-					textalign		ITEM_ALIGN_RIGHT
-					textalignx		145
-					textaligny		10
-					textscale		.25
-					backcolor		1 1 1 .07
-					forecolor		1 1 1 1
-					visible			1
 					}
 
 

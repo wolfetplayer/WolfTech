@@ -858,9 +858,9 @@ itemDef {
 		type ITEM_TYPE_MULTI
 		style 0
 		textstyle 6
-		text "Class:"
+		text "@LOBBY_CLASS"
 		cvar "cl_survivalClass"
-		cvarFloatList { "Soldier" 0 "Medic" 1 "Engineer" 2 "Lieutenant" 3 }
+		cvarFloatList { "@CREATE_CLASS_SOLDIER" 0 "@CREATE_CLASS_MEDIC" 1 "@CREATE_CLASS_ENGINEER" 2 "@CREATE_CLASS_LIEUTENANT" 3 }
 		textscale .16
 		textalign ITEM_ALIGN_LEFT
 		textaligny 12
