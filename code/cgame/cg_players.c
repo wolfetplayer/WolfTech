@@ -1857,6 +1857,7 @@ static void CG_ClearLerpFrame( clientInfo_t *ci, lerpFrame_t *lf, int animationN
 	CG_SetLerpFrameAnimation( ci, lf, animationNumber );
 	if ( lf->animation ) {
 		lf->oldFrame = lf->frame = lf->animation->firstFrame;
+		lf->oldFrameAnim = lf->animation;
 	}
 }
 
@@ -2040,6 +2041,12 @@ void CG_RunLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, c
 	if ( cg.time >= lf->frameTime ) {
 
 		lf->oldFrame = lf->frame;
+		// lf->frame's provenance is normally whatever lf->animation was before this
+		// call (oldAnim) - except the firstAnim/EF_DEATH_FRAME special cases in
+		// CG_SetLerpFrameAnimationRate above, which force lf->frame to a value from
+		// the new anim before we get here, so fall back to that when there's no
+		// previous animation to attribute it to.
+		lf->oldFrameAnim = oldAnim ? oldAnim : anim;
 		lf->oldFrameTime = lf->frameTime;
 		VectorCopy( cent->lerpOrigin, lf->oldFramePos );
 
@@ -2204,6 +2211,7 @@ void CG_ClearLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int animationNumb
 	CG_SetLerpFrameAnimationRate( cent, ci, lf, animationNumber );
 	if ( lf->animation ) {
 		lf->oldFrame = lf->frame = lf->animation->firstFrame;
+		lf->oldFrameAnim = lf->animation;
 	}
 }
 
@@ -4782,6 +4790,18 @@ void CG_Player( centity_t *cent ) {
 	CG_PlayerAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 						&torso.oldframe, &torso.frame, &torso.backlerp );
 
+	// MDM/MDX character: legs.frame/torso.frame above index into whichever
+	// .mdx each animation_t names, not a skeleton embedded in ci->legsModel
+	// itself - point the renderer at the right one(s). oldFrameAnim can
+	// briefly differ from the current animation right after a transition
+	// (see CG_RunLerpFrameRate), so it's tracked separately.
+	if ( ci->isCharacter ) {
+		legs.frameModel = cent->pe.legs.animation ? cent->pe.legs.animation->mdxFile : 0;
+		legs.oldframeModel = cent->pe.legs.oldFrameAnim ? cent->pe.legs.oldFrameAnim->mdxFile : 0;
+		torso.frameModel = cent->pe.torso.animation ? cent->pe.torso.animation->mdxFile : 0;
+		torso.oldframeModel = cent->pe.torso.oldFrameAnim ? cent->pe.torso.oldFrameAnim->mdxFile : 0;
+	}
+
 	// add powerups floating behind the player
 	CG_PlayerPowerups( cent );
 
@@ -4905,6 +4925,8 @@ void CG_Player( centity_t *cent ) {
 
 		legs.torsoFrame = torso.frame;
 		legs.oldTorsoFrame = torso.oldframe;
+		legs.torsoFrameModel = torso.frameModel;
+		legs.oldTorsoFrameModel = torso.oldframeModel;
 
 		memcpy( legs.torsoAxis, torso.axis, sizeof( torso.axis ) );
 		legs.torsoBacklerp = torso.backlerp;

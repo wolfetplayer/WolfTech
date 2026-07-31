@@ -169,6 +169,12 @@ typedef struct {
 	// done.
 
 	animation_t *cgAnim;    // pointer to the root of the animation array to use (*animation above points at the current sequence)	//----(SA)	added
+
+	// MDM/MDX character support: which animation oldFrame was computed
+	// against, since it can briefly differ from `animation` (and so belong
+	// to a different .mdx) right after an animation transition - see
+	// CG_RunLerpFrameRate. Unused for plain .mds models.
+	animation_t *oldFrameAnim;
 } lerpFrame_t;
 
 // Ridah, effect defines
