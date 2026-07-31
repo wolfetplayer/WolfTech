@@ -614,11 +614,12 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 	switch ( weap ) {      // some weapons don't draw ammo count text
 	case WP_KNIFE:
 	case WP_CLASS_SPECIAL:              // DHM - Nerve
+	case WP_DYNAMITE:                   // charge-based (cooldown-gated), no meaningful clip/reserve count
+	case WP_AIRSTRIKE:
 		return;
 
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
-	case WP_DYNAMITE:
 	case WP_TESLA:
 	case WP_FLAMETHROWER:
 		if ( type == 0 ) {  // don't draw reserve value, just clip (since these weapons have all their ammo in the clip)

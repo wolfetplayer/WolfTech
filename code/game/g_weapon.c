@@ -403,7 +403,7 @@ void Weapon_Artillery( gentity_t *ent ) {
 		bomb->think = G_AirStrikeExplode;
 		bomb->s.eType       = ET_MISSILE;
 		bomb->r.svFlags     = SVF_USE_CURRENT_ORIGIN | SVF_NOCLIENT;
-		bomb->s.weapon      = WP_ARTY;
+		bomb->s.weapon      = WP_ARTY; // never registered client-side (see CG_RegisterWeapon skip list), so it stays invisible while falling/sitting - CG_MissileHitWall has a dedicated big-explosion case for it below
 		bomb->r.ownerNum    = ent->s.number;
 		bomb->parent        = ent;
 
@@ -416,6 +416,7 @@ void Weapon_Artillery( gentity_t *ent ) {
 			bomb->splashRadius  = 50;
 			bomb->s.otherEntityNum2 = 0;
 			bomb->think = artillerySpotterThink;
+			bomb->s.weapon = WP_SMOKETRAIL; // trace/marker round - blue signal smoke instead of the barrage's fireball (see CG_MissileHitWall)
 		} else {
 			bomb->nextthink = level.time + 8950 + 2000 * i + crandom() * 800;
 			bomb->classname = "arty barrage";

@@ -3548,8 +3548,19 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-	// player is zooming - no fire
+	// player is zooming - no fire, except LT's binocular arty call-in, which needs an EV_FIRE_WEAPON to reach FireWeapon()'s hook (skips ammo/anim, isn't really firing)
 	if ( pm->ps->eFlags & EF_ZOOMING ) {
+#if defined ( CGAMEDLL )
+		if ( cg_gameType.integer == GT_COOP_SURVIVAL && !pm->ps->aiChar &&
+#elif defined ( GAMEDLL )
+		if ( g_gametype.integer == GT_COOP_SURVIVAL && !pm->ps->aiChar &&
+#endif
+			 ( pm->ps->stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) &&
+			 !( GetWeaponTableData( pm->ps->weapon )->weaponClass & WEAPON_CLASS_SCOPED ) &&
+			 !pm->ps->leanf &&
+			 ( pm->cmd.buttons & BUTTON_ATTACK ) && !( pm->oldcmd.buttons & BUTTON_ATTACK ) ) { // edge-triggered so holding fire doesn't spam call-ins
+			PM_AddEvent( EV_FIRE_WEAPON );
+		}
 		return;
 	}
 

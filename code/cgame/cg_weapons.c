@@ -4967,6 +4967,11 @@ void CG_FireWeapon( centity_t *cent ) {
 
 	ent = &cent->currentState;
 
+	// LT's binocular arty call-in reuses EV_FIRE_WEAPON to reach g_weapon.c's hook - skip fire fx here, it isn't really firing
+	if ( cent->currentState.eFlags & EF_ZOOMING ) {
+		return;
+	}
+
 	// Rafael - mg42
 	if ( ( cent->currentState.clientNum == cg.snap->ps.clientNum && cg.snap->ps.persistant[PERS_HWEAPON_USE] ) ||
 		 ( cent->currentState.clientNum != cg.snap->ps.clientNum && ( cent->currentState.eFlags & EF_MG42_ACTIVE ) ) ) {
@@ -5420,6 +5425,68 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 			}
 
 			CG_AddDebris( origin, dir, 120, 2000, 7 + rand() % 2 );
+		}
+		break;
+
+	case WP_ARTY:
+		sfx = cgs.media.sfx_rockexp;
+		mark = cgs.media.burnMarkShader;
+		radius = 96;
+		light = 700;
+		isSprite = qtrue;
+		duration = 1200;
+		lightColor[0] = 0.75;
+		lightColor[1] = 0.5;
+		lightColor[2] = 0.1;
+
+		shakeAmt = 0.3f;
+		shakeDur = 1200;
+		shakeRad = 1500;
+
+		if ( cg_gameType.integer <= GT_SINGLE_PLAYER ) {
+			VectorScale( dir, 16, sprVel );
+			for ( i = 0; i < 5; i++ ) {
+				for ( j = 0; j < 3; j++ ) {
+					sprOrg[j] = origin[j] + 64 * dir[j] + 24 * crandom();
+				}
+				sprVel[2] += rand() % 50;
+				CG_ParticleExplosion( "blacksmokeanimb", sprOrg, sprVel, 3500 + rand() % 250, 10, 250 + rand() % 60 );
+			}
+
+			VectorMA( origin, 24, dir, sprOrg );
+			VectorScale( dir, 64, sprVel );
+			CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1400, 30, 300 );
+
+			for ( i = 0; i < 4; i++ ) {
+				for ( j = 0; j < 3; j++ ) {
+					sprOrg[j] = origin[j] + 32 * dir[j] + 32 * crandom();
+				}
+				CG_ParticleExplosion( "explode1", sprOrg, sprVel, 1200, 40, 160 + rand() % 120 );
+			}
+
+			CG_AddDebris( origin, dir, 160, 2000, 9 + rand() % 3 );
+		}
+		break;
+
+	case WP_SMOKETRAIL: // arty spotter/trace round - blue signal smoke marking the target, not a real detonation
+		{
+			vec3_t puffOrg, puffVel;
+			float rnd;
+			int k;
+
+			for ( k = 0; k < 6; k++ ) {
+				puffOrg[0] = origin[0] + 12 * crandom();
+				puffOrg[1] = origin[1] + 12 * crandom();
+				puffOrg[2] = origin[2] + 4 * k;
+
+				puffVel[0] = 8 * crandom();
+				puffVel[1] = 8 * crandom();
+				puffVel[2] = 20 + rand() % 20;
+
+				rnd = random();
+				CG_SmokePuff( puffOrg, puffVel, 30 + rnd * 90, rnd * 0.5f + 0.5f, rnd * 0.5f + 0.5f, 1, 0.5f,
+							  3000 + rand() % 1500, cg.time, 200, 0, cgs.media.smokePuffShader );
+			}
 		}
 		break;
 

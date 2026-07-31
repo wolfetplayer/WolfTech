@@ -568,9 +568,12 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 		}
 		break;
 
+	case WP_DYNAMITE:      // charge-based (cooldown-gated), no meaningful clip/reserve count
+	case WP_AIRSTRIKE:
+		return;
+
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
-	case WP_DYNAMITE:
 	case WP_TESLA:
 	case WP_FLAMETHROWER:
 		if ( type == 0 ) {  // don't draw reserve value, just clip (since these weapons have all their ammo in the clip)
