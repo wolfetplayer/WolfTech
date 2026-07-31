@@ -615,6 +615,7 @@ typedef struct {
 	qhandle_t torsoSkin;
 
 	qboolean isSkeletal;
+	qboolean isCharacter;           // true for a .char (MDM/MDX) model - see CG_RegisterClientModelname
 
 	//----(SA) added accessory models/skins for belts/backpacks/etc.
 	qhandle_t accModels[ACC_MAX];       // see def of ACC_MAX for index descriptions

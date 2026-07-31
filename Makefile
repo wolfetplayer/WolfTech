@@ -2567,6 +2567,8 @@ $(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
 Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_main.o \
   $(B)/$(BASEGAME)/cgame/bg_animation.o \
+  $(B)/$(BASEGAME)/cgame/bg_character.o \
+  $(B)/$(BASEGAME)/cgame/bg_animgroup.o \
   $(B)/$(BASEGAME)/cgame/bg_misc.o \
   $(B)/$(BASEGAME)/cgame/bg_pmove.o \
   $(B)/$(BASEGAME)/cgame/bg_slidemove.o \
@@ -2646,6 +2648,8 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/ai_main.o \
   $(B)/$(BASEGAME)/game/ai_team.o \
   $(B)/$(BASEGAME)/game/bg_animation.o \
+  $(B)/$(BASEGAME)/game/bg_character.o \
+  $(B)/$(BASEGAME)/game/bg_animgroup.o \
   $(B)/$(BASEGAME)/game/bg_misc.o \
   $(B)/$(BASEGAME)/game/bg_pmove.o \
   $(B)/$(BASEGAME)/game/bg_slidemove.o \

@@ -1020,6 +1020,41 @@ qboolean G_ParseAnimationFiles( char *modelname, gclient_t *cl ) {
 	// set the name of the model in the modelinfo structure
 	Q_strncpyz( cl->modelInfo->modelname, modelname, sizeof( cl->modelInfo->modelname ) );
 
+	// try the newer MDM/MDX character (.char) pipeline first - modelname maps
+	// directly onto its path (e.g. "temperate/allied/soldier" ->
+	// "characters/temperate/allied/soldier.char"). Falls through to the
+	// legacy wolfanim.cfg path below for any modelname with no .char file.
+	Com_sprintf( filename, sizeof( filename ), "characters/%s.char", modelname );
+	if ( BG_ParseCharacterFile( filename, &cl->modelInfo->characterDef ) ) {
+		cl->modelInfo->isCharacter = qtrue;
+
+		if ( !BG_RegisterAnimationGroup( cl->modelInfo->characterDef.animationGroup, cl->modelInfo ) ) {
+			G_Error( "G_ParseAnimationFiles(): failed to load animation group '%s' for '%s'\n",
+					 cl->modelInfo->characterDef.animationGroup, filename );
+		}
+
+		len = trap_FS_FOpenFile( cl->modelInfo->characterDef.animationScript, &f, FS_READ );
+		if ( len <= 0 ) {
+			G_Printf( "G_ParseAnimationFiles(): file '%s' not found\n", cl->modelInfo->characterDef.animationScript );
+			return qfalse;
+		}
+		if ( len >= sizeof( text ) - 1 ) {
+			G_Printf( "File %s too long\n", cl->modelInfo->characterDef.animationScript );
+			return qfalse;
+		}
+		trap_FS_Read( text, len, f );
+		text[len] = 0;
+		trap_FS_FCloseFile( f );
+
+		BG_AnimParseAnimScript( cl->modelInfo, &level.animScriptData, cl->ps.clientNum,
+								 cl->modelInfo->characterDef.animationScript, text );
+
+		G_LoadAndParseMoveSpeeds( modelname );
+
+		return qtrue;
+	}
+	cl->modelInfo->isCharacter = qfalse;
+
 	// load the cfg file
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/wolfanim.cfg", modelname );
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );

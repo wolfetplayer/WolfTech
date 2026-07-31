@@ -505,6 +505,40 @@ qboolean CG_ParseAnimationFiles( char *modelname, animModelInfo_t *modelInfo, in
 	// set the name of the model in the modelinfo structure
 	Q_strncpyz( modelInfo->modelname, modelname, sizeof( modelInfo->modelname ) );
 
+	// try the newer MDM/MDX character (.char) pipeline first - see
+	// G_ParseAnimationFiles for the matching server-side logic. Falls
+	// through to the legacy wolfanim.cfg path below for any modelname
+	// with no .char file.
+	Com_sprintf( filename, sizeof( filename ), "characters/%s.char", modelname );
+	if ( BG_ParseCharacterFile( filename, &modelInfo->characterDef ) ) {
+		modelInfo->isCharacter = qtrue;
+
+		if ( !BG_RegisterAnimationGroup( modelInfo->characterDef.animationGroup, modelInfo ) ) {
+			CG_Printf( "CG_ParseAnimationFiles(): failed to load animation group '%s' for '%s'\n",
+					   modelInfo->characterDef.animationGroup, filename );
+			return qfalse;
+		}
+
+		len = trap_FS_FOpenFile( modelInfo->characterDef.animationScript, &f, FS_READ );
+		if ( len <= 0 ) {
+			CG_Printf( "CG_ParseAnimationFiles(): file '%s' not found\n", modelInfo->characterDef.animationScript );
+			return qfalse;
+		}
+		if ( len >= sizeof( text ) - 1 ) {
+			CG_Printf( "File %s too long\n", modelInfo->characterDef.animationScript );
+			return qfalse;
+		}
+		trap_FS_Read( text, len, f );
+		text[len] = 0;
+		trap_FS_FCloseFile( f );
+
+		BG_AnimParseAnimScript( modelInfo, &cgs.animScriptData, clientNum,
+								 modelInfo->characterDef.animationScript, text );
+
+		return qtrue;
+	}
+	modelInfo->isCharacter = qfalse;
+
 	// load the cfg file
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/wolfanim.cfg", modelname );
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
@@ -624,6 +658,50 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 	char filename[MAX_QPATH];
 	char name[MAX_QPATH];
 	int i;
+	bg_characterDef_t characterDef;
+
+	// try the newer MDM/MDX character (.char) pipeline first - modelName maps
+	// directly onto its path (e.g. "temperate/allied/soldier" ->
+	// "characters/temperate/allied/soldier.char"). Falls through to the
+	// legacy RTCW legs/torso .mds/.md3 path below (unchanged) for any
+	// modelName with no .char file, so AI/NPC models are unaffected. Doesn't
+	// go through CG_RegisterClientSkin/accessories/zombie special-casing
+	// below - a .char model's surfaces are remapped by its own .skin file,
+	// and per-part accessories aren't wired up yet (future work).
+	Com_sprintf( filename, sizeof( filename ), "characters/%s.char", modelName );
+	if ( BG_ParseCharacterFile( filename, &characterDef ) ) {
+		char meshBase[MAX_QPATH];
+
+		ci->isCharacter = qtrue;
+		ci->isSkeletal = qtrue;
+
+		ci->legsModel = trap_R_RegisterModel( characterDef.mesh );
+		if ( !ci->legsModel ) {
+			Com_Printf( "Failed to load character mesh %s\n", characterDef.mesh );
+			return qfalse;
+		}
+		ci->torsoModel = ci->legsModel;
+
+		COM_StripExtension( characterDef.mesh, meshBase, sizeof( meshBase ) );
+		Com_sprintf( filename, sizeof( filename ), "%s_%s.skin", meshBase, characterDef.skin );
+		ci->legsSkin = trap_R_RegisterSkin( filename );
+		if ( !ci->legsSkin ) {
+			Com_Printf( "Failed to load character skin %s\n", filename );
+			return qfalse;
+		}
+		ci->torsoSkin = ci->legsSkin;
+
+		// look for this model in the list of models already opened
+		if ( !CG_CheckForExistingModelInfo( ci, (char *)modelName, &ci->modelInfo ) ) {
+			if ( !CG_ParseAnimationFiles( (char *)modelName, ci->modelInfo, ci->clientNum ) ) {
+				Com_Printf( "Failed to load animation file for character %s\n", modelName );
+				return qfalse;
+			}
+		}
+
+		return qtrue;
+	}
+	ci->isCharacter = qfalse;
 
 	// if any skins failed to load, return failure
 //----(SA) modified this for head separation

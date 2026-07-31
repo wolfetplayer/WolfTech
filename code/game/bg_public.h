@@ -1221,6 +1221,7 @@ typedef enum {
 
 #define ANIMFL_LADDERANIM   0x1
 #define ANIMFL_FIRINGANIM   0x2
+#define ANIMFL_REVERSED     0x4     // played back-to-front (animation group / .aninc content)
 
 typedef struct animation_s {
 	char name[MAX_QPATH];
@@ -1240,6 +1241,11 @@ typedef struct animation_s {
 	int flags;
 	int movetype;
 	float stepGap;
+
+	// set by BG_RegisterAnimationGroup (MDM/MDX character animations) for models
+	// whose frame data lives in a separate .mdx rather than the bound model itself.
+	// Zero/unused for plain .mds models parsed by BG_AnimParseAnimConfig.
+	qhandle_t mdxFile;
 } animation_t;
 
 // Ridah, head animations
@@ -1879,6 +1885,20 @@ typedef struct
 	animScriptItem_t    *items[MAX_ANIMSCRIPT_ITEMS];   // pointers into a global list of items
 } animScript_t;
 
+// raw paths parsed from a .char file by BG_ParseCharacterFile - see
+// characters/<theme>/<team>/<class>.char for the on-disk format
+typedef struct {
+	char mesh[MAX_QPATH];
+	char animationGroup[MAX_QPATH];
+	char animationScript[MAX_QPATH];
+	char skin[MAX_QPATH];
+	char undressedCorpseModel[MAX_QPATH];
+	char undressedCorpseSkin[MAX_QPATH];
+	char hudhead[MAX_QPATH];
+	char hudheadskin[MAX_QPATH];
+	char hudheadanims[MAX_QPATH];
+} bg_characterDef_t;
+
 typedef struct
 {
 	char modelname[MAX_QPATH];                              // name of the model
@@ -1904,6 +1924,22 @@ typedef struct
 	// global list of script items for this model
 	animScriptItem_t scriptItems[MAX_ANIMSCRIPT_ITEMS_PER_MODEL];
 	int numScriptItems;
+
+	// MDM/MDX character support: populated by BG_ParseCharacterFile +
+	// BG_RegisterAnimationGroup when this modelname resolves to a .char file
+	// instead of a plain .mds models/players/<name>/wolfanim.cfg. Reuses this
+	// struct's existing per-modelname cache (see CG_CheckForExistingModelInfo /
+	// G_CheckForExistingModelInfo) rather than introducing a parallel cache.
+	qboolean isCharacter;
+	bg_characterDef_t characterDef;
+#ifdef CGAMEDLL
+	qhandle_t mesh;
+	qhandle_t skin;
+	qhandle_t undressedCorpseModel;
+	qhandle_t undressedCorpseSkin;
+	qhandle_t hudhead;
+	qhandle_t hudheadskin;
+#endif
 
 } animModelInfo_t;
 
@@ -1978,6 +2014,8 @@ typedef enum
 
 animModelInfo_t *BG_ModelInfoForModelname( char *modelname );
 qboolean BG_AnimParseAnimConfig( animModelInfo_t *animModelInfo, const char *filename, const char *input );
+qboolean BG_ParseCharacterFile( const char *filename, bg_characterDef_t *characterDef );
+qboolean BG_RegisterAnimationGroup( const char *filename, animModelInfo_t *animModelInfo );
 void BG_AnimParseAnimScript( animModelInfo_t *modelInfo, animScriptData_t *scriptData, int client, char *filename, char *input );
 int BG_AnimScriptAnimation( playerState_t *ps, aistateEnum_t state, scriptAnimMoveTypes_t movetype, qboolean isContinue );
 int BG_AnimScriptCannedAnimation( playerState_t *ps, aistateEnum_t state );
