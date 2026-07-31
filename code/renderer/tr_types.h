@@ -135,9 +135,7 @@ typedef struct {
 
 	vec3_t scale;       //----(SA)	added
 
-	// MDM/MDX: mesh (hModel) and skeleton are separate model handles.
-	// frameModel/torsoFrameModel select which MDX to sample frame/torsoFrame from.
-	// Unused (0) for MDS/MD3/etc, which carry their own frame data.
+	// MDM/MDX: which MDX to sample frame/torsoFrame from; unused (0) for MDS/MD3/etc, which carry their own frame data
 	qhandle_t frameModel;
 	qhandle_t torsoFrameModel;
 

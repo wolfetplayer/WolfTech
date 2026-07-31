@@ -1020,10 +1020,7 @@ qboolean G_ParseAnimationFiles( char *modelname, gclient_t *cl ) {
 	// set the name of the model in the modelinfo structure
 	Q_strncpyz( cl->modelInfo->modelname, modelname, sizeof( cl->modelInfo->modelname ) );
 
-	// try the newer MDM/MDX character (.char) pipeline first - modelname maps
-	// directly onto its path (e.g. "temperate/allied/soldier" ->
-	// "characters/temperate/allied/soldier.char"). Falls through to the
-	// legacy wolfanim.cfg path below for any modelname with no .char file.
+	// try the newer MDM/MDX character (.char) pipeline first; falls through to legacy wolfanim.cfg if none found
 	Com_sprintf( filename, sizeof( filename ), "characters/%s.char", modelname );
 	if ( BG_ParseCharacterFile( filename, &cl->modelInfo->characterDef ) ) {
 		cl->modelInfo->isCharacter = qtrue;

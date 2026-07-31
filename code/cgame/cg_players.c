@@ -505,10 +505,7 @@ qboolean CG_ParseAnimationFiles( char *modelname, animModelInfo_t *modelInfo, in
 	// set the name of the model in the modelinfo structure
 	Q_strncpyz( modelInfo->modelname, modelname, sizeof( modelInfo->modelname ) );
 
-	// try the newer MDM/MDX character (.char) pipeline first - see
-	// G_ParseAnimationFiles for the matching server-side logic. Falls
-	// through to the legacy wolfanim.cfg path below for any modelname
-	// with no .char file.
+	// try the newer MDM/MDX character (.char) pipeline first, see G_ParseAnimationFiles for the matching server-side logic
 	Com_sprintf( filename, sizeof( filename ), "characters/%s.char", modelname );
 	if ( BG_ParseCharacterFile( filename, &modelInfo->characterDef ) ) {
 		modelInfo->isCharacter = qtrue;
@@ -660,14 +657,7 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 	int i;
 	bg_characterDef_t characterDef;
 
-	// try the newer MDM/MDX character (.char) pipeline first - modelName maps
-	// directly onto its path (e.g. "temperate/allied/soldier" ->
-	// "characters/temperate/allied/soldier.char"). Falls through to the
-	// legacy RTCW legs/torso .mds/.md3 path below (unchanged) for any
-	// modelName with no .char file, so AI/NPC models are unaffected. Doesn't
-	// go through CG_RegisterClientSkin/accessories/zombie special-casing
-	// below - a .char model's surfaces are remapped by its own .skin file,
-	// and per-part accessories aren't wired up yet (future work).
+	// try the newer MDM/MDX character (.char) pipeline first; falls through to the legacy .mds/.md3 path if not found, skipping accessories/zombie special-casing below (future work)
 	Com_sprintf( filename, sizeof( filename ), "characters/%s.char", modelName );
 	if ( BG_ParseCharacterFile( filename, &characterDef ) ) {
 		char meshBase[MAX_QPATH];
@@ -2041,11 +2031,7 @@ void CG_RunLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, c
 	if ( cg.time >= lf->frameTime ) {
 
 		lf->oldFrame = lf->frame;
-		// lf->frame's provenance is normally whatever lf->animation was before this
-		// call (oldAnim) - except the firstAnim/EF_DEATH_FRAME special cases in
-		// CG_SetLerpFrameAnimationRate above, which force lf->frame to a value from
-		// the new anim before we get here, so fall back to that when there's no
-		// previous animation to attribute it to.
+		// normally oldAnim (lf->animation before this call); falls back to anim for the firstAnim/EF_DEATH_FRAME special cases above
 		lf->oldFrameAnim = oldAnim ? oldAnim : anim;
 		lf->oldFrameTime = lf->frameTime;
 		VectorCopy( cent->lerpOrigin, lf->oldFramePos );
@@ -4790,11 +4776,7 @@ void CG_Player( centity_t *cent ) {
 	CG_PlayerAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 						&torso.oldframe, &torso.frame, &torso.backlerp );
 
-	// MDM/MDX character: legs.frame/torso.frame above index into whichever
-	// .mdx each animation_t names, not a skeleton embedded in ci->legsModel
-	// itself - point the renderer at the right one(s). oldFrameAnim can
-	// briefly differ from the current animation right after a transition
-	// (see CG_RunLerpFrameRate), so it's tracked separately.
+	// MDM/MDX character: frame/torsoFrame above index into whichever .mdx each animation_t names, so point the renderer at it
 	if ( ci->isCharacter ) {
 		legs.frameModel = cent->pe.legs.animation ? cent->pe.legs.animation->mdxFile : 0;
 		legs.oldframeModel = cent->pe.legs.oldFrameAnim ? cent->pe.legs.oldFrameAnim->mdxFile : 0;

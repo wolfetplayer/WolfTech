@@ -1966,8 +1966,7 @@ static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *mod_name ) {
 			LL( surf->ofsEnd );
 		}
 
-		// stamp the current build's surfaceType_t value; unlike MDS, MDM assets
-		// aren't guaranteed to carry a baked ident matching this enum's ordering
+		// stamp the current build's surfaceType_t value; unlike MDS, MDM assets aren't guaranteed to carry a matching baked ident
 		surf->ident = SF_MDM;
 
 		if ( surf->numVerts >= SHADER_MAX_VERTEXES ) {

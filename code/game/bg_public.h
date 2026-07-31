@@ -1242,9 +1242,7 @@ typedef struct animation_s {
 	int movetype;
 	float stepGap;
 
-	// set by BG_RegisterAnimationGroup (MDM/MDX character animations) for models
-	// whose frame data lives in a separate .mdx rather than the bound model itself.
-	// Zero/unused for plain .mds models parsed by BG_AnimParseAnimConfig.
+	// set by BG_RegisterAnimationGroup for MDM/MDX character animations whose frames live in a separate .mdx; unused for .mds
 	qhandle_t mdxFile;
 } animation_t;
 
@@ -1885,8 +1883,7 @@ typedef struct
 	animScriptItem_t    *items[MAX_ANIMSCRIPT_ITEMS];   // pointers into a global list of items
 } animScript_t;
 
-// raw paths parsed from a .char file by BG_ParseCharacterFile - see
-// characters/<theme>/<team>/<class>.char for the on-disk format
+// raw paths parsed from a .char file by BG_ParseCharacterFile, e.g. characters/<theme>/<team>/<class>.char
 typedef struct {
 	char mesh[MAX_QPATH];
 	char animationGroup[MAX_QPATH];
@@ -1925,11 +1922,7 @@ typedef struct
 	animScriptItem_t scriptItems[MAX_ANIMSCRIPT_ITEMS_PER_MODEL];
 	int numScriptItems;
 
-	// MDM/MDX character support: populated by BG_ParseCharacterFile +
-	// BG_RegisterAnimationGroup when this modelname resolves to a .char file
-	// instead of a plain .mds models/players/<name>/wolfanim.cfg. Reuses this
-	// struct's existing per-modelname cache (see CG_CheckForExistingModelInfo /
-	// G_CheckForExistingModelInfo) rather than introducing a parallel cache.
+	// MDM/MDX character support, populated by BG_ParseCharacterFile + BG_RegisterAnimationGroup for .char-based models
 	qboolean isCharacter;
 	bg_characterDef_t characterDef;
 #ifdef CGAMEDLL
