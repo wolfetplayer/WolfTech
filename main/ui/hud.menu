@@ -77,10 +77,10 @@
 		itemDef
 		{
  			name "waves"
-				
+
 			cvarTest "g_gameType"
-			showCvar { "2" }
-			
+			showCvar { "0" }
+
 			ownerDraw CG_PLAYER_WAVES
 			
 			rect -52 4 32 32
@@ -692,95 +692,92 @@
 		itemDef {
 			name "score_box"
 			rect 7 -44 55 22
-			
+
 			cvarTest "g_gameType"
-			showCvar { "2" }												// Score
-			
+			showCvar { "0" }											// Score
+
 			decoration
 			visible MENU_TRUE
 			style WINDOW_STYLE_SHADER
 			background "gfx/2d/back_box.tga"
-			
+
 			forecolor 1 1 1 1
 		}
-		
+
 			itemDef
 			{
 				name "score_icon"
-					
+
 				cvarTest "g_gameType"
-				showCvar { "2" }
-				
+				showCvar { "0" }
+
 				rect 12 -39 12 24 // X+5 Y+5
-				
+
 				background "gfx/limbo/skill_roll.tga"
-				
+
 				decoration
 				style WINDOW_STYLE_SHADER
 				visible	1
 			}
-			
+
 			itemDef
 			{
 				name "score_text"
-				
+
 				cvarTest "g_gameType"
-				showCvar { "2" }
-				
+				showCvar { "0" }
+
 				rect 32 -40.5 16.5 12 // X+20 Y-1.5
-				
+
 				decoration
 				foreColor 1 1 1 1
 				textFont UI_FONT_BIG
 				textScale .28
 				visible MENU_TRUE
-				
+
 				ownerDraw CG_PLAYER_SCORE
 			}
-		
+
 		itemDef {
 			name "kills_box"
 			rect 62 -44 55 22
-			
+
 			cvarTest "g_gameType"
-			showCvar { "2" }												// Kills
-			
+			showCvar { "0" }											// Kills
+
 			decoration
 			visible MENU_TRUE
 			style WINDOW_STYLE_SHADER
 			background "gfx/2d/back_box.tga"
-			
+
 			forecolor 1 1 1 1
 		}
-		
+
 			itemDef
 			{
 				name "kills_icon"
-					
+
 				cvarTest "g_gameType"
-				showCvar { "2" }
-					
-				cvarTest "g_gameType"
-				showCvar { "2" }
-				
+				showCvar { "0" }
+
 				rect 68 -39 12 12 // X+5 Y+5
 				style WINDOW_STYLE_SHADER
 				background "gfx/hud/pm_death"
 				visible	1
 				decoration
 			}
-			
+
 			itemDef
 			{
 				name "kills_text"
-					
+
 				cvarTest "g_gameType"
-				showCvar { "2" }
-				
+				showCvar { "0" }
+
 				ownerDraw CG_PLAYER_KILLS
-				
+
 				rect 88 -40.5 12 12 // X+20 Y-1.5
-				
+
 				decoration
 				foreColor 1 1 1 1
 				textAlignX 6
@@ -842,23 +839,24 @@
 		itemDef {
 			name "a"
 			rect 458 -40 80 40
-			
+
 			cvarTest "g_gameType"
-			hideCvar { "2" }
-			
+			hideCvar { "0" }
+
 			visible MENU_TRUE
 			decoration
 			align ITEM_ALIGN_CENTER
 			ownerdraw CG_PLAYER_WEAPON_ICON2D
 		}
-		
+
+		// same icon, raised to leave room for the class weapon-charge bar below it (GT_COOP_SURVIVAL, GT_SINGLE_PLAYER)
 		itemDef {
 			name "a"
 			rect 458 -62 80 40
-			
+
 			cvarTest "g_gameType"
-			showCvar { "2" }
-			
+			showCvar { "0" }
+
 			visible MENU_TRUE
 			decoration
 			align ITEM_ALIGN_CENTER
@@ -1035,10 +1033,10 @@
 		itemDef {
 			name "weapcharbar_box"
 			rect 443 -22 110 22
-			
+
 			cvarTest "g_gameType"
-			showCvar { "2" }
-			
+			showCvar { "0" }
+
 			decoration
 			visible MENU_TRUE
 			style WINDOW_STYLE_SHADER
@@ -1046,48 +1044,48 @@
 			forecolor 1 1 1 1
 			ownerdrawflag CG_SHOW_NOT_V_BINOC
 		}
-		
+
 			itemDef
 			{
 				name "weapcharbar_icon"
 				rect 451 -17 6 12 // X+5 Y+5
-				
+
 				cvarTest "g_gameType"
-				showCvar { "2" }
-				
+				showCvar { "0" }
+
 				background "gfx/hud/et/ic_power.tga"
 				decoration
 				style WINDOW_STYLE_SHADER
 				visible	1
 				ownerdrawflag CG_SHOW_NOT_V_BINOC
 			}
-		
+
 		// weapon charge bar backcolor
 		itemDef {
 			name ""
 			rect 463 -16 83.25 10 // X+20 Y+6
-			
+
 			cvarTest "g_gameType"
-			showCvar { "2" }
-			
+			showCvar { "0" }
+
 			decoration
 			visible MENU_TRUE
 			style WINDOW_STYLE_SHADER
 			background "gfx/hud/backcolor.tga"
-			
+
 			forecolor 0 0 0 .5
 			ownerdrawflag CG_SHOW_NOT_V_BINOC
 		}
-		
+
 			itemDef {
 				name "weapcharbar"
-				
+
 				cvarTest "g_gameType"
-				showCvar { "2" }
-				
+				showCvar { "0" }
+
 				decoration
 				visible MENU_TRUE
-				align HUD_HORIZONTAL 
+				align HUD_HORIZONTAL
 				rect 463.5 -21.5 82 11 // horizontal version // Y-5.5
 				ownerdraw CG_PLAYER_WEAPON_RECHARGE
 				addColorRangerel 0.00 0.25  1 0.1 0.1 0.5   // 0-25%
