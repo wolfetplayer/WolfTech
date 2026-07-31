@@ -3700,16 +3700,32 @@ void CL_Frame( int msec ) {
 		}
 
 		// Lobby membership notices the host leaving well before the P2P poll below would.
-		if ( steamCheckHostLeft() && !isHostingServer && clc.state != CA_DISCONNECTED ) {
+		if ( steamCheckHostLeft() && !isHostingServer ) {
+			if ( clc.state != CA_DISCONNECTED ) {
 #ifdef LOCALISATION
-			message = CL_TranslateStringBuf( "Host has disconnected from the game.\n" );
-			Com_Printf( "%s", message );
-			Cvar_Set( "com_errorMessage", message );
+				message = CL_TranslateStringBuf( "Host has disconnected from the game.\n" );
+				Com_Printf( "%s", message );
+				Cvar_Set( "com_errorMessage", message );
 #else
-			Com_Printf( "Host has disconnected from the game.\n" );
-			Cvar_Set( "com_errorMessage", "Host has disconnected from the game.\n" );
+				Com_Printf( "Host has disconnected from the game.\n" );
+				Cvar_Set( "com_errorMessage", "Host has disconnected from the game.\n" );
 #endif
-			CL_Disconnect( qtrue );
+				CL_Disconnect( qtrue );
+			} else if ( steamLobbyCurrent() != 0 ) {
+				// Still in the pre-game lobby - boot everyone back to the main menu instead of stranding them with no leader.
+#ifdef LOCALISATION
+				message = CL_TranslateStringBuf( "Lobby has been disbanded by the host.\n" );
+				Com_Printf( "%s", message );
+				Cvar_Set( "com_errorMessage", message );
+#else
+				Com_Printf( "Lobby has been disbanded by the host.\n" );
+				Cvar_Set( "com_errorMessage", "Lobby has been disbanded by the host.\n" );
+#endif
+				steamLobbyLeave();
+				if ( uivm ) {
+					VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+				}
+			}
 		}
 
 		while ( steamNetPollConnEvent( &peerSteamID, &peerConnected ) ) {
