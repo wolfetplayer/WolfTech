@@ -411,6 +411,76 @@ void R_AddAnimSurfaces( trRefEntity_t *ent ) {
 	}
 }
 
+/*
+==============
+R_AddMDMSurfaces
+
+Phase 1: MDM meshes have no frame/bounds data of their own (that lives in
+the linked MDX skeleton, referenced via ent->e.frameModel) so there's no
+cheap way to cull or fog yet - the mesh is always considered visible and
+unfogged for now. Bone posing is also not wired up yet; RB_MDMSurfaceAnim
+renders in bind pose. Both will be extended once MDX skeletons are consumed.
+==============
+*/
+void R_AddMDMSurfaces( trRefEntity_t *ent ) {
+	mdmHeader_t     *header;
+	mdmSurface_t    *surface;
+	shader_t        *shader = 0;
+	int             cubemapIndex;
+	int i, j, fogNum;
+	qboolean personalModel;
+
+	// don't add third_person objects if not in a portal
+	personalModel = (ent->e.renderfx & RF_THIRD_PERSON) && !(tr.viewParms.isPortal
+	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)));
+
+	header = tr.currentModel->mdm;
+
+	if ( !personalModel || r_shadows->integer > 1 ) {
+		R_SetupEntityLighting( &tr.refdef, ent );
+	}
+
+	fogNum = 0;
+
+	cubemapIndex = R_CubemapForPoint(ent->e.origin);
+
+	surface = ( mdmSurface_t * )( (byte *)header + header->ofsSurfaces );
+	for ( i = 0 ; i < header->numSurfaces ; i++ ) {
+		if ( ent->e.customShader ) {
+			shader = R_GetShaderByHandle( ent->e.customShader );
+		} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
+			skin_t *skin;
+
+			skin = R_GetSkinByHandle( ent->e.customSkin );
+
+			// match the surface name to something in the skin file
+			shader = tr.defaultShader;
+			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+				// the names have both been lowercased
+				if ( !strcmp( skin->surfaces[j].name, surface->name ) ) {
+					shader = skin->surfaces[j].shader;
+					break;
+				}
+			}
+
+			if ( shader == tr.defaultShader ) {
+				ri.Printf( PRINT_DEVELOPER, "WARNING: no shader for surface %s in skin %s\n", surface->name, skin->name );
+			} else if ( shader->defaultShader )     {
+				ri.Printf( PRINT_DEVELOPER, "WARNING: shader %s in skin %s not found\n", shader->name, skin->name );
+			}
+		} else {
+			shader = R_GetShaderByHandle( surface->shaderIndex );
+		}
+
+		// don't add third_person objects if not viewing through a portal
+		if ( !personalModel ) {
+			R_AddDrawSurf( (void *)surface, shader, fogNum, qfalse, qfalse, cubemapIndex );
+		}
+
+		surface = ( mdmSurface_t * )( (byte *)surface + surface->ofsEnd );
+	}
+}
+
 static ID_INLINE void LocalMatrixTransformVector( vec3_t in, vec3_t mat[ 3 ], vec3_t out ) {
 	out[ 0 ] = in[ 0 ] * mat[ 0 ][ 0 ] + in[ 1 ] * mat[ 0 ][ 1 ] + in[ 2 ] * mat[ 0 ][ 2 ];
 	out[ 1 ] = in[ 0 ] * mat[ 1 ][ 0 ] + in[ 1 ] * mat[ 1 ][ 1 ] + in[ 2 ] * mat[ 1 ][ 2 ];
@@ -1291,6 +1361,65 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 	Com_Printf( "\n" );
 #endif
 
+}
+
+/*
+==============
+RB_MDMSurfaceAnim
+
+Phase 1: bind pose only. Each vertex is the weighted sum of its
+mdmWeight_t offsets with identity bone matrices - this doesn't yet
+consume the entity's linked MDX skeleton (ent->e.frameModel), and
+always renders at full LOD (no collapse-map reduction).
+==============
+*/
+void RB_MDMSurfaceAnim( mdmSurface_t *surface ) {
+	int j, k;
+	int *triangles;
+	int numIndexes;
+	int baseIndex, baseVertex;
+	glIndex_t *pIndexes;
+	mdmVertex_t *v;
+	mdmWeight_t *w;
+	float *tempVert;
+	int16_t *tempNormal;
+
+	RB_CHECKOVERFLOW( surface->numVerts, surface->numTriangles * 3 );
+
+	triangles = ( int * )( (byte *)surface + surface->ofsTriangles );
+	numIndexes = surface->numTriangles * 3;
+	baseIndex = tess.numIndexes;
+	baseVertex = tess.numVertexes;
+
+	tess.numVertexes += surface->numVerts;
+
+	pIndexes = (glIndex_t *)&tess.indexes[baseIndex];
+	for ( j = 0; j < numIndexes; j++ ) {
+		pIndexes[j] = triangles[j] + baseVertex;
+	}
+	tess.numIndexes += numIndexes;
+
+	//
+	// bind pose: sum each vertex's weighted offsets directly (identity bones)
+	//
+	v = ( mdmVertex_t * )( (byte *)surface + surface->ofsVerts );
+	tempVert = ( float * )( tess.xyz + baseVertex );
+	tempNormal = ( int16_t * )( tess.normal + baseVertex );
+	for ( j = 0; j < surface->numVerts; j++, tempVert += 4, tempNormal += 4 ) {
+		VectorClear( tempVert );
+
+		w = v->weights;
+		for ( k = 0 ; k < v->numWeights ; k++, w++ ) {
+			VectorMA( tempVert, w->boneWeight, w->offset, tempVert );
+		}
+
+		R_VaoPackNormal( tempNormal, v->normal );
+
+		tess.texCoords[baseVertex + j][0] = v->texCoords[0];
+		tess.texCoords[baseVertex + j][1] = v->texCoords[1];
+
+		v = (mdmVertex_t *)&v->weights[v->numWeights];
+	}
 }
 
 /*

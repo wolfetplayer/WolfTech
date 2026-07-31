@@ -1794,6 +1794,9 @@ static void R_AddEntitySurface (int entityNum)
 			case MOD_MDS:
 				R_AddAnimSurfaces( ent );
 				break;
+			case MOD_MDM:
+				R_AddMDMSurfaces( ent );
+				break;
 			case MOD_MDR:
 				R_MDRAddAnimSurfaces( ent );
 				break;
@@ -2097,6 +2100,20 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 					mdsFrame_t *frame = ( mdsFrame_t * ) ( ( byte * ) header + header->ofsFrames + frameSize * ent->e.frame);
 
 					radius = frame->radius;
+				}
+				break;
+				case MOD_MDM:
+				{
+					model_t *skelModel = R_GetModelByHandle( ent->e.frameModel );
+
+					if ( skelModel && skelModel->type == MOD_MDX )
+					{
+						mdxHeader_t *header = skelModel->mdx;
+						int frameSize = sizeof( mdxFrame_t ) + header->numBones * sizeof( mdxBoneFrameCompressed_t );
+						mdxFrame_t *frame = ( mdxFrame_t * ) ( ( byte * ) header + header->ofsFrames + frameSize * ent->e.frame);
+
+						radius = frame->radius;
+					}
 				}
 				break;
 				case MOD_MDR:

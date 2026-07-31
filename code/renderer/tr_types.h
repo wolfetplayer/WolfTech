@@ -135,12 +135,21 @@ typedef struct {
 
 	vec3_t scale;       //----(SA)	added
 
+	// MDM/MDX: mesh (hModel) and skeleton are separate model handles.
+	// frameModel/torsoFrameModel select which MDX to sample frame/torsoFrame from.
+	// Unused (0) for MDS/MD3/etc, which carry their own frame data.
+	qhandle_t frameModel;
+	qhandle_t torsoFrameModel;
+
 	// previous data for frame interpolation
 	float oldorigin[3];             // also used as MODEL_BEAM's "to"
 	int oldframe;
 	int oldTorsoFrame;
 	float backlerp;                 // 0.0 = current, 1.0 = old
 	float torsoBacklerp;
+
+	qhandle_t oldframeModel;
+	qhandle_t oldTorsoFrameModel;
 
 	// texturing
 	int skinNum;                    // inline skin index

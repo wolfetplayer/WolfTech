@@ -980,6 +980,7 @@ typedef enum {
 	SF_POLY,
 	SF_MDV,
 	SF_MDS,
+	SF_MDM,
 	SF_MDR,
 	SF_IQM,
 	SF_FLARE,
@@ -1422,6 +1423,8 @@ typedef enum {
 	MOD_MESH,
 	MOD_MDS,
 	MOD_MDC, // Ridah
+	MOD_MDM, // skeletal mesh, bones come from a separate MOD_MDX model
+	MOD_MDX, // skeletal data only, no mesh
 	MOD_MDR,
 	MOD_IQM
 } modtype_t;
@@ -1435,6 +1438,8 @@ typedef struct model_s {
 	bmodel_t    *bmodel;            // only if type == MOD_BRUSH
 	mdvModel_t	*mdv[MD3_MAX_LODS];	// only if type == MOD_MESH
 	mdsHeader_t *mds;               // only if type == MOD_MDS
+	mdmHeader_t *mdm;                // only if type == MOD_MDM
+	mdxHeader_t *mdx;                // only if type == MOD_MDX
 	void	*modelData;		// only if type == (MOD_MDR | MOD_IQM)
 
 	int numLods;
@@ -2610,6 +2615,8 @@ void RB_SurfaceAnim( mdsSurface_t *surfType );
 int R_GetBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, const refEntity_t *refent, const char *tagName );
 void R_MDRAddAnimSurfaces( trRefEntity_t *ent );
 void RB_MDRSurfaceAnim( mdrSurface_t *surface );
+void R_AddMDMSurfaces( trRefEntity_t *ent );
+void RB_MDMSurfaceAnim( mdmSurface_t *surfType );
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );
 void RB_IQMSurfaceAnim( surfaceType_t *surface );
