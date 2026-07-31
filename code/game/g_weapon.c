@@ -2073,6 +2073,12 @@ void FireWeapon( gentity_t *ent ) {
 	}
 	else if (wc & WEAPON_CLASS_DYNAMITE)
 	{
+		// engineer dynamite is a Lieutenant-airstrike-style cooldown ability, not an ammo-limited throw.
+		// AI characters (e.g. scripted enemies) still throw it on their own ammo/script-governed cadence.
+		if (!ent->aiCharacter && level.time - ent->client->ps.classWeaponTime < g_engineerChargeTime.integer)
+		{
+			return;
+		}
 
 		ent->client->ps.classWeaponTime = level.time;
 

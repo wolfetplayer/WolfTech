@@ -3280,7 +3280,6 @@ static void PM_Weapon( void ) {
 				if ( pm->ps->grenadeTimeLeft > 8000 ) {
 					PM_AddEvent( EV_FIRE_WEAPON );
 					pm->ps->weaponTime = 1600;
-					PM_WeaponUseAmmo( pm->ps->weapon, 1 );  //----(SA)	take ammo
 					return;
 				}
 			} else {
@@ -3570,6 +3569,13 @@ static void PM_Weapon( void ) {
 	// JPW NERVE -- airstrike marker on LT cooldown: no fire (predicted-side mirror of the server gate in g_weapon.c FireWeapon).
 	if ( pm->ps->weapon == WP_AIRSTRIKE && pm->ps->grenadeTimeLeft <= 0 &&
 		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->ltChargeTime ) {
+		return;
+	}
+
+	// engineer dynamite on cooldown: no fire (predicted-side mirror of the server gate in g_weapon.c FireWeapon).
+	// AI characters (e.g. scripted enemies) still throw it on their own ammo/script-governed cadence.
+	if ( pm->ps->weapon == WP_DYNAMITE && !pm->ps->aiChar && pm->ps->grenadeTimeLeft <= 0 &&
+		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->engineerChargeTime ) {
 		return;
 	}
 

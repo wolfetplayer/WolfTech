@@ -37,6 +37,9 @@ loadout survival_default_engineer
 
 		giveweapon weapon_grenadelauncher
 		setammo weapon_grenadelauncher full
+
+		giveweapon weapon_dynamite
+		setammo weapon_dynamite full
 }
 
 loadout survival_default_lt
@@ -85,6 +88,9 @@ loadout survival_hardcore_engineer
 
 		giveweapon weapon_grenadelauncher
 		setammo weapon_grenadelauncher full
+
+		giveweapon weapon_dynamite
+		setammo weapon_dynamite full
 }
 
 loadout survival_hardcore_lt
