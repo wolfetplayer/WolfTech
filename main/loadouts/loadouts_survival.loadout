@@ -3,110 +3,101 @@
 
 loadout survival_default_soldier
 {
-		givescore 500
+		givescore 50
+		
 		giveweapon weapon_knife
 		giveweapon weapon_thompson
-		setammo weapon_thompson 128
+		setammo weapon_thompson full
 		setclip weapon_thompson full
 		selectweapon weapon_thompson
-
-		giveweapon weapon_grenadepineapple
-		setammo weapon_grenadepineapple full
 }
 
 loadout survival_default_medic
 {
-		givescore 500
+		givescore 50
+		
 		giveweapon weapon_knife
-		giveweapon weapon_thompson
-		setammo weapon_thompson 128
-		setclip weapon_thompson full
-		selectweapon weapon_thompson
-
-		giveweapon weapon_grenadepineapple
-		setammo weapon_grenadepineapple full
+		giveweapon weapon_colt
+		setammo weapon_colt 64
+		setclip weapon_colt full
+		selectweapon weapon_colt
+		
+		setarmor 200
 }
 
 loadout survival_default_engineer
 {
-		givescore 500
+		givescore 50
+		
 		giveweapon weapon_knife
-		giveweapon weapon_thompson
-		setammo weapon_thompson 128
-		setclip weapon_thompson full
-		selectweapon weapon_thompson
+		giveweapon weapon_colt
+		setammo weapon_colt 64
+		setclip weapon_colt full
+		selectweapon weapon_colt
 
-		giveweapon weapon_grenadepineapple
-		setammo weapon_grenadepineapple full
+		giveweapon weapon_grenadelauncher
+		setammo weapon_grenadelauncher full
 }
 
 loadout survival_default_lt
 {
-		givescore 500
+		givescore 150
+		
 		giveweapon weapon_knife
-		giveweapon weapon_thompson
-		setammo weapon_thompson 128
-		setclip weapon_thompson full
-		selectweapon weapon_thompson
-
-		giveweapon weapon_grenadepineapple
-		setammo weapon_grenadepineapple full
+		giveweapon weapon_colt
+		setammo weapon_colt 64
+		setclip weapon_colt full
+		selectweapon weapon_colt
 
 		giveweapon weapon_airstrike
 		giveweapon weapon_arty
+		setclip weapon_arty 1
+		giveinventory key_binocs
 }
 
 loadout survival_hardcore_soldier
 {
-		givescore 50
 		giveweapon weapon_knife
-		giveweapon weapon_akimbo
-		setammo weapon_akimbo 128
-		setclip weapon_akimbo full
-		selectweapon weapon_akimbo
-
-		giveweapon weapon_grenadepineapple
-		setammo weapon_grenadepineapple full
+		giveweapon weapon_thompson
+		setammo weapon_thompson full
+		setclip weapon_thompson full
+		selectweapon weapon_thompson
 }
 
 loadout survival_hardcore_medic
 {
-		givescore 50
 		giveweapon weapon_knife
-		giveweapon weapon_akimbo
-		setammo weapon_akimbo 128
-		setclip weapon_akimbo full
-		selectweapon weapon_akimbo
-
-		giveweapon weapon_grenadepineapple
-		setammo weapon_grenadepineapple full
+		giveweapon weapon_colt
+		setammo weapon_colt 64
+		setclip weapon_colt full
+		selectweapon weapon_colt
+		
+        setarmor 200
 }
 
 loadout survival_hardcore_engineer
 {
-		givescore 50
 		giveweapon weapon_knife
-		giveweapon weapon_akimbo
-		setammo weapon_akimbo 128
-		setclip weapon_akimbo full
-		selectweapon weapon_akimbo
+		giveweapon weapon_colt
+		setammo weapon_colt 64
+		setclip weapon_colt full
+		selectweapon weapon_colt
 
-		giveweapon weapon_grenadepineapple
-		setammo weapon_grenadepineapple full
+		giveweapon weapon_grenadelauncher
+		setammo weapon_grenadelauncher full
 }
 
 loadout survival_hardcore_lt
 {
-		givescore 50
+		givescore 100
 		giveweapon weapon_knife
-		giveweapon weapon_akimbo
-		setammo weapon_akimbo 128
-		setclip weapon_akimbo full
-		selectweapon weapon_akimbo
-
-		giveweapon weapon_grenadepineapple
-		setammo weapon_grenadepineapple full
+		giveweapon weapon_colt
+		setammo weapon_colt 64
+		setclip weapon_colt full
+		selectweapon weapon_colt
 
 		giveweapon weapon_airstrike
 		giveweapon weapon_arty
+		setclip weapon_arty 1
+		giveinventory key_binocs
 }
