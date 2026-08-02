@@ -40,6 +40,7 @@ extern void SP_target_smoke( gentity_t *ent );
 void G_ExplodeMissilePoisonGas( gentity_t *ent );
 void G_ExplodeMissile( gentity_t *ent );
 void M_think( gentity_t *ent );
+void G_TryArmLandmine( gentity_t *ent, trace_t *trace );
 /*
 ================
 G_BounceMissile
@@ -118,6 +119,11 @@ qboolean G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 //----(SA)	end
 			G_SetOrigin( ent, trace->endpos );
 			ent->s.time = level.time / 4;
+			if ( ent->s.weapon == WP_LANDMINE ) {
+				// may free ent on denial, so this must be the last thing touching it
+				G_TryArmLandmine( ent, trace );
+				return qfalse;
+			}
 			if ( ent->s.weapon == WP_M7 ) {
 				// explode ~750msec after launch, regardless of how long it took to come to rest
 				ent->nextthink = level.time + ( 750 - ( level.time + 4000 - ent->nextthink ) );
@@ -135,6 +141,238 @@ qboolean G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 
 	}
 	return qtrue;
+}
+
+/*
+===========================================================================
+
+LANDMINE
+
+Auto-arms after landing; state lives in ent->s.effect1Time (0 = settling, 1 = armed, 2 = triggered).
+
+===========================================================================
+*/
+
+#define LANDMINE_MAX_PER_PLAYER 10
+#define LANDMINE_VALID_SURFACES ( SURF_GRASS | SURF_GRAVEL | SURF_SNOW )
+#define LANDMINE_TRIGGER_DIST   64.0f
+#define LANDMINE_TRIGGER_HEIGHT 45.0f
+#define LANDMINE_FUSE_TIME      300
+#define LANDMINE_ARM_DELAY      1500
+
+/*
+================
+G_LandmineValidSurface
+
+Only flat grass/gravel/snow qualifies; steep or unflagged surfaces (e.g. concrete) are rejected.
+================
+*/
+qboolean G_LandmineValidSurface( trace_t *trace ) {
+	int contents;
+
+	if ( trace->plane.normal[2] < 0.7f ) {
+		return qfalse;
+	}
+
+	if ( !( trace->surfaceFlags & LANDMINE_VALID_SURFACES ) ) {
+		return qfalse;
+	}
+
+	contents = trap_PointContents( trace->endpos, -1 );
+	if ( contents & MASK_WATER ) {
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+================
+G_CountPlayerLandmines
+
+Live scan of this owner's armed mines, so the 10-cap holds even across a wave respawn resetting ammo.
+================
+*/
+int G_CountPlayerLandmines( gentity_t *owner ) {
+	gentity_t *e = &g_entities[MAX_CLIENTS];
+	int i, cnt = 0;
+
+	for ( i = MAX_CLIENTS; i < level.num_entities; i++, e++ ) {
+		if ( !e->inuse || e->s.eType != ET_MISSILE || e->methodOfDeath != MOD_LANDMINE ) {
+			continue;
+		}
+
+		if ( e->parent == owner && e->s.effect1Time ) {   // armed (1) or triggered (2) both still count
+			cnt++;
+		}
+	}
+
+	return cnt;
+}
+
+/*
+================
+G_ExplodeLandmine
+
+Wraps G_ExplodeMissile so the mine is handed back to the owner's inventory the instant it detonates.
+================
+*/
+void G_ExplodeLandmine( gentity_t *self ) {
+	if ( self->parent && self->parent->inuse && self->parent->client ) {
+		Add_Ammo( self->parent, WP_LANDMINE, 1, qfalse );
+	}
+
+	G_ExplodeMissile( self );
+}
+
+/*
+================
+G_LandmineWillTrigger
+
+Hostile AI and the owner always trigger it; other players only count if g_friendlyFire is on.
+================
+*/
+static qboolean G_LandmineWillTrigger( gentity_t *self, gentity_t *ent ) {
+	if ( !ent->client ) {
+		return qfalse;
+	}
+
+	if ( ent->aiCharacter ) {
+		return ent->aiTeam == AITEAM_MONSTER;
+	}
+
+	if ( ent == self->parent ) {
+		return qtrue;
+	}
+
+	return g_friendlyFire.integer != 0;
+}
+
+/*
+================
+G_LandmineSomeoneInRange
+
+Scans trigger range/height for anyone eligible to trip the mine; shared by both think states.
+================
+*/
+static qboolean G_LandmineSomeoneInRange( gentity_t *self ) {
+	int       entityList[MAX_GENTITIES];
+	int       i, cnt;
+	vec3_t    range = { LANDMINE_TRIGGER_DIST, LANDMINE_TRIGGER_DIST, LANDMINE_TRIGGER_DIST };
+	vec3_t    mins, maxs;
+
+	VectorSubtract( self->r.currentOrigin, range, mins );
+	VectorAdd( self->r.currentOrigin, range, maxs );
+
+	cnt = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
+
+	for ( i = 0; i < cnt; i++ ) {
+		gentity_t *ent = &g_entities[entityList[i]];
+		vec3_t    dist;
+
+		if ( !G_LandmineWillTrigger( self, ent ) ) {
+			continue;
+		}
+
+		VectorSubtract( self->r.currentOrigin, ent->r.currentOrigin, dist );
+		if ( VectorLengthSquared( dist ) <= Square( LANDMINE_TRIGGER_DIST ) && Q_fabs( dist[2] ) < LANDMINE_TRIGGER_HEIGHT ) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+================
+G_LandminePostThink
+
+Pressure-release like ETLegacy: waits for the trigger radius to clear before fusing and exploding.
+================
+*/
+void G_LandminePostThink( gentity_t *self ) {
+	self->nextthink = level.time + FRAMETIME;
+
+	if ( !G_LandmineSomeoneInRange( self ) ) {
+		self->nextthink = level.time + LANDMINE_FUSE_TIME;
+		self->think     = G_ExplodeLandmine;
+	}
+}
+
+/*
+================
+G_LandmineThink
+
+Polls while armed; on first trip marks it triggered (effect1Time=2) and hands off to G_LandminePostThink.
+================
+*/
+void G_LandmineThink( gentity_t *self ) {
+	self->nextthink = level.time + FRAMETIME;
+
+	if ( G_LandmineSomeoneInRange( self ) ) {
+		self->s.effect1Time = 2;    // triggered
+		self->think = G_LandminePostThink;
+	}
+}
+
+/*
+================
+G_ArmLandmine
+
+Deferred think: arms the mine LANDMINE_ARM_DELAY after landing instead of instantly.
+================
+*/
+void G_ArmLandmine( gentity_t *self ) {
+	self->s.effect1Time = 1;                 // armed
+	self->s.frame       = rand() % 20;       // desync the marker's waving animation across mines (cg_ents.c CG_Missile)
+
+	self->nextthink = level.time + FRAMETIME;
+	self->think     = G_LandmineThink;
+}
+
+/*
+================
+G_TryArmLandmine
+
+Validates the landing spot/mine cap; refunds and removes on failure, else schedules G_ArmLandmine.
+================
+*/
+void G_TryArmLandmine( gentity_t *ent, trace_t *trace ) {
+	gentity_t  *owner = ent->parent;
+	const char *denyReason = NULL;
+
+	if ( !G_LandmineValidSurface( trace ) ) {
+		denyReason = "Landmine cannot be armed here";
+	} else if ( owner && owner->client && G_CountPlayerLandmines( owner ) >= LANDMINE_MAX_PER_PLAYER ) {
+		denyReason = "You have too many landmines placed";
+	}
+
+	if ( denyReason ) {
+		if ( owner && owner->inuse && owner->client ) {
+			trap_SendServerCommand( owner - g_entities, va( "cp \"%s\" 1", denyReason ) );
+			Add_Ammo( owner, WP_LANDMINE, 1, qfalse );
+
+			if ( !owner->aiCharacter ) {
+				owner->client->ps.classWeaponTime -= ( g_engineerChargeTime.integer / 3 );
+			}
+		}
+
+		G_FreeEntity( ent );
+		return;
+	}
+
+	ent->r.ownerNum    = ENTITYNUM_WORLD;   // thrower can walk away without self-attribution weirdness
+	ent->r.contents    = 0;                 // players can walk over the mine, armed or not
+	ent->clipmask      = 0;
+	ent->s.pos.trType  = TR_STATIONARY;     // stop the flying-missile spin now that it's landed
+	ent->s.pos.trTime  = level.time;
+	trap_LinkEntity( ent );
+
+	// explicit landing thud, since a mine's gentle toss usually settles too slowly to trigger this naturally
+	G_AddEvent( ent, EV_GRENADE_BOUNCE, trace->surfaceFlags >> 12 );
+
+	ent->nextthink = level.time + LANDMINE_ARM_DELAY;
+	ent->think     = G_ArmLandmine;
 }
 
 /*
@@ -1278,6 +1516,9 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 
 	bolt = G_Spawn();
 
+	// landmines are dropped, not cooked/fused -- no nextthink/explode timer here (see G_TryArmLandmine).
+	if ( grenadeWPID != WP_LANDMINE ) {
+
 	// no self->client for shooter_grenade's
 	if ( self->client && self->client->ps.grenadeTimeLeft ) {
 		if ( grenadeWPID == WP_DYNAMITE ) {   // remove any fraction of a 5 second 'click'
@@ -1302,13 +1543,16 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		}
 	}
 
+	if ( !noExplode ) {
+		bolt->think         = G_ExplodeMissile;
+	}
+
+	}
+
 	// no self->client for shooter_grenade's
 	if ( self->client ) {
 		self->client->ps.grenadeTimeLeft = 0;       // reset grenade timer
 
-	}
-	if ( !noExplode ) {
-		bolt->think         = G_ExplodeMissile;
 	}
 
 	bolt->s.eType       = ET_MISSILE;
@@ -1453,6 +1697,15 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		// will try setting it when it settles
 //			bolt->r.ownerNum			= ENTITYNUM_WORLD;	// (SA) make the world the owner of the dynamite, so the player can shoot it without modifying the bullet code to ignore players id for hits
 
+		break;
+	case WP_LANDMINE:
+		// inert until G_TryArmLandmine primes it; no direct-hit damage, only the triggered splash.
+		bolt->classname             = "landmine";
+		bolt->damage                = 0;
+		bolt->splashRadius          = 200;
+		bolt->methodOfDeath         = MOD_LANDMINE;
+		bolt->splashMethodOfDeath   = MOD_LANDMINE;
+		bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
 		break;
 	}
 

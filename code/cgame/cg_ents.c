@@ -1270,6 +1270,56 @@ static void CG_Missile( centity_t *cent ) {
 	}
 	ent.renderfx = weapon->missileRenderfx | RF_NOSHADOW;
 
+	// armed (effect1Time==1): animated marker model; triggered (effect1Time==2): plain mine model, sunk into ground
+	if ( s1->weapon == WP_LANDMINE && s1->effect1Time == 1 ) {
+		static qhandle_t landmineMarkerModel = 0;
+
+		if ( !landmineMarkerModel ) {
+			landmineMarkerModel = trap_R_RegisterModel( "models/multiplayer/mine_marker/allied_marker.md3" );
+		}
+
+		if ( landmineMarkerModel ) {
+			ent.hModel = landmineMarkerModel;
+			ent.origin[2]    += 8;
+			ent.oldorigin[2] += 8;
+
+			// 20-frame marker animation at 20fps; s1->frame offset (set in G_ArmLandmine) desyncs multiple mines
+			if ( cg.time >= cent->lerpFrame.frameTime ) {
+				cent->lerpFrame.oldFrameTime = cent->lerpFrame.frameTime;
+				cent->lerpFrame.oldFrame     = cent->lerpFrame.frame;
+
+				while ( cg.time >= cent->lerpFrame.frameTime ) {
+					cent->lerpFrame.frameTime += 50;
+					cent->lerpFrame.frame++;
+					if ( cent->lerpFrame.frame >= 20 ) {
+						cent->lerpFrame.frame = 0;
+					}
+				}
+			}
+
+			if ( cent->lerpFrame.frameTime == cent->lerpFrame.oldFrameTime ) {
+				cent->lerpFrame.backlerp = 0;
+			} else {
+				cent->lerpFrame.backlerp = 1.0f - (float)( cg.time - cent->lerpFrame.oldFrameTime ) / ( cent->lerpFrame.frameTime - cent->lerpFrame.oldFrameTime );
+			}
+
+			ent.frame = cent->lerpFrame.frame + s1->frame;
+			if ( ent.frame >= 20 ) {
+				ent.frame -= 20;
+			}
+
+			ent.oldframe = cent->lerpFrame.oldFrame + s1->frame;
+			if ( ent.oldframe >= 20 ) {
+				ent.oldframe -= 20;
+			}
+
+			ent.backlerp = cent->lerpFrame.backlerp;
+		}
+	} else if ( s1->weapon == WP_LANDMINE && s1->effect1Time == 2 ) {
+		ent.origin[2]    -= 8;
+		ent.oldorigin[2] -= 8;
+	}
+
 	// convert direction of travel into axis
 	if ( VectorNormalize2( s1->pos.trDelta, ent.axis[0] ) == 0 ) {
 		ent.axis[0][2] = 1;

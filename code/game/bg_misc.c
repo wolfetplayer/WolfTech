@@ -62,7 +62,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN,    WP_M1941,    WP_DELISLE },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
-	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_AIRSTRIKE },  //	6
+	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_LANDMINE, WP_AIRSTRIKE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
 	{WP_TESLA,              WP_VENOM,               0           },  //	8
 	{WP_M97,                WP_AUTO5,               0           },  //	9
@@ -1211,6 +1211,36 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qfalse,
 		.underwaterFire     = qtrue,
 		.weapFile           = "dynamite.weap",
+    },
+    // Landmine: cooldown-gated like dynamite (1/3 cost), 10-cap enforced by a live entity scan (G_CountPlayerLandmines), not this ammo pool.
+    [WP_LANDMINE] = {
+		.weaponindex        = WP_LANDMINE,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_LANDMINE,
+        .maxammo            = 10,
+        .uses               = 1,
+        .maxclip            = 10,
+        .reloadTime         = 0,
+        .fireDelayTime      = DELAY_THROW,
+        .nextShotTime       = 1600,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 250,
+		.weaponSpread       = 0,
+		.spreadScale        = 0.0f,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 64,
+		.aiRange            = AI_WEAPON_RANGE_GRENADE,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_LANDMINE,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qtrue,
+		.weapFile           = "landmine.weap",
     },
     [WP_PANZERFAUST] = {
 		.weaponindex        = WP_PANZERFAUST,
@@ -2934,6 +2964,29 @@ gitem_t bg_itemlist[] =
 	},
 
 	{
+		"weapon_landmine",
+		"sound/misc/w_pkup.wav",
+		{   "models/multiplayer/landmine/landmine.md3",
+			"models/multiplayer/landmine/landmine.md3",
+			"models/multiplayer/landmine/landmine.md3",
+			0, 0 },
+
+		"icons/iconw_landmine",    // icon
+		"icons/ammo9",           // ammo icon
+		"Landmine",              // pickup
+		1,
+		IT_WEAPON,
+		WP_LANDMINE,
+		WP_LANDMINE,
+		WP_LANDMINE,
+		WP_LANDMINE,
+		WP_LANDMINE,
+		"",                      // precache
+		"",                      // sounds
+		{0,0,0,0}
+	},
+
+	{
 		"weapon_airstrike",
 		"sound/misc/w_pkup.wav",
 		{ "", "", "", 0, 0 },
@@ -3621,6 +3674,26 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_DYNAMITE,
 		WP_DYNAMITE,
 		WP_DYNAMITE,
+		"",                      // precache
+		"",                      // sounds
+		{1,1,1,1}
+	},
+
+	{
+		"ammo_landmine",
+		"sound/misc/am_pkup.wav",
+		{ "models/multiplayer/landmine/landmine.md3",
+		  0, 0, 0,    0 },
+		"icons/icona_landmine",  // icon
+		NULL,                   // ammo icon
+		"Landmine",              // pickup
+		1,
+		IT_AMMO,
+		WP_NONE,
+		WP_LANDMINE,
+		WP_LANDMINE,
+		WP_LANDMINE,
+		WP_LANDMINE,
 		"",                      // precache
 		"",                      // sounds
 		{1,1,1,1}
@@ -4665,6 +4738,7 @@ qboolean isClipOnly( int weap ) {
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
+	case WP_LANDMINE:
 	case WP_TESLA:
 	case WP_FLAMETHROWER:
 		return qtrue;

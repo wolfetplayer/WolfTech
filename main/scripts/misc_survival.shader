@@ -154,3 +154,14 @@ textures/sfx/wilsflame1
 		rgbGen wave sin .6 .2 0 .6
 	}
 }
+
+models/multiplayer/mine_marker/allied_marker
+{
+	cull disable
+	nomipmaps
+	nopicmip
+	{
+		map models/multiplayer/mine_marker/allied_marker.tga
+		rgbGen lightingdiffuse
+	}
+}

@@ -551,11 +551,38 @@ void CG_PyroSmokeTrail( centity_t *ent, const weaponInfo_t *wi ) {
 	float rnd;
 	static float grounddir = 99;
 
+	es = &ent->currentState;
+
+	// landmines only trail smoke for a moment after being triggered, and play a one-shot warning cue
+	if ( es->weapon == WP_LANDMINE ) {
+		if ( es->effect1Time != 2 ) {
+			ent->miscTime = 0;
+			return;
+		}
+
+		if ( !ent->miscTime ) {
+			static sfxHandle_t landmineTriggeredSound = 0;
+
+			ent->trailTime = cg.time;
+			ent->miscTime  = cg.time;
+
+			if ( !landmineTriggeredSound ) {
+				landmineTriggeredSound = trap_S_RegisterSound( "sound/weapons/landmine/mine_on.wav" );
+			}
+			if ( landmineTriggeredSound ) {
+				trap_S_StartSound( NULL, es->number, CHAN_WEAPON, landmineTriggeredSound );
+			}
+		}
+
+		if ( cg.time - ent->miscTime > 1000 ) {
+			return;
+		}
+	}
+
 	if ( grounddir == 99 ) { // pick a wind direction -- cheap trick because it can be different
 		grounddir = crandom(); // on different clients, but it's all smoke and mirrors anyway
 	}
 	step = 30;
-	es = &ent->currentState;
 	startTime = ent->trailTime;
 	t = step * ( ( startTime + step ) / step );
 
@@ -595,7 +622,16 @@ void CG_PyroSmokeTrail( centity_t *ent, const weaponInfo_t *wi ) {
 		VectorNormalize( dir );
 		VectorScale( dir,45,dir ); // was 75
 
-		if ( !ent->currentState.otherEntityNum2 ) { // axis team, generate red smoke
+		if ( es->weapon == WP_LANDMINE ) { // triggered mine warning: distinct blue smoke
+			CG_SmokePuff( origin, dir,
+							   25 + rnd * 110, // width
+							   rnd * 0.3f, rnd * 0.3f, 1, 0.6f,
+							   4800 + ( rand() % 2800 ), // duration was 2800+
+							   t,
+							   0,
+							   0,
+							   cgs.media.smokePuffShader );
+		} else if ( !ent->currentState.otherEntityNum2 ) { // axis team, generate red smoke
 			CG_SmokePuff( origin, dir,
 							   25 + rnd * 110, // width
 							   rnd * 0.5 + 0.5, rnd * 0.5 + 0.5, 1, 0.5,
@@ -5611,7 +5647,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, in
 				}
 			}
 		}
-		else if ( wc & ( WEAPON_CLASS_GRENADE | WEAPON_CLASS_RIFLENADE ) ) {
+		else if ( wc & ( WEAPON_CLASS_GRENADE | WEAPON_CLASS_RIFLENADE | WEAPON_CLASS_LANDMINE ) ) {
 			shader = cgs.media.rocketExplosionShader;
 			sfx = cgs.media.sfx_rockexp;
 			mark = cgs.media.burnMarkShader;

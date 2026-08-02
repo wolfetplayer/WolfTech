@@ -3569,7 +3569,7 @@ static void PM_Weapon( void ) {
 	}
 
 	// player is leaning - no fire
-	if ( pm->ps->leanf != 0 && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE ) {
+	if ( pm->ps->leanf != 0 && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_LANDMINE ) {
 		return;
 	}
 
@@ -3591,6 +3591,12 @@ static void PM_Weapon( void ) {
 	// AI characters (e.g. scripted enemies) still throw it on their own ammo/script-governed cadence.
 	if ( pm->ps->weapon == WP_DYNAMITE && !pm->ps->aiChar && pm->ps->grenadeTimeLeft <= 0 &&
 		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->engineerChargeTime ) {
+		return;
+	}
+
+	// landmine only needs 1/3 of the charge bar banked, not the full bar dynamite requires (predicted-side mirror of g_weapon.c FireWeapon).
+	if ( pm->ps->weapon == WP_LANDMINE && !pm->ps->aiChar &&
+		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->engineerChargeTime / 3 ) {
 		return;
 	}
 
@@ -3619,6 +3625,18 @@ static void PM_Weapon( void ) {
 
 					PM_StartWeaponAnim( WEAP_ATTACK1 );
 				}
+			}
+
+			pm->ps->weaponDelay = wt->fireDelayTime;
+		}
+	}
+	else if ( wc & WEAPON_CLASS_LANDMINE ) {
+		// unlike grenades/dynamite, mines are dropped, not cooked: no grenadeTimeLeft fuse to hold.
+		if ( !delayedFire ) {
+			if ( pm->ps->aiChar ) {
+				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
+			} else {
+				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
 			}
 
 			pm->ps->weaponDelay = wt->fireDelayTime;
@@ -3683,6 +3701,7 @@ static void PM_Weapon( void ) {
 				// Ridah, only play if using a triggered weapon
 			case WP_MONSTER_ATTACK1:
 			case WP_DYNAMITE:
+			case WP_LANDMINE:
 			case WP_GRENADE_LAUNCHER:
 			case WP_GRENADE_PINEAPPLE:
 				playswitchsound = qfalse;

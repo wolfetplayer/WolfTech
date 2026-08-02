@@ -1,0 +1,25 @@
+// Paths match ETLegacy's real landmine.weap (models/multiplayer/landmine|mine_marker/*); marker model itself is registered in cg_ents.c, not via modModel here.
+weaponDef
+{
+	client {
+		weaponConfig		"models/multiplayer/landmine/weapon.cfg"
+		handsModel			"models/multiplayer/landmine/v_landmine_hand.md3"
+
+		missileModel		"models/multiplayer/landmine/landmine.md3"
+		missileTrailFunc	"PyroSmokeTrail"	// gated to only trail while triggered (effect1Time == 2) -- see CG_PyroSmokeTrail's WP_LANDMINE branch
+
+		weaponIcon			"icons/iconw_landmine"
+		weaponSelectedIcon	"icons/iconw_landmine_1_select"
+		ammoIcon			"icons/icona_landmine"
+
+		// NOTE: bounceSound doesn't apply to thrown missiles (dropped items only); landing thud is EV_GRENADE_BOUNCE from G_TryArmLandmine instead.
+
+		firstPerson {
+			model		"models/multiplayer/landmine/v_landmine.md3"
+		}
+
+		thirdPerson {
+			model		"models/multiplayer/landmine/landmine.md3"
+		}
+	}
+}

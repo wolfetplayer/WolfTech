@@ -42,6 +42,9 @@ loadout survival_default_engineer
 
 		giveweapon weapon_dynamite
 		setammo weapon_dynamite full
+
+		giveweapon weapon_landmine
+		setammo weapon_landmine full
 }
 
 loadout survival_default_lt
@@ -95,6 +98,9 @@ loadout survival_hardcore_engineer
 
 		giveweapon weapon_dynamite
 		setammo weapon_dynamite full
+
+		giveweapon weapon_landmine
+		setammo weapon_landmine full
 }
 
 loadout survival_hardcore_lt

@@ -2070,6 +2070,42 @@ void FireWeapon( gentity_t *ent ) {
 			weapon_grenadelauncher_fire(ent, ent->s.weapon);
 		}
 	}
+	else if (wc & WEAPON_CLASS_LANDMINE)
+	{
+		// same charge bar as dynamite but only needs/costs 1/3, deducted from the currently banked charge; AI ignore the gate.
+		if (!ent->aiCharacter)
+		{
+			int chargeTime = g_engineerChargeTime.integer;
+			int cost = chargeTime / 3;
+			int banked = level.time - ent->client->ps.classWeaponTime;
+
+			if (banked < cost)
+			{
+				return;
+			}
+
+			if (banked > chargeTime)
+			{
+				banked = chargeTime;
+			}
+
+			ent->client->ps.classWeaponTime = level.time - (banked - cost);
+		}
+		else
+		{
+			ent->client->ps.classWeaponTime = level.time;
+		}
+
+		// reuses dynamite's short-toss arc: these helpers only special-case WP_DYNAMITE, everything else falls through the same way.
+		if (g_gametype.integer <= GT_COOP)
+		{
+			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
+		}
+		else
+		{
+			weapon_grenadelauncher_fire(ent, ent->s.weapon);
+		}
+	}
 	else if (wc & WEAPON_CLASS_GRENADE)
 	{
 		// JPW NERVE -- airstrike marker is a Lieutenant cooldown ability, not an ammo-limited throw like its siblings here.
