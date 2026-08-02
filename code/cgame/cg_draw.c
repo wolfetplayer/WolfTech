@@ -2287,7 +2287,7 @@ static void CG_DrawWeapReticle( void ) {
 
 	weap = cg.weaponSelect;
 
-	if ( weap == WP_SNIPERRIFLE ) {
+	if ( weap == WP_SNIPERRIFLE || weap == WP_M1941SCOPE ) {
 		// sides
 		if ( cg_fixedAspect.integer ) {
 			if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
@@ -2633,6 +2633,7 @@ static void CG_DrawCrosshair( void ) {
 	case WP_SNIPERRIFLE:
 	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
+	case WP_M1941SCOPE:
 		if ( !( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) ) {
 			CG_DrawWeapReticle();
 			return;
@@ -2650,7 +2651,16 @@ static void CG_DrawCrosshair( void ) {
 
 	if ( cg.weaponSelect == WP_MAUSER ) {
 		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_SNIPERRIFLE ) ) {
-		if ( !cg_snipersCrosshair.integer ) 
+		if ( !cg_snipersCrosshair.integer )
+	    {
+		return;
+	    }
+		}
+	}
+
+	if ( cg.weaponSelect == WP_M1941 ) {
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1941SCOPE ) ) {
+		if ( !cg_snipersCrosshair.integer )
 	    {
 		return;
 	    }
@@ -3327,6 +3337,7 @@ static void CG_DrawCrosshair3D( void ) {
 	case WP_SNIPERRIFLE:
 	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
+	case WP_M1941SCOPE:
 		if ( !( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) ) {
 			CG_DrawWeapReticle();
 			return;
@@ -3345,7 +3356,16 @@ static void CG_DrawCrosshair3D( void ) {
 	// mauser only gets crosshair if you don't have the scope (I don't like this, but it's a test)
 	if ( cg.weaponSelect == WP_MAUSER ) {
 		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_SNIPERRIFLE ) ) {
-		if ( !cg_snipersCrosshair.integer ) 
+		if ( !cg_snipersCrosshair.integer )
+	    {
+		return;
+	    }
+		}
+	}
+
+	if ( cg.weaponSelect == WP_M1941 ) {
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1941SCOPE ) ) {
+		if ( !cg_snipersCrosshair.integer )
 	    {
 		return;
 	    }

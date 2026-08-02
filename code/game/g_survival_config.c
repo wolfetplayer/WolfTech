@@ -145,6 +145,8 @@ static const survNamedInt_t survWeaponNames[] = {
 	{ "snooperscope",      WP_SNOOPERSCOPE },
 	{ "m1garand",          WP_M1GARAND },
 	{ "g43",               WP_G43 },
+	{ "m1941",             WP_M1941 },
+	{ "m1941scope",        WP_M1941SCOPE },
 	{ "fg42",              WP_FG42 },
 	{ "mp44",              WP_MP44 },
 	{ "bar",               WP_BAR },

@@ -1748,6 +1748,12 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		if ( weapon == WP_SNIPERRIFLE ) {
 			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_MAUSER );
 		}
+		if ( weapon == WP_M1941 ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_M1941SCOPE );
+		}
+		if ( weapon == WP_M1941SCOPE ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_M1941 );
+		}
 //----(SA)	end
 
 		// monsters have full ammo for their attacks
@@ -1865,6 +1871,12 @@ qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params ) {
         }
 		if ( weapon == WP_SNIPERRIFLE ) {
 			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_MAUSER );
+		}
+		if ( weapon == WP_M1941 ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_M1941SCOPE );
+		}
+		if ( weapon == WP_M1941SCOPE ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_M1941 );
 		}
 
 		// giveweaponfull gives you max ammo and fills your clip for all weapons

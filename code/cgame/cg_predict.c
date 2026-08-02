@@ -423,6 +423,10 @@ static void CG_TouchItem( centity_t *cent ) {
 			COM_BitSet( cg.predictedPlayerState.weapons, WP_M1GARAND );
 		} else if ( weapon == WP_M1GARAND ) {
 			COM_BitSet( cg.predictedPlayerState.weapons, WP_M7 );
+		} else if ( weapon == WP_M1941SCOPE ) {
+			COM_BitSet( cg.predictedPlayerState.weapons, WP_M1941 );
+		} else if ( weapon == WP_M1941 ) {
+			COM_BitSet( cg.predictedPlayerState.weapons, WP_M1941SCOPE );
 		}
 //----(SA)	end
 

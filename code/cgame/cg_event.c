@@ -2233,6 +2233,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		case WP_FG42SCOPE:
 			newweap = WP_FG42;
 			break;
+		case WP_M1941SCOPE:
+			newweap = WP_M1941;
+			break;
 		default:
 			break;
 		}

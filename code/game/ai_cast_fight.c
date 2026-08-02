@@ -1619,7 +1619,8 @@ qboolean AICast_CanMoveWhileFiringWeapon( int weaponnum ) {
 	case WP_MAUSER:
 	case WP_SNOOPER:
 	case WP_SNIPERRIFLE:
-	case WP_SNOOPERSCOPE:   
+	case WP_SNOOPERSCOPE:
+	case WP_M1941SCOPE:
 	case WP_PANZERFAUST:
 		return qfalse;
 	default:

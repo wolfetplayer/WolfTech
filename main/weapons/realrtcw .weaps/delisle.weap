@@ -1,0 +1,112 @@
+weaponDef
+{
+	client {
+		//standModel		""	
+		pickupModel			"models/weapons/rifles/delisle/delisle_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/rifles/delisle/weapon.cfg"
+		handsModel			"models/weapons/rifles/delisle/v_delisle_hand.md3"
+		
+		//flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/delisle/delisle_fire.wav"
+        flashSoundAI		"sound/weapons/delisle/delisle_fire_empty.wav"		
+		//flashEchoSound	""		
+		lastShotSound		"sound/weapons/delisle/delisle_fire_empty.wav"
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/delisle/delisle_reload.wav"
+		reloadFullSound		"sound/weapons/delisle/delisle_reload_full.wav"
+		reloadSoundFast		"sound/weapons/delisle/delisle_reload_fast.wav"
+		reloadFullSoundFast	"sound/weapons/delisle/delisle_reload_full_fast.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_delisle"
+		weaponSelectedIcon	"icons/iconw_delisle_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      1 -1 -2                              // X Y Z positions
+		weaponPositionAlt   -2 3 1                              // X Y Z positions
+		weaponPositionAlt2   1 2 -2                              // X Y Z positions
+		
+		ejectBrassFunc		"PistolEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/rifles/delisle/v_delisle.md3"
+			//flashModel		""
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/rifles/delisle/v_delisle_barrel.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/rifles/delisle/v_delisle_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/rifles/delisle/v_delisle_barrel4.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/rifles/delisle/delisle_3rd.md3"
+			//flashmodel		""
+		}
+	}
+			ammo {
+			maxammoPerSkill         150 150 100 100 100 100
+			maxammoUpgradedPerSkill 300 300 300 300 300 300
+			maxclipPerSkill         7   7   7   7   7   7
+            maxclipUpgradedPerSkill 21  21  21  21  21  21			
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              2100            
+			reloadTimeFull          3350             
+			fireDelayTime           0              
+			nextShotTime            1200
+            nextShotTimeUpgraded    100            
+			nextShotTime2           1200
+            nextShotTime2Upgraded   100            
+			maxHeat                 0                
+			coolRate                0                
+			playerDamage            30
+            playerDamageUpgraded    60			
+			aiDamage                20               
+			playerSplashRadius      0                
+			aiSplashRadius          0                
+			spread                  250
+            spreadUpgraded          200			
+			aimSpreadScaleAdd       50              
+			spreadScale             0.5              
+			weapRecoilDuration      60               
+			weapRecoilPitch         1.0 1.0          
+			weapRecoilYaw           0.1 0.1         
+			soundRange              32               
+			moveSpeed               0.90             
+			twoHand                 1                
+			upAngle                 0              
+			falloffDistance         1000.0 2000.0
+			brassDelayEmpty         700
+			brassDelay              600
+		}
+}

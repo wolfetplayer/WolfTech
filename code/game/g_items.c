@@ -1499,6 +1499,7 @@ weapon_t GetComplexWeapon( weapon_t weapon ) {
 	case WP_COLT:
 	case WP_MAUSER:
 	case WP_M1GARAND:
+	case WP_M1941:
 		return GetWeaponTableData( weapon )->weapAlts;
 	default:
 		return weapon;
@@ -1512,6 +1513,7 @@ weapon_t GetSimpleWeapon( weapon_t weapon ) {
 	case WP_FG42SCOPE:
 	case WP_SNIPERRIFLE:
 	case WP_M7:
+	case WP_M1941SCOPE:
 		return GetWeaponTableData( weapon )->weapAlts;
 	default:
 		return weapon;
@@ -1525,10 +1527,12 @@ qboolean IsWeaponComplex( weapon_t weapon ) {
 	case WP_SNOOPER:
 	case WP_FG42:
 	case WP_M1GARAND:
+	case WP_M1941:
 
 	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
 	case WP_M7:
+	case WP_M1941SCOPE:
 
 	// semi complex
 	case WP_SNIPERRIFLE:

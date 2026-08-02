@@ -3074,6 +3074,19 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		}
 	}
 
+	// add the scope model to the M1941 if you've got it
+	if ( isPlayer && !cg.renderingThirdPerson ) {      // (SA) for now just do it on the first person weapons
+		if ( weaponNum == WP_M1941 ) {
+			if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1941SCOPE ) ) {
+				barrel.hModel = weapon->modModel[0];
+				if ( barrel.hModel ) {
+					CG_PositionEntityOnTag(&barrel, parent, "tag_scope", 0, NULL);
+					CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups, ps, cent );
+				}
+			}
+		}
+	}
+
 		if ( isPlayer && !cg.renderingThirdPerson ) {        // (SA) for now just do it on the first person weapons
 		if ( weaponNum == WP_M1GARAND || weaponNum == WP_M7 ) {
 			if ( (  cg.snap->ps.ammo[BG_FindAmmoForWeapon( WP_M7 )] || cg.snap->ps.ammoclip[BG_FindAmmoForWeapon( WP_M7 )]  ) ) {
@@ -3968,6 +3981,8 @@ void CG_SetSniperZoom( int lastweap, int newweap ) {
 //			cg.zoomedScope	= 1;	// TODO: add to zoomTable
 //			cg.zoomTime		= cg.time;
 		break;
+	case WP_M1941SCOPE:
+		break;
 	}
 
 	switch ( newweap ) {
@@ -3989,6 +4004,11 @@ void CG_SetSniperZoom( int lastweap, int newweap ) {
 		cg.zoomval = cg_zoomDefaultFG.value;
 		cg.zoomedScope  = 1;        // TODO: add to zoomTable
 		zoomindex = ZOOM_FG42SCOPE;
+		break;
+	case WP_M1941SCOPE:
+		cg.zoomval = cg_zoomDefaultSniper.value;
+		cg.zoomedScope  = 900;      // TODO: add to zoomTable
+		zoomindex = ZOOM_SNIPER;
 		break;
 	}
 
@@ -4071,6 +4091,7 @@ void CG_FinishWeaponChange( int lastweap, int newweap ) {
 		case WP_SNIPERRIFLE:
 		case WP_SNOOPERSCOPE:
 		case WP_FG42SCOPE:
+		case WP_M1941SCOPE:
 			break;
 		default:
 			cg.switchbackWeapon = lastweap;
@@ -4095,6 +4116,7 @@ qboolean CG_WeaponSupportsSimpleZoom( int weap ) {
         case WP_SNIPERRIFLE:
         case WP_SNOOPERSCOPE:
         case WP_FG42SCOPE:
+        case WP_M1941SCOPE:
             return qfalse;
 
         // Disallow: binocs / mounted / explosives / melee etc (adjust to your mod)

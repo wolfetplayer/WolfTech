@@ -721,6 +721,8 @@ void CG_ZoomIn_f( void ) {
 		CG_AdjustZoomVal( -( cg_zoomStepSnooper.value ), ZOOM_SNOOPER );
 	} else if ( cg_entities[cg.snap->ps.clientNum].currentState.weapon == WP_FG42SCOPE )      {
 		CG_AdjustZoomVal( -( cg_zoomStepSnooper.value ), ZOOM_FG42SCOPE );
+	} else if ( cg_entities[cg.snap->ps.clientNum].currentState.weapon == WP_M1941SCOPE )      {
+		CG_AdjustZoomVal( -( cg_zoomStepSniper.value ), ZOOM_SNIPER );
 	} else if ( cg.zoomedBinoc )      {
 		CG_AdjustZoomVal( -( cg_zoomStepBinoc.value ), ZOOM_BINOC );
 	}
@@ -733,6 +735,8 @@ void CG_ZoomOut_f( void ) {
 		CG_AdjustZoomVal( cg_zoomStepSnooper.value, ZOOM_SNOOPER );
 	} else if ( cg_entities[cg.snap->ps.clientNum].currentState.weapon == WP_FG42SCOPE )      {
 		CG_AdjustZoomVal( cg_zoomStepSnooper.value, ZOOM_FG42SCOPE );
+	} else if ( cg_entities[cg.snap->ps.clientNum].currentState.weapon == WP_M1941SCOPE )      {
+		CG_AdjustZoomVal( cg_zoomStepSniper.value, ZOOM_SNIPER );
 	} else if ( cg.zoomedBinoc )      {
 		CG_AdjustZoomVal( cg_zoomStepBinoc.value, ZOOM_BINOC );
 	}
@@ -766,6 +770,8 @@ void CG_Zoom( void ) {
 			cg.zoomval = cg_zoomDefaultSniper.value;
 		} else if ( cg.predictedPlayerState.weapon == WP_FG42SCOPE ) {
 			cg.zoomval = cg_zoomDefaultFG.value;
+		} else if ( cg.predictedPlayerState.weapon == WP_M1941SCOPE ) {
+			cg.zoomval = cg_zoomDefaultSniper.value;
 		} else {
 			cg.zoomval = 0;
 		}
@@ -1596,6 +1602,9 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 				break;
 			case WP_SNIPERRIFLE:
 				CG_FinishWeaponChange( cg.weaponSelect, WP_MAUSER );
+				break;
+			case WP_M1941SCOPE:
+				CG_FinishWeaponChange( cg.weaponSelect, WP_M1941 );
 				break;
 			}
 		}

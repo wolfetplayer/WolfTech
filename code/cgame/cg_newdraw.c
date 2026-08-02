@@ -1607,7 +1607,7 @@ qboolean CG_OwnerDrawVisible( int flags ) {
 	}
 
 	if ( flags & CG_SHOW_NOT_V_SNIPER ) {     // if looking through sniper scope
-		if ( cg.weaponSelect == WP_SNIPERRIFLE ) {
+		if ( cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_M1941SCOPE ) {
 			return qfalse;
 		}
 	}

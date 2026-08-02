@@ -1,0 +1,61 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/auto_rifles/m1941/m1941_3rd.md3"
+
+		weaponConfig		"models/weapons/auto_rifles/m1941/weapon.cfg"
+		handsModel			"models/weapons/auto_rifles/m1941/v_m1941_hand.md3"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/m1941/m1941_fire.wav"
+		flashEchoSound	    "sound/weapons/m1941/m1941_far.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/m1941/m1941_reload.wav"
+		reloadSoundFast		"sound/weapons/m1941/m1941_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/auto_rifle_reload.wav"
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_m1941"
+		weaponSelectedIcon	"icons/iconw_m1941_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		modModel 0			"models/weapons/auto_rifles/m1941/v_m1941_scope.md3"
+
+		firstPerson {
+			model			"models/weapons/auto_rifles/m1941/v_m1941.md3"
+			flashModel		"models/weapons/auto_rifles/m1941/v_m1941_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/auto_rifles/m1941/v_m1941_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/auto_rifles/m1941/v_m1941_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/auto_rifles/m1941/v_m1941_barrel3.md3"
+				}
+				part 5
+				{
+					tag		"tag_barrel6"
+					model	"models/weapons/auto_rifles/m1941/v_m1941_barrel6.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/auto_rifles/m1941/m1941_3rd.md3"
+			flashModel		"models/weapons/auto_rifles/m1941/m1941_3rd_flash.md3"
+		}
+	}
+}

@@ -1,0 +1,116 @@
+weaponDef
+{
+	client {
+		//standModel		""	
+		pickupModel			"models/weapons/auto_rifles/m1941/m1941_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/auto_rifles/m1941/weapon.cfg"
+		handsModel			"models/weapons/auto_rifles/m1941/v_m1941_hand.md3"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/m1941/m1941_fire.wav"		
+		flashEchoSound	    "sound/weapons/m1941/m1941_far.wav"		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/m1941/m1941_reload.wav"
+		reloadFullSound	    "sound/weapons/m1941/m1941_reload_full.wav"
+		reloadSoundFast		"sound/weapons/m1941/m1941_reload_fast.wav"
+		reloadFullSoundFast	"sound/weapons/m1941/m1941_reload_full_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/auto_rifle_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""		
+        bounceSound         "sound/misc/weapon_bounce.wav"			
+		
+		weaponIcon			"icons/iconw_m1941"
+		weaponSelectedIcon	"icons/iconw_m1941_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      0 -2 -3                              // X Y Z positions
+		weaponPositionAlt   1 2 0                              // X Y Z positions
+		weaponPositionAlt2  0 5 -3                              // X Y Z positions
+		
+		ejectBrassFunc		"MachineGunEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+	    modModel 0			"models/weapons/auto_rifles/m1941/v_m1941_scope.md3"
+		
+		firstPerson {
+			model			"models/weapons/auto_rifles/m1941/v_m1941.md3"
+			flashModel		"models/weapons/auto_rifles/m1941/v_m1941_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/auto_rifles/m1941/v_m1941_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/auto_rifles/m1941/v_m1941_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/auto_rifles/m1941/v_m1941_barrel3.md3"
+				}
+				
+				part 5
+				{
+					tag		"tag_barrel6"
+					model	"models/weapons/auto_rifles/m1941/v_m1941_barrel6.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/auto_rifles/m1941/m1941_3rd.md3"
+			flashmodel		"models/weapons/auto_rifles/m1941/m1941_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill         200 200 150 150 120 100
+			maxammoUpgradedPerSkill 200 200 200 200 200 200
+			maxclipPerSkill         10  10  10  10  10  10
+            maxclipUpgradedPerSkill 20  20  20  20  20  20			
+			uses                    1
+            usesUpgraded            1			
+			reloadTime              1600			
+			reloadTimeFull          3750                
+			fireDelayTime           0                
+			nextShotTime            300
+            nextShotTimeUpgraded    100			
+			nextShotTime2           300
+            nextShotTime2Upgraded   100			
+			maxHeat                 0                  
+			coolRate                0                   
+			playerDamage            20
+            playerDamageUpgraded    60			
+			aiDamage                10                 
+			playerSplashRadius      0                  
+			aiSplashRadius          0                  
+			spread                  300
+            spreadUpgraded          250			
+			aimSpreadScaleAdd       40                  
+			spreadScale             0.4                 
+			weapRecoilDuration      40                  
+			weapRecoilPitch         0.2 0.2            
+			weapRecoilYaw           0.1 0.1             
+			soundRange              2000                
+			moveSpeed               0.90               
+			twoHand                 1                   
+			upAngle                 0                  
+			falloffDistance         2000.0 4000.0      
+		}
+}

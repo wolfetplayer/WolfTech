@@ -634,6 +634,7 @@ typedef enum {
 	WP_SNOOPERSCOPE,
 	WP_FG42SCOPE,
 	WP_M7,
+	WP_M1941SCOPE,
 
 	// more weapons
 	WP_STEN,                
@@ -650,6 +651,7 @@ typedef enum {
 	WP_TT33,
 	WP_DUAL_TT33,
 	WP_AUTO5,
+	WP_M1941,
 
 	WP_DYNAMITE,
 	WP_AIRSTRIKE,
@@ -753,7 +755,7 @@ extern ammotable_t ammoTable[WP_NUM_WEAPONS];
 #define WP_BEGINAMERICAN    WP_COLT
 #define WP_LASTAMERICAN     WP_GRENADE_PINEAPPLE
 #define WP_BEGINSECONDARY   WP_SNIPERRIFLE
-#define WP_LASTSECONDARY    WP_M7
+#define WP_LASTSECONDARY    WP_M1941SCOPE
 
 #define WEAPS_ONE_HANDED    ( ( 1LL << WP_KNIFE ) | ( 1LL << WP_LUGER ) | ( 1LL << WP_COLT ) | ( 1LL << WP_SILENCER ) | ( 1LL << WP_REVOLVER ) | ( 1LL << WP_TT33 ) | ( 1LL << WP_GRENADE_LAUNCHER ) | ( 1LL << WP_GRENADE_PINEAPPLE ) )
 //----(SA)	end
@@ -1391,7 +1393,10 @@ typedef enum {
 	MOD_BAT,
 
 	MOD_MG42M,
-	MOD_BROWNING
+	MOD_BROWNING,
+
+	MOD_M1941,
+	MOD_M1941SCOPE
 
 } meansOfDeath_t;
 
