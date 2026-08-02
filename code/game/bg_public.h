@@ -534,7 +534,7 @@ typedef enum {
 	HI_BOOK3,   //----(SA)	added
 	HI_M97,     // not a real holdable pickup - reuses this networked slot for the M97 pump-reload sub-state (m97state_t)
 	HI_AUTO5,   // not a real holdable pickup - reuses this networked slot for the Auto-5 pump-reload sub-state (auto5state_t)
-	HI_13,
+	HI_ADRENALINE,  // PC_SOLDIER-only special ability, ported from RealRTCW's HI_BG_SYRINGE; permanent (never consumed), gated by classWeaponTime/g_soldierChargeTime
 	HI_14,
 //	HI_15,	// ?
 

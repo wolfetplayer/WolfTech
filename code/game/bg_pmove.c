@@ -3217,8 +3217,8 @@ static void PM_Weapon( void ) {
 
 				if ( item && ( pm->ps->holdable[pm->cmd.holdable] >= item->quantity ) ) { // ->quantity being how much 'ammo' is taken per use
 					PM_AddEvent( EV_USE_ITEM0 + pm->cmd.holdable );
-					// don't take books away when used
-					if ( pm->cmd.holdable < HI_BOOK1 || pm->cmd.holdable > HI_BOOK3 ) {
+					// don't take books (or the permanent soldier adrenaline ability) away when used
+					if ( ( pm->cmd.holdable < HI_BOOK1 || pm->cmd.holdable > HI_BOOK3 ) && pm->cmd.holdable != HI_ADRENALINE ) {
 						pm->ps->holdable[ pm->cmd.holdable ] -= item->quantity;
 					}
 

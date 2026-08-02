@@ -3767,6 +3767,35 @@ model="models/powerups/holdable/wine.md3"
 		{0,0,0,0}
 	},
 
+/*QUAKED holdable_adrenaline (.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+
+PC_SOLDIER-only special ability (see UseHoldableItem/HI_ADRENALINE in g_items.c). Not placed in maps -
+granted permanently via the soldier loadout's "giveinventory holdable_adrenaline" and never consumed
+on use (see the HI_ADRENALINE exemption in bg_pmove.c's Pmove()). Reuses the stamina item's assets.
+*/
+	{
+		"holdable_adrenaline",
+		"sound/pickup/holdable/get_stamina.wav",
+		{
+			"models/powerups/holdable/stamina.md3",
+			0, 0, 0
+			,   0
+		},
+		"icons/stamina",             // icon
+		NULL,                           // ammo icon
+		"Adrenaline Shot",           // pickup
+		1,
+		IT_HOLDABLE,
+		WP_NONE,
+		HI_ADRENALINE,
+		0,
+		0,
+		0,
+		"",                              // precache
+		"sound/pickup/holdable/use_stamina.wav", // sounds
+		{0,0,0,0}
+	},
+
 	{
 		"holdable_book1",
 		"sound/pickup/holdable/get_book1.wav",
