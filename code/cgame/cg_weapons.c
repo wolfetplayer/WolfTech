@@ -3983,6 +3983,8 @@ void CG_SetSniperZoom( int lastweap, int newweap ) {
 		break;
 	case WP_M1941SCOPE:
 		break;
+	case WP_DELISLESCOPE:
+		break;
 	}
 
 	switch ( newweap ) {
@@ -4006,6 +4008,11 @@ void CG_SetSniperZoom( int lastweap, int newweap ) {
 		zoomindex = ZOOM_FG42SCOPE;
 		break;
 	case WP_M1941SCOPE:
+		cg.zoomval = cg_zoomDefaultSniper.value;
+		cg.zoomedScope  = 900;      // TODO: add to zoomTable
+		zoomindex = ZOOM_SNIPER;
+		break;
+	case WP_DELISLESCOPE:
 		cg.zoomval = cg_zoomDefaultSniper.value;
 		cg.zoomedScope  = 900;      // TODO: add to zoomTable
 		zoomindex = ZOOM_SNIPER;
@@ -4092,6 +4099,7 @@ void CG_FinishWeaponChange( int lastweap, int newweap ) {
 		case WP_SNOOPERSCOPE:
 		case WP_FG42SCOPE:
 		case WP_M1941SCOPE:
+		case WP_DELISLESCOPE:
 			break;
 		default:
 			cg.switchbackWeapon = lastweap;
@@ -4117,6 +4125,7 @@ qboolean CG_WeaponSupportsSimpleZoom( int weap ) {
         case WP_SNOOPERSCOPE:
         case WP_FG42SCOPE:
         case WP_M1941SCOPE:
+        case WP_DELISLESCOPE:
             return qfalse;
 
         // Disallow: binocs / mounted / explosives / melee etc (adjust to your mod)

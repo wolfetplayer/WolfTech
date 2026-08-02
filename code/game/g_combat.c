@@ -349,7 +349,9 @@ char    *modNames[] = {
 
 	"MOD_M1941",
 	"MOD_M1941SCOPE",
-	"MOD_HDM"
+	"MOD_HDM",
+	"MOD_DELISLE",
+	"MOD_DELISLESCOPE"
 };
 
 /*
@@ -637,7 +639,8 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 		// ai's are always allowed headshots from these weapons
 		if ( mod == MOD_SNIPERRIFLE ||
 			 mod == MOD_SNOOPERSCOPE ||
-			 mod == MOD_M1941SCOPE ) {
+			 mod == MOD_M1941SCOPE ||
+			 mod == MOD_DELISLESCOPE ) {
 			return qtrue;
 		}
 
@@ -675,6 +678,8 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_M1941:
 	case MOD_M1941SCOPE:
 	case MOD_HDM:
+	case MOD_DELISLE:
+	case MOD_DELISLESCOPE:
 		return qtrue;
 	}
 

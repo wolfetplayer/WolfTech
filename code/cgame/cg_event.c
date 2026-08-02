@@ -305,6 +305,11 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s scoped M1941";
 				break;
+			case MOD_DELISLE:
+			case MOD_DELISLESCOPE:
+				message = "was killed by";
+				message2 = "'s De Lisle carbine";
+				break;
 			// JPW NERVE - per atvi req
 			case MOD_DYNAMITE:
 			case MOD_DYNAMITE_SPLASH:
@@ -2247,6 +2252,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			break;
 		case WP_M1941SCOPE:
 			newweap = WP_M1941;
+			break;
+		case WP_DELISLESCOPE:
+			newweap = WP_DELISLE;
 			break;
 		default:
 			break;

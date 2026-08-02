@@ -2373,6 +2373,7 @@ static void PM_FinishWeaponChange( void ) {
 	case WP_SNIPERRIFLE:
 	case WP_FG42SCOPE:
 	case WP_M1941SCOPE:
+	case WP_DELISLESCOPE:
 		pm->ps->aimSpreadScale = 255;               // initially at lowest accuracy
 		pm->ps->aimSpreadScaleFloat = 255.0f;       // initially at lowest accuracy
 
@@ -2737,6 +2738,7 @@ void PM_CheckForReload( int weapon ) {
 		case WP_SNIPERRIFLE:
 		case WP_FG42SCOPE:
 		case WP_M1941SCOPE:
+		case WP_DELISLESCOPE:
 			if ( reloadRequested ) {
 				doReload = qtrue;
 				if ( !( pm->ps->ammo[ammoWeap] ) ) { // no ammo left. when you switch out, don't try to reload
@@ -3691,6 +3693,7 @@ static void PM_Weapon( void ) {
 			case WP_SNIPERRIFLE:
 			case WP_FG42SCOPE:
 			case WP_M1941SCOPE:
+			case WP_DELISLESCOPE:
 				reloadingW = qfalse;
 				break;
 			}
@@ -3957,7 +3960,7 @@ static void PM_QuickGrenade( void ) {
 	}
 
 	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ||
-		pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE || pm->ps->weapon == WP_SNOOPERSCOPE || pm->ps->weapon == WP_M1941SCOPE )
+		pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE || pm->ps->weapon == WP_SNOOPERSCOPE || pm->ps->weapon == WP_M1941SCOPE || pm->ps->weapon == WP_DELISLESCOPE )
 	{
 		return;
 	}

@@ -1,0 +1,53 @@
+weaponDef
+{
+	client {
+		pickupModel			"models/weapons/rifles/delisle/delisle_3rd.md3"
+
+		weaponConfig		"models/weapons/rifles/delisle/weapon.cfg"
+		handsModel			"models/weapons/rifles/delisle/v_delisle_hand.md3"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/delisle/delisle_fire.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/delisle/delisle_reload.wav"
+		reloadFullSound		"sound/weapons/delisle/delisle_reload_full.wav"
+		reloadSoundFast		"sound/weapons/delisle/delisle_reload_fast.wav"
+		reloadFullSoundFast	"sound/weapons/delisle/delisle_reload_full_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/rifle_reload.wav"
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_delisle"
+		weaponSelectedIcon	"icons/iconw_delisle_select"
+
+		ejectBrassFunc		"RifleEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/rifles/delisle/v_delisle.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/rifles/delisle/v_delisle_barrel.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/rifles/delisle/v_delisle_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/rifles/delisle/v_delisle_barrel4.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/rifles/delisle/delisle_3rd.md3"
+		}
+	}
+}

@@ -60,7 +60,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_KNIFE,              0,                      0           },  //	1
 	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_TT33,     WP_DUAL_TT33, WP_REVOLVER, WP_HDM },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
-	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN,    WP_M1941 },  //	4
+	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN,    WP_M1941,    WP_DELISLE },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_AIRSTRIKE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
@@ -797,6 +797,69 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, -1.0f },
 		.weapFile           = "hdm.weap",
+    },
+    [WP_DELISLE] = {
+		.weaponindex        = WP_DELISLE,
+		.weapAlts           = WP_DELISLESCOPE,
+		.weaponClass        = WEAPON_CLASS_RIFLE_BOLTACTION | WEAPON_CLASS_SCOPABLE,
+        .maxammo            = 150,
+        .uses               = 1,
+        .maxclip            = 7,
+        .reloadTime         = 2100,
+        .reloadTimeFull     = 3350,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 1200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 30,
+		.weaponSpread       = 250,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 50,
+        .weapRecoilDuration = 60,
+        .weapRecoilPitch    = { 1.0f, 1.0f },
+        .weapRecoilYaw      = { 0.1f, 0.1f },
+		.soundRange         = 32,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
+        .moveSpeed          = 0.95f,
+        .mod                = MOD_DELISLE,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 1.0f, -1.0f, -2.0f },
+		.weapFile           = "delisle.weap",
+    },
+    [WP_DELISLESCOPE] = {
+		.weaponindex        = WP_DELISLESCOPE,
+		.weapAlts           = WP_DELISLE,
+		.weaponClass        = WEAPON_CLASS_SCOPED | WEAPON_CLASS_RIFLE_BOLTACTION,
+        .maxammo            = 150,
+        .uses               = 1,
+        .maxclip            = 7,
+        .reloadTime         = 2100,
+        .reloadTimeFull     = 3350,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 1200,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 30,
+		.weaponSpread       = 50,
+		.spreadScale        = 0.5f,
+		.spreadScaleAdd     = 50,
+        .weapRecoilDuration = 300,
+        .weapRecoilPitch    = { 0.7f, 0.0f },
+        .weapRecoilYaw      = { 0.5f, 0.0f },
+		.soundRange         = 64,
+		.aiRange            = AI_WEAPON_RANGE_LONG,
+        .moveSpeed          = 0.55f,
+        .mod                = MOD_DELISLESCOPE,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_WIDE,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
+		.weapFile           = "delislescope.weap",
     },
     [WP_G43] = {
 		.weaponindex        = WP_G43,
@@ -2641,6 +2704,29 @@ gitem_t bg_itemlist[] =
 	},
 
 	{
+		"weapon_delisle",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/rifles/delisle/delisle_3rd.md3",
+			"models/weapons/rifles/delisle/v_delisle.md3",
+			"models/weapons/rifles/delisle/delisle_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_delisle",   // icon
+		"icons/ammo3",           // ammo icon
+		"De Lisle Carbine",      // pickup
+		30,
+		IT_WEAPON,
+		WP_DELISLE,
+		WP_DELISLE,
+		WP_DELISLE,
+		WP_DELISLE,
+		WP_DELISLE,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
 		"weapon_g43",
 		"sound/misc/w_pkup.wav",
 		{   "models/weapons/auto_rifles/g43/g43_3rd.md3",
@@ -3094,6 +3180,29 @@ gitem_t bg_itemlist[] =
 		WP_M1941,       // shares ammo w/
 		WP_M1941,       // shares ammo w/ (survival)
 		WP_M1941,       // shares clip w/
+		"",                          // precache
+		"",                          // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_delislescope",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/rifles/delisle/delisle_3rd.md3",
+			"models/weapons/rifles/delisle/v_delisle.md3",
+			"models/weapons/rifles/delisle/delisle_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_delislescope",  // icon
+		"icons/ammo3",               // ammo icon
+		"De Lisle Scope",            // pickup
+		50,
+		IT_WEAPON,
+		WP_DELISLESCOPE,  // this weap
+		WP_DELISLESCOPE,
+		WP_DELISLE,       // shares ammo w/
+		WP_DELISLE,       // shares ammo w/ (survival)
+		WP_DELISLE,       // shares clip w/
 		"",                          // precache
 		"",                          // sounds
 		{0,0,0,0}

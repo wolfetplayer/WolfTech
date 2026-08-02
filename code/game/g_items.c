@@ -471,6 +471,18 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	} else if ( weapon == WP_M1GARAND ) {
 		COM_BitSet( other->client->ps.weapons, WP_M7 );
 	}
+	// m1941/scope
+	else if ( weapon == WP_M1941SCOPE ) {
+		COM_BitSet( other->client->ps.weapons, WP_M1941 );
+	} else if ( weapon == WP_M1941 ) {
+		COM_BitSet( other->client->ps.weapons, WP_M1941SCOPE );
+	}
+	// delisle/scope
+	else if ( weapon == WP_DELISLESCOPE ) {
+		COM_BitSet( other->client->ps.weapons, WP_DELISLE );
+	} else if ( weapon == WP_DELISLE ) {
+		COM_BitSet( other->client->ps.weapons, WP_DELISLESCOPE );
+	}
 
 //----(SA)	end
 
@@ -1500,6 +1512,7 @@ weapon_t GetComplexWeapon( weapon_t weapon ) {
 	case WP_MAUSER:
 	case WP_M1GARAND:
 	case WP_M1941:
+	case WP_DELISLE:
 		return GetWeaponTableData( weapon )->weapAlts;
 	default:
 		return weapon;
@@ -1514,6 +1527,7 @@ weapon_t GetSimpleWeapon( weapon_t weapon ) {
 	case WP_SNIPERRIFLE:
 	case WP_M7:
 	case WP_M1941SCOPE:
+	case WP_DELISLESCOPE:
 		return GetWeaponTableData( weapon )->weapAlts;
 	default:
 		return weapon;
@@ -1528,11 +1542,13 @@ qboolean IsWeaponComplex( weapon_t weapon ) {
 	case WP_FG42:
 	case WP_M1GARAND:
 	case WP_M1941:
+	case WP_DELISLE:
 
 	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
 	case WP_M7:
 	case WP_M1941SCOPE:
+	case WP_DELISLESCOPE:
 
 	// semi complex
 	case WP_SNIPERRIFLE:
