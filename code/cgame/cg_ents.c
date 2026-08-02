@@ -1186,6 +1186,7 @@ CG_Missile
 */
 
 extern void CG_RocketTrail( centity_t *ent, const weaponInfo_t *wi );
+extern void CG_PyroSmokeTrail( centity_t *ent, const weaponInfo_t *wi );
 
 static void CG_Missile( centity_t *cent ) {
 	refEntity_t ent;
@@ -1207,8 +1208,10 @@ static void CG_Missile( centity_t *cent ) {
 		 || cent->currentState.eType == ET_FIRE_COLUMN_SMOKE
 		 || cent->currentState.eType == ET_RAMJET ) {
 		CG_RocketTrail( cent, NULL );
-	} else if ( weapon->missileTrailFunc ) {
-		weapon->missileTrailFunc( cent, weapon );
+	} else if ( s1->weapon == WP_ARTY && s1->density ) {
+		CG_PyroSmokeTrail( cent, weapon ); // arty spotter round only (density flag set in g_weapon.c); real barrage bombs share WP_ARTY but fall without a trail
+	} else if ( weapon->missileTrailFunc && !( s1->weapon == WP_AIRSTRIKE && s1->pos.trType == TR_LINEAR ) ) {
+		weapon->missileTrailFunc( cent, weapon ); // airstrike.weap's trail is for the thrown marker; falling bombs share WP_AIRSTRIKE but use TR_LINEAR and must not have one
 	}
 
 	// add dynamic light
@@ -1259,6 +1262,9 @@ static void CG_Missile( centity_t *cent ) {
 		ent.hModel = 0;
 	}
 	// ent.hModel = cgs.gameModels[cent->currentState.modelindex];
+	else if ( weapon->shellModel && s1->pos.trType == TR_LINEAR ) {
+		ent.hModel = weapon->shellModel; // TR_LINEAR falling bombs share WP_AIRSTRIKE with the thrown TR_GRAVITY marker but use the distinct shell model
+	}
 	else {
 		ent.hModel = weapon->missileModel;
 	}

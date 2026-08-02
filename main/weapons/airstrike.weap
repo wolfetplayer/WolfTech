@@ -27,6 +27,7 @@ weaponDef
 		weaponSelectedIcon	"icons/iconw_airstrike_1_select"
 
 		missileModel		"models/weapons/explosives/airstrike/signal.md3"
+		shellModel			"models/mapobjects/etl_plane/bomb.md3"
 		//missileSound		""
 		missileTrailFunc	"PyroSmokeTrail"						// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
 		missileDlight		200

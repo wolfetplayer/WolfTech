@@ -155,9 +155,11 @@ void Weapon_Knife( gentity_t *ent ) {
 void G_ExplodeMissile( gentity_t *ent );
 #define NUMBOMBS 10
 #define BOMBSPREAD 150
+#define BOMB_FALL_HEIGHT 2200      // units a falling bomb/shell visibly drops before impact (higher = faster, since fall time is fixed)
+#define ARTY_BOMB_REVEAL_TIME 1200 // ms an artillery shell is visible+falling before its scripted detonation
 extern void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message );
 
-// bombs spawn hidden (SVF_NOCLIENT) while falling; this think reveals them at the moment they detonate.
+// final-approach think shared by airstrike/arty bombs: makes sure they're visible and hands off to the actual explosion.
 void G_AirStrikeExplode( gentity_t *self ) {
 	self->r.svFlags &= ~SVF_NOCLIENT;
 	self->r.svFlags |= SVF_BROADCAST;
@@ -166,12 +168,31 @@ void G_AirStrikeExplode( gentity_t *self ) {
 	self->nextthink = level.time + 50;
 }
 
+// fires shortly before the scripted detonation: reveals the hidden/stationary bomb and gives it a short visible fall to its impact point (self->s.pos.trBase).
+void G_ArtilleryBombReveal( gentity_t *self ) {
+	self->r.svFlags &= ~SVF_NOCLIENT;
+	self->r.svFlags |= SVF_BROADCAST;
+	self->clipmask = 0; // no mid-air collision while falling; detonation timing is driven by nextthink, not impact
+
+	self->s.pos.trType = TR_LINEAR;
+	self->s.pos.trTime = level.time;
+	self->s.pos.trBase[2] += BOMB_FALL_HEIGHT;
+	self->s.pos.trDelta[0] = 0;
+	self->s.pos.trDelta[1] = 0;
+	self->s.pos.trDelta[2] = -BOMB_FALL_HEIGHT / ( ARTY_BOMB_REVEAL_TIME * 0.001f );
+	SnapVector( self->s.pos.trDelta );
+	VectorCopy( self->s.pos.trBase, self->r.currentOrigin );
+
+	self->think = G_AirStrikeExplode;
+	self->nextthink = level.time + ARTY_BOMB_REVEAL_TIME;
+}
+
 void weapon_callAirStrike( gentity_t *ent ) {
 	int i;
-	vec3_t bombaxis, lookaxis, pos, bomboffset, fallaxis;
+	vec3_t bombaxis, lookaxis, pos, bomboffset, fallaxis, impactPos;
 	gentity_t *bomb, *te;
 	trace_t tr;
-	float traceheight, bottomtraceheight;
+	float traceheight, bottomtraceheight, fallTime;
 	const ammotable_t *wt = GetWeaponTableData( WP_AIRSTRIKE );
 
 	VectorCopy( ent->s.pos.trBase,bomboffset );
@@ -226,8 +247,8 @@ void weapon_callAirStrike( gentity_t *ent ) {
 		bomb->nextthink = level.time + i * 100 + crandom() * 50 + 1000; // 1000 for aircraft flyby, other term for tumble stagger
 		bomb->think = G_AirStrikeExplode;
 		bomb->s.eType       = ET_MISSILE;
-		bomb->r.svFlags     = SVF_USE_CURRENT_ORIGIN | SVF_NOCLIENT;
-		bomb->s.weapon      = WP_GRENADE_PINEAPPLE;
+		bomb->r.svFlags     = SVF_USE_CURRENT_ORIGIN | SVF_BROADCAST;
+		bomb->s.weapon      = WP_AIRSTRIKE; // TR_LINEAR trajectory (set below) picks airstrike.weap's shellModel instead of the marker's missileModel, see CG_Missile
 		bomb->r.ownerNum    = ent->s.number;
 		bomb->parent        = ent->parent;
 		bomb->damage        = wt->weaponDamage;
@@ -236,15 +257,13 @@ void weapon_callAirStrike( gentity_t *ent ) {
 		bomb->splashRadius          = 400;
 		bomb->methodOfDeath         = MOD_AIRSTRIKE;
 		bomb->splashMethodOfDeath   = MOD_AIRSTRIKE;
-		bomb->clipmask = MASK_MISSILESHOT;
-		bomb->s.pos.trType = TR_STATIONARY; // was TR_GRAVITY,  might wanna go back to this and drop from height
-		bomb->s.pos.trTime = level.time;        // move a bit on the very first frame
+		bomb->clipmask = 0; // no mid-air collision while falling; detonation timing is driven by nextthink below, not impact
 		bomboffset[0] = crandom() * 0.5 * BOMBSPREAD;
 		bomboffset[1] = crandom() * 0.5 * BOMBSPREAD;
 		bomboffset[2] = 0;
-		VectorAdd( pos,bomboffset,bomb->s.pos.trBase );
+		VectorAdd( pos,bomboffset,impactPos );
 
-		VectorCopy( bomb->s.pos.trBase,bomboffset ); // make sure bombs fall "on top of" nonuniform scenery
+		VectorCopy( impactPos,bomboffset ); // make sure bombs fall "on top of" nonuniform scenery
 		bomboffset[2] = traceheight;
 
 		VectorCopy( bomboffset, fallaxis );
@@ -252,12 +271,21 @@ void weapon_callAirStrike( gentity_t *ent ) {
 
 		trap_Trace( &tr, bomboffset, NULL, NULL, fallaxis, ent->s.number, MASK_SHOT );
 		if ( tr.fraction != 1.0 ) {
-			VectorCopy( tr.endpos,bomb->s.pos.trBase );
+			VectorCopy( tr.endpos,impactPos );
 		}
 
-		bomb->s.pos.trDelta[0] = 0; // might need to change this
+		// visible fall from BOMB_FALL_HEIGHT above the impact point, timed to land when nextthink detonates it
+		fallTime = ( bomb->nextthink - level.time ) * 0.001f;
+		if ( fallTime < 0.05f ) {
+			fallTime = 0.05f;
+		}
+		bomb->s.pos.trType = TR_LINEAR;
+		bomb->s.pos.trTime = level.time;        // move a bit on the very first frame
+		VectorCopy( impactPos, bomb->s.pos.trBase );
+		bomb->s.pos.trBase[2] += BOMB_FALL_HEIGHT;
+		bomb->s.pos.trDelta[0] = 0;
 		bomb->s.pos.trDelta[1] = 0;
-		bomb->s.pos.trDelta[2] = 0;
+		bomb->s.pos.trDelta[2] = -BOMB_FALL_HEIGHT / fallTime;
 		SnapVector( bomb->s.pos.trDelta );          // save net bandwidth
 		VectorCopy( bomb->s.pos.trBase, bomb->r.currentOrigin );
 
@@ -290,67 +318,17 @@ void artilleryThink( gentity_t *ent ) {
 	ent->r.svFlags = SVF_USE_CURRENT_ORIGIN | SVF_BROADCAST;
 }
 
-// makes spotter-round smoke debris disappear after a bit (just unregisters it)
-void artilleryGoAway( gentity_t *ent ) {
-	ent->freeAfterEvent = qtrue;
-	trap_LinkEntity( ent );
-}
-
-// generates some smoke debris for the artillery spotter round
-void artillerySpotterThink( gentity_t *ent ) {
-	gentity_t *bomb;
-	vec3_t tmpdir;
-	int i;
-	ent->think = G_ExplodeMissile;
-	ent->nextthink = level.time + 1;
-	SnapVector( ent->s.pos.trBase );
-
-	for ( i = 0; i < 7; i++ ) {
-		bomb = G_Spawn();
-		bomb->s.eType       = ET_MISSILE;
-		bomb->r.svFlags     = SVF_USE_CURRENT_ORIGIN;
-		bomb->r.ownerNum    = ent->s.number;
-		bomb->parent        = ent;
-		bomb->nextthink = level.time + 1000 + random() * 300;
-		bomb->classname = "arty smoke debris"; // purely cosmetic, no damage
-		bomb->damage        = 0;
-		bomb->splashDamage  = 0;
-		bomb->splashRadius  = 0;
-		bomb->s.weapon  = WP_SMOKETRAIL;
-		bomb->think = artilleryGoAway;
-		bomb->s.eFlags |= EF_BOUNCE;
-		bomb->clipmask = MASK_MISSILESHOT;
-		bomb->s.pos.trType = TR_GRAVITY;
-		bomb->s.pos.trTime = level.time;        // move a bit on the very first frame
-		bomb->s.otherEntityNum2 = ent->s.otherEntityNum2;
-		VectorCopy( ent->s.pos.trBase,bomb->s.pos.trBase );
-		tmpdir[0] = crandom();
-		tmpdir[1] = crandom();
-		tmpdir[2] = 1;
-		VectorNormalize( tmpdir );
-		tmpdir[2] = 1; // extra up
-		VectorScale( tmpdir,500 + random() * 500,tmpdir );
-		VectorCopy( tmpdir,bomb->s.pos.trDelta );
-		SnapVector( bomb->s.pos.trDelta );          // save net bandwidth
-		VectorCopy( ent->s.pos.trBase,bomb->s.pos.trBase );
-		VectorCopy( ent->s.pos.trBase,bomb->r.currentOrigin );
-	}
-}
-
 /*
 ==================
 Weapon_Artillery
 
-Lieutenant-only: zoom binoculars and fire to call in a barrage on the point you're looking at.
-Spawns a 5-second-delayed "spotter" round (smoke debris only, minor damage as a warning to
-anyone standing on the mark) followed by 9 staggered real bombs, each paired with a falling-
-shell sound entity a beat ahead of its impact.
+Lieutenant-only: zoom binoculars and fire to call in a barrage on the point you're looking at. Spawns a 5-second-delayed "spotter" round (reduced damage, has a smoke trail) then 9 staggered real bombs, all falling/exploding the same way (see G_ArtilleryBombReveal).
 ==================
 */
 void Weapon_Artillery( gentity_t *ent ) {
 	trace_t trace;
 	int i = 0;
-	vec3_t muzzlePoint,end,bomboffset,pos,fallaxis;
+	vec3_t muzzlePoint,end,bomboffset,pos,fallaxis,impactPos;
 	float traceheight, bottomtraceheight;
 	gentity_t *bomb,*bomb2,*te;
 	const ammotable_t *wt = GetWeaponTableData( WP_ARTY );
@@ -400,25 +378,23 @@ void Weapon_Artillery( gentity_t *ent ) {
 	// i == 0 is the "spotter" round, i == 1..9 are the real bombs
 	for ( i = 0; i < NUMBOMBS; i++ ) {
 		bomb = G_Spawn();
-		bomb->think = G_AirStrikeExplode;
+		bomb->think = G_ArtilleryBombReveal; // hidden/stationary until this fires shortly before detonation; bomb->nextthink below is that reveal time, not the actual detonation time
 		bomb->s.eType       = ET_MISSILE;
 		bomb->r.svFlags     = SVF_USE_CURRENT_ORIGIN | SVF_NOCLIENT;
-		bomb->s.weapon      = WP_ARTY; // never registered client-side (see CG_RegisterWeapon skip list), so it stays invisible while falling/sitting - CG_MissileHitWall has a dedicated big-explosion case for it below
+		bomb->s.weapon      = WP_ARTY; // uses arty.weap's missileModel once G_ArtilleryBombReveal makes it visible and falling
 		bomb->r.ownerNum    = ent->s.number;
 		bomb->parent        = ent;
 
 		if ( i == 0 ) {
-			bomb->nextthink = level.time + 5000;
-			bomb->r.svFlags     = SVF_USE_CURRENT_ORIGIN | SVF_BROADCAST;
+			// spotter: same shell/explosion as real bombs, but reduced damage + a smoke trail (density flag, see CG_Missile)
+			bomb->nextthink = level.time + 5000 - ARTY_BOMB_REVEAL_TIME;
 			bomb->classname = "arty spotter round";
 			bomb->damage        = 0;
 			bomb->splashDamage  = 90;
 			bomb->splashRadius  = 50;
-			bomb->s.otherEntityNum2 = 0;
-			bomb->think = artillerySpotterThink;
-			bomb->s.weapon = WP_SMOKETRAIL; // trace/marker round - blue signal smoke instead of the barrage's fireball (see CG_MissileHitWall)
+			bomb->s.density     = 1;
 		} else {
-			bomb->nextthink = level.time + 8950 + 2000 * i + crandom() * 800;
+			bomb->nextthink = level.time + 8950 + 2000 * i + crandom() * 800 - ARTY_BOMB_REVEAL_TIME;
 			bomb->classname = "arty barrage";
 			bomb->damage        = 0;
 			bomb->splashDamage  = wt->weaponDamage;
@@ -437,9 +413,9 @@ void Weapon_Artillery( gentity_t *ent ) {
 			bomboffset[1] = crandom() * 50;
 		}
 		bomboffset[2] = 0;
-		VectorAdd( pos,bomboffset,bomb->s.pos.trBase );
+		VectorAdd( pos,bomboffset,impactPos );
 
-		VectorCopy( bomb->s.pos.trBase,bomboffset ); // make sure bombs fall "on top of" nonuniform scenery
+		VectorCopy( impactPos,bomboffset ); // make sure bombs fall "on top of" nonuniform scenery
 		bomboffset[2] = traceheight;
 
 		VectorCopy( bomboffset, fallaxis );
@@ -447,9 +423,11 @@ void Weapon_Artillery( gentity_t *ent ) {
 
 		trap_Trace( &trace, bomboffset, NULL, NULL, fallaxis, ent->s.number, MASK_SHOT );
 		if ( trace.fraction != 1.0 ) {
-			VectorCopy( trace.endpos,bomb->s.pos.trBase );
+			VectorCopy( trace.endpos,impactPos );
 		}
 
+		// stays put at its impact point, hidden, until G_ArtilleryBombReveal fires
+		VectorCopy( impactPos, bomb->s.pos.trBase );
 		bomb->s.pos.trDelta[0] = 0;
 		bomb->s.pos.trDelta[1] = 0;
 		bomb->s.pos.trDelta[2] = 0;
@@ -464,7 +442,7 @@ void Weapon_Artillery( gentity_t *ent ) {
 		bomb2->r.ownerNum   = ent->s.number;
 		bomb2->parent       = ent;
 		bomb2->damage       = 0;
-		bomb2->nextthink = bomb->nextthink - 600;
+		bomb2->nextthink = bomb->nextthink + ARTY_BOMB_REVEAL_TIME - 600; // bomb->nextthink is the reveal time, not detonation time, so add it back
 		bomb2->classname = "arty falling sound";
 		bomb2->clipmask = MASK_MISSILESHOT;
 		bomb2->s.pos.trType = TR_STATIONARY;

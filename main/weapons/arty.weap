@@ -1,0 +1,8 @@
+weaponDef
+{
+	client {
+		missileModel		"models/multiplayer/mortar/mortar_shell.md3"
+		// no missileTrailFunc: spotter round's trail is called directly in CG_Missile so it doesn't leak onto real bombs
+		// no firstPerson/thirdPerson: WP_ARTY is never carried; adding fp/tp models would require a weapon.cfg we don't have
+	}
+}

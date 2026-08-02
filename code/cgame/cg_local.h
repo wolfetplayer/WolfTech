@@ -716,6 +716,7 @@ typedef struct weaponInfo_s {
 	qhandle_t ammoModel;
 
 	qhandle_t missileModel;
+	qhandle_t shellModel;   // used instead of missileModel for TR_LINEAR falling ordnance (see CG_Missile) when a weapon id is shared with a thrown TR_GRAVITY marker
 	sfxHandle_t missileSound;
 	void ( *missileTrailFunc )( centity_t *, const struct weaponInfo_s *wi );
 	float missileDlight;

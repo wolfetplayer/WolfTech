@@ -1392,7 +1392,7 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qfalse,
 		.hasMuzzle          = qfalse,
 		.underwaterFire     = qfalse,
-		// no weapFile: never carried/rendered, fired purely via binoculars (see CG_RegisterWeapon skip list)
+		.weapFile           = "arty.weap", // fired purely via binoculars, never carried; weapFile only provides the falling-shell missileModel
     },
     [WP_SMOKETRAIL] = {
 		.weaponindex        = WP_SMOKETRAIL,

@@ -1518,6 +1518,9 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 		} else if ( !Q_stricmp( token.string, "missileModel" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected missileModel filename" ); return qfalse; }
 			wi->missileModel = trap_R_RegisterModel( s );
+		} else if ( !Q_stricmp( token.string, "shellModel" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected shellModel filename" ); return qfalse; }
+			wi->shellModel = trap_R_RegisterModel( s );
 		} else if ( !Q_stricmp( token.string, "missileSound" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected missileSound filename" ); return qfalse; }
 			wi->missileSound = trap_S_RegisterSound( s );
@@ -1778,8 +1781,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 // (SA) i don't know about these, but we don't have models for 'em
 	case WP_GRENADE_SMOKE:
 	case WP_MEDIC_HEAL:
-	// JPW NERVE -- WP_ARTY is never carried/rendered; WP_SMOKETRAIL is a cosmetic-only debris tag, not a real weapon.
-	case WP_ARTY:
+	// JPW NERVE -- WP_SMOKETRAIL is a cosmetic-only debris tag, not a real weapon.
 	case WP_SMOKETRAIL:
 		return;
 	default:
