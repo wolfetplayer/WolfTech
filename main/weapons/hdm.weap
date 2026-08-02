@@ -1,0 +1,56 @@
+weaponDef
+{
+	client {
+		pickupModel		        "models/weapons/pistols/hdm/hdm_3rd.md3"
+
+		weaponConfig		"models/weapons/pistols/hdm/weapon.cfg"
+		handsModel			"models/weapons/pistols/hdm/v_hdm_hand.mdc"
+
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/hdm/hdm_fire.wav"
+		//lastShotSound		""
+
+		reloadSound			"sound/weapons/hdm/hdm_reload.wav"
+		reloadSoundFast		"sound/weapons/hdm/hdm_reload_fast.wav"
+		reloadSoundAi	    "sound/weapons/ai/pistol_reload.wav"
+		//switchSound		""
+        bounceSound         "sound/misc/weapon_bounce.wav"
+
+		weaponIcon			"icons/iconw_hdm_1"
+		weaponSelectedIcon	"icons/iconw_hdm_1_select"
+
+		ejectBrassFunc		"PistolEjectBrass"		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/pistols/hdm/v_hdm.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/pistols/hdm/v_hdm_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/pistols/hdm/v_hdm_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/pistols/hdm/v_hdm_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/pistols/hdm/v_hdm_barrel4.md3"
+				}
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/pistols/hdm/hdm_3rd.md3"
+		}
+	}
+}

@@ -45,6 +45,7 @@ static int Survival_GetCompiledInWeaponPrice(int weapon) {
 		case WP_TT33:         return 35;
 		case WP_DUAL_TT33:    return 70;
 		case WP_REVOLVER:     return 80;
+		case WP_HDM:          return 50;
 
 		// SMGs
 		case WP_STEN:         return 90;
@@ -127,7 +128,7 @@ above the target_buy's origin and despawned on pickup/reset.
 
 static const weapon_t rwb_weapon_pool[] = {
 	WP_LUGER, WP_SILENCER, WP_COLT,
-	WP_AKIMBO, WP_TT33, WP_DUAL_TT33, WP_REVOLVER, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34, WP_PPSH,
+	WP_AKIMBO, WP_TT33, WP_DUAL_TT33, WP_REVOLVER, WP_HDM, WP_MP40, WP_THOMPSON, WP_STEN, WP_MP34, WP_PPSH,
 	WP_MAUSER, WP_MOSIN, WP_SNIPERRIFLE, WP_SNOOPERSCOPE, WP_FG42,
 	WP_M1GARAND, WP_G43, WP_M1941, WP_MP44, WP_BAR, WP_M97, WP_AUTO5,
 	WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA,

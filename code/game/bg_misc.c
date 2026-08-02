@@ -58,7 +58,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{0,                     0,                      0           },  //	0 (empty)
 
 	{WP_KNIFE,              0,                      0           },  //	1
-	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_TT33,     WP_DUAL_TT33, WP_REVOLVER },  //	2
+	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_TT33,     WP_DUAL_TT33, WP_REVOLVER, WP_HDM },  //	2
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN,    WP_M1941 },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
@@ -765,6 +765,38 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 0.0f, 0.0f, 0.0f },
 		.weapFile           = "revolver.weap",
+    },
+    [WP_HDM] = {
+		.weaponindex        = WP_HDM,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_PISTOL,
+        .maxammo            = 200,
+        .uses               = 1,
+        .maxclip            = 10,
+        .reloadTime         = 2300,
+        .reloadTimeFull     = 2300,
+        .fireDelayTime      = 0,
+        .nextShotTime       = 300,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 8,
+		.weaponSpread       = 250,
+		.spreadScale        = 0.4f,
+		.spreadScaleAdd     = 35,
+        .weapRecoilDuration = 50,
+        .weapRecoilPitch    = { 0.2f, 0.1f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 64,
+		.aiRange            = AI_WEAPON_RANGE_NORMAL,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_HDM,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qtrue,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qfalse,
+		.gunOffset          = { 0.0f, 0.0f, -1.0f },
+		.weapFile           = "hdm.weap",
     },
     [WP_G43] = {
 		.weaponindex        = WP_G43,
@@ -2580,6 +2612,29 @@ gitem_t bg_itemlist[] =
 		WP_REVOLVER,
 		WP_REVOLVER,
 		WP_REVOLVER,
+		"",                  // precache
+		"",                  // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_hdm",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/pistols/hdm/hdm_3rd.md3",
+			"models/weapons/pistols/hdm/v_hdm.md3",
+			"models/weapons/pistols/hdm/hdm_3rd.md3",
+			0, 0 },
+
+		"icons/iconw_hdm_1",     // icon
+		"icons/ammo2",           // ammo icon
+		"HDM",                   // pickup
+		30,
+		IT_WEAPON,
+		WP_HDM,
+		WP_HDM,
+		WP_HDM,
+		WP_HDM,
+		WP_HDM,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}

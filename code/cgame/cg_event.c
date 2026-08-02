@@ -293,6 +293,18 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s revolver";
 				break;
+			case MOD_HDM:
+				message = "was killed by";
+				message2 = "'s HDM";
+				break;
+			case MOD_M1941:
+				message = "was killed by";
+				message2 = "'s M1941";
+				break;
+			case MOD_M1941SCOPE:
+				message = "was killed by";
+				message2 = "'s scoped M1941";
+				break;
 			// JPW NERVE - per atvi req
 			case MOD_DYNAMITE:
 			case MOD_DYNAMITE_SPLASH:

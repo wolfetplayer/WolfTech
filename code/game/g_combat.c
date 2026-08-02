@@ -348,7 +348,8 @@ char    *modNames[] = {
 	"MOD_BROWNING",
 
 	"MOD_M1941",
-	"MOD_M1941SCOPE"
+	"MOD_M1941SCOPE",
+	"MOD_HDM"
 };
 
 /*
@@ -673,6 +674,7 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_SNIPERRIFLE:
 	case MOD_M1941:
 	case MOD_M1941SCOPE:
+	case MOD_HDM:
 		return qtrue;
 	}
 

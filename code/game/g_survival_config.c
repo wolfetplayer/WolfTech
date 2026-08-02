@@ -134,6 +134,7 @@ static const survNamedInt_t survWeaponNames[] = {
 	{ "tt33",              WP_TT33 },
 	{ "dual_tt33",         WP_DUAL_TT33 },
 	{ "revolver",          WP_REVOLVER },
+	{ "hdm",               WP_HDM },
 	{ "sten",              WP_STEN },
 	{ "mp40",              WP_MP40 },
 	{ "mp34",              WP_MP34 },
