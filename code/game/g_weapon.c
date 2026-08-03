@@ -2106,6 +2106,26 @@ void FireWeapon( gentity_t *ent ) {
 			weapon_grenadelauncher_fire(ent, ent->s.weapon);
 		}
 	}
+	else if (wc & WEAPON_CLASS_MEDCRATE)
+	{
+		// full charge drain like dynamite, not landmine's partial 1/3-banked cost; AI ignore the gate.
+		if (!ent->aiCharacter && level.time - ent->client->ps.classWeaponTime < g_medicChargeTime.integer)
+		{
+			return;
+		}
+
+		ent->client->ps.classWeaponTime = level.time;
+
+		// reuses dynamite's short-toss arc: these helpers only special-case WP_DYNAMITE, everything else falls through the same way.
+		if (g_gametype.integer <= GT_COOP)
+		{
+			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
+		}
+		else
+		{
+			weapon_grenadelauncher_fire(ent, ent->s.weapon);
+		}
+	}
 	else if (wc & WEAPON_CLASS_GRENADE)
 	{
 		// JPW NERVE -- airstrike marker is a Lieutenant cooldown ability, not an ammo-limited throw like its siblings here.

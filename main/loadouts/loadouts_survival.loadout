@@ -23,7 +23,10 @@ loadout survival_default_medic
 		setammo weapon_colt 64
 		setclip weapon_colt full
 		selectweapon weapon_colt
-		
+
+		giveweapon weapon_medcrate
+		setammo weapon_medcrate full
+
 		setarmor 200
 }
 
@@ -81,7 +84,10 @@ loadout survival_hardcore_medic
 		setammo weapon_colt 64
 		setclip weapon_colt full
 		selectweapon weapon_colt
-		
+
+		giveweapon weapon_medcrate
+		setammo weapon_medcrate full
+
         setarmor 200
 }
 

@@ -3569,7 +3569,7 @@ static void PM_Weapon( void ) {
 	}
 
 	// player is leaning - no fire
-	if ( pm->ps->leanf != 0 && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_LANDMINE ) {
+	if ( pm->ps->leanf != 0 && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_LANDMINE && pm->ps->weapon != WP_MEDCRATE ) {
 		return;
 	}
 
@@ -3597,6 +3597,12 @@ static void PM_Weapon( void ) {
 	// landmine only needs 1/3 of the charge bar banked, not the full bar dynamite requires (predicted-side mirror of g_weapon.c FireWeapon).
 	if ( pm->ps->weapon == WP_LANDMINE && !pm->ps->aiChar &&
 		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->engineerChargeTime / 3 ) {
+		return;
+	}
+
+	// medic crate on cooldown: no fire (predicted-side mirror of the server gate in g_weapon.c FireWeapon).
+	if ( pm->ps->weapon == WP_MEDCRATE && !pm->ps->aiChar &&
+		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->medicChargeTime ) {
 		return;
 	}
 
@@ -3630,8 +3636,8 @@ static void PM_Weapon( void ) {
 			pm->ps->weaponDelay = wt->fireDelayTime;
 		}
 	}
-	else if ( wc & WEAPON_CLASS_LANDMINE ) {
-		// unlike grenades/dynamite, mines are dropped, not cooked: no grenadeTimeLeft fuse to hold.
+	else if ( wc & ( WEAPON_CLASS_LANDMINE | WEAPON_CLASS_MEDCRATE ) ) {
+		// unlike grenades/dynamite, mines and med crates are dropped, not cooked: no grenadeTimeLeft fuse to hold.
 		if ( !delayedFire ) {
 			if ( pm->ps->aiChar ) {
 				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
@@ -3702,6 +3708,7 @@ static void PM_Weapon( void ) {
 			case WP_MONSTER_ATTACK1:
 			case WP_DYNAMITE:
 			case WP_LANDMINE:
+			case WP_MEDCRATE:
 			case WP_GRENADE_LAUNCHER:
 			case WP_GRENADE_PINEAPPLE:
 				playswitchsound = qfalse;

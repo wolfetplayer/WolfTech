@@ -658,6 +658,7 @@ typedef enum {
 
 	WP_DYNAMITE,
 	WP_LANDMINE,
+	WP_MEDCRATE,
 	WP_AIRSTRIKE,
 	WP_ARTY,
 	WP_SMOKETRAIL,      // cosmetic-only "weapon" tag for artillery spotter-round smoke debris, never carried/fired directly
@@ -1360,6 +1361,7 @@ typedef enum {
 	MOD_DYNAMITE,
 	MOD_DYNAMITE_SPLASH,
 	MOD_LANDMINE,
+	MOD_MEDCRATE,
 	MOD_AIRSTRIKE, // JPW NERVE
 	MOD_ARTY,
 	MOD_WATER,
@@ -1439,6 +1441,7 @@ typedef enum {
 	WEAPON_CLASS_DYNAMITE           = (1 << 16),
 	WEAPON_CLASS_RIFLE_BOLTACTION   = (1 << 17),
 	WEAPON_CLASS_LANDMINE           = (1 << 18),
+	WEAPON_CLASS_MEDCRATE           = (1 << 19),
 } weaponClass_t;
 
 //---------------------------------------------------------

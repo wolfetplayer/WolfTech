@@ -1,0 +1,24 @@
+// Placeholder art: reuses the stock large health pack model until real crate art exists.
+weaponDef
+{
+	client {
+		weaponConfig		"models/multiplayer/landmine/weapon.cfg"
+		handsModel			"models/multiplayer/landmine/v_landmine_hand.md3"
+
+		missileModel		"models/powerups/health/health_l.md3"
+
+		weaponIcon			"icons/iconh_large"
+		weaponSelectedIcon	"icons/iconh_large"
+		ammoIcon			"icons/iconh_large"
+
+		// NOTE: bounceSound doesn't apply to thrown missiles (dropped items only); landing thud is EV_GRENADE_BOUNCE from G_TryPlaceMedCrate instead.
+
+		firstPerson {
+			model		"models/powerups/health/health_l.md3"
+		}
+
+		thirdPerson {
+			model		"models/powerups/health/health_l.md3"
+		}
+	}
+}

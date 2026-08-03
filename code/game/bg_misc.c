@@ -62,7 +62,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
 	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN,    WP_M1941,    WP_DELISLE },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
-	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_LANDMINE, WP_AIRSTRIKE },  //	6
+	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_LANDMINE, WP_MEDCRATE, WP_AIRSTRIKE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
 	{WP_TESLA,              WP_VENOM,               0           },  //	8
 	{WP_M97,                WP_AUTO5,               0           },  //	9
@@ -1241,6 +1241,37 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qfalse,
 		.underwaterFire     = qtrue,
 		.weapFile           = "landmine.weap",
+    },
+    // Medic health crate: cooldown-gated like dynamite (full charge cost), not ammo-limited; 2-cap enforced by a
+    // live entity scan (G_CountAndCapPlayerMedCrates in g_missile.c) that evicts the oldest, not this ammo pool.
+    [WP_MEDCRATE] = {
+		.weaponindex        = WP_MEDCRATE,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_MEDCRATE,
+        .maxammo            = 999,
+        .uses               = 0,
+        .maxclip            = 999,
+        .reloadTime         = 0,
+        .fireDelayTime      = DELAY_THROW,
+        .nextShotTime       = 1600,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 0,
+		.weaponSpread       = 0,
+		.spreadScale        = 0.0f,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 64,
+		.aiRange            = AI_WEAPON_RANGE_GRENADE,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_MEDCRATE,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qtrue,
+		.weapFile           = "medcrate.weap",
     },
     [WP_PANZERFAUST] = {
 		.weaponindex        = WP_PANZERFAUST,
@@ -2981,6 +3012,29 @@ gitem_t bg_itemlist[] =
 		WP_LANDMINE,
 		WP_LANDMINE,
 		WP_LANDMINE,
+		"",                      // precache
+		"",                      // sounds
+		{0,0,0,0}
+	},
+
+	{
+		"weapon_medcrate",
+		"sound/misc/w_pkup.wav",
+		{   "models/powerups/health/health_l.md3",  // placeholder, stock large health pack model
+			"models/powerups/health/health_l.md3",
+			"models/powerups/health/health_l.md3",
+			0, 0 },
+
+		"icons/iconh_large",     // icon (placeholder)
+		"icons/iconh_large",     // ammo icon (placeholder)
+		"Medical Crate",         // pickup
+		1,
+		IT_WEAPON,
+		WP_MEDCRATE,
+		WP_MEDCRATE,
+		WP_MEDCRATE,
+		WP_MEDCRATE,
+		WP_MEDCRATE,
 		"",                      // precache
 		"",                      // sounds
 		{0,0,0,0}
@@ -4739,6 +4793,7 @@ qboolean isClipOnly( int weap ) {
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
 	case WP_LANDMINE:
+	case WP_MEDCRATE:
 	case WP_TESLA:
 	case WP_FLAMETHROWER:
 		return qtrue;

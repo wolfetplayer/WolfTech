@@ -41,6 +41,7 @@ void G_ExplodeMissilePoisonGas( gentity_t *ent );
 void G_ExplodeMissile( gentity_t *ent );
 void M_think( gentity_t *ent );
 void G_TryArmLandmine( gentity_t *ent, trace_t *trace );
+void G_TryPlaceMedCrate( gentity_t *ent, trace_t *trace );
 /*
 ================
 G_BounceMissile
@@ -122,6 +123,11 @@ qboolean G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 			if ( ent->s.weapon == WP_LANDMINE ) {
 				// may free ent on denial, so this must be the last thing touching it
 				G_TryArmLandmine( ent, trace );
+				return qfalse;
+			}
+			if ( ent->s.weapon == WP_MEDCRATE ) {
+				// may free ent (cap eviction), so this must be the last thing touching it
+				G_TryPlaceMedCrate( ent, trace );
 				return qfalse;
 			}
 			if ( ent->s.weapon == WP_M7 ) {
@@ -373,6 +379,269 @@ void G_TryArmLandmine( gentity_t *ent, trace_t *trace ) {
 
 	ent->nextthink = level.time + LANDMINE_ARM_DELAY;
 	ent->think     = G_ArmLandmine;
+}
+
+/*
+===========================================================================
+
+MEDIC HEALTH CRATE
+
+Dropped, not cooked/fused (same as landmine). Once settled it ticks a radius
+heal to every friendly, living, damaged player -- including its owner -- out
+of a shared, fixed healing budget (self->health doubles as the remaining-HP
+pool, since the entity is never shootable). When the pool runs out it sinks
+into the ground and removes itself. At most MEDCRATE_MAX_PER_PLAYER can be
+live per medic; placing another evicts the oldest immediately.
+
+===========================================================================
+*/
+
+#define MEDCRATE_MAX_PER_PLAYER      2
+#define MEDCRATE_HEAL_RADIUS         300.0f
+#define MEDCRATE_HEAL_POOL_PER_PLAYER 250    // scaled by level.numPlayingCoopClients: 250/500/750/1000 for 1/2/3/4 players
+#define MEDCRATE_HEAL_POOL_MAX       1000
+#define MEDCRATE_TICK_INTERVAL       250
+#define MEDCRATE_HEAL_PER_TICK  5      // 20 HP/sec per player -- faster than every regen tier in g_active.c, no hit-delay gate
+#define MEDCRATE_SINK_TICK      100
+#define MEDCRATE_SINK_DURATION  2000
+
+/*
+================
+G_CountAndCapPlayerMedCrates
+
+Live scan of this owner's *other* crates (placing is excluded -- by the time
+this runs it's already spawned/inuse/tagged, so it would otherwise count
+itself and evict one crate too many). If the owner already has
+MEDCRATE_MAX_PER_PLAYER without counting the one being placed, frees the
+oldest (smallest ->timestamp) so the new crate can take its place -- unlike
+the landmine cap, this evicts rather than denies.
+================
+*/
+void G_CountAndCapPlayerMedCrates( gentity_t *owner, gentity_t *placing ) {
+	gentity_t *e = &g_entities[MAX_CLIENTS];
+	gentity_t *oldest = NULL;
+	int i, cnt = 0;
+
+	for ( i = MAX_CLIENTS; i < level.num_entities; i++, e++ ) {
+		if ( !e->inuse || e->s.eType != ET_MISSILE || e->methodOfDeath != MOD_MEDCRATE || e->parent != owner || e == placing ) {
+			continue;
+		}
+
+		cnt++;
+		if ( !oldest || e->timestamp < oldest->timestamp ) {
+			oldest = e;
+		}
+	}
+
+	if ( cnt >= MEDCRATE_MAX_PER_PLAYER && oldest ) {
+		// note: G_FreeEntity memsets the entity immediately, so no despawn event/sound can ride along with it
+		G_FreeEntity( oldest );
+	}
+}
+
+/*
+================
+G_MedCrateSinkThink
+
+Mirrors BodySink (g_client.c): settle into the ground over MEDCRATE_SINK_DURATION, then remove.
+================
+*/
+void G_MedCrateSinkThink( gentity_t *self ) {
+	vec3_t origin;
+
+	if ( self->count-- <= 0 ) {
+		G_FreeEntity( self );
+		return;
+	}
+
+	// this entity is SVF_USE_CURRENT_ORIGIN (set in fire_grenade), so r.currentOrigin -- not just
+	// s.pos.trBase -- must move too; G_SetOrigin keeps both in sync (same helper the landmine uses to settle).
+	VectorCopy( self->r.currentOrigin, origin );
+	origin[2] -= 1;
+	G_SetOrigin( self, origin );
+	trap_LinkEntity( self );
+
+	self->nextthink = level.time + MEDCRATE_SINK_TICK;
+}
+
+/*
+================
+G_MedCrateEligible
+
+Friendly, living, damaged client -- inverse of G_LandmineWillTrigger's hostility check.
+================
+*/
+static qboolean G_MedCrateEligible( gentity_t *ent ) {
+	if ( !ent->client || ent->health <= 0 ) {
+		return qfalse;
+	}
+
+	if ( ent->aiCharacter && ent->aiTeam == AITEAM_MONSTER ) {
+		return qfalse;
+	}
+
+	return ent->health < ent->client->ps.stats[STAT_MAX_HEALTH];
+}
+
+/*
+================
+G_ClosestMedCrateTo
+
+Global scan of every live (non-sunk) med crate to find whichever one is
+closest to ent, breaking ties by whichever has more pool left, then by the
+lower entity number for determinism. Used to stop overlapping crates from
+stacking their healing on the same player -- only the single best crate
+for a given player heals them on any given tick.
+================
+*/
+static gentity_t *G_ClosestMedCrateTo( gentity_t *ent ) {
+	gentity_t *e = &g_entities[MAX_CLIENTS];
+	gentity_t *best = NULL;
+	float     bestDistSq = 0;
+	int       i;
+
+	for ( i = MAX_CLIENTS; i < level.num_entities; i++, e++ ) {
+		vec3_t dist;
+		float  distSq;
+
+		if ( !e->inuse || e->s.eType != ET_MISSILE || e->methodOfDeath != MOD_MEDCRATE || e->health <= 0 ) {
+			continue;
+		}
+
+		VectorSubtract( e->r.currentOrigin, ent->r.currentOrigin, dist );
+		distSq = VectorLengthSquared( dist );
+		if ( distSq > Square( MEDCRATE_HEAL_RADIUS ) ) {
+			continue;
+		}
+
+		if ( !best || distSq < bestDistSq ||
+			 ( distSq == bestDistSq && e->health > best->health ) ) {
+			best = e;
+			bestDistSq = distSq;
+		}
+	}
+
+	return best;
+}
+
+/*
+================
+G_MedCrateThink
+
+Polls every MEDCRATE_TICK_INTERVAL. Heals everyone eligible in radius out of
+the shared self->health pool (decremented per player, per tick, so crowding
+the crate drains it faster); once the pool is spent, sinks and despawns.
+If a player is in range of more than one crate, only the closest one
+(G_ClosestMedCrateTo) actually heals them that tick -- overlapping crates
+don't stack.
+================
+*/
+void G_MedCrateThink( gentity_t *self ) {
+	int       entityList[MAX_GENTITIES];
+	int       i, cnt;
+	vec3_t    range = { MEDCRATE_HEAL_RADIUS, MEDCRATE_HEAL_RADIUS, MEDCRATE_HEAL_RADIUS };
+	vec3_t    mins, maxs;
+
+	if ( self->health <= 0 ) {
+		self->count     = MEDCRATE_SINK_DURATION / MEDCRATE_SINK_TICK;
+		self->nextthink = level.time + MEDCRATE_SINK_TICK;
+		self->think     = G_MedCrateSinkThink;
+		return;
+	}
+
+	self->nextthink = level.time + MEDCRATE_TICK_INTERVAL;
+
+	VectorSubtract( self->r.currentOrigin, range, mins );
+	VectorAdd( self->r.currentOrigin, range, maxs );
+
+	cnt = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
+
+	for ( i = 0; i < cnt && self->health > 0; i++ ) {
+		gentity_t *ent = &g_entities[entityList[i]];
+		vec3_t    dist;
+		int       grant;
+
+		if ( !G_MedCrateEligible( ent ) ) {
+			continue;
+		}
+
+		VectorSubtract( self->r.currentOrigin, ent->r.currentOrigin, dist );
+		if ( VectorLengthSquared( dist ) > Square( MEDCRATE_HEAL_RADIUS ) ) {
+			continue;
+		}
+
+		// another crate is closer (or equidistant with more pool) to this player -- let it heal them instead, no stacking
+		if ( G_ClosestMedCrateTo( ent ) != self ) {
+			continue;
+		}
+
+		grant = MEDCRATE_HEAL_PER_TICK;
+		if ( grant > self->health ) {
+			grant = self->health;
+		}
+		if ( grant > ent->client->ps.stats[STAT_MAX_HEALTH] - ent->health ) {
+			grant = ent->client->ps.stats[STAT_MAX_HEALTH] - ent->health;
+		}
+		if ( grant <= 0 ) {
+			continue;
+		}
+
+		ent->health    += grant;
+		self->health   -= grant;
+		G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
+	}
+}
+
+/*
+================
+G_ArmMedCrate
+
+Deferred think: initializes the shared healing budget (scaled by how many
+players are actually in the coop game -- 250/500/750/1000 for 1/2/3/4+
+players), then starts the heal-tick loop.
+================
+*/
+void G_ArmMedCrate( gentity_t *self ) {
+	int pool = MEDCRATE_HEAL_POOL_PER_PLAYER * level.numPlayingCoopClients;
+
+	if ( pool < MEDCRATE_HEAL_POOL_PER_PLAYER ) {
+		pool = MEDCRATE_HEAL_POOL_PER_PLAYER;
+	} else if ( pool > MEDCRATE_HEAL_POOL_MAX ) {
+		pool = MEDCRATE_HEAL_POOL_MAX;
+	}
+
+	self->health    = pool;
+	self->nextthink = level.time + MEDCRATE_TICK_INTERVAL;
+	self->think     = G_MedCrateThink;
+}
+
+/*
+================
+G_TryPlaceMedCrate
+
+Settles the crate where it landed, evicts the oldest crate if this owner is
+already at the cap, then arms the heal-tick loop.
+================
+*/
+void G_TryPlaceMedCrate( gentity_t *ent, trace_t *trace ) {
+	gentity_t *owner = ent->parent;
+
+	if ( owner && owner->client ) {
+		G_CountAndCapPlayerMedCrates( owner, ent );
+	}
+
+	ent->r.ownerNum    = ENTITYNUM_WORLD;   // thrower can walk away without self-attribution weirdness
+	ent->r.contents    = 0;                 // players can walk through the crate
+	ent->clipmask      = 0;
+	ent->s.pos.trType  = TR_STATIONARY;     // stop the flying-missile spin now that it's landed
+	ent->s.pos.trTime  = level.time;
+	trap_LinkEntity( ent );
+
+	// explicit landing thud, since a gentle toss usually settles too slowly to trigger this naturally
+	G_AddEvent( ent, EV_GRENADE_BOUNCE, trace->surfaceFlags >> 12 );
+
+	ent->nextthink = level.time;
+	ent->think     = G_ArmMedCrate;
 }
 
 /*
@@ -1516,8 +1785,9 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 
 	bolt = G_Spawn();
 
-	// landmines are dropped, not cooked/fused -- no nextthink/explode timer here (see G_TryArmLandmine).
-	if ( grenadeWPID != WP_LANDMINE ) {
+	// landmines and med crates are dropped, not cooked/fused -- no nextthink/explode timer here
+	// (see G_TryArmLandmine / G_TryPlaceMedCrate).
+	if ( grenadeWPID != WP_LANDMINE && grenadeWPID != WP_MEDCRATE ) {
 
 	// no self->client for shooter_grenade's
 	if ( self->client && self->client->ps.grenadeTimeLeft ) {
@@ -1706,6 +1976,16 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->methodOfDeath         = MOD_LANDMINE;
 		bolt->splashMethodOfDeath   = MOD_LANDMINE;
 		bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
+		break;
+	case WP_MEDCRATE:
+		// inert until G_TryPlaceMedCrate settles it; never explodes or deals damage.
+		bolt->classname             = "medcrate";
+		bolt->damage                = 0;
+		bolt->splashRadius          = 0;
+		bolt->methodOfDeath         = MOD_MEDCRATE;
+		bolt->splashMethodOfDeath   = MOD_MEDCRATE;
+		bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
+		bolt->timestamp             = level.time;    // spawn order, for oldest-first eviction (G_CountAndCapPlayerMedCrates)
 		break;
 	}
 
