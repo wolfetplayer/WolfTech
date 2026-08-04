@@ -511,7 +511,7 @@ STATE COMBAT
 
 	turnright
 	{
-		default
+		movetype idle
 		{
 			both turn_1h_R
 		}
@@ -519,7 +519,7 @@ STATE COMBAT
 
 	turnleft
 	{
-		default
+		movetype idle
 		{
 			both turn_1h_R
 		}
