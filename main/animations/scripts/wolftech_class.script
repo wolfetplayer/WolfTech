@@ -107,6 +107,10 @@ STATE COMBAT
 		{
 			both stand_rifle
 		}
+		weapons two_handed
+		{
+			both stand_rifle
+		}
 		weapons self_loading
 		{
 			both stand_srifle
@@ -118,6 +122,10 @@ STATE COMBAT
 		weapons mg
 		{
 			legs stand_machinegun torso stand_mobilemg42
+		}
+		weapons panzerfaust, firing
+		{
+			legs firing_panzer torso stand_panzer
 		}
 		weapons panzerfaust
 		{
@@ -156,6 +164,10 @@ STATE COMBAT
 	idlecr
 	{
 		weapons sniper
+		{
+			legs alert_crchidle_2h torso stand_rifle
+		}
+		weapons two_handed
 		{
 			legs alert_crchidle_2h torso stand_rifle
 		}
@@ -211,6 +223,10 @@ STATE COMBAT
 		{
 			legs relaxed_walk_1h_1 torso stand_rifle
 		}
+		weapons two_handed
+		{
+			legs relaxed_walk_1h_1 torso stand_rifle
+		}
 		weapons self_loading
 		{
 			legs relaxed_walk_1h_1 torso stand_srifle
@@ -252,6 +268,10 @@ STATE COMBAT
 	walkbk
 	{
 		weapons sniper
+		{
+			legs alert_bk_2h torso stand_rifle
+		}
+		weapons two_handed
 		{
 			legs alert_bk_2h torso stand_rifle
 		}
@@ -299,6 +319,10 @@ STATE COMBAT
 		{
 			legs alert_crch_2h torso stand_rifle
 		}
+		weapons two_handed
+		{
+			legs alert_crch_2h torso stand_rifle
+		}
 		weapons self_loading
 		{
 			both alert_crch_srifle
@@ -343,6 +367,10 @@ STATE COMBAT
 		{
 			legs alert_crbk_2h torso stand_rifle
 		}
+		weapons two_handed
+		{
+			legs alert_crbk_2h torso stand_rifle
+		}
 		weapons self_loading
 		{
 			both alert_crbk_srifle
@@ -384,6 +412,10 @@ STATE COMBAT
 	run
 	{
 		weapons sniper
+		{
+			legs alert_run_2h torso stand_rifle
+		}
+		weapons two_handed
 		{
 			legs alert_run_2h torso stand_rifle
 		}
@@ -436,6 +468,10 @@ STATE COMBAT
 	runbk
 	{
 		weapons sniper
+		{
+			legs alert_bk_2h torso stand_rifle
+		}
+		weapons two_handed
 		{
 			legs alert_bk_2h torso stand_rifle
 		}
@@ -503,17 +539,113 @@ STATE COMBAT
 
 	straferight
 	{
+		weapons sniper
+		{
+			legs alert_run_2h torso stand_rifle
+		}
+		weapons self_loading
+		{
+			both alert_run_srifle
+		}
+		weapons smg
+		{
+			both alert_run_2h
+		}
+		weapons mg
+		{
+			legs alert_run_2h torso stand_mobilemg42
+		}
+		weapons panzerfaust
+		{
+			legs alert_run_2h torso stand_panzer
+		}
+		weapons grenlauncher
+		{
+			legs alert_run_srifle torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs alert_run_2h torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			legs alert_run_1h torso stand_pistolB
+		}
+		weapons two_handed
+		{
+			legs alert_run_2h torso stand_rifle
+		}
+		weapons medcrate
+		{
+			both run_medpack
+		}
+		weapons melee
+		{
+			both alert_run_1h
+		}
+		weapons no_weapon
+		{
+			both alert_run_no
+		}
 		default
 		{
-			both alert_strafe_1h_R
+			both alert_run_1h
 		}
 	}
 
 	strafeleft
 	{
+		weapons sniper
+		{
+			legs alert_run_2h torso stand_rifle
+		}
+		weapons self_loading
+		{
+			both alert_run_srifle
+		}
+		weapons smg
+		{
+			both alert_run_2h
+		}
+		weapons mg
+		{
+			legs alert_run_2h torso stand_mobilemg42
+		}
+		weapons panzerfaust
+		{
+			legs alert_run_2h torso stand_panzer
+		}
+		weapons grenlauncher
+		{
+			legs alert_run_srifle torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs alert_run_2h torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			legs alert_run_1h torso stand_pistolB
+		}
+		weapons two_handed
+		{
+			legs alert_run_2h torso stand_rifle
+		}
+		weapons medcrate
+		{
+			both run_medpack
+		}
+		weapons melee
+		{
+			both alert_run_1h
+		}
+		weapons no_weapon
+		{
+			both alert_run_no
+		}
 		default
 		{
-			both alert_strafe_1h_L
+			both alert_run_1h
 		}
 	}
 
