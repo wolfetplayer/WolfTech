@@ -2974,6 +2974,20 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	CG_PositionEntityOnTag( &gun, parent, "tag_weapon", 0, NULL );
 
+	if ( !ps ) {    // third person only - some weapon models weren't authored for the carry pose tag_weapon puts them in
+		vec3_t angleOffset;
+		VectorCopy( GetWeaponTableData( weaponNum )->gunAngleOffset, angleOffset );
+		angleOffset[PITCH] += cg_gunAnglePitch.value;
+		angleOffset[YAW] += cg_gunAngleYaw.value;
+		angleOffset[ROLL] += cg_gunAngleRoll.value;
+		if ( angleOffset[PITCH] || angleOffset[YAW] || angleOffset[ROLL] ) {
+			vec3_t correctionAxis[3], correctedAxis[3];
+			AnglesToAxis( angleOffset, correctionAxis );
+			MatrixMultiply( correctionAxis, gun.axis, correctedAxis );
+			AxisCopy( correctedAxis, gun.axis );
+		}
+	}
+
 	playerScaled = (qboolean)( cgs.clientinfo[ cent->currentState.clientNum ].playermodelScale[0] != 0 );
 	if ( !ps && playerScaled ) {   // don't "un-scale" weap up in 1st person
 		for ( i = 0; i < 3; i++ ) {  // scale weapon back up so it doesn't pick up the adjusted scale of the character models.

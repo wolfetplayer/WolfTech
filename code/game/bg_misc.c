@@ -1302,6 +1302,7 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
 		.gunOffset          = { 3.0f, 1.0f, 1.0f },
+		.gunAngleOffset     = { 100.0f, 10.0f, -100.0f },
 		.weapFile           = "panzerfaust.weap",
     },
     [WP_VENOM] = {

@@ -2177,7 +2177,10 @@ void CG_RunLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, c
 						lf->animSpeedScale = ANIM_SCALEMAX_HIGH;
 					}
 				} else {
-					lf->animSpeedScale = ANIM_SCALEMAX_HIGH - ( ANIM_SCALEMAX_HIGH - ANIM_SCALEMAX_LOW ) * (float)( anim->moveSpeed - ANIM_SPEEDMAX_HIGH ) / (float)( ANIM_SPEEDMAX_LOW - ANIM_SPEEDMAX_HIGH );
+					float scaleCeiling = ANIM_SCALEMAX_HIGH - ( ANIM_SCALEMAX_HIGH - ANIM_SCALEMAX_LOW ) * (float)( anim->moveSpeed - ANIM_SPEEDMAX_HIGH ) / (float)( ANIM_SPEEDMAX_LOW - ANIM_SPEEDMAX_HIGH );
+					if ( lf->animSpeedScale > scaleCeiling ) {
+						lf->animSpeedScale = scaleCeiling;
+					}
 				}
 			} else if ( lf->animSpeedScale > 4.0 ) {
 				lf->animSpeedScale = 4.0;

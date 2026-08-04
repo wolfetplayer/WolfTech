@@ -2113,14 +2113,15 @@ static void PM_BeginWeaponReload( int weapon ) {
 		return;
 	}
 
-	// M97 pump-action: shell-by-shell reload has its own state machine (AI use the generic path below)
 	if ( !pm->ps->aiChar && weapon == WP_M97 ) {
+		BG_AnimScriptEvent( pm->ps, ANIM_ET_RELOAD, qfalse, qtrue );
 		PM_BeginM97Reload();
 		return;
 	}
 
 	// Auto-5: same shell-by-shell reload state machine as M97 (AI use the generic path below)
 	if ( !pm->ps->aiChar && weapon == WP_AUTO5 ) {
+		BG_AnimScriptEvent( pm->ps, ANIM_ET_RELOAD, qfalse, qtrue );
 		PM_BeginAuto5Reload();
 		return;
 	}

@@ -184,6 +184,9 @@ vmCvar_t cg_gun_frame;
 vmCvar_t cg_gun_x;
 vmCvar_t cg_gun_y;
 vmCvar_t cg_gun_z;
+vmCvar_t cg_gunAnglePitch;
+vmCvar_t cg_gunAngleYaw;
+vmCvar_t cg_gunAngleRoll;
 vmCvar_t cg_tracerChance;
 vmCvar_t cg_tracerWidth;
 vmCvar_t cg_tracerLength;
@@ -414,6 +417,9 @@ cvarTable_t cvarTable[] = {
 	{&cg_gun_x, "cg_gunX", "0", CVAR_CHEAT},
 	{&cg_gun_y, "cg_gunY", "0", CVAR_CHEAT},
 	{&cg_gun_z, "cg_gunZ", "0", CVAR_CHEAT},
+	{&cg_gunAnglePitch, "cg_gunAnglePitch", "0", CVAR_CHEAT},
+	{&cg_gunAngleYaw, "cg_gunAngleYaw", "0", CVAR_CHEAT},
+	{&cg_gunAngleRoll, "cg_gunAngleRoll", "0", CVAR_CHEAT},
 	{&cg_centertime, "cg_centertime", "3", CVAR_CHEAT},
 	{&cg_buyprinttime, "cg_buyprinttime", "1", CVAR_CHEAT},
 	{&cg_drawSubtitles, "cg_drawSubtitles", "0", CVAR_ARCHIVE},

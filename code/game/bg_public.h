@@ -719,6 +719,7 @@ typedef struct ammotable_s {
 	qboolean hasMuzzle;
 	qboolean underwaterFire;
 	vec3_t gunOffset;
+	vec3_t gunAngleOffset;
 
 	int fireModeSwitchTime; // 0 = no selectable fire modes; otherwise ms for each of the drop/raise phases of the switch
 	qboolean fireModeIsRateSwitch; // qtrue: selector swaps nextShotTime/nextShotTime2 (e.g. BAR) instead of enforcing semi-auto
