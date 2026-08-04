@@ -95,6 +95,14 @@ STATE COMBAT
 {
 	idle
 	{
+		mounted mg42, firing
+		{
+			both firing_mg42
+		}
+		mounted mg42
+		{
+			both stand_mg42
+		}
 		weapons sniper
 		{
 			both stand_rifle
@@ -622,6 +630,10 @@ DEATH
 
 FIREWEAPON
 {
+	mounted mg42
+	{
+		both firing_mg42
+	}
 	weapons sniper, movetype walk AND turnleft AND turnright AND idlecr AND idle
 	{
 		torso firing_rifle
