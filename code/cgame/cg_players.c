@@ -5514,11 +5514,6 @@ int parts[] = { 34,
 			if ( cent->currentState.eFlags & EF_HEADSHOT ) {
 				continue;
 			}
-			// MDM/MDX: ETL helmets attach to the body mesh's tag_head, not the separate head model's tag_mouth like legacy hats below
-			if ( ci->isCharacter ) {
-				CG_PositionEntityOnTag( &acc,   &torso, "tag_head", 0, NULL );
-				break;
-			}
 		case ACC_MOUTH2:            // hat2
 		case ACC_MOUTH3:            // hat3
 			CG_PositionEntityOnTag( &acc,   &head,  "tag_mouth", 0, NULL );

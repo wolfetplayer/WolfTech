@@ -5,24 +5,47 @@
 // Shared by all characters/*.char class models (they all bind to the same
 // animations/human_base.anim skeleton). Conditions the locomotion pose on
 // WEAPONS (ANIM_COND_WEAPON), matching real pickup_name strings from
-// bg_itemlist[] in bg_misc.c - grouped by how the weapon is actually held
-// (two_handed/one_handed/sniper/no_weapon), not per-weapon, since the
-// available clips in body.aninc only vary by hand-count/scope, not by
-// individual weapon.
+// bg_itemlist[] in bg_misc.c - grouped by how the weapon is actually held,
+// cross-checked against each WP_'s weaponClass in bg_misc.c's ammoTable so
+// every weapon lands in the right bucket:
 //
-// FIREWEAPON is conditioned the same coarse way (sniper/one_handed/no_weapon/
-// default-two_handed), not per individual weapon. body.aninc has many
-// single-weapon-specific firing clips (firing_panzer, firing_mg42,
-// firing_grenlauncher, firing_machinegun, ...) that a real per-weapon pass
-// could use instead of lumping every two-handed weapon onto firing_rifle -
-// not done here. Same for PAIN/DEATH, which stay fully generic.
+//   two_handed    - bolt-action rifles/shotguns/flamer-type weapons with no
+//                   better dedicated clip family available (falls back to
+//                   the plain rifle pose)
+//   self_loading  - unscoped semi/select-fire rifles (WEAPON_CLASS_RIFLE_AUTO
+//                   / WEAPON_CLASS_ASSAULT_RIFLE); reuses the same _srifle
+//                   clips as the sniper bucket below, matching stock ET's
+//                   own human_base.script (Garand/FG42/K43 use stand_srifle
+//                   even unscoped there)
+//   sniper        - WEAPON_CLASS_SCOPED
+//   smg           - WEAPON_CLASS_SMG; body.aninc's "machinegun" clip family
+//                   is the SMG carry/fire pose in ET's naming, not a heavy MG
+//   akimbo        - WEAPON_CLASS_AKIMBO; only overrides FIREWEAPON below -
+//                   akimbo.mdx has no locomotion clips of its own, so these
+//                   stay in one_handed for movement (see human_base.anim,
+//                   which now registers akimbo.mdx alongside body.mdx)
+//   panzerfaust   - WEAPON_CLASS_LAUNCHER
+//   mg            - WEAPON_CLASS_MG; carried/fired like a heavy SMG, not a
+//                   mounted emplacement, so it uses the "mobilemg42" clips
+//   grenlauncher  - WEAPON_CLASS_RIFLENADE (M7), directly analogous to ET's
+//                   own gpg40/gpg40a rifle-grenade-launcher attachment
+//   one_handed    - WEAPON_CLASS_PISTOL (incl. akimbo pistols, for movement)
+//   no_weapon     - melee/throwables/utility items with no better clip
+//
+// PAIN/DEATH stay fully generic.
 //
 //==========================================================================
 
 DEFINES
 
-set weapons two_handed = Mauser Rifle AND Thompson AND Sten AND M1 Garand AND M7 Grenade Launcher AND MP40 AND MP34 AND FG42 Paratroop Rifle AND Browning Automatic Rifle AND MP44 Sturmgewehr AND Ithaca 37 AND Auto-5 AND De Lisle Carbine AND G43 rifle AND PPSh-41 AND Mosin-Nagant AND M1941 AND Panzerfaust AND Venom AND Flamethrower AND Tesla Gun AND MG42 AND Browning M1919
+set weapons two_handed = Mauser Rifle AND Ithaca 37 AND Auto-5 AND De Lisle Carbine AND Mosin-Nagant AND Venom AND Flamethrower AND Tesla Gun
+set weapons self_loading = M1 Garand AND FG42 Paratroop Rifle AND Browning Automatic Rifle AND MP44 Sturmgewehr AND G43 rifle AND M1941
 set weapons sniper = Sniper Scope AND Snooper Rifle AND M1941 Scope AND De Lisle Scope AND FG42 Scope
+set weapons smg = Thompson AND Sten AND MP40 AND MP34 AND PPSh-41
+set weapons akimbo = Dual Colts AND Dual TT-33s
+set weapons panzerfaust = Panzerfaust
+set weapons mg = MG42 AND Browning M1919
+set weapons grenlauncher = M7 Grenade Launcher
 set weapons one_handed = Luger AND Dual Colts AND Colt AND TT-33 AND Dual TT-33s AND Revolver AND HDM AND sp5 pistol
 set weapons no_weapon = Knife AND Grenade AND Pineapple AND Dynamite Weapon AND Landmine AND Medical Crate AND Airstrike Signal AND Artillery
 
@@ -49,6 +72,10 @@ state RELAXED
 	IDLECR
 	{
 		WEAPONS sniper
+		{
+			both alert_crchidle_srifle
+		}
+		WEAPONS self_loading
 		{
 			both alert_crchidle_srifle
 		}
@@ -84,6 +111,10 @@ state RELAXED
 		{
 			both alert_bk_srifle
 		}
+		WEAPONS self_loading
+		{
+			both alert_bk_srifle
+		}
 		WEAPONS one_handed
 		{
 			both alert_bk_1h
@@ -97,6 +128,10 @@ state RELAXED
 	WALKCR
 	{
 		WEAPONS sniper
+		{
+			both alert_crch_srifle
+		}
+		WEAPONS self_loading
 		{
 			both alert_crch_srifle
 		}
@@ -116,6 +151,10 @@ state RELAXED
 		{
 			both alert_crbk_srifle
 		}
+		WEAPONS self_loading
+		{
+			both alert_crbk_srifle
+		}
 		WEAPONS one_handed
 		{
 			both alert_crbk_1h
@@ -129,6 +168,10 @@ state RELAXED
 	RUN
 	{
 		WEAPONS sniper
+		{
+			both alert_run_srifle
+		}
+		WEAPONS self_loading
 		{
 			both alert_run_srifle
 		}
@@ -152,6 +195,10 @@ state RELAXED
 		{
 			both alert_bk_srifle
 		}
+		WEAPONS self_loading
+		{
+			both alert_bk_srifle
+		}
 		WEAPONS one_handed
 		{
 			both alert_bk_1h
@@ -164,17 +211,25 @@ state RELAXED
 
 	SWIM
 	{
+		WEAPONS one_handed
+		{
+			both e_swim_1h
+		}
 		default
 		{
-			both swim_2h
+			both e_swim_2h
 		}
 	}
 
 	SWIMBK
 	{
+		WEAPONS one_handed
+		{
+			both e_swim_1h
+		}
 		default
 		{
-			both swim_2h
+			both e_swim_2h
 		}
 	}
 
@@ -251,9 +306,33 @@ FIREWEAPON
 	{
 		both firing_srifle
 	}
+	WEAPONS self_loading
+	{
+		both firing_srifle
+	}
+	WEAPONS akimbo
+	{
+		both firing_akimbo
+	}
 	WEAPONS one_handed
 	{
 		both firing_pistolA_1
+	}
+	WEAPONS smg
+	{
+		both firing_machinegun
+	}
+	WEAPONS panzerfaust
+	{
+		both firing_panzer
+	}
+	WEAPONS mg
+	{
+		both firing_mobilemg42
+	}
+	WEAPONS grenlauncher
+	{
+		both firing_grenlauncher
 	}
 	WEAPONS no_weapon
 	{
