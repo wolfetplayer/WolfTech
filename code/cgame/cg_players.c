@@ -780,9 +780,9 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 			ci->accSkins[ACC_HAT] = trap_R_RegisterSkin( filename );
 		}
 
-		// look for this model in the list of models already opened
+		// look for this model in the list of models already opened - CG_CheckForExistingModelInfo() already fully loads isCharacter models itself, so don't re-parse (that wiped moveSpeed back to -1, see cg_players.c CG_RunLerpFrameRate)
 		if ( !CG_CheckForExistingModelInfo( ci, (char *)modelName, &ci->modelInfo ) ) {
-			if ( !CG_ParseAnimationFiles( (char *)modelName, ci->modelInfo, ci->clientNum ) ) {
+			if ( !ci->modelInfo->numAnimations ) {
 				Com_Printf( "Failed to load animation file for character %s\n", modelName );
 				return qfalse;
 			}
@@ -2075,7 +2075,7 @@ void CG_RunLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, c
 	qboolean isLadderAnim;
 
 #define ANIM_SCALEMAX_LOW   1.1
-#define ANIM_SCALEMAX_HIGH  1.6
+#define ANIM_SCALEMAX_HIGH  12.0	// was 1.6 - too tight for this roster's ~20-45 moveSpeed baselines vs ~320-370ups actual run speed
 
 #define ANIM_SPEEDMAX_LOW   100
 #define ANIM_SPEEDMAX_HIGH  20

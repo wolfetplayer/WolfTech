@@ -2,84 +2,192 @@
 //
 // WolfTech class character animation script
 //
-// Shared by all characters/*.char class models (they all bind to the same
-// animations/human_base.anim skeleton). Conditions the locomotion pose on
-// WEAPONS (ANIM_COND_WEAPON), matching real pickup_name strings from
-// bg_itemlist[] in bg_misc.c - grouped by how the weapon is actually held,
-// cross-checked against each WP_'s weaponClass in bg_misc.c's ammoTable so
-// every weapon lands in the right bucket:
+// Adapted from ET:Legacy's real animations/scripts/human_base.script (see
+// main/etl/human_base.script for the reference copy) rather than hand-rolled
+// from scratch. Two structural corrections vs. the previous version of this
+// file, both load-bearing:
 //
-//   two_handed    - bolt-action rifles/shotguns/flamer-type weapons with no
-//                   better dedicated clip family available (falls back to
-//                   the plain rifle pose)
-//   self_loading  - unscoped semi/select-fire rifles (WEAPON_CLASS_RIFLE_AUTO
-//                   / WEAPON_CLASS_ASSAULT_RIFLE); reuses the same _srifle
-//                   clips as the sniper bucket below, matching stock ET's
-//                   own human_base.script (Garand/FG42/K43 use stand_srifle
-//                   even unscoped there)
-//   sniper        - WEAPON_CLASS_SCOPED
-//   smg           - WEAPON_CLASS_SMG; body.aninc's "machinegun" clip family
-//                   is the SMG carry/fire pose in ET's naming, not a heavy MG
-//   akimbo        - WEAPON_CLASS_AKIMBO; only overrides FIREWEAPON below -
-//                   akimbo.mdx has no locomotion clips of its own, so these
-//                   stay in one_handed for movement (see human_base.anim,
-//                   which now registers akimbo.mdx alongside body.mdx)
-//   panzerfaust   - WEAPON_CLASS_LAUNCHER
-//   mg            - WEAPON_CLASS_MG; carried/fired like a heavy SMG, not a
-//                   mounted emplacement, so it uses the "mobilemg42" clips
-//   grenlauncher  - WEAPON_CLASS_RIFLENADE (M7), directly analogous to ET's
-//                   own gpg40/gpg40a rifle-grenade-launcher attachment
-//   one_handed    - WEAPON_CLASS_PISTOL (incl. akimbo pistols, for movement)
-//   no_weapon     - melee/throwables/utility items with no better clip
+//   1) Real players always run with ps->aiState == AISTATE_COMBAT (forced in
+//      G_ClientThink_real, g_active.c) - AISTATE_RELAXED/QUERY/ALERT are an
+//      AI-only concept (ai_cast_*.c). BG_AnimScriptAnimation searches states
+//      top-down from whatever state is requested (COMBAT -> ALERT -> QUERY
+//      -> RELAXED) and stops at the first one with matching content, so the
+//      old file "worked" only because it put everything under RELAXED and
+//      let 3 empty states cascade down to it every single lookup. This file
+//      puts real content under STATE COMBAT instead, matching both the
+//      engine's actual per-frame lookup and ET's own reference script, and
+//      leaves RELAXED/ALERT empty like ET does.
 //
-// PAIN/DEATH stay fully generic.
+//   2) FIREWEAPON/RELOAD/RAISEWEAPON now animate torso only (not both), so
+//      legs keep running/walking/crouching normally while firing instead of
+//      snapping to a static firing stance every time a shot is fired - this
+//      is ET's own explicit documented convention (see the EVENTS format
+//      comment in the reference file) and fixes visibly broken-looking
+//      movement during sustained fire.
+//
+// Weapon buckets below are cross-checked against each WP_'s weaponClass in
+// bg_misc.c's ammoTable, then matched to the closest equivalent condition in
+// the ET reference so the right clip family gets used:
+//
+//   sniper        WEAPON_CLASS_SCOPED
+//   self_loading  WEAPON_CLASS_RIFLE_AUTO / ASSAULT_RIFLE (unscoped) - ET's
+//                 Garand/FG42/K43 use the same _srifle clips even unscoped
+//   smg           WEAPON_CLASS_SMG, plus Flamethrower/Venom/Tesla Gun - ET's
+//                 own "machineguns" DEFINE bundles Flamethrower in with
+//                 MP40/Thompson/Sten for exactly this clip family; Venom/
+//                 Tesla have no ET equivalent, closest fit is the same
+//                 automatic-two-handed-weapon carry pose
+//   akimbo        WEAPON_CLASS_AKIMBO - only overrides FIREWEAPON/RELOAD/
+//                 RAISEWEAPON; locomotion stays on one_handed since
+//                 akimbo.mdx (now registered in human_base.anim) has no
+//                 locomotion clips of its own, matching ET's own script
+//   panzerfaust   WEAPON_CLASS_LAUNCHER
+//   mg            WEAPON_CLASS_MG - carried/fired like ET's "Mobile MG42",
+//                 not a mounted emplacement
+//   grenlauncher  WEAPON_CLASS_RIFLENADE (M7) - analogous to ET's gpg40/
+//                 gpg40a rifle-grenade-launcher attachment
+//   one_handed    WEAPON_CLASS_PISTOL (incl. akimbo pistols, for movement)
+//   medcrate      WEAPON_CLASS_MEDCRATE - ET's "medicheal"/"Ammo Pack" pose
+//   two_handed    bolt-action rifles (Mauser/De Lisle/Mosin) and shotguns -
+//                 ET's roster has no bolt-action rifle, so this bucket (and
+//                 its "default" fallback) is a WolfTech-specific addition,
+//                 not a direct port
+//   melee         Knife
+//   no_weapon     throwables/signal items with no better clip
+//
+// PAIN is upgraded from a flat default to ET's real impact_point-conditioned
+// version (already-existing pain_* clips, just never wired up). DEATH stays
+// as-is - ET's own human_base.script has no DEATH event block at all; ours
+// predates this port and already uses valid clips, so it's left alone.
 //
 //==========================================================================
 
 DEFINES
 
-set weapons two_handed = Mauser Rifle AND Ithaca 37 AND Auto-5 AND De Lisle Carbine AND Mosin-Nagant AND Venom AND Flamethrower AND Tesla Gun
-set weapons self_loading = M1 Garand AND FG42 Paratroop Rifle AND Browning Automatic Rifle AND MP44 Sturmgewehr AND G43 rifle AND M1941
 set weapons sniper = Sniper Scope AND Snooper Rifle AND M1941 Scope AND De Lisle Scope AND FG42 Scope
-set weapons smg = Thompson AND Sten AND MP40 AND MP34 AND PPSh-41
+set weapons self_loading = M1 Garand AND FG42 Paratroop Rifle AND Browning Automatic Rifle AND MP44 Sturmgewehr AND G43 rifle AND M1941
+set weapons smg = Thompson AND Sten AND MP40 AND MP34 AND PPSh-41 AND Flamethrower AND Venom AND Tesla Gun
 set weapons akimbo = Dual Colts AND Dual TT-33s
 set weapons panzerfaust = Panzerfaust
 set weapons mg = MG42 AND Browning M1919
 set weapons grenlauncher = M7 Grenade Launcher
-set weapons one_handed = Luger AND Dual Colts AND Colt AND TT-33 AND Dual TT-33s AND Revolver AND HDM AND sp5 pistol
-set weapons no_weapon = Knife AND Grenade AND Pineapple AND Dynamite Weapon AND Landmine AND Medical Crate AND Airstrike Signal AND Artillery
+set weapons one_handed = Luger AND Colt AND sp5 pistol AND Revolver AND HDM AND TT-33 AND Dual Colts AND Dual TT-33s
+set weapons medcrate = Medical Crate
+set weapons two_handed = Mauser Rifle AND Ithaca 37 AND Auto-5 AND De Lisle Carbine AND Mosin-Nagant
+set weapons melee = Knife
+set weapons no_weapon = Grenade AND Pineapple AND Dynamite Weapon AND Landmine AND Airstrike Signal AND Artillery
+
+set movetype moving = walk AND walkcr AND walkcrbk AND walkbk AND run AND runbk AND straferight AND strafeleft
+set movetype crouching = idlecr AND walkcr AND walkcrbk
+set movetype backstep = walkbk AND runbk AND walkcrbk
 
 ANIMATIONS
 
-state RELAXED
+STATE RELAXED
 {
-	IDLE
+}
+
+STATE ALERT
+{
+}
+
+STATE COMBAT
+{
+	idle
 	{
-		WEAPONS no_weapon
+		weapons sniper
 		{
-			both relaxed_idle_no
+			both stand_rifle
 		}
-		WEAPONS one_handed
+		weapons self_loading
 		{
-			both alert_idle_1h
+			both stand_srifle
+		}
+		weapons smg
+		{
+			both stand_machinegun
+		}
+		weapons mg
+		{
+			legs stand_machinegun torso stand_mobilemg42
+		}
+		weapons panzerfaust
+		{
+			both stand_panzer
+		}
+		weapons grenlauncher
+		{
+			legs stand_srifle torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs stand_pistolB torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			both stand_pistolB
+		}
+		weapons medcrate
+		{
+			both stand_medpack
+		}
+		weapons melee
+		{
+			both stand_knife
+		}
+		weapons no_weapon
+		{
+			both stand_grenade
 		}
 		default
 		{
-			both relaxed_idle_2h_1
+			both stand_rifle
 		}
 	}
 
-	IDLECR
+	idlecr
 	{
-		WEAPONS sniper
+		weapons sniper
+		{
+			legs alert_crchidle_2h torso stand_rifle
+		}
+		weapons self_loading
 		{
 			both alert_crchidle_srifle
 		}
-		WEAPONS self_loading
+		weapons smg
 		{
-			both alert_crchidle_srifle
+			both alert_crchidle_2h
 		}
-		WEAPONS one_handed
+		weapons mg
+		{
+			legs alert_crchidle_2h torso stand_mobilemg42
+		}
+		weapons panzerfaust
+		{
+			legs alert_crchidle_2h torso stand_panzer
+		}
+		weapons grenlauncher
+		{
+			legs alert_crchidle_srifle torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs alert_crchidle_1h torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			legs alert_crchidle_1h torso stand_pistolB
+		}
+		weapons medcrate
+		{
+			legs alert_crchidle_2h torso stand_medpack
+		}
+		weapons melee
+		{
+			both alert_crchidle_1h
+		}
+		weapons no_weapon
 		{
 			both alert_crchidle_1h
 		}
@@ -89,119 +197,271 @@ state RELAXED
 		}
 	}
 
-	WALK
+	walk
 	{
-		WEAPONS no_weapon
+		weapons sniper
 		{
-			both relaxed_walk_no
+			legs relaxed_walk_1h_1 torso stand_rifle
 		}
-		WEAPONS one_handed
+		weapons self_loading
+		{
+			legs relaxed_walk_1h_1 torso stand_srifle
+		}
+		weapons smg
+		{
+			legs relaxed_walk_1h_1 torso stand_machinegun
+		}
+		weapons mg
+		{
+			legs relaxed_walk_1h_1 torso stand_mobilemg42
+		}
+		weapons panzerfaust
+		{
+			legs relaxed_walk_1h_1 torso stand_panzer
+		}
+		weapons grenlauncher
+		{
+			legs relaxed_walk_1h_1 torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs relaxed_walk_1h_1 torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			legs relaxed_walk_1h_1 torso stand_pistolB
+		}
+		weapons medcrate
+		{
+			legs relaxed_walk_1h_1 torso stand_medpack
+		}
+		default
 		{
 			both relaxed_walk_1h_1
 		}
-		default
-		{
-			both relaxed_walk_2h_1
-		}
 	}
 
-	WALKBK
+	walkbk
 	{
-		WEAPONS sniper
+		weapons sniper
+		{
+			legs alert_bk_2h torso stand_rifle
+		}
+		weapons self_loading
 		{
 			both alert_bk_srifle
 		}
-		WEAPONS self_loading
-		{
-			both alert_bk_srifle
-		}
-		WEAPONS one_handed
-		{
-			both alert_bk_1h
-		}
-		default
+		weapons smg
 		{
 			both alert_bk_2h
 		}
-	}
-
-	WALKCR
-	{
-		WEAPONS sniper
+		weapons mg
 		{
-			both alert_crch_srifle
+			legs alert_bk_2h torso stand_mobilemg42
 		}
-		WEAPONS self_loading
+		weapons panzerfaust
 		{
-			both alert_crch_srifle
+			legs alert_bk_2h torso stand_panzer
 		}
-		WEAPONS one_handed
+		weapons grenlauncher
 		{
-			both alert_crch_1h
+			legs alert_bk_srifle torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs alert_bk_2h torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			legs alert_bk_1h torso stand_pistolB
+		}
+		weapons medcrate
+		{
+			legs alert_bk_1h torso stand_medpack
 		}
 		default
+		{
+			both alert_bk_1h
+		}
+	}
+
+	walkcr
+	{
+		weapons sniper
+		{
+			legs alert_crch_2h torso stand_rifle
+		}
+		weapons self_loading
+		{
+			both alert_crch_srifle
+		}
+		weapons smg
 		{
 			both alert_crch_2h
 		}
-	}
-
-	WALKCRBK
-	{
-		WEAPONS sniper
+		weapons mg
 		{
-			both alert_crbk_srifle
+			legs alert_crch_2h torso stand_mobilemg42
 		}
-		WEAPONS self_loading
+		weapons panzerfaust
 		{
-			both alert_crbk_srifle
+			legs alert_crch_2h torso stand_panzer
 		}
-		WEAPONS one_handed
+		weapons grenlauncher
 		{
-			both alert_crbk_1h
+			legs alert_crch_srifle torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs alert_crch_2h torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			both alert_crch_1h
+		}
+		weapons medcrate
+		{
+			legs alert_crch_2h torso stand_medpack
 		}
 		default
+		{
+			both alert_crch_1h
+		}
+	}
+
+	walkcrbk
+	{
+		weapons sniper
+		{
+			legs alert_crbk_2h torso stand_rifle
+		}
+		weapons self_loading
+		{
+			both alert_crbk_srifle
+		}
+		weapons smg
 		{
 			both alert_crbk_2h
 		}
-	}
-
-	RUN
-	{
-		WEAPONS sniper
+		weapons mg
 		{
-			both alert_run_srifle
+			legs alert_crbk_2h torso stand_mobilemg42
 		}
-		WEAPONS self_loading
+		weapons panzerfaust
 		{
-			both alert_run_srifle
+			legs alert_crbk_2h torso stand_panzer
 		}
-		WEAPONS no_weapon
+		weapons grenlauncher
 		{
-			both alert_run_no
+			legs alert_crbk_srifle torso stand_grenlauncher
 		}
-		WEAPONS one_handed
+		weapons akimbo
 		{
-			both alert_run_1h
+			legs alert_crbk_2h torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			both alert_crbk_1h
+		}
+		weapons medcrate
+		{
+			legs alert_crbk_2h torso stand_medpack
 		}
 		default
 		{
-			both alert_run_2h
+			both alert_crbk_1h
 		}
 	}
 
-	RUNBK
+	run
 	{
-		WEAPONS sniper
+		weapons sniper
+		{
+			legs alert_run_2h torso stand_rifle
+		}
+		weapons self_loading
+		{
+			both alert_run_srifle
+		}
+		weapons smg
+		{
+			both alert_run_2h
+		}
+		weapons mg
+		{
+			legs alert_run_2h torso stand_mobilemg42
+		}
+		weapons panzerfaust
+		{
+			legs alert_run_2h torso stand_panzer
+		}
+		weapons grenlauncher
+		{
+			legs alert_run_srifle torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs alert_run_2h torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			legs alert_run_1h torso stand_pistolB
+		}
+		weapons medcrate
+		{
+			both run_medpack
+		}
+		weapons melee
+		{
+			both alert_run_1h
+		}
+		weapons no_weapon
+		{
+			both alert_run_no
+		}
+		default
+		{
+			both alert_run_1h
+		}
+	}
+
+	runbk
+	{
+		weapons sniper
+		{
+			legs alert_bk_2h torso stand_rifle
+		}
+		weapons self_loading
 		{
 			both alert_bk_srifle
 		}
-		WEAPONS self_loading
+		weapons smg
 		{
-			both alert_bk_srifle
+			both alert_bk_2h
 		}
-		WEAPONS one_handed
+		weapons mg
 		{
-			both alert_bk_1h
+			legs alert_bk_2h torso stand_mobilemg42
+		}
+		weapons panzerfaust
+		{
+			legs alert_bk_2h torso stand_panzer
+		}
+		weapons grenlauncher
+		{
+			legs alert_bk_srifle torso stand_grenlauncher
+		}
+		weapons akimbo
+		{
+			legs alert_bk_2h torso stand_akimbo
+		}
+		weapons one_handed
+		{
+			legs alert_bk_1h torso stand_pistolB
+		}
+		weapons medcrate
+		{
+			legs alert_bk_2h torso stand_medpack
 		}
 		default
 		{
@@ -209,9 +469,9 @@ state RELAXED
 		}
 	}
 
-	SWIM
+	swim
 	{
-		WEAPONS one_handed
+		weapons one_handed AND akimbo AND melee AND no_weapon
 		{
 			both e_swim_1h
 		}
@@ -221,9 +481,9 @@ state RELAXED
 		}
 	}
 
-	SWIMBK
+	swimbk
 	{
-		WEAPONS one_handed
+		weapons one_handed AND akimbo AND melee AND no_weapon
 		{
 			both e_swim_1h
 		}
@@ -233,7 +493,7 @@ state RELAXED
 		}
 	}
 
-	STRAFERIGHT
+	straferight
 	{
 		default
 		{
@@ -241,7 +501,7 @@ state RELAXED
 		}
 	}
 
-	STRAFELEFT
+	strafeleft
 	{
 		default
 		{
@@ -249,7 +509,7 @@ state RELAXED
 		}
 	}
 
-	TURNRIGHT
+	turnright
 	{
 		default
 		{
@@ -257,7 +517,7 @@ state RELAXED
 		}
 	}
 
-	TURNLEFT
+	turnleft
 	{
 		default
 		{
@@ -265,7 +525,7 @@ state RELAXED
 		}
 	}
 
-	CLIMBUP
+	climbup
 	{
 		default
 		{
@@ -273,7 +533,7 @@ state RELAXED
 		}
 	}
 
-	CLIMBDOWN
+	climbdown
 	{
 		default
 		{
@@ -286,9 +546,69 @@ EVENTS
 
 PAIN
 {
+	movetype crouching, impact_point head
+	{
+		both pain_cr_head
+	}
+	movetype crouching, impact_point shoulder_right
+	{
+		both pain_cr_shoulderR
+	}
+	movetype crouching, impact_point shoulder_left
+	{
+		both pain_cr_shoulderL
+	}
+	movetype crouching
+	{
+		both pain_cr_head
+		both pain_cr_shoulderR
+		both pain_cr_shoulderL
+	}
+	enemy_weapon Flamethrower
+	{
+		both pain_fire
+	}
+	stunned
+	{
+		both pain_daze
+	}
+	impact_point head
+	{
+		both pain_head
+	}
+	impact_point chest
+	{
+		both pain_chest
+	}
+	impact_point gut
+	{
+		both pain_gut
+	}
+	impact_point groin
+	{
+		both pain_groin
+	}
+	impact_point shoulder_right
+	{
+		both pain_shoulderR
+	}
+	impact_point shoulder_left
+	{
+		both pain_shoulderL
+	}
+	impact_point knee_right
+	{
+		both pain_kneeR
+	}
+	impact_point knee_left
+	{
+		both pain_kneeL
+	}
 	default
 	{
 		both pain_chest
+		both pain_gut
+		both pain_groin
 	}
 }
 
@@ -302,56 +622,333 @@ DEATH
 
 FIREWEAPON
 {
-	WEAPONS sniper
+	weapons sniper, movetype walk AND turnleft AND turnright AND idlecr AND idle
 	{
-		both firing_srifle
+		torso firing_rifle
 	}
-	WEAPONS self_loading
+	weapons sniper, movetype crouching
 	{
-		both firing_srifle
+		torso firing_crch_2h
 	}
-	WEAPONS akimbo
+	weapons sniper, movetype run AND swim
 	{
-		both firing_akimbo
+		torso alert_run_2h
 	}
-	WEAPONS one_handed
+	weapons sniper, movetype backstep AND swimbk
 	{
-		both firing_pistolA_1
+		torso firing_bk_2h
 	}
-	WEAPONS smg
+	weapons sniper
 	{
-		both firing_machinegun
+		torso firing_rifle
 	}
-	WEAPONS panzerfaust
+
+	weapons self_loading, movetype walk AND turnleft AND turnright AND idlecr AND idle
 	{
-		both firing_panzer
+		torso firing_srifle
 	}
-	WEAPONS mg
+	weapons self_loading, movetype crouching
 	{
-		both firing_mobilemg42
+		torso firing_crch_srifle
 	}
-	WEAPONS grenlauncher
+	weapons self_loading, movetype run AND swim
 	{
-		both firing_grenlauncher
+		torso firing_run_srifle
 	}
-	WEAPONS no_weapon
+	weapons self_loading, movetype backstep AND swimbk
 	{
-		both firing_knifeA
+		torso firing_bk_srifle
+	}
+	weapons self_loading
+	{
+		torso firing_srifle
+	}
+
+	weapons smg, movetype straferight AND strafeleft
+	{
+		torso alert_run_2h duration 50
+	}
+	weapons smg, movetype walk AND turnleft AND turnright AND idlecr
+	{
+		torso firing_machinegun duration 50
+	}
+	weapons smg, movetype walkcrbk
+	{
+		torso firing_crbk_2h duration 50
+	}
+	weapons smg, movetype crouching
+	{
+		torso firing_crch_2h duration 50
+	}
+	weapons smg, movetype run AND swim
+	{
+		torso alert_run_2h duration 50
+	}
+	weapons smg, movetype backstep AND swimbk
+	{
+		torso alert_bk_2h duration 50
+	}
+	weapons smg
+	{
+		torso firing_machinegun duration 50
+	}
+
+	weapons mg, movetype straferight AND strafeleft
+	{
+		torso alert_run_2h duration 50
+	}
+	weapons mg, movetype walk AND turnleft AND turnright AND idlecr
+	{
+		torso firing_mobilemg42 duration 50
+	}
+	weapons mg, movetype walkcrbk
+	{
+		torso firing_crbk_2h duration 50
+	}
+	weapons mg, movetype crouching
+	{
+		torso firing_crch_2h duration 50
+	}
+	weapons mg, movetype run AND swim
+	{
+		torso alert_run_2h duration 50
+	}
+	weapons mg, movetype backstep AND swimbk
+	{
+		torso alert_bk_2h duration 50
+	}
+	weapons mg
+	{
+		torso firing_mobilemg42 duration 50
+	}
+
+	weapons panzerfaust
+	{
+		torso firing_panzer
+	}
+
+	weapons grenlauncher
+	{
+		torso firing_grenlauncher
+	}
+
+	weapons akimbo
+	{
+		torso firing_akimbo
+	}
+
+	weapons one_handed, movetype straferight AND strafeleft
+	{
+		torso firing_pistolB_1
+	}
+	weapons one_handed, movetype walk AND turnleft AND turnright AND idlecr AND idle
+	{
+		torso firing_pistolB_1
+		torso firing_pistolB_2
+	}
+	weapons one_handed, movetype walkcrbk
+	{
+		torso firing_crbk_1h
+	}
+	weapons one_handed, movetype crouching
+	{
+		torso firing_crch_1h
+	}
+	weapons one_handed, movetype run AND swim
+	{
+		torso firing_pistolB_1
+	}
+	weapons one_handed, movetype backstep AND swimbk
+	{
+		torso firing_pistolB_1
+	}
+	weapons one_handed
+	{
+		torso firing_pistolB_1
+		torso firing_pistolB_2
+	}
+
+	weapons medcrate
+	{
+		torso firing_grenadeB
+	}
+
+	weapons melee
+	{
+		torso firing_knifeA
+	}
+
+	weapons no_weapon, movetype idle
+	{
+		torso firing_grenadeB
+	}
+	weapons no_weapon, movetype run AND walk AND straferight AND strafeleft AND backstep AND turnleft AND turnright AND idlecr
+	{
+		torso firing_grenadeB
+	}
+	weapons no_weapon
+	{
+		torso firing_grenadeB
+	}
+
+	default
+	{
+		torso firing_rifle
+	}
+}
+
+RELOAD
+{
+	weapons sniper
+	{
+		torso reload_rifle
+	}
+	weapons self_loading
+	{
+		torso reload_machinegun
+	}
+	weapons smg, movetype idlecr
+	{
+		torso reload_machinegun_cr
+	}
+	weapons smg
+	{
+		torso reload_machinegun
+	}
+	weapons mg
+	{
+		torso reload_mobilemg42
+	}
+	weapons panzerfaust
+	{
+		torso reload_panzer
+	}
+	weapons grenlauncher
+	{
+		torso reload_grenlauncher
+	}
+	weapons akimbo, movetype idlecr
+	{
+		torso reload_akimbo
+	}
+	weapons akimbo
+	{
+		torso reload_akimbo
+	}
+	weapons one_handed, movetype idlecr
+	{
+		torso reload_pistol_cr
+	}
+	weapons one_handed
+	{
+		torso reload_pistol
+	}
+	weapons medcrate
+	{
+		torso raise_medpack
 	}
 	default
 	{
-		both firing_rifle
+		torso reload_rifle
+	}
+}
+
+RAISEWEAPON
+{
+	weapons sniper
+	{
+		torso raise_sniper
+	}
+	weapons self_loading
+	{
+		torso raise_machinegun
+	}
+	weapons smg
+	{
+		torso raise_machinegun
+	}
+	weapons mg
+	{
+		torso raise_mobilemg42
+	}
+	weapons panzerfaust
+	{
+		torso raise_panzer
+	}
+	weapons grenlauncher
+	{
+		torso raise_grenlauncher
+	}
+	weapons akimbo
+	{
+		torso raise_akimbo
+	}
+	weapons one_handed
+	{
+		torso raise_pistolA
+	}
+	weapons medcrate
+	{
+		torso raise_medpack
+	}
+	weapons melee
+	{
+		torso raise_knife
+	}
+	weapons no_weapon
+	{
+		torso raise_grenade
+	}
+	default
+	{
+		torso raise_rifle
 	}
 }
 
 JUMP
 {
-	WEAPONS one_handed
+	weapons sniper, movetype run
+	{
+		legs jump_1step_2h torso stand_rifle
+	}
+	weapons sniper
+	{
+		legs jump_nostep_1h torso stand_rifle
+	}
+	weapons self_loading, movetype run
+	{
+		legs jump_1step_2h
+	}
+	weapons self_loading
+	{
+		legs jump_nostep_1h
+	}
+	weapons panzerfaust, movetype run
+	{
+		legs jump_1step_2h torso stand_panzer
+	}
+	weapons panzerfaust
+	{
+		legs jump_nostep_1h torso stand_panzer
+	}
+	weapons one_handed AND akimbo, movetype run
 	{
 		both jump_1step_1h
 	}
-	default
+	weapons one_handed AND akimbo
+	{
+		both jump_nostep_1h
+	}
+	weapons smg AND mg AND grenlauncher AND two_handed AND medcrate, movetype run
 	{
 		both jump_1step_2h
+	}
+	weapons smg AND mg AND grenlauncher AND two_handed AND medcrate
+	{
+		both jump_nostep_1h
+	}
+	default
+	{
+		both jump_1step_1h
 	}
 }

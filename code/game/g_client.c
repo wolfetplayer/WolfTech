@@ -1074,6 +1074,14 @@ qboolean G_ParseAnimationFiles( char *modelname, gclient_t *cl ) {
 		BG_AnimParseAnimScript( cl->modelInfo, &level.animScriptData, cl->ps.clientNum,
 								 cl->modelInfo->characterDef.animationScript, text );
 
+		// ask the client to send us the movespeeds if available - same mechanism as the
+		// legacy wolfanim.cfg path below, just never wired up for .char models. Only a
+		// no-op once models/movespeeds/<modelname>.mvspd already exists (see
+		// G_RetrieveMoveSpeedsFromClient), so this is safe to fire on every load.
+		if ( g_gametype.integer <= GT_COOP && g_entities[0].client && g_entities[0].client->pers.connected == CON_CONNECTED ) {
+			trap_SendServerCommand( 0, va( "mvspd %s", modelname ) );
+		}
+
 		G_LoadAndParseMoveSpeeds( modelname );
 
 		return qtrue;

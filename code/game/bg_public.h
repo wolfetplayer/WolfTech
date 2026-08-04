@@ -1762,10 +1762,10 @@ typedef enum {
 // New Animation Scripting Defines
 
 #define MAX_ANIMSCRIPT_MODELS               32      // allocated dynamically, so limit is scalable
-#define MAX_ANIMSCRIPT_ITEMS_PER_MODEL      256
-#define MAX_MODEL_ANIMATIONS                256     // animations per model
+#define MAX_ANIMSCRIPT_ITEMS_PER_MODEL      2048
+#define MAX_MODEL_ANIMATIONS                512     // animations per model
 #define MAX_ANIMSCRIPT_ANIMCOMMANDS         8
-#define MAX_ANIMSCRIPT_ITEMS                32
+#define MAX_ANIMSCRIPT_ITEMS                128
 
 // NOTE: these must all be in sync with string tables in bg_animation.c
 
