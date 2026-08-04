@@ -1,0 +1,278 @@
+//==========================================================================
+//
+// WolfTech class character animation script
+//
+// Shared by all characters/*.char class models (they all bind to the same
+// animations/human_base.anim skeleton). Conditions the locomotion pose on
+// WEAPONS (ANIM_COND_WEAPON), matching real pickup_name strings from
+// bg_itemlist[] in bg_misc.c - grouped by how the weapon is actually held
+// (two_handed/one_handed/sniper/no_weapon), not per-weapon, since the
+// available clips in body.aninc only vary by hand-count/scope, not by
+// individual weapon.
+//
+// FIREWEAPON is conditioned the same coarse way (sniper/one_handed/no_weapon/
+// default-two_handed), not per individual weapon. body.aninc has many
+// single-weapon-specific firing clips (firing_panzer, firing_mg42,
+// firing_grenlauncher, firing_machinegun, ...) that a real per-weapon pass
+// could use instead of lumping every two-handed weapon onto firing_rifle -
+// not done here. Same for PAIN/DEATH, which stay fully generic.
+//
+//==========================================================================
+
+DEFINES
+
+set weapons two_handed = Mauser Rifle AND Thompson AND Sten AND M1 Garand AND M7 Grenade Launcher AND MP40 AND MP34 AND FG42 Paratroop Rifle AND Browning Automatic Rifle AND MP44 Sturmgewehr AND Ithaca 37 AND Auto-5 AND De Lisle Carbine AND G43 rifle AND PPSh-41 AND Mosin-Nagant AND M1941 AND Panzerfaust AND Venom AND Flamethrower AND Tesla Gun AND MG42 AND Browning M1919
+set weapons sniper = Sniper Scope AND Snooper Rifle AND M1941 Scope AND De Lisle Scope AND FG42 Scope
+set weapons one_handed = Luger AND Dual Colts AND Colt AND TT-33 AND Dual TT-33s AND Revolver AND HDM AND sp5 pistol
+set weapons no_weapon = Knife AND Grenade AND Pineapple AND Dynamite Weapon AND Landmine AND Medical Crate AND Airstrike Signal AND Artillery
+
+ANIMATIONS
+
+state RELAXED
+{
+	IDLE
+	{
+		WEAPONS no_weapon
+		{
+			both relaxed_idle_no
+		}
+		WEAPONS one_handed
+		{
+			both alert_idle_1h
+		}
+		default
+		{
+			both relaxed_idle_2h_1
+		}
+	}
+
+	IDLECR
+	{
+		WEAPONS sniper
+		{
+			both alert_crchidle_srifle
+		}
+		WEAPONS one_handed
+		{
+			both alert_crchidle_1h
+		}
+		default
+		{
+			both alert_crchidle_2h
+		}
+	}
+
+	WALK
+	{
+		WEAPONS no_weapon
+		{
+			both relaxed_walk_no
+		}
+		WEAPONS one_handed
+		{
+			both relaxed_walk_1h_1
+		}
+		default
+		{
+			both relaxed_walk_2h_1
+		}
+	}
+
+	WALKBK
+	{
+		WEAPONS sniper
+		{
+			both alert_bk_srifle
+		}
+		WEAPONS one_handed
+		{
+			both alert_bk_1h
+		}
+		default
+		{
+			both alert_bk_2h
+		}
+	}
+
+	WALKCR
+	{
+		WEAPONS sniper
+		{
+			both alert_crch_srifle
+		}
+		WEAPONS one_handed
+		{
+			both alert_crch_1h
+		}
+		default
+		{
+			both alert_crch_2h
+		}
+	}
+
+	WALKCRBK
+	{
+		WEAPONS sniper
+		{
+			both alert_crbk_srifle
+		}
+		WEAPONS one_handed
+		{
+			both alert_crbk_1h
+		}
+		default
+		{
+			both alert_crbk_2h
+		}
+	}
+
+	RUN
+	{
+		WEAPONS sniper
+		{
+			both alert_run_srifle
+		}
+		WEAPONS no_weapon
+		{
+			both alert_run_no
+		}
+		WEAPONS one_handed
+		{
+			both alert_run_1h
+		}
+		default
+		{
+			both alert_run_2h
+		}
+	}
+
+	RUNBK
+	{
+		WEAPONS sniper
+		{
+			both alert_bk_srifle
+		}
+		WEAPONS one_handed
+		{
+			both alert_bk_1h
+		}
+		default
+		{
+			both alert_bk_2h
+		}
+	}
+
+	SWIM
+	{
+		default
+		{
+			both swim_2h
+		}
+	}
+
+	SWIMBK
+	{
+		default
+		{
+			both swim_2h
+		}
+	}
+
+	STRAFERIGHT
+	{
+		default
+		{
+			both alert_strafe_1h_R
+		}
+	}
+
+	STRAFELEFT
+	{
+		default
+		{
+			both alert_strafe_1h_L
+		}
+	}
+
+	TURNRIGHT
+	{
+		default
+		{
+			both turn_1h_R
+		}
+	}
+
+	TURNLEFT
+	{
+		default
+		{
+			both turn_1h_R
+		}
+	}
+
+	CLIMBUP
+	{
+		default
+		{
+			both climb_up
+		}
+	}
+
+	CLIMBDOWN
+	{
+		default
+		{
+			both climb_down
+		}
+	}
+}
+
+EVENTS
+
+PAIN
+{
+	default
+	{
+		both pain_chest
+	}
+}
+
+DEATH
+{
+	default
+	{
+		both death_machinegun_1
+	}
+}
+
+FIREWEAPON
+{
+	WEAPONS sniper
+	{
+		both firing_srifle
+	}
+	WEAPONS one_handed
+	{
+		both firing_pistolA_1
+	}
+	WEAPONS no_weapon
+	{
+		both firing_knifeA
+	}
+	default
+	{
+		both firing_rifle
+	}
+}
+
+JUMP
+{
+	WEAPONS one_handed
+	{
+		both jump_1step_1h
+	}
+	default
+	{
+		both jump_1step_2h
+	}
+}

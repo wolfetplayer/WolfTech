@@ -1,0 +1,9 @@
+characterDef
+{
+	mesh				models/players/temperate/allied/medic/body.mdm
+	animationgroup		animations/human_base.anim
+	animationscript		animations/scripts/wolftech_class.script
+	skin				medic
+	hudhead				models/players/hud/head_1.md3
+	hudheadskin			models/players/hud/allied_medic.skin
+}

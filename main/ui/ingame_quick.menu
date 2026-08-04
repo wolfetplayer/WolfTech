@@ -67,27 +67,6 @@ menuDef {
 			}
 			
 		itemDef {
-			name			quick
-			visible			1
-			rect			-30 45 220 15		
-			forecolor		1 1 1 1
-			backcolor		0 0 0 0
-			outlinecolor	1 1 0 .5
-			textfont		UI_FONT_NORMAL
-			type			ITEM_TYPE_MULTI
-			style			0
-			maxChars		32
-			maxpaintchars	18
-			text			"@MULTI_MODEL_LABEL"
-			cvar			"skin"
-			cvarFloatList	{ "@MULTI_MODEL_YANKEE" 1 "@MULTI_MODEL_AFRO" 2 "@MULTI_MODEL_EURO" 3 }
-			textscale		.22
-			textalign		ITEM_ALIGN_RIGHT	
-			textalignx		126
-			textaligny		11
-			}
-
-		itemDef {
 			name quick
 			type ITEM_TYPE_SLIDER
 			text "@QUICK_BRIGHTNESS"
@@ -108,7 +87,7 @@ menuDef {
 		itemDef {
 			name quick
 			type ITEM_TYPE_SLIDER
-			text "FOV (90°-115°):"
+			text "FOV (90ï¿½-115ï¿½):"
 			cvarfloat "cg_fov" 90 90 115
 			rect -30 80 220 12
 			textfont UI_FONT_NORMAL

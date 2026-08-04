@@ -265,32 +265,6 @@ itemDef
 
 
 		itemDef {
-			name			window_limbo_model
-			group			grpJoin
-			visible			1
-			rect			310 138 150 15		
-			forecolor		1 1 1 1
-			backcolor		0 0 0 0
-			outlinecolor	1 1 0 .5
-			textfont		UI_FONT_NORMAL
-			type			ITEM_TYPE_MULTI
-			style			0
-			textstyle		6
-			maxChars		16
-			maxpaintchars	16
-			text			"@MULTI_MODEL_LABEL"
-			cvar			"skin"
-			cvarFloatList	{ "@MULTI_MODEL_YANKEE" 1 "@MULTI_MODEL_AFRO" 2 "@MULTI_MODEL_EURO" 3 }
-			textscale		.25
-			textalign		ITEM_ALIGN_LEFT	
-			textalignx		0
-			textaligny		14
-			mouseEnter		{ show message_model}
-			mouseExit		{ hide message_model}
-			}
-
-			
-		itemDef {
 			name			gametypefield
 			group			grpJoin
 			style			0	

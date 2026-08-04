@@ -825,28 +825,9 @@ itemDef {
 		visible 1
 		}
 
-	// Character/skin select - own cosmetic pick, not host-gated
-
-	itemDef {
-		name characterselect
-		visible 1
-		rect 494 267 118 16
-		forecolor 1 1 1 1
-		backcolor 0 0 0 0
-		outlinecolor 1 1 0 .5
-		textfont UI_FONT_NORMAL
-		type ITEM_TYPE_MULTI
-		style 0
-		textstyle 6
-		text "@MULTI_MODEL_LABEL"
-		cvar "skin"
-		cvarFloatList { "@MULTI_MODEL_YANKEE" 1 "@MULTI_MODEL_AFRO" 2 "@MULTI_MODEL_EURO" 3 }
-		textscale .16
-		textalign ITEM_ALIGN_LEFT
-		textaligny 12
-		}
-
-	// Survival class select - own pick, not host-gated (same pattern as characterselect above).
+	// Survival class select - own pick, not host-gated. Also drives the player's
+	// model now (see SetClassModel in g_client.c) - class replaced the old
+	// cosmetic characterselect/skin picker entirely.
 	itemDef {
 		name classselect
 		visible 1

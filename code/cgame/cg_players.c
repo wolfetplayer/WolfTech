@@ -193,6 +193,7 @@ void CG_CalcMoveSpeeds( clientInfo_t *ci ) {
 	qboolean isStrafe;
 	orientation_t o[2];
 
+	Com_Memset( &refent, 0, sizeof( refent ) );
 	refent.hModel = ci->legsModel;
 
 	for ( i = 0, anim = ci->modelInfo->animations; i < ci->modelInfo->numAnimations; i++, anim++ ) {
@@ -200,6 +201,9 @@ void CG_CalcMoveSpeeds( clientInfo_t *ci ) {
 		if ( anim->moveSpeed == 0 ) {
 			continue;
 		}
+
+		// MDM/MDX: tag lerping resolves the skeleton from frameModel, not hModel - see R_MDM_CalcBones
+		refent.frameModel = refent.oldframeModel = refent.torsoFrameModel = refent.oldTorsoFrameModel = anim->mdxFile;
 
 		totalSpeed = 0;
 		numSpeed = 0;
@@ -313,6 +317,83 @@ void CG_CalcMoveSpeeds( clientInfo_t *ci ) {
 
 	if ( cgs.localServer ) {
 		CG_SendMoveSpeed( ci->modelInfo->animations, ci->modelInfo->numAnimations, ci->modelInfo->modelname );
+	}
+}
+
+/*
+================
+CG_LoadAndParseMoveSpeeds
+
+cgame-side mirror of G_LoadAndParseMoveSpeeds (g_client.c). Needed because
+CG_CheckForExistingModelInfo re-runs BG_RegisterAnimationGroup on MDM/MDX
+characters to populate mdxFile (see the comment there), which as a side
+effect resets every animation's moveSpeed back to the raw -1/0 from
+body.aninc - wiping out whatever the server already loaded from the
+model's .mvspd into the shared animModelInfo_t. Re-load it here, before
+CG_CalcMoveSpeeds runs, so its auto-calculation only kicks in for clips a
+.mvspd doesn't cover, same as the server-authoritative behavior.
+
+Silently returns instead of erroring on a missing/truncated file (unlike the
+server's version) - this is a best-effort re-read of a file the server
+already validated once, not a fresh authoring pass. An unrecognized clip
+name inside the file still hard-errors via BG_AnimationForString itself,
+same as server-side, since that check lives in the shared function, not here.
+================
+*/
+static void CG_LoadAndParseMoveSpeeds( const char *modelname ) {
+	char *text_p, *token;
+	char filename[MAX_QPATH];
+	animation_t *anim;
+	animModelInfo_t *modelInfo;
+	int len;
+	fileHandle_t f;
+
+	Q_strncpyz( filename, "models/movespeeds/", sizeof( filename ) );
+	Q_strcat( filename, sizeof( filename ), va( "%s.mvspd", modelname ) );
+
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( len < 0 ) {
+		return;
+	}
+	if ( len >= sizeof( text ) - 1 ) {
+		trap_FS_FCloseFile( f );
+		return;
+	}
+
+	trap_FS_Read( text, len, f );
+	text[len] = 0;
+	trap_FS_FCloseFile( f );
+
+	text_p = text;
+
+	token = COM_Parse( &text_p );
+	if ( !token[0] ) {
+		return;
+	}
+
+	modelInfo = BG_ModelInfoForModelname( token );
+	if ( !modelInfo ) {
+		return;
+	}
+
+	while ( 1 ) {
+		token = COM_Parse( &text_p );
+		if ( !token[0] ) {
+			break;
+		}
+		anim = BG_AnimationForString( token, modelInfo );
+
+		token = COM_Parse( &text_p );
+		if ( !token[0] ) {
+			break;
+		}
+		anim->moveSpeed = atoi( token );
+
+		token = COM_Parse( &text_p );
+		if ( !token[0] ) {
+			break;
+		}
+		anim->stepGap = (float)atoi( token );
 	}
 }
 
@@ -625,6 +706,14 @@ qboolean CG_CheckForExistingModelInfo( clientInfo_t *ci, char *modelName, animMo
 				if ( !CG_ParseAnimationFiles( modelName, cgs.animScriptData.modelInfo[i], ci->clientNum ) ) {
 					CG_Error( "Failed to load animation scripts for model %s\n", modelName );
 				}
+			} else if ( cgs.animScriptData.modelInfo[i]->isCharacter ) {
+				// MDM/MDX: trap_GetModelInfo shares the game module's animModelInfo_t directly, and it parsed with CGAMEDLL undefined so mdxFile is still 0 - re-run the parse here (cgame-only) to fill it in
+				if ( !BG_RegisterAnimationGroup( cgs.animScriptData.modelInfo[i]->characterDef.animationGroup, cgs.animScriptData.modelInfo[i] ) ) {
+					CG_Error( "Failed to load animation group '%s' for character model %s\n",
+							  cgs.animScriptData.modelInfo[i]->characterDef.animationGroup, modelName );
+				}
+				// re-apply the .mvspd override the re-parse above just wiped out (see CG_LoadAndParseMoveSpeeds)
+				CG_LoadAndParseMoveSpeeds( modelName );
 			}
 
 			// success
@@ -680,6 +769,16 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 			return qfalse;
 		}
 		ci->torsoSkin = ci->legsSkin;
+
+		// scan the body skin for tag-attached accessories (helmet/backpack); registered directly since these ETL .skin entries already store the full path, unlike legacy CG_RegisterAcc's relative-path convention - md3_rank not wired up, no free ACC_* slot
+		if ( trap_R_GetSkinModel( ci->legsSkin, "md3_back", &namefromskin[0] ) ) {
+			ci->accModels[ACC_BACK] = trap_R_RegisterModel( namefromskin );
+		}
+		if ( trap_R_GetSkinModel( ci->legsSkin, "md3_hat", &namefromskin[0] ) ) {
+			ci->accModels[ACC_HAT] = trap_R_RegisterModel( namefromskin );
+			Com_sprintf( filename, sizeof( filename ), "models/players/temperate/allied/helmet_%s.skin", characterDef.skin );
+			ci->accSkins[ACC_HAT] = trap_R_RegisterSkin( filename );
+		}
 
 		// look for this model in the list of models already opened
 		if ( !CG_CheckForExistingModelInfo( ci, (char *)modelName, &ci->modelInfo ) ) {
@@ -1271,6 +1370,30 @@ static qboolean CG_RegisterClientHeadname( clientInfo_t *ci, const char *modelNa
 	char namefromskin[MAX_QPATH];
 	char filename[MAX_QPATH];
 	int i;
+	bg_characterDef_t characterDef;
+
+	// MDM/MDX: head is a separate model (.char's hudhead/hudheadskin) attached at tag_head, not part of body.mdm - always return qtrue so a failure here can't set headfail and skip the .char model in CG_LoadClientInfo
+	Com_sprintf( filename, sizeof( filename ), "characters/%s.char", modelName );
+	if ( BG_ParseCharacterFile( filename, &characterDef ) ) {
+		if ( !characterDef.hudhead[0] ) {
+			// no head defined for this character yet - render without one
+			return qtrue;
+		}
+
+		ci->headSkin = trap_R_RegisterSkin( characterDef.hudheadskin );
+		if ( !ci->headSkin ) {
+			Com_Printf( "Failed to load head skin file: %s\n", characterDef.hudheadskin );
+			return qtrue;
+		}
+
+		ci->headModel = trap_R_RegisterModel( characterDef.hudhead );
+		if ( !ci->headModel ) {
+			Com_Printf( "Failed to load head model file: %s\n", characterDef.hudhead );
+			ci->headSkin = 0;
+		}
+
+		return qtrue;
+	}
 
 	if ( !CG_RegisterClientHeadSkin( ci, modelName, hSkinName ) ) {
 		Com_Printf( "Failed to load head skin file: %s/head_%s.skin\n", modelName, hSkinName );   //----(SA)
@@ -5390,6 +5513,11 @@ int parts[] = { 34,
 		case ACC_HAT:           //hat
 			if ( cent->currentState.eFlags & EF_HEADSHOT ) {
 				continue;
+			}
+			// MDM/MDX: ETL helmets attach to the body mesh's tag_head, not the separate head model's tag_mouth like legacy hats below
+			if ( ci->isCharacter ) {
+				CG_PositionEntityOnTag( &acc,   &torso, "tag_head", 0, NULL );
+				break;
 			}
 		case ACC_MOUTH2:            // hat2
 		case ACC_MOUTH3:            // hat3

@@ -1,0 +1,7 @@
+animgroup
+{
+	animfile "animations/human/base/body.mdx"
+	{
+		#include "animations/human/base/body.aninc"
+	}
+}

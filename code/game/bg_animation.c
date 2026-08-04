@@ -1161,6 +1161,11 @@ void BG_AnimParseAnimScript( animModelInfo_t *modelInfo, animScriptData_t *scrip
 	int indexes[MAX_INDENT_LEVELS], indentLevel, oldState, newParseMode;
 	int i, defineType;
 
+	// weaponStrings[] is otherwise only lazy-inited from BG_AnimParseAnimConfig, which the .char/MDX path never calls
+	if ( !weaponStringsInited ) {
+		BG_InitWeaponStrings();
+	}
+
 	// the scriptData passed into here must be the one this binary is using
 	globalScriptData = scriptData;
 

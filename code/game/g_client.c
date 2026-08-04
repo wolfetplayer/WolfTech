@@ -811,8 +811,6 @@ Forces a client's skin (for Wolfenstein teamplay)
 */
 
 #define MULTIPLAYER_MODEL   "multi"
-#define COOP_MODEL   "multi"
-#define COOP_MODEL_AXIS   "multi_axis"
 
 void SetCoopSkin( gclient_t *client, char *model, int number ) {
  
@@ -880,6 +878,36 @@ void SetWolfSkin( gclient_t *client, char *model ) {
 		break;
 	default:
 		Q_strcat( model, MAX_QPATH, "1" );
+		break;
+	}
+}
+
+/*
+===========
+SetClassModel
+
+Builds the class-locked cosmetic model name for coop - each PC_* class
+always renders as its own dedicated characters/<class>.char model,
+independent of any player-chosen cosmetic skin (replaces the old
+skin-cvar-driven SetCoopSkin path for GT_COOP/GT_COOP_SURVIVAL). Must
+produce a single path segment - see the call site in
+ClientUserinfoChanged for why.
+===========
+*/
+void SetClassModel( gclient_t *client, char *model ) {
+	switch ( client->sess.playerType ) {
+	case PC_MEDIC:
+		Q_strcat( model, MAX_QPATH, "medic" );
+		break;
+	case PC_ENGINEER:
+		Q_strcat( model, MAX_QPATH, "engineer" );
+		break;
+	case PC_LT:
+		Q_strcat( model, MAX_QPATH, "fieldops" );
+		break;
+	case PC_SOLDIER:
+	default:
+		Q_strcat( model, MAX_QPATH, "soldier" );
 		break;
 	}
 }
@@ -1146,7 +1174,7 @@ if desired.
 void ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent;
 	char    *s;
-	char model[MAX_QPATH], modelname[MAX_QPATH], skin[MAX_QPATH];
+	char model[MAX_QPATH], modelname[MAX_QPATH];
 
 //----(SA) added this for head separation
 	char head[MAX_QPATH];
@@ -1276,35 +1304,11 @@ if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
 	client->ps.torsoAnim = 0;
 
 	if ( g_gametype.integer <= GT_COOP &&  !( ent->r.svFlags & SVF_CASTAI ) ) {
-		int skinno = 0;
-
-		// get skin number:
-		Q_strncpyz( skin, Info_ValueForKey( userinfo, "skin" ), sizeof( skin ) );
-		skinno = atoi( skin );
-
-		if ( skinno <= 0 ) {
-			skinno = 1;
-		}
-
-		if ( skinno > 3 ) {
-			skinno = 3;
-		}
-
-		if ( client->sess.sessionTeam == TEAM_RED ) {
-			Q_strncpyz( model, COOP_MODEL_AXIS, MAX_QPATH );
-		} else {
-			Q_strncpyz( model, COOP_MODEL, MAX_QPATH );
-		}
-		Q_strcat( model, MAX_QPATH, "/" );
-
-		SetCoopSkin( client, model, skinno );
+		// class-locked cosmetic model, must stay a single path segment (no '/') - see SetClassModel
+		model[0] = '\0';
+		SetClassModel( client, model );
 
 		Q_strncpyz( head, "", MAX_QPATH );
-		// scoreboard leader gets bj his skin !
-		//if (clientNum == level.clients[ level.sortedClients[0] ].ps.clientNum)
-		//SetCoopSkin( client, head, 0  );
-		//else
-		SetCoopSkin( client, head, skinno );
 	}
 
 	// strip the skin name
