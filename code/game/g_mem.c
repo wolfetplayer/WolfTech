@@ -37,7 +37,9 @@ If you have questions concerning this license or the applicable additional terms
 //#define POOLSIZE	(256 * 1024)
 //#define POOLSIZE	(2048 * 1024)
 //#define POOLSIZE    ( 4096 * 1024 )   //----(SA)	upped to try to get assault_34 going
-#define POOLSIZE    ( 8192 * 1024 )
+//#define POOLSIZE    ( 8192 * 1024 )
+// were bumped for MDM/MDX character support; 8MB overflows on maps with several distinct soldier models
+#define POOLSIZE    ( 16384 * 1024 )
 
 static char memoryPool[POOLSIZE];
 static int allocPoint;
