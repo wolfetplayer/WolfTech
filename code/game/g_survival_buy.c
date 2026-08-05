@@ -907,6 +907,21 @@ qboolean Survival_HandlePerkPurchase(gentity_t *activator, gitem_t *item, int pr
 /*QUAKED target_buy (1 0 0) (-8 -8 -8) (8 8 8)
 Gives the activator all the items pointed to.
 */
+// TEMP DEBUG: remove once the post-purchase anim glitch is diagnosed
+static void Survival_DebugDumpAnimState( gentity_t *activator, const char *tag ) {
+	playerState_t *ps = &activator->client->ps;
+	int clientModelSlot = level.animScriptData.clientModels[ps->clientNum];
+	animModelInfo_t *realModelInfo = clientModelSlot ? level.animScriptData.modelInfo[clientModelSlot - 1] : NULL;
+	int ammoIdx = ( ps->weapon > WP_NONE && ps->weapon < WP_NUM_WEAPONS ) ? BG_FindAmmoForWeapon( ps->weapon ) : -1;
+	G_Printf( "SURV_DEBUG[%s] cl=%i eFlags=%i pm_type=%i pm_flags=%i legsAnim=%i torsoAnim=%i legsTimer=%i torsoTimer=%i health=%i weapon=%i clModelInfo=%p clientModelSlot=%i realModelInfo=%p realModelname=%s weaponstate=%i weaponTime=%i weapAnim=%i weapAnimTimer=%i ammoclip=%i ammo=%i\n",
+		tag, ps->clientNum, ps->eFlags, ps->pm_type, ps->pm_flags, ps->legsAnim, ps->torsoAnim, ps->legsTimer, ps->torsoTimer,
+		ps->stats[STAT_HEALTH], ps->weapon, (void *)activator->client->modelInfo,
+		clientModelSlot, (void *)realModelInfo, realModelInfo ? realModelInfo->modelname : "(null)",
+		ps->weaponstate, ps->weaponTime, ps->weapAnim, ps->weapAnimTimer,
+		( ps->weapon >= 0 && ps->weapon < MAX_WEAPONS ) ? ps->ammoclip[ps->weapon] : -1,
+		ammoIdx >= 0 ? ps->ammo[ammoIdx] : -1 );
+}
+
 void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 	if (!activator || !activator->client || !ent->buy_item) return;
 
@@ -919,15 +934,18 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 
 	// Special case: ammo
 	if (!Q_stricmp(itemName, "ammo")) {
+		Survival_DebugDumpAnimState(activator, "ammo-before");
 		if (Survival_HandleAmmoPurchase(ent, activator, price)) {
 			// Survival_HandleAmmoPurchase already deducts its own (upgrade-aware) price internally
 			ClientUserinfoChanged(clientNum);
 		}
+		Survival_DebugDumpAnimState(activator, "ammo-after");
 		return;
 	}
 
 	// Special case: random weapon (mystery box)
 	if (!Q_stricmp(itemName, "random_weapon")) {
+		Survival_DebugDumpAnimState(activator, "randweap-before");
 		if (ent->rwbState == RWB_IDLE) {
 			success = Survival_RandomBox_Start(ent, activator);
 		} else if (ent->rwbState == RWB_LANDED) {
@@ -939,25 +957,30 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 		if (success) {
 			ClientUserinfoChanged(clientNum);
 		}
+		Survival_DebugDumpAnimState(activator, "randweap-after");
 		return; // Don't flow into generic weapon handling
 	}
 
 	// Special case: upgrade weapon
 	if (!Q_stricmp(itemName, "upgrade_weapon"))
 	{
+		Survival_DebugDumpAnimState(activator, "upgradeweap-before");
 		if (Survival_HandleWeaponUpgrade(ent, activator, price))
 		{
 			ClientUserinfoChanged(clientNum);
 		}
+		Survival_DebugDumpAnimState(activator, "upgradeweap-after");
 		return;
 	}
 
 	// Special case: random perk
 	if (!Q_stricmp(itemName, "random_perk")) {
+		Survival_DebugDumpAnimState(activator, "randperk-before");
 		success = Survival_HandleRandomPerkBox(ent, activator, &itemName, &itemIndex);
 		if (success) {
 			ClientUserinfoChanged(clientNum);
 		}
+		Survival_DebugDumpAnimState(activator, "randperk-after");
 		return;
 	}
 
@@ -980,6 +1003,8 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 		return;
 	}
 
+	Survival_DebugDumpAnimState(activator, "generic-before");
+
 	switch (item->giType) {
 		case IT_WEAPON:
 		case IT_AMMO:
@@ -998,6 +1023,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 	if (success) {
 		ClientUserinfoChanged(clientNum);
 	}
+	Survival_DebugDumpAnimState(activator, "generic-after");
 }
 
 #define AXIS_OBJECTIVE      1

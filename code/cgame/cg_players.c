@@ -2140,6 +2140,13 @@ void CG_RunLerpFrameRate( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, c
 			// convert it to a factor of this animation's movespeed
 			lf->animSpeedScale = moveSpeed / (float)anim->moveSpeed;
 			lf->oldFrameSnapshotTime = cg.latestSnapshotTime;
+
+			// TEMP DEBUG: remove once the post-purchase anim glitch is diagnosed
+			if ( cent->currentState.number == cg.snap->ps.clientNum && ( anim->moveSpeed <= 0 || lf->animSpeedScale < 0 || lf->animSpeedScale > 20 ) ) {
+				Com_Printf( "SURV_DEBUG[CG movespeed-bad] cl=%i anim=%s moveSpeed=%i rawSpeed=%.1f animSpeedScale=%.2f legOrTorso=%s\n",
+					cent->currentState.number, anim->name, anim->moveSpeed, moveSpeed, lf->animSpeedScale,
+					( lf == &cent->pe.legs ) ? "legs" : "torso" );
+			}
 		}
 	} else {
 		// move at normal speed
@@ -2650,6 +2657,10 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	float clampTolerance;
 	int legsSet;
 	clientInfo_t *ci;
+	// TEMP DEBUG: remove once the post-purchase anim glitch is diagnosed
+	qboolean survDebugLocal = ( cent->currentState.number == cg.snap->ps.clientNum );
+	float survDebugPrevLegsYaw = cent->pe.legs.yawAngle;
+	float survDebugPrevTorsoYaw = cent->pe.torso.yawAngle;
 	ci = &cgs.clientinfo[ cent->currentState.number ];
 
 	// special case (female zombie while climbing wall)
@@ -2790,6 +2801,18 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	AnglesToAxis( legsAngles, legs );
 	AnglesToAxis( torsoAngles, torso );
 	AnglesToAxis( headAngles, head );
+
+	// TEMP DEBUG: remove once the post-purchase anim glitch is diagnosed
+	if ( survDebugLocal ) {
+		float legsDelta = AngleSubtract( cent->pe.legs.yawAngle, survDebugPrevLegsYaw );
+		float torsoDelta = AngleSubtract( cent->pe.torso.yawAngle, survDebugPrevTorsoYaw );
+		if ( fabs( legsDelta ) > 30 || fabs( torsoDelta ) > 30 ) {
+			Com_Printf( "SURV_DEBUG[CG yaw-jump] cl=%i legsYaw %.1f->%.1f (d=%.1f) torsoYaw %.1f->%.1f (d=%.1f) legsYawing=%i torsoYawing=%i eFlags=%i\n",
+				cent->currentState.number, survDebugPrevLegsYaw, cent->pe.legs.yawAngle, legsDelta,
+				survDebugPrevTorsoYaw, cent->pe.torso.yawAngle, torsoDelta,
+				cent->pe.legs.yawing, cent->pe.torso.yawing, cent->currentState.eFlags );
+		}
+	}
 }
 
 
@@ -5475,6 +5498,16 @@ int parts[] = { 34,
 	}
 #endif
 
+
+	// TEMP DEBUG: remove once the post-purchase anim glitch is diagnosed
+	if ( cent->currentState.number == cg.snap->ps.clientNum &&
+		 ( cg.snap->ps.accHideBits != cg.predictedPlayerState.accHideBits ||
+		   cg.snap->ps.accShowBits != cg.predictedPlayerState.accShowBits ) ) {
+		Com_Printf( "SURV_DEBUG[CG acc-mismatch] cl=%i snapHide=%i predHide=%i snapShow=%i predShow=%i legsAnim=%i torsoAnim=%i\n",
+			cent->currentState.number, cg.snap->ps.accHideBits, cg.predictedPlayerState.accHideBits,
+			cg.snap->ps.accShowBits, cg.predictedPlayerState.accShowBits,
+			cent->currentState.legsAnim, cent->currentState.torsoAnim );
+	}
 
 	//
 	// add accessories

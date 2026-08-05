@@ -1307,10 +1307,6 @@ if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
 		Q_strncpyz( model, Info_ValueForKey( userinfo, "model" ), sizeof( model ) );
 	}
 
-	// RF, reset anims so client's dont freak out
-	client->ps.legsAnim = 0;
-	client->ps.torsoAnim = 0;
-
 	if ( g_gametype.integer <= GT_COOP &&  !( ent->r.svFlags & SVF_CASTAI ) ) {
 		// class-locked cosmetic model, must stay a single path segment (no '/') - see SetClassModel
 		model[0] = '\0';
@@ -1327,9 +1323,20 @@ if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
 		modelname[ strstr( modelname, "\\" ) - modelname ] = 0;
 	}
 
-	if ( !G_CheckForExistingModelInfo( client, modelname, &client->modelInfo ) ) {
-		if ( !G_ParseAnimationFiles( modelname, client ) ) {
-			G_Error( "Failed to load animation scripts for model %s\n", modelname );
+	{
+		// client->modelInfo is wiped on every respawn, so compare the level-persistent animScriptData slot instead
+		int prevModelSlot = level.animScriptData.clientModels[ client->ps.clientNum ];
+
+		if ( !G_CheckForExistingModelInfo( client, modelname, &client->modelInfo ) ) {
+			if ( !G_ParseAnimationFiles( modelname, client ) ) {
+				G_Error( "Failed to load animation scripts for model %s\n", modelname );
+			}
+		}
+
+		// RF, reset anims so client's dont freak out - only on an actual model change, since this fires mid-life too (e.g. survival purchases)
+		if ( level.animScriptData.clientModels[ client->ps.clientNum ] != prevModelSlot ) {
+			client->ps.legsAnim = 0;
+			client->ps.torsoAnim = 0;
 		}
 	}
 
