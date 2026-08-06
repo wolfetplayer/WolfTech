@@ -35,11 +35,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "bg_public.h"
 #include "bg_local.h"
 
-#if defined( QAGAME ) || defined( CGAMEDLL )
-// TEMP DEBUG: remove once the post-purchase anim glitch is diagnosed
-extern animModelInfo_t *BG_ModelInfoForClient( int client );
-#endif
-
 // Rafael gameskill
 int bg_pmove_gameskill_integer;
 // done
@@ -3367,25 +3362,12 @@ static void PM_Weapon( void ) {
 	}
 
 	if ( pm->ps->weaponstate == WEAPON_RELOADING ) {
-#ifdef QAGAME
-		// TEMP DEBUG: remove once the post-purchase anim glitch is diagnosed
-		if ( !pm->ps->aiChar ) {
-			Com_Printf( "SURV_DEBUG[reload-finish-before] cl=%i legsAnim=%i torsoAnim=%i legsTimer=%i torsoTimer=%i weaponTime=%i ammoclip=%i\n",
-				pm->ps->clientNum, pm->ps->legsAnim, pm->ps->torsoAnim, pm->ps->legsTimer, pm->ps->torsoTimer, pm->ps->weaponTime, pm->ps->ammoclip[pm->ps->weapon] );
-		}
-#endif
 		PM_FinishWeaponReload();
 
 		// This will happen for chained shotgun reloads
 		if (pm->ps->weaponTime > 0) {
 			return;
 		}
-#ifdef QAGAME
-		if ( !pm->ps->aiChar ) {
-			Com_Printf( "SURV_DEBUG[reload-finish-after] cl=%i legsAnim=%i torsoAnim=%i legsTimer=%i torsoTimer=%i weaponTime=%i ammoclip=%i weaponstate=%i\n",
-				pm->ps->clientNum, pm->ps->legsAnim, pm->ps->torsoAnim, pm->ps->legsTimer, pm->ps->torsoTimer, pm->ps->weaponTime, pm->ps->ammoclip[pm->ps->weapon], pm->ps->weaponstate );
-		}
-#endif
 	}
 
 	// change weapon if time
@@ -4866,9 +4848,6 @@ Can be called by either the server or the client
 */
 int Pmove( pmove_t *pmove ) {
 	int finalTime;
-#if defined( QAGAME ) || defined( CGAMEDLL )
-	int traceLegsAnim, traceTorsoAnim;
-#endif
 
 	// Ridah
 	if ( pmove->ps->eFlags & EF_DUMMY_PMOVE ) {
@@ -4916,11 +4895,6 @@ int Pmove( pmove_t *pmove ) {
 //	startedTorsoAnim = -1;
 //	startedLegAnim = -1;
 
-#if defined( QAGAME ) || defined( CGAMEDLL )
-	traceLegsAnim = pmove->ps->legsAnim;
-	traceTorsoAnim = pmove->ps->torsoAnim;
-#endif
-
 	// chop the move up if it is too long, to prevent framerate
 	// dependent behavior
 	while ( pmove->ps->commandTime != finalTime ) {
@@ -4946,26 +4920,6 @@ int Pmove( pmove_t *pmove ) {
 	}
 
 	//PM_CheckStuck();
-
-#if defined( QAGAME ) || defined( CGAMEDLL )
-	// TEMP DEBUG: remove once the post-purchase anim glitch is diagnosed
-	if ( !pmove->ps->aiChar && ( pmove->ps->legsAnim != traceLegsAnim || pmove->ps->torsoAnim != traceTorsoAnim ) ) {
-		animModelInfo_t *survDebugMI = BG_ModelInfoForClient( pmove->ps->clientNum );
-		int survDebugLegsIdx = pmove->ps->legsAnim & ~ANIM_TOGGLEBIT;
-		int survDebugTorsoIdx = pmove->ps->torsoAnim & ~ANIM_TOGGLEBIT;
-		const char *survDebugLegsName = ( survDebugLegsIdx < survDebugMI->numAnimations ) ? survDebugMI->animations[survDebugLegsIdx].name : "OUT_OF_RANGE";
-		const char *survDebugTorsoName = ( survDebugTorsoIdx < survDebugMI->numAnimations ) ? survDebugMI->animations[survDebugTorsoIdx].name : "OUT_OF_RANGE";
-		int survDebugCondWeapon = BG_GetConditionValue( pmove->ps->clientNum, ANIM_COND_WEAPON, qfalse );
-#ifdef QAGAME
-		Com_Printf( "SURV_DEBUG[SV anim-changed] cl=%i legs %i->%i(%s) torso %i->%i(%s) numAnims=%i weaponstate=%i weaponTime=%i pm_type=%i eFlags=%i accShowBits=%i accHideBits=%i condWeapon=%i actualWeapon=%i\n",
-#else
-		Com_Printf( "SURV_DEBUG[CG anim-changed] cl=%i legs %i->%i(%s) torso %i->%i(%s) numAnims=%i weaponstate=%i weaponTime=%i pm_type=%i eFlags=%i accShowBits=%i accHideBits=%i condWeapon=%i actualWeapon=%i\n",
-#endif
-			pmove->ps->clientNum, traceLegsAnim, pmove->ps->legsAnim, survDebugLegsName, traceTorsoAnim, pmove->ps->torsoAnim, survDebugTorsoName,
-			survDebugMI->numAnimations, pmove->ps->weaponstate, pmove->ps->weaponTime, pmove->ps->pm_type, pmove->ps->eFlags,
-			pmove->ps->accShowBits, pmove->ps->accHideBits, survDebugCondWeapon, pmove->ps->weapon );
-	}
-#endif
 
 	if ( ( pm->ps->stats[STAT_HEALTH] <= 0 || pm->ps->pm_type == PM_DEAD ) && pml.groundTrace.surfaceFlags & SURF_MONSTERSLICK ) {
 		return ( pml.groundTrace.surfaceFlags );
