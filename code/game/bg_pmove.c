@@ -2523,6 +2523,8 @@ static void PM_M97Reload( void ) {
 	qboolean fastReload = (qboolean)( pm->ps->perks[PERK_WEAPONHANDLING] != 0 );
 	int maxclip, ammoIndex;
 
+	BG_AnimScriptEvent( pm->ps, ANIM_ET_RELOAD, qfalse, qtrue );
+
 	// transition from shell + pump
 	if ( pm->ps->holdable[HI_M97] == M97_RELOADING_BEGIN_PUMP ) {
 
@@ -2609,6 +2611,8 @@ PM_Auto5Reload
 static void PM_Auto5Reload( void ) {
 	qboolean fastReload = (qboolean)( pm->ps->perks[PERK_WEAPONHANDLING] != 0 );
 	int maxclip, ammoIndex;
+
+	BG_AnimScriptEvent( pm->ps, ANIM_ET_RELOAD, qfalse, qtrue );
 
 	// transition from shell + pump
 	if ( pm->ps->holdable[HI_AUTO5] == AUTO5_RELOADING_BEGIN_PUMP ) {
