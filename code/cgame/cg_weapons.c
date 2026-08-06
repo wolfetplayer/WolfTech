@@ -1217,7 +1217,8 @@ typedef struct {
 	char tpFlashModel[MAX_QPATH];
 	char fpModel[MAX_QPATH];
 	char fpFlashModel[MAX_QPATH];
-	char fpParts[W_MAX_PARTS][MAX_QPATH];  // first-person barrel/part models - WolfTech attaches these to fixed "tag_barrel"/"tag_barrelN" tags by index, third person parts aren't rendered for non-Venom weapons
+	char fpParts[W_MAX_PARTS][MAX_QPATH];  // first-person barrel/part models - WolfTech attaches these to fixed "tag_barrel"/"tag_barrelN" tags by index
+	char tpParts[W_MAX_PARTS][MAX_QPATH];  // third-person barrel/part models - only WP_VENOM's hardcoded tag_barrel case (see CG_AddPlayerWeapon) actually reads these
 	char sktpModel[MAX_QPATH];
 	char sktpFlashModel[MAX_QPATH];
 	char configPath[MAX_QPATH];            // optional explicit weapon.cfg path; falls back to "<firstPersonModel dir>weapon.cfg" if unset
@@ -1313,10 +1314,11 @@ Parses "part <index> { tag "<name>" model "<path>" }" inside a weaponLink
 block. WolfTech's renderer attaches parts to fixed tag names by index
 ("tag_barrel", "tag_barrel2", ...), not an arbitrary tag string - "tag" is
 accepted (so existing RealRTCW-style .weap assets drop in unmodified) but
-only the part index and model actually matter.
+only the part index and model actually matter. `parts` is the view-type's
+part array (weapFileClient_t::fpParts or ::tpParts) being populated.
 ======================
 */
-static qboolean CG_RW_ParseWeaponLinkPart( int handle, const char *filename, weapFileClient_t *c ) {
+static qboolean CG_RW_ParseWeaponLinkPart( int handle, const char *filename, char parts[][MAX_QPATH] ) {
 	pc_token_t token;
 	int part;
 	const char *s;
@@ -1346,7 +1348,7 @@ static qboolean CG_RW_ParseWeaponLinkPart( int handle, const char *filename, wea
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected tag name" ); return qfalse; }
 		} else if ( !Q_stricmp( token.string, "model" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected part model filename" ); return qfalse; }
-			Q_strncpyz( c->fpParts[part], s, sizeof( c->fpParts[part] ) );
+			Q_strncpyz( parts[part], s, MAX_QPATH );
 		} else {
 			CG_WeapParseError( handle, filename, "unknown token '%s'", token.string );
 			return qfalse;
@@ -1363,7 +1365,7 @@ CG_RW_ParseWeaponLink
 Parses "weaponLink { part N { ... } part N { ... } ... }".
 ======================
 */
-static qboolean CG_RW_ParseWeaponLink( int handle, const char *filename, weapFileClient_t *c ) {
+static qboolean CG_RW_ParseWeaponLink( int handle, const char *filename, char parts[][MAX_QPATH] ) {
 	pc_token_t token;
 
 	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "{" ) ) {
@@ -1379,7 +1381,7 @@ static qboolean CG_RW_ParseWeaponLink( int handle, const char *filename, weapFil
 			break;
 		}
 		if ( !Q_stricmp( token.string, "part" ) ) {
-			if ( !CG_RW_ParseWeaponLinkPart( handle, filename, c ) ) {
+			if ( !CG_RW_ParseWeaponLinkPart( handle, filename, parts ) ) {
 				return qfalse;
 			}
 		} else {
@@ -1397,11 +1399,12 @@ CG_RW_ParseViewType
 
 Parses "{ model "..." flashModel "..." [weaponLink {...}] }" for the
 firstPerson/thirdPerson/skeletalThirdPerson blocks. weaponLink is only
-meaningful (and only accepted) for firstPerson - WolfTech's renderer never
-reads third-person part slots for anything but WP_VENOM's hardcoded case.
+accepted when `parts` is non-NULL - WolfTech's renderer only reads
+third-person part slots for WP_VENOM's hardcoded tag_barrel case, so
+skeletalThirdPerson still passes NULL to reject it.
 ======================
 */
-static qboolean CG_RW_ParseViewType( int handle, const char *filename, weapFileClient_t *c, char *modelPath, char *flashModelPath, size_t pathSize, qboolean allowWeaponLink ) {
+static qboolean CG_RW_ParseViewType( int handle, const char *filename, char parts[][MAX_QPATH], char *modelPath, char *flashModelPath, size_t pathSize ) {
 	pc_token_t token;
 	const char *s;
 
@@ -1423,8 +1426,8 @@ static qboolean CG_RW_ParseViewType( int handle, const char *filename, weapFileC
 		} else if ( !Q_stricmp( token.string, "flashModel" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected flashModel filename" ); return qfalse; }
 			Q_strncpyz( flashModelPath, s, pathSize );
-		} else if ( allowWeaponLink && !Q_stricmp( token.string, "weaponLink" ) ) {
-			if ( !CG_RW_ParseWeaponLink( handle, filename, c ) ) {
+		} else if ( parts && !Q_stricmp( token.string, "weaponLink" ) ) {
+			if ( !CG_RW_ParseWeaponLink( handle, filename, parts ) ) {
 				return qfalse;
 			}
 		} else {
@@ -1461,15 +1464,15 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 		}
 
 		if ( !Q_stricmp( token.string, "firstPerson" ) ) {
-			if ( !CG_RW_ParseViewType( handle, filename, c, c->fpModel, c->fpFlashModel, sizeof( c->fpModel ), qtrue ) ) {
+			if ( !CG_RW_ParseViewType( handle, filename, c->fpParts, c->fpModel, c->fpFlashModel, sizeof( c->fpModel ) ) ) {
 				return qfalse;
 			}
 		} else if ( !Q_stricmp( token.string, "thirdPerson" ) ) {
-			if ( !CG_RW_ParseViewType( handle, filename, c, c->tpModel, c->tpFlashModel, sizeof( c->tpModel ), qfalse ) ) {
+			if ( !CG_RW_ParseViewType( handle, filename, c->tpParts, c->tpModel, c->tpFlashModel, sizeof( c->tpModel ) ) ) {
 				return qfalse;
 			}
 		} else if ( !Q_stricmp( token.string, "skeletalThirdPerson" ) ) {
-			if ( !CG_RW_ParseViewType( handle, filename, c, c->sktpModel, c->sktpFlashModel, sizeof( c->sktpModel ), qfalse ) ) {
+			if ( !CG_RW_ParseViewType( handle, filename, NULL, c->sktpModel, c->sktpFlashModel, sizeof( c->sktpModel ) ) ) {
 				return qfalse;
 			}
 		} else if ( !Q_stricmp( token.string, "weaponConfig" ) ) {
@@ -1721,12 +1724,16 @@ static qboolean CG_RegisterWeaponFromFile( int weaponNum, weaponInfo_t *weaponIn
 		}
 	}
 
-	// first-person barrel/part models (e.g. bolt/receiver pieces) - attached at render time to fixed
-	// "tag_barrel"/"tag_barrelN" tags by index (see CG_AddPlayerWeapon), never read for third person
-	// except WP_VENOM's hardcoded belt, so only W_FP_MODEL is populated here
+	// barrel/part models (e.g. bolt/receiver pieces) - attached at render time to fixed
+	// "tag_barrel"/"tag_barrelN" tags by index (see CG_AddPlayerWeapon). Third-person parts
+	// are only ever read back for WP_VENOM's hardcoded tag_barrel case, but any weapon's
+	// .weap can still declare them here.
 	for ( i = 0; i < W_MAX_PARTS; i++ ) {
 		if ( c.fpParts[i][0] ) {
 			weaponInfo->wpPartModels[W_FP_MODEL][i] = trap_R_RegisterModel( c.fpParts[i] );
+		}
+		if ( c.tpParts[i][0] ) {
+			weaponInfo->wpPartModels[W_TP_MODEL][i] = trap_R_RegisterModel( c.tpParts[i] );
 		}
 	}
 

@@ -51,6 +51,15 @@ weaponDef
 		thirdPerson {
 			model			"models/weapons/secret/venom/venom_3rd.md3"
 			flashModel		"models/weapons/secret/venom/venom_3rd_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/secret/venom/venom_3rd_barrel.md3"
+				}
+			}
 		}
 	}
 }
