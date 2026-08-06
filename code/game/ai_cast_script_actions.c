@@ -1721,7 +1721,7 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		{
 			if (g_gametype.integer == GT_COOP_SURVIVAL)
 			{
-				if (weapon != WP_GRENADE_LAUNCHER && weapon != WP_GRENADE_PINEAPPLE && weapon != WP_DYNAMITE && weapon != WP_AIRSTRIKE && weapon != WP_ARTY) // Skip WP_AIRSTRIKE and WP_ARTY
+				if (weapon != WP_GRENADE_LAUNCHER && weapon != WP_GRENADE_PINEAPPLE && weapon != WP_DYNAMITE && weapon != WP_AIRSTRIKE && weapon != WP_ARTY && weapon != WP_MEDCRATE && weapon != WP_LANDMINE) // Skip WP_AIRSTRIKE and WP_ARTY
 				{
 					if (ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_SOLDIER)
 					{
