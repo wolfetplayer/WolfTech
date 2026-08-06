@@ -904,6 +904,30 @@ qboolean Survival_HandlePerkPurchase(gentity_t *activator, gitem_t *item, int pr
 }
 
 
+/*
+============
+Survival_RefreshMaxHealth
+
+Mirrors the "--- SURVIVAL maxHealth rules ---" block in ClientUserinfoChanged
+(g_client.c) - recomputes pers.maxHealth/STAT_MAX_HEALTH from class + Resilience
+level. target_buy only ever needs this one side effect of ClientUserinfoChanged;
+calling the full function on every purchase also forced a needless model/anim
+reparse (G_CheckForExistingModelInfo, plus the conditional legsAnim/torsoAnim
+reset) and wiped session stats via Coop_DeleteStats.
+============
+*/
+static void Survival_RefreshMaxHealth( gentity_t *activator ) {
+	gclient_t *client = activator->client;
+
+	if ( client->ps.perks[ PERK_RESILIENCE ] ) {
+		client->pers.maxHealth = ( client->ps.stats[ STAT_PLAYER_CLASS ] == PC_MEDIC ) ? 250 : 200;
+	} else {
+		client->pers.maxHealth = ( client->ps.stats[ STAT_PLAYER_CLASS ] == PC_MEDIC ) ? 150 : 100;
+	}
+
+	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
+}
+
 /*QUAKED target_buy (1 0 0) (-8 -8 -8) (8 8 8)
 Gives the activator all the items pointed to.
 */
@@ -928,7 +952,6 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 	int itemIndex = 0;
 	char *itemName = ent->buy_item;
 	int price = (ent->price > 0) ? ent->price : 0;
-	int clientNum = activator->client->ps.clientNum;
 	gitem_t *item = NULL;
 	qboolean success = qfalse;
 
@@ -937,7 +960,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 		Survival_DebugDumpAnimState(activator, "ammo-before");
 		if (Survival_HandleAmmoPurchase(ent, activator, price)) {
 			// Survival_HandleAmmoPurchase already deducts its own (upgrade-aware) price internally
-			ClientUserinfoChanged(clientNum);
+			Survival_RefreshMaxHealth(activator);
 		}
 		Survival_DebugDumpAnimState(activator, "ammo-after");
 		return;
@@ -955,7 +978,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 			trap_SendServerCommand(-1, "mu_play sound/items/use_nothing.wav 0\n");
 		}
 		if (success) {
-			ClientUserinfoChanged(clientNum);
+			Survival_RefreshMaxHealth(activator);
 		}
 		Survival_DebugDumpAnimState(activator, "randweap-after");
 		return; // Don't flow into generic weapon handling
@@ -967,7 +990,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 		Survival_DebugDumpAnimState(activator, "upgradeweap-before");
 		if (Survival_HandleWeaponUpgrade(ent, activator, price))
 		{
-			ClientUserinfoChanged(clientNum);
+			Survival_RefreshMaxHealth(activator);
 		}
 		Survival_DebugDumpAnimState(activator, "upgradeweap-after");
 		return;
@@ -978,7 +1001,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 		Survival_DebugDumpAnimState(activator, "randperk-before");
 		success = Survival_HandleRandomPerkBox(ent, activator, &itemName, &itemIndex);
 		if (success) {
-			ClientUserinfoChanged(clientNum);
+			Survival_RefreshMaxHealth(activator);
 		}
 		Survival_DebugDumpAnimState(activator, "randperk-after");
 		return;
@@ -1021,7 +1044,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 	}
 
 	if (success) {
-		ClientUserinfoChanged(clientNum);
+		Survival_RefreshMaxHealth(activator);
 	}
 	Survival_DebugDumpAnimState(activator, "generic-after");
 }
