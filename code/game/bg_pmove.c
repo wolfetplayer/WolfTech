@@ -3982,6 +3982,11 @@ static void PM_QuickGrenade( void ) {
 				BG_AddPredictableEventToPlayerstate( EV_FIRE_QUICKGREN, fuseLeft, pm->ps );
 			}
 
+			// borrow the thrown-weapon anim condition so the equipped gun's pose isn't used for the throw
+			BG_UpdateConditionValue( pm->ps->clientNum, ANIM_COND_WEAPON, pm->ps->weaponDelay, qtrue );
+			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qtrue );
+			BG_UpdateConditionValue( pm->ps->clientNum, ANIM_COND_WEAPON, pm->ps->weapon, qtrue );
+
 			pm->ps->grenadeTimeLeft = 0;
 			pm->ps->weaponDelay = 0;
 			pm->ps->quickGrenTime = 2500;
