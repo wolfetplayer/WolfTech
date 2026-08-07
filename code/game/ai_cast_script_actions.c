@@ -1606,8 +1606,6 @@ qboolean AICast_ScriptAction_GiveArmor( cast_state_t *cs, char *params ) {
 
 qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 	gentity_t *player;
-	qboolean appliedAny = qfalse;
-	int i;
 	// Every survival player has a class, so the loadout is always "<loadout>_<class>" (see loadouts_survival.loadout).
 	static const char *classSuffixes[4] = { "soldier", "medic", "engineer", "lt" };
 
@@ -1616,34 +1614,28 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 	}
 
 	if ( g_gametype.integer == GT_COOP_SURVIVAL || g_gametype.integer == GT_COOP ) {
-		for ( i = 0; i < MAX_CLIENTS; i++ ) {
-			int classNum;
-			char classLoadoutName[128];
+		int classNum;
+		char classLoadoutName[128];
 
-			player = &g_entities[i];
+		player = &g_entities[cs->entityNum];
 
-			if ( !player->inuse || !player->client ) {
-				continue;
-			}
-			if ( player->client->pers.connected != CON_CONNECTED ) {
-				continue;
-			}
-			if ( player->aiCharacter ) {
-				continue;   // skip bots/AI-controlled entities
-			}
-
-			classNum = player->client->ps.stats[STAT_PLAYER_CLASS];
-			if ( classNum < PC_SOLDIER || classNum > PC_LT ) {
-				classNum = PC_SOLDIER;
-			}
-			Com_sprintf( classLoadoutName, sizeof( classLoadoutName ), "%s_%s", params, classSuffixes[classNum] );
-
-			if ( AICast_Loadouts_ApplyToEnt( cs, player, classLoadoutName ) ) {
-				appliedAny = qtrue;
-			}
+		if ( !player->inuse || !player->client ) {
+			return qfalse;
+		}
+		if ( player->client->pers.connected != CON_CONNECTED ) {
+			return qfalse;
+		}
+		if ( player->aiCharacter ) {
+			return qfalse;   // skip bots/AI-controlled entities
 		}
 
-		return appliedAny;
+		classNum = player->client->ps.stats[STAT_PLAYER_CLASS];
+		if ( classNum < PC_SOLDIER || classNum > PC_LT ) {
+			classNum = PC_SOLDIER;
+		}
+		Com_sprintf( classLoadoutName, sizeof( classLoadoutName ), "%s_%s", params, classSuffixes[classNum] );
+
+		return AICast_Loadouts_ApplyToEnt( cs, player, classLoadoutName );
 	}
 
 	player = AICast_FindEntityForName( "player" );
