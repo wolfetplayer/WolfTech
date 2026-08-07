@@ -3702,15 +3702,17 @@ void CL_Frame( int msec ) {
 		// Lobby membership notices the host leaving well before the P2P poll below would.
 		if ( steamCheckHostLeft() && !isHostingServer ) {
 			if ( clc.state != CA_DISCONNECTED ) {
+				// Com_Error (not a bare CL_Disconnect) so cgame/ui VMs get torn down - avoids crashing mid-game.
 #ifdef LOCALISATION
 				message = CL_TranslateStringBuf( "Host has disconnected from the game.\n" );
 				Com_Printf( "%s", message );
 				Cvar_Set( "com_errorMessage", message );
+				Com_Error( ERR_DISCONNECT, "%s", message );
 #else
 				Com_Printf( "Host has disconnected from the game.\n" );
 				Cvar_Set( "com_errorMessage", "Host has disconnected from the game.\n" );
+				Com_Error( ERR_DISCONNECT, "Host has disconnected from the game.\n" );
 #endif
-				CL_Disconnect( qtrue );
 			} else if ( steamLobbyCurrent() != 0 ) {
 				// Still in the pre-game lobby - boot everyone back to the main menu instead of stranding them with no leader.
 #ifdef LOCALISATION
@@ -3731,15 +3733,17 @@ void CL_Frame( int msec ) {
 		while ( steamNetPollConnEvent( &peerSteamID, &peerConnected ) ) {
 			if ( !peerConnected && clc.serverAddress.type == NA_STEAM_P2P &&
 				 clc.serverAddress.steamID == peerSteamID ) {
+				// Same reasoning as the steamCheckHostLeft() block above - use Com_Error, not a bare CL_Disconnect.
 #ifdef LOCALISATION
 				message = CL_TranslateStringBuf( "Lost connection to the host.\n" );
 				Com_Printf( "%s", message );
 				Cvar_Set( "com_errorMessage", message );
+				Com_Error( ERR_DISCONNECT, "%s", message );
 #else
 				Com_Printf( "Lost connection to the host.\n" );
 				Cvar_Set( "com_errorMessage", "Lost connection to the host.\n" );
+				Com_Error( ERR_DISCONNECT, "Lost connection to the host.\n" );
 #endif
-				CL_Disconnect( qtrue );
 			}
 		}
 	}
