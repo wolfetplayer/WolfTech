@@ -613,6 +613,9 @@ qboolean CG_ParseAnimationFiles( char *modelname, animModelInfo_t *modelInfo, in
 		BG_AnimParseAnimScript( modelInfo, &cgs.animScriptData, clientNum,
 								 modelInfo->characterDef.animationScript, text );
 
+		// re-apply .mvspd here too - this fallback path never goes through the copy in CG_CheckForExistingModelInfo that normally does it
+		CG_LoadAndParseMoveSpeeds( modelname );
+
 		return qtrue;
 	}
 	modelInfo->isCharacter = qfalse;
@@ -1562,6 +1565,13 @@ void CG_LoadClientInfo( int clientNum, clientInfo_t *ci ) {
 	for ( i = 0 ; i < MAX_GENTITIES ; i++ ) {
 		if ( cg_entities[i].currentState.clientNum == clientNum
 			 && cg_entities[i].currentState.eType == ET_PLAYER ) {
+			// clamp stale indices from a previous (possibly different) model, avoids a hard error in CG_ResetPlayerEntity below
+			if ( ( cg_entities[i].currentState.legsAnim & ~ANIM_TOGGLEBIT ) >= ci->modelInfo->numAnimations ) {
+				cg_entities[i].currentState.legsAnim = 0;
+			}
+			if ( ( cg_entities[i].currentState.torsoAnim & ~ANIM_TOGGLEBIT ) >= ci->modelInfo->numAnimations ) {
+				cg_entities[i].currentState.torsoAnim = 0;
+			}
 			CG_ResetPlayerEntity( &cg_entities[i] );
 		}
 	}
@@ -1582,6 +1592,7 @@ static void CG_CopyClientInfoModel( clientInfo_t *from, clientInfo_t *to ) {
 	to->headModel   = from->headModel;
 	to->headSkin    = from->headSkin;
 	to->isSkeletal  = from->isSkeletal;
+	to->isCharacter = from->isCharacter;
 	to->modelIcon   = from->modelIcon;
 
 //----(SA)
