@@ -534,10 +534,10 @@ cvarTable_t cvarTable[] = {
 	{&cg_survivalAiHealthCap, "g_survivalAiHealthCap", "0", 0}, // host-controlled, communicated by serverinfo
 
 		// JPW NERVE
-	{&cg_medicChargeTime, "g_medicChargeTime", "30000", 0},		  // communicated by systeminfo
-	{&cg_LTChargeTime, "g_LTChargeTime", "30000", 0},			  // communicated by systeminfo
-	{&cg_engineerChargeTime, "g_engineerChargeTime", "30000", 0}, // communicated by systeminfo
-	{&cg_soldierChargeTime, "g_soldierChargeTime", "30000", 0},	  // communicated by systeminfo
+	{&cg_medicChargeTime, "g_medicChargeTime", "30000", CVAR_SYSTEMINFO},		  // communicated by systeminfo
+	{&cg_LTChargeTime, "g_LTChargeTime", "30000", CVAR_SYSTEMINFO},			  // communicated by systeminfo
+	{&cg_engineerChargeTime, "g_engineerChargeTime", "30000", CVAR_SYSTEMINFO}, // communicated by systeminfo
+	{&cg_soldierChargeTime, "g_soldierChargeTime", "30000", CVAR_SYSTEMINFO},	  // communicated by systeminfo
 
 	{&cg_notebook, "cl_notebook", "0", CVAR_ROM},
 	{&cg_notebookpages, "cg_notebookpages", "0", CVAR_ROM},
