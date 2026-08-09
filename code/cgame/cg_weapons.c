@@ -1560,6 +1560,9 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 		} else if ( !Q_stricmp( token.string, "shellModel" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected shellModel filename" ); return qfalse; }
 			wi->shellModel = trap_R_RegisterModel( s );
+		} else if ( !Q_stricmp( token.string, "droppedModel" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected droppedModel filename" ); return qfalse; }
+			wi->droppedModel = trap_R_RegisterModel( s );
 		} else if ( !Q_stricmp( token.string, "missileSound" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected missileSound filename" ); return qfalse; }
 			wi->missileSound = trap_S_RegisterSound( s );

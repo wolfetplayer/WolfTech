@@ -1271,6 +1271,7 @@ ammotable_t ammoTable[] = {
 		.bulletBased        = qfalse,
 		.hasMuzzle          = qfalse,
 		.underwaterFire     = qtrue,
+        .gunAngleOffset     = { -70.0f, -60.0f, -40.0f },
 		.weapFile           = "medcrate.weap",
     },
     [WP_PANZERFAUST] = {

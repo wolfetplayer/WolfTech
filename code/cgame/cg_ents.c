@@ -1265,6 +1265,9 @@ static void CG_Missile( centity_t *cent ) {
 	else if ( weapon->shellModel && s1->pos.trType == TR_LINEAR ) {
 		ent.hModel = weapon->shellModel; // TR_LINEAR falling bombs share WP_AIRSTRIKE with the thrown TR_GRAVITY marker but use the distinct shell model
 	}
+	else if ( weapon->droppedModel && s1->pos.trType == TR_STATIONARY ) {
+		ent.hModel = weapon->droppedModel; // e.g. medcrate: opened-crate model once G_TryPlaceMedCrate has settled it
+	}
 	else {
 		ent.hModel = weapon->missileModel;
 	}
@@ -1330,6 +1333,11 @@ static void CG_Missile( centity_t *cent ) {
 		RotateAroundDirection( ent.axis, cg.time / 4 );
 	} else {
 		RotateAroundDirection( ent.axis, s1->time );
+	}
+
+	// dropped models (see above) are authored lying flat -- skip the travel-direction tilt or they'd render half-sunk into the ground
+	if ( weapon->droppedModel && s1->pos.trType == TR_STATIONARY ) {
+		AxisClear( ent.axis );
 	}
 
 	// Rafael

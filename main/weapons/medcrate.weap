@@ -1,11 +1,11 @@
-// Placeholder art: reuses the stock large health pack model until real crate art exists.
 weaponDef
 {
 	client {
-		weaponConfig		"models/multiplayer/landmine/weapon.cfg"
-		handsModel			"models/multiplayer/landmine/v_landmine_hand.md3"
+		weaponConfig		"models/weapons/misc/medcrate/weapon.cfg"
+		handsModel			"models/weapons/misc/medcrate/v_medcrate_hand.md3"
 
-		missileModel		"models/powerups/health/health_l.md3"
+		missileModel		"models/weapons/misc/medcrate/medcrate_throw.md3"
+		droppedModel		"models/weapons/misc/medcrate/medcrate_dropped.md3"
 
 		weaponIcon			"icons/iconh_large"
 		weaponSelectedIcon	"icons/iconh_large"
@@ -14,11 +14,11 @@ weaponDef
 		// NOTE: bounceSound doesn't apply to thrown missiles (dropped items only); landing thud is EV_GRENADE_BOUNCE from G_TryPlaceMedCrate instead.
 
 		firstPerson {
-			model		"models/powerups/health/health_l.md3"
+			model		"models/weapons/misc/medcrate/v_medcrate.md3"
 		}
 
 		thirdPerson {
-			model		"models/powerups/health/health_l.md3"
+			model		"models/weapons/misc/medcrate/medcrate_3rd.md3"
 		}
 	}
 }

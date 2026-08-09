@@ -1112,6 +1112,8 @@ gentity_t *weapon_grenadelauncher_fire_coop( gentity_t *ent, int grenType ) {
 		upangle *= 1100;
 	} else if ( grenType == WP_GRENADE_SMOKE || grenType == WP_AIRSTRIKE ) {
 		upangle *= 1100;
+	} else if ( grenType == WP_MEDCRATE ) {
+		upangle = 150; 
 	} else {     // WP_DYNAMITE
 		upangle *= 400;
 	}
@@ -1220,6 +1222,8 @@ gentity_t *weapon_grenadelauncher_fire( gentity_t *ent, int grenType ) {
 		}
 	} else if ( grenType == WP_GRENADE_SMOKE || grenType == WP_AIRSTRIKE )   { // smoke grenades and airstrike markers *really* get chucked
 		upangle *= 800;
+	} else if ( grenType == WP_MEDCRATE ) {
+		upangle = 150; 
 	} else {      // WP_DYNAMITE
 		upangle *= 400;     //										0.0 / 100.0
 
@@ -2116,7 +2120,7 @@ void FireWeapon( gentity_t *ent ) {
 
 		ent->client->ps.classWeaponTime = level.time;
 
-		// reuses dynamite's short-toss arc: these helpers only special-case WP_DYNAMITE, everything else falls through the same way.
+		// these helpers special-case WP_MEDCRATE with zero launch velocity so it just drops -- see weapon_grenadelauncher_fire_coop/_fire.
 		if (g_gametype.integer <= GT_COOP)
 		{
 			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
