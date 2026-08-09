@@ -5323,6 +5323,8 @@ char *eventnames[] = {
 
 	"EV_M97_PUMP",
 
+	"EV_MEDCRATE_HEAL_START",
+
 	"EV_MAX_EVENTS"
 };
 

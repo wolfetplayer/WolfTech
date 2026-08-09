@@ -570,6 +570,7 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 
 	case WP_DYNAMITE:      // charge-based (cooldown-gated), no meaningful clip/reserve count
 	case WP_AIRSTRIKE:
+	case WP_MEDCRATE:
 		return;
 
 	case WP_GRENADE_LAUNCHER:

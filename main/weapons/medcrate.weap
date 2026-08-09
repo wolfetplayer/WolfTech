@@ -7,11 +7,15 @@ weaponDef
 		missileModel		"models/weapons/misc/medcrate/medcrate_throw.md3"
 		droppedModel		"models/weapons/misc/medcrate/medcrate_dropped.md3"
 
+		flashSound			"sound/weapons/medcrate/throw.wav"
+		landSound			"sound/weapons/medcrate/land.wav"
+		healSound			"sound/weapons/medcrate/heal.wav"
+
 		weaponIcon			"icons/iconh_large"
 		weaponSelectedIcon	"icons/iconh_large"
 		ammoIcon			"icons/iconh_large"
 
-		// NOTE: bounceSound doesn't apply to thrown missiles (dropped items only); landing thud is EV_GRENADE_BOUNCE from G_TryPlaceMedCrate instead.
+		// NOTE: bounceSound doesn't apply to thrown missiles (dropped items only); landing thud uses landSound above via EV_GRENADE_BOUNCE.
 
 		firstPerson {
 			model		"models/weapons/misc/medcrate/v_medcrate.md3"

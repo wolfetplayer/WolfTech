@@ -586,6 +586,12 @@ void G_MedCrateThink( gentity_t *self ) {
 			continue;
 		}
 
+		// one-shot "crate is healing" chime -- effect1Time doubles as a played-already flag (medcrate never uses it otherwise)
+		if ( !self->s.effect1Time ) {
+			self->s.effect1Time = 1;
+			G_AddEvent( self, EV_MEDCRATE_HEAL_START, 0 );
+		}
+
 		ent->health    += grant;
 		self->health   -= grant;
 		G_AddEvent( ent, EV_POWERUP_REGEN, 0 );

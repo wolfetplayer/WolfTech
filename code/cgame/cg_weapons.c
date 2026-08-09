@@ -1566,6 +1566,12 @@ static qboolean CG_RW_ParseClient( int handle, const char *filename, weaponInfo_
 		} else if ( !Q_stricmp( token.string, "missileSound" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected missileSound filename" ); return qfalse; }
 			wi->missileSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "landSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected landSound filename" ); return qfalse; }
+			wi->landSound = trap_S_RegisterSound( s );
+		} else if ( !Q_stricmp( token.string, "healSound" ) ) {
+			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected healSound filename" ); return qfalse; }
+			wi->healSound = trap_S_RegisterSound( s );
 		} else if ( !Q_stricmp( token.string, "missileTrailFunc" ) ) {
 			if ( !PC_String_Parse( handle, &s ) ) { CG_WeapParseError( handle, filename, "expected missileTrailFunc name" ); return qfalse; }
 			wi->missileTrailFunc = CG_WeapMissileTrailFuncForName( s );

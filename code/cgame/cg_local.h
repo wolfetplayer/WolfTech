@@ -719,6 +719,8 @@ typedef struct weaponInfo_s {
 	qhandle_t shellModel;   // used instead of missileModel for TR_LINEAR falling ordnance (see CG_Missile) when a weapon id is shared with a thrown TR_GRAVITY marker
 	qhandle_t droppedModel; // used instead of missileModel once the missile has settled (TR_STATIONARY) -- e.g. medcrate's opened-crate model after it lands
 	sfxHandle_t missileSound;
+	sfxHandle_t landSound;  // one-shot thud when the missile settles (EV_GRENADE_BOUNCE); falls back to the generic material-based bounce bank if unset
+	sfxHandle_t healSound;  // one-shot chime on EV_MEDCRATE_HEAL_START
 	void ( *missileTrailFunc )( centity_t *, const struct weaponInfo_s *wi );
 	float missileDlight;
 	vec3_t missileDlightColor;

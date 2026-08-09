@@ -2190,6 +2190,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			trap_S_StartSoundEx( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].pumpSound, SND_REQUESTCUT );
 		}
 		break;
+	case EV_MEDCRATE_HEAL_START:
+		DEBUGNAME( "EV_MEDCRATE_HEAL_START" );
+		if ( cg_weapons[WP_MEDCRATE].healSound ) {
+			trap_S_StartSound( NULL, es->number, CHAN_AUTO, cg_weapons[WP_MEDCRATE].healSound );
+		}
+		break;
 	case EV_FIREMODE_SWITCH:
 		DEBUGNAME( "EV_FIREMODE_SWITCH" );
 		if ( cg_weapons[es->weapon].fireModeSwitchSound ) {
@@ -2417,8 +2423,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_GRENADE_BOUNCE:
 		DEBUGNAME( "EV_GRENADE_BOUNCE" );
 
+		// MEDCRATE (dedicated .weap-defined land thud, if set)
+		if ( es->weapon == WP_MEDCRATE && cg_weapons[WP_MEDCRATE].landSound ) {
+			trap_S_StartSound( NULL, es->number, CHAN_AUTO, cg_weapons[WP_MEDCRATE].landSound );
+		}
 		// DYNAMITE
-		if ( es->weapon == WP_DYNAMITE ) {
+		else if ( es->weapon == WP_DYNAMITE ) {
 			trap_S_StartSound( NULL, es->number, CHAN_AUTO, cgs.media.dynamitebounce1 );
 		} else {
 			int flags;
