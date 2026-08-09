@@ -720,7 +720,7 @@ typedef struct weaponInfo_s {
 	qhandle_t droppedModel; // used instead of missileModel once the missile has settled (TR_STATIONARY) -- e.g. medcrate's opened-crate model after it lands
 	sfxHandle_t missileSound;
 	sfxHandle_t landSound;  // one-shot thud when the missile settles (EV_GRENADE_BOUNCE); falls back to the generic material-based bounce bank if unset
-	sfxHandle_t healSound;  // one-shot chime on EV_MEDCRATE_HEAL_START
+	sfxHandle_t healSound;  // played every EV_MEDCRATE_HEAL_TICK while the crate is actively healing someone
 	void ( *missileTrailFunc )( centity_t *, const struct weaponInfo_s *wi );
 	float missileDlight;
 	vec3_t missileDlightColor;

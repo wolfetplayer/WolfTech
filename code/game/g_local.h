@@ -1279,6 +1279,7 @@ extern vmCvar_t g_LTChargeTime; // JPW NERVE -- Lieutenant airstrike/artillery c
 extern vmCvar_t g_medicChargeTime;
 extern vmCvar_t g_engineerChargeTime;
 extern vmCvar_t g_soldierChargeTime;
+extern vmCvar_t g_regenDelay;
 extern vmCvar_t g_password;
 extern vmCvar_t g_needpass;
 extern vmCvar_t g_gravity;

@@ -491,7 +491,8 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 
 		// regenerate
 // JPW NERVE, split these completely
-		if ( g_gametype.integer <= GT_SINGLE_PLAYER ) {
+		// excluded for survival: this legacy SP path bypasses the tiered/hit-delay regen below via the PC_MEDIC PW_REGEN keepalive further down
+		if ( g_gametype.integer <= GT_SINGLE_PLAYER && g_gametype.integer != GT_COOP_SURVIVAL ) {
 			if ( client->ps.powerups[PW_REGEN] ) {
 				if ( ent->health < client->ps.stats[STAT_MAX_HEALTH] ) {
 					ent->health += 15;
@@ -526,7 +527,7 @@ if ((g_gametype.integer == GT_COOP_SURVIVAL) && level.time >= client->healthRege
 			if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.75)
 				{
 					client->healthRegenStartTime = level.time + 500;
-					ent->health += 10;
+					ent->health += 8;
 
 					if (ent->health > client->ps.stats[STAT_MAX_HEALTH])
 					{
@@ -536,15 +537,15 @@ if ((g_gametype.integer == GT_COOP_SURVIVAL) && level.time >= client->healthRege
 				  else if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.50 && ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.75)
 				{
 					client->healthRegenStartTime = level.time + 750;
-					ent->health += 9;
+					ent->health += 6; 
 				} else if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.25 && ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.50)
 				{
                    	client->healthRegenStartTime = level.time + 1000;
-					ent->health += 7;
+					ent->health += 4; 
 				}  else if (ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.25)
 				{
 					client->healthRegenStartTime = level.time + 1500;
-					ent->health += 5;
+					ent->health += 2;  
 				}
 
 

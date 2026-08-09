@@ -985,7 +985,7 @@ typedef enum {
 
 	EV_M97_PUMP,    // M97 pump-action rack sound, played when starting a reload from an empty clip
 
-	EV_MEDCRATE_HEAL_START, // fired once by G_MedCrateThink the first time a crate grants any healing, not on every tick
+	EV_MEDCRATE_HEAL_TICK, // fired by G_MedCrateThink once per tick while the crate is actively healing at least one player
 
 	EV_MAX_EVENTS   // just added as an 'endcap'
 

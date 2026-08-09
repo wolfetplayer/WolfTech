@@ -1375,7 +1375,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		client->damage_blood += take;
 		client->damage_knockback += knockback;
 
-		client->healthRegenStartTime = level.time + 2500; // This will reset health regen timer
+		client->healthRegenStartTime = level.time + g_regenDelay.integer; // any damage (world, enemy, self) pushes passive regen back -- CoD-style
 
 		if ( dir ) {
 			VectorCopy( dir, client->damage_from );

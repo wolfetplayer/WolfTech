@@ -2190,8 +2190,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			trap_S_StartSoundEx( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].pumpSound, SND_REQUESTCUT );
 		}
 		break;
-	case EV_MEDCRATE_HEAL_START:
-		DEBUGNAME( "EV_MEDCRATE_HEAL_START" );
+	case EV_MEDCRATE_HEAL_TICK:
+		DEBUGNAME( "EV_MEDCRATE_HEAL_TICK" );
 		if ( cg_weapons[WP_MEDCRATE].healSound ) {
 			trap_S_StartSound( NULL, es->number, CHAN_AUTO, cg_weapons[WP_MEDCRATE].healSound );
 		}

@@ -397,11 +397,11 @@ live per medic; placing another evicts the oldest immediately.
 */
 
 #define MEDCRATE_MAX_PER_PLAYER      2
-// MEDCRATE_HEAL_RADIUS lives in bg_public.h -- cgame's ground radius indicator needs it too
-#define MEDCRATE_HEAL_POOL_PER_PLAYER 250    // scaled by level.numPlayingCoopClients: 250/500/750/1000 for 1/2/3/4 players
+
+#define MEDCRATE_HEAL_POOL_PER_PLAYER 250
 #define MEDCRATE_HEAL_POOL_MAX       1000
 #define MEDCRATE_TICK_INTERVAL       500
-#define MEDCRATE_HEAL_PER_TICK  5      // 10 HP/sec per player -- no hit-delay gate, unlike g_active.c's regen tiers
+#define MEDCRATE_HEAL_PER_TICK  10
 #define MEDCRATE_SINK_TICK      100
 #define MEDCRATE_SINK_DURATION  2000
 
@@ -541,6 +541,7 @@ void G_MedCrateThink( gentity_t *self ) {
 	int       i, cnt;
 	vec3_t    range = { MEDCRATE_HEAL_RADIUS, MEDCRATE_HEAL_RADIUS, MEDCRATE_HEAL_RADIUS };
 	vec3_t    mins, maxs;
+	qboolean  healedAnyone = qfalse;
 
 	if ( self->health <= 0 ) {
 		self->count     = MEDCRATE_SINK_DURATION / MEDCRATE_SINK_TICK;
@@ -586,15 +587,15 @@ void G_MedCrateThink( gentity_t *self ) {
 			continue;
 		}
 
-		// one-shot "crate is healing" chime -- effect1Time doubles as a played-already flag (medcrate never uses it otherwise)
-		if ( !self->s.effect1Time ) {
-			self->s.effect1Time = 1;
-			G_AddEvent( self, EV_MEDCRATE_HEAL_START, 0 );
-		}
-
 		ent->health    += grant;
 		self->health   -= grant;
 		G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
+		healedAnyone = qtrue;
+	}
+
+	// one chime per tick from the crate itself while it's actively healing someone, not one per player healed
+	if ( healedAnyone ) {
+		G_AddEvent( self, EV_MEDCRATE_HEAL_TICK, 0 );
 	}
 }
 
