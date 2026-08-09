@@ -55,6 +55,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #define ITEM_RADIUS     10 // Rafael changed the radius so that the items would fit in the 3 new containers
 
+#define MEDCRATE_HEAL_RADIUS    96.0f  // shared with cgame so the ground radius indicator (CG_Missile) matches the real heal range (G_MedCrateThink)
+
 // RF, zombie getup
 #define TIMER_RESPAWN   ( 38 * ( 1000 / 15 ) + 100 )
 

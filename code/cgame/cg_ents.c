@@ -1188,6 +1188,102 @@ CG_Missile
 extern void CG_RocketTrail( centity_t *ent, const weaponInfo_t *wi );
 extern void CG_PyroSmokeTrail( centity_t *ent, const weaponInfo_t *wi );
 
+#define MEDCRATE_RING_SEGMENTS 32
+#define MEDCRATE_RING_WIDTH    6.0f
+
+/*
+===============
+CG_MedCrateGroundHeight
+
+Traces straight down (and a bit up, in case the sample point sits over a rise)
+from a point above the crate to find the floor height directly beneath it, so
+the radius ring can drape over slopes/steps instead of floating as one flat
+plane. Falls back to the crate's own height if the trace hits nothing (eg. a
+ledge or gap within the radius).
+===============
+*/
+static float CG_MedCrateGroundHeight( const vec3_t point, float fallbackZ ) {
+	trace_t tr;
+	vec3_t start, end;
+
+	VectorCopy( point, start );
+	start[2] = fallbackZ + 64.0f;
+	VectorCopy( point, end );
+	end[2] = fallbackZ - 64.0f;
+
+	CG_Trace_World( &tr, start, NULL, NULL, end, -1, MASK_SOLID );
+	if ( tr.fraction == 1.0f ) {
+		return fallbackZ;
+	}
+	return tr.endpos[2];
+}
+
+/*
+===============
+CG_DrawMedCrateRadius
+
+Faint ground ring showing the medcrate's heal radius (MEDCRATE_HEAL_RADIUS,
+shared with G_MedCrateThink via bg_public.h) once it has landed. Built from
+real geometry (a thin banded polygon per segment, height-sampled per segment
+so it follows slopes/steps) rather than a flat sprite quad. Kept subtle on
+purpose -- low alpha, no animation -- so it hints at the boundary rather than
+competing with the rest of the scene.
+===============
+*/
+static void CG_DrawMedCrateRadius( const vec3_t origin ) {
+	int i, j;
+	float outer = MEDCRATE_HEAL_RADIUS;
+	float inner = outer - MEDCRATE_RING_WIDTH;
+	vec3_t center;
+	float height[MEDCRATE_RING_SEGMENTS];
+
+	VectorCopy( origin, center );
+
+	for ( i = 0; i < MEDCRATE_RING_SEGMENTS; i++ ) {
+		float a = ( i / (float)MEDCRATE_RING_SEGMENTS ) * 2.0f * M_PI;
+		vec3_t sample;
+
+		sample[0] = center[0] + outer * cos( a );
+		sample[1] = center[1] + outer * sin( a );
+		sample[2] = center[2];
+
+		height[i] = CG_MedCrateGroundHeight( sample, center[2] ) + 2.0f;   // lift off the floor slightly to avoid z-fighting
+	}
+
+	for ( i = 0; i < MEDCRATE_RING_SEGMENTS; i++ ) {
+		int i1 = ( i + 1 ) % MEDCRATE_RING_SEGMENTS;
+		polyVert_t verts[4], flipped[4];
+		float a0 = ( i  / (float)MEDCRATE_RING_SEGMENTS ) * 2.0f * M_PI;
+		float a1 = ( i1 / (float)MEDCRATE_RING_SEGMENTS ) * 2.0f * M_PI;
+		float c0 = cos( a0 ), s0 = sin( a0 );
+		float c1 = cos( a1 ), s1 = sin( a1 );
+		float z0 = height[i];
+		float z1 = height[i1];
+
+		VectorSet( verts[0].xyz, center[0] + inner * c0, center[1] + inner * s0, z0 );
+		VectorSet( verts[1].xyz, center[0] + outer * c0, center[1] + outer * s0, z0 );
+		VectorSet( verts[2].xyz, center[0] + outer * c1, center[1] + outer * s1, z1 );
+		VectorSet( verts[3].xyz, center[0] + inner * c1, center[1] + inner * s1, z1 );
+
+		// pale green, low alpha -- a faint boundary hint, not a glowing dome
+		for ( j = 0; j < 4; j++ ) {
+			verts[j].st[0] = 0; verts[j].st[1] = 0;
+			verts[j].modulate[0] = 170;
+			verts[j].modulate[1] = 255;
+			verts[j].modulate[2] = 180;
+			verts[j].modulate[3] = 90;
+		}
+
+		// whiteShader front-culls; submit both winding orders so it's visible regardless of view angle
+		for ( j = 0; j < 4; j++ ) {
+			flipped[j] = verts[3 - j];
+		}
+
+		trap_R_AddPolyToScene( cgs.media.whiteShader, 4, verts );
+		trap_R_AddPolyToScene( cgs.media.whiteShader, 4, flipped );
+	}
+}
+
 static void CG_Missile( centity_t *cent ) {
 	refEntity_t ent;
 	entityState_t       *s1;
@@ -1345,6 +1441,10 @@ static void CG_Missile( centity_t *cent ) {
 	if ( ent.hModel ) {
 		// add to refresh list, possibly with quad glow
 		CG_AddRefEntityWithPowerups( &ent, s1->powerups, TEAM_FREE, s1, vec3_origin );
+	}
+
+	if ( s1->weapon == WP_MEDCRATE && s1->pos.trType == TR_STATIONARY ) {
+		CG_DrawMedCrateRadius( cent->lerpOrigin );
 	}
 
 }

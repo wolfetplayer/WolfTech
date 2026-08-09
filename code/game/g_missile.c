@@ -397,11 +397,11 @@ live per medic; placing another evicts the oldest immediately.
 */
 
 #define MEDCRATE_MAX_PER_PLAYER      2
-#define MEDCRATE_HEAL_RADIUS         300.0f
+// MEDCRATE_HEAL_RADIUS lives in bg_public.h -- cgame's ground radius indicator needs it too
 #define MEDCRATE_HEAL_POOL_PER_PLAYER 250    // scaled by level.numPlayingCoopClients: 250/500/750/1000 for 1/2/3/4 players
 #define MEDCRATE_HEAL_POOL_MAX       1000
-#define MEDCRATE_TICK_INTERVAL       250
-#define MEDCRATE_HEAL_PER_TICK  5      // 20 HP/sec per player -- faster than every regen tier in g_active.c, no hit-delay gate
+#define MEDCRATE_TICK_INTERVAL       500
+#define MEDCRATE_HEAL_PER_TICK  5      // 10 HP/sec per player -- no hit-delay gate, unlike g_active.c's regen tiers
 #define MEDCRATE_SINK_TICK      100
 #define MEDCRATE_SINK_DURATION  2000
 
