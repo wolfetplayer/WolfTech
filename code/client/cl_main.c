@@ -3611,10 +3611,18 @@ void CL_Frame( int msec ) {
 			// Broadcast our own class pick to the lobby whenever it changes, same push-on-change idiom as the countdown above.
 			{
 				static int lastPushedClass = -1;
+				static uint64_t lastPushedClassLobby = 0;
 				int myClass = Cvar_VariableValue( "cl_survivalClass" );
+				uint64_t curLobby = steamLobbyCurrent();
+
+				// New lobby invalidates the guard, otherwise a carried-over cl_survivalClass suppresses the push.
+				if ( curLobby != lastPushedClassLobby ) {
+					lastPushedClass = -1;
+					lastPushedClassLobby = curLobby;
+				}
 
 				if ( myClass != lastPushedClass ) {
-					if ( steamLobbyCurrent() != 0 ) {
+					if ( curLobby != 0 ) {
 						steamLobbySetMyClass( myClass );
 					}
 					lastPushedClass = myClass;
