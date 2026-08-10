@@ -3625,6 +3625,9 @@ static void PM_Weapon( void ) {
 			if ( pm->ps->aiChar ) {
 				// AI characters go into their regular animation setup
 				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
+			} else if ( pm->ps->weapon == WP_AIRSTRIKE ) {
+				// LT call-in signal: not cookable, no fuse to hold - press fire and it's thrown, gated only by classWeaponTime cooldown.
+				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
 			} else {
 				// Player pulls the fuse and holds the hot potato
 				if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) ) {
