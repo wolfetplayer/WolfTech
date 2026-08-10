@@ -920,9 +920,9 @@ static void Survival_RefreshMaxHealth( gentity_t *activator ) {
 	gclient_t *client = activator->client;
 
 	if ( client->ps.perks[ PERK_RESILIENCE ] ) {
-		client->pers.maxHealth = ( client->ps.stats[ STAT_PLAYER_CLASS ] == PC_MEDIC ) ? 250 : 200;
+		client->pers.maxHealth = ( client->ps.stats[ STAT_PLAYER_CLASS ] == PC_SOLDIER ) ? 300 : 200;
 	} else {
-		client->pers.maxHealth = ( client->ps.stats[ STAT_PLAYER_CLASS ] == PC_MEDIC ) ? 150 : 100;
+		client->pers.maxHealth = ( client->ps.stats[ STAT_PLAYER_CLASS ] == PC_SOLDIER ) ? 200 : 100;
 	}
 
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
