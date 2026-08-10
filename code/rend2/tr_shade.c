@@ -1224,7 +1224,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-			if (r_sunlightMode->integer && (backEnd.viewParms.flags & VPF_USESUNLIGHT) && (index & LIGHTDEF_LIGHTTYPE_MASK))
+			if (r_sunlightMode->integer && (backEnd.viewParms.flags & VPF_USESUNLIGHT) && (index & LIGHTDEF_LIGHTTYPE_MASK)
+				&& !(backEnd.currentEntity && (backEnd.currentEntity->e.renderfx & (RF_NOSHADOW | RF_DEPTHHACK))))
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
