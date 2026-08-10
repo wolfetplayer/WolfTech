@@ -526,7 +526,6 @@ static void CG_UseItem( centity_t *cent ) {
 		break;
 
 	case HI_STAMINA:
-	case HI_ADRENALINE:
 		trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.staminaSound );
 		break;
 	}

@@ -227,25 +227,6 @@ void UseHoldableItem( gentity_t *ent, int item ) {
 		G_AddEvent( ent, EV_POPUP_BOOK, ( item - HI_BOOK1 ) + 1 );
 		break;
 
-	case HI_ADRENALINE:
-		if ( level.time - ent->client->ps.classWeaponTime < g_soldierChargeTime.integer ) {
-			break;
-		}
-		ent->client->ps.classWeaponTime = level.time;
-
-		ent->health += 100;
-		if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
-			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH];
-		}
-
-		ent->client->ps.powerups[PW_NOFATIGUE] = 15000;
-
-		ent->client->ps.powerups[PW_HASTE] = level.time - ( level.time % 1000 );
-		ent->client->ps.powerups[PW_HASTE] += 30 * 1000;
-
-		ent->client->ps.powerups[PW_BATTLESUIT] = level.time - ( level.time % 1000 );
-		ent->client->ps.powerups[PW_BATTLESUIT] += 30 * 1000;
-		break;
 	}
 }
 

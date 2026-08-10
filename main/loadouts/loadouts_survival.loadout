@@ -10,8 +10,6 @@ loadout survival_default_soldier
 		setammo weapon_thompson full
 		setclip weapon_thompson full
 		selectweapon weapon_thompson
-
-		giveinventory holdable_adrenaline
 }
 
 loadout survival_default_medic
@@ -73,8 +71,6 @@ loadout survival_hardcore_soldier
 		setammo weapon_thompson full
 		setclip weapon_thompson full
 		selectweapon weapon_thompson
-
-		giveinventory holdable_adrenaline
 }
 
 loadout survival_hardcore_medic

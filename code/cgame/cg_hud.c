@@ -1636,13 +1636,18 @@ static void CG_DrawWeapRecharge( rectDef_t *rect, vec4_t color, int align ) {
 	//qboolean fade = qfalse;
 	vec4_t bgcolor = {1.0f, 1.0f, 1.0f, 0.25f};
 
+	// Soldier has no active class ability, so there's nothing to charge
+	if ( cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_SOLDIER ) {
+		return;
+	}
+
 	if ( align != HUD_HORIZONTAL) {
 		flags |= 4;   // BAR_VERT
 		flags |= 1;   // BAR_LEFT (left, when vertical means grow 'up')
 	}
 	flags |= 16;
 
-		
+
 		// Determine charge time based on class
 		switch (cg.snap->ps.stats[STAT_PLAYER_CLASS])
 		{
@@ -1651,9 +1656,6 @@ static void CG_DrawWeapRecharge( rectDef_t *rect, vec4_t color, int align ) {
 			break;
 		case PC_ENGINEER:
 			chargeTime = cg_engineerChargeTime.value;
-			break;
-		case PC_SOLDIER:
-			chargeTime = cg_soldierChargeTime.value;
 			break;
 		case PC_LT:
 			chargeTime = cg_LTChargeTime.value;
