@@ -237,6 +237,12 @@ void CG_Respawn( void ) {
 
 	// select the weapon the server says we are using
 //	cg.weaponSelect = cg.snap->ps.weapon;
+
+	// set current player type
+	if ( mp_currentPlayerType.integer != cg.snap->ps.stats[ STAT_PLAYER_CLASS ] ) {
+		trap_Cvar_Set( "mp_currentPlayerType", va( "%i", cg.snap->ps.stats[ STAT_PLAYER_CLASS ] ) );
+	}
+
 	// DHM - Nerve :: Clear even more things on respawn
 	cg.zoomedBinoc = qfalse;
 	cg.zoomedBinoc = cg.zoomedScope = qfalse;

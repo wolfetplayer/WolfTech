@@ -5833,7 +5833,22 @@ static void UI_RunMenuScript( char **args ) {
 		}
 		else if (Q_stricmp(name, "wm_sayPlayerClass") == 0)
 		{
-			trap_Cmd_ExecuteText( EXEC_APPEND, va( "VoiceTeamChat IamSoldier\n" ) );
+			int playerType;
+			const char *s;
+
+			playerType = trap_Cvar_VariableValue( "mp_currentPlayerType" );
+
+			if ( playerType == 1 ) {
+				s = "IamMedic";
+			} else if ( playerType == 2 ) {
+				s = "IamEngineer";
+			} else if ( playerType == 3 ) {
+				s = "IamLieutenant";
+			} else {
+				s = "IamSoldier";
+			}
+
+			trap_Cmd_ExecuteText( EXEC_APPEND, va( "VoiceTeamChat %s\n", s ) );
 		}
 		else if (Q_stricmp(name, "wm_pickitem2") == 0)
 		{

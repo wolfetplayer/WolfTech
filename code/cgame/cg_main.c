@@ -306,6 +306,7 @@ vmCvar_t cg_drawNotifyText;
 
 // NERVE - SMF - Wolf multiplayer configuration cvars
 vmCvar_t mp_playerType;
+vmCvar_t mp_currentPlayerType;
 vmCvar_t mp_team;
 vmCvar_t mp_weapon;
 vmCvar_t mp_pistol;
@@ -557,6 +558,7 @@ cvarTable_t cvarTable[] = {
 
 	// NERVE - SMF
 	{&mp_playerType, "mp_playerType", "0", 0},
+	{&mp_currentPlayerType, "mp_currentPlayerType", "0", 0},
 	{&mp_team, "mp_team", "0", 0},
 	{&mp_weapon, "mp_weapon", "0", 0},
 	{&mp_pistol, "mp_pistol", "0", 0},
