@@ -244,7 +244,7 @@ static qboolean G_LandmineWillTrigger( gentity_t *self, gentity_t *ent ) {
 	}
 
 	if ( ent->aiCharacter ) {
-		return ent->aiTeam == AITEAM_MONSTER;
+		return ent->aiTeam == AITEAM_NAZI || ent->aiTeam == AITEAM_MONSTER || ent->aiTeam == AITEAM_ENDMAPBOSS;
 	}
 
 	if ( ent == self->parent ) {
