@@ -257,7 +257,9 @@ qboolean CG_DrawScoreboard( void ) {
 		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 	}
 
-	if ( cg.showScores || cg.predictedPlayerState.pm_type == PM_DEAD ||
+	// bleeding out (GT_COOP_SURVIVAL) is PM_DEAD but still revivable -- don't auto-pop the scoreboard for that
+	if ( cg.showScores ||
+		 ( cg.predictedPlayerState.pm_type == PM_DEAD && cg.predictedPlayerState.stats[STAT_REVIVE_TIME] <= 0 ) ||
 		 cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		fade = 1.0;
 	} else {

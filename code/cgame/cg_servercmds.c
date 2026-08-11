@@ -232,6 +232,7 @@ void CG_ParseServerinfo( void ) {
 	trap_Cvar_Set( "mapname", Info_ValueForKey( info, "mapname" ) );
 
 	cg_limbotime.integer = atoi( Info_ValueForKey( info,"g_limbotime" ) );
+	cg_reviveBleedoutTime.integer = atoi( Info_ValueForKey( info,"g_reviveBleedoutTime" ) );
 
 	trap_Cvar_Set( "cg_maxspawnpoints", Info_ValueForKey( info, "g_maxspawnpoints" ) );
 	trap_Cvar_Set( "cg_maxlives", Info_ValueForKey( info, "g_maxlives" ) );

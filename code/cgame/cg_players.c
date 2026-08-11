@@ -3038,6 +3038,16 @@ static void CG_PlayerSprites( centity_t *cent ) {
 		return;
 	}
 
+	// bleeding out and revivable -- show teammates they need a revive
+	if ( cgs.gametype == GT_COOP_SURVIVAL &&
+		 cent->currentState.number < MAX_CLIENTS &&
+		 !cent->currentState.aiChar &&
+		 ( cent->currentState.eFlags & EF_DEAD ) &&
+		 cg.snap->ps.persistant[PERS_TEAM] == cgs.clientinfo[ cent->currentState.clientNum ].team ) {
+		CG_PlayerFloatSprite( cent, cgs.media.reviveNeededShader, 56 );
+		return;
+	}
+
 	if ( cent->currentState.eFlags & EF_CONNECTION ) {
 		CG_PlayerFloatSprite( cent, cgs.media.connectionShader, 48 );
 		return;

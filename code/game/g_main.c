@@ -70,6 +70,11 @@ vmCvar_t g_limbotime;
 vmCvar_t g_reinforce;
 vmCvar_t g_freeze;
 vmCvar_t g_gamestate;
+vmCvar_t g_reviveBleedoutTime;
+vmCvar_t g_reviveTimeNormal;
+vmCvar_t g_reviveTimeMedic;
+vmCvar_t g_reviveInvulnTime;
+vmCvar_t g_reviveHealthPct;
 
 // Rafael gameskill
 vmCvar_t g_gameskill;
@@ -236,6 +241,11 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_limbotime, "g_limbotime", "10000", CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse },
 	{ &g_reinforce, "g_reinforce", "0", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_LATCH, 0, qfalse },
 	{ &g_freeze, "g_freeze", "0", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
+	{ &g_reviveBleedoutTime, "g_reviveBleedoutTime", "30000", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
+	{ &g_reviveTimeNormal, "g_reviveTimeNormal", "10000", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
+	{ &g_reviveTimeMedic, "g_reviveTimeMedic", "2000", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
+	{ &g_reviveInvulnTime, "g_reviveInvulnTime", "3000", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
+	{ &g_reviveHealthPct, "g_reviveHealthPct", "50", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
 	{ &g_ignorescriptedaccuracy, "g_ignorescriptedaccuracy", "1", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
 
 	{ &g_maxclients, "sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qfalse  },
@@ -699,6 +709,17 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 			        hintDist = CH_FRIENDLY_DIST;
 			}
 			*/
+		}
+
+		// revive prompt takes priority over friend/knife hints when looking at a downed teammate
+		// (OnSameTeam() is always false in coop -- compare sessionTeam directly, like G_Damage does)
+		if ( g_gametype.integer == GT_COOP_SURVIVAL && traceEnt->client &&
+			 traceEnt->client->ps.stats[STAT_REVIVE_TIME] > 0 &&
+			 ent->health > 0 && ent->client &&
+			 traceEnt->client->sess.sessionTeam == ent->client->sess.sessionTeam ) {
+			hintType = HINT_REVIVE;
+			hintDist = CH_ACTIVATE_DIST;
+			hintVal = tr->entityNum + 1;
 		}
 	}
 	//
@@ -2981,6 +3002,7 @@ void G_RunFrame( int levelTime ) {
 	{
 		AICast_TickSurvivalWave();
 		Survival_CheckWipe();
+		G_TickReviveStates();
 	}
 
 	// perform final fixups on the players

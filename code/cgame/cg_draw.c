@@ -3628,6 +3628,104 @@ static void CG_DrawDynamiteStatus( void ) {
 	trap_R_SetColor( NULL );
 }
 
+/*
+==============
+CG_ReviveBarCenterX
+
+cg_fixedAspect defaults off, and in that mode the virtual coordinate width
+tracks the real aspect ratio instead of staying at the classic 640 (4:3)
+reference, so a literal x=320 lands well left of true center on a wide
+display. Recompute the actual center instead of assuming 640-space.
+==============
+*/
+static float CG_ReviveBarCenterX( void ) {
+	// earlier draws this frame (e.g. CG_DrawGrenadeCount) can leave screen placement
+	// pointed at PLACE_RIGHT/PLACE_LEFT and never reset it -- force center explicitly
+	CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+
+	if ( cg_fixedAspect.integer || !cgs.glconfig.vidHeight ) {
+		return 320.0f;
+	}
+	return 240.0f * cgs.glconfig.vidWidth / (float)cgs.glconfig.vidHeight;
+}
+
+/*
+==============
+CG_DrawBleedoutStatus
+
+GT_COOP_SURVIVAL only: countdown bar shown to a bleeding-out player while
+STAT_REVIVE_TIME counts down (frozen server-side while someone revives them).
+==============
+*/
+static void CG_DrawBleedoutStatus( void ) {
+	vec4_t color = { 0.8f, 0.1f, 0.1f, 1.0f };
+	vec4_t bgColor = { 0, 0, 0, 0.6f };
+	float frac, centerX, barW;
+	int maxTime;
+	char *s;
+	float w;
+
+	maxTime = cg_reviveBleedoutTime.integer;
+	if ( maxTime < 1 ) {
+		maxTime = 1;
+	}
+
+	frac = (float)cg.snap->ps.stats[STAT_REVIVE_TIME] / (float)maxTime;
+	if ( frac < 0.0f ) {
+		frac = 0.0f;
+	} else if ( frac > 1.0f ) {
+		frac = 1.0f;
+	}
+
+	centerX = CG_ReviveBarCenterX();
+	barW = 200;
+
+	CG_FilledBar( centerX - barW / 2, 400, barW, 14, color, NULL, bgColor, frac, BAR_BG );
+
+	s = "Bleeding out -- wait for a teammate to revive you";
+	w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
+	CG_DrawSmallStringColor( centerX - w / 2, 384, s, colorWhite );
+}
+
+/*
+==============
+CG_DrawReviveProgress
+
+GT_COOP_SURVIVAL only: progress bar shown to a player currently holding
+ACTIVATE to revive a downed teammate.
+==============
+*/
+static void CG_DrawReviveProgress( void ) {
+	vec4_t color = { 0.2f, 0.6f, 1.0f, 1.0f };
+	vec4_t bgColor = { 0, 0, 0, 0.6f };
+	float frac, centerX, barW;
+	char *s;
+	float w;
+
+	if ( cg.snap->ps.stats[STAT_REVIVE_PROGRESS] <= 0 ) {
+		return;
+	}
+
+	// s.loopSound (set server-side on our own entity) never reaches our own predicted
+	// entity, so the reviver has to hear their own loop via a direct local add instead
+	CG_S_AddLoopingSound( cg.snap->ps.clientNum, cg.snap->ps.origin, vec3_origin,
+						   ( cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC ) ? cgs.media.reviveLoopMedicSound : cgs.media.reviveLoopSound, 255 );
+
+	frac = (float)cg.snap->ps.stats[STAT_REVIVE_PROGRESS] / 100.0f;
+	if ( frac > 1.0f ) {
+		frac = 1.0f;
+	}
+
+	centerX = CG_ReviveBarCenterX();
+	barW = 200;
+
+	CG_FilledBar( centerX - barW / 2, 400, barW, 14, color, NULL, bgColor, frac, BAR_BG );
+
+	s = "Reviving...";
+	w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
+	CG_DrawSmallStringColor( centerX - w / 2, 384, s, colorWhite );
+}
+
 
 
 /*
@@ -4837,6 +4935,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawAmmoWarning();
 			CG_DrawDynamiteStatus();
 			CG_DrawGrenadeCount();
+			CG_DrawReviveProgress();
 			CG_DrawCoopCrosshairNames();
 			CG_DrawEnemyHealthbars();
 			CG_DrawDamageNumbers();
@@ -4845,6 +4944,11 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawHoldableSelect();
 			CG_DrawPickupItem();
 			CG_DrawReward();
+		} else if ( cgs.gametype == GT_COOP_SURVIVAL && cg.snap->ps.stats[STAT_REVIVE_TIME] > 0 ) {
+			CG_DrawBleedoutStatus();
+			if ( cgs.gametype != GT_SINGLE_PLAYER ) {
+				CG_DrawTeamInfo(); // chat overlay lives in here -- bleeding out shouldn't cut you off from it
+			}
 		}
 	}
 

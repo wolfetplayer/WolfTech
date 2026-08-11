@@ -35,6 +35,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "g_coop.h"
+#include "g_survival.h"
 
 /*
 ============
@@ -582,6 +583,272 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	}
 }
 
+/*
+==================
+G_EnterBleedout
+
+GT_COOP_SURVIVAL only: instead of committing a kill immediately, put a real
+player into a revivable bleed-out state for g_reviveBleedoutTime ms. Unlike
+player_die(), this does NOT touch score, obituary, respawnTime or corpse
+bookkeeping -- that only happens if bleed-out expires (G_TickReviveStates)
+or the player takes a finishing hit while already down.
+==================
+*/
+void G_EnterBleedout( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
+	int killer;
+	int anim;
+
+	if ( attacker ) {
+		killer = attacker->s.number;
+	} else {
+		killer = ENTITYNUM_WORLD;
+	}
+	if ( killer < 0 || killer >= MAX_CLIENTS ) {
+		killer = ENTITYNUM_WORLD;
+	}
+
+	self->client->ps.pm_type = PM_DEAD;
+	self->takedamage = qtrue;
+	self->client->reviveTargetNum = -1;
+	self->client->revivedByNum = -1;
+	self->client->bleedoutAttackerNum = killer;
+	self->client->bleedoutMOD = meansOfDeath;
+	self->client->ps.stats[STAT_REVIVE_TIME] = g_reviveBleedoutTime.integer;
+
+	self->s.angles[0] = 0;
+	self->s.angles[2] = 0;
+	LookAtKiller( self, inflictor, attacker );
+	VectorCopy( self->s.angles, self->client->ps.viewangles );
+
+	self->r.maxs[2] = -8;
+
+	// play the falling-down death anim first; G_TickReviveStates settles into
+	// wounded_idle_1 once it's finished playing (see bleedoutFallEndTime)
+	switch ( rand() % 3 ) {
+	case 0:
+		anim = BOTH_DEATH1;
+		break;
+	case 1:
+		anim = BOTH_DEATH2;
+		break;
+	default:
+		anim = BOTH_DEATH3;
+		break;
+	}
+	self->client->ps.legsAnim =
+		( ( self->client->ps.legsAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
+	self->client->ps.torsoAnim =
+		( ( self->client->ps.torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
+	self->client->bleedoutFallEndTime = level.time + 1700; // matches player_die()'s own death-anim-length assumption
+
+	G_AddEvent( self, EV_DEATH1 + 1, killer );
+	G_Sound( self, G_SoundIndex( ( rand() % 2 ) ? "sound/voice/medic_call_1.wav" : "sound/voice/medic_call_2.wav" ) );
+
+	trap_SendServerCommand( -1, va( "cp \"^3%s^7 is down! Go revive them!\n\"", self->client->pers.netname ) );
+}
+
+/*
+==================
+G_ResolveRevive
+
+Completes a successful revive: restores the target to g_reviveHealthPct of
+their max health, clears bleed-out/revive-progress state on both sides, and
+grants a short window of post-revive invulnerability. The downed player's
+Pmove naturally recomputes their standing bbox next frame once pm_type flips
+back to PM_NORMAL, same as any other transition out of PM_DEAD.
+==================
+*/
+void G_ResolveRevive( gentity_t *reviver, gentity_t *target ) {
+	int healAmt;
+
+	healAmt = target->client->ps.stats[STAT_MAX_HEALTH] * g_reviveHealthPct.integer / 100;
+	if ( healAmt < 1 ) {
+		healAmt = 1;
+	}
+
+	target->health = target->client->ps.stats[STAT_HEALTH] = healAmt;
+	target->client->ps.stats[STAT_REVIVE_TIME] = 0;
+	target->client->ps.pm_type = PM_NORMAL;
+	target->client->ps.eFlags &= ~EF_DEAD; // PM_Footsteps() won't re-animate a live player while this is set
+	target->client->ps.powerups[PW_INVULNERABLE] = level.time + g_reviveInvulnTime.integer;
+	target->client->revivedByNum = -1;
+
+	BG_PlayAnimName( &target->client->ps, "revive", ANIM_BP_BOTH, qtrue, qfalse, qtrue );
+	// G_AddEvent() on a player entity routes through ps.events[], which is only ever sent
+	// to that player's own client -- G_Sound() fires on a temp entity instead so everyone nearby hears it
+	G_Sound( target, G_SoundIndex( "sound/misc/revived.wav" ) );
+
+	reviver->client->ps.stats[STAT_REVIVE_PROGRESS] = 0;
+	reviver->client->reviveTargetNum = -1;
+	reviver->client->reviveElapsedMs = 0;
+
+	trap_SendServerCommand( target->s.number, va( "cp \"You were revived by ^3%s^7!\n\"", reviver->client->pers.netname ) );
+	trap_SendServerCommand( reviver->s.number, va( "cp \"You revived ^3%s^7!\n\"", target->client->pers.netname ) );
+}
+
+/*
+==================
+G_BleedoutExpireToDeath
+
+Commits an unrevived bleeding-out player to a real death. player_die() always
+forces a fresh falling-down anim, but this player already fell when they
+entered bleed-out -- reassert the wounded pose right after so they don't
+visibly pop back to standing just to collapse a second time.
+==================
+*/
+static void G_BleedoutExpireToDeath( gentity_t *ent ) {
+	gentity_t *killerEnt = &g_entities[ent->client->bleedoutAttackerNum];
+
+	ent->client->ps.stats[STAT_REVIVE_TIME] = 0;
+	ent->client->ps.pm_type = PM_NORMAL; // player_die() no-ops if pm_type is already PM_DEAD
+	player_die( ent, killerEnt, killerEnt, 100000, ent->client->bleedoutMOD );
+
+	ent->client->bleedoutFallEndTime = 0;
+	BG_PlayAnimName( &ent->client->ps, "wounded_idle_1", ANIM_BP_BOTH, qtrue, qfalse, qtrue );
+}
+
+/*
+==================
+G_TickReviveStates
+
+GT_COOP_SURVIVAL only, called once per server frame from G_RunFrame. Counts
+down bleed-out timers (committing a real death via player_die() when one
+expires), and starts/advances/validates in-progress revive attempts.
+==================
+*/
+void G_TickReviveStates( void ) {
+	int i;
+	int frameTime;
+	gentity_t *ent;
+
+	frameTime = level.time - level.previousTime;
+	if ( frameTime <= 0 ) {
+		return;
+	}
+
+	// wave already declared over -- force any still-bleeding-out players through a real death before the queued map_restart fires
+	if ( svParams.waveGameOver ) {
+		for ( i = 0; i < level.maxclients; i++ ) {
+			ent = &g_entities[i];
+
+			if ( !ent->inuse || !ent->client || ent->client->ps.stats[STAT_REVIVE_TIME] <= 0 ) {
+				continue;
+			}
+
+			if ( ent->client->revivedByNum != -1 ) {
+				gentity_t *reviver = &g_entities[ent->client->revivedByNum];
+
+				if ( reviver->inuse && reviver->client && reviver->client->reviveTargetNum == i ) {
+					reviver->client->reviveTargetNum = -1;
+					reviver->client->ps.stats[STAT_REVIVE_PROGRESS] = 0;
+				}
+			}
+
+			G_BleedoutExpireToDeath( ent );
+		}
+		return;
+	}
+
+	for ( i = 0; i < level.maxclients; i++ ) {
+		ent = &g_entities[i];
+
+		if ( !ent->inuse || !ent->client ) {
+			continue;
+		}
+		if ( ent->client->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+
+		// tick down bleed-out, unless someone is actively reviving this player
+		if ( ent->client->ps.stats[STAT_REVIVE_TIME] > 0 ) {
+			// settle into the wounded loop once the falling-down anim has finished playing
+			if ( ent->client->bleedoutFallEndTime > 0 && level.time >= ent->client->bleedoutFallEndTime ) {
+				ent->client->bleedoutFallEndTime = 0;
+				BG_PlayAnimName( &ent->client->ps, "wounded_idle_1", ANIM_BP_BOTH, qtrue, qfalse, qtrue );
+			}
+
+			// clear a stale reference if our reviver disconnected or moved on mid-attempt
+			if ( ent->client->revivedByNum != -1 ) {
+				gentity_t *reviver = &g_entities[ent->client->revivedByNum];
+
+				if ( !reviver->inuse || !reviver->client || reviver->client->reviveTargetNum != i ) {
+					ent->client->revivedByNum = -1;
+				}
+			}
+			if ( ent->client->revivedByNum == -1 ) {
+				ent->client->ps.stats[STAT_REVIVE_TIME] -= frameTime;
+				if ( ent->client->ps.stats[STAT_REVIVE_TIME] <= 0 ) {
+					G_BleedoutExpireToDeath( ent );
+				}
+			}
+			continue; // can't be reviving anyone while down
+		}
+
+		// advance/validate an in-progress revive this player is performing
+		if ( ent->client->reviveTargetNum != -1 ) {
+			gentity_t *target = &g_entities[ent->client->reviveTargetNum];
+			qboolean stillValid = qtrue;
+			int reviveTime;
+
+			if ( ent->health <= 0 ) {
+				stillValid = qfalse;
+			} else if ( !( ent->client->buttons & BUTTON_ACTIVATE ) ) {
+				stillValid = qfalse;
+			} else if ( ent->client->ps.serverCursorHint != HINT_REVIVE ||
+						ent->client->ps.serverCursorHintVal - 1 != ent->client->reviveTargetNum ) {
+				stillValid = qfalse;
+			} else if ( !target->inuse || !target->client || target->client->ps.stats[STAT_REVIVE_TIME] <= 0 ) {
+				stillValid = qfalse;
+			}
+
+			if ( !stillValid ) {
+				ent->client->ps.stats[STAT_REVIVE_PROGRESS] = 0;
+				ent->client->reviveElapsedMs = 0;
+				if ( target->inuse && target->client && target->client->revivedByNum == ent->s.number ) {
+					target->client->revivedByNum = -1;
+				}
+				ent->client->reviveTargetNum = -1;
+				continue;
+			}
+
+			reviveTime = ( ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC ) ?
+						 g_reviveTimeMedic.integer : g_reviveTimeNormal.integer;
+			if ( reviveTime < 1 ) {
+				reviveTime = 1;
+			}
+
+			// track raw elapsed ms (not the rounded 0-100 stat) so slow per-frame
+			// increments can't get lost to integer-division truncation
+			ent->client->reviveElapsedMs += frameTime;
+			if ( ent->client->reviveElapsedMs >= reviveTime ) {
+				ent->client->ps.stats[STAT_REVIVE_PROGRESS] = 100;
+				G_ResolveRevive( ent, target );
+			} else {
+				ent->client->ps.stats[STAT_REVIVE_PROGRESS] = ent->client->reviveElapsedMs * 100 / reviveTime;
+			}
+			continue;
+		}
+
+		// not reviving anyone -- see if we should start
+		if ( ( ent->client->buttons & BUTTON_ACTIVATE ) &&
+			 ent->health > 0 &&
+			 ent->client->ps.serverCursorHint == HINT_REVIVE &&
+			 ent->client->ps.serverCursorHintVal > 0 ) {
+
+			int targetNum = ent->client->ps.serverCursorHintVal - 1;
+			gentity_t *target = &g_entities[targetNum];
+
+			if ( target->inuse && target->client && target->client->ps.stats[STAT_REVIVE_TIME] > 0 &&
+				 target->client->revivedByNum == -1 ) {
+				ent->client->reviveTargetNum = targetNum;
+				ent->client->reviveElapsedMs = 0;
+				target->client->revivedByNum = ent->s.number;
+				ent->client->ps.stats[STAT_REVIVE_PROGRESS] = 1; // kick off, refined next frame
+			}
+		}
+	}
+}
+
 
 /*
 ================
@@ -939,6 +1206,32 @@ dflags		these flags are used to control how T_Damage works
 	DAMAGE_NO_PROTECTION	kills godmode, armor, everything
 ============
 */
+
+/*
+==================
+G_KillOrEnterBleedout
+
+Dispatches a lethal hit: in GT_COOP_SURVIVAL, a real player with a living
+teammate and who isn't already downed enters bleed-out instead of dying
+outright. Everything else (AI, breakables, admin/self kills that call
+player_die() directly, finishing blows on an already-downed player, overkill
+past GIB_HEALTH, or nobody left standing to revive them) dies as normal.
+==================
+*/
+static void G_KillOrEnterBleedout( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, int damage, int mod ) {
+	if ( g_gametype.integer == GT_COOP_SURVIVAL && targ->client &&
+		 !( targ->r.svFlags & SVF_CASTAI ) &&
+		 targ->client->ps.stats[STAT_REVIVE_TIME] <= 0 &&
+		 targ->health > GIB_HEALTH &&
+		 G_HasLivingTeammate( targ ) ) {
+		G_EnterBleedout( targ, inflictor, attacker, damage, mod );
+		return;
+	}
+
+	if ( targ->die ) { // Ridah, mg42 doesn't have die func (FIXME)
+		targ->die( targ, inflictor, attacker, damage, mod );
+	}
+}
 
 void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int damage, int dflags, int mod ) {
@@ -1559,9 +1852,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			}
 
 			targ->enemy = attacker;
-			if ( targ->die ) { // Ridah, mg42 doesn't have die func (FIXME)
-				targ->die( targ, inflictor, attacker, take, mod );
-			}
+			G_KillOrEnterBleedout( targ, inflictor, attacker, take, mod );
 
 			// if we freed ourselves in death function
 			if ( !targ->inuse ) {
@@ -1603,9 +1894,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			}
 
 			attacker->enemy = attacker;
-			if ( attacker->die ) { // Ridah, mg42 doesn't have die func (FIXME)
-				attacker->die( attacker, inflictor, attacker, take, mod );
-			}
+			G_KillOrEnterBleedout( attacker, inflictor, attacker, take, mod );
 
 			// if we freed ourselves in death function
 			if ( !attacker->inuse ) {

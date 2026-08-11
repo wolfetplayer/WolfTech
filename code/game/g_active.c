@@ -248,6 +248,9 @@ void G_SetClientSound( gentity_t *ent ) {
 	if ( ent->waterlevel && ( ent->watertype & CONTENTS_LAVA ) ) { //----(SA)	modified since slime is no longer deadly
 //	if (ent->waterlevel && (ent->watertype&(CONTENTS_LAVA|CONTENTS_SLIME)) )
 		ent->s.loopSound = level.snd_fry;
+	} else if ( ent->client->reviveTargetNum != -1 ) {
+		ent->s.loopSound = G_SoundIndex( ( ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC ) ?
+										  "sound/misc/revive_loop_medic.wav" : "sound/misc/revive_loop.wav" );
 	} else {
 		ent->s.loopSound = 0;
 	}
@@ -1525,7 +1528,8 @@ void ClientThink_real( gentity_t *ent ) {
 		// check for respawning
 		if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
 			// wait for the attack button to be pressed
-			if ( level.time > client->respawnTime ) {
+			// bleeding-out players wait for STAT_REVIVE_TIME to resolve first
+			if ( level.time > client->respawnTime && client->ps.stats[STAT_REVIVE_TIME] <= 0 ) {
 				// Survival: wait in limbo until next wave's intermission revives everyone
 				if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
 					if ( !( ent->client->ps.pm_flags & PMF_LIMBO ) ) {

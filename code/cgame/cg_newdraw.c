@@ -541,8 +541,8 @@ static void CG_DrawCursorhint( rectDef_t *rect ) {
 
 	trap_R_SetColor( NULL );
 
-	// draw status bar under the cursor hint
-	if ( cg.cursorHintValue && ( !( cg.time - cg.cursorHintTime ) ) ) {    // don't fade bar out w/ hint icon
+	// draw status bar under the cursor hint (hintVal on HINT_REVIVE is a clientNum, not a 0-255 fraction)
+	if ( cg.cursorHintIcon != HINT_REVIVE && cg.cursorHintValue && ( !( cg.time - cg.cursorHintTime ) ) ) {    // don't fade bar out w/ hint icon
 		if ( redbar ) {
 			Vector4Set( color, 1, 0, 0, 0.5f );
 		} else {

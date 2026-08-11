@@ -284,8 +284,8 @@ static void CG_OffsetThirdPersonView( void ) {
 
 	VectorCopy( cg.refdefViewAngles, focusAngles );
 
-	// if dead, look at killer
-	if ( cg.predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
+	// if dead, look at killer -- but a bleeding-out player keeps free camera control
+	if ( cg.predictedPlayerState.stats[STAT_HEALTH] <= 0 && cg.predictedPlayerState.stats[STAT_REVIVE_TIME] <= 0 ) {
 		focusAngles[YAW] = cg.predictedPlayerState.stats[STAT_DEAD_YAW];
 		cg.refdefViewAngles[YAW] = cg.predictedPlayerState.stats[STAT_DEAD_YAW];
 	}

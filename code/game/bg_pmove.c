@@ -3240,6 +3240,22 @@ static void PM_Weapon( void ) {
 		pm->ps->pm_flags &= ~PMF_USE_ITEM_HELD;
 	}
 
+	// busy reviving a downed teammate - holster the weapon (drop/raise), same pattern as the grenade-cook case below
+	if ( pm->ps->stats[STAT_REVIVE_PROGRESS] > 0 ) {
+		if ( pm->ps->weaponTime > 0 ) {
+			pm->ps->weaponTime -= pml.msec;
+			if ( pm->ps->weaponTime < 0 ) {
+				pm->ps->weaponTime = 0;
+			}
+		}
+		if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN && pm->ps->weaponTime <= 0 ) {
+			pm->ps->weaponstate = WEAPON_HOLSTER_IN;
+			PM_StartWeaponAnim( WEAP_DROP );
+			pm->ps->weaponTime = 250;
+		}
+		return;
+	}
+
 	// busy cooking a quick grenade - holster the weapon (drop/raise), gated on weaponTime (networked, same field the ladder-holster
 	// below uses) instead of weapAnimTimer (not networked) so client and server can't desync on when the transition can happen.
 	if ( pm->ps->grenadeTimeLeft > 0 &&
@@ -4256,8 +4272,8 @@ void PM_UpdateViewAngles( playerState_t *ps, usercmd_t *cmd, void( trace ) ( tra
 		return;     // no view changes at all
 	}
 
-	if ( ps->pm_type != PM_SPECTATOR && ps->stats[STAT_HEALTH] <= 0 ) {
-		return;     // no view changes at all
+	if ( ps->pm_type != PM_SPECTATOR && ps->stats[STAT_HEALTH] <= 0 && ps->stats[STAT_REVIVE_TIME] <= 0 ) {
+		return;     // no view changes at all -- bleeding-out players (STAT_REVIVE_TIME > 0) can still look around
 	}
 
 	// circularly clamp the angles with deltas

@@ -5358,7 +5358,13 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	}
 
 	s->apos.trType = TR_INTERPOLATE;
-	VectorCopy( ps->viewangles, s->apos.trBase );
+	if ( ps->stats[STAT_REVIVE_TIME] > 0 ) {
+		// bleeding out -- body stays put where it fell; the player free-looks with the camera only
+		vec3_t frozenAngles = { 0, ps->stats[STAT_DEAD_YAW], 0 };
+		VectorCopy( frozenAngles, s->apos.trBase );
+	} else {
+		VectorCopy( ps->viewangles, s->apos.trBase );
+	}
 	if ( snap ) {
 		SnapVector( s->apos.trBase );
 	}
@@ -5471,7 +5477,13 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
 
 	s->apos.trType = TR_INTERPOLATE;
-	VectorCopy( ps->viewangles, s->apos.trBase );
+	if ( ps->stats[STAT_REVIVE_TIME] > 0 ) {
+		// bleeding out -- body stays put where it fell; the player free-looks with the camera only
+		vec3_t frozenAngles = { 0, ps->stats[STAT_DEAD_YAW], 0 };
+		VectorCopy( frozenAngles, s->apos.trBase );
+	} else {
+		VectorCopy( ps->viewangles, s->apos.trBase );
+	}
 	if ( snap ) {
 		SnapVector( s->apos.trBase );
 	}

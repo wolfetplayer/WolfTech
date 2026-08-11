@@ -693,6 +693,13 @@ struct gclient_s {
 	int healthRegenStartTime;
 
 	int venomPrevWeapon;            // weapon to restore when the venom powerup discards/expires
+
+	int reviveTargetNum;            // clientNum this player is currently reviving, -1 if none
+	int reviveElapsedMs;            // ms elapsed on the current revive attempt (avoids integer-truncation drift in the 0-100 stat)
+	int revivedByNum;                // clientNum currently reviving this player, -1 if none
+	int bleedoutAttackerNum;        // entity number to credit/blame if bleed-out expires into a real death
+	int bleedoutMOD;                 // means of death to use if bleed-out expires into a real death
+	int bleedoutFallEndTime;        // when the falling-down anim finishes and we should settle into wounded_idle_1; 0 once handled
 };
 
 
@@ -1068,6 +1075,7 @@ void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, v
 // g_client.c
 //
 int TeamCount( int ignoreClientNum, team_t team );
+qboolean G_HasLivingTeammate( gentity_t *self );
 team_t PickTeam( int ignoreClientNum );
 void SetClientViewAngle( gentity_t *ent, vec3_t angle );
 gentity_t *SelectSpawnPoint( vec3_t avoidPoint, vec3_t origin, vec3_t angles );
@@ -1076,6 +1084,9 @@ void BeginIntermission( void );
 void InitBodyQue( void );
 void ClientSpawn( gentity_t *ent );
 void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod );
+void G_EnterBleedout( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath );
+void G_ResolveRevive( gentity_t *reviver, gentity_t *target );
+void G_TickReviveStates( void );
 void AddScore( gentity_t *ent, int score );
 void CalculateRanks( void );
 qboolean SpotWouldTelefrag( gentity_t *spot );
@@ -1257,6 +1268,11 @@ extern vmCvar_t g_limbotime;
 extern vmCvar_t g_reinforce;
 extern vmCvar_t g_freeze;
 extern vmCvar_t g_gamestate;
+extern vmCvar_t g_reviveBleedoutTime;
+extern vmCvar_t g_reviveTimeNormal;
+extern vmCvar_t g_reviveTimeMedic;
+extern vmCvar_t g_reviveInvulnTime;
+extern vmCvar_t g_reviveHealthPct;
 
 // Rafael gameskill
 extern vmCvar_t g_gameskill;

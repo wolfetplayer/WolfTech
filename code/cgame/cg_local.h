@@ -1168,6 +1168,9 @@ typedef struct {
 	qhandle_t frozenShader;
 	qhandle_t balloonShader;
 	qhandle_t connectionShader;
+	qhandle_t reviveNeededShader;
+	sfxHandle_t reviveLoopSound;        // looped locally for the reviver's own client -- s.loopSound never reaches your own predicted entity
+	sfxHandle_t reviveLoopMedicSound;
 
 	qhandle_t aiStateShaders[MAX_AISTATES];
 
@@ -1945,6 +1948,7 @@ extern vmCvar_t cg_obituaries;
 extern vmCvar_t cg_drawcompass;
 extern vmCvar_t cg_fancyfx;
 extern vmCvar_t cg_limbotime;
+extern vmCvar_t cg_reviveBleedoutTime;
 
 extern vmCvar_t cg_bloodTime;
 extern vmCvar_t cg_norender;
@@ -2091,6 +2095,17 @@ void CG_HorizontalPercentBar( float x, float y, float width, float height, float
 void CG_DrawMotd( void );
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
 void CG_FilledBar( float x, float y, float w, float h, const float *startColorIn, float *endColor, const float *bgColor, float frac, int flags );
+
+// flags for CG_FilledBar
+#define BAR_LEFT        0x0001
+#define BAR_CENTER      0x0002
+#define BAR_VERT        0x0004
+#define BAR_NOHUDALPHA  0x0008
+#define BAR_BG          0x0010
+// different spacing modes for use w/ BAR_BG
+#define BAR_BGSPACING_X0Y5  0x0020
+#define BAR_BGSPACING_X0Y0  0x0040
+#define BAR_LERP_COLOR  0x0100
 // JOSEPH 10-26-99
 void CG_DrawStretchPic( float x, float y, float width, float height, qhandle_t hShader );
 // END JOSEPH

@@ -383,7 +383,9 @@ typedef enum {
 	STAT_CLIENTS_READY,             // bit mask of clients wishing to exit the intermission (FIXME: configstring?)
 	STAT_MAX_HEALTH,                // health / armor limit, changable by handicap
 	STAT_PLAYER_CLASS,               // DHM - Nerve :: player class in multiplayer
-	STAT_PERK
+	STAT_PERK,
+	STAT_REVIVE_TIME,               // ms left in bleed-out before real death; 0 = not downed
+	STAT_REVIVE_PROGRESS            // 0-100, % complete of a revive this player is performing on someone else
 } statIndex_t;
 
 
@@ -1672,6 +1674,8 @@ typedef enum {
 	HINT_BUILD,
 
 	HINT_BAD_USER,  // invisible user with no target
+
+	HINT_REVIVE,    // looking at a downed teammate who can be revived
 
 	HINT_NUM_HINTS
 } hintType_t;

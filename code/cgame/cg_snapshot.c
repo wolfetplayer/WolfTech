@@ -380,14 +380,14 @@ static snapshot_t *CG_ReadNextSnapshot( void ) {
 					cg_entities[i].currentState = backupCent.currentState;
 					cg_entities[i].nextState = backupCent.nextState;
 					cg_entities[i].currentValid = backupCent.currentValid;
-					cg_entities[i].interpolate = backupCent.interpolate;
+					cg_entities[i].interpolate = qfalse; // no nextSnap yet post-restart -- must not carry a stale qtrue in here
 				}
 				// reset the predicted cent
 				memset( &cg.predictedPlayerEntity, 0, sizeof( centity_t ) );
 				cg.predictedPlayerEntity.currentState = backupCent.currentState;
 				cg.predictedPlayerEntity.nextState = backupCent.nextState;
 				cg.predictedPlayerEntity.currentValid = backupCent.currentValid;
-				cg.predictedPlayerEntity.interpolate = backupCent.interpolate;
+				cg.predictedPlayerEntity.interpolate = qfalse; // ditto
 				return NULL;
 			}
 

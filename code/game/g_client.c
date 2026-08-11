@@ -745,6 +745,51 @@ int TeamCount( int ignoreClientNum, team_t team ) {
 
 /*
 ================
+G_HasLivingTeammate
+
+Returns true if self has at least one connected, non-spectator, non-bot
+teammate who is standing (not dead, not itself bleeding out). Used to decide
+whether a dying player can enter the revive/bleed-out state at all.
+================
+*/
+qboolean G_HasLivingTeammate( gentity_t *self ) {
+	int i;
+	gentity_t *other;
+
+	for ( i = 0; i < level.maxclients; i++ ) {
+		other = &g_entities[i];
+
+		if ( other == self ) {
+			continue;
+		}
+		if ( !other->inuse || !other->client ) {
+			continue;
+		}
+		if ( other->client->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+		if ( other->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+			continue;
+		}
+		if ( other->r.svFlags & SVF_BOT ) {
+			continue;
+		}
+		// OnSameTeam() is a no-op (always false) for g_gametype <= GT_SINGLE_PLAYER,
+		// which covers both coop gametypes -- compare sessionTeam directly instead,
+		// matching the pattern G_Damage already uses for coop-mode team checks.
+		if ( other->client->sess.sessionTeam != self->client->sess.sessionTeam ) {
+			continue;
+		}
+		if ( other->health > 0 && other->client->ps.stats[STAT_REVIVE_TIME] <= 0 ) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+================
 PickTeam
 
 ================
@@ -1880,6 +1925,13 @@ void ClientSpawn( gentity_t *ent ) {
 	// increment the spawncount so the client will detect the respawn
 	client->ps.persistant[PERS_SPAWN_COUNT]++;
 	client->ps.persistant[PERS_TEAM] = client->sess.sessionTeam;
+
+	client->reviveTargetNum = -1;
+	client->reviveElapsedMs = 0;
+	client->revivedByNum = -1;
+	client->bleedoutAttackerNum = ENTITYNUM_WORLD;
+	client->bleedoutMOD = MOD_UNKNOWN;
+	client->bleedoutFallEndTime = 0;
 
 	client->airOutTime = level.time + 12000;
 

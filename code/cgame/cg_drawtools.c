@@ -152,17 +152,7 @@ flags:
 */
 
 
-// TODO: these flags will be shared, but it was easier to work on stuff if I wasn't changing header files a lot
-#define BAR_LEFT        0x0001
-#define BAR_CENTER      0x0002
-#define BAR_VERT        0x0004
-#define BAR_NOHUDALPHA  0x0008
-#define BAR_BG          0x0010
-// different spacing modes for use w/ BAR_BG
-#define BAR_BGSPACING_X0Y5  0x0020
-#define BAR_BGSPACING_X0Y0  0x0040
-
-#define BAR_LERP_COLOR  0x0100
+// BAR_* flags now live in cg_local.h so other files can use CG_FilledBar's bg/border support too
 
 #define BAR_BORDERSIZE 2
 
