@@ -188,6 +188,7 @@ cvar_t  *r_drawSunRays;
 cvar_t  *r_sunShadows;
 cvar_t  *r_shadowFilter;
 cvar_t  *r_shadowBlur;
+cvar_t  *r_fxaa;
 cvar_t  *r_shadowMapSize;
 cvar_t  *r_shadowCascadeZNear;
 cvar_t  *r_shadowCascadeZFar;
@@ -1451,6 +1452,7 @@ void R_Register( void ) {
 	r_sunShadows = ri.Cvar_Get( "r_sunShadows", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowFilter = ri.Cvar_Get( "r_shadowFilter", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowBlur = ri.Cvar_Get("r_shadowBlur", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fxaa = ri.Cvar_Get("r_fxaa", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_shadowMapSize = ri.Cvar_Get("r_shadowMapSize", "1024", CVAR_ARCHIVE | CVAR_LATCH);
 	r_shadowCascadeZNear = ri.Cvar_Get( "r_shadowCascadeZNear", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZFar = ri.Cvar_Get( "r_shadowCascadeZFar", "1024", CVAR_ARCHIVE | CVAR_LATCH );

@@ -482,3 +482,18 @@ void RB_GaussianBlur(float blur)
 		FBO_Blit(tr.textureScratchFbo[0], srcBox, NULL, NULL, dstBox, NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	}
 }
+
+/*
+=============
+RB_FXAA
+=============
+*/
+void RB_FXAA(FBO_t *srcFbo, ivec4_t srcBox, FBO_t *dstFbo, ivec4_t dstBox)
+{
+	if (!tr.fxaaFbo)
+		return;
+
+	FBO_FastBlit(srcFbo, srcBox, tr.fxaaFbo, srcBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+	FBO_Blit(tr.fxaaFbo, srcBox, NULL, dstFbo, dstBox, &tr.fxaaShader, NULL, 0);
+}

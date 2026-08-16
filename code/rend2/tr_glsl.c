@@ -56,6 +56,8 @@ extern const char *fallbackShader_gamma_vp;
 extern const char *fallbackShader_gamma_fp;
 extern const char *fallbackShader_greyscale_vp;
 extern const char *fallbackShader_greyscale_fp;
+extern const char *fallbackShader_fxaa_vp;
+extern const char *fallbackShader_fxaa_fp;
 
 typedef struct uniformInfo_s
 {
@@ -1043,6 +1045,19 @@ void GLSL_InitGPUShaders(void)
 
 	numEtcShaders++;
 
+	if (!GLSL_InitGPUShader(&tr.fxaaShader, "fxaa", attribs, qtrue, extradefines, qtrue, fallbackShader_fxaa_vp, fallbackShader_fxaa_fp))
+	{
+		ri.Error(ERR_FATAL, "Could not load fxaa shader!");
+	}
+
+	GLSL_InitUniforms(&tr.fxaaShader);
+
+	GLSL_SetUniformInt(&tr.fxaaShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+
+	GLSL_FinishGPUShader(&tr.fxaaShader);
+
+	numEtcShaders++;
+
 	for (i = 0; i < FOGDEF_COUNT; i++)
 	{
 		if ((i & FOGDEF_USE_VERTEX_ANIMATION) && (i & FOGDEF_USE_BONE_ANIMATION))
@@ -1521,6 +1536,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
 	GLSL_DeleteGPUShader(&tr.gammaShader);
 	GLSL_DeleteGPUShader(&tr.greyscaleShader);
+	GLSL_DeleteGPUShader(&tr.fxaaShader);
 
 	for ( i = 0; i < FOGDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.fogShader[i]);

@@ -1704,6 +1704,7 @@ typedef struct {
 	image_t					*renderDepthImage;
 	image_t					*pshadowMaps[MAX_DRAWN_PSHADOWS];
 	image_t					*screenScratchImage;
+	image_t					*fxaaImage;
 	image_t					*textureScratchImage[2];
 	image_t                 *quarterImage[2];
 	image_t					*calcLevelsImage;
@@ -1723,6 +1724,7 @@ typedef struct {
 	FBO_t					*depthFbo;
 	FBO_t					*pshadowFbos[MAX_DRAWN_PSHADOWS];
 	FBO_t					*screenScratchFbo;
+	FBO_t					*fxaaFbo;
 	FBO_t					*textureScratchFbo[2];
 	FBO_t                   *quarterFbo[2];
 	FBO_t					*calcLevelsFbo;
@@ -1769,6 +1771,7 @@ typedef struct {
 	shaderProgram_t textureColorShader;
 	shaderProgram_t gammaShader;
 	shaderProgram_t greyscaleShader;
+	shaderProgram_t fxaaShader;
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
@@ -2074,6 +2077,7 @@ extern  cvar_t  *r_drawSunRays;
 extern  cvar_t  *r_sunShadows;
 extern  cvar_t  *r_shadowFilter;
 extern  cvar_t  *r_shadowBlur;
+extern  cvar_t  *r_fxaa;
 extern  cvar_t  *r_shadowMapSize;
 extern  cvar_t  *r_shadowCascadeZNear;
 extern  cvar_t  *r_shadowCascadeZFar;

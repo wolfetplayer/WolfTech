@@ -2253,6 +2253,9 @@ const void *RB_PostProcess(const void *data)
 	else
 		RB_GaussianBlur(backEnd.refdef.blurFactor);
 
+	if (r_fxaa->integer)
+		RB_FXAA(postDst, srcBox, postDst, dstBox);
+
 #if 0
 	if (0)
 	{

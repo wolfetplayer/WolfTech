@@ -314,6 +314,14 @@ void FBO_Init(void)
 		R_CheckFBO(tr.screenScratchFbo);
 	}
 
+	if (tr.fxaaImage)
+	{
+		tr.fxaaFbo = FBO_Create("_fxaa", tr.fxaaImage->width, tr.fxaaImage->height);
+		FBO_AttachImage(tr.fxaaFbo, tr.fxaaImage, GL_COLOR_ATTACHMENT0, 0);
+		FBO_AttachImage(tr.fxaaFbo, tr.renderDepthImage, GL_DEPTH_ATTACHMENT, 0);
+		R_CheckFBO(tr.fxaaFbo);
+	}
+
 	if (tr.sunRaysImage)
 	{
 		tr.sunRaysFbo = FBO_Create("_sunRays", tr.renderDepthImage->width, tr.renderDepthImage->height);

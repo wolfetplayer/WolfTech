@@ -1961,6 +1961,8 @@ Q3R2STRINGOBJ = \
   $(B)/rend2/glsl/down4x_vp.o \
   $(B)/rend2/glsl/fogpass_fp.o \
   $(B)/rend2/glsl/fogpass_vp.o \
+  $(B)/rend2/glsl/fxaa_fp.o \
+  $(B)/rend2/glsl/fxaa_vp.o \
   $(B)/rend2/glsl/gamma_fp.o \
   $(B)/rend2/glsl/gamma_vp.o \
   $(B)/rend2/glsl/generic_fp.o \
