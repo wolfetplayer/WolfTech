@@ -485,6 +485,41 @@ void RB_GaussianBlur(float blur)
 
 /*
 =============
+RB_Bloom
+=============
+*/
+void RB_Bloom(FBO_t *srcFbo, ivec4_t srcBox, FBO_t *dstFbo, ivec4_t dstBox)
+{
+	vec4_t color;
+
+	if (!srcFbo)
+		return;
+
+	// bright-pass: threshold the HDR scene down into the half-res scratch buffer
+	VectorSet4(color, r_bloomThreshold->value, r_bloomThreshold->value, r_bloomThreshold->value, 1.0f);
+	FBO_Blit(srcFbo, srcBox, NULL, tr.quarterFbo[0], NULL, &tr.bloomShader, color, 0);
+
+	// downsample further into the small blur scratch buffer
+	FBO_Blit(tr.quarterFbo[0], NULL, NULL, tr.textureScratchFbo[0], NULL, &tr.down4xShader, NULL, 0);
+
+	// blur it
+	RB_HBlur(tr.textureScratchFbo[0], tr.textureScratchFbo[1], 1.0f);
+	RB_VBlur(tr.textureScratchFbo[1], tr.textureScratchFbo[0], 1.0f);
+
+	if (r_bloomDebug->integer)
+	{
+		ivec4_t previewBox;
+		VectorSet4(previewBox, 0, 0, 256, 256);
+		FBO_BlitFromTexture(tr.textureScratchImage[0], NULL, NULL, NULL, previewBox, NULL, NULL, 0);
+	}
+
+	// upsample and additively composite onto the tonemapped image
+	VectorSet4(color, r_bloomIntensity->value, r_bloomIntensity->value, r_bloomIntensity->value, 1.0f);
+	FBO_Blit(tr.textureScratchFbo[0], NULL, NULL, dstFbo, dstBox, NULL, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
+}
+
+/*
+=============
 RB_FXAA
 =============
 */

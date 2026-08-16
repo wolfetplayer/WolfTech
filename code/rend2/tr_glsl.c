@@ -58,6 +58,8 @@ extern const char *fallbackShader_greyscale_vp;
 extern const char *fallbackShader_greyscale_fp;
 extern const char *fallbackShader_fxaa_vp;
 extern const char *fallbackShader_fxaa_fp;
+extern const char *fallbackShader_bloom_vp;
+extern const char *fallbackShader_bloom_fp;
 
 typedef struct uniformInfo_s
 {
@@ -1358,6 +1360,23 @@ void GLSL_InitGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD;
 	extradefines[0] = '\0';
 
+	if (!GLSL_InitGPUShader(&tr.bloomShader, "bloom", attribs, qtrue, extradefines, qtrue, fallbackShader_bloom_vp, fallbackShader_bloom_fp))
+	{
+		ri.Error(ERR_FATAL, "Could not load bloom shader!");
+	}
+
+	GLSL_InitUniforms(&tr.bloomShader);
+
+	GLSL_SetUniformInt(&tr.bloomShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+
+	GLSL_FinishGPUShader(&tr.bloomShader);
+
+	numEtcShaders++;
+
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD;
+	extradefines[0] = '\0';
+
 	if (!GLSL_InitGPUShader(&tr.bokehShader, "bokeh", attribs, qtrue, extradefines, qtrue, fallbackShader_bokeh_vp, fallbackShader_bokeh_fp))
 	{
 		ri.Error(ERR_FATAL, "Could not load bokeh shader!");
@@ -1552,6 +1571,7 @@ void GLSL_ShutdownGPUShaders(void)
 
 	GLSL_DeleteGPUShader(&tr.pshadowShader);
 	GLSL_DeleteGPUShader(&tr.down4xShader);
+	GLSL_DeleteGPUShader(&tr.bloomShader);
 	GLSL_DeleteGPUShader(&tr.bokehShader);
 	GLSL_DeleteGPUShader(&tr.tonemapShader);
 

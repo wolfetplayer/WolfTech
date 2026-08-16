@@ -1949,6 +1949,8 @@ Q3R2OBJ = \
   $(B)/renderer/sdl_glimp.o
 
 Q3R2STRINGOBJ = \
+  $(B)/rend2/glsl/bloom_fp.o \
+  $(B)/rend2/glsl/bloom_vp.o \
   $(B)/rend2/glsl/bokeh_fp.o \
   $(B)/rend2/glsl/bokeh_vp.o \
   $(B)/rend2/glsl/calclevels4x_fp.o \

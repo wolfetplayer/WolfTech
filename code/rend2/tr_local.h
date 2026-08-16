@@ -1778,6 +1778,7 @@ typedef struct {
 	shaderProgram_t shadowmapShader[SHADOWMAPDEF_COUNT];
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;
+	shaderProgram_t bloomShader;
 	shaderProgram_t bokehShader;
 	shaderProgram_t tonemapShader;
 	shaderProgram_t calclevels4xShader[2];
@@ -2042,6 +2043,11 @@ extern  cvar_t  *r_forceAutoExposureMax;
 extern  cvar_t  *r_autoExposureInterval;
 
 extern  cvar_t  *r_cameraExposure;
+
+extern  cvar_t  *r_bloom;
+extern  cvar_t  *r_bloomThreshold;
+extern  cvar_t  *r_bloomIntensity;
+extern  cvar_t  *r_bloomDebug;
 
 extern  cvar_t  *r_depthPrepass;
 extern  cvar_t  *r_ssao;

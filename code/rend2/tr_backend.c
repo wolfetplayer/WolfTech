@@ -2230,6 +2230,9 @@ const void *RB_PostProcess(const void *data)
 		{
 			autoExposure = r_autoExposure->integer || r_forceAutoExposure->integer;
 			RB_ToneMap(srcFbo, srcBox, postDst, dstBox, autoExposure);
+
+			if (r_bloom->integer)
+				RB_Bloom(srcFbo, srcBox, postDst, dstBox);
 		}
 		else
 		{
