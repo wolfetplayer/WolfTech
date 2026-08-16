@@ -2145,7 +2145,7 @@ static void CG_Mover( centity_t *cent ) {
 			CG_PositionRotatedEntityOnTag( &flash, &ent, "tag_gun1" );
 
 			trap_R_AddRefEntityToScene( &flash );
-			trap_R_AddLightToScene( flash.origin, 200 + ( rand() & 31 ),1.0, 0.6, 0.23, 0 );
+			trap_R_AddLightToScene( flash.origin, 200 + ( rand() & 31 ),1.0, 0.6, 0.23, REF_MUZZLEFLASH_DLIGHT );
 
 			memset( &flash, 0, sizeof( flash ) );
 			flash.renderfx = ent.shadowPlane;
@@ -2156,7 +2156,7 @@ static void CG_Mover( centity_t *cent ) {
 			CG_PositionRotatedEntityOnTag( &flash, &ent, "tag_gun02" );
 
 			trap_R_AddRefEntityToScene( &flash );
-			trap_R_AddLightToScene( flash.origin, 200 + ( rand() & 31 ),1.0, 0.6, 0.23, 0 );
+			trap_R_AddLightToScene( flash.origin, 200 + ( rand() & 31 ),1.0, 0.6, 0.23, REF_MUZZLEFLASH_DLIGHT );
 		}
 	}
 

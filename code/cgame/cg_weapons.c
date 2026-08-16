@@ -3347,7 +3347,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			// make a dlight for the flash
 			if ( weapon->flashDlightColor[0] || weapon->flashDlightColor[1] || weapon->flashDlightColor[2] ) {
 				trap_R_AddLightToScene( flash.origin, 200 + ( rand() & 31 ), weapon->flashDlightColor[0],
-										weapon->flashDlightColor[1], weapon->flashDlightColor[2], 0 );
+										weapon->flashDlightColor[1], weapon->flashDlightColor[2], REF_MUZZLEFLASH_DLIGHT );
 			}
 		} else {
 			if ( weaponNum == WP_FLAMETHROWER ) {
@@ -4862,7 +4862,7 @@ void CG_MG42EFX( centity_t *cent ) {
 	VectorCopy( cent->currentState.origin, point );
 	AngleVectors( cent->currentState.angles, forward, NULL, NULL );
 	VectorMA( point, 40, forward, point );
-	trap_R_AddLightToScene( point, 200 + ( rand() & 31 ),1.0, 0.6, 0.23, 0 );
+	trap_R_AddLightToScene( point, 200 + ( rand() & 31 ),1.0, 0.6, 0.23, REF_MUZZLEFLASH_DLIGHT );
 
 	memset( &flash, 0, sizeof( flash ) );
 	flash.renderfx = RF_LIGHTING_ORIGIN;
@@ -4904,7 +4904,7 @@ void CG_FLAKEFX( centity_t *cent, int whichgun ) {
 		VectorMA( point, -22, right, point );
 	}
 
-	trap_R_AddLightToScene( point, 200 + ( rand() & 31 ),1.0, 0.6, 0.23, 0 );
+	trap_R_AddLightToScene( point, 200 + ( rand() & 31 ),1.0, 0.6, 0.23, REF_MUZZLEFLASH_DLIGHT );
 
 	memset( &flash, 0, sizeof( flash ) );
 	flash.renderfx = RF_LIGHTING_ORIGIN;
@@ -4936,7 +4936,7 @@ void CG_MortarEFX( centity_t *cent ) {
 
 	if ( cent->currentState.density & 2 ) {
 		// light
-		trap_R_AddLightToScene( cent->currentState.origin, 200 + ( rand() & 31 ), 1.0, 1.0, 1.0, 0 );
+		trap_R_AddLightToScene( cent->currentState.origin, 200 + ( rand() & 31 ), 1.0, 1.0, 1.0, REF_MUZZLEFLASH_DLIGHT );
 
 		// muzzle flash
 		memset( &flash, 0, sizeof( flash ) );

@@ -578,6 +578,8 @@ typedef struct dlight_s {
 	qboolean forced;	//----(SA) use this dlight when r_dynamiclight is either 1 or 2 (rather than just 1) for "important" gameplay lights (alarm lights, etc)
 	//done
 
+	qboolean isMuzzleflash;	// set from REF_MUZZLEFLASH_DLIGHT in the overdraw parameter
+
 } dlight_t;
 
 enum
@@ -1701,6 +1703,7 @@ typedef struct {
 
 	image_t					*renderImage;
 	image_t					*sunRaysImage;
+	image_t					*dlightRaysImage;
 	image_t					*renderDepthImage;
 	image_t					*pshadowMaps[MAX_DRAWN_PSHADOWS];
 	image_t					*screenScratchImage;
@@ -1721,6 +1724,7 @@ typedef struct {
 	FBO_t					*renderFbo;
 	FBO_t					*msaaResolveFbo;
 	FBO_t					*sunRaysFbo;
+	FBO_t					*dlightRaysFbo;
 	FBO_t					*depthFbo;
 	FBO_t					*pshadowFbos[MAX_DRAWN_PSHADOWS];
 	FBO_t					*screenScratchFbo;
@@ -1809,6 +1813,11 @@ typedef struct {
 
 	vec3_t sunLight;                            // from the sky shader for this level
 	vec3_t sunDirection;
+
+	qboolean primaryDlightActive;                // set each frame while drawing the main view
+	vec3_t   primaryDlightOrigin;
+	vec3_t   primaryDlightColor;
+	qboolean primaryDlightIsMuzzleflash;
 	vec3_t                  lastCascadeSunDirection;
 	float                   lastCascadeSunMvp[16];
 
@@ -2080,6 +2089,10 @@ extern  cvar_t  *r_forceSunLightScale;
 extern  cvar_t  *r_forceSunAmbientScale;
 extern  cvar_t  *r_sunlightMode;
 extern  cvar_t  *r_drawSunRays;
+extern  cvar_t  *r_dlightRays;
+extern  cvar_t  *r_dlightRaysMinRadius;
+extern  cvar_t  *r_dlightRaysIntensity;
+extern  cvar_t  *r_dlightRaysMuzzleflashIntensity;
 extern  cvar_t  *r_sunShadows;
 extern  cvar_t  *r_shadowFilter;
 extern  cvar_t  *r_shadowBlur;

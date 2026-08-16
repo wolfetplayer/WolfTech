@@ -390,6 +390,77 @@ void RB_SunRays(FBO_t *srcFbo, ivec4_t srcBox, FBO_t *dstFbo, ivec4_t dstBox)
 	}
 }
 
+/*
+=============
+RB_DlightRays
+=============
+*/
+void RB_DlightRays(FBO_t *srcFbo, ivec4_t srcBox, FBO_t *dstFbo, ivec4_t dstBox)
+{
+	vec4_t color;
+	mat4_t mvp;
+	vec4_t pos, hpos;
+
+	if (!tr.primaryDlightActive || !tr.dlightRaysFbo)
+		return;
+
+	Mat4Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, mvp);
+
+	VectorCopy(tr.primaryDlightOrigin, pos);
+	pos[3] = 1.0f;
+	Mat4Transform(mvp, pos, hpos);
+
+	if (hpos[3] <= 0.0f)
+		return;
+
+	hpos[3] = 0.5f / hpos[3];
+	pos[0] = 0.5f + hpos[0] * hpos[3];
+	pos[1] = 0.5f + hpos[1] * hpos[3];
+
+	// downsample the depth-tested dlight mask into the quarter buffer
+	{
+		ivec4_t rayBox, quarterBox;
+		int srcWidth  = srcFbo ? srcFbo->width  : glConfig.vidWidth;
+		int srcHeight = srcFbo ? srcFbo->height : glConfig.vidHeight;
+
+		VectorSet4(color, 1, 1, 1, 1);
+
+		rayBox[0] = srcBox[0] * tr.dlightRaysFbo->width  / srcWidth;
+		rayBox[1] = srcBox[1] * tr.dlightRaysFbo->height / srcHeight;
+		rayBox[2] = srcBox[2] * tr.dlightRaysFbo->width  / srcWidth;
+		rayBox[3] = srcBox[3] * tr.dlightRaysFbo->height / srcHeight;
+
+		quarterBox[0] = 0;
+		quarterBox[1] = tr.quarterFbo[0]->height;
+		quarterBox[2] = tr.quarterFbo[0]->width;
+		quarterBox[3] = -tr.quarterFbo[0]->height;
+
+		FBO_FastBlit(srcFbo, srcBox, tr.quarterFbo[0], quarterBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		FBO_Blit(tr.dlightRaysFbo, rayBox, NULL, tr.quarterFbo[0], quarterBox, NULL, color, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
+	}
+
+	// radial blur passes, ping-ponging between the two quarter-size buffers
+	{
+		const float stretch_add = 2.f/3.f;
+		float stretch = 1.f + stretch_add;
+		int i;
+		for (i=0; i<2; ++i)
+		{
+			RB_RadialBlur(tr.quarterFbo[i&1], tr.quarterFbo[(~i) & 1], 5, stretch, 0.f, 0.f, tr.quarterFbo[0]->width, tr.quarterFbo[0]->height, pos[0], pos[1], 1.125f);
+			stretch += stretch_add;
+		}
+	}
+
+	// add result back on top of the main buffer
+	{
+		float mul = tr.primaryDlightIsMuzzleflash ? r_dlightRaysMuzzleflashIntensity->value : r_dlightRaysIntensity->value;
+
+		VectorSet4(color, mul, mul, mul, 1);
+
+		FBO_Blit(tr.quarterFbo[0], NULL, NULL, dstFbo, dstBox, NULL, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
+	}
+}
+
 static void RB_BlurAxis(FBO_t *srcFbo, FBO_t *dstFbo, float strength, qboolean horizontal)
 {
 	float dx, dy;

@@ -330,6 +330,14 @@ void FBO_Init(void)
 		R_CheckFBO(tr.sunRaysFbo);
 	}
 
+	if (tr.dlightRaysImage)
+	{
+		tr.dlightRaysFbo = FBO_Create("_dlightRays", tr.renderDepthImage->width, tr.renderDepthImage->height);
+		FBO_AttachImage(tr.dlightRaysFbo, tr.dlightRaysImage, GL_COLOR_ATTACHMENT0, 0);
+		FBO_AttachImage(tr.dlightRaysFbo, tr.renderDepthImage, GL_DEPTH_ATTACHMENT, 0);
+		R_CheckFBO(tr.dlightRaysFbo);
+	}
+
 	if (MAX_DRAWN_PSHADOWS && tr.pshadowMaps[0])
 	{
 		for( i = 0; i < MAX_DRAWN_PSHADOWS; i++)

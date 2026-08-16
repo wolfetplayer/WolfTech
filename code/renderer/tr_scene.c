@@ -346,6 +346,7 @@ void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, fl
 
 	overdraw &= ~REF_FORCE_DLIGHT;
 	overdraw &= ~REF_JUNIOR_DLIGHT;
+	overdraw &= ~REF_MUZZLEFLASH_DLIGHT;
 
 	dl = &backEndData->dlights[r_numdlights++];
 	VectorCopy( org, dl->origin );

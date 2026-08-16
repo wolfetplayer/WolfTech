@@ -1529,6 +1529,103 @@ const void *RB_StretchPicGradient( const void *data ) {
 
 /*
 =============
+RB_DrawDlightRaysMask
+=============
+*/
+static void RB_DrawDlightRaysMask(void)
+{
+	dlight_t *l, *best = NULL;
+	float bestDist = 0.0f;
+	int i;
+	FBO_t *oldFbo;
+	vec3_t left, up, toLight;
+	vec3_t p0, p1, p2, p3;
+	vec4_t quadVerts[4];
+	vec2_t texCoords[4];
+	vec4_t color;
+	float testRadius;
+	int oldCull;
+
+	tr.primaryDlightActive = qfalse;
+
+	l = backEnd.refdef.dlights;
+	for (i = 0; i < backEnd.refdef.num_dlights; i++, l++)
+	{
+		float dist;
+
+		if (l->radius < r_dlightRaysMinRadius->value)
+			continue;
+
+		VectorSubtract(l->origin, backEnd.viewParms.or.origin, toLight);
+
+		if (DotProduct(toLight, backEnd.viewParms.or.axis[0]) <= 0.0f)
+			continue;
+
+		dist = DotProduct(toLight, toLight);
+
+		if (!best || dist < bestDist)
+		{
+			best = l;
+			bestDist = dist;
+		}
+	}
+
+	if (!best)
+		return;
+
+	VectorCopy(best->origin, tr.primaryDlightOrigin);
+	VectorCopy(best->color, tr.primaryDlightColor);
+	tr.primaryDlightIsMuzzleflash = best->isMuzzleflash;
+	tr.primaryDlightActive = qtrue;
+
+	oldFbo = glState.currentFBO;
+	FBO_Bind(tr.dlightRaysFbo);
+
+	qglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	qglClear(GL_COLOR_BUFFER_BIT);
+
+	testRadius = best->radius * 0.15f;
+	if (testRadius < 4.0f)
+		testRadius = 4.0f;
+
+	VectorScale(backEnd.viewParms.or.axis[1], testRadius, left);
+	VectorScale(backEnd.viewParms.or.axis[2], testRadius, up);
+
+	VectorSubtract(best->origin, left, p0); VectorSubtract(p0, up, p0);
+	VectorAdd(best->origin, left, p1);      VectorSubtract(p1, up, p1);
+	VectorAdd(best->origin, left, p2);      VectorAdd(p2, up, p2);
+	VectorSubtract(best->origin, left, p3); VectorAdd(p3, up, p3);
+
+	VectorCopy(p0, quadVerts[0]); quadVerts[0][3] = 1.0f;
+	VectorCopy(p1, quadVerts[1]); quadVerts[1][3] = 1.0f;
+	VectorCopy(p2, quadVerts[2]); quadVerts[2][3] = 1.0f;
+	VectorCopy(p3, quadVerts[3]); quadVerts[3][3] = 1.0f;
+
+	VectorSet2(texCoords[0], 0.0f, 0.0f);
+	VectorSet2(texCoords[1], 1.0f, 0.0f);
+	VectorSet2(texCoords[2], 1.0f, 1.0f);
+	VectorSet2(texCoords[3], 0.0f, 1.0f);
+
+	oldCull = glState.faceCulling;
+	GL_Cull(CT_TWO_SIDED);
+	GL_State(0); // depth test on, depth write off, blend off, color write on
+
+	GL_BindToTMU(tr.whiteImage, TB_COLORMAP);
+
+	GLSL_BindProgram(&tr.textureColorShader);
+	GLSL_SetUniformMat4(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	VectorSet4(color, best->color[0], best->color[1], best->color[2], 1.0f);
+	GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, color);
+
+	RB_InstantQuad2(quadVerts, texCoords);
+
+	GL_Cull(oldCull);
+
+	FBO_Bind(oldFbo);
+}
+
+/*
+=============
 RB_DrawSurfs
 
 =============
@@ -1817,8 +1914,13 @@ const void	*RB_DrawSurfs( const void *data ) {
 			FBO_Bind(oldFbo);
 		}
 
+		if (glRefConfig.framebufferObject && r_dlightRays->integer)
+		{
+			RB_DrawDlightRaysMask();
+		}
+
 		// darken down any stencil shadows
-		RB_ShadowFinish();		
+		RB_ShadowFinish();
 
 		// add light flares on lights that aren't obscured
 		RB_RenderFlares();
@@ -2250,6 +2352,9 @@ const void *RB_PostProcess(const void *data)
 
 	if (r_drawSunRays->integer)
 		RB_SunRays(postDst, srcBox, postDst, dstBox);
+
+	if (r_dlightRays->integer)
+		RB_DlightRays(postDst, srcBox, postDst, dstBox);
 
 	if (1)
 		RB_BokehBlur(postDst, srcBox, postDst, dstBox, backEnd.refdef.blurFactor);

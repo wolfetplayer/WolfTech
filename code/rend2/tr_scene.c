@@ -365,6 +365,8 @@ void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, fl
 	dl->color[2] = b;
 	dl->dlshader = NULL;
 	dl->overdraw = 0;
+	dl->isMuzzleflash = ( overdraw & REF_MUZZLEFLASH_DLIGHT ) != 0;
+	overdraw &= ~REF_MUZZLEFLASH_DLIGHT;
 
 	if ( overdraw == 10 ) { // sorry, hijacking 10 for a quick hack (SA)
 		dl->dlshader = R_GetShaderByHandle( RE_RegisterShader( "negdlightshader" ) );
