@@ -20,6 +20,10 @@ compatibility with existing RTCW mods.
   - Advanced shading and specular methods.
   - RGTC and BPTC texture compression support.
   - Screen-space ambient occlusion.
+  - FXAA.
+  - Bloom.
+  - Sun and dynamic light rays.
+  - Color grading via LUT textures.
 
 
 -------------------------------------------------------------------------------
@@ -79,6 +83,12 @@ Cvars for simple rendering features:
                                      0    - None. (default)
                                      1-16 - Some.
                                      17+  - Too much!
+
+*  `r_fxaa`                         - Fast approximate anti-aliasing, a cheap
+                                   post-process edge smooth.  Can be used
+                                   together with MSAA.
+                                     0 - No.
+                                     1 - Yes. (default)
 
 *  `r_ssao`                         - Enable screen-space ambient occlusion.
                                    Currently eats framerate and has some
@@ -168,6 +178,28 @@ Cvars for HDR and tonemapping:
                                      1.0 - Dimmer.
                                      2.0 - Normal. (default)
                                      3.0 - Brighter.
+
+Cvars for bloom:
+
+*  `r_bloom`                         - Enable bloom.  Bright areas of the
+                                   scene bleed a soft glow onto their
+                                   surroundings.
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_bloomThreshold`                - Brightness a pixel needs to exceed
+                                   before it contributes to the bloom.
+                                     1.0 - Default.
+
+*  `r_bloomIntensity`                - Strength of the bloom glow once
+                                   applied back onto the scene.
+                                     0.5 - Default.
+
+*  `r_bloomDebug`                    - Cheat.  Show the isolated bloom
+                                   bright-pass in the top-left corner,
+                                   for tuning the threshold.
+                                     0 - No. (default)
+                                     1 - Yes.
 
 Cvars for advanced material usage:
 
@@ -315,6 +347,33 @@ Cvars for the sunlight and cascaded shadow maps:
                                      2048 - 2048x2048, extreme.
                                      4096 - 4096x4096, indistinguishable from
                                             2048.
+
+Cvars for light rays (requires vid_restart to toggle):
+
+*  `r_drawSunRays`                   - Radial light shafts from the sun.
+                                   Only visible when the sun is roughly
+                                   facing the camera; requires a sky shader
+                                   with q3gl2_sun (see DYNAMIC SUNLIGHT above).
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_dlightRays`                    - Radial light shafts from the current
+                                   "primary" dynamic light (explosions,
+                                   muzzle flashes, etc).
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_dlightRaysMinRadius`           - Minimum dlight radius before it's
+                                   eligible to cast rays.  Keeps small,
+                                   unimportant lights from flaring up.
+                                     200 - Default.
+
+*  `r_dlightRaysIntensity`           - Strength of dlight-cast rays.
+                                     1.0 - Default.
+
+*  `r_dlightRaysMuzzleflashIntensity` - Strength of dlight rays specifically
+                                   from muzzle flashes.
+                                     1.0 - Default.
 
 Cvars for color grading:
 
