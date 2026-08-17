@@ -2350,6 +2350,11 @@ const void *RB_PostProcess(const void *data)
 			else
 				GL_BindToTMU(tr.identityLUTImage, TB_COLORGRADELUT);
 
+			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_TIME, (float)backEnd.refdef.floatTime);
+			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_VIGNETTEINTENSITY, r_vignette->integer ? r_vignetteIntensity->value : 0.0f);
+			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_FILMGRAININTENSITY, r_filmGrain->integer ? r_filmGrainIntensity->value : 0.0f);
+			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_CHROMATICABERRATION, r_chromaticAberration->integer ? r_chromaticAberrationIntensity->value : 0.0f);
+
 			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_INVGAMMA, tr.invGamma);
 			FBO_Blit(srcFbo, srcBox, NULL, postDst, dstBox, &tr.gammaShader, color, 0);
 		}

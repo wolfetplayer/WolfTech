@@ -95,6 +95,11 @@ void RB_ToneMap(FBO_t *hdrFbo, ivec4_t hdrBox, FBO_t *ldrFbo, ivec4_t ldrBox, in
 	else
 		GL_BindToTMU(tr.identityLUTImage, TB_COLORGRADELUT);
 
+	GLSL_SetUniformFloat(&tr.tonemapShader, UNIFORM_TIME, (float)backEnd.refdef.floatTime);
+	GLSL_SetUniformFloat(&tr.tonemapShader, UNIFORM_VIGNETTEINTENSITY, r_vignette->integer ? r_vignetteIntensity->value : 0.0f);
+	GLSL_SetUniformFloat(&tr.tonemapShader, UNIFORM_FILMGRAININTENSITY, r_filmGrain->integer ? r_filmGrainIntensity->value : 0.0f);
+	GLSL_SetUniformFloat(&tr.tonemapShader, UNIFORM_CHROMATICABERRATION, r_chromaticAberration->integer ? r_chromaticAberrationIntensity->value : 0.0f);
+
 	GLSL_SetUniformFloat(&tr.tonemapShader, UNIFORM_INVGAMMA, tr.invGamma);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.tonemapShader, color, 0);
 }

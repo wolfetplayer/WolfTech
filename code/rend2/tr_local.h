@@ -805,6 +805,10 @@ typedef enum
 
 	UNIFORM_COLORGRADELUT,
 
+	UNIFORM_VIGNETTEINTENSITY,
+	UNIFORM_FILMGRAININTENSITY,
+	UNIFORM_CHROMATICABERRATION,
+
 	UNIFORM_COUNT
 } uniform_t;
 
@@ -2066,6 +2070,13 @@ extern  cvar_t  *r_bloomDebug;
 
 extern  cvar_t  *r_colorGrading;
 extern  cvar_t  *r_colorGradeLUT;
+
+extern  cvar_t  *r_vignette;
+extern  cvar_t  *r_vignetteIntensity;
+extern  cvar_t  *r_filmGrain;
+extern  cvar_t  *r_filmGrainIntensity;
+extern  cvar_t  *r_chromaticAberration;
+extern  cvar_t  *r_chromaticAberrationIntensity;
 
 extern  cvar_t  *r_depthPrepass;
 extern  cvar_t  *r_ssao;

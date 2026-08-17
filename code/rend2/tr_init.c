@@ -144,6 +144,13 @@ cvar_t  *r_bloomDebug;
 cvar_t  *r_colorGrading;
 cvar_t  *r_colorGradeLUT;
 
+cvar_t  *r_vignette;
+cvar_t  *r_vignetteIntensity;
+cvar_t  *r_filmGrain;
+cvar_t  *r_filmGrainIntensity;
+cvar_t  *r_chromaticAberration;
+cvar_t  *r_chromaticAberrationIntensity;
+
 cvar_t  *r_externalGLSL;
 
 cvar_t  *r_hdr;
@@ -1435,6 +1442,13 @@ void R_Register( void ) {
 
 	r_colorGrading = ri.Cvar_Get( "r_colorGrading", "0", CVAR_ARCHIVE );
 	r_colorGradeLUT = ri.Cvar_Get( "r_colorGradeLUT", "gfx/luts/neutral", CVAR_ARCHIVE );
+
+	r_vignette = ri.Cvar_Get( "r_vignette", "0", CVAR_ARCHIVE );
+	r_vignetteIntensity = ri.Cvar_Get( "r_vignetteIntensity", "0.4", CVAR_ARCHIVE );
+	r_filmGrain = ri.Cvar_Get( "r_filmGrain", "0", CVAR_ARCHIVE );
+	r_filmGrainIntensity = ri.Cvar_Get( "r_filmGrainIntensity", "0.05", CVAR_ARCHIVE );
+	r_chromaticAberration = ri.Cvar_Get( "r_chromaticAberration", "0", CVAR_ARCHIVE );
+	r_chromaticAberrationIntensity = ri.Cvar_Get( "r_chromaticAberrationIntensity", "0.002", CVAR_ARCHIVE );
 
 	r_depthPrepass = ri.Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
 	r_ssao = ri.Cvar_Get( "r_ssao", "0", CVAR_LATCH | CVAR_ARCHIVE );

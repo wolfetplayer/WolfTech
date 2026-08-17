@@ -7,6 +7,7 @@ uniform vec4      u_Color;
 uniform vec2      u_AutoExposureMinMax;
 uniform vec3      u_ToneMinAvgMaxLinear;
 uniform float     u_InvGamma;
+uniform float     u_Time;
 
 varying vec2      var_TexCoords;
 varying float     var_InvWhite;
@@ -14,6 +15,9 @@ varying float     var_InvWhite;
 const vec3  LUMINANCE_VECTOR =   vec3(0.2125, 0.7154, 0.0721); //vec3(0.299, 0.587, 0.114);
 
 uniform sampler2D u_ColorGradeLUT;
+uniform float     u_VignetteIntensity;
+uniform float     u_FilmGrainIntensity;
+uniform float     u_ChromaticAberration;
 
 // u_ColorGradeLUT is a 16^3 color cube flattened into a 256x16 2D strip
 // (16 tiles of 16x16, blue selects the tile); see main/gfx/luts/neutral.png.
@@ -37,6 +41,40 @@ vec3 ApplyColorGradeLUT(vec3 color)
 	return mix(sampleLow, sampleHigh, sliceFrac);
 }
 
+// samples R/G/B at slightly different UVs, radiating from screen center,
+// to fake the color fringing of an imperfect lens. u_ChromaticAberration
+// of 0 collapses all three taps onto the same texel (no-op).
+vec4 SampleChromaticAberration(sampler2D tex, vec2 uv, float amount)
+{
+	vec2 offset = (uv - vec2(0.5)) * amount;
+	vec4 center = texture2D(tex, uv);
+
+	float r = texture2D(tex, uv - offset).r;
+	float b = texture2D(tex, uv + offset).b;
+
+	return vec4(r, center.g, b, center.a);
+}
+
+// darkens the screen edges/corners
+vec3 ApplyVignette(vec3 color, vec2 uv, float intensity)
+{
+	float dist = length(uv - vec2(0.5)) * 1.4142135; // corners reach 1.0
+	float vig = 1.0 - intensity * smoothstep(0.3, 1.0, dist);
+	return color * vig;
+}
+
+float FilmGrainRandom(vec2 p)
+{
+	return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+// per-pixel noise that re-randomizes every frame via u_Time
+vec3 ApplyFilmGrain(vec3 color, vec2 fragCoord, float time, float intensity)
+{
+	float noise = FilmGrainRandom(fragCoord + fract(time) * 1000.0) - 0.5;
+	return color + noise * intensity;
+}
+
 float FilmicTonemap(float x)
 {
 	const float SS  = 0.22; // Shoulder Strength
@@ -51,7 +89,7 @@ float FilmicTonemap(float x)
 
 void main()
 {
-	vec4 color = texture2D(u_TextureMap, var_TexCoords) * u_Color;
+	vec4 color = SampleChromaticAberration(u_TextureMap, var_TexCoords, u_ChromaticAberration) * u_Color;
 
 #if defined(USE_PBR)
 	color.rgb *= color.rgb;
@@ -79,6 +117,8 @@ void main()
 	color.rgb = pow(color.rgb, vec3(u_InvGamma));
 
 	color.rgb = ApplyColorGradeLUT(color.rgb);
+	color.rgb = ApplyVignette(color.rgb, var_TexCoords, u_VignetteIntensity);
+	color.rgb = ApplyFilmGrain(color.rgb, gl_FragCoord.xy, u_Time, u_FilmGrainIntensity);
 
 	// add a bit of dither to reduce banding
 	color.rgb += vec3(1.0/510.0 * mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) - 1.0/1020.0);

@@ -24,6 +24,7 @@ compatibility with existing RTCW mods.
   - Bloom.
   - Sun and dynamic light rays.
   - Color grading via LUT textures.
+  - Vignette, film grain, and chromatic aberration.
 
 
 -------------------------------------------------------------------------------
@@ -386,6 +387,34 @@ Cvars for color grading:
                                    no extension needed.  Hot-reloads when
                                    changed -- no vid_restart required.
                                      gfx/luts/neutral - No-op grade. (default)
+
+Cvars for screen effects (all hot-toggleable, no vid_restart needed):
+
+*  `r_vignette`                      - Darken the screen edges/corners.
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_vignetteIntensity`             - Strength of the vignette darkening.
+                                     0.0 - None.
+                                     0.4 - Default.
+                                     1.0 - Corners go black.
+
+*  `r_filmGrain`                     - Add animated per-pixel grain/noise.
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_filmGrainIntensity`            - Strength of the grain.
+                                     0.05 - Default, subtle.
+                                     0.2  - Heavy, visibly noisy.
+
+*  `r_chromaticAberration`           - Fringe color channels apart toward
+                                   the screen edges, like an imperfect lens.
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_chromaticAberrationIntensity`  - Strength of the color fringing.
+                                     0.002 - Default, subtle.
+                                     0.01  - Strong, edges clearly split.
 
 Cvars that you probably don't care about or shouldn't mess with:
 
