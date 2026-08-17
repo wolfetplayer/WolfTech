@@ -1832,6 +1832,8 @@ const void	*RB_DrawSurfs( const void *data ) {
 				GL_BindToTMU(tr.hdrDepthImage, TB_COLORMAP);
 
 				GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_VIEWINFO, viewInfo);
+				GLSL_SetUniformFloat(&tr.ssaoShader, UNIFORM_SSAOINTENSITY, r_ssaoIntensity->value);
+				GLSL_SetUniformFloat(&tr.ssaoShader, UNIFORM_SSAORADIUS, r_ssaoRadius->value);
 
 				RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
 

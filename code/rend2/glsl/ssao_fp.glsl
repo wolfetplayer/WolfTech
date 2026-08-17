@@ -1,6 +1,8 @@
 uniform sampler2D u_ScreenDepthMap;
 
 uniform vec4   u_ViewInfo; // zfar / znear, zfar, 1/width, 1/height
+uniform float  u_SSAOIntensity;
+uniform float  u_SSAORadius;
 
 varying vec2   var_ScreenTex;
 
@@ -14,7 +16,8 @@ vec2(0.7320465, 0.6317794)
 );
 #endif
 
-#define NUM_SAMPLES 3
+// use the full 9-point poisson disc below (was only sampling the first 3)
+#define NUM_SAMPLES 9
 
 // Input: It uses texture coords as the random number seed.
 // Output: Random number: [0,1), that is between 0.0 and 0.999999... inclusive.
@@ -47,7 +50,7 @@ float getLinearDepth(sampler2D depthMap, const vec2 tex, const float zFarDivZNea
 	return 1.0 / mix(zFarDivZNear, 1.0, sampleZDivW);
 }
 
-float ambientOcclusion(sampler2D depthMap, const vec2 tex, const float zFarDivZNear, const float zFar, const vec2 scale)
+float ambientOcclusion(sampler2D depthMap, const vec2 tex, const float zFarDivZNear, const float zFar, const vec2 scale, const float radius)
 {
 	vec2 poissonDisc[9];
 
@@ -71,7 +74,7 @@ float ambientOcclusion(sampler2D depthMap, const vec2 tex, const float zFarDivZN
 	if (length(slope) * zFar > 5000.0)
 		return 1.0;
 
-	vec2 offsetScale = vec2(scale * 1024.0 / scaleZ);
+	vec2 offsetScale = vec2(scale * radius / scaleZ);
 
 	mat2 rmat = randomRotation(tex);
 
@@ -95,7 +98,10 @@ float ambientOcclusion(sampler2D depthMap, const vec2 tex, const float zFarDivZN
 
 void main()
 {
-	float result = ambientOcclusion(u_ScreenDepthMap, var_ScreenTex, u_ViewInfo.x, u_ViewInfo.y, u_ViewInfo.wz);
+	float result = ambientOcclusion(u_ScreenDepthMap, var_ScreenTex, u_ViewInfo.x, u_ViewInfo.y, u_ViewInfo.wz, u_SSAORadius);
+
+	// u_SSAOIntensity of 0 fades back to 1.0 (fully unoccluded/no effect)
+	result = mix(1.0, result, u_SSAOIntensity);
 
 	gl_FragColor = vec4(vec3(result), 1.0);
 }

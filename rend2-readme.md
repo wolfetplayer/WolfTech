@@ -92,10 +92,23 @@ Cvars for simple rendering features:
                                      1 - Yes. (default)
 
 *  `r_ssao`                         - Enable screen-space ambient occlusion.
-                                   Currently eats framerate and has some
-                                   visible artifacts.
-                                     0 - No. (default)
-                                     1 - Yes.
+                                   Runs at quarter resolution with a
+                                   depth-aware blur, so it's cheap; requires
+                                   r_hdr and r_depthPrepass (both on by
+                                   default).  Requires vid_restart to toggle.
+                                     0 - No.
+                                     1 - Yes. (default)
+
+*  `r_ssaoIntensity`                 - Strength of the occlusion darkening.
+                                   Hot-tunable, no vid_restart needed.
+                                     0.0  - No visible effect.
+                                     0.85 - Default.
+                                     1.0  - Full strength.
+
+*  `r_ssaoRadius`                    - Sample spread distance.  Larger values
+                                   pick up occlusion from farther away, at
+                                   the cost of looking less precise up close.
+                                     1024 - Default.
 
 Cvars for HDR and tonemapping:
 

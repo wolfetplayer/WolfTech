@@ -172,6 +172,9 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_VignetteIntensity", GLSL_FLOAT },
 	{ "u_FilmGrainIntensity", GLSL_FLOAT },
 	{ "u_ChromaticAberration", GLSL_FLOAT },
+
+	{ "u_SSAOIntensity", GLSL_FLOAT },
+	{ "u_SSAORadius", GLSL_FLOAT },
 };
 
 typedef enum

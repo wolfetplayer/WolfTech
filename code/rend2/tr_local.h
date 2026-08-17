@@ -809,6 +809,9 @@ typedef enum
 	UNIFORM_FILMGRAININTENSITY,
 	UNIFORM_CHROMATICABERRATION,
 
+	UNIFORM_SSAOINTENSITY,
+	UNIFORM_SSAORADIUS,
+
 	UNIFORM_COUNT
 } uniform_t;
 
@@ -2080,6 +2083,8 @@ extern  cvar_t  *r_chromaticAberrationIntensity;
 
 extern  cvar_t  *r_depthPrepass;
 extern  cvar_t  *r_ssao;
+extern  cvar_t  *r_ssaoIntensity;
+extern  cvar_t  *r_ssaoRadius;
 
 extern  cvar_t  *r_normalMapping;
 extern  cvar_t  *r_specularMapping;
