@@ -22,6 +22,7 @@ compatibility with existing RTCW mods.
   - Screen-space ambient occlusion.
   - FXAA.
   - Bloom.
+  - Anamorphic light streaks.
   - Sun and dynamic light rays.
   - Color grading via LUT textures.
   - Vignette, film grain, and chromatic aberration.
@@ -214,6 +215,28 @@ Cvars for bloom:
                                    for tuning the threshold.
                                      0 - No. (default)
                                      1 - Yes.
+
+Cvars for anamorphic streaks (horizontal-only light streaks off bright
+pixels, reuses the same bright-pass as bloom):
+
+*  `r_streaks`                       - Enable streaks.
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_streaksThreshold`              - Brightness a pixel needs to exceed
+                                   before it streaks.
+                                     1.0 - Default.
+
+*  `r_streaksIntensity`              - Strength of the streaks once
+                                   applied back onto the scene.
+                                     0.5 - Default.
+
+*  `r_streaksLength`                 - How many times the streak blur is
+                                   applied.  Each pass roughly doubles the
+                                   reach, at the cost of a bit more GPU time.
+                                     1 - Short.
+                                     4 - Default.
+                                     8 - Long, edge-to-edge on bright scenes.
 
 Cvars for advanced material usage:
 

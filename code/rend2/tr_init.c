@@ -141,6 +141,11 @@ cvar_t  *r_bloomThreshold;
 cvar_t  *r_bloomIntensity;
 cvar_t  *r_bloomDebug;
 
+cvar_t  *r_streaks;
+cvar_t  *r_streaksThreshold;
+cvar_t  *r_streaksIntensity;
+cvar_t  *r_streaksLength;
+
 cvar_t  *r_colorGrading;
 cvar_t  *r_colorGradeLUT;
 
@@ -1444,6 +1449,11 @@ void R_Register( void ) {
 	r_bloomThreshold = ri.Cvar_Get( "r_bloomThreshold", "1.0", CVAR_ARCHIVE );
 	r_bloomIntensity = ri.Cvar_Get( "r_bloomIntensity", "0.5", CVAR_ARCHIVE );
 	r_bloomDebug = ri.Cvar_Get( "r_bloomDebug", "0", CVAR_TEMP );
+
+	r_streaks = ri.Cvar_Get( "r_streaks", "0", CVAR_ARCHIVE );
+	r_streaksThreshold = ri.Cvar_Get( "r_streaksThreshold", "1.0", CVAR_ARCHIVE );
+	r_streaksIntensity = ri.Cvar_Get( "r_streaksIntensity", "0.5", CVAR_ARCHIVE );
+	r_streaksLength = ri.Cvar_Get( "r_streaksLength", "4", CVAR_ARCHIVE );
 
 	r_colorGrading = ri.Cvar_Get( "r_colorGrading", "0", CVAR_ARCHIVE );
 	r_colorGradeLUT = ri.Cvar_Get( "r_colorGradeLUT", "gfx/luts/neutral", CVAR_ARCHIVE );

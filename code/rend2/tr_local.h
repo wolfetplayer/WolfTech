@@ -2084,6 +2084,11 @@ extern  cvar_t  *r_bloomThreshold;
 extern  cvar_t  *r_bloomIntensity;
 extern  cvar_t  *r_bloomDebug;
 
+extern  cvar_t  *r_streaks;
+extern  cvar_t  *r_streaksThreshold;
+extern  cvar_t  *r_streaksIntensity;
+extern  cvar_t  *r_streaksLength;
+
 extern  cvar_t  *r_colorGrading;
 extern  cvar_t  *r_colorGradeLUT;
 
