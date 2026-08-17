@@ -2345,6 +2345,11 @@ const void *RB_PostProcess(const void *data)
 			color[2] = (r_cameraExposure->value == 0.0f) ? 1.0f : pow(2, r_cameraExposure->value); //exp2(r_cameraExposure->value);
 			color[3] = 1.0f;
 
+			if (r_colorGrading->integer && tr.colorGradeLUTImage)
+				GL_BindToTMU(tr.colorGradeLUTImage, TB_COLORGRADELUT);
+			else
+				GL_BindToTMU(tr.identityLUTImage, TB_COLORGRADELUT);
+
 			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_INVGAMMA, tr.invGamma);
 			FBO_Blit(srcFbo, srcBox, NULL, postDst, dstBox, &tr.gammaShader, color, 0);
 		}

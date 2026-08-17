@@ -13,6 +13,30 @@ varying float     var_InvWhite;
 
 const vec3  LUMINANCE_VECTOR =   vec3(0.2125, 0.7154, 0.0721); //vec3(0.299, 0.587, 0.114);
 
+uniform sampler2D u_ColorGradeLUT;
+
+// u_ColorGradeLUT is a 16^3 color cube flattened into a 256x16 2D strip
+// (16 tiles of 16x16, blue selects the tile); see main/gfx/luts/neutral.png.
+// Always bound to either the active grade or the built-in no-op identity LUT.
+vec3 ApplyColorGradeLUT(vec3 color)
+{
+	const float lutSize = 16.0;
+
+	vec3 scaled = clamp(color, 0.0, 1.0) * (lutSize - 1.0);
+
+	float slice     = floor(scaled.b);
+	float sliceFrac = scaled.b - slice;
+	float sliceNext = min(slice + 1.0, lutSize - 1.0);
+
+	float u = (scaled.r + 0.5) / (lutSize * lutSize);
+	float v = (scaled.g + 0.5) / lutSize;
+
+	vec3 sampleLow  = texture2D(u_ColorGradeLUT, vec2(u + slice     / lutSize, v)).rgb;
+	vec3 sampleHigh = texture2D(u_ColorGradeLUT, vec2(u + sliceNext / lutSize, v)).rgb;
+
+	return mix(sampleLow, sampleHigh, sliceFrac);
+}
+
 float FilmicTonemap(float x)
 {
 	const float SS  = 0.22; // Shoulder Strength
@@ -53,6 +77,8 @@ void main()
 
 	// software gamma correction, replaces the hw gamma ramp SDL3 no longer supports
 	color.rgb = pow(color.rgb, vec3(u_InvGamma));
+
+	color.rgb = ApplyColorGradeLUT(color.rgb);
 
 	// add a bit of dither to reduce banding
 	color.rgb += vec3(1.0/510.0 * mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) - 1.0/1020.0);

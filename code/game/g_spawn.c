@@ -1121,6 +1121,7 @@ Every map should have exactly one worldspawn.
 "ambient"  Ambient light value (must use '_color')
 "_color"    Ambient light color (must be used with 'ambient')
 "sun"        Shader to use for 'sun' image
+"colorgradelut" Path to a color grading LUT (e.g. "gfx/luts/hoth"), no extension needed. Empty/omitted disables grading.
 */
 void SP_worldspawn( void ) {
 	char    *s;
@@ -1147,7 +1148,10 @@ void SP_worldspawn( void ) {
 	trap_Cvar_Set( "g_gravity", s );
 
 	G_SpawnString("atmosphere", "", &s);
-	trap_SetConfigstring(CS_ATMOSEFFECT, s);  	
+	trap_SetConfigstring(CS_ATMOSEFFECT, s);
+
+	G_SpawnString("colorgradelut", "", &s);
+	trap_SetConfigstring(CS_COLORGRADELUT, s);
 
 	// (SA) FIXME: todo: sun shader set for worldspawn
 

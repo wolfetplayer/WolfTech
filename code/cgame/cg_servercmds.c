@@ -441,6 +441,24 @@ static void CG_ParseFog( void ) {
 }
 
 /*
+==============
+CG_SetColorGradeLUT
+
+Applies the map's default color grading LUT (worldspawn "colorgradelut" key,
+carried in CS_COLORGRADELUT). An empty string means the map didn't request
+one, so grading is left off rather than guessing at a default.
+==============
+*/
+static void CG_SetColorGradeLUT( const char *lut ) {
+	if ( lut && lut[0] ) {
+		trap_Cvar_Set( "r_colorGradeLUT", lut );
+		trap_Cvar_Set( "r_colorGrading", "1" );
+	} else {
+		trap_Cvar_Set( "r_colorGrading", "0" );
+	}
+}
+
+/*
 ================
 CG_SetConfigValues
 
@@ -455,6 +473,8 @@ void CG_SetConfigValues( void ) {
 
 	if (cg_atm_effects.integer)
 		CG_EffectParse(CG_ConfigString(CS_ATMOSEFFECT));
+
+	CG_SetColorGradeLUT( CG_ConfigString( CS_COLORGRADELUT ) );
 }
 
 /*
@@ -595,6 +615,8 @@ static void CG_ConfigStringModified( void ) {
 		CG_ParseMissionFunStats();
 	} else if (num == CS_ATMOSEFFECT) {
 		CG_EffectParse(str);
+	} else if (num == CS_COLORGRADELUT) {
+		CG_SetColorGradeLUT(str);
 	}
 }
 

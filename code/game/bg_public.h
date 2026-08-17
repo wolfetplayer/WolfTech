@@ -172,7 +172,7 @@ typedef enum {
 #define CS_MULTI_INFO       15
 #define CS_MULTI_MAPDESC    16
 #define CS_MULTI_OBJECTIVE1 17
-//#define CS_MULTI_OBJECTIVE2 18
+#define CS_COLORGRADELUT    18      // per-map default color grading LUT path, from worldspawn's "colorgradelut" key
 #define CS_MULTI_OBJECTIVE3 19
 #define CS_MULTI_OBJECTIVE4 20
 #define CS_MULTI_OBJECTIVE5 21

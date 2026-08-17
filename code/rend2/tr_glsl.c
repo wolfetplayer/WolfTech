@@ -166,6 +166,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_InvGamma", GLSL_FLOAT },
 
 	{ "u_Greyscale", GLSL_FLOAT },
+
+	{ "u_ColorGradeLUT", GLSL_INT },
 };
 
 typedef enum
@@ -1020,6 +1022,7 @@ void GLSL_InitGPUShaders(void)
 	numEtcShaders++;
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD;
+	extradefines[0] = '\0';
 
 	if (!GLSL_InitGPUShader(&tr.gammaShader, "gamma", attribs, qtrue, extradefines, qtrue, fallbackShader_gamma_vp, fallbackShader_gamma_fp))
 	{
@@ -1029,6 +1032,7 @@ void GLSL_InitGPUShaders(void)
 	GLSL_InitUniforms(&tr.gammaShader);
 
 	GLSL_SetUniformInt(&tr.gammaShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.gammaShader, UNIFORM_COLORGRADELUT, TB_COLORGRADELUT);
 
 	GLSL_FinishGPUShader(&tr.gammaShader);
 
@@ -1403,6 +1407,7 @@ void GLSL_InitGPUShaders(void)
 
 	GLSL_SetUniformInt(&tr.tonemapShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
 	GLSL_SetUniformInt(&tr.tonemapShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.tonemapShader, UNIFORM_COLORGRADELUT, TB_COLORGRADELUT);
 
 	GLSL_FinishGPUShader(&tr.tonemapShader);
 

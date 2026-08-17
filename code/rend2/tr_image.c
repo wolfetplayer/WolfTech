@@ -2722,6 +2722,28 @@ static void R_CreateDefaultImage( void ) {
 
 /*
 ==================
+R_LoadColorGradeLUT
+
+(Re)loads the user-selected color grading LUT named by r_colorGradeLUT.
+Safe to call at any time (used both at init and for runtime hot-reload
+from RE_BeginFrame when the cvar changes) -- falls back to the built-in
+no-op identityLUTImage if the path is empty or the file can't be found.
+==================
+*/
+void R_LoadColorGradeLUT( void ) {
+	if ( r_colorGradeLUT->string[0] ) {
+		tr.colorGradeLUTImage = R_FindImageFile( r_colorGradeLUT->string, IMGTYPE_COLORALPHA,
+			IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION );
+
+		if ( !tr.colorGradeLUTImage )
+			ri.Printf( PRINT_WARNING, "WARNING: could not load color grade LUT '%s'\n", r_colorGradeLUT->string );
+	} else {
+		tr.colorGradeLUTImage = NULL;
+	}
+}
+
+/*
+==================
 R_CreateBuiltinImages
 ==================
 */
@@ -2756,6 +2778,28 @@ void R_CreateBuiltinImages( void ) {
 
 	tr.identityLightImage = R_CreateImage( "*identityLight", (byte *)data, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0 );
 
+	// no-op 256x16 (16^3) color grading LUT, bound whenever grading is off or the user's LUT fails to load
+	{
+		byte lutData[16][256][4];
+		int lr, lg, lb;
+
+		for ( lg = 0; lg < 16; lg++ ) {
+			for ( lb = 0; lb < 16; lb++ ) {
+				for ( lr = 0; lr < 16; lr++ ) {
+					int lx = lb * 16 + lr;
+					lutData[lg][lx][0] = (byte)(lr * 17);
+					lutData[lg][lx][1] = (byte)(lg * 17);
+					lutData[lg][lx][2] = (byte)(lb * 17);
+					lutData[lg][lx][3] = 255;
+				}
+			}
+		}
+
+		tr.identityLUTImage = R_CreateImage( "*colorGradeIdentityLUT", (byte *)lutData, 256, 16, IMGTYPE_COLORALPHA,
+			IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, 0 );
+	}
+
+	R_LoadColorGradeLUT();
 
 	for ( x = 0; x < 32; x++ ) {
 		// scratchimage is usually used for cinematic drawing

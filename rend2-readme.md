@@ -316,6 +316,18 @@ Cvars for the sunlight and cascaded shadow maps:
                                      4096 - 4096x4096, indistinguishable from
                                             2048.
 
+Cvars for color grading:
+
+*  `r_colorGrading`                  - Enable color grading via a LUT texture.
+                                   See the COLOR GRADING section below.
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_colorGradeLUT`                 - Path to the color grading LUT to use,
+                                   no extension needed.  Hot-reloads when
+                                   changed -- no vid_restart required.
+                                     gfx/luts/neutral - No-op grade. (default)
+
 Cvars that you probably don't care about or shouldn't mess with:
 
 *  `r_depthPrepass`                 - Do a depth-only pass before rendering.
@@ -569,6 +581,46 @@ This adds a new keyword to sky materials, q3gl2_tonemap.  The syntax is:
   
 Each of these settings corresponds to a matching cvar, so you can view and
 adjust the effect before settling on fixed settings.
+
+
+-------------------------------------------------------------------------------
+  COLOR GRADING
+-------------------------------------------------------------------------------
+
+Rend2 can apply a color grading LUT (look-up table) as the final step of the
+postprocess pipeline, right after tone mapping/gamma.  It's a cheap way to
+give a level its own mood (cold and icy, warm desert sun, damp forest, a
+tinted "hurt" state, etc.) without touching lighting or materials.
+
+LUT format: a 256x16 PNG, a 16x16x16 color cube flattened into 16 tiles of
+16x16 (the classic Unity-style 2D strip).  Bundled presets live in
+`main/gfx/luts/`:
+
+  - `neutral`     - identity, no visual change (the default)
+  - `bacta`       - green healing-tank tint
+  - `hoth`        - cold, icy, high-contrast exteriors
+  - `desert`      - warm, sun-baked, richly saturated
+  - `rainyforest` - damp, overcast, muted olive-grey woodland
+  - `lowhealth`   - desaturated, red-pushed tension grade
+
+To try one at the console:
+
+    r_colorGrading 1
+    r_colorGradeLUT gfx/luts/hoth
+
+Changing `r_colorGradeLUT` reloads the texture live, no `vid_restart` needed
+-- switch between presets as many times as you like.  To give a map its own
+default grade, set a `colorgradelut` key on worldspawn (same workflow as
+`sun` or `ambient`):
+
+    "colorgradelut" "gfx/luts/rainyforest"
+
+An empty/omitted key leaves grading off, so existing maps are unaffected.
+
+To author your own LUT: take `neutral.png` (or generate a fresh identity
+strip), load it into Photoshop/DaVinci/whatever as if it were footage, push
+whatever curves/color-balance/saturation you want, and export back at the
+same 256x16 size over the original file.
 
 
 -------------------------------------------------------------------------------

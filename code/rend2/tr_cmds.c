@@ -461,6 +461,15 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	}
 
 	//
+	// color grading LUT -- reload without a vid_restart when the path changes
+	//
+	if ( r_colorGradeLUT->modified ) {
+		R_IssuePendingRenderCommands();
+		R_LoadColorGradeLUT();
+		r_colorGradeLUT->modified = qfalse;
+	}
+
+	//
 	// ATI stuff
 	//
 

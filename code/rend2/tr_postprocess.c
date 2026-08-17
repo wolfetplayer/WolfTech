@@ -90,6 +90,11 @@ void RB_ToneMap(FBO_t *hdrFbo, ivec4_t hdrBox, FBO_t *ldrFbo, ivec4_t ldrBox, in
 	else
 		GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
+	if (r_colorGrading->integer && tr.colorGradeLUTImage)
+		GL_BindToTMU(tr.colorGradeLUTImage, TB_COLORGRADELUT);
+	else
+		GL_BindToTMU(tr.identityLUTImage, TB_COLORGRADELUT);
+
 	GLSL_SetUniformFloat(&tr.tonemapShader, UNIFORM_INVGAMMA, tr.invGamma);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.tonemapShader, color, 0);
 }

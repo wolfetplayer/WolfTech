@@ -400,6 +400,7 @@ enum
 	TB_LEVELSMAP   = 1,
 	TB_SHADOWMAP3   = 1,
 	TB_NORMALMAP   = 2,
+	TB_COLORGRADELUT = 2,
 	TB_DELUXEMAP   = 3,
 	TB_SHADOWMAP2  = 3,
 	TB_SPECULARMAP = 4,
@@ -801,6 +802,8 @@ typedef enum
 	UNIFORM_INVGAMMA,
 
 	UNIFORM_GREYSCALE,
+
+	UNIFORM_COLORGRADELUT,
 
 	UNIFORM_COUNT
 } uniform_t;
@@ -1698,6 +1701,9 @@ typedef struct {
 	image_t                 *whiteImage;            // full of 0xff
 	image_t                 *identityLightImage;    // full of tr.identityLightByte
 
+	image_t                 *colorGradeLUTImage;    // 256x16 (16^3) color grading strip LUT, user-selected, reloadable at runtime
+	image_t                 *identityLUTImage;      // built-in no-op 256x16 LUT, bound when grading is off or the LUT fails to load
+
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	
 
@@ -2058,6 +2064,9 @@ extern  cvar_t  *r_bloomThreshold;
 extern  cvar_t  *r_bloomIntensity;
 extern  cvar_t  *r_bloomDebug;
 
+extern  cvar_t  *r_colorGrading;
+extern  cvar_t  *r_colorGradeLUT;
+
 extern  cvar_t  *r_depthPrepass;
 extern  cvar_t  *r_ssao;
 
@@ -2276,6 +2285,7 @@ model_t     *R_AllocModel( void );
 void        R_Init( void );
 image_t     *R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags );
 image_t     *R_FindImageFileExt( const char *name, imgType_t type, imgFlags_t flags, qboolean characterMip ); //----(SA)	added
+void        R_LoadColorGradeLUT( void );
 
 image_t     *R_CreateImage( const char *name, byte *pic, int width, int height, imgType_t type, imgFlags_t flags, int internalFormat );
 //----(SA)	added (didn't want to modify all instances of R_CreateImage()

@@ -141,6 +141,9 @@ cvar_t  *r_bloomThreshold;
 cvar_t  *r_bloomIntensity;
 cvar_t  *r_bloomDebug;
 
+cvar_t  *r_colorGrading;
+cvar_t  *r_colorGradeLUT;
+
 cvar_t  *r_externalGLSL;
 
 cvar_t  *r_hdr;
@@ -1429,6 +1432,9 @@ void R_Register( void ) {
 	r_bloomThreshold = ri.Cvar_Get( "r_bloomThreshold", "1.0", CVAR_ARCHIVE );
 	r_bloomIntensity = ri.Cvar_Get( "r_bloomIntensity", "0.5", CVAR_ARCHIVE );
 	r_bloomDebug = ri.Cvar_Get( "r_bloomDebug", "0", CVAR_TEMP );
+
+	r_colorGrading = ri.Cvar_Get( "r_colorGrading", "0", CVAR_ARCHIVE );
+	r_colorGradeLUT = ri.Cvar_Get( "r_colorGradeLUT", "gfx/luts/neutral", CVAR_ARCHIVE );
 
 	r_depthPrepass = ri.Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
 	r_ssao = ri.Cvar_Get( "r_ssao", "0", CVAR_LATCH | CVAR_ARCHIVE );
