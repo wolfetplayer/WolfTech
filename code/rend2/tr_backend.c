@@ -1667,6 +1667,25 @@ const void	*RB_DrawSurfs( const void *data ) {
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 		backEnd.depthFill = qfalse;
 
+		if (isShadowView && r_pcss->integer && tr.sunShadowRawFbo[0])
+		{
+			int cascadeLevel;
+
+			for (cascadeLevel = 0; cascadeLevel < 4; cascadeLevel++)
+			{
+				if (backEnd.viewParms.targetFbo == tr.sunShadowFbo[cascadeLevel])
+				{
+					// GL_COMPARE_R_TO_TEXTURE makes plain texture2D() sampling of
+					// this texture undefined, so drop it for the raw-depth copy
+					// PCSS needs for its blocker search, then restore it after
+					qglTextureParameterfEXT(tr.sunShadowDepthImage[cascadeLevel]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+					FBO_BlitFromTexture(tr.sunShadowDepthImage[cascadeLevel], NULL, NULL, tr.sunShadowRawFbo[cascadeLevel], NULL, NULL, NULL, 0);
+					qglTextureParameterfEXT(tr.sunShadowDepthImage[cascadeLevel]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+					break;
+				}
+			}
+		}
+
 		if (!isShadowView)
 		{
 			if (tr.msaaResolveFbo)
@@ -1741,6 +1760,14 @@ const void	*RB_DrawSurfs( const void *data ) {
 					GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
 					GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP4);
 
+					if (r_pcss->integer && tr.sunShadowRawImage[0])
+					{
+						GL_BindToTMU(tr.sunShadowRawImage[0], TB_SHADOWMAPRAW);
+						GL_BindToTMU(tr.sunShadowRawImage[1], TB_SHADOWMAPRAW2);
+						GL_BindToTMU(tr.sunShadowRawImage[2], TB_SHADOWMAPRAW3);
+						GL_BindToTMU(tr.sunShadowRawImage[3], TB_SHADOWMAPRAW4);
+					}
+
 					GLSL_SetUniformMat4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP, backEnd.refdef.sunShadowMvp[0]);
 					GLSL_SetUniformMat4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
 					GLSL_SetUniformMat4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
@@ -1749,8 +1776,16 @@ const void	*RB_DrawSurfs( const void *data ) {
 				else
 				{
 					GL_BindToTMU(tr.sunShadowDepthImage[3], TB_SHADOWMAP);
+
+					if (r_pcss->integer && tr.sunShadowRawImage[3])
+						GL_BindToTMU(tr.sunShadowRawImage[3], TB_SHADOWMAPRAW);
+
 					GLSL_SetUniformMat4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP, backEnd.refdef.sunShadowMvp[3]);
 				}
+
+				if (r_pcss->integer && tr.sunShadowRawImage[0])
+					GLSL_SetUniformFloat(&tr.shadowmaskShader, UNIFORM_PCSSLIGHTSIZE, r_pcssLightSize->value);
+				GLSL_SetUniformFloat(&tr.shadowmaskShader, UNIFORM_PCSSDEBUG, r_pcssDebug->integer ? 1.0f : 0.0f);
 
 				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
 				{

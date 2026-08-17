@@ -407,7 +407,11 @@ enum
 	TB_SHADOWMAP  = 5,
 	TB_CUBEMAP     = 6,
 	TB_SHADOWMAP4  = 6,
-	NUM_TEXTURE_BUNDLES = 7
+	TB_SHADOWMAPRAW  = 7,
+	TB_SHADOWMAPRAW2 = 8,
+	TB_SHADOWMAPRAW3 = 9,
+	TB_SHADOWMAPRAW4 = 10,
+	NUM_TEXTURE_BUNDLES = 11
 };
 
 typedef enum
@@ -724,6 +728,13 @@ typedef enum
 	UNIFORM_SHADOWMAP2,
 	UNIFORM_SHADOWMAP3,
 	UNIFORM_SHADOWMAP4,
+
+	UNIFORM_SHADOWMAPRAW,
+	UNIFORM_SHADOWMAPRAW2,
+	UNIFORM_SHADOWMAPRAW3,
+	UNIFORM_SHADOWMAPRAW4,
+	UNIFORM_PCSSLIGHTSIZE,
+	UNIFORM_PCSSDEBUG,
 
 	UNIFORM_SHADOWMVP,
 	UNIFORM_SHADOWMVP2,
@@ -1727,6 +1738,7 @@ typedef struct {
 	image_t					*targetLevelsImage;
 	image_t					*fixedLevelsImage;
 	image_t					*sunShadowDepthImage[4];
+	image_t					*sunShadowRawImage[4];	// non-comparison copy of the above, for PCSS blocker search
 	image_t                 *screenShadowImage;
 	image_t                 *screenSsaoImage;
 	image_t					*hdrDepthImage;
@@ -1747,6 +1759,7 @@ typedef struct {
 	FBO_t					*calcLevelsFbo;
 	FBO_t					*targetLevelsFbo;
 	FBO_t					*sunShadowFbo[4];
+	FBO_t					*sunShadowRawFbo[4];
 	FBO_t					*screenShadowFbo;
 	FBO_t					*screenSsaoFbo;
 	FBO_t					*hdrDepthFbo;
@@ -2126,6 +2139,9 @@ extern  cvar_t  *r_shadowMapSize;
 extern  cvar_t  *r_shadowCascadeZNear;
 extern  cvar_t  *r_shadowCascadeZFar;
 extern  cvar_t  *r_shadowCascadeZBias;
+extern  cvar_t  *r_pcss;
+extern  cvar_t  *r_pcssLightSize;
+extern  cvar_t  *r_pcssDebug;
 extern  cvar_t  *r_ignoreDstAlpha;
 
 extern	cvar_t	*r_greyscale;

@@ -89,6 +89,13 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_ShadowMap3", GLSL_INT },
 	{ "u_ShadowMap4", GLSL_INT },
 
+	{ "u_ShadowMapRaw",  GLSL_INT },
+	{ "u_ShadowMapRaw2", GLSL_INT },
+	{ "u_ShadowMapRaw3", GLSL_INT },
+	{ "u_ShadowMapRaw4", GLSL_INT },
+	{ "u_PCSSLightSize", GLSL_FLOAT },
+	{ "u_PCSSDebug", GLSL_FLOAT },
+
 	{ "u_ShadowMvp",  GLSL_MAT16 },
 	{ "u_ShadowMvp2", GLSL_MAT16 },
 	{ "u_ShadowMvp3", GLSL_MAT16 },
@@ -1456,6 +1463,9 @@ void GLSL_InitGPUShaders(void)
 	if (r_shadowCascadeZFar->integer != 0)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE\n");
 
+	if (r_pcss->integer && tr.sunShadowRawImage[0])
+		Q_strcat(extradefines, 1024, "#define USE_PCSS\n");
+
 	Q_strcat(extradefines, 1024, va("#define r_shadowMapSize %f\n", r_shadowMapSize->value));
 	Q_strcat(extradefines, 1024, va("#define r_shadowCascadeZFar %f\n", r_shadowCascadeZFar->value));
 
@@ -1464,7 +1474,7 @@ void GLSL_InitGPUShaders(void)
 	{
 		ri.Error(ERR_FATAL, "Could not load shadowmask shader!");
 	}
-	
+
 	GLSL_InitUniforms(&tr.shadowmaskShader);
 
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
@@ -1472,6 +1482,14 @@ void GLSL_InitGPUShaders(void)
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP2, TB_SHADOWMAP2);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP3, TB_SHADOWMAP3);
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAP4, TB_SHADOWMAP4);
+
+	if (r_pcss->integer && tr.sunShadowRawImage[0])
+	{
+		GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAPRAW,  TB_SHADOWMAPRAW);
+		GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAPRAW2, TB_SHADOWMAPRAW2);
+		GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAPRAW3, TB_SHADOWMAPRAW3);
+		GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SHADOWMAPRAW4, TB_SHADOWMAPRAW4);
+	}
 
 	GLSL_FinishGPUShader(&tr.shadowmaskShader);
 

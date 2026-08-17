@@ -13,7 +13,7 @@ compatibility with existing RTCW mods.
   - Compatible with most vanilla RTCW mods.
   - HDR Rendering, and support for HDR lightmaps
   - Tone mapping and auto-exposure.
-  - Cascaded shadow maps.
+  - Cascaded shadow maps, with optional percentage-closer soft shadows.
   - Multisample anti-aliasing.
   - Texture upsampling.
   - Advanced materials support.
@@ -361,6 +361,30 @@ Cvars for the sunlight and cascaded shadow maps:
                                      2048 - 2048x2048, extreme.
                                      4096 - 4096x4096, indistinguishable from
                                             2048.
+
+*  `r_pcss`                          - Percentage-closer soft shadows: vary
+                                   the cascaded shadow blur radius per-pixel
+                                   based on an estimated blocker distance, so
+                                   contact shadows stay sharp and shadows
+                                   with more gap to their caster get softer.
+                                   Requires vid_restart to toggle.
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_pcssLightSize`                 - Softness scale.  Hot-tunable, no
+                                   vid_restart needed.
+                                     0.5 - Subtler, sharper-edged.
+                                     1.0 - Default.
+                                     2.0 - Noticeably softer penumbrae.
+
+*  `r_pcssDebug`                     - Cheat.  Replace shadows with a
+                                   visualization of the penumbra estimate
+                                   instead (black = sharp/1x, white = maxed
+                                   out against the clamp/8x).  Use this to
+                                   check r_pcssLightSize is actually varying
+                                   per-pixel instead of saturating.
+                                     0 - No. (default)
+                                     1 - Yes.
 
 Cvars for light rays (requires vid_restart to toggle):
 

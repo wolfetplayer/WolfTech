@@ -214,6 +214,9 @@ cvar_t  *r_shadowMapSize;
 cvar_t  *r_shadowCascadeZNear;
 cvar_t  *r_shadowCascadeZFar;
 cvar_t  *r_shadowCascadeZBias;
+cvar_t  *r_pcss;
+cvar_t  *r_pcssLightSize;
+cvar_t  *r_pcssDebug;
 cvar_t  *r_ignoreDstAlpha;
 
 cvar_t  *r_ignoreGLErrors;
@@ -1499,6 +1502,10 @@ void R_Register( void ) {
 	r_shadowCascadeZNear = ri.Cvar_Get( "r_shadowCascadeZNear", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZFar = ri.Cvar_Get( "r_shadowCascadeZFar", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZBias = ri.Cvar_Get( "r_shadowCascadeZBias", "0", CVAR_ARCHIVE | CVAR_LATCH );
+
+	r_pcss = ri.Cvar_Get( "r_pcss", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_pcssLightSize = ri.Cvar_Get( "r_pcssLightSize", "1.0", CVAR_ARCHIVE );
+	r_pcssDebug = ri.Cvar_Get( "r_pcssDebug", "0", CVAR_TEMP );
 	r_ignoreDstAlpha = ri.Cvar_Get( "r_ignoreDstAlpha", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	//
