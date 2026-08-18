@@ -601,47 +601,6 @@ void RB_Bloom(FBO_t *srcFbo, ivec4_t srcBox, FBO_t *dstFbo, ivec4_t dstBox)
 
 /*
 =============
-RB_Streaks
-
-Anamorphic-style horizontal light streaks. Reuses bloom's bright-pass
-threshold, then smears it horizontally several times over -- repeatedly
-convolving RB_BlurAxis's short kernel builds up a long streak without
-needing a dedicated wide-kernel shader.
-=============
-*/
-void RB_Streaks(FBO_t *srcFbo, ivec4_t srcBox, FBO_t *dstFbo, ivec4_t dstBox)
-{
-	vec4_t color;
-	int i, passes;
-
-	if (!srcFbo)
-		return;
-
-	// bright-pass: threshold the HDR scene down into the half-res scratch buffer
-	VectorSet4(color, r_streaksThreshold->value, r_streaksThreshold->value, r_streaksThreshold->value, 1.0f);
-	FBO_Blit(srcFbo, srcBox, NULL, tr.quarterFbo[0], NULL, &tr.bloomShader, color, 0);
-
-	// downsample further into the small blur scratch buffer
-	FBO_Blit(tr.quarterFbo[0], NULL, NULL, tr.textureScratchFbo[0], NULL, &tr.down4xShader, NULL, 0);
-
-	// smear horizontally only (never vertically -- that's what makes it anamorphic)
-	passes = r_streaksLength->integer;
-	if (passes < 1) passes = 1;
-	if (passes > 8) passes = 8;
-
-	for (i = 0; i < passes; i++)
-	{
-		RB_HBlur(tr.textureScratchFbo[0], tr.textureScratchFbo[1], 2.0f);
-		RB_HBlur(tr.textureScratchFbo[1], tr.textureScratchFbo[0], 2.0f);
-	}
-
-	// upsample and additively composite onto the tonemapped image
-	VectorSet4(color, r_streaksIntensity->value, r_streaksIntensity->value, r_streaksIntensity->value, 1.0f);
-	FBO_Blit(tr.textureScratchFbo[0], NULL, NULL, dstFbo, dstBox, NULL, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
-}
-
-/*
-=============
 RB_FXAA
 =============
 */

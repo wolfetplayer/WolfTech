@@ -2372,9 +2372,6 @@ const void *RB_PostProcess(const void *data)
 
 			if (r_bloom->integer)
 				RB_Bloom(srcFbo, srcBox, postDst, dstBox);
-
-			if (r_streaks->integer)
-				RB_Streaks(srcFbo, srcBox, postDst, dstBox);
 		}
 		else
 		{
