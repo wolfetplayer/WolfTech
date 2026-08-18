@@ -1367,6 +1367,7 @@ extern int BG_AnimationIndexForString ( char * string , int client ) ;
 extern animModelInfo_t * BG_ModelInfoForModelname ( char * modelname ) ;
 extern animModelInfo_t * BG_ModelInfoForClient ( int client ) ;
 extern void QDECL BG_AnimParseError ( const char * msg , ... ) ;
+extern void QDECL BG_AnimParseWarning ( const char * msg , ... ) ;
 extern void AICast_IdleReload ( cast_state_t * cs ) ;
 extern void AICast_DeadClipWalls ( cast_state_t * cs ) ;
 extern void AICast_QueryThink ( cast_state_t * cs ) ;

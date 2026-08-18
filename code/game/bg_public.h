@@ -2053,6 +2053,7 @@ animation_t *BG_AnimationForString( char *string, animModelInfo_t *modelInfo );
 animation_t *BG_GetAnimationForIndex( int client, int index );
 int BG_GetAnimScriptEvent( playerState_t *ps, scriptAnimEventTypes_t event );
 void QDECL BG_AnimParseError( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
+void QDECL BG_AnimParseWarning( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void BG_UpdateConditionValueStrings( int client, char *conditionStr, char *valueStr );
 float BG_AnimGetFootstepGap( playerState_t *ps, float xyspeed );
 

@@ -346,6 +346,29 @@ void QDECL BG_AnimParseError( const char *msg, ... ) {
 
 /*
 =================
+BG_AnimParseWarning
+
+  same as BG_AnimParseError, but non-fatal - logs and lets parsing continue
+  use only where the caller has a safe fallback for a missing/invalid value
+=================
+*/
+void QDECL BG_AnimParseWarning( const char *msg, ... ) {
+	va_list argptr;
+	char text[1024];
+
+	va_start( argptr, msg );
+	Q_vsnprintf( text, sizeof( text ), msg, argptr );
+	va_end( argptr );
+
+	if ( globalFilename ) {
+		Com_Printf( "^3WARNING: %s: (%s, line %i)\n", text, globalFilename, COM_GetCurrentParseLine() + 1 );
+	} else {
+		Com_Printf( "^3WARNING: %s\n", text );
+	}
+}
+
+/*
+=================
 BG_ModelInfoForClient
 =================
 */
@@ -901,9 +924,14 @@ void BG_ParseConditionBits( char **text_pp, animStringItem_t *stringTable, int c
 					tempBits[1] = defineBits[condIndex][indexFound][1];
 				} else {
 					// convert the string into an index
-					indexFound = BG_IndexForString( currentString, stringTable, qfalse );
-					// convert the index into a bitflag
-					COM_BitSet( tempBits, indexFound );
+					indexFound = BG_IndexForString( currentString, stringTable, qtrue );
+					if ( indexFound >= 0 ) {
+						// convert the index into a bitflag
+						COM_BitSet( tempBits, indexFound );
+					} else {
+						// unknown token (eg. stale/misspelled weapon name) - ignore it rather than dropping the game
+						BG_AnimParseWarning( "BG_ParseConditionBits: unknown token '%s', ignoring", currentString );
+					}
 				}
 			}
 			// perform operation
@@ -968,7 +996,11 @@ qboolean BG_ParseConditions( char **text_pp, animScriptItem_t *scriptItem ) {
 				if ( token[strlen( token ) - 1] == ',' ) {
 					token[strlen( token ) - 1] = '\0';
 				}
-				conditionValue[0] = BG_IndexForString( token, animConditionsTable[conditionIndex].values, qfalse );
+				conditionValue[0] = BG_IndexForString( token, animConditionsTable[conditionIndex].values, qtrue );
+				if ( conditionValue[0] < 0 ) {
+					// unknown value (eg. stale/misspelled name) - condition just never matches, rather than dropping the game
+					BG_AnimParseWarning( "BG_ParseConditions: unknown condition value '%s', condition will never be true", token );
+				}
 			} else {
 				conditionValue[0] = 1;  // not used, just check for a positive condition
 			}

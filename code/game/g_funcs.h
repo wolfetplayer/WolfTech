@@ -1367,6 +1367,7 @@ If you have questions concerning this license or the applicable additional terms
 {"BG_ModelInfoForModelname", (byte *)BG_ModelInfoForModelname},
 {"BG_ModelInfoForClient", (byte *)BG_ModelInfoForClient},
 {"BG_AnimParseError", (byte *)BG_AnimParseError},
+{"BG_AnimParseWarning", (byte *)BG_AnimParseWarning},
 {"AICast_IdleReload", (byte *)AICast_IdleReload},
 {"AICast_DeadClipWalls", (byte *)AICast_DeadClipWalls},
 {"AICast_QueryThink", (byte *)AICast_QueryThink},
