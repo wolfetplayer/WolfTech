@@ -2887,16 +2887,6 @@ void R_CreateBuiltinImages( void ) {
 				qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 			}
 
-			// PCSS needs raw (non-comparison) depth reads for its blocker search,
-			// which GL_COMPARE_R_TO_TEXTURE above rules out on sunShadowDepthImage
-			if (r_pcss->integer)
-			{
-				for ( x = 0; x < 4; x++)
-				{
-					tr.sunShadowRawImage[x] = R_CreateImage(va("*sunshadowraw%i", x), NULL, r_shadowMapSize->integer, r_shadowMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_R32F);
-				}
-			}
-
 			tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 

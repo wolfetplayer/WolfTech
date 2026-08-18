@@ -363,16 +363,6 @@ void FBO_Init(void)
 		}
 	}
 
-	if (tr.sunShadowRawImage[0])
-	{
-		for (i = 0; i < 4; i++)
-		{
-			tr.sunShadowRawFbo[i] = FBO_Create("_sunshadowraw", tr.sunShadowRawImage[i]->width, tr.sunShadowRawImage[i]->height);
-			FBO_AttachImage(tr.sunShadowRawFbo[i], tr.sunShadowRawImage[i], GL_COLOR_ATTACHMENT0, 0);
-			R_CheckFBO(tr.sunShadowRawFbo[i]);
-		}
-	}
-
 	if (tr.screenShadowImage)
 	{
 		tr.screenShadowFbo = FBO_Create("_screenshadow", tr.screenShadowImage->width, tr.screenShadowImage->height);
