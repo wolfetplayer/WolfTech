@@ -74,7 +74,8 @@ float ambientOcclusion(sampler2D depthMap, const vec2 tex, const float zFarDivZN
 	if (length(slope) * zFar > 5000.0)
 		return 1.0;
 
-	vec2 offsetScale = vec2(scale * radius / scaleZ);
+	// cap the radius so a near-zero scaleZ (e.g. crunched view-weapon depth) can't fling samples off-screen
+	vec2 offsetScale = min(vec2(scale * radius / scaleZ), vec2(0.1));
 
 	mat2 rmat = randomRotation(tex);
 
