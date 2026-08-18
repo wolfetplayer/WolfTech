@@ -326,7 +326,7 @@ friendly1
 	statetype alert
 	notarget on
 	godmode on
-	//defend marker_def1 32 0
+	defend marker_def1 32 0
 	}
 	
 	activate
@@ -389,7 +389,7 @@ friendly2
 	statetype alert
 	notarget on
 	godmode on
-	//defend marker_def2 32 0
+	defend marker_def2 32 0
 	}
 	
 	activate
@@ -452,7 +452,7 @@ friendly3
 	statetype alert
 	notarget on
 	godmode on
-	//defend marker_def3 32 0
+	defend marker_def3 32 0
 	}
 	
 	activate
@@ -515,7 +515,7 @@ friendly4
 	statetype alert
 	notarget on
 	godmode on
-	//defend marker_def4 32 0
+	defend marker_def4 32 0
 	}
 	
 	activate
