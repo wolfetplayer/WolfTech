@@ -347,3 +347,115 @@ loper10
 	}
 
 }
+
+friendly1
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	giveweaponfull weapon_thompson weapon_bar weapon_venom
+	statetype alert
+	followcast player
+	}
+	
+	activate
+	{
+	deny
+	}
+	
+	enemysight
+	{
+	deny
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+friendly2
+{
+
+	attributes
+	{
+	}
+	
+	respawn
+	{
+	resetscript
+	giveweaponfull weapon_thompson weapon_bar weapon_venom
+	statetype alert
+	followcast player
+	}
+	
+	activate
+	{
+	deny
+	}
+	
+	enemysight
+	{
+	deny
+	}
+	
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}

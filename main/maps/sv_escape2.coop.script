@@ -68,6 +68,8 @@ game_manager
 		alertentity loper8
 		alertentity loper9
 		alertentity loper10	
+	    alertentity friendly1
+	    alertentity friendly2
 	}
 	
 }
