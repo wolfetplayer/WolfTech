@@ -1,0 +1,10 @@
+// custominfoparms for elite
+// Custom Contentsflags
+{
+playerclip2  0x800000
+friendlyclip 0x200
+}
+// Custom Surfaceflags
+{
+//
+}
