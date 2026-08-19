@@ -64,7 +64,7 @@ If you have questions concerning this license or the applicable additional terms
 // use this for returning the length of an anim
 #define ANIMLENGTH( frames,fps )  ( ( frames * 1000 ) / fps )
 //
-#define AICAST_TFL_DEFAULT  TFL_DEFAULT & ~( TFL_JUMPPAD | TFL_ROCKETJUMP | TFL_BFGJUMP | TFL_GRAPPLEHOOK | TFL_DOUBLEJUMP | TFL_RAMPJUMP | TFL_STRAFEJUMP | TFL_LAVA ) //----(SA)	modified since slime is no longer deadly
+#define AICAST_TFL_DEFAULT  ( ( TFL_DEFAULT | TFL_FRIENDLYCLIP ) & ~( TFL_JUMPPAD | TFL_ROCKETJUMP | TFL_BFGJUMP | TFL_GRAPPLEHOOK | TFL_DOUBLEJUMP | TFL_RAMPJUMP | TFL_STRAFEJUMP | TFL_LAVA ) ) //----(SA)	modified since slime is no longer deadly; RF, TFL_FRIENDLYCLIP allowed by default here, stripped per-entity for allies only in AICast_SetAASIndex
 //#define AICAST_TFL_DEFAULT	TFL_DEFAULT & ~(TFL_JUMPPAD|TFL_ROCKETJUMP|TFL_BFGJUMP|TFL_GRAPPLEHOOK|TFL_DOUBLEJUMP|TFL_RAMPJUMP|TFL_STRAFEJUMP|TFL_SLIME|TFL_LAVA)
 //
 // AI flags

@@ -120,6 +120,9 @@ int Q3_BrushContents( mapbrush_t *b ) {
 		if ( contents & CONTENTS_PLAYERCLIP ) {
 			return ( contents & CONTENTS_PLAYERCLIP );
 		}
+		if ( contents & CONTENTS_FRIENDLYCLIP ) {
+			return ( contents & CONTENTS_FRIENDLYCLIP );
+		}
 		return ( contents & CONTENTS_SOLID );
 	} //end if
 	  /*

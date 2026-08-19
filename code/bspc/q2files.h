@@ -355,6 +355,9 @@ typedef struct
 #define CONTENTS_PLAYERCLIP     0x10000
 #define CONTENTS_MONSTERCLIP    0x20000
 
+// RTCW addition, must match code/qcommon/surfaceflags.h
+#define CONTENTS_FRIENDLYCLIP   0x200 // blocks allied AI only
+
 // currents can be added to any other contents, and may be mixed
 #define CONTENTS_CURRENT_0      0x40000
 #define CONTENTS_CURRENT_90     0x80000

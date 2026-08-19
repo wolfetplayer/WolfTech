@@ -1315,6 +1315,9 @@ int AAS_AreaContentsTravelFlag( int areanum ) {
 	if ( contents & AREACONTENTS_DONOTENTER_LARGE ) {
 		tfl |= TFL_DONOTENTER_LARGE;
 	}
+	if ( contents & AREACONTENTS_FRIENDLYCLIP ) {
+		tfl |= TFL_FRIENDLYCLIP;
+	}
 	if ( contents & AREACONTENTS_DONOTENTER ) {
 		return tfl |= TFL_DONOTENTER;
 	}

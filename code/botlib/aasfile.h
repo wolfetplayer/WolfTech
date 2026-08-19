@@ -88,6 +88,7 @@ If you have questions concerning this license or the applicable additional terms
 // Rafael - nopass
 #define AREACONTENTS_DONOTENTER_LARGE   1024
 #define AREACONTENTS_MOVER              2048
+#define AREACONTENTS_FRIENDLYCLIP       4096
 
 //number of model of the mover inside this area
 #define AREACONTENTS_MODELNUMSHIFT      24

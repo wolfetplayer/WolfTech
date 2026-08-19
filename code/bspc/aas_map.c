@@ -181,7 +181,8 @@ void AAS_SetTexinfo( mapbrush_t *brush ) {
 							 | CONTENTS_LAVA
 							 | CONTENTS_SLIME
 							 | CONTENTS_WINDOW
-							 | CONTENTS_PLAYERCLIP ) ) {
+							 | CONTENTS_PLAYERCLIP
+							 | CONTENTS_FRIENDLYCLIP ) ) {
 		//we just set texinfo to 0 because these brush sides MUST be used as
 		//bsp splitters textured or not textured
 		for ( n = 0; n < brush->numsides; n++ )
@@ -771,6 +772,7 @@ void AAS_CreateMapBrushes( mapbrush_t *brush, entity_t *mapent, int addbevels ) 
 								| CONTENTS_LAVA
 								| CONTENTS_SLIME
 								| CONTENTS_MOVER
+								| CONTENTS_FRIENDLYCLIP
 								) ) ) {
 		nummapbrushsides -= brush->numsides;
 		brush->numsides = 0;
@@ -804,6 +806,7 @@ void AAS_CreateMapBrushes( mapbrush_t *brush, entity_t *mapent, int addbevels ) 
 							 | CONTENTS_DONOTENTER
 							 | CONTENTS_DONOTENTER_LARGE
 							 | CONTENTS_MOVER
+							 | CONTENTS_FRIENDLYCLIP
 							 ) ) {
 		brush->expansionbbox = 0;
 		//NOTE: the first bounding box is the max

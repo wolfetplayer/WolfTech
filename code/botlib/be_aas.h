@@ -67,6 +67,7 @@ If you have questions concerning this license or the applicable additional terms
 #define TFL_DONOTENTER          0x0800000   //travel through donotenter area
 #define TFL_FUNCBOB             0x1000000   //func bobbing
 #define TFL_DONOTENTER_LARGE    0x2000000   //travel through donotenter area
+#define TFL_FRIENDLYCLIP        0x4000000   //travel through an area blocked off from friendly AI
 
 //default travel flags
 

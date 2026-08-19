@@ -579,6 +579,9 @@ void AICast_Think( int client, float thinktime ) {
 
 				ent->r.contents = CONTENTS_BODY;
 				ent->clipmask = MASK_PLAYERSOLID | CONTENTS_MONSTERCLIP;
+				if ( ent->aiTeam == AITEAM_ALLIES ) {
+					ent->clipmask |= CONTENTS_FRIENDLYCLIP;
+				}
 				ent->takedamage = qtrue;
 				ent->waterlevel = 0;
 				ent->watertype = 0;

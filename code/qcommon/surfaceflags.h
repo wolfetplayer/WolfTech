@@ -53,6 +53,8 @@ If you have questions concerning this license or the applicable additional terms
 #define CONTENTS_ITEM           256 // 0x100
 //----(SA) end
 
+#define CONTENTS_FRIENDLYCLIP   0x200 // blocks allied AI only (see CONTENTS_PLAYERCLIP2)
+
 // RF, AI sight/nosight & bullet/nobullet
 #define CONTENTS_AI_NOSIGHT     0x1000  // AI cannot see through this
 #define CONTENTS_CLIPSHOT       0x2000  // bullets hit this

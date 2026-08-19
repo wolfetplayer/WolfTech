@@ -202,6 +202,13 @@ void AIChar_AIScript_AlertEntity_Survival( gentity_t *ent ) {
 	//ent->AIScript_AlertEntity = NULL;
 	cs->aiFlags &= ~AIFL_WAITINGTOSPAWN;
 	ent->aiInactive = qfalse;
+
+	ent->r.contents = CONTENTS_BODY;
+	ent->clipmask = MASK_PLAYERSOLID | CONTENTS_MONSTERCLIP;
+	if ( ent->aiTeam == AITEAM_ALLIES ) {
+		ent->clipmask |= CONTENTS_FRIENDLYCLIP;
+	}
+
 	trap_LinkEntity( ent );
 
 	// trigger a spawn script event
@@ -1601,6 +1608,9 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				AICast_ApplySurvivalAttributes(ent, cs);
 				ent->r.contents = CONTENTS_BODY;
 				ent->clipmask = MASK_PLAYERSOLID | CONTENTS_MONSTERCLIP;
+				if ( ent->aiTeam == AITEAM_ALLIES ) {
+					ent->clipmask |= CONTENTS_FRIENDLYCLIP;
+				}
 				ent->takedamage = qtrue;
 				ent->waterlevel = 0;
 				ent->watertype = 0;

@@ -768,6 +768,9 @@ tmp_node_t *AAS_CreateArea( node_t *node ) {
 	if ( node->contents & CONTENTS_DONOTENTER_LARGE ) {
 		tmparea->contents |= AREACONTENTS_DONOTENTER_LARGE;
 	}
+	if ( node->contents & CONTENTS_FRIENDLYCLIP ) {
+		tmparea->contents |= AREACONTENTS_FRIENDLYCLIP;
+	}
 	if ( node->contents & CONTENTS_WATER ) {
 		tmparea->contents |= AREACONTENTS_WATER;
 	}

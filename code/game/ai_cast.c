@@ -329,6 +329,11 @@ void AICast_SetAASIndex( cast_state_t *cs ) {
 		Com_Error( ERR_DROP, "AICast_SetAASIndex: unsupported bounds size (%i)", aiDefaults[cs->aiCharacter].bboxType );
 	}
 
+	// RF, allied AI should never path through areas reserved for enemy spawns/patrols
+	if ( g_entities[cs->entityNum].aiTeam == AITEAM_ALLIES ) {
+		cs->travelflags &= ~TFL_FRIENDLYCLIP;
+	}
+
 	if ( !cs->attributes[ATTACK_CROUCH] ) {
 		cs->travelflags &= ~TFL_CROUCH;
 	}
@@ -389,7 +394,6 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	ppStr = &ent->aiAttributes;
 	AICast_CheckLevelAttributes( cs, ent, ppStr );
 	//
-	AICast_SetAASIndex( cs );
 	// make sure they face the right direction
 	VectorCopy( ent->s.angles, cs->ideal_viewangles );
 	// factor in the delta_angles
@@ -406,6 +410,8 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	//
 	newent->aiName = ent->aiName;
 	newent->aiTeam = ent->aiTeam;
+	// RF, must run after aiTeam is set above, since it strips TFL_FRIENDLYCLIP for allies only
+	AICast_SetAASIndex( cs );
 	newent->targetname = ent->targetname;
 	newent->oneshot = ent->oneshot;
 	//
