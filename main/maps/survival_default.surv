@@ -41,7 +41,7 @@ initial_zombies       5
 initial_warriors      0
 initial_flamers       0
 //
-initial_partisan      2   // friendly AI
+// friendly AI count is auto-derived from how many ai_partisan (or other allied AI) entities are placed in the map - nothing to configure here
 initial_lopers        0
 initial_helgas        0
 initial_heinrichs     0

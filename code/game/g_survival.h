@@ -60,6 +60,10 @@ gentity_t *SelectSpawnPoint_AI ( gentity_t *player, gentity_t *ent, vec3_t origi
 void AICast_TickSurvivalWave( void );
 void Survival_CheckWipe( void );
 
+// Friendly AI reinforcement call (func_invisible_user CALLS_REINFORCEMENTS spawnflag, see g_mover.c)
+qboolean AICast_ReinforceAvailable( void );
+void AICast_CallReinforcements( void );
+
 // Mapper-configurable special-wave enemy pool (set via the "specialWaveType" key
 // on the game_manager entity, e.g. "loper_special zombie_ghost")
 #define MAX_SPECIAL_WAVE_TYPES 4
@@ -121,7 +125,6 @@ typedef struct survConfig_s
 	int initialFlamers;
 	int initialWarriors;
 	int initialProtos;
-	int initialPartisan;
 	int initialElites;
 	int initialBlackguards;
 	int initialVenoms;
@@ -222,9 +225,6 @@ typedef struct svParams_s
 	int currentSpecialWaveType;                    // AICharacters_t featured in the active special wave
 
 	qboolean waveGameOver;              // all players died mid-wave, game over triggered
-
-	// loaded from .surv file
-	int   aliveFriendliestoCallReinforce;
 
 	float soldierExplosiveDmgBonus;
 

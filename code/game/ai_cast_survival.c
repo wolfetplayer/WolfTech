@@ -85,7 +85,7 @@ void AICast_InitSurvival(void) {
 	svParams.maxActiveAI[AICHAR_ZOMBIE_FLAME] = survCfg.initialFlamers;
 	svParams.maxActiveAI[AICHAR_WARZOMBIE] = survCfg.initialWarriors;
 	svParams.maxActiveAI[AICHAR_PROTOSOLDIER] = survCfg.initialProtos;
-	svParams.maxActiveAI[AICHAR_PARTISAN] = survCfg.initialPartisan;
+	svParams.maxActiveAI[AICHAR_PARTISAN] = 0; // auto-counted per placed friendly, see AICast_CreateCharacter_Survival
 	svParams.maxActiveAI[AICHAR_ELITEGUARD] = survCfg.initialElites;
 	svParams.maxActiveAI[AICHAR_BLACKGUARD] = survCfg.initialBlackguards;
 	svParams.maxActiveAI[AICHAR_VENOM] = survCfg.initialVenoms;
@@ -106,6 +106,9 @@ void AICast_CreateCharacter_Survival(gentity_t *newent, cast_state_t *cs) {
     // If the character is friendly AI (aiTeam == 1), set respawnsleft to 0
     if (newent->aiTeam == 1) {
         cs->respawnsleft = 0;
+        // Raise this character type's admission cap by one for each friendly actually
+        // placed in the map, so the count needs no separate .surv config to match it.
+        svParams.maxActiveAI[newent->aiCharacter]++;
     } else {
         // Unlimited respawn for other AI
         cs->respawnsleft = -1;
@@ -1457,6 +1460,63 @@ if ( wave == 1 ) {
 		Survival_GameManagerEvent( "specialwave_start" );
 	} else {
 		Survival_GameManagerEvent( "wave_start" );
+	}
+}
+
+
+/*
+============
+AICast_ReinforceAvailable
+
+True if at least one allied AI cast is currently down (never deployed, or
+dead and waiting) and would be brought back in by AICast_CallReinforcements.
+============
+*/
+qboolean AICast_ReinforceAvailable( void ) {
+	int i;
+	gentity_t *ent;
+	cast_state_t *cs;
+
+	for ( i = 0; i < level.num_entities; i++ ) {
+		ent = &g_entities[i];
+		if ( !ent->inuse || !ent->aiCharacter || ent->aiTeam != AITEAM_ALLIES || ent->oneshot ) {
+			continue;
+		}
+		cs = AICast_GetCastState( ent->s.number );
+		if ( cs->norespawn || cs->respawnsleft != 0 ) {
+			continue;
+		}
+		return qtrue;
+	}
+	return qfalse;
+}
+
+
+/*
+============
+AICast_CallReinforcements
+
+Grants one queued life to every allied AI cast that is currently down.
+The existing per-frame survival respawn/alert-retry logic
+(AICast_SurvivalRespawn / AIChar_AIScript_AlertEntity_Survival) picks them
+up and brings them back in on its own - nothing else to do here.
+============
+*/
+void AICast_CallReinforcements( void ) {
+	int i;
+	gentity_t *ent;
+	cast_state_t *cs;
+
+	for ( i = 0; i < level.num_entities; i++ ) {
+		ent = &g_entities[i];
+		if ( !ent->inuse || !ent->aiCharacter || ent->aiTeam != AITEAM_ALLIES || ent->oneshot ) {
+			continue;
+		}
+		cs = AICast_GetCastState( ent->s.number );
+		if ( cs->norespawn || cs->respawnsleft != 0 ) {
+			continue;
+		}
+		cs->respawnsleft = 1;
 	}
 }
 

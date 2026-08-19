@@ -360,7 +360,6 @@ friendly1
 	resetscript
 	giveweaponfull weapon_thompson weapon_bar weapon_venom
 	statetype alert
-	followcast player
 	}
 	
 	activate
@@ -416,7 +415,6 @@ friendly2
 	resetscript
 	giveweaponfull weapon_thompson weapon_bar weapon_venom
 	statetype alert
-	followcast player
 	}
 	
 	activate

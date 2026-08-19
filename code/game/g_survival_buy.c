@@ -1028,6 +1028,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 
 void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 	gentity_t *buyEnt = NULL;
+	gentity_t *funcUser = NULL;
 	int price = 0;
 	int ammoPrice = 0;
 	int isWeapon = ent->isWeapon;
@@ -1062,17 +1063,25 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 	{
 		for (int i = 0; i < level.num_entities; i++)
 		{
-			gentity_t *funcUser = &g_entities[i];
-			if (!funcUser->inuse)
+			gentity_t *candidate = &g_entities[i];
+			if (!candidate->inuse)
 				continue;
-			if (Q_stricmp(funcUser->classname, "func_invisible_user") != 0)
+			if (Q_stricmp(candidate->classname, "func_invisible_user") != 0)
 				continue;
-			if (funcUser->targetname && Q_stricmp(ent->target, funcUser->targetname) == 0)
+			if (candidate->targetname && Q_stricmp(ent->target, candidate->targetname) == 0)
 			{
+				funcUser = candidate;
 				price = funcUser->price;
 				break;
 			}
 		}
+	}
+
+	// Reinforcement callers show live squad-status text instead of a price prompt when nobody's down
+	if (funcUser && (funcUser->spawnflags & 32) && !AICast_ReinforceAvailable())
+	{
+		trap_SendServerCommand(other - g_entities, "cpbuy \"Squad At Full Strength\"");
+		return;
 	}
 
 	if (other->client->ps.weapon > WP_NONE && other->client->ps.weapon < WP_NUM_WEAPONS)

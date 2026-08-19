@@ -199,7 +199,6 @@ static const survConfigKey_t survConfigKeys[] = {
 	{ "initial_flamers",           &survCfg.initialFlamers },
 	{ "initial_warriors",          &survCfg.initialWarriors },
 	{ "initial_protos",            &survCfg.initialProtos },
-	{ "initial_partisan",          &survCfg.initialPartisan },
 	{ "initial_elites",            &survCfg.initialElites },
 	{ "initial_blackguards",       &survCfg.initialBlackguards },
 	{ "initial_venoms",            &survCfg.initialVenoms },
@@ -362,7 +361,6 @@ static void Surv_SetDefaults( void ) {
 	survCfg.initialFlamers = 0;
 	survCfg.initialWarriors = 0;
 	survCfg.initialProtos = 0;
-	survCfg.initialPartisan = 2;
 	survCfg.initialElites = 0;
 	survCfg.initialBlackguards = 0;
 	survCfg.initialVenoms = 0;

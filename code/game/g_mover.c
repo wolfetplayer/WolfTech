@@ -4565,16 +4565,20 @@ void SP_func_explosive( gentity_t *ent ) {
 	ent->die = func_explosive_explode;
 }
 
-/*QUAKED func_invisible_user (.3 .5 .8) ? STARTOFF HAS_USER NO_OFF_NOISE NOT_KICKABLE
+/*QUAKED func_invisible_user (.3 .5 .8) ? STARTOFF HAS_USER NO_OFF_NOISE NOT_KICKABLE FREE_AFTER_USE CALLS_REINFORCEMENTS
 when activated will use its target
 "delay" - time (in seconds) before it can be used again
 "offnoise" - specifies an alternate sound
 "cursorhint" - overrides the auto-location of targeted entity (list below)
+"price" - in GT_COOP_SURVIVAL, points required to use this (deducted from the activating player's score)
+"wave" - in GT_COOP_SURVIVAL, minimum wave number before this can be used
 Normally when a player 'activates' this entity, if the entity has been turned 'off' (by a scripted command) you will hear a sound to indicate that you cannot activate the user.
 The sound defaults to "sound/movers/invis_user_off.wav"
 
 NO_OFF_NOISE - no sound will play if the invis_user is used when 'off'
 NOT_KICKABLE - kicking doesn't fire, only player activating
+FREE_AFTER_USE - deletes this entity (and any trigger_objective_info targeting it) after one successful use
+CALLS_REINFORCEMENTS - in GT_COOP_SURVIVAL, revives every allied AI cast (ai_partisan, etc.) that is currently down; denied while none are down, regardless of price
 
 "cursorhint" cursor types: (probably more, ask sherman if you think the list is out of date)
 they /don't/ need to be all uppercase
@@ -4652,8 +4656,8 @@ void use_invisible_user( gentity_t *ent, gentity_t *other, gentity_t *activator 
 			return; // Player doesn't have enough points
 		}
 
-		// Restrict usage if targetname is "reinforce_call" and no friendly AI are spawned
-		if (Q_stricmp(ent->targetname, "reinforce_call") == 0 && svParams.spawnedThisWaveFriendly != 0) {
+		// Deny if this is a reinforcement caller and no allied AI are currently down
+		if ((ent->spawnflags & 32) && !AICast_ReinforceAvailable()) {
 			trap_SendServerCommand(-1, "mu_play sound/items/use_nothing.wav 0\n");
 			return;
 		}
@@ -4710,6 +4714,11 @@ void use_invisible_user( gentity_t *ent, gentity_t *other, gentity_t *activator 
 		if (price > 0)
 		{
 			trap_SendServerCommand(activator->s.number, "mu_play sound/misc/buy.wav 0\n");
+		}
+
+		if (ent->spawnflags & 32)
+		{
+			AICast_CallReinforcements();
 		}
 	}
 
