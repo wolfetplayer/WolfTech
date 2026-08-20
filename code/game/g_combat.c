@@ -652,16 +652,21 @@ void G_EnterBleedout( gentity_t *self, gentity_t *inflictor, gentity_t *attacker
 G_ResolveRevive
 
 Completes a successful revive: restores the target to g_reviveHealthPct of
-their max health, clears bleed-out/revive-progress state on both sides, and
-grants a short window of post-revive invulnerability. The downed player's
-Pmove naturally recomputes their standing bbox next frame once pm_type flips
-back to PM_NORMAL, same as any other transition out of PM_DEAD.
+their max health (or a full heal if the reviver is a Medic), clears
+bleed-out/revive-progress state on both sides, and grants a short window of
+post-revive invulnerability. The downed player's Pmove naturally recomputes
+their standing bbox next frame once pm_type flips back to PM_NORMAL, same as
+any other transition out of PM_DEAD.
 ==================
 */
 void G_ResolveRevive( gentity_t *reviver, gentity_t *target ) {
 	int healAmt;
 
-	healAmt = target->client->ps.stats[STAT_MAX_HEALTH] * g_reviveHealthPct.integer / 100;
+	if ( reviver->client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC ) {
+		healAmt = target->client->ps.stats[STAT_MAX_HEALTH];
+	} else {
+		healAmt = target->client->ps.stats[STAT_MAX_HEALTH] * g_reviveHealthPct.integer / 100;
+	}
 	if ( healAmt < 1 ) {
 		healAmt = 1;
 	}
@@ -684,6 +689,61 @@ void G_ResolveRevive( gentity_t *reviver, gentity_t *target ) {
 
 	trap_SendServerCommand( target->s.number, va( "cp \"You were revived by ^3%s^7!\n\"", reviver->client->pers.netname ) );
 	trap_SendServerCommand( reviver->s.number, va( "cp \"You revived ^3%s^7!\n\"", target->client->pers.netname ) );
+}
+
+/*
+==================
+G_ResolveSelfRevive
+
+Completes a PERK_SECONDCHANCE self-revive. Same partial heal as an ordinary
+ally revive (g_reviveHealthPct of max health -- the rest has to regen
+naturally), except a Medic always comes back at full health, same as a Medic
+reviving someone else. The perk consumes itself on use either way: base tier
+(level 1) strips every perk the player owns, PRO tier (level 2) keeps
+everything else and only loses Second Chance itself -- it has to be re-bought
+before it can save the player again.
+==================
+*/
+static void G_ResolveSelfRevive( gentity_t *ent ) {
+	int healAmt;
+	int secondChanceLevel = ent->client->ps.perks[PERK_SECONDCHANCE];
+	int i;
+
+	if ( ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC ) {
+		healAmt = ent->client->ps.stats[STAT_MAX_HEALTH];
+	} else {
+		healAmt = ent->client->ps.stats[STAT_MAX_HEALTH] * g_reviveHealthPct.integer / 100;
+	}
+	if ( healAmt < 1 ) {
+		healAmt = 1;
+	}
+
+	ent->health = ent->client->ps.stats[STAT_HEALTH] = healAmt;
+	ent->client->ps.stats[STAT_REVIVE_TIME] = 0;
+	ent->client->ps.pm_type = PM_NORMAL;
+	ent->client->ps.eFlags &= ~EF_DEAD; // PM_Footsteps() won't re-animate a live player while this is set
+	ent->client->ps.powerups[PW_INVULNERABLE] = level.time + g_reviveInvulnTime.integer;
+	ent->client->revivedByNum = -1;
+	ent->client->reviveTargetNum = -1;
+	ent->client->reviveElapsedMs = 0;
+	ent->client->ps.stats[STAT_REVIVE_PROGRESS] = 0;
+
+	BG_PlayAnimName( &ent->client->ps, "revive", ANIM_BP_BOTH, qtrue, qfalse, qtrue );
+	G_Sound( ent, G_SoundIndex( "sound/misc/revived.wav" ) );
+
+	if ( secondChanceLevel >= 2 ) {
+		// PRO: only Second Chance itself is consumed
+		ent->client->ps.perks[PERK_SECONDCHANCE] = 0;
+		ent->client->ps.stats[STAT_PERK] &= ~( 1 << PERK_SECONDCHANCE );
+	} else {
+		// base tier: the fake death costs every perk, not just this one
+		for ( i = 0; i < MAX_PERKS; i++ ) {
+			ent->client->ps.perks[i] = 0;
+		}
+		ent->client->ps.stats[STAT_PERK] = 0;
+	}
+
+	trap_SendServerCommand( ent->s.number, "cp \"^3Second Chance!^7 You revived yourself!\n\"" );
 }
 
 /*
@@ -775,13 +835,39 @@ void G_TickReviveStates( void ) {
 					ent->client->revivedByNum = -1;
 				}
 			}
+
+			// PERK_SECONDCHANCE: self-revive by holding activate while nobody else is reviving us
+			if ( ent->client->revivedByNum == -1 && ent->client->ps.perks[PERK_SECONDCHANCE] > 0 &&
+				 ( ent->client->buttons & BUTTON_ACTIVATE ) ) {
+				int reviveTime = ( ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC ) ?
+								 g_reviveTimeMedic.integer : g_reviveTimeNormal.integer;
+				if ( reviveTime < 1 ) {
+					reviveTime = 1;
+				}
+
+				ent->client->reviveTargetNum = i;
+				ent->client->reviveElapsedMs += frameTime;
+				if ( ent->client->reviveElapsedMs >= reviveTime ) {
+					ent->client->ps.stats[STAT_REVIVE_PROGRESS] = 100;
+					G_ResolveSelfRevive( ent );
+				} else {
+					ent->client->ps.stats[STAT_REVIVE_PROGRESS] = ent->client->reviveElapsedMs * 100 / reviveTime;
+				}
+				continue;
+			}
+
+			// not attempting (or no longer holding) a self-revive -- drop any partial progress
+			ent->client->reviveTargetNum = -1;
+			ent->client->reviveElapsedMs = 0;
+			ent->client->ps.stats[STAT_REVIVE_PROGRESS] = 0;
+
 			if ( ent->client->revivedByNum == -1 ) {
 				ent->client->ps.stats[STAT_REVIVE_TIME] -= frameTime;
 				if ( ent->client->ps.stats[STAT_REVIVE_TIME] <= 0 ) {
 					G_BleedoutExpireToDeath( ent );
 				}
 			}
-			continue; // can't be reviving anyone while down
+			continue; // can't be reviving anyone else while down
 		}
 
 		// advance/validate an in-progress revive this player is performing
@@ -1213,9 +1299,11 @@ G_KillOrEnterBleedout
 
 Dispatches a lethal hit: in GT_COOP_SURVIVAL, a real player with a living
 teammate and who isn't already downed enters bleed-out instead of dying
-outright. Everything else (AI, breakables, admin/self kills that call
-player_die() directly, finishing blows on an already-downed player, overkill
-past GIB_HEALTH, or nobody left standing to revive them) dies as normal.
+outright. A PERK_SECONDCHANCE owner enters bleed-out even with nobody left
+standing to revive them, since the perk lets them revive themselves (see
+G_ResolveSelfRevive). Everything else (AI, breakables, admin/self kills that
+call player_die() directly, finishing blows on an already-downed player, or
+overkill past GIB_HEALTH) dies as normal.
 ==================
 */
 static void G_KillOrEnterBleedout( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, int damage, int mod ) {
@@ -1223,7 +1311,7 @@ static void G_KillOrEnterBleedout( gentity_t *targ, gentity_t *inflictor, gentit
 		 !( targ->r.svFlags & SVF_CASTAI ) &&
 		 targ->client->ps.stats[STAT_REVIVE_TIME] <= 0 &&
 		 targ->health > GIB_HEALTH &&
-		 G_HasLivingTeammate( targ ) ) {
+		 ( G_HasLivingTeammate( targ ) || targ->client->ps.perks[PERK_SECONDCHANCE] > 0 ) ) {
 		G_EnterBleedout( targ, inflictor, attacker, damage, mod );
 		return;
 	}

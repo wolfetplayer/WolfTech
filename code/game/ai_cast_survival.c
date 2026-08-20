@@ -1268,8 +1268,9 @@ void Survival_CheckWipe( void ) {
 
 		playing++;
 
-		if ( cl->health > 0 ) {
-			return; // someone's still standing
+		// health <= 0 alone doesn't mean fallen -- a downed player keeps that value during bleed-out
+		if ( cl->health > 0 || cl->client->ps.stats[STAT_REVIVE_TIME] > 0 ) {
+			return; // someone's still standing, or still has a chance to get back up
 		}
 	}
 

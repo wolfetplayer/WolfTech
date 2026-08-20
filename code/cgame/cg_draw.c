@@ -3655,6 +3655,7 @@ CG_DrawBleedoutStatus
 
 GT_COOP_SURVIVAL only: countdown bar shown to a bleeding-out player while
 STAT_REVIVE_TIME counts down (frozen server-side while someone revives them).
+A PERK_SECONDCHANCE owner gets a hint that they can revive themselves too.
 ==============
 */
 static void CG_DrawBleedoutStatus( void ) {
@@ -3682,7 +3683,9 @@ static void CG_DrawBleedoutStatus( void ) {
 
 	CG_FilledBar( centerX - barW / 2, 400, barW, 14, color, NULL, bgColor, frac, BAR_BG );
 
-	s = "Bleeding out -- wait for a teammate to revive you";
+	s = ( cg.snap->ps.perks[PERK_SECONDCHANCE] > 0 ) ?
+		"Bleeding out -- hold ACTIVATE to revive yourself, or wait for a teammate" :
+		"Bleeding out -- wait for a teammate to revive you";
 	w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
 	CG_DrawSmallStringColor( centerX - w / 2, 384, s, colorWhite );
 }
@@ -4945,7 +4948,12 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawPickupItem();
 			CG_DrawReward();
 		} else if ( cgs.gametype == GT_COOP_SURVIVAL && cg.snap->ps.stats[STAT_REVIVE_TIME] > 0 ) {
-			CG_DrawBleedoutStatus();
+			// STAT_REVIVE_PROGRESS > 0 means we're self-reviving -- show the progress bar instead of the frozen timer
+			if ( cg.snap->ps.stats[STAT_REVIVE_PROGRESS] > 0 ) {
+				CG_DrawReviveProgress();
+			} else {
+				CG_DrawBleedoutStatus();
+			}
 			if ( cgs.gametype != GT_SINGLE_PLAYER ) {
 				CG_DrawTeamInfo(); // chat overlay lives in here -- bleeding out shouldn't cut you off from it
 			}
