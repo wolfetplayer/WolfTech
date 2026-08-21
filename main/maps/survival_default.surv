@@ -15,6 +15,15 @@ intermission_time       15   // seconds between waves
 initial_killcount_req    5   // kills required to clear wave 1
 friendly_spawn_time     15   // seconds before a dead friendly AI can respawn
 
+// ---- Game over (all players fallen) ----
+// Cycles the view through 3 mapper-placed cameras (info_notnull ents targetnamed gameover_cam1/2/3), holds on cam3, then counts down to map_restart.
+gameover_linger_time      4000   // ms, death-fall/GAME OVER text before cams start
+gameover_cam_hold_time    4500   // ms, fully-visible hold time on cam1 and cam2 each (excludes fade in/out)
+gameover_cam3_hold_time   2200   // ms, hold on cam3 before the countdown starts
+gameover_fade_time         600   // ms, screen fade to/from black - runs once in and once out around every camera cut
+gameover_countdown           5   // seconds counted down on cam3 before restart
+gameover_music   sound/music/s_longout   // empty value = no music
+
 // ---- Wave each enemy type first appears on ----
 wave_eliteguard   3
 wave_trench       5

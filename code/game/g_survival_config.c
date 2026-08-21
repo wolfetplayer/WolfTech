@@ -267,6 +267,12 @@ static const survConfigKey_t survConfigKeys[] = {
 	{ "hard_steps_bonus_divisor_early", &survCfg.hardStepsBonusDivisorEarly },
 	{ "hard_steps_bonus_base_late",     &survCfg.hardStepsBonusBaseLate },
 	{ "hard_steps_bonus_divisor_late",  &survCfg.hardStepsBonusDivisorLate },
+
+	{ "gameover_linger_time",      &survCfg.gameoverLingerTime },
+	{ "gameover_cam_hold_time",    &survCfg.gameoverCamHoldTime },
+	{ "gameover_cam3_hold_time",   &survCfg.gameoverCam3HoldTime },
+	{ "gameover_fade_time",        &survCfg.gameoverFadeTime },
+	{ "gameover_countdown",        &survCfg.gameoverCountdown },
 };
 
 #define NUM_SURV_CONFIG_KEYS ( sizeof( survConfigKeys ) / sizeof( survConfigKeys[0] ) )
@@ -417,6 +423,13 @@ static void Surv_SetDefaults( void ) {
 	survCfg.hardStepsBonusDivisorEarly = 2;
 	survCfg.hardStepsBonusBaseLate = 4;
 	survCfg.hardStepsBonusDivisorLate = 3;
+
+	survCfg.gameoverLingerTime = 4000;
+	survCfg.gameoverCamHoldTime = 4500;
+	survCfg.gameoverCam3HoldTime = 2200;
+	survCfg.gameoverFadeTime = 600;
+	survCfg.gameoverCountdown = 5;
+	Q_strncpyz( survCfg.gameoverMusic, "sound/music/s_longout", sizeof( survCfg.gameoverMusic ) );
 
 	Com_Memset( survCfg.charCurve, 0, sizeof( survCfg.charCurve ) );
 
@@ -621,6 +634,11 @@ static void Surv_ParseBuffer( char *data, const char *sourceForLog ) {
 			if ( !Surv_ApplyDottedKey( keybuf, dot, tok, sourceForLog ) ) {
 				G_Printf( "Survival: %s: unknown key '%s', ignoring\n", sourceForLog, keybuf );
 			}
+			continue;
+		}
+
+		if ( !Q_stricmp( keybuf, "gameover_music" ) ) {
+			Q_strncpyz( survCfg.gameoverMusic, tok, sizeof( survCfg.gameoverMusic ) );
 			continue;
 		}
 

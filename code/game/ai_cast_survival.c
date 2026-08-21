@@ -73,6 +73,17 @@ void AICast_InitSurvival(void) {
 	svParams.waveChangeTime = level.time + survCfg.prepareTime * 1000;
 	svParams.waveGameOver = qfalse;
 
+	// reset explicitly - the DLL can stay loaded across map changes, so BSS zero-init alone isn't enough
+	svParams.gameOverPhase = GAMEOVER_PHASE_NONE;
+	svParams.gameOverPhaseTime = 0;
+	svParams.gameOverCountdownShown = -1;
+	VectorClear( svParams.gameOverCamOrigin );
+	VectorClear( svParams.gameOverCamAngles );
+	svParams.gameOverCamValid = qfalse;
+	svParams.gameOverFadeInSent = qfalse;
+	svParams.gameOverFadeOutSent = qfalse;
+	svParams.gameOverMsgRefreshTime = 0;
+
     // Special wave defaults
     svParams.specialWaveActive    = qfalse;
     svParams.lastSpecialWave      = 0;
@@ -1279,9 +1290,229 @@ void Survival_CheckWipe( void ) {
 	}
 
 	svParams.waveGameOver = qtrue;
+	svParams.gameOverPhase = GAMEOVER_PHASE_LINGER;
+	svParams.gameOverPhaseTime = level.time;
+	svParams.gameOverCountdownShown = -1;
+	svParams.gameOverMsgRefreshTime = level.time;
+	svParams.gameOverFadeOutSent = qfalse;
 
 	trap_SendServerCommand( -1, "cp \"^1GAME OVER\n^7All players have fallen\n\"" );
-	trap_SendConsoleCommand( EXEC_APPEND, "map_restart 5\n" );
+
+	if ( survCfg.gameoverMusic[0] ) {
+		trap_SendServerCommand( -1, va( "mu_play %s 0", survCfg.gameoverMusic ) );
+	}
+}
+
+/*
+============
+Survival_FindGameOverCam
+
+  Looks up a mapper-placed info_notnull with the given targetname (e.g.
+  "gameover_cam1"). Returns NULL if the map doesn't have one - callers must
+  degrade gracefully (see Survival_TickGameOver).
+============
+*/
+static gentity_t *Survival_FindGameOverCam( const char *targetname ) {
+	return G_Find( NULL, FOFS( targetname ), targetname );
+}
+
+/*
+============
+Survival_EnterGameOverPhase
+
+  Common phase-transition work: latch the new phase/time, and for the camera
+  phases, snap svParams.gameOverCamOrigin/Angles to the matching gameover_camN
+  entity (if the map has one) plus a screen fade over the cut.
+============
+*/
+static void Survival_EnterGameOverPhase( gameOverPhase_t phase, const char *camTargetname ) {
+	svParams.gameOverPhase = phase;
+	svParams.gameOverPhaseTime = level.time;
+	svParams.gameOverFadeInSent = qfalse;
+	svParams.gameOverFadeOutSent = qfalse;
+
+	if ( !camTargetname ) {
+		svParams.gameOverCamValid = qfalse;
+		return;
+	}
+
+	{
+		gentity_t *cam = Survival_FindGameOverCam( camTargetname );
+
+		if ( cam ) {
+			VectorCopy( cam->s.origin, svParams.gameOverCamOrigin );
+			VectorCopy( cam->s.angles, svParams.gameOverCamAngles );
+			svParams.gameOverCamValid = qtrue;
+
+			// instant black hides the camera cut; Survival_TickGameOver fades back up gradually
+			trap_SetConfigstring( CS_SCREENFADE, va( "1 %i 1", level.time ) );
+		} else {
+			svParams.gameOverCamValid = qfalse;
+		}
+	}
+}
+
+/*
+============
+Survival_TickGameOver
+
+  GT_COOP_SURVIVAL only, called once per server frame from G_RunFrame (after
+  ClientEndFrame, so nothing else overwrites our pm_type/origin override for
+  this frame). Runs the post-wipe sequence: let the death-fall linger, cycle
+  the view through up to 3 mapper-placed cameras (info_notnull entities
+  targetnamed gameover_cam1/2/3), then hold on the 3rd and count down to a
+  map_restart. Maps without the camera entities still get the GAME OVER text,
+  music and countdown - they just don't get the camera cuts.
+============
+*/
+void Survival_TickGameOver( void ) {
+	int elapsed;
+	int i;
+
+	if ( svParams.gameOverPhase == GAMEOVER_PHASE_NONE ) {
+		return;
+	}
+
+	elapsed = level.time - svParams.gameOverPhaseTime;
+
+	// fade back up from the cut-to-black once it's had time to land, one-shot per phase
+	if ( svParams.gameOverCamValid && !svParams.gameOverFadeInSent &&
+		 svParams.gameOverPhase >= GAMEOVER_PHASE_CAM1 && svParams.gameOverPhase <= GAMEOVER_PHASE_CAM3 &&
+		 elapsed >= survCfg.gameoverFadeTime ) {
+		svParams.gameOverFadeInSent = qtrue;
+		trap_SetConfigstring( CS_SCREENFADE, va( "0 %i %i", level.time, survCfg.gameoverFadeTime ) );
+	}
+
+	// CAM1/CAM2 only: fade back to black on the current camera before cutting to the next; CAM3 has nowhere else to cut to
+	if ( svParams.gameOverCamValid && !svParams.gameOverFadeOutSent &&
+		 ( svParams.gameOverPhase == GAMEOVER_PHASE_CAM1 || svParams.gameOverPhase == GAMEOVER_PHASE_CAM2 ) &&
+		 elapsed >= survCfg.gameoverFadeTime + survCfg.gameoverCamHoldTime ) {
+		svParams.gameOverFadeOutSent = qtrue;
+		trap_SetConfigstring( CS_SCREENFADE, va( "1 %i %i", level.time, survCfg.gameoverFadeTime ) );
+	}
+
+	// LINGER only: fade out of the death-fall view before cutting to CAM1, same as the CAM1/CAM2 transitions above
+	if ( svParams.gameOverPhase == GAMEOVER_PHASE_LINGER && !svParams.gameOverFadeOutSent &&
+		 elapsed >= survCfg.gameoverLingerTime ) {
+		svParams.gameOverFadeOutSent = qtrue;
+		trap_SetConfigstring( CS_SCREENFADE, va( "1 %i %i", level.time, survCfg.gameoverFadeTime ) );
+	}
+
+	// re-send periodically so cg_centertime doesn't fade this out before the countdown case below takes over
+	if ( svParams.gameOverPhase == GAMEOVER_PHASE_LINGER ||
+		 svParams.gameOverPhase == GAMEOVER_PHASE_CAM1 ||
+		 svParams.gameOverPhase == GAMEOVER_PHASE_CAM2 ||
+		 ( svParams.gameOverPhase == GAMEOVER_PHASE_CAM3 && elapsed < survCfg.gameoverCam3HoldTime ) ) {
+		if ( level.time - svParams.gameOverMsgRefreshTime >= 2000 ) {
+			svParams.gameOverMsgRefreshTime = level.time;
+			trap_SendServerCommand( -1, "cp \"^1GAME OVER\n^7All players have fallen\n\"" );
+		}
+	}
+
+	switch ( svParams.gameOverPhase ) {
+	case GAMEOVER_PHASE_LINGER:
+		// the fade-out above must finish before we cut to CAM1
+		if ( elapsed >= survCfg.gameoverLingerTime + survCfg.gameoverFadeTime ) {
+			Survival_EnterGameOverPhase( GAMEOVER_PHASE_CAM1, "gameover_cam1" );
+		}
+		break;
+
+	case GAMEOVER_PHASE_CAM1:
+		// fade in + hold + fade out (all three timed above) must finish before the cut
+		if ( elapsed >= survCfg.gameoverFadeTime + survCfg.gameoverCamHoldTime + survCfg.gameoverFadeTime ) {
+			Survival_EnterGameOverPhase( GAMEOVER_PHASE_CAM2, "gameover_cam2" );
+		}
+		break;
+
+	case GAMEOVER_PHASE_CAM2:
+		if ( elapsed >= survCfg.gameoverFadeTime + survCfg.gameoverCamHoldTime + survCfg.gameoverFadeTime ) {
+			Survival_EnterGameOverPhase( GAMEOVER_PHASE_CAM3, "gameover_cam3" );
+		}
+		break;
+
+	case GAMEOVER_PHASE_CAM3:
+		if ( elapsed < survCfg.gameoverCam3HoldTime ) {
+			break;
+		}
+
+		{
+			int countdownElapsed = elapsed - survCfg.gameoverCam3HoldTime;
+			int secLeft = survCfg.gameoverCountdown - ( countdownElapsed / 1000 );
+
+			if ( secLeft < 0 ) {
+				secLeft = 0;
+			}
+
+			if ( secLeft != svParams.gameOverCountdownShown ) {
+				svParams.gameOverCountdownShown = secLeft;
+
+				if ( secLeft > 0 ) {
+					trap_SendServerCommand( -1, va( "cp \"^1GAME OVER\n^7Restarting in ^3%i\n\"", secLeft ) );
+				}
+			}
+
+			if ( secLeft <= 0 ) {
+				svParams.gameOverPhase = GAMEOVER_PHASE_RESTART;
+				trap_SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
+			}
+		}
+		break;
+
+	case GAMEOVER_PHASE_RESTART:
+	default:
+		break;
+	}
+
+	// hold every connected player's view on the active camera while cycling/holding
+	if ( svParams.gameOverCamValid &&
+		 svParams.gameOverPhase >= GAMEOVER_PHASE_CAM1 && svParams.gameOverPhase <= GAMEOVER_PHASE_CAM3 ) {
+
+		// hides dead players/AI and CopyToBodyQue() corpses (g_client.c) from camera view; eType is what CG_Player() checks, not modelindex
+		for ( i = 0; i < level.num_entities; i++ ) {
+			gentity_t *cl = &g_entities[i];
+			qboolean deadClient = cl->client && cl->health <= 0;
+			qboolean bodyQueue = cl->classname && !Q_stricmp( cl->classname, "bodyque" );
+
+			if ( !cl->inuse || !( deadClient || bodyQueue ) ) {
+				continue;
+			}
+
+			if ( cl->client ) {
+				cl->client->ps.eFlags = 0;
+			}
+			cl->s.eFlags = 0;
+			cl->s.eType = ET_GENERAL;
+			cl->s.modelindex = 0;
+			cl->s.loopSound = 0;
+			cl->s.event = 0;
+		}
+
+		for ( i = 0; i < level.maxclients; i++ ) {
+			gentity_t *cl = &g_entities[i];
+
+			if ( !cl->inuse || !cl->client ) {
+				continue;
+			}
+
+			if ( cl->client->pers.connected != CON_CONNECTED ) {
+				continue;
+			}
+			if ( cl->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+				continue;
+			}
+			if ( cl->r.svFlags & SVF_BOT ) {
+				continue; // AI casts occupy client slots too - only lock human players' views
+			}
+
+			VectorCopy( svParams.gameOverCamOrigin, cl->client->ps.origin );
+			VectorCopy( svParams.gameOverCamAngles, cl->client->ps.viewangles );
+			VectorClear( cl->client->ps.velocity );
+			// PM_FREEZE not PM_INTERMISSION - the latter forces the scoreboard on; cg_view.c/cg_weapons.c/bg_misc.c give PM_FREEZE the same view/weapon/body treatment instead
+			cl->client->ps.pm_type = PM_FREEZE;
+			// clear stale PMF_FOLLOW/PMF_LIMBO so CG_DrawFollow's old "Waiting for next wave" text doesn't leak through
+			cl->client->ps.pm_flags &= ~( PMF_FOLLOW | PMF_LIMBO );
+		}
+	}
 }
 
 void AICast_CheckSurvivalProgression( gentity_t *attacker ) {

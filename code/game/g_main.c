@@ -2529,7 +2529,8 @@ void CheckGameState( void ) {
 
 	// check warmup latch
 	if ( current_gs == GS_WARMUP ) {
-		if ( g_warmup.integer <= 0 || !g_doWarmup.integer ) {
+		// survival has no warmup - skip straight to playing, no "(WARMUP)" HUD line or prepare/FIGHT! sounds
+		if ( g_gametype.integer == GT_COOP_SURVIVAL || g_warmup.integer <= 0 || !g_doWarmup.integer ) {
 			trap_Cvar_Set( "gamestate", va( "%i", GS_PLAYING ) );
 		} else {
 			int delay = g_warmup.integer + 1;
@@ -3011,6 +3012,11 @@ void G_RunFrame( int levelTime ) {
 		if ( ent->inuse ) {
 			ClientEndFrame( ent );
 		}
+	}
+
+	// after ClientEndFrame so the game-over camera's pm_type/origin override isn't clobbered by the fixups above
+	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		Survival_TickGameOver();
 	}
 
 	// see if it is time to do a tournement restart

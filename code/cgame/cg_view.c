@@ -1186,8 +1186,8 @@ static int CG_CalcViewValues( void ) {
 		}
 	}
 
-	// intermission view
-	if ( ps->pm_type == PM_INTERMISSION ) {
+	// intermission view - PM_FREEZE gets the same verbatim-angle treatment, without PM_INTERMISSION's forced scoreboard/FOV
+	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_FREEZE ) {
 		VectorCopy( ps->origin, cg.refdef.vieworg );
 		VectorCopy( ps->viewangles, cg.refdefViewAngles );
 		AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );

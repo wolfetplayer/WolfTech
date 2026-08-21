@@ -60,6 +60,19 @@ gentity_t *SelectSpawnPoint_AI ( gentity_t *player, gentity_t *ent, vec3_t origi
 void AICast_TickSurvivalWave( void );
 void Survival_CheckWipe( void );
 
+// Game-over sequence (all players fallen); see Survival_TickGameOver() in ai_cast_survival.c
+typedef enum
+{
+	GAMEOVER_PHASE_NONE,
+	GAMEOVER_PHASE_LINGER,   // let the death-fall play out; GAME OVER text + music start here
+	GAMEOVER_PHASE_CAM1,
+	GAMEOVER_PHASE_CAM2,
+	GAMEOVER_PHASE_CAM3,     // holds here; restart countdown ticks on this angle
+	GAMEOVER_PHASE_RESTART   // countdown hit 0, map_restart fired - latch so we don't refire
+} gameOverPhase_t;
+
+void Survival_TickGameOver( void );
+
 // Friendly AI reinforcement call (func_invisible_user CALLS_REINFORCEMENTS spawnflag, see g_mover.c)
 qboolean AICast_ReinforceAvailable( void );
 void AICast_CallReinforcements( void );
@@ -191,6 +204,14 @@ typedef struct survConfig_s
 	// -1 = no override; set via "weapon_price.<name> <price>" / "perk_price.<name> <price>".
 	int weaponPrice[WP_NUM_WEAPONS];
 	int perkPrice[NUM_PERKS];
+
+	// Game-over sequence (all players fallen), see gameOverPhase_t below.
+	int gameoverLingerTime;        // ms, death-fall/GAME OVER text linger before cams start
+	int gameoverCamHoldTime;       // ms, hold time on cam1 and cam2 each
+	int gameoverCam3HoldTime;      // ms, hold on cam3 before the restart countdown begins
+	int gameoverFadeTime;          // ms, screen fade to/from black on each camera cut
+	int gameoverCountdown;         // seconds counted down on cam3 before map_restart
+	char gameoverMusic[MAX_QPATH]; // mu_play track on wipe; empty = no music
 } survConfig_t;
 
 extern survConfig_t survCfg;
@@ -225,6 +246,17 @@ typedef struct svParams_s
 	int currentSpecialWaveType;                    // AICharacters_t featured in the active special wave
 
 	qboolean waveGameOver;              // all players died mid-wave, game over triggered
+
+	// Game-over sequence state, see gameOverPhase_t and Survival_TickGameOver().
+	gameOverPhase_t gameOverPhase;
+	int gameOverPhaseTime;              // level.time the current phase started
+	int gameOverCountdownShown;         // last whole-second value centerprinted on cam3, -1 = none yet
+	vec3_t gameOverCamOrigin;           // active camera origin/angles for the current phase (CAM1-CAM3)
+	vec3_t gameOverCamAngles;
+	qboolean gameOverCamValid;          // qfalse if the map has no gameover_camN ent for this phase - skip the view-lock, just hold the timer
+	qboolean gameOverFadeInSent;        // one-shot latch: has the fade-back-from-black been sent for the current cam phase yet
+	qboolean gameOverFadeOutSent;       // one-shot latch: has the fade-to-black-before-the-next-cut been sent for the current cam phase yet (CAM1/CAM2 only)
+	int gameOverMsgRefreshTime;         // level.time the "All players have fallen" centerprint was last (re)sent, 0 = not sent yet this sequence
 
 	float soldierExplosiveDmgBonus;
 
