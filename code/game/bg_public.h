@@ -385,7 +385,8 @@ typedef enum {
 	STAT_PLAYER_CLASS,               // DHM - Nerve :: player class in multiplayer
 	STAT_PERK,
 	STAT_REVIVE_TIME,               // ms left in bleed-out before real death; 0 = not downed
-	STAT_REVIVE_PROGRESS            // 0-100, % complete of a revive this player is performing on someone else
+	STAT_REVIVE_PROGRESS,           // 0-100, % complete of a revive this player is performing on someone else
+	STAT_GAMEOVER                   // GT_COOP_SURVIVAL: non-zero while the post-wipe game-over sequence is active (see gameOverPhase_t)
 } statIndex_t;
 
 

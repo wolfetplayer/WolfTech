@@ -81,10 +81,10 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 		// TODO: add respawnsLeft to the end of the message
 #ifdef MONEY
 		Com_sprintf( entry, sizeof( entry ),
-				" %i %i %i %i %i %i %i", level.sortedClients[i], g_entities[level.sortedClients[i]].client->ps.persistant[PERS_SCORE], ping, ( level.time - cl->pers.enterTime ) / 60000, g_entities[level.sortedClients[i]].client->ps.persistant[PERS_KILLED], cl->sess.damage_given, cl->sess.damage_received );
+				" %i %i %i %i %i %i %i %i %i", level.sortedClients[i], g_entities[level.sortedClients[i]].client->ps.persistant[PERS_SCORE], ping, ( level.time - cl->pers.enterTime ) / 60000, g_entities[level.sortedClients[i]].client->ps.persistant[PERS_KILLED], cl->sess.damage_given, cl->sess.damage_received, cl->ps.persistant[PERS_KILLS], cl->ps.stats[STAT_PLAYER_CLASS] );
 #else
 		Com_sprintf( entry, sizeof( entry ),
-				 " %i %i %i %i %i %i", level.sortedClients[i], 	g_entities[level.sortedClients[i]].client->ps.persistant[PERS_SCORE], ping, ( level.time - cl->pers.enterTime ) / 60000, scoreFlags, g_entities[level.sortedClients[i]].s.powerups );
+				 " %i %i %i %i %i %i %i %i", level.sortedClients[i], 	g_entities[level.sortedClients[i]].client->ps.persistant[PERS_SCORE], ping, ( level.time - cl->pers.enterTime ) / 60000, scoreFlags, g_entities[level.sortedClients[i]].s.powerups, cl->ps.persistant[PERS_KILLS], cl->ps.stats[STAT_PLAYER_CLASS] );
 #endif
 
 		j = strlen( entry );

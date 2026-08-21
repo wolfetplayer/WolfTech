@@ -62,20 +62,24 @@ static void CG_ParseScores( void ) {
 	for ( i = 0 ; i < cg.numScores ; i++ ) {
 		//
 #ifndef MONEY
-		cg.scores[i].client = atoi( CG_Argv( i * 6 + 4 ) );
-		cg.scores[i].score = atoi( CG_Argv( i * 6 + 5 ) );
-		cg.scores[i].ping = atoi( CG_Argv( i * 6 + 6 ) );
-		cg.scores[i].time = atoi( CG_Argv( i * 6 + 7 ) );
-		cg.scores[i].scoreFlags = atoi( CG_Argv( i * 6 + 8 ) );
-		powerups = atoi( CG_Argv( i * 6 + 9 ) );
+		cg.scores[i].client = atoi( CG_Argv( i * 8 + 4 ) );
+		cg.scores[i].score = atoi( CG_Argv( i * 8 + 5 ) );
+		cg.scores[i].ping = atoi( CG_Argv( i * 8 + 6 ) );
+		cg.scores[i].time = atoi( CG_Argv( i * 8 + 7 ) );
+		cg.scores[i].scoreFlags = atoi( CG_Argv( i * 8 + 8 ) );
+		powerups = atoi( CG_Argv( i * 8 + 9 ) );
+		cg.scores[i].kills = atoi( CG_Argv( i * 8 + 10 ) );
+		cg.scores[i].playerClass = atoi( CG_Argv( i * 8 + 11 ) );
 #else
-		cg.scores[i].client = atoi( CG_Argv( i * 7 + 4 ) );
-		cg.scores[i].score = atoi( CG_Argv( i * 7 + 5 ) );
-		cg.scores[i].ping = atoi( CG_Argv( i * 7 + 6 ) );
-		cg.scores[i].time = atoi( CG_Argv( i * 7 + 7 ) );
-		cg.scores[i].deaths = atoi( CG_Argv( i * 7 + 8 ) );
-		cg.scores[i].damage_given = atof( CG_Argv( i * 7 + 9 ) );
-		cg.scores[i].damage_received  = atof( CG_Argv( i * 7 + 10 ) );
+		cg.scores[i].client = atoi( CG_Argv( i * 9 + 4 ) );
+		cg.scores[i].score = atoi( CG_Argv( i * 9 + 5 ) );
+		cg.scores[i].ping = atoi( CG_Argv( i * 9 + 6 ) );
+		cg.scores[i].time = atoi( CG_Argv( i * 9 + 7 ) );
+		cg.scores[i].deaths = atoi( CG_Argv( i * 9 + 8 ) );
+		cg.scores[i].damage_given = atof( CG_Argv( i * 9 + 9 ) );
+		cg.scores[i].damage_received  = atof( CG_Argv( i * 9 + 10 ) );
+		cg.scores[i].kills = atoi( CG_Argv( i * 9 + 11 ) );
+		cg.scores[i].playerClass = atoi( CG_Argv( i * 9 + 12 ) );
 #endif
 		//respawnsLeft = atoi( CG_Argv( i * 6 + 10 ) );
 		// DHM - Nerve :: the following parameters are not sent by server

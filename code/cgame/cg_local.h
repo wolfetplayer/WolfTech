@@ -543,6 +543,8 @@ typedef struct {
 	int captures;
 	qboolean perfect;
 	int team;
+	int kills;
+	int playerClass;
 } score_t;
 
 
@@ -2483,6 +2485,7 @@ const char *CG_translateTextString2( const char *str );
 // cg_scoreboard.c
 //
 qboolean CG_DrawScoreboard( void );
+void CG_DrawCoopScoreboard( void );
 
 //
 // cg_consolecmds.c

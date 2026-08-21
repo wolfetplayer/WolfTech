@@ -46,6 +46,8 @@ void CG_DrawCoopScoreboard( void ) {
 	float green[4] = {0, 1, 0, 1};
 #endif
 	const char *s;
+	const char *className;
+	static const char *classNames[4] = { "Soldier", "Medic", "Engineer", "Lieutenant" };
 	int msec, mins, seconds, tens;     // JPW NERVE
 	qboolean maxlives = qfalse;
 
@@ -64,40 +66,51 @@ void CG_DrawCoopScoreboard( void ) {
 
 	color2[3] = color[3];
 
-	// patched for 8 players.
+	// patched for MAX_COOP_PLAYERS (4) players.
 	// background
 	color2[3] *= 0.6f;
-	CG_FilledBar( 150, 104, 340, 280, color2, NULL, NULL, 1.0f, 0 );
+	CG_FilledBar( 80, 104, 480, 168, color2, NULL, NULL, 1.0f, 0 );
 
 	color2[0] = color2[1] = color2[2] = 0.3f;
 	color2[3] *= 0.6f;
 
 	// border
-	CG_FilledBar( 148, 104, 2, 280, color2, NULL, NULL, 1.0f, 0 );        // left
-	CG_FilledBar( 490, 104, 2, 280, color2, NULL, NULL, 1.0f, 0 );        // right
-	CG_FilledBar( 148, 102, 344, 2, color2, NULL, NULL, 1.0f, 0 );        // top
-	CG_FilledBar( 150, 124, 342, 2, color2, NULL, NULL, 1.0f, 0 );        // under green bar
-	CG_FilledBar( 148, 384, 344, 2, color2, NULL, NULL, 1.0f, 0 );        // bot
+	CG_FilledBar( 78, 104, 2, 168, color2, NULL, NULL, 1.0f, 0 );        // left
+	CG_FilledBar( 560, 104, 2, 168, color2, NULL, NULL, 1.0f, 0 );        // right
+	CG_FilledBar( 78, 102, 484, 2, color2, NULL, NULL, 1.0f, 0 );        // top
+	CG_FilledBar( 80, 124, 482, 2, color2, NULL, NULL, 1.0f, 0 );        // under green bar
+	CG_FilledBar( 78, 272, 484, 2, color2, NULL, NULL, 1.0f, 0 );        // bot
 
 
 	// text boxes
 	color2[0] = color2[1] = color2[2] = 0.4f;
 #ifdef LOCALISATION
-	CG_DrawStringExt( 175, 130, CG_TranslateString( "Name" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_DrawStringExt( 105, 130, CG_TranslateString( "Name" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #else
-	CG_DrawStringExt( 175, 130, va( "Name" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_DrawStringExt( 105, 130, va( "Name" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+#endif
+#ifdef LOCALISATION
+	CG_DrawStringExt( 280, 130, CG_TranslateString( "Class" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+#else
+	CG_DrawStringExt( 280, 130, va( "Class" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+#endif
+	w = strlen( "Kills" ) * SMALLCHAR_WIDTH;
+#ifdef LOCALISATION
+	CG_DrawStringExt( 100 + 320 - w, 130, CG_TranslateString( "Kills" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+#else
+	CG_DrawStringExt( 100 + 320 - w, 130, va( "Kills" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #endif
 	w = strlen( "Score" ) * SMALLCHAR_WIDTH;
 #ifdef LOCALISATION
-	CG_DrawStringExt( 170 + 255 - w, 130, CG_TranslateString( "Score" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_DrawStringExt( 100 + 375 - w, 130, CG_TranslateString( "Score" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #else
-	CG_DrawStringExt( 170 + 255 - w, 130, va( "Score" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_DrawStringExt( 100 + 375 - w, 130, va( "Score" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #endif
 	w = strlen( "Ping" ) * SMALLCHAR_WIDTH;
 #ifdef LOCALISATION
-	CG_DrawStringExt( 170 + 294 - w, 130, CG_TranslateString( "Ping" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_DrawStringExt( 100 + 420 - w, 130, CG_TranslateString( "Ping" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #else
-	CG_DrawStringExt( 170 + 294 - w, 130, va( "Ping" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_DrawStringExt( 100 + 420 - w, 130, va( "Ping" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #endif
 	//if (cg.scores[0].respawnsLeft != -1)
 	//        maxlives = qtrue;
@@ -107,18 +120,18 @@ void CG_DrawCoopScoreboard( void ) {
 #ifdef MONEY
 	highest_score = 0;
 
-	for ( i = 0; i < MAX_COOP_CLIENTS; i++ ) {
+	for ( i = 0; i < MAX_COOP_PLAYERS; i++ ) {
 		if ( cg.scores[i].score > highest_score ) {
 			highest_score = cg.scores[i].score;
 		}
 	}
 #endif
 
-	for ( i = 0; i < 8; i++ ) {
+	for ( i = 0; i < MAX_COOP_PLAYERS; i++ ) {
 		if ( cg.clientNum == cg.scores[i].client && i < cg.numScores ) {
-			CG_FilledBar( 170, 154 + ( 28 * i ), 300, 20, black, NULL, NULL, 1.0f, 0 );
+			CG_FilledBar( 100, 154 + ( 28 * i ), 440, 20, black, NULL, NULL, 1.0f, 0 );
 		} else {
-			CG_FilledBar( 170, 154 + ( 28 * i ), 300, 20, color2, NULL, NULL, 1.0f, 0 );
+			CG_FilledBar( 100, 154 + ( 28 * i ), 440, 20, color2, NULL, NULL, 1.0f, 0 );
 		}
 
 		ci = &cgs.clientinfo[cg.scores[i].client];
@@ -130,14 +143,23 @@ void CG_DrawCoopScoreboard( void ) {
 			place++;
 			if ( ci->team == TEAM_SPECTATOR ) {
 #ifdef LOCALISATION
-				CG_DrawStringExt( 175, 154 + ( 28 * i ) + 1, va( CG_TranslateString( "[SPECTATOR] %s" ), ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+				CG_DrawStringExt( 105, 154 + ( 28 * i ) + 1, va( CG_TranslateString( "[SPECTATOR] %s" ), ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
 #else
-				CG_DrawStringExt( 175, 154 + ( 28 * i ) + 1, va( "[SPECTATOR] %s", ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+				CG_DrawStringExt( 105, 154 + ( 28 * i ) + 1, va( "[SPECTATOR] %s", ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
 #endif
 			} else if ( ci->team == TEAM_RED ) {
-				CG_DrawStringExt( 175, 154 + ( 28 * i ) + 1, va( "^1%i^7. %s", place, ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+				CG_DrawStringExt( 105, 154 + ( 28 * i ) + 1, va( "^1%i^7. %s", place, ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
 			} else {
-				CG_DrawStringExt( 175, 154 + ( 28 * i ) + 1, va( "%i. %s", place, ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+				CG_DrawStringExt( 105, 154 + ( 28 * i ) + 1, va( "%i. %s", place, ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+			}
+
+			if ( ci->team != TEAM_SPECTATOR ) {
+				className = ( cg.scores[i].playerClass >= 0 && cg.scores[i].playerClass < 4 ) ?
+					classNames[cg.scores[i].playerClass] : "";
+				CG_DrawStringExt( 280, 154 + ( 28 * i ) + 1, className, color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 10 ) ;
+
+				w = strlen( va( "%d", cg.scores[i].kills ) ) * SMALLCHAR_WIDTH;
+				CG_DrawStringExt( 100 + 320 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].kills ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 			}
 
 			if ( maxlives )
@@ -148,12 +170,12 @@ void CG_DrawCoopScoreboard( void ) {
 #ifdef MONEY
 					if ( cg.scores[i].score == highest_score )
 					{
-						CG_DrawStringExt( 170 + 255 - w, 154 + ( 28 * i ) + 1, va( "%d (%d)", cg.scores[i].score, cg.scores[i].respawnsLeft ), green, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+						CG_DrawStringExt( 100 + 375 - w, 154 + ( 28 * i ) + 1, va( "%d (%d)", cg.scores[i].score, cg.scores[i].respawnsLeft ), green, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 					}
 					else
 #endif
 					{
-						CG_DrawStringExt( 170 + 255 - w, 154 + ( 28 * i ) + 1, va( "%d (%d)", cg.scores[i].score, cg.scores[i].respawnsLeft ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+						CG_DrawStringExt( 100 + 375 - w, 154 + ( 28 * i ) + 1, va( "%d (%d)", cg.scores[i].score, cg.scores[i].respawnsLeft ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 					}
 				}
 			}
@@ -165,18 +187,18 @@ void CG_DrawCoopScoreboard( void ) {
 #ifdef MONEY
 					if ( cg.scores[i].score == highest_score )
 					{
-						CG_DrawStringExt( 170 + 255 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].score ), green, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+						CG_DrawStringExt( 100 + 375 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].score ), green, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 					}
 					else
 #endif
 					{
-						CG_DrawStringExt( 170 + 255 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].score ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+						CG_DrawStringExt( 100 + 375 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].score ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 					}
 				}
 			}
 
 			w = strlen( va( "%d", ping ) ) * SMALLCHAR_WIDTH;
-			CG_DrawStringExt( 170 + 294 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].ping ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+			CG_DrawStringExt( 100 + 420 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].ping ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 		}
 	}
 
@@ -184,7 +206,7 @@ void CG_DrawCoopScoreboard( void ) {
 	// green title
 	color2[0] = color2[2] = 0;
 	color2[1] = 0.3f;
-	CG_FilledBar( 150, 104, 340, 20, color2, NULL, NULL, 1.0f, 0 );
+	CG_FilledBar( 80, 104, 480, 20, color2, NULL, NULL, 1.0f, 0 );
 
 	color2[0] = color2[1] = color2[2] = 0.2f;
 
@@ -194,10 +216,10 @@ void CG_DrawCoopScoreboard( void ) {
 	if ( cgs.gametype == GT_COOP ) {
 #ifdef LOCALISATION
 		w = strlen( CG_TranslateString( "Score" ) ) * SMALLCHAR_WIDTH;
-		CG_DrawStringExt( 170 + ( 344 / 2 ) - ( w - 2 ), 105, CG_TranslateString( "Score" ), color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+		CG_DrawStringExt( 100 + ( 484 / 2 ) - ( w - 2 ), 105, CG_TranslateString( "Score" ), color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #else
 		w = strlen( "scores" ) * SMALLCHAR_WIDTH;
-		CG_DrawStringExt( 170 + ( 344 / 2 ) - ( w - 2 ), 105, va( "scores" ), color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+		CG_DrawStringExt( 100 + ( 484 / 2 ) - ( w - 2 ), 105, va( "scores" ), color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 #endif
 	}
 
@@ -213,7 +235,7 @@ void CG_DrawCoopScoreboard( void ) {
 
 	s = va( "%2.0f:%i%i", (float)mins, tens, seconds );
 
-	CG_DrawStringExt( 170, 105, s, color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_DrawStringExt( 100, 105, s, color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
 
 	color2[0] = color2[1] = color2[2] = 1;
 }
@@ -235,6 +257,11 @@ qboolean CG_DrawScoreboard( void ) {
 	// don't draw anything if the menu or console is up
 	if ( cg_paused.integer ) {
 		cg.deferredPlayerLoading = 0;
+		return qfalse;
+	}
+
+	// game-over sequence: CG_Draw2D already force-draws this; bail so TAB doesn't stack a second copy on top
+	if ( cgs.gametype == GT_COOP_SURVIVAL && cg.predictedPlayerState.stats[STAT_GAMEOVER] ) {
 		return qfalse;
 	}
 

@@ -93,6 +93,11 @@ static void CG_Viewpos_f( void ) {
 
 
 static void CG_ScoresDown_f( void ) {
+	// game-over sequence: CG_Draw2D already force-draws the scoreboard; the numScores=0 reset below would just blank it for a frame
+	if ( cgs.gametype == GT_COOP_SURVIVAL && cg.predictedPlayerState.stats[STAT_GAMEOVER] ) {
+		return;
+	}
+
 	if ( cg.scoresRequestTime + 2000 < cg.time ) {
 		// the scores are more than two seconds out of data,
 		// so request new ones

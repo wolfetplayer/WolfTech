@@ -1373,6 +1373,20 @@ void Survival_TickGameOver( void ) {
 		return;
 	}
 
+	// flag connected players so cgame can force the scoreboard + chat on; STAT_HEALTH/REVIVE_TIME aren't reliable here
+	for ( i = 0; i < level.maxclients; i++ ) {
+		gentity_t *cl = &g_entities[i];
+
+		if ( !cl->inuse || !cl->client || cl->client->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+		if ( cl->client->sess.sessionTeam == TEAM_SPECTATOR || ( cl->r.svFlags & SVF_BOT ) ) {
+			continue;
+		}
+
+		cl->client->ps.stats[STAT_GAMEOVER] = 1;
+	}
+
 	elapsed = level.time - svParams.gameOverPhaseTime;
 
 	// fade back up from the cut-to-black once it's had time to land, one-shot per phase

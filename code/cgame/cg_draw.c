@@ -4947,6 +4947,16 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawHoldableSelect();
 			CG_DrawPickupItem();
 			CG_DrawReward();
+		} else if ( cgs.gametype == GT_COOP_SURVIVAL && cg.snap->ps.stats[STAT_GAMEOVER] ) {
+			// post-wipe game-over sequence: force scoreboard + chat on; STAT_HEALTH/STAT_REVIVE_TIME aren't reliable here
+			if ( cgs.gametype != GT_SINGLE_PLAYER ) {
+				CG_DrawTeamInfo();
+			}
+			// CG_DrawScoreboard() normally sets this; without it the box renders off-center on wide aspects
+			if ( cg_fixedAspect.integer ) {
+				CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+			}
+			CG_DrawCoopScoreboard();
 		} else if ( cgs.gametype == GT_COOP_SURVIVAL && cg.snap->ps.stats[STAT_REVIVE_TIME] > 0 ) {
 			// STAT_REVIVE_PROGRESS > 0 means we're self-reviving -- show the progress bar instead of the frozen timer
 			if ( cg.snap->ps.stats[STAT_REVIVE_PROGRESS] > 0 ) {
