@@ -10,7 +10,7 @@ game_manager
 	{
 	   mu_play sound/misc/wave_start
 	   wait 11000
-	   mu_queue sound/music/m_action sound/music/m_alarm sound/music/m_moving sound/music/m_situation sound/music/x_action sound/music/m_assault
+	   //mu_queue sound/music/m_action sound/music/m_alarm sound/music/m_moving sound/music/m_situation sound/music/x_action sound/music/m_assault
 	}
 	
 	wave_end 

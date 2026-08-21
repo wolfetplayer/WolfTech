@@ -22,7 +22,7 @@ gameover_cam_hold_time    4500   // ms, fully-visible hold time on cam1 and cam2
 gameover_cam3_hold_time   2200   // ms, hold on cam3 before the countdown starts
 gameover_fade_time         600   // ms, screen fade to/from black - runs once in and once out around every camera cut
 gameover_countdown           5   // seconds counted down on cam3 before restart
-gameover_music   sound/music/s_longout   // empty value = no music
+gameover_music   sound/music/survival_game_over   // empty value = no music
 
 // ---- Wave each enemy type first appears on ----
 wave_eliteguard   3
