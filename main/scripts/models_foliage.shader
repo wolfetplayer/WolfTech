@@ -203,6 +203,7 @@ models/foliage/grassfoliage1
 	surfaceparm trans
 	surfaceparm nomarks
 	nopicmip
+	deformVertexes wave 15 sin 0 1 0 0.25
 	{
 		map models/foliage/grassfoliage1.tga
 		alphaFunc GE128
@@ -224,6 +225,7 @@ models/foliage/grassfoliage2
 	surfaceparm trans
 	surfaceparm nomarks
 	nopicmip
+	deformVertexes wave 15 sin 0 1 0 0.25
 	{
 		map models/foliage/grassfoliage2.tga
 		alphaFunc GE128
@@ -245,6 +247,7 @@ models/foliage/grassfoliage3
 	surfaceparm trans
 	surfaceparm nomarks
 	nopicmip
+	deformVertexes wave 15 sin 0 1 0 0.25
 	{
 		map models/foliage/grassfoliage3.tga
 		alphaFunc GE128
