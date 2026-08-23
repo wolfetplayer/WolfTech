@@ -1964,6 +1964,7 @@ extern cvar_t  *r_nocull;
 extern cvar_t  *r_facePlaneCull;        // enables culling of planar surfaces with back side test
 extern cvar_t  *r_nocurves;
 extern cvar_t  *r_drawfoliage;
+extern cvar_t  *r_foliageMinLight;
 extern cvar_t  *r_showcluster;
 
 extern cvar_t   *r_mode;                // video mode

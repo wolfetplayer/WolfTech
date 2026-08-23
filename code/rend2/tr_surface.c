@@ -1356,6 +1356,8 @@ static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
 		color       = tess.color[tess.numVertexes];
 
 		for ( i = 0 ; i < numVerts ; i++, dv++, xyz += 4, normal += 4, texCoords += 2, lightCoords += 2, color += 4 ) {
+			float lightFactor;
+
 			VectorAdd( dv->xyz, instance->origin, xyz );
 
 			VectorCopy4( dv->normal, normal );
@@ -1366,10 +1368,20 @@ static void RB_SurfaceFoliage( srfFoliage_t *srf ) {
 			lightCoords[0] = dv->lightmap[0];
 			lightCoords[1] = dv->lightmap[1];
 
+			// cheap per-vertex directional term on top of the flat baked instance color, so blades
+			// within a tuft shade against the sun instead of reading as one flat, unlit card
+			lightFactor = DotProduct( dv->normal, tr.refdef.sunDir ) * ( 1.0f / 32767.0f );
+			if ( lightFactor < 0.0f ) {
+				lightFactor = 0.0f;
+			} else if ( lightFactor > 1.0f ) {
+				lightFactor = 1.0f;
+			}
+			lightFactor = r_foliageMinLight->value + ( 1.0f - r_foliageMinLight->value ) * lightFactor;
+
 			// scale 0-255 instance color up to the 0-65535 packed color range
-			color[0] = srcColor[0] * 257;
-			color[1] = srcColor[1] * 257;
-			color[2] = srcColor[2] * 257;
+			color[0] = srcColor[0] * 257 * lightFactor;
+			color[1] = srcColor[1] * 257 * lightFactor;
+			color[2] = srcColor[2] * 257 * lightFactor;
 			color[3] = srcColor[3] * 257;
 		}
 
