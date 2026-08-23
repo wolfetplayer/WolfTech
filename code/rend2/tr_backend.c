@@ -843,8 +843,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
 		if ( drawSurf->sort == oldSort && drawSurf->cubemapIndex == oldCubemapIndex) {
-			// depth pre-pass only pays off for cheap-to-resubmit static world geometry; shadow-caster passes still need entities
-			if (backEnd.depthFill && shader && (shader->sort != SS_OPAQUE || (entityNum != REFENTITYNUM_WORLD && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW))))
+			// depth pre-pass only pays off for cheap-to-resubmit static world geometry; shadow-caster passes and sunlit main views still need entities so the shadow mask has correct entity depth
+			if (backEnd.depthFill && shader && (shader->sort != SS_OPAQUE || (entityNum != REFENTITYNUM_WORLD && !(backEnd.viewParms.flags & (VPF_DEPTHSHADOW | VPF_USESUNLIGHT)))))
 				continue;
 
 			// fast path, same as previous sort
@@ -883,7 +883,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			oldCubemapIndex = cubemapIndex;
 		}
 
-		if (backEnd.depthFill && shader && (shader->sort != SS_OPAQUE || (entityNum != REFENTITYNUM_WORLD && !(backEnd.viewParms.flags & VPF_DEPTHSHADOW))))
+		if (backEnd.depthFill && shader && (shader->sort != SS_OPAQUE || (entityNum != REFENTITYNUM_WORLD && !(backEnd.viewParms.flags & (VPF_DEPTHSHADOW | VPF_USESUNLIGHT)))))
 			continue;
 
 		//
