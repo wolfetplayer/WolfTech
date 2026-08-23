@@ -36,6 +36,7 @@ void GLimp_InitExtraExtensions(void)
 	const char* result[3] = { "...ignoring %s\n", "...using %s\n", "...%s not found\n" };
 	qboolean q_gl_version_at_least_3_0;
 	qboolean q_gl_version_at_least_3_2;
+	qboolean glExtFuncMissing;
 
 	q_gl_version_at_least_3_0 = QGL_VERSION_ATLEAST( 3, 0 );
 	q_gl_version_at_least_3_2 = QGL_VERSION_ATLEAST( 3, 2 );
@@ -51,11 +52,15 @@ void GLimp_InitExtraExtensions(void)
 #undef GLE
 
 	// GL function loader, based on https://gist.github.com/rygorous/16796a0c876cf8a5f542caddb55bce8a
-#define GLE(ret, name, ...) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name);
+	// a driver can advertise an extension string without exposing every function it implies, leaving a dangling NULL that crashes far from the real cause; glExtFuncMissing lets each block below decide whether that's fatal or safe to degrade
+#define GLE(ret, name, ...) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); if (!qgl##name) { ri.Printf(PRINT_WARNING, "WARNING: OpenGL function 'gl%s' not found\n", #name); glExtFuncMissing = qtrue; }
 
 	// OpenGL 1.5 - GL_ARB_occlusion_query
-	glRefConfig.occlusionQuery = qtrue;
+	glExtFuncMissing = qfalse;
 	QGL_ARB_occlusion_query_PROCS;
+	glRefConfig.occlusionQuery = !glExtFuncMissing;
+	if (!glRefConfig.occlusionQuery)
+		ri.Printf(PRINT_WARNING, "WARNING: GL_ARB_occlusion_query functions missing, disabling occlusion queries\n");
 
 	// OpenGL 3.0 - GL_ARB_framebuffer_object
 	extension = "GL_ARB_framebuffer_object";
@@ -71,7 +76,10 @@ void GLimp_InitExtraExtensions(void)
 		qglGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &glRefConfig.maxRenderbufferSize);
 		qglGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &glRefConfig.maxColorAttachments);
 
+		glExtFuncMissing = qfalse;
 		QGL_ARB_framebuffer_object_PROCS;
+		if (glExtFuncMissing)
+			ri.Error(ERR_FATAL, "%s was detected but required functions are missing; update your graphics driver\n", extension);
 
 		ri.Printf(PRINT_ALL, result[glRefConfig.framebufferObject], extension);
 	}
@@ -95,7 +103,10 @@ void GLimp_InitExtraExtensions(void)
 			glRefConfig.vertexArrayObject = !!r_arb_vertex_array_object->integer;
 		}
 
+		glExtFuncMissing = qfalse;
 		QGL_ARB_vertex_array_object_PROCS;
+		if (glExtFuncMissing)
+			ri.Error(ERR_FATAL, "%s was detected but required functions are missing; update your graphics driver\n", extension);
 
 		ri.Printf(PRINT_ALL, result[glRefConfig.vertexArrayObject], extension);
 	}
@@ -239,7 +250,20 @@ void GLimp_InitExtraExtensions(void)
 		// QGL_*_PROCS becomes several functions, do not remove {}
 		if (glRefConfig.directStateAccess)
 		{
+			glExtFuncMissing = qfalse;
 			QGL_EXT_direct_state_access_PROCS;
+
+			if (glExtFuncMissing)
+			{
+				// driver claimed the extension but didn't provide every function; restore the safe fallbacks for all of them rather than risk some staying NULL
+				ri.Printf(PRINT_WARNING, "WARNING: %s functions incomplete, falling back to non-DSA path\n", extension);
+				glRefConfig.directStateAccess = qfalse;
+#undef GLE
+#define GLE(ret, name, ...) qgl##name = GLDSA_##name;
+				QGL_EXT_direct_state_access_PROCS;
+#undef GLE
+#define GLE(ret, name, ...) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); if (!qgl##name) { ri.Printf(PRINT_WARNING, "WARNING: OpenGL function 'gl%s' not found\n", #name); glExtFuncMissing = qtrue; }
+			}
 		}
 
 		ri.Printf(PRINT_ALL, result[glRefConfig.directStateAccess], extension);
