@@ -1839,6 +1839,7 @@ typedef struct {
 	vec3_t                  cascadeBoundsMins[3];
 	vec3_t                  cascadeBoundsMaxs[3];
 	float                   cascadeMvp[3][16];
+	unsigned int            cascadeEntitySignature[3]; // detects shadow-casting entities moving/animating inside otherwise-unchanged bounds
 
 //----(SA)	added
 	float lightGridMulAmbient;          // lightgrid multipliers specified in sky shader

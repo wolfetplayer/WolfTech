@@ -2417,6 +2417,28 @@ static float CalcSplit(float n, float f, float i, float m)
 	return (n * pow(f / n, i / m) + (f - n) * i / m) / 2.0f;
 }
 
+// cheap change-detection hash over shadow-casting entity pose, so a cached cascade isn't reused while entities move/animate
+static unsigned int R_ShadowEntitySignature( void )
+{
+	unsigned int sig = (unsigned int)tr.refdef.num_entities;
+	int i, j;
+
+	for ( i = 0; i < tr.refdef.num_entities; i++ )
+	{
+		const refEntity_t *ent = &tr.refdef.entities[i].e;
+
+		for ( j = 0; j < 3; j++ )
+		{
+			sig = (sig ^ (unsigned int)(int)(ent->origin[j] * 8.0f)) * 16777619u;
+			sig = (sig ^ (unsigned int)(int)(ent->axis[0][j] * 64.0f)) * 16777619u;
+		}
+
+		sig = (sig ^ (unsigned int)ent->frame) * 16777619u;
+		sig = (sig ^ (unsigned int)ent->torsoFrame) * 16777619u;
+	}
+
+	return sig;
+}
 
 void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 {
@@ -2698,13 +2720,16 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 	}
 
 	// skip the traversal/draw and reuse last frame's cascade if its bounds haven't shifted by more than half a texel
+	// and no shadow-casting entity has moved/animated since
 	if (level < 3)
 	{
+		unsigned int entitySignature = R_ShadowEntitySignature();
 		float texelWorldSize = MAX(lightviewBounds[1][1] - lightviewBounds[0][1],
 			lightviewBounds[1][2] - lightviewBounds[0][2]) / tr.sunShadowFbo[level]->width;
 		float skipThreshold = texelWorldSize * 0.5f;
 
 		if (tr.cascadeBoundsValid[level] &&
+			tr.cascadeEntitySignature[level] == entitySignature &&
 			fabs(lightviewBounds[0][1] - tr.cascadeBoundsMins[level][1]) < skipThreshold &&
 			fabs(lightviewBounds[0][2] - tr.cascadeBoundsMins[level][2]) < skipThreshold &&
 			fabs(lightviewBounds[1][1] - tr.cascadeBoundsMaxs[level][1]) < skipThreshold &&
@@ -2716,6 +2741,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 		VectorCopy(lightviewBounds[0], tr.cascadeBoundsMins[level]);
 		VectorCopy(lightviewBounds[1], tr.cascadeBoundsMaxs[level]);
+		tr.cascadeEntitySignature[level] = entitySignature;
 		tr.cascadeBoundsValid[level] = qtrue;
 	}
 
