@@ -1420,17 +1420,17 @@ void R_Register( void ) {
 
 	r_externalGLSL = ri.Cvar_Get( "r_externalGLSL", "0", CVAR_LATCH );
 	
-	r_hdr = ri.Cvar_Get( "r_hdr", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_hdr = ri.Cvar_Get( "r_hdr", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_floatLightmap = ri.Cvar_Get( "r_floatLightmap", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_postProcess = ri.Cvar_Get( "r_postProcess", "1", CVAR_ARCHIVE );
 
-	r_toneMap = ri.Cvar_Get( "r_toneMap", "1", CVAR_ARCHIVE );
+	r_toneMap = ri.Cvar_Get( "r_toneMap", "0", CVAR_ARCHIVE );
 	r_forceToneMap = ri.Cvar_Get( "r_forceToneMap", "0", CVAR_CHEAT );
 	r_forceToneMapMin = ri.Cvar_Get( "r_forceToneMapMin", "-8.0", CVAR_CHEAT );
 	r_forceToneMapAvg = ri.Cvar_Get( "r_forceToneMapAvg", "-2.0", CVAR_CHEAT );
 	r_forceToneMapMax = ri.Cvar_Get( "r_forceToneMapMax", "0.0", CVAR_CHEAT );
 
-	r_autoExposure = ri.Cvar_Get( "r_autoExposure", "1", CVAR_ARCHIVE );
+	r_autoExposure = ri.Cvar_Get( "r_autoExposure", "0", CVAR_ARCHIVE );
 	r_forceAutoExposure = ri.Cvar_Get( "r_forceAutoExposure", "0", CVAR_CHEAT );
 	r_autoExposureInterval = ri.Cvar_Get( "r_autoExposureInterval", "20", CVAR_ARCHIVE );
 	r_forceAutoExposureMin = ri.Cvar_Get( "r_forceAutoExposureMin", "-2.0", CVAR_CHEAT );
@@ -1453,8 +1453,8 @@ void R_Register( void ) {
 	r_chromaticAberration = ri.Cvar_Get( "r_chromaticAberration", "0", CVAR_ARCHIVE );
 	r_chromaticAberrationIntensity = ri.Cvar_Get( "r_chromaticAberrationIntensity", "0.002", CVAR_ARCHIVE );
 
-	r_depthPrepass = ri.Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
-	r_ssao = ri.Cvar_Get( "r_ssao", "1", CVAR_LATCH | CVAR_ARCHIVE );
+	r_depthPrepass = ri.Cvar_Get( "r_depthPrepass", "0", CVAR_ARCHIVE );
+	r_ssao = ri.Cvar_Get( "r_ssao", "0", CVAR_LATCH | CVAR_ARCHIVE );
 	r_ssaoIntensity = ri.Cvar_Get( "r_ssaoIntensity", "0.85", CVAR_ARCHIVE );
 	r_ssaoRadius = ri.Cvar_Get( "r_ssaoRadius", "1024", CVAR_ARCHIVE );
 
@@ -1492,7 +1492,7 @@ void R_Register( void ) {
 	r_dlightRaysMuzzleflashIntensity = ri.Cvar_Get( "r_dlightRaysMuzzleflashIntensity", "1.0", CVAR_ARCHIVE );
 	r_sunlightMode = ri.Cvar_Get( "r_sunlightMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_sunShadows = ri.Cvar_Get( "r_sunShadows", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_sunShadows = ri.Cvar_Get( "r_sunShadows", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowFilter = ri.Cvar_Get( "r_shadowFilter", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowBlur = ri.Cvar_Get("r_shadowBlur", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fxaa = ri.Cvar_Get("r_fxaa", "1", CVAR_ARCHIVE | CVAR_LATCH);

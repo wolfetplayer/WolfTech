@@ -169,26 +169,6 @@ itemDef {
 // end
 
 	itemDef {
-    		name performance
-    		group grpOptions
-    		type ITEM_TYPE_MULTI
-    		text "@OPTIONS_ASPECTCORRECTION"
-		textfont		UI_FONT_BIG
-    		cvar "cg_fixedAspect"
-    		cvarFloatList	{ "@GENERAL_OFF" 0 "@OPTIONS_ASPECT_43" 1 "@OPTIONS_ASPECT_WIDE" 2 }
-    		rect 82 115 290 12
-          	textalign ITEM_ALIGN_RIGHT
-          	textalignx 142
-          	textaligny 10
-    		textscale .23
-    		style WINDOW_STYLE_FILLED
-    		backcolor 1 1 1 .07        
-          	forecolor 1 1 1 1
-          	visible 0
-		action { exec "vid_restart" }
-	}
-
-	itemDef {
 		name performance
 		group grpOptions
 		text "@OPTIONS_CROSSHAIR"

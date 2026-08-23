@@ -93,11 +93,12 @@ Cvars for simple rendering features:
 
 *  `r_ssao`                         - Enable screen-space ambient occlusion.
                                    Runs at quarter resolution with a
-                                   depth-aware blur, so it's cheap; requires
-                                   r_hdr and r_depthPrepass (both on by
-                                   default).  Requires vid_restart to toggle.
-                                     0 - No.
-                                     1 - Yes. (default)
+                                   depth-aware blur, but still a real cost;
+                                   requires r_hdr and r_depthPrepass (the
+                                   options menu enables both automatically).
+                                   Requires vid_restart to toggle.
+                                     0 - No. (default)
+                                     1 - Yes.
 
 *  `r_ssaoIntensity`                 - Strength of the occlusion darkening.
                                    Hot-tunable, no vid_restart needed.
@@ -114,9 +115,10 @@ Cvars for HDR and tonemapping:
 
  * `r_hdr`                          - Do scene rendering in a framebuffer with
                                    high dynamic range.  (Less banding, and
-                                   exposure changes look much better)
-                                     0 - No.
-                                     1 - Yes. (default)
+                                   exposure changes look much better, at a
+                                   real bandwidth/performance cost)
+                                     0 - No. (default)
+                                     1 - Yes.
 
 *  `r_cameraExposure`               - Cheat.  Alter brightness, in powers of two.
                                      -2  - 4x as dark.
@@ -137,8 +139,8 @@ Cvars for HDR and tonemapping:
 
 *  `r_toneMap`                      - Enable tone mapping.  Requires 
                                    r_hdr and r_postProcess.
-                                     0 - No.
-                                     1 - Yes. (default)
+                                     0 - No. (default)
+                                     1 - Yes.
 
 *  `r_forceToneMap`                 - Cheat. Override built-in and map tonemap settings and use cvars r_forceToneMapAvg, r_forceToneMapMin, and r_forceToneMapMax.
                                      0 - No. (default)
@@ -169,8 +171,8 @@ Cvars for HDR and tonemapping:
                                    brightness.  Hardcoded to -2 to 2 on maps
                                    that don't specify otherwise.  Requires
                                    r_hdr, r_postprocess, and r_toneMap.
-                                     0 - No.
-                                     1 - Yes. (default)
+                                     0 - No. (default)
+                                     1 - Yes.
 
 *  `r_forceAutoExposure`            - Cheat.  Override built-in and map auto
                                    exposure settings and use cvars
@@ -333,9 +335,10 @@ Cvars for the sunlight and cascaded shadow maps:
 *  `r_forceSunAmbientScale`         - Cheat. Scale sun ambient brightness by this factor when r_forceSun 1. 0.5 - Default
 
 *  `r_sunShadows`                   - Enable sunlight and cascaded shadow maps for
-                                   it on maps that support it.
-                                     0 - No.
-                                     1 - Yes. (default)
+                                   it on maps that support it.  One of the more
+                                   expensive rend2 features.
+                                     0 - No. (default)
+                                     1 - Yes.
 
 *  `r_sunlightMode`                 - Specify the method used to add sunlight to
                                    the scene.
@@ -434,9 +437,10 @@ Cvars that you probably don't care about or shouldn't mess with:
 *  `r_depthPrepass`                 - Do a depth-only pass before rendering.
                                    Speeds up rendering in cases where advanced
                                    features are used.  Required for
-                                   r_sunShadows.
-                                     0 - No.
-                                     1 - Yes. (default)
+                                   r_sunShadows and r_ssao; not worth enabling
+                                   unless one of those is on.
+                                     0 - No. (default)
+                                     1 - Yes.
 
 *  `r_mergeLightmaps`               - Merge the small (128x128) lightmaps into 
                                    2 or fewer giant (4096x4096) lightmaps.

@@ -10,11 +10,11 @@ menuDef {
 	name "system_menu"
 	visible 0
 	fullscreen 0
-	rect 220 110 443 340
+	rect 220 110 443 370
 	focusColor 1 .75 0 1
 	style 1
 	border 1
-	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; fadeout fadebox ; hide grpSystem ; hide grpapplysystem ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show graphics ; show graphicsapply ; setitemcolor ctr_graphics backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .3 ; setitemcolor ctr_other backcolor .1 .1 .1 .3 }
+	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; fadeout fadebox ; hide grpSystem ; hide grpapplysystem ; hide rend2page ; hide rend2apply ; show graphics ; show graphicsapply ; setitemcolor ctr_graphics backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .3 ; setitemcolor ctr_other backcolor .1 .1 .1 .3 }
 	onEsc { close system_menu ; close setup_menu ; open main }
 
 
@@ -24,7 +24,7 @@ menuDef {
 	{
 		name window
 		group grpSystembutton
-		rect 0 2 443 300	
+		rect 0 2 443 330
 		style WINDOW_STYLE_FILLED
 		border 1
 		bordercolor .5 .5 .5 .5
@@ -57,7 +57,7 @@ itemDef {
 	backcolor .3 0.5 0.2 .5
  	visible 1
 	action { play "sound/misc/kcaction.wav" ;
-	hide grpSystem ; hide grpapplysystem ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show graphics ; show graphicsapply ;
+	hide grpSystem ; hide grpapplysystem ; hide rend2page ; hide rend2apply ; show graphics ; show graphicsapply ;
 	setitemcolor ctr_graphics backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .3 ; setitemcolor ctr_other backcolor .1 .1 .1 .3 }
 	}
 
@@ -176,10 +176,10 @@ itemDef {
 		action { uiScript glCustom }
 	}
 	
-	itemDef {
+		itemDef {
    		name graphics
 		group grpSystem
-   		type ITEM_TYPE_MULTI	
+   		type ITEM_TYPE_MULTI
 		text "@SYSTEM_VIDEOMODE_LABEL"
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_mode"
@@ -189,11 +189,31 @@ itemDef {
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .22 
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
+		action { uiScript glCustom }
+	}
+
+	itemDef {
+		name graphics
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@SYSTEM_ASPECTRATIO_LABEL"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "cg_fixedAspect"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@OPTIONS_ASPECT_43" 1 "@OPTIONS_ASPECT_WIDE" 2 }
+		rect 82 87 290 12
+      	textalign ITEM_ALIGN_RIGHT
+      	textalignx 142
+      	textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+      	forecolor 1 1 1 1
+      	visible 0
 		action { uiScript glCustom }
 	}
 
@@ -205,15 +225,15 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_colorbits"
 		cvarFloatList { "@SYSTEM_COLORDEPTH_DESKTOP" 0 "@SYSTEM_BITDEPTH_16_HYPHEN" 16 "@SYSTEM_BITDEPTH_32_HYPHEN" 32 }
-		rect 82 87 290 12
+		rect 82 102 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .22 
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07      
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom ; uiScript update "r_colorbits" }
 	}
 
@@ -225,35 +245,35 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_fullscreen"
 		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 102 290 12
+		rect 82 117 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
 		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07        
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
 	}
 
 	itemDef {
       	name graphics
 		group grpSystem
-      	type ITEM_TYPE_MULTI			
+      	type ITEM_TYPE_MULTI
 		text "@SYSTEM_LIGHTING_LABEL"
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_vertexlight"
 		cvarFloatList { "@SYSTEM_LIGHTING_LIGHTMAP" 0 "@SYSTEM_LIGHTING_VERTEX" 1  }
-		rect 82 117 290 12
+		rect 82 132 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .22   
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07     
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
 	}
 
@@ -265,15 +285,15 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_lodbias"
 		cvarFloatList { "@SYSTEM_LEVEL_HIGH" 0 "@SYSTEM_LEVEL_MEDIUM" 1 "@SYSTEM_LEVEL_LOW" 2 }
-		rect 82 132 290 12
+		rect 82 147 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .22 
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom ; uiScript update "r_lodbias" }
 	}
 
@@ -285,18 +305,18 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_picmip2"
 		cvarFloatList { "@SYSTEM_LEVEL_LOW" 3 "@SYSTEM_LEVEL_NORMAL" 2 "@SYSTEM_LEVEL_HIGH" 1 "@SYSTEM_LEVEL_EXTRA" 0 }
-		rect 82 147 290 12
+		rect 82 162 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .23 
+		textscale .23
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
    		}
-	
+
 	itemDef {
 		name graphics
 		group grpSystem
@@ -305,20 +325,17 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_picmip"
 		cvarFloatList { "@SYSTEM_LEVEL_LOW" 2 "@SYSTEM_LEVEL_NORMAL" 1 "@SYSTEM_LEVEL_HIGH" 0 }
-		rect 82 162 290 12
+		rect 82 177 290 12
 	     	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .23 
+		textscale .23
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
  		action { uiScript glCustom }
    		}
-
-
-
 
 
 
@@ -331,15 +348,15 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_texturemode"
 		cvarStrList { "@SYSTEM_TEXFILTER_BILINEAR", "GL_LINEAR_MIPMAP_NEAREST", "@SYSTEM_TEXFILTER_TRILINEAR", "GL_LINEAR_MIPMAP_LINEAR"  }
-		rect 82 177 290 12
+		rect 82 192 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .22  
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07      
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
 		}
 
@@ -351,15 +368,15 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_ext_compressed_textures"
 		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 192 290 12
+		rect 82 207 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .22 
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
 		}
 	itemDef {
@@ -370,15 +387,15 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_texturebits"
 		cvarFloatList { "@SYSTEM_LEVEL_DEFAULT" 0 "@SYSTEM_BITDEPTH_16" 16 "@SYSTEM_BITDEPTH_32" 32 }
-		rect 82 207 290 12
+		rect 82 222 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .23 
+		textscale .23
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
     		}
 
@@ -389,13 +406,13 @@ itemDef {
 		text "@SYSTEM_BRIGHTNESS_LABEL"
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvarfloat "r_gamma" 1 0.5 3
- 		rect 82 222 290 12
+ 		rect 82 237 290 12
       	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142 
+      	textalignx 142
       	textaligny 10
-		textscale .22 
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
 
 		cvarTest "r_ignorehwgamma"
@@ -415,50 +432,64 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_bloom"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 237 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23 
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
-      	forecolor 1 1 1 1
-      	visible 0 
-		action { uiScript glCustom }
-    		}
-
-//
-// Nvidia
-// 
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_NVFOG_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_ext_NV_fog_dist"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-// would be nice to be able to do an extension check from the menu
-//		extensionTest "GL_NV_fog_distance"
-
 		rect 82 252 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
-		textscale .23 
+		textscale .23
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07       
+		backcolor 1 1 1 .07
       	forecolor 1 1 1 1
-      	visible 0 
+      	visible 0
 		action { uiScript glCustom }
     		}
 
+//
+// Anti-aliasing
+//
+	itemDef {
+		name graphics
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@SYSTEM_MSAA_LABEL"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "r_ext_multisample"
+		cvarFloatList		{ "@GENERAL_OFF" 0 "@SYSTEM_MSAA_2X" 2 "@SYSTEM_MSAA_4X" 4 }
 
-
-
-
+		rect 82 267 290 12
+      	textalign ITEM_ALIGN_RIGHT
+      	textalignx 142
+      	textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+      	forecolor 1 1 1 1
+      	visible 0
+		action { uiScript glCustom }
+    		}
 
 	itemDef {
+		name graphics
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@SYSTEM_ANISOTROPIC_LABEL"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "r_ext_max_anisotropy"
+		cvarFloatList		{ "@GENERAL_OFF" 0 "@SYSTEM_ANISO_2X" 2 "@SYSTEM_ANISO_4X" 4 "@SYSTEM_ANISO_8X" 8 "@SYSTEM_ANISO_16X" 16 }
+
+		rect 82 282 290 12
+      	textalign ITEM_ALIGN_RIGHT
+      	textalignx 142
+      	textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+      	forecolor 1 1 1 1
+      	visible 0
+		action { uiScript glCustom ; uiScript update "r_ext_max_anisotropy" }
+    		}
+
+itemDef {
 		name graphicsapply
 		text "@SYSTEM_APPLY"
 		textfont UI_FONT_BIG	// RealRTCWCoop
@@ -467,7 +498,7 @@ itemDef {
 		style WINDOW_STYLE_FILLED
 		group grpsystem
 
-		rect 181 280 100 20
+		rect 181 310 100 20
 		textalign 1
 		textalignx 50
 		textaligny 15
@@ -504,987 +535,381 @@ itemDef {
 	visible 1
 	action { play "sound/misc/kcaction.wav" ;
 	hide grpSystem ; hide grpapplysystem ; hide graphicsapply ;
-	show rend2p1 ; hide rend2p2 ; hide rend2p3 ; show rend2nav ; show rend2apply ;
+	show rend2page ; show rend2apply ;
 	setitemcolor ctr_rend2 backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .3 ; setitemcolor ctr_other backcolor .1 .1 .1 .3 }
 	}
 
 
 //
-// Rend2 - rend2p1 (Materials)
+// Rend2
 //
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_NORMALMAP_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_normalMapping"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 27 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        style 1
+        text "@SYSTEM_REND2_MATERIALS"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        rect 82 35 290 12
+        textalign ITEM_ALIGN_CENTER
+        textalignx 145
+        textaligny 10
+        textscale .18
+        forecolor .75 .75 .75 1
+        visible 0
+        decoration
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_SPECULARMAP_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_specularMapping"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 42 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_NORMALMAP_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_normalMapping"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 49 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_DELUXEMAP_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_deluxeMapping"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 57 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_SPECULARMAP_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_specularMapping"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 63 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_PARALLAX_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_parallaxMapping"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 72 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        style 1
+        text "@SYSTEM_REND2_ADVANCED_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        rect 82 77 290 12
+        textalign ITEM_ALIGN_CENTER
+        textalignx 145
+        textaligny 10
+        textscale .18
+        forecolor .75 .75 .75 1
+        visible 0
+        decoration
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_PARALLAXSHADOWS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_parallaxMapShadows"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 87 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_SSAO_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_ssao"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 91 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom ; uiScript update "r_ssao" }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_PBR_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_pbr"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 102 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_SUNSHADOWS_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_sunShadows"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 105 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom ; uiScript update "r_sunShadows" }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_CUBEMAPPING_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_cubeMapping"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 117 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_SHADOWFILTER_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_shadowFilter"
+        cvarFloatList { "@SYSTEM_LEVEL_LOW" 0 "@SYSTEM_LEVEL_MEDIUM" 1 "@SYSTEM_LEVEL_HIGH" 2 }
+        rect 82 119 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_GENNORMALMAPS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_genNormalMaps"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 132 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_SHADOWMAPSIZE_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_shadowMapSize"
+        cvarFloatList { "@SYSTEM_LEVEL_LOW" 512 "@SYSTEM_LEVEL_MEDIUM" 1024 "@SYSTEM_LEVEL_HIGH" 2048 }
+        rect 82 133 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_MERGELIGHTMAPS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_mergeLightmaps"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 147 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_HDR_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_hdr"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 147 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom ; uiScript update "r_hdr" }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_GLOSSTYPE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_glossType" 1 0 3
-		rect 82 162 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_LIGHTBLOOMS_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_bloom"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 161 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom ; uiScript update "r_bloom" }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_CUBEMAPSIZE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_cubemapSize" 128 16 512
-		rect 82 177 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_LIGHTRAYS_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_drawSunRays"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 175 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom ; uiScript update "r_drawSunRays" }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_DELUXESPECULAR_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_deluxeSpecular" 0.1 0 1
-		rect 82 192 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_PARALLAX_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_parallaxMapping"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 189 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_BASENORMALX_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_baseNormalX" 1.0 0 2
-		rect 82 207 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        style 1
+        text "@SYSTEM_REND2_SCREENFX_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        rect 82 203 290 12
+        textalign ITEM_ALIGN_CENTER
+        textalignx 145
+        textaligny 10
+        textscale .18
+        forecolor .75 .75 .75 1
+        visible 0
+        decoration
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_BASENORMALY_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_baseNormalY" 1.0 0 2
-		rect 82 222 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_FXAA_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_fxaa"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 217 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_BASEPARALLAX_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_baseParallax" 0.05 0 0.5
-		rect 82 237 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_VIGNETTE_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_vignette"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 231 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_BASESPECULAR_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_baseSpecular" 0.04 0 1
-		rect 82 252 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_FILMGRAIN_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_filmGrain"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 245 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-	itemDef {
-		name rend2p1
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_BASEGLOSS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_baseGloss" 0.1 0 1
-		rect 82 267 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_CHROMATICABERRATION_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_chromaticAberration"
+        cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+        rect 82 259 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
-//
-// Rend2 - rend2p2 (Shadows & Lighting)
-//
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_SUNSHADOWS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_sunShadows"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 27 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_COLORGRADE_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_colorGradeLUT"
+        cvarStrList { "@SYSTEM_REND2_COLORGRADE_NEUTRAL", "gfx/luts/neutral", "@SYSTEM_REND2_COLORGRADE_BACTA", "gfx/luts/bacta", "@SYSTEM_REND2_COLORGRADE_HOTH", "gfx/luts/hoth", "@SYSTEM_REND2_COLORGRADE_DESERT", "gfx/luts/desert", "@SYSTEM_REND2_COLORGRADE_RAINYFOREST", "gfx/luts/rainyforest", "@SYSTEM_REND2_COLORGRADE_LOWHEALTH", "gfx/luts/lowhealth" }
+        rect 82 273 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom ; uiScript update "r_colorGradeLUT" }
+        }
 
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_SHADOWBLUR_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_shadowBlur"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 42 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_FORCESUN_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_forceSun"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 57 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_DRAWSUNRAYS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_drawSunRays"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 72 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_DLIGHTMODE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_dlightMode" 0 0 2
-		rect 82 87 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_SHADOWFILTER_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_shadowFilter" 1 0 2
-		rect 82 102 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_SHADOWMAPSIZE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_shadowMapSize" 1024 256 4096
-		rect 82 117 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_SHADOWCASCADENEAR_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_shadowCascadeZNear" 8 1 256
-		rect 82 132 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_SHADOWCASCADEFAR_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_shadowCascadeZFar" 1024 128 4096
-		rect 82 147 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_SHADOWCASCADEBIAS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_shadowCascadeZBias" 0 0 200
-		rect 82 162 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_PSHADOWDIST_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_pshadowDist" 128 0 1024
-		rect 82 177 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p2
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_SUNLIGHTMODE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_sunlightMode" 1 0 2
-		rect 82 192 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-//
-// Rend2 - rend2p3 (Post-Processing & Extensions)
-//
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_POSTPROCESS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_postProcess"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 27 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_HDR_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_hdr"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 42 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_FLOATLIGHTMAP_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_floatLightmap"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 57 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_TONEMAP_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_toneMap"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 72 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_AUTOEXPOSURE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_autoExposure"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 87 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_DEPTHPREPASS_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_depthPrepass"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 102 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_SSAO_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_ssao"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 117 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_IGNOREDSTALPHA_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_ignoreDstAlpha"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 132 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_IMAGEUPSAMPLE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_imageUpsample"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 147 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_UPSAMPLEMAXSIZE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_imageUpsampleMaxSize" 1024 256 4096
-		rect 82 162 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_REND2_UPSAMPLETYPE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvarfloat "r_imageUpsampleType" 1 0 2
-		rect 82 177 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_SEAMLESSCUBEMAP_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_arb_seamless_cube_map"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 192 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_VAO_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_arb_vertex_array_object"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 207 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_DSA_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_ext_direct_state_access"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 222 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_FBO_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_ext_framebuffer_object"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 237 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_FBOMULTISAMPLE_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_ext_framebuffer_multisample"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 252 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-	itemDef {
-		name rend2p3
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_REND2_TEXTUREFLOAT_LABEL"
-		textfont UI_FONT_BIG	// RealRTCWCoop
-		cvar "r_ext_texture_float"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 267 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		action { uiScript glCustom }
-		}
-
-itemDef {
-	name rend2nav1
-	group rend2nav
-	text "@SYSTEM_REND2_MATERIALS"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	type ITEM_TYPE_BUTTON
-	textscale .19
-	style WINDOW_STYLE_FILLED
-	rect 2 283 145 14
-	textalign ITEM_ALIGN_CENTER
-	textalignx 72
-	textaligny 11
-	forecolor 1 1 1 1
-	backcolor .1 .1 .1 .1
-	border 1
-	bordercolor .5 .5 .5 .5
-	visible 0
-	action { play "sound/misc/kcaction.wav" ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; show rend2p1 }
-	mouseEnter { setitemcolor rend2nav1 backcolor .3 .5 .2 .25 }
-	mouseExit { setitemcolor rend2nav1 backcolor .1 .1 .1 .1 }
-	}
-
-itemDef {
-	name rend2nav2
-	group rend2nav
-	text "@SYSTEM_REND2_SHADOWS"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	type ITEM_TYPE_BUTTON
-	textscale .19
-	style WINDOW_STYLE_FILLED
-	rect 149 283 145 14
-	textalign ITEM_ALIGN_CENTER
-	textalignx 72
-	textaligny 11
-	forecolor 1 1 1 1
-	backcolor .1 .1 .1 .1
-	border 1
-	bordercolor .5 .5 .5 .5
-	visible 0
-	action { play "sound/misc/kcaction.wav" ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; show rend2p2 }
-	mouseEnter { setitemcolor rend2nav2 backcolor .3 .5 .2 .25 }
-	mouseExit { setitemcolor rend2nav2 backcolor .1 .1 .1 .1 }
-	}
-
-itemDef {
-	name rend2nav3
-	group rend2nav
-	text "@SYSTEM_REND2_POSTFX"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	type ITEM_TYPE_BUTTON
-	textscale .19
-	style WINDOW_STYLE_FILLED
-	rect 296 283 145 14
-	textalign ITEM_ALIGN_CENTER
-	textalignx 72
-	textaligny 11
-	forecolor 1 1 1 1
-	backcolor .1 .1 .1 .1
-	border 1
-	bordercolor .5 .5 .5 .5
-	visible 0
-	action { play "sound/misc/kcaction.wav" ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; show rend2p3 }
-	mouseEnter { setitemcolor rend2nav3 backcolor .3 .5 .2 .25 }
-	mouseExit { setitemcolor rend2nav3 backcolor .1 .1 .1 .1 }
-	}
+    itemDef {
+        name rend2page
+        group grpSystem
+        type ITEM_TYPE_MULTI
+        text "@SYSTEM_REND2_GREYSCALE_LABEL"
+        textfont UI_FONT_BIG	// RealRTCWCoop
+        cvar "r_greyscale"
+        cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 "@SYSTEM_REND2_GREYSCALE_GOTHICSTEIN" 2 }
+        rect 82 287 290 12
+        textalign ITEM_ALIGN_RIGHT
+        textalignx 142
+        textaligny 10
+        textscale .22
+        style WINDOW_STYLE_FILLED
+        backcolor 1 1 1 .07
+        forecolor 1 1 1 1
+        visible 0
+        action { uiScript glCustom }
+        }
 
 itemDef {
 	name rend2apply
@@ -1494,7 +919,7 @@ itemDef {
 	textscale .25
 	style WINDOW_STYLE_FILLED
 	group rend2apply
-	rect 181 302 100 20
+	rect 181 310 100 20
 	textalign 1
 	textalignx 50
 	textaligny 15
@@ -1504,7 +929,7 @@ itemDef {
 	border 1
 	bordercolor .5 .5 .5 .5
 	action { play "sound/misc/kcaction.wav" ;
-	open vid_restart_popmenu ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply }
+	open vid_restart_popmenu ; hide rend2page ; hide rend2apply }
 	mouseEnter { setitemcolor rend2apply backcolor .3 .5 .2 .25 }
 	mouseExit { setitemcolor rend2apply backcolor .1 .1 .1 .1 }
 	}
@@ -1527,7 +952,7 @@ itemDef {
 	backcolor .1 .1 .1 .3
 	visible 1
 	action { play "sound/misc/kcaction.wav" ;
-	hide grpSystem ; hide graphicsapply ; hide rend2p1 ; hide rend2p2 ; hide rend2p3 ; hide rend2nav ; hide rend2apply ; show other ;
+	hide grpSystem ; hide graphicsapply ; hide rend2page ; hide rend2apply ; show other ;
 	setitemcolor ctr_other backcolor .3 0.5 0.2 .5 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .3 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .3 }
 	}
 

@@ -4989,19 +4989,22 @@ static void UI_Update( const char *name ) {
 			trap_Cvar_SetValue( "r_ext_compressed_textures", 0 );
 			trap_Cvar_SetValue( "r_overBrightBits", 0 );
 			trap_Cvar_Set( "cl_renderer", "rend2" );
-			trap_Cvar_SetValue( "r_hdr", 1 );
+			// heavy rend2 passes stay off even on High Quality, opt-in via the Rend2 tab
+			trap_Cvar_SetValue( "r_hdr", 0 );
 			trap_Cvar_SetValue( "r_postProcess", 1 );
-			trap_Cvar_SetValue( "r_toneMap", 1 );
-			trap_Cvar_SetValue( "r_autoExposure", 1 );
+			trap_Cvar_SetValue( "r_toneMap", 0 );
+			trap_Cvar_SetValue( "r_autoExposure", 0 );
+			trap_Cvar_SetValue( "r_depthPrepass", 0 );
+			trap_Cvar_SetValue( "r_ssao", 0 );
 			trap_Cvar_SetValue( "r_normalMapping", 1 );
 			trap_Cvar_SetValue( "r_specularMapping", 1 );
 			trap_Cvar_SetValue( "r_deluxeMapping", 1 );
 			trap_Cvar_SetValue( "r_forceSun", 1 );
-			trap_Cvar_SetValue( "r_drawSunRays", 1 );
-			trap_Cvar_SetValue( "r_sunShadows", 1 );
+			trap_Cvar_SetValue( "r_drawSunRays", 0 );
+			trap_Cvar_SetValue( "r_sunShadows", 0 );
 			trap_Cvar_SetValue( "r_shadowFilter", 1 );
 #ifdef USE_BLOOM
-			trap_Cvar_SetValue( "r_bloom", 1 );
+			trap_Cvar_SetValue( "r_bloom", 0 ); // no-ops without HDR anyway
 #endif
 			break;
 		case 1:     // normal
@@ -5077,6 +5080,55 @@ static void UI_Update( const char *name ) {
 		case 999:   // 999 is reserved for having set default values ("recommended")
 			break;
 		}
+	} else if ( Q_stricmp( name, "r_hdr" ) == 0 ) {
+		// keeps HDR-dependent toggles (tonemap/autoexposure/ssao/bloom) in sync
+		if ( val ) {
+			trap_Cvar_SetValue( "r_toneMap", 1 );
+			trap_Cvar_SetValue( "r_autoExposure", 1 );
+		} else {
+			trap_Cvar_SetValue( "r_toneMap", 0 );
+			trap_Cvar_SetValue( "r_autoExposure", 0 );
+			trap_Cvar_SetValue( "r_ssao", 0 );
+			trap_Cvar_SetValue( "r_bloom", 0 );
+			if ( !trap_Cvar_VariableValue( "r_sunShadows" ) ) {
+				trap_Cvar_SetValue( "r_depthPrepass", 0 );
+			}
+		}
+	} else if ( Q_stricmp( name, "r_ssao" ) == 0 ) {
+		// SSAO requires r_hdr and r_depthPrepass to actually do anything.
+		if ( val ) {
+			trap_Cvar_SetValue( "r_hdr", 1 );
+			trap_Cvar_SetValue( "r_toneMap", 1 );
+			trap_Cvar_SetValue( "r_autoExposure", 1 );
+			trap_Cvar_SetValue( "r_depthPrepass", 1 );
+		} else if ( !trap_Cvar_VariableValue( "r_sunShadows" ) ) {
+			trap_Cvar_SetValue( "r_depthPrepass", 0 );
+		}
+	} else if ( Q_stricmp( name, "r_sunShadows" ) == 0 ) {
+		// Sun shadows require r_depthPrepass; only release it if SSAO doesn't need it too.
+		if ( val ) {
+			trap_Cvar_SetValue( "r_depthPrepass", 1 );
+		} else if ( !trap_Cvar_VariableValue( "r_ssao" ) ) {
+			trap_Cvar_SetValue( "r_depthPrepass", 0 );
+		}
+	} else if ( Q_stricmp( name, "r_bloom" ) == 0 ) {
+		// RB_Bloom no-ops without r_hdr + r_toneMap
+		if ( val ) {
+			trap_Cvar_SetValue( "r_hdr", 1 );
+			trap_Cvar_SetValue( "r_toneMap", 1 );
+			trap_Cvar_SetValue( "r_autoExposure", 1 );
+		}
+	} else if ( Q_stricmp( name, "r_drawSunRays" ) == 0 ) {
+		// bundles sun rays + dlight rays into one menu toggle
+		trap_Cvar_SetValue( "r_dlightRays", val );
+	} else if ( Q_stricmp( name, "r_ext_max_anisotropy" ) == 0 ) {
+		// level alone does nothing without the master extension toggle also on
+		trap_Cvar_SetValue( "r_ext_texture_filter_anisotropic", val > 0 ? 1 : 0 );
+	} else if ( Q_stricmp( name, "r_colorGradeLUT" ) == 0 ) {
+		// path cvar -- flips r_colorGrading based on whether neutral was picked
+		char lutPath[MAX_QPATH];
+		trap_Cvar_VariableStringBuffer( "r_colorGradeLUT", lutPath, sizeof( lutPath ) );
+		trap_Cvar_SetValue( "r_colorGrading", Q_stricmp( lutPath, "gfx/luts/neutral" ) != 0 );
 	} else if ( Q_stricmp( name, "ui_mousePitch" ) == 0 ) {
 		if ( val == 0 ) {
 			trap_Cvar_SetValue( "m_pitch", 0.022f );
