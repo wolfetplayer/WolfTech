@@ -1255,7 +1255,7 @@ void R_Register( void ) {
 	r_mode = ri.Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE | CVAR_LATCH );
 #else
-	r_mode = ri.Cvar_Get( "r_mode", "4", CVAR_ARCHIVE | CVAR_LATCH );
+	r_mode = ri.Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE | CVAR_LATCH );
 #endif
 	r_noborder = ri.Cvar_Get("r_noborder", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1310,7 +1310,7 @@ void R_Register( void ) {
 	r_swapInterval = ri.Cvar_Get( "r_swapInterval", "0",
 					CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_gamma = ri.Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE ); // Varies by system and platform, so just default to 1
+	r_gamma = ri.Cvar_Get( "r_gamma", "1.4", CVAR_ARCHIVE ); // Varies by system and platform, so just default a bit brighter than neutral
 	r_facePlaneCull = ri.Cvar_Get( "r_facePlaneCull", "1", CVAR_ARCHIVE );
 
 	r_railWidth = ri.Cvar_Get( "r_railWidth", "16", CVAR_ARCHIVE );

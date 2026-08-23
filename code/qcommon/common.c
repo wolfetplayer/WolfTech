@@ -2207,6 +2207,8 @@ void Com_SetRecommended( qboolean vidrestart ) {
 			Cvar_Set( "r_lowMemTextureThreshold", "40.0" );
 		}
 	}
+	// the legacy vid/cpu preset .cfg files above hardcode r_mode to a fixed low resolution; queue this after them so desktop mode wins
+	Cbuf_AddText( "seta r_mode \"-2\"\n" );
 	if ( vidrestart ) {
 		Cbuf_AddText( "vid_restart\n" );
 	}

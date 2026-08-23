@@ -1401,7 +1401,7 @@ void R_Register( void ) {
 	ri.Cvar_CheckRange( r_ext_multisample, 0, 4, qtrue );
 	r_overBrightBits = ri.Cvar_Get( "r_overBrightBits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_mode = ri.Cvar_Get( "r_mode", "4", CVAR_ARCHIVE | CVAR_LATCH );
+	r_mode = ri.Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_noborder = ri.Cvar_Get("r_noborder", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1449,7 +1449,7 @@ void R_Register( void ) {
 	r_vignette = ri.Cvar_Get( "r_vignette", "0", CVAR_ARCHIVE );
 	r_vignetteIntensity = ri.Cvar_Get( "r_vignetteIntensity", "0.4", CVAR_ARCHIVE );
 	r_filmGrain = ri.Cvar_Get( "r_filmGrain", "0", CVAR_ARCHIVE );
-	r_filmGrainIntensity = ri.Cvar_Get( "r_filmGrainIntensity", "0.05", CVAR_ARCHIVE );
+	r_filmGrainIntensity = ri.Cvar_Get( "r_filmGrainIntensity", "0.09", CVAR_ARCHIVE );
 	r_chromaticAberration = ri.Cvar_Get( "r_chromaticAberration", "0", CVAR_ARCHIVE );
 	r_chromaticAberrationIntensity = ri.Cvar_Get( "r_chromaticAberrationIntensity", "0.002", CVAR_ARCHIVE );
 
@@ -1488,8 +1488,8 @@ void R_Register( void ) {
 	r_drawSunRays = ri.Cvar_Get( "r_drawSunRays", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_dlightRays = ri.Cvar_Get( "r_dlightRays", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_dlightRaysMinRadius = ri.Cvar_Get( "r_dlightRaysMinRadius", "200", CVAR_ARCHIVE );
-	r_dlightRaysIntensity = ri.Cvar_Get( "r_dlightRaysIntensity", "1.0", CVAR_ARCHIVE );
-	r_dlightRaysMuzzleflashIntensity = ri.Cvar_Get( "r_dlightRaysMuzzleflashIntensity", "1.0", CVAR_ARCHIVE );
+	r_dlightRaysIntensity = ri.Cvar_Get( "r_dlightRaysIntensity", "0.6", CVAR_ARCHIVE );
+	r_dlightRaysMuzzleflashIntensity = ri.Cvar_Get( "r_dlightRaysMuzzleflashIntensity", "0.0", CVAR_ARCHIVE );
 	r_sunlightMode = ri.Cvar_Get( "r_sunlightMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_sunShadows = ri.Cvar_Get( "r_sunShadows", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1539,7 +1539,7 @@ void R_Register( void ) {
 	r_swapInterval = ri.Cvar_Get( "r_swapInterval", "0",
 					CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_gamma = ri.Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE ); // Varies by system and platform, so just default to 1
+	r_gamma = ri.Cvar_Get( "r_gamma", "1.4", CVAR_ARCHIVE ); // Varies by system and platform, so just default a bit brighter than neutral
 	r_facePlaneCull = ri.Cvar_Get( "r_facePlaneCull", "1", CVAR_ARCHIVE );
 
 	r_railWidth = ri.Cvar_Get( "r_railWidth", "16", CVAR_ARCHIVE );
