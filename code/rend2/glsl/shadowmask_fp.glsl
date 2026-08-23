@@ -15,6 +15,7 @@ uniform mat4      u_ShadowMvp4;
 #endif
 
 uniform vec3   u_ViewOrigin;
+uniform vec4   u_PrimaryLightOrigin;
 uniform vec4   u_ViewInfo; // zfar / znear, zfar
 
 varying vec2   var_DepthTex;
@@ -99,7 +100,13 @@ void main()
 	float result;
 
 	float depth = getLinearDepth(u_ScreenDepthMap, var_DepthTex, u_ViewInfo.x);
-	vec4 biasPos = vec4(u_ViewOrigin + var_ViewDir * (depth - 0.5 / u_ViewInfo.x), 1.0);
+	vec3 worldPos = u_ViewOrigin + var_ViewDir * depth;
+
+	vec3 N = normalize(cross(dFdx(worldPos), dFdy(worldPos)));
+	float NdotL = clamp(dot(N, u_PrimaryLightOrigin.xyz), -1.0, 1.0);
+	float slopeScale = clamp(1.0 - NdotL, 0.2, 1.0);
+
+	vec4 biasPos = vec4(worldPos - var_ViewDir * (slopeScale * 0.5 / u_ViewInfo.x), 1.0);
 
 	vec4 shadowpos = u_ShadowMvp * biasPos;
 

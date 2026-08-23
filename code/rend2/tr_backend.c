@@ -1759,6 +1759,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 				}
 
 				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN, backEnd.refdef.vieworg);
+				GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_PRIMARYLIGHTORIGIN, backEnd.refdef.sunDir);
 				{
 					vec3_t viewVector;
 
