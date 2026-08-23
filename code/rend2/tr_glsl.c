@@ -60,6 +60,10 @@ extern const char *fallbackShader_fxaa_vp;
 extern const char *fallbackShader_fxaa_fp;
 extern const char *fallbackShader_bloom_vp;
 extern const char *fallbackShader_bloom_fp;
+extern const char *fallbackShader_bloomdownsample_vp;
+extern const char *fallbackShader_bloomdownsample_fp;
+extern const char *fallbackShader_bloomupsample_vp;
+extern const char *fallbackShader_bloomupsample_fp;
 
 typedef struct uniformInfo_s
 {
@@ -1388,6 +1392,40 @@ void GLSL_InitGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD;
 	extradefines[0] = '\0';
 
+	if (!GLSL_InitGPUShader(&tr.bloomDownsampleShader, "bloomdownsample", attribs, qtrue, extradefines, qtrue, fallbackShader_bloomdownsample_vp, fallbackShader_bloomdownsample_fp))
+	{
+		ri.Error(ERR_FATAL, "Could not load bloomdownsample shader!");
+	}
+
+	GLSL_InitUniforms(&tr.bloomDownsampleShader);
+
+	GLSL_SetUniformInt(&tr.bloomDownsampleShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+
+	GLSL_FinishGPUShader(&tr.bloomDownsampleShader);
+
+	numEtcShaders++;
+
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD;
+	extradefines[0] = '\0';
+
+	if (!GLSL_InitGPUShader(&tr.bloomUpsampleShader, "bloomupsample", attribs, qtrue, extradefines, qtrue, fallbackShader_bloomupsample_vp, fallbackShader_bloomupsample_fp))
+	{
+		ri.Error(ERR_FATAL, "Could not load bloomupsample shader!");
+	}
+
+	GLSL_InitUniforms(&tr.bloomUpsampleShader);
+
+	GLSL_SetUniformInt(&tr.bloomUpsampleShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+
+	GLSL_FinishGPUShader(&tr.bloomUpsampleShader);
+
+	numEtcShaders++;
+
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD;
+	extradefines[0] = '\0';
+
 	if (!GLSL_InitGPUShader(&tr.bokehShader, "bokeh", attribs, qtrue, extradefines, qtrue, fallbackShader_bokeh_vp, fallbackShader_bokeh_fp))
 	{
 		ri.Error(ERR_FATAL, "Could not load bokeh shader!");
@@ -1584,6 +1622,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.pshadowShader);
 	GLSL_DeleteGPUShader(&tr.down4xShader);
 	GLSL_DeleteGPUShader(&tr.bloomShader);
+	GLSL_DeleteGPUShader(&tr.bloomDownsampleShader);
+	GLSL_DeleteGPUShader(&tr.bloomUpsampleShader);
 	GLSL_DeleteGPUShader(&tr.bokehShader);
 	GLSL_DeleteGPUShader(&tr.tonemapShader);
 

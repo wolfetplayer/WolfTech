@@ -1951,6 +1951,10 @@ Q3R2OBJ = \
 Q3R2STRINGOBJ = \
   $(B)/rend2/glsl/bloom_fp.o \
   $(B)/rend2/glsl/bloom_vp.o \
+  $(B)/rend2/glsl/bloomdownsample_fp.o \
+  $(B)/rend2/glsl/bloomdownsample_vp.o \
+  $(B)/rend2/glsl/bloomupsample_fp.o \
+  $(B)/rend2/glsl/bloomupsample_vp.o \
   $(B)/rend2/glsl/bokeh_fp.o \
   $(B)/rend2/glsl/bokeh_vp.o \
   $(B)/rend2/glsl/calclevels4x_fp.o \

@@ -850,7 +850,7 @@ typedef struct {
 	qboolean areamaskModified;      // qtrue if areamask changed since last scene
 
 	double floatTime;                // tr.refdef.time / 1000.0
-	int frameTime;                  // ms elapsed since the last non-skyboxportal scene, for framerate-independent effects (e.g. auto-exposure adaptation speed)
+	int frameTime;                  // ms since last non-skyboxportal scene; for framerate-independent effects like auto-exposure
 
 	float		blurFactor;
 
@@ -1724,6 +1724,7 @@ typedef struct {
 	image_t					*fxaaImage;
 	image_t					*textureScratchImage[2];
 	image_t                 *quarterImage[2];
+	image_t                 *bloomImage[3];       // quarter/eighth/sixteenth mip chain for bloom; quarterFbo[0] is level 0 (half-res)
 	image_t					*calcLevelsImage;
 	image_t					*targetLevelsImage;
 	image_t					*fixedLevelsImage;
@@ -1745,6 +1746,7 @@ typedef struct {
 	FBO_t					*fxaaFbo;
 	FBO_t					*textureScratchFbo[2];
 	FBO_t                   *quarterFbo[2];
+	FBO_t                   *bloomFbo[3];
 	FBO_t					*calcLevelsFbo;
 	FBO_t					*targetLevelsFbo;
 	FBO_t					*sunShadowFbo[4];
@@ -1797,6 +1799,8 @@ typedef struct {
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;
 	shaderProgram_t bloomShader;
+	shaderProgram_t bloomDownsampleShader;
+	shaderProgram_t bloomUpsampleShader;
 	shaderProgram_t bokehShader;
 	shaderProgram_t tonemapShader;
 	shaderProgram_t calclevels4xShader[2];

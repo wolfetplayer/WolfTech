@@ -2865,6 +2865,12 @@ void R_CreateBuiltinImages( void ) {
 			tr.quarterImage[x] = R_CreateImage(va("*quarter%d", x), NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 
+		// r_bloom is CVAR_ARCHIVE not CVAR_LATCH (live-toggleable), so these must exist unconditionally or a live toggle crashes on NULL
+		for (x = 0; x < 3; x++)
+		{
+			tr.bloomImage[x] = R_CreateImage(va("*bloom%d", x), NULL, width / (4 << x), height / (4 << x), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
+		}
+
 		if (r_ssao->integer)
 		{
 			tr.screenSsaoImage = R_CreateImage("*screenSsao", NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);

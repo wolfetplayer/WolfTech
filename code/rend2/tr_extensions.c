@@ -52,7 +52,7 @@ void GLimp_InitExtraExtensions(void)
 #undef GLE
 
 	// GL function loader, based on https://gist.github.com/rygorous/16796a0c876cf8a5f542caddb55bce8a
-	// a driver can advertise an extension string without exposing every function it implies, leaving a dangling NULL that crashes far from the real cause; glExtFuncMissing lets each block below decide whether that's fatal or safe to degrade
+	// a driver can advertise an extension without actually exposing every function it implies; glExtFuncMissing catches that
 #define GLE(ret, name, ...) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); if (!qgl##name) { ri.Printf(PRINT_WARNING, "WARNING: OpenGL function 'gl%s' not found\n", #name); glExtFuncMissing = qtrue; }
 
 	// OpenGL 1.5 - GL_ARB_occlusion_query
@@ -255,7 +255,7 @@ void GLimp_InitExtraExtensions(void)
 
 			if (glExtFuncMissing)
 			{
-				// driver claimed the extension but didn't provide every function; restore the safe fallbacks for all of them rather than risk some staying NULL
+				// partial load failure; restore all the safe fallbacks rather than risk some functions staying NULL
 				ri.Printf(PRINT_WARNING, "WARNING: %s functions incomplete, falling back to non-DSA path\n", extension);
 				glRefConfig.directStateAccess = qfalse;
 #undef GLE

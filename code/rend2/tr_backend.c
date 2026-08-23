@@ -843,7 +843,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
 		if ( drawSurf->sort == oldSort && drawSurf->cubemapIndex == oldCubemapIndex) {
-			// depth pre-pass only pays off for cheap-to-resubmit static world geometry; shadow-caster passes and sunlit main views still need entities so the shadow mask has correct entity depth
+			// depth pre-pass skips entities, except shadow-caster and sunlit views which need them for correct shadow depth
 			if (backEnd.depthFill && shader && (shader->sort != SS_OPAQUE || (entityNum != REFENTITYNUM_WORLD && !(backEnd.viewParms.flags & (VPF_DEPTHSHADOW | VPF_USESUNLIGHT)))))
 				continue;
 
@@ -1865,7 +1865,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 		if (glRefConfig.framebufferObject && r_ssao->integer && !(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL))
 		{
-			// generate SSAO last, once every opaque draw for this view (entities included) has landed in the depth buffer; skip for the skyportal sub-scene, its own postprocess pass would just waste time AO'ing a small distant background layer
+			// generate SSAO last, once opaque draws land in the depth buffer; skip skyportal sub-scenes, pure wasted work there
 			FBO_t *oldFbo = glState.currentFBO;
 			vec4_t viewInfo;
 			vec4_t quadVerts[4];
