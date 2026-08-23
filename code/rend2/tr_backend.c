@@ -1862,9 +1862,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 		// add light flares on lights that aren't obscured
 		RB_RenderFlares();
 
-		if (glRefConfig.framebufferObject && r_ssao->integer)
+		if (glRefConfig.framebufferObject && r_ssao->integer && !(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL))
 		{
-			// generate SSAO last, once every opaque draw for this view (entities included) has landed in the depth buffer
+			// generate SSAO last, once every opaque draw for this view (entities included) has landed in the depth buffer; skip for the skyportal sub-scene, its own postprocess pass would just waste time AO'ing a small distant background layer
 			FBO_t *oldFbo = glState.currentFBO;
 			vec4_t viewInfo;
 			vec4_t quadVerts[4];
@@ -2323,7 +2323,7 @@ const void *RB_PostProcess(const void *data)
 	dstBox[2] = backEnd.viewParms.viewportWidth;
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
-	if (r_ssao->integer)
+	if (r_ssao->integer && !(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL))
 	{
 		srcBox[0] = backEnd.viewParms.viewportX      * tr.screenSsaoImage->width  / (float)glConfig.vidWidth;
 		srcBox[1] = backEnd.viewParms.viewportY      * tr.screenSsaoImage->height / (float)glConfig.vidHeight;
