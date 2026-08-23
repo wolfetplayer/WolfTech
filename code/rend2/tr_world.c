@@ -219,6 +219,7 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 		case SF_FACE:
 		case SF_GRID:
 		case SF_TRIANGLES:
+		case SF_VBO_MESH:
 			((srfBspSurface_t *)surf->data)->dlightBits = dlightBits;
 			break;
 
@@ -308,6 +309,7 @@ static int R_PshadowSurface( msurface_t *surf, int pshadowBits ) {
 		case SF_FACE:
 		case SF_GRID:
 		case SF_TRIANGLES:
+		case SF_VBO_MESH:
 			((srfBspSurface_t *)surf->data)->pshadowBits = pshadowBits;
 			break;
 
@@ -669,13 +671,28 @@ static void R_RecursiveWorldNode( mnode_t *node, uint32_t planeBits, uint32_t dl
 		}
 
 		// add surfaces
-		view = tr.world->marksurfaces + node->firstmarksurface;
+		view = ( tr.world->viewSurfaces ? tr.world->viewSurfaces : tr.world->marksurfaces ) + node->firstmarksurface;
 
 		c = node->nummarksurfaces;
 		while (c--) {
 			// just mark it as visible, so we don't jump out of the cache derefencing the surface
 			surf = *view;
-			if (tr.world->surfacesViewCount[surf] != tr.viewCount)
+			if ( surf < 0 )
+			{
+				int m = -surf - 1;
+				if (tr.world->mergedSurfacesViewCount[m] != tr.viewCount)
+				{
+					tr.world->mergedSurfacesViewCount[m] = tr.viewCount;
+					tr.world->mergedSurfacesDlightBits[m] = dlightBits;
+					tr.world->mergedSurfacesPshadowBits[m] = pshadowBits;
+				}
+				else
+				{
+					tr.world->mergedSurfacesDlightBits[m] |= dlightBits;
+					tr.world->mergedSurfacesPshadowBits[m] |= pshadowBits;
+				}
+			}
+			else if (tr.world->surfacesViewCount[surf] != tr.viewCount)
 			{
 				tr.world->surfacesViewCount[surf] = tr.viewCount;
 				tr.world->surfacesDlightBits[surf] = dlightBits;
@@ -894,6 +911,15 @@ void R_AddWorldSurfaces( void ) {
 
 			R_AddWorldSurface( tr.world->surfaces + i, tr.world->surfacesDlightBits[i], tr.world->surfacesPshadowBits[i] );
 			tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
+		}
+
+		for (i = 0; i < tr.world->numMergedSurfaces; i++)
+		{
+			if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)
+				continue;
+
+			R_AddWorldSurface( tr.world->mergedSurfaces + i, tr.world->mergedSurfacesDlightBits[i], tr.world->mergedSurfacesPshadowBits[i] );
+			tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
 		}
 
 		tr.refdef.dlightMask = ~tr.refdef.dlightMask;

@@ -475,6 +475,36 @@ static qboolean RB_SurfaceVaoCached(int numVerts, srfVert_t *verts, int numIndex
 	return qtrue;
 }
 
+/*
+=============
+RB_SurfaceVaoMesh
+
+Draws a static (and possibly leaf-merged) BSP surface directly from its
+own vao, bypassing the tess CPU-copy path entirely.
+=============
+*/
+static void RB_SurfaceVaoMesh( srfBspSurface_t *srf )
+{
+	if (!srf->vao)
+		return;
+
+	RB_EndSurface();
+	RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
+
+	R_BindVao(srf->vao);
+
+	tess.useInternalVao = qfalse;
+
+	// srf->vao may be a chunk shared with other surfaces, so read must start at this surface's own offset
+	tess.firstIndex = srf->firstIndex;
+	tess.numIndexes = srf->numIndexes;
+	tess.numVertexes = srf->numVerts;
+
+	tess.dlightBits |= srf->dlightBits;
+	tess.pshadowBits |= srf->pshadowBits;
+
+	RB_EndSurface();
+}
 
 /*
 =============
@@ -482,6 +512,12 @@ RB_SurfaceTriangles
 =============
 */
 static void RB_SurfaceTriangles( srfBspSurface_t *srf ) {
+	if (srf->vao)
+	{
+		RB_SurfaceVaoMesh(srf);
+		return;
+	}
+
 	if (RB_SurfaceVaoCached(srf->numVerts, srf->verts, srf->numIndexes,
 		srf->indexes, srf->dlightBits, srf->pshadowBits))
 	{
@@ -920,6 +956,12 @@ RB_SurfaceFace
 ==============
 */
 static void RB_SurfaceFace( srfBspSurface_t *srf ) {
+	if (srf->vao)
+	{
+		RB_SurfaceVaoMesh(srf);
+		return;
+	}
+
 	if (RB_SurfaceVaoCached(srf->numVerts, srf->verts, srf->numIndexes,
 		srf->indexes, srf->dlightBits, srf->pshadowBits))
 	{
@@ -1500,4 +1542,5 @@ void( *rb_surfaceTable[SF_NUM_SURFACE_TYPES] ) ( void * ) = {
 	( void( * ) ( void* ) )RB_SurfaceVaoMdvMesh,	// SF_VAO_MDVMESH
 	( void( * ) ( void* ) )RB_IQMSurfaceAnimVao,	// SF_VAO_IQM
 	( void( * ) ( void* ) )RB_SurfaceFoliage,	// SF_FOLIAGE
+	( void( * ) ( void* ) )RB_SurfaceVaoMesh,	// SF_VBO_MESH
 };

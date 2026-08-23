@@ -1001,6 +1001,7 @@ typedef enum {
 	SF_VAO_MDVMESH,
 	SF_VAO_IQM,
 	SF_FOLIAGE,
+	SF_VBO_MESH,            // merged static BSP leaf surfaces, see R_MergeLeafSurfaces
 
 	SF_NUM_SURFACE_TYPES,
 	SF_MAX = 0xffffffff         // ensures that sizeof( surfaceType_t ) == sizeof( int )
@@ -1075,6 +1076,13 @@ typedef struct srfBspSurface_s
 	// vertexes
 	int             numVerts;
 	srfVert_t      *verts;
+
+	// static world VBO/IBO storage; vao is NULL until built by R_CreateWorldVaos/R_MergeLeafSurfaces, or if ineligible
+	struct vao_s   *vao;
+	int             firstIndex;   // offset into vao's IBO, in indexes (standalone/non-merged path only)
+	int             firstVert;    // offset into vao's VBO, in verts
+	int             minIndex;     // min vertex index referenced (relative to firstVert)
+	int             maxIndex;     // max vertex index referenced (relative to firstVert)
 
 	// SF_GRID specific variables after here
 
@@ -1335,8 +1343,15 @@ typedef struct {
 	int         *surfacesDlightBits;
 	int			*surfacesPshadowBits;
 
+	int         numMergedSurfaces;
+	msurface_t  *mergedSurfaces;
+	int         *mergedSurfacesViewCount;
+	int         *mergedSurfacesDlightBits;
+	int         *mergedSurfacesPshadowBits;
+
 	int nummarksurfaces;
 	int         *marksurfaces;
+	int         *viewSurfaces;      // parallel to marksurfaces; >=0 = surfaces[] index, <0 = -(mergedSurfaces index)-1
 
 	int numfogs;
 	fog_t       *fogs;
@@ -2112,6 +2127,7 @@ extern  cvar_t  *r_glossType;
 extern  cvar_t  *r_dlightMode;
 extern  cvar_t  *r_pshadowDist;
 extern  cvar_t  *r_mergeLightmaps;
+extern  cvar_t  *r_mergeLeafSurfaces;
 extern  cvar_t  *r_imageUpsample;
 extern  cvar_t  *r_imageUpsampleMaxSize;
 extern  cvar_t  *r_imageUpsampleType;

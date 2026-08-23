@@ -2145,6 +2145,428 @@ static void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 			   numFaces, numMeshes, numTriSurfs, numFlares, numFoliage );
 }
 
+#define WORLD_VAO_MAX_VERT_BYTES   (64 * 1024 * 1024)
+#define WORLD_VAO_MAX_INDEX_BYTES  (16 * 1024 * 1024)
+
+typedef struct
+{
+	srfBspSurface_t *surf;
+	shader_t        *shader;
+	int              fogIndex;
+	int              cubemapIndex;
+} worldVaoSurf_t;
+
+static int R_CompareWorldVaoSurf( const void *a, const void *b )
+{
+	const worldVaoSurf_t *sa = (const worldVaoSurf_t *)a;
+	const worldVaoSurf_t *sb = (const worldVaoSurf_t *)b;
+
+	if ( sa->shader->sortedIndex != sb->shader->sortedIndex )
+		return sa->shader->sortedIndex - sb->shader->sortedIndex;
+	if ( sa->fogIndex != sb->fogIndex )
+		return sa->fogIndex - sb->fogIndex;
+	return sa->cubemapIndex - sb->cubemapIndex;
+}
+
+// excludes CPU-deformed/sky/portal shaders and curved patches (LOD retessellates every frame, can't be static)
+static qboolean R_SurfaceIsWorldVaoEligible( msurface_t *surf, srfBspSurface_t **outBspSurf )
+{
+	srfBspSurface_t *bspSurf;
+
+	if ( *surf->data != SF_FACE && *surf->data != SF_TRIANGLES )
+		return qfalse;
+
+	bspSurf = (srfBspSurface_t *)surf->data;
+
+	if ( !bspSurf->numVerts || !bspSurf->numIndexes )
+		return qfalse;
+
+	if ( surf->shader->isSky || surf->shader->isPortal )
+		return qfalse;
+
+	if ( ShaderRequiresCPUDeforms( surf->shader ) )
+		return qfalse;
+
+	*outBspSurf = bspSurf;
+	return qtrue;
+}
+
+/*
+=================
+R_CreateWorldVaos
+
+Packs static, non-deformed, non-sky/portal BSP surfaces (world model and
+brush-entity submodels alike) into load-time GL_STATIC_DRAW vaos, sorted
+by shader/fog/cubemap, so they no longer need a per-frame CPU vertex copy
+through tess. See R_MergeLeafSurfaces for the leaf-local draw-call-reducing
+pass built on top of this.
+=================
+*/
+static void R_CreateWorldVaos( world_t *worldData )
+{
+	int i, j;
+	int numEligible;
+	worldVaoSurf_t *sortSurfs;
+	int chunkStart;
+	int numChunks = 0;
+
+	numEligible = 0;
+	for ( i = 0; i < worldData->numsurfaces; i++ )
+	{
+		srfBspSurface_t *bspSurf;
+		if ( R_SurfaceIsWorldVaoEligible( worldData->surfaces + i, &bspSurf ) )
+			numEligible++;
+	}
+
+	if ( !numEligible )
+		return;
+
+	sortSurfs = ri.Hunk_AllocateTempMemory( numEligible * sizeof( *sortSurfs ) );
+
+	numEligible = 0;
+	for ( i = 0; i < worldData->numsurfaces; i++ )
+	{
+		msurface_t *surf = worldData->surfaces + i;
+		srfBspSurface_t *bspSurf;
+
+		if ( !R_SurfaceIsWorldVaoEligible( surf, &bspSurf ) )
+			continue;
+
+		sortSurfs[numEligible].surf = bspSurf;
+		sortSurfs[numEligible].shader = surf->shader;
+		sortSurfs[numEligible].fogIndex = surf->fogIndex;
+		sortSurfs[numEligible].cubemapIndex = surf->cubemapIndex;
+		numEligible++;
+	}
+
+	qsort( sortSurfs, numEligible, sizeof( *sortSurfs ), R_CompareWorldVaoSurf );
+
+	chunkStart = 0;
+	while ( chunkStart < numEligible )
+	{
+		int chunkEnd, chunkVerts, chunkIndexes;
+		srfVert_t *vertBuf;
+		glIndex_t *indexBuf;
+		char name[MAX_QPATH];
+		vao_t *vao;
+
+		chunkVerts = 0;
+		chunkIndexes = 0;
+		chunkEnd = chunkStart;
+
+		// grow the chunk one same-(shader,fog,cubemap) group at a time, always taking at least one full group
+		while ( chunkEnd < numEligible )
+		{
+			int groupEnd = chunkEnd;
+			int groupVerts = 0, groupIndexes = 0;
+			int vertBytes, indexBytes;
+
+			while ( groupEnd < numEligible &&
+				R_CompareWorldVaoSurf( &sortSurfs[chunkEnd], &sortSurfs[groupEnd] ) == 0 )
+			{
+				groupVerts += sortSurfs[groupEnd].surf->numVerts;
+				groupIndexes += sortSurfs[groupEnd].surf->numIndexes;
+				groupEnd++;
+			}
+
+			vertBytes = ( chunkVerts + groupVerts ) * sizeof( srfVert_t );
+			indexBytes = ( chunkIndexes + groupIndexes ) * sizeof( glIndex_t );
+
+			if ( chunkEnd != chunkStart &&
+				( vertBytes > WORLD_VAO_MAX_VERT_BYTES || indexBytes > WORLD_VAO_MAX_INDEX_BYTES ) )
+				break;
+
+			chunkVerts += groupVerts;
+			chunkIndexes += groupIndexes;
+			chunkEnd = groupEnd;
+		}
+
+		vertBuf = ri.Hunk_AllocateTempMemory( chunkVerts * sizeof( srfVert_t ) );
+		indexBuf = ri.Hunk_AllocateTempMemory( chunkIndexes * sizeof( glIndex_t ) );
+
+		chunkVerts = 0;
+		chunkIndexes = 0;
+		for ( j = chunkStart; j < chunkEnd; j++ )
+		{
+			srfBspSurface_t *bspSurf = sortSurfs[j].surf;
+			int k;
+
+			Com_Memcpy( vertBuf + chunkVerts, bspSurf->verts, bspSurf->numVerts * sizeof( srfVert_t ) );
+
+			for ( k = 0; k < bspSurf->numIndexes; k++ )
+				indexBuf[chunkIndexes + k] = bspSurf->indexes[k] + chunkVerts;
+
+			bspSurf->firstVert = chunkVerts;
+			bspSurf->firstIndex = chunkIndexes;
+			bspSurf->minIndex = 0;
+			bspSurf->maxIndex = bspSurf->numVerts - 1;
+
+			chunkVerts += bspSurf->numVerts;
+			chunkIndexes += bspSurf->numIndexes;
+		}
+
+		Com_sprintf( name, sizeof( name ), "staticWorld%d", numChunks );
+		vao = R_CreateVao2( name, chunkVerts, vertBuf, chunkIndexes, indexBuf );
+
+		for ( j = chunkStart; j < chunkEnd; j++ )
+			sortSurfs[j].surf->vao = vao;
+
+		ri.Hunk_FreeTempMemory( indexBuf );
+		ri.Hunk_FreeTempMemory( vertBuf );
+
+		chunkStart = chunkEnd;
+		numChunks++;
+	}
+
+	ri.Hunk_FreeTempMemory( sortSurfs );
+}
+
+// true if this surface alone qualifies for merging; doesn't compare against another surface
+static qboolean R_SurfaceIsMergeEligible( world_t *worldData, int surfNum )
+{
+	msurface_t *surf;
+	srfBspSurface_t *bspSurf;
+
+	if ( surfNum >= worldData->numWorldSurfaces )
+		return qfalse; // brush-entity submodel surface, never merged
+
+	surf = worldData->surfaces + surfNum;
+
+	if ( *surf->data != SF_FACE && *surf->data != SF_TRIANGLES )
+		return qfalse;
+
+	bspSurf = (srfBspSurface_t *)surf->data;
+	if ( !bspSurf->numVerts || !bspSurf->numIndexes )
+		return qfalse;
+
+	if ( surf->shader->isSky || surf->shader->isPortal )
+		return qfalse;
+
+	if ( ShaderRequiresCPUDeforms( surf->shader ) )
+		return qfalse;
+
+	return qtrue;
+}
+
+/*
+=================
+R_MergeLeafSurfaces
+
+Within each BSP leaf, merges world-model surfaces (never brush-entity
+submodels) sharing (shader, fogIndex, cubemapIndex) into groups of 2+,
+each becoming a single SF_VBO_MESH draw call with its own small static
+vao and combined cull bounds. Must run after R_CreateWorldVaos.
+=================
+*/
+static void R_MergeLeafSurfaces( world_t *worldData )
+{
+	int i, j, k;
+	int numWorldSurfaces;
+	int numMergedSurfaces;
+	msurface_t *mergedSurfaces;
+	int *mergedViewCount, *mergedDlightBits, *mergedPshadowBits;
+	int *viewSurfaces;
+	int *members;
+
+	numWorldSurfaces = worldData->numWorldSurfaces;
+
+	if ( !numWorldSurfaces )
+		return;
+
+	// repurpose surfacesViewCount as scratch: -1 = ungrouped, else the leader index (a leader stamps itself too, so it's never reconsidered)
+	for ( i = 0; i < numWorldSurfaces; i++ )
+		worldData->surfacesViewCount[i] = -1;
+
+	for ( i = 0; i < worldData->numnodes - worldData->numDecisionNodes; i++ )
+	{
+		mnode_t *leaf = worldData->nodes + worldData->numDecisionNodes + i;
+		int *marks = worldData->marksurfaces + leaf->firstmarksurface;
+
+		for ( j = 0; j < leaf->nummarksurfaces; j++ )
+		{
+			int surfA = marks[j];
+			msurface_t *a;
+
+			if ( worldData->surfacesViewCount[surfA] != -1 )
+				continue;
+
+			if ( !R_SurfaceIsMergeEligible( worldData, surfA ) )
+				continue;
+
+			a = worldData->surfaces + surfA;
+			worldData->surfacesViewCount[surfA] = surfA;
+
+			for ( k = j + 1; k < leaf->nummarksurfaces; k++ )
+			{
+				int surfB = marks[k];
+				msurface_t *b;
+
+				if ( worldData->surfacesViewCount[surfB] != -1 )
+					continue;
+
+				if ( !R_SurfaceIsMergeEligible( worldData, surfB ) )
+					continue;
+
+				b = worldData->surfaces + surfB;
+
+				if ( a->shader != b->shader || a->fogIndex != b->fogIndex || a->cubemapIndex != b->cubemapIndex )
+					continue;
+
+				worldData->surfacesViewCount[surfB] = surfA;
+			}
+		}
+	}
+
+	// drop groups with no followers (leader-only, nothing to merge)
+	numMergedSurfaces = 0;
+	for ( i = 0; i < numWorldSurfaces; i++ )
+	{
+		qboolean hasFollower = qfalse;
+
+		if ( worldData->surfacesViewCount[i] != i )
+			continue;
+
+		for ( j = 0; j < numWorldSurfaces; j++ )
+		{
+			if ( j != i && worldData->surfacesViewCount[j] == i )
+			{
+				hasFollower = qtrue;
+				break;
+			}
+		}
+
+		if ( hasFollower )
+			numMergedSurfaces++;
+		else
+			worldData->surfacesViewCount[i] = -1;
+	}
+
+	if ( !numMergedSurfaces )
+	{
+		for ( i = 0; i < numWorldSurfaces; i++ )
+			worldData->surfacesViewCount[i] = -1;
+		return;
+	}
+
+	mergedSurfaces    = ri.Hunk_Alloc( numMergedSurfaces * sizeof( *mergedSurfaces ), h_low );
+	mergedViewCount   = ri.Hunk_Alloc( numMergedSurfaces * sizeof( *mergedViewCount ), h_low );
+	mergedDlightBits  = ri.Hunk_Alloc( numMergedSurfaces * sizeof( *mergedDlightBits ), h_low );
+	mergedPshadowBits = ri.Hunk_Alloc( numMergedSurfaces * sizeof( *mergedPshadowBits ), h_low );
+
+	viewSurfaces = ri.Hunk_Alloc( worldData->nummarksurfaces * sizeof( *viewSurfaces ), h_low );
+	for ( i = 0; i < worldData->nummarksurfaces; i++ )
+		viewSurfaces[i] = worldData->marksurfaces[i];
+
+	members = ri.Hunk_AllocateTempMemory( numWorldSurfaces * sizeof( *members ) );
+
+	numMergedSurfaces = 0;
+	for ( i = 0; i < numWorldSurfaces; i++ )
+	{
+		msurface_t *leader;
+		srfBspSurface_t *merged;
+		srfVert_t *vertBuf;
+		glIndex_t *indexBuf;
+		vec3_t mins, maxs;
+		int totalVerts, totalIndexes;
+		int numMembers;
+		char name[MAX_QPATH];
+
+		if ( worldData->surfacesViewCount[i] != i )
+			continue;
+
+		leader = worldData->surfaces + i;
+
+		numMembers = 0;
+		members[numMembers++] = i;
+		for ( j = 0; j < numWorldSurfaces; j++ )
+			if ( j != i && worldData->surfacesViewCount[j] == i )
+				members[numMembers++] = j;
+
+		totalVerts = 0;
+		totalIndexes = 0;
+		ClearBounds( mins, maxs );
+		for ( j = 0; j < numMembers; j++ )
+		{
+			msurface_t *ms = worldData->surfaces + members[j];
+			srfBspSurface_t *bs = (srfBspSurface_t *)ms->data;
+
+			totalVerts += bs->numVerts;
+			totalIndexes += bs->numIndexes;
+
+			AddPointToBounds( ms->cullinfo.bounds[0], mins, maxs );
+			AddPointToBounds( ms->cullinfo.bounds[1], mins, maxs );
+		}
+
+		vertBuf = ri.Hunk_AllocateTempMemory( totalVerts * sizeof( srfVert_t ) );
+		indexBuf = ri.Hunk_AllocateTempMemory( totalIndexes * sizeof( glIndex_t ) );
+
+		totalVerts = 0;
+		totalIndexes = 0;
+		for ( j = 0; j < numMembers; j++ )
+		{
+			msurface_t *ms = worldData->surfaces + members[j];
+			srfBspSurface_t *bs = (srfBspSurface_t *)ms->data;
+			int k2;
+
+			Com_Memcpy( vertBuf + totalVerts, bs->verts, bs->numVerts * sizeof( srfVert_t ) );
+
+			for ( k2 = 0; k2 < bs->numIndexes; k2++ )
+				indexBuf[totalIndexes + k2] = bs->indexes[k2] + totalVerts;
+
+			totalVerts += bs->numVerts;
+			totalIndexes += bs->numIndexes;
+		}
+
+		Com_sprintf( name, sizeof( name ), "mergedLeaf%d", numMergedSurfaces );
+
+		merged = ri.Hunk_Alloc( sizeof( *merged ), h_low );
+		merged->surfaceType = SF_VBO_MESH;
+		merged->numVerts = totalVerts;
+		merged->numIndexes = totalIndexes;
+		merged->firstVert = 0;
+		merged->firstIndex = 0;
+		merged->minIndex = 0;
+		merged->maxIndex = totalVerts - 1;
+		merged->vao = R_CreateVao2( name, totalVerts, vertBuf, totalIndexes, indexBuf );
+
+		ri.Hunk_FreeTempMemory( indexBuf );
+		ri.Hunk_FreeTempMemory( vertBuf );
+
+		mergedSurfaces[numMergedSurfaces].shader = leader->shader;
+		mergedSurfaces[numMergedSurfaces].fogIndex = leader->fogIndex;
+		mergedSurfaces[numMergedSurfaces].cubemapIndex = leader->cubemapIndex;
+		mergedSurfaces[numMergedSurfaces].cullinfo.type = CULLINFO_BOX;
+		VectorCopy( mins, mergedSurfaces[numMergedSurfaces].cullinfo.bounds[0] );
+		VectorCopy( maxs, mergedSurfaces[numMergedSurfaces].cullinfo.bounds[1] );
+		mergedSurfaces[numMergedSurfaces].data = (surfaceType_t *)merged;
+
+		for ( j = 0; j < numMembers; j++ )
+		{
+			int m;
+			for ( m = 0; m < worldData->nummarksurfaces; m++ )
+				if ( worldData->marksurfaces[m] == members[j] )
+					viewSurfaces[m] = -(numMergedSurfaces + 1);
+		}
+
+		numMergedSurfaces++;
+	}
+
+	ri.Hunk_FreeTempMemory( members );
+
+	worldData->numMergedSurfaces = numMergedSurfaces;
+	worldData->mergedSurfaces = mergedSurfaces;
+	worldData->mergedSurfacesViewCount = mergedViewCount;
+	worldData->mergedSurfacesDlightBits = mergedDlightBits;
+	worldData->mergedSurfacesPshadowBits = mergedPshadowBits;
+	worldData->viewSurfaces = viewSurfaces;
+
+	for ( i = 0; i < numWorldSurfaces; i++ )
+		worldData->surfacesViewCount[i] = -1;
+
+	ri.Printf( PRINT_ALL, "...merged %d world surfaces into %d leaf batches\n",
+			   numWorldSurfaces, numMergedSurfaces );
+}
+
 /*
 =================
 R_LoadSubmodels
@@ -3259,6 +3681,12 @@ void RE_LoadWorldMap( const char *name ) {
 	R_LoadNodesAndLeafs( &header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS] );
 	ri.Cmd_ExecuteText( EXEC_NOW, "updatescreen\n" );
 	R_LoadSubmodels( &header->lumps[LUMP_MODELS] );
+	ri.Cmd_ExecuteText( EXEC_NOW, "updatescreen\n" );
+	if ( r_mergeLeafSurfaces->integer )
+	{
+		R_CreateWorldVaos( &s_worldData );
+		R_MergeLeafSurfaces( &s_worldData );
+	}
 	ri.Cmd_ExecuteText( EXEC_NOW, "updatescreen\n" );
 	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
 	ri.Cmd_ExecuteText( EXEC_NOW, "updatescreen\n" );
