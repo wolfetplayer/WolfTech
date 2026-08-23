@@ -95,7 +95,7 @@ void R_RemapShader( const char *shaderName, const char *newShaderName, const cha
 
 	sh = R_FindShaderByName( shaderName );
 	if ( sh == NULL || sh == tr.defaultShader ) {
-		h = RE_RegisterShaderLightMap( shaderName, 0 );
+		h = RE_RegisterShaderLightMap( shaderName, LIGHTMAP_NONE );
 		sh = R_GetShaderByHandle( h );
 	}
 	if ( sh == NULL || sh == tr.defaultShader ) {
@@ -105,7 +105,7 @@ void R_RemapShader( const char *shaderName, const char *newShaderName, const cha
 
 	sh2 = R_FindShaderByName( newShaderName );
 	if ( sh2 == NULL || sh2 == tr.defaultShader ) {
-		h = RE_RegisterShaderLightMap( newShaderName, 0 );
+		h = RE_RegisterShaderLightMap( newShaderName, LIGHTMAP_NONE );
 		sh2 = R_GetShaderByHandle( h );
 	}
 
