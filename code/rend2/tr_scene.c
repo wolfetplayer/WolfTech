@@ -423,6 +423,16 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.time = fd->time;
 	tr.refdef.rdflags = fd->rdflags;
 
+	{
+		// skyboxportal sub-scenes share fd->time with their triggering scene, so skip advancing lastSceneTime for them or the main scene's frameTime reads back as ~0
+		static int lastSceneTime = 0;
+		tr.refdef.frameTime = lastSceneTime ? (fd->time - lastSceneTime) : 0;
+		if (tr.refdef.frameTime < 0)
+			tr.refdef.frameTime = 0;
+		if ( !( fd->rdflags & RDF_SKYBOXPORTAL ) )
+			lastSceneTime = fd->time;
+	}
+
 	if ( fd->rdflags & RDF_SKYBOXPORTAL ) {
 		skyboxportal = 1;
 	}

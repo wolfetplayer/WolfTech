@@ -68,13 +68,15 @@ void RB_ToneMap(FBO_t *hdrFbo, ivec4_t hdrBox, FBO_t *ldrFbo, ivec4_t ldrBox, in
 		// blend with old log luminance for gradual change
 		VectorSet4(srcBox, 0, 0, 0, 0);
 
-		color[0] = 
+		color[0] =
 		color[1] =
 		color[2] = 1.0f;
+		// scale blend weight by elapsed frame time so exposure adaptation speed is framerate-independent
 		if (glRefConfig.textureFloat)
-			color[3] = 0.03f;
+			color[3] = 0.001f * backEnd.refdef.frameTime;
 		else
-			color[3] = 0.1f;
+			color[3] = 0.003f * backEnd.refdef.frameTime;
+		color[3] = CLAMP(color[3], 0.0f, 1.0f);
 
 		FBO_Blit(tr.targetLevelsFbo, srcBox, NULL, tr.calcLevelsFbo, NULL,  NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	}

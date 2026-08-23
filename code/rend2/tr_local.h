@@ -850,6 +850,7 @@ typedef struct {
 	qboolean areamaskModified;      // qtrue if areamask changed since last scene
 
 	double floatTime;                // tr.refdef.time / 1000.0
+	int frameTime;                  // ms elapsed since the last non-skyboxportal scene, for framerate-independent effects (e.g. auto-exposure adaptation speed)
 
 	float		blurFactor;
 
