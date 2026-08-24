@@ -1036,6 +1036,10 @@ void FS_FCloseFile( fileHandle_t f ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		Com_Error( ERR_DROP, "FS_FCloseFile: out of range" );
+	}
+
 	if ( fsh[f].zipFile == qtrue ) {
 		unzCloseCurrentFile( fsh[f].handleFiles.file.z );
 		if ( fsh[f].handleFiles.unique ) {
@@ -1939,6 +1943,10 @@ int FS_Read( void *buffer, int len, fileHandle_t f ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
+	if ( f < 0 || f >= MAX_FILE_HANDLES ) {
+		Com_Error( ERR_DROP, "FS_Read: out of range" );
+	}
+
 	if ( !f ) {
 		return 0;
 	}
@@ -2054,6 +2062,10 @@ int FS_Seek( fileHandle_t f, long offset, int origin ) {
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 		return -1;
+	}
+
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		Com_Error( ERR_DROP, "FS_Seek: out of range" );
 	}
 
 	if ( fsh[f].zipFile == qtrue ) {
@@ -4812,6 +4824,11 @@ int     FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) 
 
 int     FS_FTell( fileHandle_t f ) {
 	int pos;
+
+	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
+		Com_Error( ERR_DROP, "FS_FTell: out of range" );
+	}
+
 	if ( fsh[f].zipFile == qtrue ) {
 		pos = unztell( fsh[f].handleFiles.file.z );
 	} else {
