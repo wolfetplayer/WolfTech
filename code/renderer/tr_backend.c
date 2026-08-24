@@ -381,21 +381,32 @@ static void RB_Hyperspace( void ) {
 
 
 static void SetViewportAndScissor( void ) {
+	int x, y, w, h;
+	const FBO_t *target;
+
 	qglMatrixMode( GL_PROJECTION );
 	qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
 	qglMatrixMode( GL_MODELVIEW );
 
+	x = backEnd.viewParms.viewportX;
+	y = backEnd.viewParms.viewportY;
+	w = backEnd.viewParms.viewportWidth;
+	h = backEnd.viewParms.viewportHeight;
+
+	target = FBO_GetCurrent();
+	if ( target && glConfig.vidWidth > 0 && glConfig.vidHeight > 0 &&
+		 ( target->width != glConfig.vidWidth || target->height != glConfig.vidHeight ) ) {
+		x = x * target->width / glConfig.vidWidth;
+		y = y * target->height / glConfig.vidHeight;
+		w = w * target->width / glConfig.vidWidth;
+		h = h * target->height / glConfig.vidHeight;
+	}
+
 	// set the window clipping
-	qglViewport(    backEnd.viewParms.viewportX,
-					backEnd.viewParms.viewportY,
-					backEnd.viewParms.viewportWidth,
-					backEnd.viewParms.viewportHeight );
+	qglViewport( x, y, w, h );
 
 // TODO: insert handling for widescreen?  (when looking through camera)
-	qglScissor(     backEnd.viewParms.viewportX,
-					backEnd.viewParms.viewportY,
-					backEnd.viewParms.viewportWidth,
-					backEnd.viewParms.viewportHeight );
+	qglScissor( x, y, w, h );
 }
 
 /*
@@ -1085,11 +1096,22 @@ RB_SetGL2D
 ================
 */
 void    RB_SetGL2D( void ) {
+	int width, height;
+	const FBO_t *target;
+
 	backEnd.projection2D = qtrue;
 
-	// set 2D virtual screen size
-	qglViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
-	qglScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
+	target = FBO_GetCurrent();
+	if ( target ) {
+		width = target->width;
+		height = target->height;
+	} else {
+		width = glConfig.vidWidth;
+		height = glConfig.vidHeight;
+	}
+
+	qglViewport( 0, 0, width, height );
+	qglScissor( 0, 0, width, height );
 	qglMatrixMode( GL_PROJECTION );
 	qglLoadIdentity();
 	qglOrtho( 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1 );

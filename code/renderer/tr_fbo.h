@@ -48,6 +48,7 @@ void      FBO_CreateColorBuffer( FBO_t *fbo, GLenum format, int samples );
 void      FBO_CreateDepthBuffer( FBO_t *fbo, GLenum format, int samples );
 qboolean  R_CheckFBO( const FBO_t *fbo );
 void      FBO_Bind( FBO_t *fbo );    // NULL binds the real backbuffer
+FBO_t    *FBO_GetCurrent( void );    // whatever FBO_Bind() last bound, NULL if the real backbuffer
 void      FBO_FastBlit( const FBO_t *src, const FBO_t *dst, GLbitfield buffers, GLenum filter );
 
 void      FBO_Init( void );

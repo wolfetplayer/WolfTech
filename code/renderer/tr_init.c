@@ -137,6 +137,7 @@ cvar_t  *r_texturebits;
 cvar_t  *r_ext_multisample;
 cvar_t  *r_fbo;
 cvar_t  *r_hdr;
+cvar_t  *r_ext_supersample;
 cvar_t  *r_bloom;
 cvar_t  *r_bloom_threshold;
 cvar_t  *r_bloom_intensity;
@@ -1260,6 +1261,8 @@ void R_Register( void ) {
 	ri.Cvar_CheckRange( r_fbo, 0, 1, qtrue );
 	r_hdr = ri.Cvar_Get( "r_hdr", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_hdr, 0, 1, qtrue );
+	r_ext_supersample = ri.Cvar_Get( "r_ext_supersample", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_ext_supersample, 0, 1, qtrue );
 
 	// shared by the \r_fbo 1 ARB-program bloom and the legacy \r_fbo 0 fallback
 	r_bloom = ri.Cvar_Get( "r_bloom", "0", CVAR_ARCHIVE );

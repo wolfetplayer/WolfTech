@@ -227,6 +227,17 @@ void FBO_Bind( FBO_t *fbo )
 
 /*
 ==============
+FBO_GetCurrent
+==============
+*/
+FBO_t *FBO_GetCurrent( void )
+{
+	return currentFbo;
+}
+
+
+/*
+==============
 FBO_FastBlit
 ==============
 */
@@ -314,6 +325,11 @@ void FBO_Init( void )
 
 	width = glConfig.vidWidth;
 	height = glConfig.vidHeight;
+
+	if ( r_ext_supersample->integer ) {
+		width *= 2;
+		height *= 2;
+	}
 
 	colorFormat = ( r_hdr->integer && glRefConfig.textureFloat ) ? GL_RGBA16F_ARB : GL_RGBA8;
 
