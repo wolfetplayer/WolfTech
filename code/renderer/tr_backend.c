@@ -1713,7 +1713,16 @@ const void  *RB_SwapBuffers( const void *data ) {
 
 	GLimp_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
 
+	if ( fboEnabled ) {
+		// blits tr.mainFbo to the real backbuffer, applying gamma correction -- see tr_arb.c
+		FBO_PostProcess();
+	}
+
 	GLimp_EndFrame();
+
+	if ( fboEnabled ) {
+		FBO_Bind( tr.mainFbo );
+	}
 
 	backEnd.projection2D = qfalse;
 
@@ -1775,21 +1784,33 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_STRETCH_PIC:
 #ifdef USE_BLOOM
 			//Check if it's time for BLOOM!
-			R_BloomScreen();
+			if ( fboEnabled ) {
+				FBO_Bloom();
+			} else {
+				R_BloomScreen();
+			}
 #endif
 			data = RB_StretchPic( data );
 			break;
 		case RC_ROTATED_PIC:
 #ifdef USE_BLOOM
 			//Check if it's time for BLOOM!
-			R_BloomScreen();
+			if ( fboEnabled ) {
+				FBO_Bloom();
+			} else {
+				R_BloomScreen();
+			}
 #endif
 			data = RB_RotatedPic( data );
 			break;
 		case RC_STRETCH_PIC_GRADIENT:
 #ifdef USE_BLOOM
 			//Check if it's time for BLOOM!
-			R_BloomScreen();
+			if ( fboEnabled ) {
+				FBO_Bloom();
+			} else {
+				R_BloomScreen();
+			}
 #endif
 			data = RB_StretchPicGradient( data );
 			break;
@@ -1802,7 +1823,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_SWAP_BUFFERS:
 #ifdef USE_BLOOM
 			//Check if it's time for BLOOM!
-			R_BloomScreen();
+			if ( fboEnabled ) {
+				FBO_Bloom();
+			} else {
+				R_BloomScreen();
+			}
 #endif
 			data = RB_SwapBuffers( data );
 			break;
