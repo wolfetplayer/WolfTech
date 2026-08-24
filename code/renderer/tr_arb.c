@@ -279,6 +279,8 @@ matching this renderer's pre-\r_fbo behavior) if the ARB program didn't compile.
 */
 void FBO_PostProcess( void )
 {
+	FBO_ResolveMSAA();
+
 	if ( !arbProgramsReady ) {
 		FBO_FastBlit( tr.mainFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST );
 		return;
@@ -340,6 +342,8 @@ void FBO_Bloom( void )
 	if ( !tr.bloomFbo[0] || !tr.bloomFbo[1] ) {
 		return;
 	}
+
+	FBO_ResolveMSAA();
 
 	// 1. threshold-extract bright pixels from the main scene into bloomFbo[0]
 	FBO_Bind( tr.bloomFbo[0] );

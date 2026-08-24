@@ -32,7 +32,8 @@ typedef struct FBO_s {
 
 	GLuint   frameBuffer;
 
-	struct image_s *colorImage;    // texture attachment
+	struct image_s *colorImage;    // texture color attachment, for FBOs that need to be sampled
+	GLuint   colorBuffer;          // renderbuffer color attachment, used instead for multisample FBOs
 	GLuint   depthBuffer;          // combined depth/stencil renderbuffer, 0 if none
 
 	int      width;
@@ -43,7 +44,8 @@ extern qboolean fboEnabled;    // r_fbo->integer && glRefConfig.framebufferObjec
 
 FBO_t    *FBO_Create( const char *name, int width, int height );
 void      FBO_AttachImage( FBO_t *fbo, struct image_s *image, GLenum attachment );
-void      FBO_CreateDepthBuffer( FBO_t *fbo, GLenum format );
+void      FBO_CreateColorBuffer( FBO_t *fbo, GLenum format, int samples );
+void      FBO_CreateDepthBuffer( FBO_t *fbo, GLenum format, int samples );
 qboolean  R_CheckFBO( const FBO_t *fbo );
 void      FBO_Bind( FBO_t *fbo );    // NULL binds the real backbuffer
 void      FBO_FastBlit( const FBO_t *src, const FBO_t *dst, GLbitfield buffers, GLenum filter );

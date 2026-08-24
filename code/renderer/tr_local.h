@@ -1105,6 +1105,7 @@ typedef struct {
 	qboolean projection2D;      // if qtrue, drawstretchpic doesn't need to change modes
 	byte color2D[4];
 	qboolean vertexes2D;        // shader needs to be finished
+	qboolean doneMSAAResolve;   // resolved tr.msaaFbo into tr.mainFbo already this frame, see tr_fbo.c
 #ifdef USE_BLOOM
 	qboolean	doneBloom;		// done bloom this frame
 	qboolean	doneSurfaces;   // done any 3d surfaces already
@@ -1145,6 +1146,7 @@ typedef struct {
 	image_t                 *identityLightImage;    // full of tr.identityLightByte
 
 	FBO_t                   *mainFbo;               // offscreen render target when \r_fbo 1, see tr_fbo.c
+	FBO_t                   *msaaFbo;               // multisampled render target for \r_ext_multisample, resolved into mainFbo, see tr_fbo.c
 	FBO_t                   *bloomFbo[2];           // half-res ping-pong scratch for \r_bloom, see tr_arb.c
 
 	shader_t                *defaultShader;
@@ -1254,6 +1256,9 @@ void     ARB_InitPrograms( void );
 void     ARB_ShutdownPrograms( void );
 void     FBO_PostProcess( void );
 void     FBO_Bloom( void );
+
+FBO_t    *FBO_RenderTarget( void );    // tr.msaaFbo if active, else tr.mainFbo -- what the 3D scene renders into
+void      FBO_ResolveMSAA( void );     // resolves tr.msaaFbo into tr.mainFbo's texture, once per frame
 
 // These two variables should live inside glConfig but can't because of compatibility issues to the original ID vms.
 // If you release a stand-alone game and your mod uses tr_types.h from this build you can safely move them to

@@ -112,6 +112,33 @@ void FBO_AttachImage( FBO_t *fbo, struct image_s *image, GLenum attachment )
 
 /*
 ==============
+FBO_CreateColorBuffer
+
+Attaches a renderbuffer as the color target, used instead of FBO_AttachImage's
+texture attachment for multisample FBOs (a plain GL_ARB_framebuffer_object
+multisample renderbuffer can't be sampled directly -- see FBO_ResolveMSAA).
+==============
+*/
+void FBO_CreateColorBuffer( FBO_t *fbo, GLenum format, int samples )
+{
+	if ( !fbo->colorBuffer ) {
+		qglGenRenderbuffers( 1, &fbo->colorBuffer );
+	}
+
+	qglBindRenderbuffer( GL_RENDERBUFFER, fbo->colorBuffer );
+	if ( samples >= 2 ) {
+		qglRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, format, fbo->width, fbo->height );
+	} else {
+		qglRenderbufferStorage( GL_RENDERBUFFER, format, fbo->width, fbo->height );
+	}
+
+	qglBindFramebuffer( GL_FRAMEBUFFER, fbo->frameBuffer );
+	qglFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fbo->colorBuffer );
+}
+
+
+/*
+==============
 FBO_CreateDepthBuffer
 
 Attaches a renderbuffer as the depth target. GL_DEPTH24_STENCIL8 (or
@@ -119,14 +146,18 @@ GL_DEPTH_STENCIL) additionally binds it as the stencil target, since
 r_shadows/r_measureOverdraw need a working stencil buffer under \r_fbo 1 too.
 ==============
 */
-void FBO_CreateDepthBuffer( FBO_t *fbo, GLenum format )
+void FBO_CreateDepthBuffer( FBO_t *fbo, GLenum format, int samples )
 {
 	if ( !fbo->depthBuffer ) {
 		qglGenRenderbuffers( 1, &fbo->depthBuffer );
 	}
 
 	qglBindRenderbuffer( GL_RENDERBUFFER, fbo->depthBuffer );
-	qglRenderbufferStorage( GL_RENDERBUFFER, format, fbo->width, fbo->height );
+	if ( samples >= 2 ) {
+		qglRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, format, fbo->width, fbo->height );
+	} else {
+		qglRenderbufferStorage( GL_RENDERBUFFER, format, fbo->width, fbo->height );
+	}
 
 	qglBindFramebuffer( GL_FRAMEBUFFER, fbo->frameBuffer );
 	qglFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, fbo->depthBuffer );
@@ -236,6 +267,10 @@ static void FBO_Delete( FBO_t *fbo )
 		qglDeleteTextures( 1, &( (image_t *)fbo->colorImage )->texnum );
 		fbo->colorImage = NULL;
 	}
+	if ( fbo->colorBuffer ) {
+		qglDeleteRenderbuffers( 1, &fbo->colorBuffer );
+		fbo->colorBuffer = 0;
+	}
 	if ( fbo->depthBuffer ) {
 		qglDeleteRenderbuffers( 1, &fbo->depthBuffer );
 		fbo->depthBuffer = 0;
@@ -256,6 +291,8 @@ void FBO_Init( void )
 {
 	int width, height;
 	int bloomWidth, bloomHeight;
+	int samples;
+	GLint maxSamples;
 	image_t *colorImage;
 	int i;
 
@@ -263,6 +300,7 @@ void FBO_Init( void )
 
 	fboEnabled = qfalse;
 	tr.mainFbo = NULL;
+	tr.msaaFbo = NULL;
 	currentFbo = NULL;
 
 	if ( !glRefConfig.framebufferObject ) {
@@ -280,13 +318,37 @@ void FBO_Init( void )
 
 	tr.mainFbo = FBO_Create( "_main", width, height );
 	FBO_AttachImage( tr.mainFbo, colorImage, GL_COLOR_ATTACHMENT0 );
-	FBO_CreateDepthBuffer( tr.mainFbo, GL_DEPTH24_STENCIL8 );
+	FBO_CreateDepthBuffer( tr.mainFbo, GL_DEPTH24_STENCIL8, 0 );
 
 	if ( !R_CheckFBO( tr.mainFbo ) ) {
 		ri.Printf( PRINT_WARNING, "WARNING: main FBO incomplete, disabling \\r_fbo\n" );
 		FBO_Delete( tr.mainFbo );
 		tr.mainFbo = NULL;
 		return;
+	}
+
+	// multisample render target the 3D scene actually draws into (FBO_RenderTarget()), resolved
+	// into tr.mainFbo's texture once per frame before gamma/bloom sample it (FBO_ResolveMSAA)
+	samples = 0;
+	if ( glRefConfig.framebufferMultisample && r_ext_multisample->integer >= 2 ) {
+		maxSamples = 0;
+		qglGetIntegerv( GL_MAX_SAMPLES, &maxSamples );
+		samples = r_ext_multisample->integer;
+		if ( samples > maxSamples ) {
+			samples = maxSamples;
+		}
+	}
+
+	if ( samples >= 2 ) {
+		tr.msaaFbo = FBO_Create( "_msaa", width, height );
+		FBO_CreateColorBuffer( tr.msaaFbo, GL_RGBA8, samples );
+		FBO_CreateDepthBuffer( tr.msaaFbo, GL_DEPTH24_STENCIL8, samples );
+
+		if ( !R_CheckFBO( tr.msaaFbo ) ) {
+			ri.Printf( PRINT_WARNING, "WARNING: multisample FBO incomplete, disabling \\r_ext_multisample\n" );
+			FBO_Delete( tr.msaaFbo );
+			tr.msaaFbo = NULL;
+		}
 	}
 
 	// half-res ping-pong scratch for \r_bloom, always created alongside so it can toggle live
@@ -318,7 +380,42 @@ void FBO_Init( void )
 
 	ARB_InitPrograms();
 
-	FBO_Bind( tr.mainFbo );
+	FBO_Bind( FBO_RenderTarget() );
+}
+
+
+/*
+==============
+FBO_RenderTarget
+
+Returns the FBO the 3D scene should actually render into: tr.msaaFbo when
+multisampling is active, otherwise tr.mainFbo directly.
+==============
+*/
+FBO_t *FBO_RenderTarget( void )
+{
+	return tr.msaaFbo ? tr.msaaFbo : tr.mainFbo;
+}
+
+
+/*
+==============
+FBO_ResolveMSAA
+
+Resolves tr.msaaFbo's multisampled color into tr.mainFbo's texture, once per
+frame -- a multisample renderbuffer can't be sampled directly, so this must
+run before anything (gamma correction, bloom) reads tr.mainFbo->colorImage.
+No-op when multisampling isn't active.
+==============
+*/
+void FBO_ResolveMSAA( void )
+{
+	if ( !tr.msaaFbo || backEnd.doneMSAAResolve ) {
+		return;
+	}
+	backEnd.doneMSAAResolve = qtrue;
+
+	FBO_FastBlit( tr.msaaFbo, tr.mainFbo, GL_COLOR_BUFFER_BIT, GL_NEAREST );
 }
 
 
@@ -342,6 +439,9 @@ void FBO_Shutdown( void )
 	FBO_Delete( tr.mainFbo );
 	tr.mainFbo = NULL;
 
+	FBO_Delete( tr.msaaFbo );
+	tr.msaaFbo = NULL;
+
 	FBO_Delete( tr.bloomFbo[0] );
 	FBO_Delete( tr.bloomFbo[1] );
 	tr.bloomFbo[0] = tr.bloomFbo[1] = NULL;
@@ -362,14 +462,19 @@ void R_FBOList_f( void )
 		return;
 	}
 
+	int count = 1;
+
 	ri.Printf( PRINT_ALL, "             size       name\n" );
 	ri.Printf( PRINT_ALL, "----------------------------------------------------------\n" );
 	ri.Printf( PRINT_ALL, "  %4i %4i  %s\n", tr.mainFbo->width, tr.mainFbo->height, tr.mainFbo->name );
+	if ( tr.msaaFbo ) {
+		ri.Printf( PRINT_ALL, "  %4i %4i  %s\n", tr.msaaFbo->width, tr.msaaFbo->height, tr.msaaFbo->name );
+		count++;
+	}
 	if ( tr.bloomFbo[0] ) {
 		ri.Printf( PRINT_ALL, "  %4i %4i  %s\n", tr.bloomFbo[0]->width, tr.bloomFbo[0]->height, tr.bloomFbo[0]->name );
 		ri.Printf( PRINT_ALL, "  %4i %4i  %s\n", tr.bloomFbo[1]->width, tr.bloomFbo[1]->height, tr.bloomFbo[1]->name );
-		ri.Printf( PRINT_ALL, " 3 FBOs\n" );
-	} else {
-		ri.Printf( PRINT_ALL, " 1 FBO\n" );
+		count += 2;
 	}
+	ri.Printf( PRINT_ALL, " %i FBO%s\n", count, count == 1 ? "" : "s" );
 }

@@ -674,7 +674,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 		depthBits = r_depthbits->value;
 
 	stencilBits = r_stencilbits->value;
-	samples = r_ext_multisample->value;
+	samples = r_fbo->integer ? 0 : r_ext_multisample->value;    // \r_fbo 1 multisamples its own FBO instead
 
 	for (i = 0; i < 16; i++)
 	{

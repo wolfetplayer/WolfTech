@@ -1721,10 +1721,11 @@ const void  *RB_SwapBuffers( const void *data ) {
 	GLimp_EndFrame();
 
 	if ( fboEnabled ) {
-		FBO_Bind( tr.mainFbo );
+		FBO_Bind( FBO_RenderTarget() );
 	}
 
 	backEnd.projection2D = qfalse;
+	backEnd.doneMSAAResolve = qfalse;
 
 #ifdef USE_BLOOM
 	backEnd.doneBloom = qfalse;
