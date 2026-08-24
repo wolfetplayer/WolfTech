@@ -172,7 +172,9 @@ static void SV_Map_f( void ) {
 
 	buildScript = Cvar_VariableIntegerValue( "com_buildScript" );
 
-	if ( !buildScript && sv_reloading->integer && sv_reloading->integer != RELOAD_NEXTMAP ) {  // game is in 'reload' mode, don't allow starting new maps yet.
+	if ( !buildScript && sv_reloading->integer
+		 && sv_reloading->integer != RELOAD_NEXTMAP
+		 && sv_reloading->integer != RELOAD_FAILED ) {  // game is in 'reload' mode, don't allow starting new maps yet.
 		return;
 	}
 
@@ -579,9 +581,10 @@ void    SV_LoadGame_f( void ) {
 	if ( Cvar_VariableIntegerValue( "savegame_loading" ) ) {
 		return;
 	}
-	if ( sv_reloading->integer ) {
-		// (SA) disabling
-//	if(sv_reloading->integer && sv_reloading->integer != RELOAD_FAILED )	// game is in 'reload' mode, don't allow starting new maps yet.
+	if ( sv_reloading->integer && sv_reloading->integer != RELOAD_NEXTMAP
+		 && sv_reloading->integer != RELOAD_FAILED ) {
+		// game is in 'reload' mode, don't allow starting new maps yet.
+		// But allow when stuck in FAILED or NEXTMAP state (prevents softlock).
 		return;
 	}
 
