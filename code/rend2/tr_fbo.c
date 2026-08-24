@@ -681,6 +681,15 @@ void FBO_FastBlit(const FBO_t *src, ivec4_t srcBox, FBO_t *dst, ivec4_t dstBox, 
 
 	GL_BindFramebuffer(GL_READ_FRAMEBUFFER, srcFb);
 	GL_BindFramebuffer(GL_DRAW_FRAMEBUFFER, dstFb);
+
+	// reset scissor so a stale reduced-viewport rect (cg_viewsize < 100) doesn't clip the blit
+	{
+		int width  = dst ? dst->width  : glConfig.vidWidth;
+		int height = dst ? dst->height : glConfig.vidHeight;
+
+		qglScissor( 0, 0, width, height );
+	}
+
 	qglBlitFramebuffer(srcBoxFinal[0], srcBoxFinal[1], srcBoxFinal[2], srcBoxFinal[3],
 	                      dstBoxFinal[0], dstBoxFinal[1], dstBoxFinal[2], dstBoxFinal[3],
 						  buffers, filter);
