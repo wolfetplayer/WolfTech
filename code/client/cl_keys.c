@@ -2280,7 +2280,12 @@ void CL_KeyDownEvent( int key, unsigned time )
 					key == K_SPACE ||
 					key == K_ENTER ) && qtrue ) {
 				if ( qtrue ) {
-					CL_AddReliableCommand( "cameraInterrupt", qfalse );
+					// debounce so rapid/repeated key input can't queue multiple map changes
+					static unsigned lastCameraInterrupt = 0;
+					if ( time - lastCameraInterrupt > 500 ) {
+						lastCameraInterrupt = time;
+						CL_AddReliableCommand( "cameraInterrupt", qfalse );
+					}
 				}
 				return;
 			}

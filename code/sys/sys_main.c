@@ -516,6 +516,8 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 	{
 		Com_Printf("Trying to load \"%s\"...\n", name);
 		dllhandle = Sys_LoadLibrary(name);
+		if(!dllhandle)
+			Com_DPrintf("Sys_LoadDll: failed to load \"%s\": \"%s\"\n", name, Sys_LibraryError());
 	}
 
 	if(!dllhandle)
@@ -534,6 +536,8 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 		{
 			Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, topDir);
 			dllhandle = Sys_LoadLibrary(libPath);
+			if(!dllhandle)
+				Com_DPrintf("Sys_LoadDll: failed to load \"%s\": \"%s\"\n", libPath, Sys_LibraryError());
 		}
 		else
 		{
@@ -554,6 +558,8 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 				{
 					Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, basePath);
 					dllhandle = Sys_LoadLibrary(libPath);
+					if(!dllhandle)
+						Com_DPrintf("Sys_LoadDll: failed to load \"%s\": \"%s\"\n", libPath, Sys_LibraryError());
 				}
 				else
 				{

@@ -1174,6 +1174,12 @@ void CL_InitCGame( void ) {
 	// load the dll or bytecode
 	cgvm = VM_Create( "cgame", CL_CgameSystemCalls, Cvar_VariableValue("vm_cgame") );
 	if ( !cgvm ) {
+		// retry once, in case a rapid map change hasn't released the DLL yet
+		Com_Printf( "^3WARNING: VM_Create on cgame failed, retrying...\n" );
+		Sys_Sleep( 100 );
+		cgvm = VM_Create( "cgame", CL_CgameSystemCalls, Cvar_VariableValue("vm_cgame") );
+	}
+	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
 	clc.state = CA_LOADING;

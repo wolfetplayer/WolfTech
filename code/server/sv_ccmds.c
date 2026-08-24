@@ -583,8 +583,7 @@ void    SV_LoadGame_f( void ) {
 	}
 	if ( sv_reloading->integer && sv_reloading->integer != RELOAD_NEXTMAP
 		 && sv_reloading->integer != RELOAD_FAILED ) {
-		// game is in 'reload' mode, don't allow starting new maps yet.
-		// But allow when stuck in FAILED or NEXTMAP state (prevents softlock).
+		// game is in 'reload' mode, don't allow starting new maps yet (but allow FAILED/NEXTMAP to prevent a softlock)
 		return;
 	}
 
