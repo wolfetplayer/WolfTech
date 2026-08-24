@@ -1874,6 +1874,58 @@ R_DebugPolygon
 ================
 */
 void R_DebugPolygon( int color, int numPoints, float *points ) {
+	// clip brush colors: 8-10 = see through walls, 11-13 = depth-tested (hidden behind walls)
+	if ( color >= 8 && color <= 13 ) {
+		int i;
+		int baseColor = ( color >= 11 ) ? color - 3 : color;  // normalize to 8-10
+		qboolean depthTest = ( color >= 11 ) ? qtrue : qfalse;
+		shaderProgram_t *sp = &tr.textureColorShader;
+		vec4_t drawColor;
+
+		if ( numPoints < 3 || numPoints > SHADER_MAX_VERTEXES - 1 ) {
+			return;
+		}
+
+		switch ( baseColor ) {
+		case 8:  VectorSet4( drawColor, 1.0f, 0.2f, 0.0f, 0.25f ); break;  // playerclip: orange
+		case 9:  VectorSet4( drawColor, 0.0f, 0.4f, 1.0f, 0.25f ); break;  // monsterclip: blue
+		default: VectorSet4( drawColor, 0.8f, 0.0f, 1.0f, 0.25f ); break;  // clipshot: purple
+		}
+
+		// build a triangle fan from the (convex) winding into the tess buffers
+		tess.numVertexes = numPoints;
+		tess.numIndexes = ( numPoints - 2 ) * 3;
+		for ( i = 0; i < numPoints; i++ ) {
+			VectorCopy( points + i * 3, tess.xyz[i] );
+		}
+		for ( i = 0; i < numPoints - 2; i++ ) {
+			tess.indexes[i * 3 + 0] = 0;
+			tess.indexes[i * 3 + 1] = i + 1;
+			tess.indexes[i * 3 + 2] = i + 2;
+		}
+
+		GL_BindToTMU( tr.whiteImage, TB_COLORMAP );
+		GL_Cull( CT_TWO_SIDED );
+
+		if ( depthTest ) {
+			GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
+		} else {
+			GL_State( GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
+		}
+
+		GLSL_BindProgram( sp );
+		GLSL_SetUniformMat4( sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection );
+		GLSL_SetUniformVec4( sp, UNIFORM_COLOR, drawColor );
+		GLSL_SetUniformInt( sp, UNIFORM_ALPHATEST, 0 );
+
+		RB_UpdateTessVao( ATTR_POSITION );
+		R_DrawElements( tess.numIndexes, 0 );
+
+		tess.numVertexes = 0;
+		tess.numIndexes = 0;
+		return;
+	}
+
 	// FIXME: implement this
 #if 0
 	int i;
@@ -1913,7 +1965,7 @@ void R_DebugGraphics( void ) {
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		return;
 	}
-	if ( !r_debugSurface->integer ) {
+	if ( !r_debugSurface->integer && !r_drawClips->integer ) {
 		return;
 	}
 

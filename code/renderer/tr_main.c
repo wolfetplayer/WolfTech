@@ -1603,6 +1603,60 @@ void R_DebugPolygon( int color, int numPoints, float *points ) {
 	int i;
 #endif
 
+	// clip brush colors: 8-10 = see through walls, 11-13 = depth-tested (hidden behind walls)
+	if ( color >= 8 && color <= 13 ) {
+		int baseColor = ( color >= 11 ) ? color - 3 : color;  // normalize to 8-10
+		qboolean depthTest = ( color >= 11 ) ? qtrue : qfalse;
+		float r = 0, g = 0, b = 0;
+
+		switch ( baseColor ) {
+		case 8:  r = 1.0f; g = 0.2f; b = 0.0f; break;  // playerclip: orange
+		case 9:  g = 0.4f; b = 1.0f; break;            // monsterclip: blue
+		case 10: r = 0.8f; b = 1.0f; break;             // clipshot: purple
+		}
+
+		GL_State( ( depthTest ? GLS_DEPTHMASK_TRUE : GLS_DEPTHTEST_DISABLE )
+				  | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
+
+#ifdef USE_OPENGLES
+		qglColor4f( r, g, b, 0.25f );
+		qglVertexPointer( 3, GL_FLOAT, 0, points );
+		qglDrawArrays( GL_TRIANGLE_FAN, 0, numPoints );
+#else
+		qglColor4f( r, g, b, 0.25f );
+		qglBegin( GL_POLYGON );
+		for ( i = 0 ; i < numPoints ; i++ ) {
+			qglVertex3fv( points + i * 3 );
+		}
+		qglEnd();
+#endif
+
+		// wireframe outline in a brighter shade of the same color
+#ifndef USE_OPENGLES
+		GL_State( GLS_POLYMODE_LINE | ( depthTest ? GLS_DEPTHMASK_TRUE : GLS_DEPTHTEST_DISABLE )
+				  | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
+#endif
+		if ( !depthTest ) {
+			qglDepthRange( 0, 0 );
+		}
+#ifdef USE_OPENGLES
+		qglColor4f( r, g, b, 0.8f );
+		qglVertexPointer( 3, GL_FLOAT, 0, points );
+		qglDrawArrays( GL_LINE_LOOP, 0, numPoints );
+#else
+		qglColor4f( r, g, b, 0.8f );
+		qglBegin( GL_POLYGON );
+		for ( i = 0 ; i < numPoints ; i++ ) {
+			qglVertex3fv( points + i * 3 );
+		}
+		qglEnd();
+#endif
+		if ( !depthTest ) {
+			qglDepthRange( 0, 1 );
+		}
+		return;
+	}
+
 	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
 
 	// draw solid shade
@@ -1651,7 +1705,7 @@ void R_DebugGraphics( void ) {
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		return;
 	}
-	if ( !r_debugSurface->integer ) {
+	if ( !r_debugSurface->integer && !r_drawClips->integer ) {
 		return;
 	}
 

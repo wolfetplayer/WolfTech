@@ -2162,6 +2162,7 @@ extern cvar_t  *r_overBrightBits;
 extern cvar_t  *r_mapOverBrightBits;
 
 extern cvar_t  *r_debugSurface;
+extern cvar_t  *r_drawClips;
 extern cvar_t  *r_simpleMipMaps;
 
 extern cvar_t  *r_showImages;
