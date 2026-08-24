@@ -1928,6 +1928,44 @@ int FS_Delete( char *filename ) {
 
 /*
 =================
+FS_GetFileMTime
+
+Returns file modification time as seconds since epoch.
+Returns 0 on failure.  Checks the home path first, then the base path.
+=================
+*/
+int FS_GetFileMTime( const char *qpath ) {
+	char *ospath;
+	int mtime;
+
+	if ( !fs_searchpaths ) {
+		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
+	}
+
+	if ( !qpath || !qpath[0] ) {
+		return 0;
+	}
+
+	// try homepath first (user-writable directory)
+	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, qpath );
+	mtime = Sys_FileTime( ospath );
+	if ( mtime != -1 ) {
+		return mtime;
+	}
+
+	// fall back to basepath (game install directory)
+	ospath = FS_BuildOSPath( fs_basepath->string, fs_gamedir, qpath );
+	mtime = Sys_FileTime( ospath );
+	if ( mtime != -1 ) {
+		return mtime;
+	}
+
+	return 0;
+}
+
+
+/*
+=================
 FS_Read
 
 Properly handles partial reads

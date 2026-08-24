@@ -143,6 +143,7 @@ typedef enum {
 	UI_LAN_SERVERISVISIBLE,
 	UI_LAN_COMPARESERVERS,
 	UI_CL_GETLIMBOSTRING,           // NERVE - SMF
+	UI_FS_GETFILEMTIME,             // returns file modification time (seconds since epoch)
 
 #ifdef LOCALISATION
 	UI_CL_TRANSLATE_STRING,

@@ -1162,6 +1162,9 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 	case UI_CL_GETLIMBOSTRING:
 		return CL_GetLimboString( args[1], VMA( 2 ) );
 
+	case UI_FS_GETFILEMTIME:
+		return FS_GetFileMTime( VMA( 1 ) );
+
 /*
 	case UI_CHECKAUTOUPDATE:
 		CL_CheckAutoUpdate();
