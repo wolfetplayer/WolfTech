@@ -21,10 +21,12 @@ compatibility with existing RTCW mods.
   - RGTC and BPTC texture compression support.
   - Screen-space ambient occlusion.
   - FXAA.
-  - Bloom.
+  - Multi-scale bloom.
   - Sun and dynamic light rays.
   - Color grading via LUT textures.
   - Vignette, film grain, and chromatic aberration.
+  - Static world VBOs with leaf-surface merging.
+  - Merged lightmap atlases.
 
 
 -------------------------------------------------------------------------------
@@ -171,6 +173,9 @@ Cvars for HDR and tonemapping:
                                    brightness.  Hardcoded to -2 to 2 on maps
                                    that don't specify otherwise.  Requires
                                    r_hdr, r_postprocess, and r_toneMap.
+                                   Adaptation speed is framerate-independent,
+                                   so exposure ramps at the same real-world
+                                   rate regardless of fps.
                                      0 - No. (default)
                                      1 - Yes.
 
@@ -199,7 +204,10 @@ Cvars for bloom:
 
 *  `r_bloom`                         - Enable bloom.  Bright areas of the
                                    scene bleed a soft glow onto their
-                                   surroundings.
+                                   surroundings.  Multi-scale: downsamples
+                                   through a mip chain and upsamples back,
+                                   for a softer, more natural glow than a
+                                   single-pass blur.
                                      0 - No. (default)
                                      1 - Yes.
 
@@ -448,6 +456,21 @@ Cvars that you probably don't care about or shouldn't mess with:
                                      0 - Don't.
                                      1 - Do. (default)
 
+*  `r_mergeLeafSurfaces`            - Merge static world surfaces that share a
+                                   leaf and shader into fewer draw calls, and
+                                   upload the world to static VBOs.  Cuts
+                                   draw call count on detailed maps.
+                                   Requires vid_restart.
+                                     0 - No. (default)
+                                     1 - Yes.
+
+*  `r_foliageMinLight`              - Minimum ambient light floor applied to
+                                   foliage instances, so grass/scatter models
+                                   don't go fully black in shadow.
+                                     0.0 - No floor.
+                                     0.6 - Default.
+                                     1.0 - Always fully lit.
+
 *  `r_shadowCascadeZNear`           - Near plane for shadow cascade frustums.
                                      4 - Default.
 
@@ -468,6 +491,17 @@ Cvars that have broken bits:
 *  `r_pshadowDist`                  - Virtual camera distance when creating shadowmaps for projected shadows.  Deprecated.
 
 *  `cg_shadows`                     - Old shadow code.  Deprecated.
+
+Cvars for debugging collision (also available in the opengl1 renderer, see
+opengl1-readme.md):
+
+*  `r_drawClips`                     - Cheat.  Draw clip brush (playerclip/
+                                   monsterclip) polygons.
+                                     0 - No. (default)
+                                     1 - Playerclip only, see through walls.
+                                     2 - All clip types, see through walls.
+                                     3 - Playerclip only, depth-tested.
+                                     4 - All clip types, depth-tested.
 
 
 -------------------------------------------------------------------------------
