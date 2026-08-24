@@ -1241,6 +1241,8 @@ typedef struct {
 	qboolean	framebufferMultisample;
 
 	qboolean	arbPrograms;            // GL_ARB_vertex_program + GL_ARB_fragment_program
+
+	qboolean	textureFloat;           // GL_ARB_texture_float, needed for \r_hdr's GL_RGBA16F_ARB format
 } glRefConfig_t;
 
 extern glRefConfig_t glRefConfig;
@@ -1301,6 +1303,7 @@ extern cvar_t   *r_texturebits;         // number of desired texture bits
 extern cvar_t	*r_ext_multisample;
 
 extern cvar_t   *r_fbo;                 // render into an offscreen FBO instead of directly to the backbuffer, see tr_fbo.c
+extern cvar_t   *r_hdr;                 // use GL_RGBA16F_ARB instead of GL_RGBA8 for \r_fbo's color attachments, reduces banding
 
 extern cvar_t   *r_bloom;               // shared by the \r_fbo 1 ARB-program bloom and the legacy \r_fbo 0 fallback (only one runs per frame)
 extern cvar_t   *r_bloom_threshold;     // brightness (0..1) a pixel must exceed to contribute to bloom

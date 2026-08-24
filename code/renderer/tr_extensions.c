@@ -82,4 +82,16 @@ void GLimp_InitExtraExtensions( void )
 	{
 		ri.Printf( PRINT_ALL, result[2], extension );
 	}
+
+	// OpenGL 3.0 - GL_ARB_texture_float: format-only, no functions to load
+	extension = "GL_ARB_texture_float";
+	if ( q_gl_version_at_least_3_0 || SDL_GL_ExtensionSupported( extension ) )
+	{
+		glRefConfig.textureFloat = qtrue;
+		ri.Printf( PRINT_ALL, result[ glRefConfig.textureFloat ], extension );
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, result[2], extension );
+	}
 }

@@ -293,6 +293,7 @@ void FBO_Init( void )
 	int bloomWidth, bloomHeight;
 	int samples;
 	GLint maxSamples;
+	GLint colorFormat;
 	image_t *colorImage;
 	int i;
 
@@ -314,7 +315,9 @@ void FBO_Init( void )
 	width = glConfig.vidWidth;
 	height = glConfig.vidHeight;
 
-	colorImage = FBO_CreateColorImage( "_main", width, height, GL_RGBA8 );
+	colorFormat = ( r_hdr->integer && glRefConfig.textureFloat ) ? GL_RGBA16F_ARB : GL_RGBA8;
+
+	colorImage = FBO_CreateColorImage( "_main", width, height, colorFormat );
 
 	tr.mainFbo = FBO_Create( "_main", width, height );
 	FBO_AttachImage( tr.mainFbo, colorImage, GL_COLOR_ATTACHMENT0 );
@@ -341,7 +344,7 @@ void FBO_Init( void )
 
 	if ( samples >= 2 ) {
 		tr.msaaFbo = FBO_Create( "_msaa", width, height );
-		FBO_CreateColorBuffer( tr.msaaFbo, GL_RGBA8, samples );
+		FBO_CreateColorBuffer( tr.msaaFbo, colorFormat, samples );
 		FBO_CreateDepthBuffer( tr.msaaFbo, GL_DEPTH24_STENCIL8, samples );
 
 		if ( !R_CheckFBO( tr.msaaFbo ) ) {
@@ -362,7 +365,7 @@ void FBO_Init( void )
 	}
 
 	for ( i = 0; i < 2; i++ ) {
-		image_t *bloomColorImage = FBO_CreateColorImage( va( "_bloom%d", i ), bloomWidth, bloomHeight, GL_RGBA8 );
+		image_t *bloomColorImage = FBO_CreateColorImage( va( "_bloom%d", i ), bloomWidth, bloomHeight, colorFormat );
 
 		tr.bloomFbo[i] = FBO_Create( va( "_bloom%d", i ), bloomWidth, bloomHeight );
 		FBO_AttachImage( tr.bloomFbo[i], bloomColorImage, GL_COLOR_ATTACHMENT0 );
