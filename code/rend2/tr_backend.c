@@ -807,7 +807,7 @@ RB_RenderDrawSurfList
 ==================
 */
 void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
-	shader_t        *shader, *oldShader;
+	shader_t        *shader = NULL, *oldShader;
 	int fogNum, oldFogNum;
 	int entityNum, oldEntityNum;
 	int dlighted, oldDlighted;
@@ -1980,6 +1980,13 @@ const void  *RB_DrawBuffer( const void *data ) {
 	if ( r_clear->integer ) {
 		qglClearColor( 1, 0, 0.5, 1 );
 		qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+		if (glRefConfig.framebufferObject && tr.renderFbo) {
+			FBO_Bind(tr.renderFbo);
+
+			qglClearColor( 1, 0, 0.5, 1 );
+			qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		}
 	}
 
 	return (const void *)( cmd + 1 );

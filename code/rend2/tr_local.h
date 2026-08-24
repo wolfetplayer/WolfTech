@@ -2128,6 +2128,7 @@ extern  cvar_t  *r_dlightMode;
 extern  cvar_t  *r_pshadowDist;
 extern  cvar_t  *r_mergeLightmaps;
 extern  cvar_t  *r_mergeLeafSurfaces;
+extern  cvar_t  *r_vaoCache;
 extern  cvar_t  *r_imageUpsample;
 extern  cvar_t  *r_imageUpsampleMaxSize;
 extern  cvar_t  *r_imageUpsampleType;
