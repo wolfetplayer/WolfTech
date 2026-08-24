@@ -173,6 +173,8 @@ void FBO_CreateBuffer(FBO_t *fbo, int format, int index, int multisample)
 	if (absent)
 		qglGenRenderbuffers(1, pRenderBuffer);
 
+	GL_BindRenderbuffer(*pRenderBuffer);
+
 	if (multisample && glRefConfig.framebufferMultisample)
 		qglNamedRenderbufferStorageMultisampleEXT(*pRenderBuffer, multisample, format, fbo->width, fbo->height);
 	else
