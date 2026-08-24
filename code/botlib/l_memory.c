@@ -114,6 +114,9 @@ void *GetMemory( unsigned long size )
 	memoryblock_t *block;
 
 	ptr = botimport.GetMemory( size + sizeof( memoryblock_t ) );
+	if ( !ptr ) {
+		return NULL;
+	}
 	block = (memoryblock_t *) ptr;
 	block->id = MEM_ID;
 	block->ptr = (char *) ptr + sizeof( memoryblock_t );
@@ -147,7 +150,9 @@ void *GetClearedMemory( unsigned long size )
 #else
 	ptr = GetMemory( size );
 #endif //MEMDEBUG
-	memset( ptr, 0, size );
+	if ( ptr ) {
+		memset( ptr, 0, size );
+	}
 	return ptr;
 } //end of the function GetClearedMemory
 //===========================================================================
@@ -365,7 +370,9 @@ void *GetClearedMemory( unsigned long size )
 #else
 ptr = GetMemory( size );
 #endif //MEMDEBUG
-memset( ptr, 0, size );
+if ( ptr ) {
+	memset( ptr, 0, size );
+}
 return ptr;
 } //end of the function GetClearedMemory
 //===========================================================================
@@ -409,7 +416,9 @@ void *GetClearedHunkMemory( unsigned long size )
 #else
 ptr = GetHunkMemory( size );
 #endif //MEMDEBUG
-memset( ptr, 0, size );
+if ( ptr ) {
+	memset( ptr, 0, size );
+}
 return ptr;
 } //end of the function GetClearedHunkMemory
 //===========================================================================
@@ -420,6 +429,10 @@ return ptr;
 //===========================================================================
 void FreeMemory( void *ptr ) {
 	unsigned long int *memid;
+
+	if ( !ptr ) {
+		return;
+	}
 
 	memid = (unsigned long int *) ( (char *) ptr - sizeof( unsigned long int ) );
 
