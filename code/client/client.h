@@ -759,8 +759,19 @@ void    SCR_FillRect( float x, float y, float width, float height,
 void    SCR_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
 void    SCR_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 
+//
+// cl_perf.c
+//
+void    SCR_PerfInit( void );
+void    SCR_PerfShutdown( void );
+void    SCR_PerfDraw( void );
+void    SCR_PerfRecordFrame( int tBeforeFirst, int tBeforeServer,
+							 int tBeforeEvents, int tBeforeClient,
+							 int tAfterClient );
+
 void	SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape );			// draws a string with embedded color control characters with fade
 void	SCR_DrawBigStringColor( int x, int y, const char *s, vec4_t color, qboolean noColorEscape );	// ignores embedded color control characters
+void	SCR_DrawStringExt( int x, int y, float size, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
 void	SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
 void    SCR_DrawSmallChar( int x, int y, int ch );
 void    SCR_DrawStringExt2( int x, int y, float size, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape, int font );

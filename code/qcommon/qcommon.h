@@ -1081,6 +1081,9 @@ void CL_InitKeyCommands( void );
 // config files, but the rest of client startup will happen later
 
 void CL_Init( void );
+void SCR_PerfRecordFrame( int tBeforeFirst, int tBeforeServer,
+						 int tBeforeEvents, int tBeforeClient,
+						 int tAfterClient );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
 void CL_Frame( int msec );

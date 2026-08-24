@@ -2746,9 +2746,7 @@ void Com_Frame( void ) {
 	//
 	// main event loop
 	//
-	if ( com_speeds->integer ) {
-		timeBeforeFirstEvents = Sys_Milliseconds();
-	}
+	timeBeforeFirstEvents = Sys_Milliseconds();
 
 	// Figure out how much time we have
 	if(!com_timedemo->integer)
@@ -2821,9 +2819,7 @@ void Com_Frame( void ) {
 	//
 	// server side
 	//
-	if ( com_speeds->integer ) {
-		timeBeforeServer = Sys_Milliseconds();
-	}
+	timeBeforeServer = Sys_Milliseconds();
 
 	SV_Frame( msec );
 
@@ -2850,30 +2846,25 @@ void Com_Frame( void ) {
 	// run event loop a second time to get server to client packets
 	// without a frame of latency
 	//
-	if ( com_speeds->integer ) {
-		timeBeforeEvents = Sys_Milliseconds ();
-	}
+	timeBeforeEvents = Sys_Milliseconds ();
 	Com_EventLoop();
 	Cbuf_Execute ();
 
 	//
 	// client side
 	//
-	if ( com_speeds->integer ) {
-		timeBeforeClient = Sys_Milliseconds ();
-	}
+	timeBeforeClient = Sys_Milliseconds ();
 
 	CL_Frame( msec );
 
-	if ( com_speeds->integer ) {
-		timeAfter = Sys_Milliseconds ();
-	}
+	timeAfter = Sys_Milliseconds ();
+
+	SCR_PerfRecordFrame( timeBeforeFirstEvents, timeBeforeServer,
+						 timeBeforeEvents, timeBeforeClient, timeAfter );
 #else
-	if ( com_speeds->integer ) {
-		timeAfter = Sys_Milliseconds ();
-		timeBeforeEvents = timeAfter;
-		timeBeforeClient = timeAfter;
-	}
+	timeAfter = Sys_Milliseconds ();
+	timeBeforeEvents = timeAfter;
+	timeBeforeClient = timeAfter;
 #endif
 
 	NET_FlushPacketQueue();

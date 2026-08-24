@@ -646,6 +646,8 @@ void SCR_Init( void ) {
 	cl_graphscale = Cvar_Get( "graphscale", "1", CVAR_CHEAT );
 	cl_graphshift = Cvar_Get( "graphshift", "0", CVAR_CHEAT );
 
+	SCR_PerfInit();
+
 	scr_initialized = qtrue;
 }
 
@@ -740,6 +742,9 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
 		SCR_DrawDebugGraph();
 	}
+
+	// performance profiler overlay, always on top
+	SCR_PerfDraw();
 }
 
 /*
