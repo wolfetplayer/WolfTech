@@ -2778,25 +2778,31 @@ void Com_Frame( void ) {
 	else
 		minMsec = 1;
 
-	do
 	{
-		if(com_sv_running->integer)
-		{
-			timeValSV = SV_SendQueuedPackets();
-			
-			timeVal = Com_TimeVal(minMsec);
+		// exit the NET_Sleep wait below on a microsecond-precise target instead of Com_TimeVal's whole-ms one
+		int64_t targetUs = (int64_t)minMsec * 1000;
+		int64_t frameStartUs = Sys_Microseconds();
 
-			if(timeValSV < timeVal)
-				timeVal = timeValSV;
-		}
-		else
-			timeVal = Com_TimeVal(minMsec);
-		
-		if(com_busyWait->integer || timeVal < 1)
-			NET_Sleep(0);
-		else
-			NET_Sleep(timeVal - 1);
-	} while(Com_TimeVal(minMsec));
+		do
+		{
+			if(com_sv_running->integer)
+			{
+				timeValSV = SV_SendQueuedPackets();
+
+				timeVal = Com_TimeVal(minMsec);
+
+				if(timeValSV < timeVal)
+					timeVal = timeValSV;
+			}
+			else
+				timeVal = Com_TimeVal(minMsec);
+
+			if(com_busyWait->integer || timeVal < 1)
+				NET_Sleep(0);
+			else
+				NET_Sleep(timeVal - 1);
+		} while((Sys_Microseconds() - frameStartUs) < targetUs);
+	}
 
 	IN_Frame();
 	

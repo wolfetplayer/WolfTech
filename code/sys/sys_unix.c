@@ -189,6 +189,26 @@ int Sys_Milliseconds (void)
 }
 
 /*
+================
+Sys_Microseconds
+================
+*/
+static unsigned long sys_usTimeBase = 0;
+int64_t Sys_Microseconds( void )
+{
+	struct timeval tp;
+
+	gettimeofday(&tp, NULL);
+
+	if (!sys_usTimeBase)
+	{
+		sys_usTimeBase = tp.tv_sec;
+	}
+
+	return (int64_t)(tp.tv_sec - sys_usTimeBase) * 1000000 + tp.tv_usec;
+}
+
+/*
 ==================
 Sys_RandomBytes
 ==================

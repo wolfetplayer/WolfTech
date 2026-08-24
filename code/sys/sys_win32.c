@@ -240,6 +240,35 @@ int Sys_Milliseconds (void)
 
 /*
 ================
+Sys_Microseconds
+================
+*/
+int64_t Sys_Microseconds( void )
+{
+	static qboolean initialized = qfalse;
+	static LARGE_INTEGER qpcFreq;
+	static LARGE_INTEGER qpcBase;
+	static qboolean qpcValid = qfalse;
+	LARGE_INTEGER now;
+
+	if ( !initialized ) {
+		if ( QueryPerformanceFrequency( &qpcFreq ) && qpcFreq.QuadPart > 0 ) {
+			QueryPerformanceCounter( &qpcBase );
+			qpcValid = qtrue;
+		}
+		initialized = qtrue;
+	}
+
+	if ( !qpcValid ) {
+		return (int64_t)Sys_Milliseconds() * 1000;
+	}
+
+	QueryPerformanceCounter( &now );
+	return ( now.QuadPart - qpcBase.QuadPart ) * 1000000 / qpcFreq.QuadPart;
+}
+
+/*
+================
 Sys_RandomBytes
 ================
 */

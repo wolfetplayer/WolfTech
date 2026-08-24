@@ -1216,6 +1216,7 @@ void    Sys_Print( const char *msg );
 // Sys_Milliseconds should only be used for profiling purposes,
 // any game related timing information should come from event timestamps
 int     Sys_Milliseconds( void );
+int64_t Sys_Microseconds( void );  // independent high-res clock, for frame-pacing precision
 
 qboolean Sys_RandomBytes( byte *string, int len );
 
