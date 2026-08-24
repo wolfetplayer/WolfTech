@@ -47,6 +47,10 @@ void RE_LoadWorldMap( const char *name );
 static world_t s_worldData;
 static byte        *fileBase;
 
+// \r_mergeLightmaps atlas grid, computed by R_LoadMergedLightmaps(), consumed by ParseFace()/ParseMesh()
+static int lightmapCountX, lightmapCountY;
+static int lightmapWidth, lightmapHeight;
+
 int c_subdivisions;
 int c_gridVerts;
 
@@ -136,13 +140,201 @@ static void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
 	out[3] = in[3];
 }
 
+#define LIGHTMAP_SIZE   128
+#define LIGHTMAP_BORDER 2
+#define LIGHTMAP_LEN    ( LIGHTMAP_SIZE + LIGHTMAP_BORDER * 2 )
+
+/*
+===============
+R_ComputeLightmapAtlasSize
+
+Computes a power-of-two atlas page grid (lightmapWidth/Height, lightmapCountX/Y) big enough to
+hold numLightmaps LIGHTMAP_LEN-sized cells, bounded by glConfig.maxTextureSize. Growth alternates
+between width and height so pages stay roughly square.
+===============
+*/
+static void R_ComputeLightmapAtlasSize( int numLightmaps ) {
+	int maxSize = glConfig.maxTextureSize;
+	int p;
+
+	p = 1;
+	while ( p < LIGHTMAP_LEN ) {
+		p <<= 1;
+	}
+	lightmapWidth = lightmapHeight = p;
+
+	lightmapCountX = lightmapWidth / LIGHTMAP_LEN;
+	lightmapCountY = lightmapHeight / LIGHTMAP_LEN;
+
+	while ( lightmapCountX * lightmapCountY < numLightmaps ) {
+		if ( lightmapWidth <= lightmapHeight ) {
+			if ( lightmapWidth >= maxSize ) {
+				break;
+			}
+			lightmapWidth <<= 1;
+		} else {
+			if ( lightmapHeight >= maxSize ) {
+				break;
+			}
+			lightmapHeight <<= 1;
+		}
+		lightmapCountX = lightmapWidth / LIGHTMAP_LEN;
+		lightmapCountY = lightmapHeight / LIGHTMAP_LEN;
+	}
+}
+
+/*
+===============
+R_LightmapOffsetForIndex
+
+Normalized (0..1) position of lightmapIndex's real 128x128 data within whichever atlas page it
+lands on -- used to bake each surface's vertex lightmap UVs into atlas space in ParseFace()/
+ParseMesh() below. Deliberately doesn't return which page: that's resolved separately, at shader
+bind time, by R_LightmapImageForIndex() in tr_shader.c.
+===============
+*/
+static void R_LightmapOffsetForIndex( int lightmapIndex, float *x, float *y ) {
+	int cell, cellX, cellY;
+
+	cell = lightmapIndex % tr.lightmapMod;
+	cellX = cell % lightmapCountX;
+	cellY = cell / lightmapCountX;
+
+	*x = (float)( LIGHTMAP_BORDER + cellX * LIGHTMAP_LEN ) / lightmapWidth;
+	*y = (float)( LIGHTMAP_BORDER + cellY * LIGHTMAP_LEN ) / lightmapHeight;
+}
+
+/*
+===============
+R_PadLightmapTile
+
+Pads a LIGHTMAP_SIZE x LIGHTMAP_SIZE RGBA tile into a LIGHTMAP_LEN x LIGHTMAP_LEN buffer,
+replicating (clamping to) the nearest edge/corner texel into the LIGHTMAP_BORDER-wide padding
+ring, so bilinear filtering can never sample a neighboring tile's unrelated texels at atlas seams.
+===============
+*/
+static void R_PadLightmapTile( const byte *src, byte *dst ) {
+	int x, y, sx, sy;
+
+	for ( y = 0 ; y < LIGHTMAP_LEN ; y++ ) {
+		sy = y - LIGHTMAP_BORDER;
+		if ( sy < 0 ) {
+			sy = 0;
+		} else if ( sy >= LIGHTMAP_SIZE ) {
+			sy = LIGHTMAP_SIZE - 1;
+		}
+		for ( x = 0 ; x < LIGHTMAP_LEN ; x++ ) {
+			sx = x - LIGHTMAP_BORDER;
+			if ( sx < 0 ) {
+				sx = 0;
+			} else if ( sx >= LIGHTMAP_SIZE ) {
+				sx = LIGHTMAP_SIZE - 1;
+			}
+			Com_Memcpy( &dst[( y * LIGHTMAP_LEN + x ) * 4], &src[( sy * LIGHTMAP_SIZE + sx ) * 4], 4 );
+		}
+	}
+}
+
+/*
+===============
+R_CreateLightmapAtlasImage
+
+Allocates an empty atlas page texture, sized exactly to width/height. Deliberately bypasses
+R_CreateImage()/Upload32() the same way tr_fbo.c's FBO_CreateColorImage() does: that path isn't
+NULL-pic safe and the atlas is filled in afterward one tile at a time via qglTexSubImage2D.
+===============
+*/
+static image_t *R_CreateLightmapAtlasImage( const char *name, int width, int height ) {
+	image_t *image;
+
+	image = ri.Hunk_Alloc( sizeof( *image ), h_low );
+	Com_Memset( image, 0, sizeof( *image ) );
+	Q_strncpyz( image->imgName, name, sizeof( image->imgName ) );
+	image->width = image->uploadWidth = width;
+	image->height = image->uploadHeight = height;
+	image->type = IMGTYPE_COLORALPHA;
+	image->flags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE;
+
+	qglGenTextures( 1, &image->texnum );
+	GL_Bind( image );
+
+	qglTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
+	glState.currenttextures[glState.currenttmu] = 0;
+	qglBindTexture( GL_TEXTURE_2D, 0 );
+
+	return image;
+}
+
+/*
+===============
+R_LoadMergedLightmaps
+
+\r_mergeLightmaps path: packs tr.numLightmaps individual LIGHTMAP_SIZE lightmaps into a handful
+of shared atlas page textures instead of one GL texture per lightmap. tr.lightmaps[] ends up
+holding page images (tr.lightmapMod tiles each), not 1:1 lightmaps -- see R_LightmapImageForIndex()
+in tr_shader.c and the vertex UV baking in ParseFace()/ParseMesh() below for the other half of this.
+===============
+*/
+static void R_LoadMergedLightmaps( const byte *buf ) {
+	byte srcImage[LIGHTMAP_SIZE * LIGHTMAP_SIZE * 4];
+	byte padded[LIGHTMAP_LEN * LIGHTMAP_LEN * 4];
+	const byte *buf_p;
+	image_t **pages;
+	int numPages;
+	int i, j, page, cell, cellX, cellY, destX, destY;
+
+	R_ComputeLightmapAtlasSize( tr.numLightmaps );
+
+	tr.lightmapMod = lightmapCountX * lightmapCountY;
+	tr.lightmapScale[0] = (float)LIGHTMAP_SIZE / lightmapWidth;
+	tr.lightmapScale[1] = (float)LIGHTMAP_SIZE / lightmapHeight;
+
+	numPages = ( tr.numLightmaps + tr.lightmapMod - 1 ) / tr.lightmapMod;
+
+	pages = ri.Hunk_Alloc( numPages * sizeof( image_t * ), h_low );
+	for ( page = 0 ; page < numPages ; page++ ) {
+		pages[page] = R_CreateLightmapAtlasImage( va( "*lightmapPage%d", page ), lightmapWidth, lightmapHeight );
+	}
+
+	for ( i = 0 ; i < tr.numLightmaps ; i++ ) {
+		buf_p = buf + i * LIGHTMAP_SIZE * LIGHTMAP_SIZE * 3;
+
+		for ( j = 0 ; j < LIGHTMAP_SIZE * LIGHTMAP_SIZE ; j++ ) {
+			R_ColorShiftLightingBytes( (byte *)&buf_p[j * 3], &srcImage[j * 4] );
+			srcImage[j * 4 + 3] = 255;
+		}
+
+		R_PadLightmapTile( srcImage, padded );
+
+		page = i / tr.lightmapMod;
+		cell = i % tr.lightmapMod;
+		cellX = cell % lightmapCountX;
+		cellY = cell / lightmapCountX;
+		destX = cellX * LIGHTMAP_LEN;
+		destY = cellY * LIGHTMAP_LEN;
+
+		GL_Bind( pages[page] );
+		qglTexSubImage2D( GL_TEXTURE_2D, 0, destX, destY, LIGHTMAP_LEN, LIGHTMAP_LEN,
+			GL_RGBA, GL_UNSIGNED_BYTE, padded );
+	}
+
+	tr.lightmaps = pages;
+
+	ri.Printf( PRINT_ALL, "Merged %i lightmaps into %i %ix%i atlas page%s\n",
+		tr.numLightmaps, numPages, lightmapWidth, lightmapHeight, numPages == 1 ? "" : "s" );
+}
+
 /*
 ===============
 R_LoadLightmaps
 
 ===============
 */
-#define LIGHTMAP_SIZE   128
 static void R_LoadLightmaps( lump_t *l ) {
 	byte        *buf, *buf_p;
 	int len;
@@ -172,6 +364,17 @@ static void R_LoadLightmaps( lump_t *l ) {
 	if ( r_vertexLight->integer || glConfig.hardwareType == GLHW_PERMEDIA2 ) {
 		return;
 	}
+
+	tr.mergeLightmaps = ( r_mergeLightmaps->integer && tr.numLightmaps > 1 &&
+		glConfig.maxTextureSize >= LIGHTMAP_LEN * 2 && r_lightmap->integer != 2 );
+
+	if ( tr.mergeLightmaps ) {
+		R_LoadMergedLightmaps( buf );
+		return;
+	}
+
+	tr.lightmapMod = 0;
+	tr.lightmapScale[0] = tr.lightmapScale[1] = 1.0f;
 
 	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 	for ( i = 0 ; i < tr.numLightmaps ; i++ ) {
@@ -429,14 +632,23 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, msurface_t *surf, int 
 	cv->numIndices = numIndexes;
 	cv->ofsIndices = ofsIndexes;
 
+	if ( tr.mergeLightmaps && lightmapNum >= 0 ) {
+		R_LightmapOffsetForIndex( lightmapNum, &tr.lightmapOffset[0], &tr.lightmapOffset[1] );
+	}
+
 	verts += LittleLong( ds->firstVert );
 	for ( i = 0 ; i < numPoints ; i++ ) {
 		for ( j = 0 ; j < 3 ; j++ ) {
 			cv->points[i][j] = LittleFloat( verts[i].xyz[j] );
 		}
-		for ( j = 0 ; j < 2 ; j++ ) {
-			cv->points[i][3 + j] = LittleFloat( verts[i].st[j] );
-			cv->points[i][5 + j] = LittleFloat( verts[i].lightmap[j] );
+		cv->points[i][3] = LittleFloat( verts[i].st[0] );
+		cv->points[i][4] = LittleFloat( verts[i].st[1] );
+		if ( tr.mergeLightmaps && lightmapNum >= 0 ) {
+			cv->points[i][5] = LittleFloat( verts[i].lightmap[0] ) * tr.lightmapScale[0] + tr.lightmapOffset[0];
+			cv->points[i][6] = LittleFloat( verts[i].lightmap[1] ) * tr.lightmapScale[1] + tr.lightmapOffset[1];
+		} else {
+			cv->points[i][5] = LittleFloat( verts[i].lightmap[0] );
+			cv->points[i][6] = LittleFloat( verts[i].lightmap[1] );
 		}
 		R_ColorShiftLightingBytes( verts[i].color, (byte *)&cv->points[i][7] );
 	}
@@ -494,6 +706,10 @@ static void ParseMesh( dsurface_t *ds, drawVert_t *verts, msurface_t *surf ) {
 	width = LittleLong( ds->patchWidth );
 	height = LittleLong( ds->patchHeight );
 
+	if ( tr.mergeLightmaps && lightmapNum >= 0 ) {
+		R_LightmapOffsetForIndex( lightmapNum, &tr.lightmapOffset[0], &tr.lightmapOffset[1] );
+	}
+
 	verts += LittleLong( ds->firstVert );
 	numPoints = width * height;
 	for ( i = 0 ; i < numPoints ; i++ ) {
@@ -501,9 +717,14 @@ static void ParseMesh( dsurface_t *ds, drawVert_t *verts, msurface_t *surf ) {
 			points[i].xyz[j] = LittleFloat( verts[i].xyz[j] );
 			points[i].normal[j] = LittleFloat( verts[i].normal[j] );
 		}
-		for ( j = 0 ; j < 2 ; j++ ) {
-			points[i].st[j] = LittleFloat( verts[i].st[j] );
-			points[i].lightmap[j] = LittleFloat( verts[i].lightmap[j] );
+		points[i].st[0] = LittleFloat( verts[i].st[0] );
+		points[i].st[1] = LittleFloat( verts[i].st[1] );
+		if ( tr.mergeLightmaps && lightmapNum >= 0 ) {
+			points[i].lightmap[0] = LittleFloat( verts[i].lightmap[0] ) * tr.lightmapScale[0] + tr.lightmapOffset[0];
+			points[i].lightmap[1] = LittleFloat( verts[i].lightmap[1] ) * tr.lightmapScale[1] + tr.lightmapOffset[1];
+		} else {
+			points[i].lightmap[0] = LittleFloat( verts[i].lightmap[0] );
+			points[i].lightmap[1] = LittleFloat( verts[i].lightmap[1] );
 		}
 		R_ColorShiftLightingBytes( verts[i].color, points[i].color );
 	}
