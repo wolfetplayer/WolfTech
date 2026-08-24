@@ -790,6 +790,10 @@ void Sys_PlatformInit( void )
 	else
 		timerResolution = 0;
 #endif
+
+	// raise the CRT stdio handle limit so large pk3/mod collections don't exhaust it during FS_Startup
+	if ( _getmaxstdio() < 2048 )
+		_setmaxstdio( 2048 );
 }
 
 /*
