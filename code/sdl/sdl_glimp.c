@@ -674,7 +674,8 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 		depthBits = r_depthbits->value;
 
 	stencilBits = r_stencilbits->value;
-	samples = r_fbo->integer ? 0 : r_ext_multisample->value;    // \r_fbo 1 multisamples its own FBO instead
+	// looked up by name, not by extern cvar_t*: this file is shared with rend2, which has no r_fbo cvar
+	samples = ri.Cvar_VariableIntegerValue( "r_fbo" ) ? 0 : r_ext_multisample->value;
 
 	for (i = 0; i < 16; i++)
 	{
