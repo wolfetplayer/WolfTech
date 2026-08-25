@@ -32,6 +32,20 @@ If you have questions concerning this license or the applicable additional terms
 
 #define SCOREBOARD_WIDTH    ( 31 * BIGCHAR_WIDTH )
 
+// row/column text - scale derived from CG_CHAT_TEXT_SCALE (cg_local.h) doubled for SMALLCHAR_HEIGHT vs TINYCHAR_HEIGHT
+#define SCOREBOARD_FONT        UI_FONT_COURBD_12
+#define SCOREBOARD_SCALE       0.38f
+// section titles / "Killed by" banner - reuses the proven HUD numeric readout pairing
+#define SCOREBOARD_TITLE_FONT  UI_FONT_COURBD_24
+#define SCOREBOARD_TITLE_SCALE 0.32f
+
+// CG_Text_Paint multiplies color[3] by cg_hudAlpha in place; copy first so repeated calls with a shared array don't compound
+static void CG_ScoreboardText( float x, float y, int font, float scale, const float *color, const char *text, int limit, int style ) {
+	vec4_t c;
+	Vector4Copy( color, c );
+	CG_Text_Paint( x, y, font, scale, c, text, 0, limit, style );
+}
+
 void CG_DrawCoopScoreboard( void ) {
 	int i, place = 0, w;
 	float *color;       // faded color based on cursor hint drawing
@@ -85,32 +99,32 @@ void CG_DrawCoopScoreboard( void ) {
 	// text boxes
 	color2[0] = color2[1] = color2[2] = 0.4f;
 #ifdef LOCALISATION
-	CG_DrawStringExt( 105, 130, CG_TranslateString( "Name" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 105, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Name" ), 25, ITEM_TEXTSTYLE_SHADOWED );
 #else
-	CG_DrawStringExt( 105, 130, va( "Name" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 105, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Name", 25, ITEM_TEXTSTYLE_SHADOWED );
 #endif
 #ifdef LOCALISATION
-	CG_DrawStringExt( 280, 130, CG_TranslateString( "Class" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 280, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Class" ), 25, ITEM_TEXTSTYLE_SHADOWED );
 #else
-	CG_DrawStringExt( 280, 130, va( "Class" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 280, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Class", 25, ITEM_TEXTSTYLE_SHADOWED );
 #endif
-	w = strlen( "Kills" ) * SMALLCHAR_WIDTH;
+	w = CG_Text_Width( "Kills", SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
 #ifdef LOCALISATION
-	CG_DrawStringExt( 100 + 320 - w, 130, CG_TranslateString( "Kills" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 100 + 320 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Kills" ), 25, ITEM_TEXTSTYLE_SHADOWED );
 #else
-	CG_DrawStringExt( 100 + 320 - w, 130, va( "Kills" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 100 + 320 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Kills", 25, ITEM_TEXTSTYLE_SHADOWED );
 #endif
-	w = strlen( "Score" ) * SMALLCHAR_WIDTH;
+	w = CG_Text_Width( "Score", SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
 #ifdef LOCALISATION
-	CG_DrawStringExt( 100 + 375 - w, 130, CG_TranslateString( "Score" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 100 + 375 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Score" ), 25, ITEM_TEXTSTYLE_SHADOWED );
 #else
-	CG_DrawStringExt( 100 + 375 - w, 130, va( "Score" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 100 + 375 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Score", 25, ITEM_TEXTSTYLE_SHADOWED );
 #endif
-	w = strlen( "Ping" ) * SMALLCHAR_WIDTH;
+	w = CG_Text_Width( "Ping", SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
 #ifdef LOCALISATION
-	CG_DrawStringExt( 100 + 420 - w, 130, CG_TranslateString( "Ping" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 100 + 420 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Ping" ), 25, ITEM_TEXTSTYLE_SHADOWED );
 #else
-	CG_DrawStringExt( 100 + 420 - w, 130, va( "Ping" ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 100 + 420 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Ping", 25, ITEM_TEXTSTYLE_SHADOWED );
 #endif
 	//if (cg.scores[0].respawnsLeft != -1)
 	//        maxlives = qtrue;
@@ -143,62 +157,62 @@ void CG_DrawCoopScoreboard( void ) {
 			place++;
 			if ( ci->team == TEAM_SPECTATOR ) {
 #ifdef LOCALISATION
-				CG_DrawStringExt( 105, 154 + ( 28 * i ) + 1, va( CG_TranslateString( "[SPECTATOR] %s" ), ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+				CG_ScoreboardText( 105, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( CG_TranslateString( "[SPECTATOR] %s" ), ci->name ), 20, ITEM_TEXTSTYLE_SHADOWED );
 #else
-				CG_DrawStringExt( 105, 154 + ( 28 * i ) + 1, va( "[SPECTATOR] %s", ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+				CG_ScoreboardText( 105, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "[SPECTATOR] %s", ci->name ), 20, ITEM_TEXTSTYLE_SHADOWED );
 #endif
 			} else if ( ci->team == TEAM_RED ) {
-				CG_DrawStringExt( 105, 154 + ( 28 * i ) + 1, va( "^1%i^7. %s", place, ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+				CG_ScoreboardText( 105, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "^1%i^7. %s", place, ci->name ), 20, ITEM_TEXTSTYLE_SHADOWED );
 			} else {
-				CG_DrawStringExt( 105, 154 + ( 28 * i ) + 1, va( "%i. %s", place, ci->name ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 20 ) ;
+				CG_ScoreboardText( 105, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "%i. %s", place, ci->name ), 20, ITEM_TEXTSTYLE_SHADOWED );
 			}
 
 			if ( ci->team != TEAM_SPECTATOR ) {
 				className = ( cg.scores[i].playerClass >= 0 && cg.scores[i].playerClass < 4 ) ?
 					classNames[cg.scores[i].playerClass] : "";
-				CG_DrawStringExt( 280, 154 + ( 28 * i ) + 1, className, color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 10 ) ;
+				CG_ScoreboardText( 280, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, className, 10, ITEM_TEXTSTYLE_SHADOWED );
 
-				w = strlen( va( "%d", cg.scores[i].kills ) ) * SMALLCHAR_WIDTH;
-				CG_DrawStringExt( 100 + 320 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].kills ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+				w = CG_Text_Width( va( "%d", cg.scores[i].kills ), SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
+				CG_ScoreboardText( 100 + 320 - w, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "%d", cg.scores[i].kills ), 25, ITEM_TEXTSTYLE_SHADOWED );
 			}
 
 			if ( maxlives )
 			{
-				w = strlen( va( "%ld (%d)", score, cg.scores[i].respawnsLeft ) ) * SMALLCHAR_WIDTH;
+				w = CG_Text_Width( va( "%ld (%d)", score, cg.scores[i].respawnsLeft ), SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
 				if ( ci->team != TEAM_SPECTATOR )
 				{
 #ifdef MONEY
 					if ( cg.scores[i].score == highest_score )
 					{
-						CG_DrawStringExt( 100 + 375 - w, 154 + ( 28 * i ) + 1, va( "%d (%d)", cg.scores[i].score, cg.scores[i].respawnsLeft ), green, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+						CG_ScoreboardText( 100 + 375 - w, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, green, va( "%d (%d)", cg.scores[i].score, cg.scores[i].respawnsLeft ), 25, ITEM_TEXTSTYLE_SHADOWED );
 					}
 					else
 #endif
 					{
-						CG_DrawStringExt( 100 + 375 - w, 154 + ( 28 * i ) + 1, va( "%d (%d)", cg.scores[i].score, cg.scores[i].respawnsLeft ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+						CG_ScoreboardText( 100 + 375 - w, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "%d (%d)", cg.scores[i].score, cg.scores[i].respawnsLeft ), 25, ITEM_TEXTSTYLE_SHADOWED );
 					}
 				}
 			}
 			else
 			{
-				w = strlen( va( "%ld", score ) ) * SMALLCHAR_WIDTH;
+				w = CG_Text_Width( va( "%ld", score ), SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
 				if ( ci->team != TEAM_SPECTATOR )
 				{
 #ifdef MONEY
 					if ( cg.scores[i].score == highest_score )
 					{
-						CG_DrawStringExt( 100 + 375 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].score ), green, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+						CG_ScoreboardText( 100 + 375 - w, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, green, va( "%d", cg.scores[i].score ), 25, ITEM_TEXTSTYLE_SHADOWED );
 					}
 					else
 #endif
 					{
-						CG_DrawStringExt( 100 + 375 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].score ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+						CG_ScoreboardText( 100 + 375 - w, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "%d", cg.scores[i].score ), 25, ITEM_TEXTSTYLE_SHADOWED );
 					}
 				}
 			}
 
-			w = strlen( va( "%d", ping ) ) * SMALLCHAR_WIDTH;
-			CG_DrawStringExt( 100 + 420 - w, 154 + ( 28 * i ) + 1, va( "%d", cg.scores[i].ping ), color3, qfalse, qtrue, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+			w = CG_Text_Width( va( "%d", ping ), SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
+			CG_ScoreboardText( 100 + 420 - w, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "%d", cg.scores[i].ping ), 25, ITEM_TEXTSTYLE_SHADOWED );
 		}
 	}
 
@@ -215,11 +229,11 @@ void CG_DrawCoopScoreboard( void ) {
 	color2[3] = color[3];
 	if ( cgs.gametype == GT_COOP ) {
 #ifdef LOCALISATION
-		w = strlen( CG_TranslateString( "Score" ) ) * SMALLCHAR_WIDTH;
-		CG_DrawStringExt( 100 + ( 484 / 2 ) - ( w - 2 ), 105, CG_TranslateString( "Score" ), color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+		w = CG_Text_Width( CG_TranslateString( "Score" ), SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, 0 );
+		CG_ScoreboardText( 100 + ( 484 / 2 ) - ( w - 2 ), 105, SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, color3, CG_TranslateString( "Score" ), 25, ITEM_TEXTSTYLE_NORMAL );
 #else
-		w = strlen( "scores" ) * SMALLCHAR_WIDTH;
-		CG_DrawStringExt( 100 + ( 484 / 2 ) - ( w - 2 ), 105, va( "scores" ), color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+		w = CG_Text_Width( "scores", SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, 0 );
+		CG_ScoreboardText( 100 + ( 484 / 2 ) - ( w - 2 ), 105, SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, color3, "scores", 25, ITEM_TEXTSTYLE_NORMAL );
 #endif
 	}
 
@@ -235,7 +249,7 @@ void CG_DrawCoopScoreboard( void ) {
 
 	s = va( "%2.0f:%i%i", (float)mins, tens, seconds );
 
-	CG_DrawStringExt( 100, 105, s, color3, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 25 ) ;
+	CG_ScoreboardText( 100, 105, SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, color3, s, 25, ITEM_TEXTSTYLE_NORMAL );
 
 	color2[0] = color2[1] = color2[2] = 1;
 }
@@ -304,11 +318,13 @@ qboolean CG_DrawScoreboard( void ) {
 
 	// fragged by ... line
 	if ( cg.killerName[0] ) {
+		vec4_t killedByColor = { 1, 1, 1, fade };
+
 		s = va( "Killed by %s", cg.killerName );
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
+		w = CG_Text_Width( s, SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, 0 );
 		x = ( SCREEN_WIDTH - w ) / 2;
 		y = 40;
-		CG_DrawBigString( x, y, s, fade );
+		CG_ScoreboardText( x, y, SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, killedByColor, s, 0, ITEM_TEXTSTYLE_SHADOWED );
 	}
 
 	// current rank
