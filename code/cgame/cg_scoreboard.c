@@ -32,18 +32,20 @@ If you have questions concerning this license or the applicable additional terms
 
 #define SCOREBOARD_WIDTH    ( 31 * BIGCHAR_WIDTH )
 
-// row/column text - scale derived from CG_CHAT_TEXT_SCALE (cg_local.h) doubled for SMALLCHAR_HEIGHT vs TINYCHAR_HEIGHT
-#define SCOREBOARD_FONT        UI_FONT_COURBD_12
-#define SCOREBOARD_SCALE       0.38f
+// row/column text - column x positions below are hardcoded for an 8px/char budget (old SMALLCHAR_WIDTH grid), so this scale is tuned to keep Courier Prime's advance width near 8px, not for cap height
+#define SCOREBOARD_FONT        UI_FONT_COURIERPRIME_12
+#define SCOREBOARD_SCALE       0.25f
 // section titles / "Killed by" banner - reuses the proven HUD numeric readout pairing
-#define SCOREBOARD_TITLE_FONT  UI_FONT_COURBD_24
+#define SCOREBOARD_TITLE_FONT  UI_FONT_COURIERPRIME_24
 #define SCOREBOARD_TITLE_SCALE 0.32f
 
-// CG_Text_Paint multiplies color[3] by cg_hudAlpha in place; copy first so repeated calls with a shared array don't compound
+#define SCOREBOARD_ROW_HEIGHT 20 // matches the CG_FilledBar row/title bar height below
+
+// converts y from "top of cell" (what callers below pass) to baseline (what CG_Text_Paint wants), vertically centered in a SCOREBOARD_ROW_HEIGHT-tall cell, and copies color since CG_Text_Paint mutates alpha in place
 static void CG_ScoreboardText( float x, float y, int font, float scale, const float *color, const char *text, int limit, int style ) {
 	vec4_t c;
 	Vector4Copy( color, c );
-	CG_Text_Paint( x, y, font, scale, c, text, 0, limit, style );
+	CG_Text_Paint( x, y + ( SCOREBOARD_ROW_HEIGHT + CG_Text_Height( text, font, scale, limit ) ) * 0.5f, font, scale, c, text, 0, limit, style );
 }
 
 void CG_DrawCoopScoreboard( void ) {

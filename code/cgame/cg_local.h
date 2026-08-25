@@ -42,12 +42,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "../game/bg_public.h"
 #include "cg_public.h"
 
-// TTF-backed courbd font used for chat/notify/subtitle/HUD-message text (replaces
-// the old fixed-cell TINYCHAR_WIDTH/HEIGHT bitmap glyphs). Tune this scale to taste.
-// Requires the including .c file to already have "../ui/ui_shared.h" included and
-// "extern displayContextDef_t cgDC;" declared.
+// TTF font for chat/notify/subtitle/HUD-message text, replacing the old TINYCHAR bitmap glyphs
 #define CG_CHAT_TEXT_SCALE 0.19f
-#define CG_CHAT_FONT ( &cgDC.Assets.extraFonts[UI_FONT_COURBD_12 - UI_FONT_EXTRA_BASE] )
+#define CG_CHAT_FONT ( &cgDC.Assets.extraFonts[UI_FONT_COURIERPRIME_12 - UI_FONT_EXTRA_BASE] )
 
 
 #define POWERUP_BLINKS      5

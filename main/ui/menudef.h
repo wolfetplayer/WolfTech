@@ -160,12 +160,15 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_FONT_EXTRA_BASE      5
 #define UI_FONT_EXTRA_COUNT     16
 
-#define UI_FONT_ARIBLK_16       5   // unused, free
-#define UI_FONT_ARIBLK_27       6   // main menu headings
-#define UI_FONT_COURBD_21       7   // main menu list items
-#define UI_FONT_COURBD_30       8   // unused, free
-#define UI_FONT_COURBD_24       9   // monospaced - HUD numeric readouts, scoreboard titles
-#define UI_FONT_COURBD_12       10  // monospaced - chat/subtitle text, scoreboard rows
+// ids are named after the real font file they bind to in ui/fonts.menu - no abbreviations
+#define UI_FONT_COURIERPRIME_12        5   // chat/subtitle text, scoreboard rows
+#define UI_FONT_COURIERPRIME_21        6   // main menu list items
+#define UI_FONT_COURIERPRIME_24        7   // HUD numeric readouts, scoreboard titles
+#define UI_FONT_COURIERPRIME_27        8   // unused, free
+#define UI_FONT_LIBERATIONSANS_12      9   // unused, free
+#define UI_FONT_LIBERATIONSANS_21      10  // unused, free
+#define UI_FONT_LIBERATIONSANS_24      11  // unused, free
+#define UI_FONT_LIBERATIONSANS_27      12  // main menu headings
 
 // owner draw types
 // ideally these should be done outside of this file but

@@ -954,6 +954,11 @@ int maxCharsBeforeOverlay;
 #define TEAM_OVERLAY_MAXNAME_WIDTH  16
 #define TEAM_OVERLAY_MAXLOCATION_WIDTH  20
 
+// CG_Text_Paint_Ext's y is a baseline (draws upward); this file's y positions were written for the old top-anchored CG_DrawStringExt, so shift down by the measured text height
+static void CG_ChatTextPaint( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t *font ) {
+	CG_Text_Paint_Ext( x, y + CG_Text_Height_Ext( text, scaley, limit, font ), scalex, scaley, color, text, adjust, limit, style, font );
+}
+
 static float CG_DrawCoopOverlay( float y ) {
 	int x, w, h, xx;
 	int i, len;
@@ -990,9 +995,10 @@ static float CG_DrawCoopOverlay( float y ) {
 	damagecolor[3] = cg_hudAlpha.value;
 	maxCharsBeforeOverlay = 80;
 
-	// TTF-backed courbd cell size, replaces the fixed TINYCHAR_WIDTH/HEIGHT grid
+	// TTF-backed courbd cell size, replaces the fixed TINYCHAR_WIDTH/HEIGHT grid. chH is measured
+	// separately from chW (not assumed square) - Courier Prime renders taller than it is wide
 	chW = CG_Text_Width_Ext( "0", CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
-	chH = chW;
+	chH = CG_Text_Height_Ext( "Mg", CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
 
 	plyrs = 0;
 
@@ -1073,6 +1079,8 @@ static float CG_DrawCoopOverlay( float y ) {
 	for ( i = 0; i < numSortedTeamPlayers; i++ ) {
 		ci = cgs.clientinfo + sortedTeamPlayers[i];
 		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM] ) {
+			// CG_Text_Paint_Ext's y is a baseline (draws upward); shift down by chH so text top lands at the row's y, matching CG_FillRect's rect below
+			float ty = y + chH;
 
 			// NERVE - SMF
 			// determine class type
@@ -1133,7 +1141,7 @@ static float CG_DrawCoopOverlay( float y ) {
 			hcolor[2] = 0.0;
 			hcolor[3] = cg_hudAlpha.value;
 
-			CG_Text_Paint_Ext( xx, y, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
+			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
 							  st, 0, 1, 0, CG_CHAT_FONT );
 
 			hcolor[0] = hcolor[1] = hcolor[2] = 1.0;
@@ -1169,7 +1177,7 @@ static float CG_DrawCoopOverlay( float y ) {
 			// CG_DrawStringExt's forceColor flag), so strip them from a local copy
 			Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
 			Q_StripColorCodes( nameClean );
-			CG_Text_Paint_Ext( xx, y, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
+			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
 							  nameClean, 0, TEAM_OVERLAY_MAXNAME_WIDTH, 0, CG_CHAT_FONT );
 
 			if ( lwidth ) {
@@ -1185,7 +1193,7 @@ static float CG_DrawCoopOverlay( float y ) {
 
 				xx = x + chW * 5 + chW * pwidth +
 					 ( ( lwidth / 2 - len / 2 ) * chW );
-				CG_Text_Paint_Ext( xx, y, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
+				CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
 								  p, 0, TEAM_OVERLAY_MAXLOCATION_WIDTH, 0, CG_CHAT_FONT );
 			}
 
@@ -1193,7 +1201,7 @@ static float CG_DrawCoopOverlay( float y ) {
 
 			xx = x + chW * 6 + chW * pwidth + chW * lwidth;
 
-			CG_Text_Paint_Ext( xx, y, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
+			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
 							  st, 0, 7, 0, CG_CHAT_FONT );
 
 			y += chH;
@@ -1319,7 +1327,7 @@ static void CG_DrawTeamInfo( void ) {
 			hcolor[3] = alphapercent;
 			trap_R_SetColor( hcolor );
 
-			CG_Text_Paint_Ext( CHATLOC_X + TINYCHAR_WIDTH,
+			CG_ChatTextPaint( CHATLOC_X + TINYCHAR_WIDTH,
 							  CHATLOC_Y - ( cgs.teamChatPos - i ) * TINYCHAR_HEIGHT,
 							  CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
 							  cgs.teamChatMsgs[i % chatHeight], 0, 0, 0, CG_CHAT_FONT );
@@ -1375,11 +1383,11 @@ static void CG_DrawPickupItem( void ) {
 			{
 				const char *translated = CG_TranslateString( pickupText );
 				w = CG_Text_Width_Ext( translated, pickupScale, 0, CG_CHAT_FONT );
-				CG_Text_Paint_Ext( 320 - ( w / 2 ), 398, pickupScale, pickupScale, color, translated, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+				CG_ChatTextPaint( 320 - ( w / 2 ), 398, pickupScale, pickupScale, color, translated, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 			}
 #else
 			w = CG_Text_Width_Ext( pickupText, pickupScale, 0, CG_CHAT_FONT );
-			CG_Text_Paint_Ext( 320 - ( w / 2 ), 398, pickupScale, pickupScale, color, pickupText, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+			CG_ChatTextPaint( 320 - ( w / 2 ), 398, pickupScale, pickupScale, color, pickupText, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 #endif
 
 			trap_R_SetColor( NULL );
@@ -1452,7 +1460,7 @@ static void CG_DrawNotify( void ) {
 			hcolor[3] = alphapercent;
 			trap_R_SetColor( hcolor );
 
-			CG_Text_Paint_Ext( NOTIFYLOC_X + TINYCHAR_WIDTH,
+			CG_ChatTextPaint( NOTIFYLOC_X + TINYCHAR_WIDTH,
 							  NOTIFYLOC_Y - ( cgs.notifyPos - i ) * TINYCHAR_HEIGHT,
 							  CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
 							  cgs.notifyMsgs[i % chatHeight], 0, maxCharsBeforeOverlay, 0, CG_CHAT_FONT );
@@ -1804,7 +1812,7 @@ void CG_DrawFreeze( void ) {
 
 	x = ( SCREEN_WIDTH - w ) / 2;
 
-	CG_Text_Paint_Ext( x, y, scale, scale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+	CG_ChatTextPaint( x, y, scale, scale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 }
 
 /*
@@ -2090,7 +2098,7 @@ static void CG_DrawCenterString( void ) {
 
 	start = (char *)cg.centerPrint;
 
-	// scale the TTF-backed courbd font relative to the requested charWidth, so the
+	// scale the TTF-backed hud font relative to the requested charWidth, so the
 	// caller-supplied size still controls centerprint size the way it did with the
 	// old fixed-cell bitmap glyphs
 	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.centerPrintCharWidth / SMALLCHAR_WIDTH );
@@ -2108,11 +2116,11 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = CG_Text_Width_Ext( linebuffer, subScale, 0, CG_CHAT_FONT );
+		w = CG_Text_Width_Ext( linebuffer, subScale, 0, &cgDC.Assets.textFont );
 
 		x = ( SCREEN_WIDTH - w ) / 2;
 
-		CG_Text_Paint_Ext( x, y, subScale, subScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+		CG_ChatTextPaint( x, y, subScale, subScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgDC.Assets.textFont );
 
 		y += cg.centerPrintCharWidth * 2;
 
@@ -2158,7 +2166,7 @@ static void CG_DrawBuyString( void ) {
 
 	start = (char *)cg.buyPrint;
 
-	// scale the TTF-backed courbd font relative to the requested charWidth, so the
+	// scale the TTF-backed hud font relative to the requested charWidth, so the
 	// caller-supplied size (SMALLCHAR_WIDTH for cpbuy) still controls buy-prompt size
 	// the way it did with the old fixed-cell bitmap glyphs
 	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.buyPrintCharWidth / SMALLCHAR_WIDTH );
@@ -2176,11 +2184,11 @@ static void CG_DrawBuyString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = CG_Text_Width_Ext( linebuffer, subScale, 0, CG_CHAT_FONT );
+		w = CG_Text_Width_Ext( linebuffer, subScale, 0, &cgDC.Assets.textFont );
 
 		x = ( SCREEN_WIDTH - w ) / 2;
 
-		CG_Text_Paint_Ext( x, y, subScale, subScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+		CG_ChatTextPaint( x, y, subScale, subScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgDC.Assets.textFont );
 
 		y += cg.buyPrintCharWidth * 2;
 
@@ -2259,7 +2267,7 @@ static void CG_DrawSubtitleString( void ) {
 
 		x = ( SCREEN_WIDTH - w ) / 2;
 
-		CG_Text_Paint_Ext( x, y, subScale, subScale, color, linebuffer, 0, 0, style, CG_CHAT_FONT );
+		CG_ChatTextPaint( x, y, subScale, subScale, color, linebuffer, 0, 0, style, CG_CHAT_FONT );
 
 		y += cg.subtitlePrintCharWidth * 2;
 
@@ -4049,14 +4057,14 @@ static void CG_DrawVote( void ) {
 		// cgs.voteString is server-controlled text; strip any ^N codes so it can't
 		// override the fixed vote-text color (matches the old forceColor behavior)
 		Q_StripColorCodes( s );
-		CG_Text_Paint_Ext( 8, 200, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
+		CG_ChatTextPaint( 8, 200, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
 
 #ifdef LOCALISATION
 		s = va( CG_TranslateString( "YES(%s):%i, NO(%s):%i" ), str1, cgs.voteYes, str2, cgs.voteNo );
 #else
 		s = va( "YES(%s):%i, NO(%s):%i", str1, cgs.voteYes, str2, cgs.voteNo );
 #endif
-		CG_Text_Paint_Ext( 8, 214, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
+		CG_ChatTextPaint( 8, 214, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
 	} else {
 
 #ifdef LOCALISATION
@@ -4064,7 +4072,7 @@ static void CG_DrawVote( void ) {
 #else
 		s = va( "Y:%i, N:%i", cgs.voteYes, cgs.voteNo );
 #endif
-		CG_Text_Paint_Ext( 8, 214, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 20, 0, CG_CHAT_FONT );
+		CG_ChatTextPaint( 8, 214, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 20, 0, CG_CHAT_FONT );
 	}
 }
 
@@ -4178,7 +4186,7 @@ static qboolean CG_DrawFollow( void ) {
 #endif
 		}
 
-		CG_Text_Paint_Ext( INFOTEXT_STARTX, 68, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, deploytime, 0, 80, 0, CG_CHAT_FONT );
+		CG_ChatTextPaint( INFOTEXT_STARTX, 68, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, deploytime, 0, 80, 0, CG_CHAT_FONT );
 
 		// DHM - Nerve :: Don't display if you're following yourself
 		if ( cg.snap->ps.clientNum != cg.clientNum ) {
@@ -4189,7 +4197,7 @@ static qboolean CG_DrawFollow( void ) {
 #endif
 			// player name may contain ^N color codes; strip them to keep the fixed color
 			Q_StripColorCodes( deploytime );
-			CG_Text_Paint_Ext( INFOTEXT_STARTX, 86, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, deploytime, 0, 80, 0, CG_CHAT_FONT );
+			CG_ChatTextPaint( INFOTEXT_STARTX, 86, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, deploytime, 0, 80, 0, CG_CHAT_FONT );
 		}
 	} else {
 		// jpw
@@ -4203,7 +4211,7 @@ static qboolean CG_DrawFollow( void ) {
 		Q_StripColorCodes( deploytime );
 		name = deploytime;
 
-		CG_Text_Paint_Ext( 120, 68, CG_CHAT_TEXT_SCALE * ( (float)BIGCHAR_WIDTH / SMALLCHAR_WIDTH ), CG_CHAT_TEXT_SCALE * ( (float)BIGCHAR_WIDTH / SMALLCHAR_WIDTH ), color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+		CG_ChatTextPaint( 120, 68, CG_CHAT_TEXT_SCALE * ( (float)BIGCHAR_WIDTH / SMALLCHAR_WIDTH ), CG_CHAT_TEXT_SCALE * ( (float)BIGCHAR_WIDTH / SMALLCHAR_WIDTH ), color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 	} // JPW NERVE
 	return qtrue;
 }
@@ -4342,7 +4350,7 @@ static void CG_DrawWarmup( void ) {
 	{
 		float scale = CG_CHAT_TEXT_SCALE * ( (float)cw / SMALLCHAR_WIDTH );
 		w = CG_Text_Width_Ext( s, scale, 0, CG_CHAT_FONT );
-		CG_Text_Paint_Ext( 320 - w / 2, 120, scale, scale, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+		CG_ChatTextPaint( 320 - w / 2, 120, scale, scale, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 	}
 }
 
@@ -4742,7 +4750,7 @@ static void CG_DrawObjectiveInfo( void ) {
 
 		x = OID_LEFT;
 
-		CG_Text_Paint_Ext( x, y, oidScale, oidScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+		CG_ChatTextPaint( x, y, oidScale, oidScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 
 		y += cg.oidPrintCharWidth * 1.5;
 
@@ -5352,11 +5360,11 @@ void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t col
 					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
 					colorBlack[3] = newColor[3];
 					trap_R_SetColor( colorBlack );
-					CG_Text_PaintChar_Ext( x + ( glyph->pitch * scalex ) + ofs, y - yadj + ofs, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+					CG_Text_PaintChar_Ext( x + ofs, y - yadj + ofs, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
 					colorBlack[3] = 1.0;
 					trap_R_SetColor( newColor );
 				}
-				CG_Text_PaintChar_Ext( x + ( /*glyph->pitch **/ scalex ), y - yadj, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+				CG_Text_PaintChar_Ext( x, y - yadj, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
 				x += ( glyph->xSkip * scalex ) + adjust;
 				s++;
 				count++;

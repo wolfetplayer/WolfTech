@@ -1,13 +1,18 @@
 // Central font bindings: the ONE place mapping a UI_FONT_* id to its file/size. #include this instead of hand-typing "font" lines per menu.
 // Console is still the legacy bitmap font (never got a working TTF wiring - reverted).
-// TEMP: everything below points at StardosStencilRegular for a full-system preview; revert to "ariblk"/"courbd" to restore the old look.
+// TEMP: the 4 base slots below still point at StardosStencilRegular for a full-system preview; revert to "ariblk"/"courbd" to restore the old look.
 
 font            "StardosStencilRegular" 16    // UI_FONT_DEFAULT / UI_FONT_NORMAL - legacy default text font
 smallFont       "StardosStencilRegular" 12    // UI_FONT_SMALL
 bigFont         "StardosStencilRegular" 24    // UI_FONT_BIG
 handwritingFont "StardosStencilRegular" 17    // UI_FONT_HANDWRITING - clipboard/notebook pages
 
-font UI_FONT_ARIBLK_27 "StardosStencilRegular" 27    // main menu headings
-font UI_FONT_COURBD_21 "StardosStencilRegular" 21    // main menu list items
-font UI_FONT_COURBD_24 "StardosStencilRegular" 24    // HUD numeric readouts, scoreboard titles
-font UI_FONT_COURBD_12 "StardosStencilRegular" 12    // chat/subtitle text, scoreboard rows
+// Courier Prime and LiberationSans-Regular, mirrored at the same 4 sizes (12/21/24/27)
+font UI_FONT_COURIERPRIME_12   "Courier Prime" 12          // chat/subtitle text, scoreboard rows
+font UI_FONT_COURIERPRIME_21   "Courier Prime" 21          // main menu list items
+font UI_FONT_COURIERPRIME_24   "Courier Prime" 24          // HUD numeric readouts, scoreboard titles
+font UI_FONT_COURIERPRIME_27   "Courier Prime" 27          // unused, free
+font UI_FONT_LIBERATIONSANS_12 "LiberationSans-Regular" 12 // unused, free
+font UI_FONT_LIBERATIONSANS_21 "LiberationSans-Regular" 21 // unused, free
+font UI_FONT_LIBERATIONSANS_24 "LiberationSans-Regular" 24 // unused, free
+font UI_FONT_LIBERATIONSANS_27 "LiberationSans-Regular" 27 // main menu headings

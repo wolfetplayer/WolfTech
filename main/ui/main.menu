@@ -82,6 +82,7 @@ itemDef
 	textalign 0
 	textaligny 20
 	textscale .60
+		textfont UI_FONT_BIG
 		
     	action {
 			play "sound/misc/zap.wav" ;
@@ -101,7 +102,7 @@ itemDef
 		type 1
 	    rect 10 250 178 26
 		visible 1
-		textfont UI_FONT_ARIBLK_27
+		textfont UI_FONT_BIG
 	textalign 0
 	textaligny 20
 	textscale .60
@@ -125,7 +126,7 @@ itemDef
 		type 1
 	    rect 10 300 178 26
 		visible 1
-		textfont UI_FONT_ARIBLK_27
+		textfont UI_FONT_BIG
 	textalign 0
 	textaligny 20
 	textscale .60
@@ -149,6 +150,7 @@ itemDef
 	textalign 0
 	textaligny 20
 	textscale .60
+		textfont UI_FONT_BIG
 	    visible 1
 		
 		action {close main;
@@ -165,7 +167,7 @@ itemDef
 		group mainmenus
  	    type 1
 	    rect 10 400 178 26
-		textfont UI_FONT_COURBD_21
+		textfont UI_FONT_BIG
 	textalign 0
 	textaligny 20
 	textscale .60

@@ -276,7 +276,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_COURBD_24
+			textfont UI_FONT_NORMAL
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -297,7 +297,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_COURBD_24
+			textfont UI_FONT_NORMAL
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -495,7 +495,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_COURBD_24
+			textfont UI_FONT_NORMAL
 			textscale .32
 			
 			ownerdraw CG_PLAYER_HEALTH
@@ -516,7 +516,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_COURBD_24
+			textfont UI_FONT_NORMAL
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -537,7 +537,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_COURBD_24
+			textfont UI_FONT_NORMAL
 			textscale .32
 			
 			ownerdraw CG_PLAYER_HEALTH
@@ -558,7 +558,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_COURBD_24
+			textfont UI_FONT_NORMAL
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -728,7 +728,7 @@
 
 				decoration
 				foreColor 1 1 1 1
-				textFont UI_FONT_COURBD_24
+				textFont UI_FONT_NORMAL
 				textScale .28
 				visible MENU_TRUE
 
@@ -909,31 +909,31 @@
 			
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "0" }
-			
-			textfont UI_FONT_COURBD_24
-			textscale .32
-			
+
+			textfont UI_FONT_NORMAL
+			textscale .18		// shrunk from .32 - 3-digit clip counts were overflowing back_box.tga
+
 			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
 			ownerdrawflag CG_SHOW_NOT_V_BINOC
-			
+
 			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
 			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
-			
+
 			forecolor 1 1 1 1
 		}
-		
+
 		// clip count value
 		itemDef {
  			name "cliptex"
 			rect 469 -5.5 38 22
 			visible MENU_TRUE
 			decoration
-			
+
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "1" }
-			
-			textfont UI_FONT_COURBD_24
-			textscale .32
+
+			textfont UI_FONT_NORMAL
+			textscale .18		// shrunk from .32 - 3-digit clip counts were overflowing back_box.tga
 			
 			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
 			ownerdrawflag CG_SHOW_NOT_V_BINOC
@@ -992,31 +992,31 @@
 			
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "0" }
-			
-			textfont UI_FONT_COURBD_24
-			textscale .32
-			
+
+			textfont UI_FONT_NORMAL
+			textscale .18		// shrunk from .32 - 3-digit reserve ammo counts were overflowing back_box.tga
+
 			ownerdraw CG_PLAYER_AMMO_VALUE
 			ownerdrawflag CG_SHOW_NOT_V_BINOC
-			
+
 			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
 			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
-			
+
 			forecolor 1 1 1 1
 		}
-		
+
 		// ammo value
 		itemDef {
  			name "amtex"
 			rect 516 9.5 55 22
 			visible MENU_TRUE
 			decoration
-			
+
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "1" }
-			
-			textfont UI_FONT_COURBD_24
-			textscale .32
+
+			textfont UI_FONT_NORMAL
+			textscale .18		// shrunk from .32 - 3-digit reserve ammo counts were overflowing back_box.tga
 			
 			ownerdraw CG_PLAYER_AMMO_VALUE
 			ownerdrawflag CG_SHOW_NOT_V_BINOC
