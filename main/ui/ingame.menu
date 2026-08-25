@@ -2,10 +2,7 @@
 {
 
   assetGlobalDef {
-	font "ariblk" 16							// font
-	smallFont "ariblk" 12						// font
-	bigFont "ariblk" 24							// font
-	handwritingFont "courbd" 17					// font (pt size needs to be diff than the others)
+	#include "ui/fonts.menu"
 	cursor "ui/assets/3_cursor3"				// cursor	
 	gradientBar "ui/assets/gradientbar2.tga"	// gradient bar
 	itemFocusSound "sound/misc/menu2.wav"		// sound for item getting focus (via keyboard or mouse )

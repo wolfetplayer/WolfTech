@@ -2,11 +2,7 @@ S#include "ui/menudef.h"
 
 {
 	assetGlobalDef {
-		font "ariblk" 16
-		smallFont "ariblk" 12
-		bigFont "ariblk" 24
-		font UI_FONT_ARIBLK_27 "ariblk" 27
-		font UI_FONT_COURBD_21 "courbd" 21
+		#include "ui/fonts.menu"
 		cursor "ui/assets/3_cursor3"			
 		gradientBar "ui/assets/gradientbar2.tga"	
 		itemFocusSound "sound/misc/menu2.wav"

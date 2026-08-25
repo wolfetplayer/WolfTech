@@ -1,0 +1,27 @@
+// Central font bindings.
+//
+// This is the ONE place that maps a UI_FONT_* id (declared in menudef.h) to the
+// physical font file + point size the engine registers for it. #include this
+// inside every assetGlobalDef block instead of hand-typing "font" lines, so the
+// HUD, menus, and clipboard all pull from the same table and can't drift.
+//
+// To add a new font: give it a UI_FONT_* id in menudef.h (pick the next free
+// slot after UI_FONT_EXTRA_BASE), then add one "font <id> <file> <size>" line
+// below with a comment saying what it's for.
+//
+// NOT yet on this system (still legacy bitmap fonts): console, scoreboard.
+//
+// TEMP: every id below is pointed at StardosStencilRegular (main/fonts/) so it
+// renders everywhere - menus, HUD, clipboard, chat - for a full-system preview.
+// The UI_FONT_ARIBLK_*/UI_FONT_COURBD_* id names no longer match their bound
+// file while this is in place; revert to "ariblk"/"courbd" to restore the old look.
+
+font            "StardosStencilRegular" 16    // UI_FONT_DEFAULT / UI_FONT_NORMAL - legacy default text font
+smallFont       "StardosStencilRegular" 12    // UI_FONT_SMALL
+bigFont         "StardosStencilRegular" 24    // UI_FONT_BIG
+handwritingFont "StardosStencilRegular" 17    // UI_FONT_HANDWRITING - clipboard/notebook pages
+
+font UI_FONT_ARIBLK_27 "StardosStencilRegular" 27    // main menu headings
+font UI_FONT_COURBD_21 "StardosStencilRegular" 21    // main menu list items
+font UI_FONT_COURBD_24 "StardosStencilRegular" 24    // HUD numeric readouts (health/armor/ammo/score/stamina)
+font UI_FONT_COURBD_12 "StardosStencilRegular" 12    // chat feed / subtitle text (see CG_CHAT_FONT, cg_local.h)

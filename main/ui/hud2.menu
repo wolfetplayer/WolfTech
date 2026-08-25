@@ -7,13 +7,7 @@
 {
 	assetGlobalDef {
 	
-		font "ariblk" 16							// font
-		handwritingFont "courbd" 17					// font (pt size needs to be diff than the others)
-
-		smallFont "ariblk" 12						// font
-		bigFont "ariblk" 24							// font
-		font UI_FONT_COURBD_24 "courbd" 24			// monospaced, for HUD numeric readouts (health/armor/stamina/ammo/score)
-		font UI_FONT_COURBD_12 "courbd" 12			// monospaced, for chat feed / subtitle text
+		#include "ui/fonts.menu"
 
 		cursor "ui/assets/3_cursor3"				// cursor	
 		gradientBar "ui/assets/gradientbar2.tga"	// gradient bar

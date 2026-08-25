@@ -3,12 +3,7 @@
 {
 	assetGlobalDef {
 	
-		smallFont "ariblk" 12
-		font "ariblk" 16
-		handwritingFont "courbd" 17
-		bigFont "ariblk" 24
-		font UI_FONT_COURBD_24 "courbd" 24		// monospaced, for HUD numeric readouts (health/armor/ammo)
-		font UI_FONT_COURBD_12 "courbd" 12		// monospaced, for chat feed / subtitle text
+		#include "ui/fonts.menu"
 		
 		// hints
 		breakableHint		"gfx/2d/breakableHint.tga"

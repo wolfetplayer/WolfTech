@@ -150,23 +150,26 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_SHOW_NOTFAVORITESERVERS          0x00001000
 
 // font types
+// This is the catalog of font ids only. The actual file/point-size each id maps
+// to is defined once, centrally, in ui/fonts.menu - edit that file to change or
+// add a font, not the per-menu assetGlobalDef blocks.
 #define UI_FONT_DEFAULT         0   // auto-chose betwen big/reg/small
 #define UI_FONT_NORMAL          1
 #define UI_FONT_BIG             2
 #define UI_FONT_SMALL           3
 #define UI_FONT_HANDWRITING     4
 
-// extra named fonts, registered in assetGlobalDef via:
+// extra named fonts, registered in ui/fonts.menu via:
 //   font <fontIndex> "<fontfile>" <pointSize>
 // and used by itemDefs via "textfont <fontIndex>". Slots UI_FONT_EXTRA_BASE
 // through UI_FONT_EXTRA_BASE+UI_FONT_EXTRA_COUNT-1 are free for menus to assign.
 #define UI_FONT_EXTRA_BASE      5
 #define UI_FONT_EXTRA_COUNT     16
 
-#define UI_FONT_ARIBLK_16       5
-#define UI_FONT_ARIBLK_27       6
-#define UI_FONT_COURBD_21       7
-#define UI_FONT_COURBD_30       8
+#define UI_FONT_ARIBLK_16       5   // unused, free
+#define UI_FONT_ARIBLK_27       6   // main menu headings
+#define UI_FONT_COURBD_21       7   // main menu list items
+#define UI_FONT_COURBD_30       8   // unused, free
 #define UI_FONT_COURBD_24       9   // monospaced, used for HUD numeric readouts (stable digit width)
 #define UI_FONT_COURBD_12       10  // monospaced, used for chat feed / subtitle text
 
