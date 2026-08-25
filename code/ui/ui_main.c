@@ -313,12 +313,8 @@ int Text_Width( const char *text, int font, float scale, int limit ) {
 		} else if ( scale > ui_bigFont.value ) {
 			fnt = &uiInfo.uiDC.Assets.bigFont;
 		}
-	} else if ( font == UI_FONT_BIG ) {
-		fnt = &uiInfo.uiDC.Assets.bigFont;
-	} else if ( font == UI_FONT_SMALL ) {
-		fnt = &uiInfo.uiDC.Assets.smallFont;
-	} else if ( font == UI_FONT_HANDWRITING ) {
-		fnt = &uiInfo.uiDC.Assets.handwritingFont;
+	} else {
+		fnt = UI_SelectFont( &uiInfo.uiDC.Assets, font, fnt );
 	}
 
 	useScale = scale * fnt->glyphScale;
@@ -358,12 +354,8 @@ int Text_Height( const char *text, int font, float scale, int limit ) {
 		} else if ( scale > ui_bigFont.value ) {
 			fnt = &uiInfo.uiDC.Assets.bigFont;
 		}
-	} else if ( font == UI_FONT_BIG ) {
-		fnt = &uiInfo.uiDC.Assets.bigFont;
-	} else if ( font == UI_FONT_SMALL ) {
-		fnt = &uiInfo.uiDC.Assets.smallFont;
-	} else if ( font == UI_FONT_HANDWRITING ) {
-		fnt = &uiInfo.uiDC.Assets.handwritingFont;
+	} else {
+		fnt = UI_SelectFont( &uiInfo.uiDC.Assets, font, fnt );
 	}
 
 	useScale = scale * fnt->glyphScale;
@@ -413,12 +405,8 @@ void Text_Paint( float x, float y, int font, float scale, vec4_t color, const ch
 		} else if ( scale > ui_bigFont.value ) {
 			fnt = &uiInfo.uiDC.Assets.bigFont;
 		}
-	} else if ( font == UI_FONT_BIG ) {
-		fnt = &uiInfo.uiDC.Assets.bigFont;
-	} else if ( font == UI_FONT_SMALL ) {
-		fnt = &uiInfo.uiDC.Assets.smallFont;
-	} else if ( font == UI_FONT_HANDWRITING ) {
-		fnt = &uiInfo.uiDC.Assets.handwritingFont;
+	} else {
+		fnt = UI_SelectFont( &uiInfo.uiDC.Assets, font, fnt );
 	}
 
 	useScale = scale * fnt->glyphScale;
@@ -505,12 +493,8 @@ void Text_PaintWithCursor( float x, float y, int font, float scale, vec4_t color
 		} else if ( scale > ui_bigFont.value ) {
 			fnt = &uiInfo.uiDC.Assets.bigFont;
 		}
-	} else if ( font == UI_FONT_BIG ) {
-		fnt = &uiInfo.uiDC.Assets.bigFont;
-	} else if ( font == UI_FONT_SMALL ) {
-		fnt = &uiInfo.uiDC.Assets.smallFont;
-	} else if ( font == UI_FONT_HANDWRITING ) {
-		fnt = &uiInfo.uiDC.Assets.handwritingFont;
+	} else {
+		fnt = UI_SelectFont( &uiInfo.uiDC.Assets, font, fnt );
 	}
 
 	useScale = scale * fnt->glyphScale;
@@ -623,12 +607,8 @@ static void Text_Paint_Limit(float *maxX, float x, float y, int font, float scal
 			} else if (scale > ui_bigFont.value) {
 				fnt = &uiInfo.uiDC.Assets.bigFont;
 			}
-		} else if(font == UI_FONT_BIG) {
-			fnt = &uiInfo.uiDC.Assets.bigFont;
-		} else if(font == UI_FONT_SMALL) {
-			fnt = &uiInfo.uiDC.Assets.smallFont;
-		} else if(font == UI_FONT_HANDWRITING) {
-			fnt = &uiInfo.uiDC.Assets.handwritingFont;
+		} else {
+			fnt = UI_SelectFont( &uiInfo.uiDC.Assets, font, fnt );
 		}
 
 		useScale = scale * fnt->glyphScale;
@@ -816,14 +796,21 @@ qboolean Asset_Parse( int handle ) {
 			return qtrue;
 		}
 
-		// font
+		// font: either "font \"<name>\" <size>" (legacy, -> textFont) or
+		// "font <index> \"<name>\" <size>" (indexed, -> extraFonts[index - UI_FONT_EXTRA_BASE])
 		if ( Q_stricmp( token.string, "font" ) == 0 ) {
-			int pointSize;
-			if ( !PC_String_Parse( handle, &tempStr ) || !PC_Int_Parse( handle,&pointSize ) ) {
+			int fontIndex, pointSize;
+			if ( !PC_Font_Parse( handle, &fontIndex, &tempStr, &pointSize ) ) {
 				return qfalse;
 			}
-			trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.textFont );
-			uiInfo.uiDC.Assets.fontRegistered = qtrue;
+			if ( fontIndex < 0 ) {
+				trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.textFont );
+				uiInfo.uiDC.Assets.fontRegistered = qtrue;
+			} else if ( fontIndex >= UI_FONT_EXTRA_BASE && fontIndex < UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT ) {
+				trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.extraFonts[fontIndex - UI_FONT_EXTRA_BASE] );
+			} else {
+				Com_Printf( "Asset_Parse: font index %i out of range (%i..%i)\n", fontIndex, UI_FONT_EXTRA_BASE, UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT - 1 );
+			}
 			continue;
 		}
 

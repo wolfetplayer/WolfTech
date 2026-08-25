@@ -65,12 +65,8 @@ int CG_Text_Width( const char *text, int font, float scale, int limit ) {
 		} else if ( scale > cg_bigFont.value ) {
 			fnt = &cgDC.Assets.bigFont;
 		}
-	} else if ( font == UI_FONT_BIG ) {
-		fnt = &cgDC.Assets.bigFont;
-	} else if ( font == UI_FONT_SMALL ) {
-		fnt = &cgDC.Assets.smallFont;
-	} else if ( font == UI_FONT_HANDWRITING ) {
-		fnt = &cgDC.Assets.handwritingFont;
+	} else {
+		fnt = UI_SelectFont( &cgDC.Assets, font, fnt );
 	}
 
 	useScale = scale * fnt->glyphScale;
@@ -110,12 +106,8 @@ int CG_Text_Height( const char *text, int font, float scale, int limit ) {
 		} else if ( scale > cg_bigFont.value ) {
 			fnt = &cgDC.Assets.bigFont;
 		}
-	} else if ( font == UI_FONT_BIG ) {
-		fnt = &cgDC.Assets.bigFont;
-	} else if ( font == UI_FONT_SMALL ) {
-		fnt = &cgDC.Assets.smallFont;
-	} else if ( font == UI_FONT_HANDWRITING ) {
-		fnt = &cgDC.Assets.handwritingFont;
+	} else {
+		fnt = UI_SelectFont( &cgDC.Assets, font, fnt );
 	}
 
 	useScale = scale * fnt->glyphScale;
@@ -164,12 +156,8 @@ void CG_Text_Paint( float x, float y, int font, float scale, vec4_t color, const
 		} else if ( scale > cg_bigFont.value ) {
 			fnt = &cgDC.Assets.bigFont;
 		}
-	} else if ( font == UI_FONT_BIG ) {
-		fnt = &cgDC.Assets.bigFont;
-	} else if ( font == UI_FONT_SMALL ) {
-		fnt = &cgDC.Assets.smallFont;
-	} else if ( font == UI_FONT_HANDWRITING ) {
-		fnt = &cgDC.Assets.handwritingFont;
+	} else {
+		fnt = UI_SelectFont( &cgDC.Assets, font, fnt );
 	}
 
 	useScale = scale * fnt->glyphScale;

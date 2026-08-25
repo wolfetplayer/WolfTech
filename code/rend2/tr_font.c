@@ -96,9 +96,13 @@ If you have questions concerning this license or the applicable additional terms
 #define _TRUNC( x )  ( ( x ) >> 6 )
 
 FT_Library ftLibrary = NULL;
+
+// live TTF/OTF lookup: fonts/<fontName>.<ext>, first match wins
+static const char *supportedFontFormats[] = { "ttf", "otf" };
+#define NUM_SUPPORTED_FONT_FORMATS ( sizeof( supportedFontFormats ) / sizeof( supportedFontFormats[0] ) )
 #endif
 
-#define MAX_FONTS 6
+#define MAX_FONTS 32
 static int registeredFontCount = 0;
 static fontInfo_t registeredFont[MAX_FONTS];
 
@@ -341,8 +345,50 @@ float readFloat( void ) {
 	return me.ffred;
 }
 
-void RE_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font ) {
+// Legacy pre-baked font: fonts/fontImage_<pointSize>.dat + fontImage_*.tga pages.
+// Kept as a fallback for assets that ship without a .ttf/.otf (e.g. retail RTCW data).
+static qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
+	void *faceData;
+	int i, len;
+
+	len = ri.FS_ReadFile( datName, NULL );
+	if ( len != sizeof( fontInfo_t ) ) {
+		return qfalse;
+	}
+
+	ri.FS_ReadFile( datName, &faceData );
+	fdOffset = 0;
+	fdFile = faceData;
+	for ( i = 0; i < GLYPHS_PER_FONT; i++ ) {
+		font->glyphs[i].height      = readInt();
+		font->glyphs[i].top         = readInt();
+		font->glyphs[i].bottom      = readInt();
+		font->glyphs[i].pitch       = readInt();
+		font->glyphs[i].xSkip       = readInt();
+		font->glyphs[i].imageWidth  = readInt();
+		font->glyphs[i].imageHeight = readInt();
+		font->glyphs[i].s           = readFloat();
+		font->glyphs[i].t           = readFloat();
+		font->glyphs[i].s2          = readFloat();
+		font->glyphs[i].t2          = readFloat();
+		font->glyphs[i].glyph       = readInt();
+		Q_strncpyz(font->glyphs[i].shaderName, (const char *)&fdFile[fdOffset], sizeof(font->glyphs[i].shaderName));
+		fdOffset += sizeof(font->glyphs[i].shaderName);
+	}
+	font->glyphScale = readFloat();
+	Com_Memcpy( font->name, &fdFile[fdOffset], MAX_QPATH );
+
+	Q_strncpyz( font->name, datName, sizeof( font->name ) );
+	for ( i = GLYPH_START; i <= GLYPH_END; i++ ) {
+		font->glyphs[i].glyph = RE_RegisterShaderNoMip( font->glyphs[i].shaderName );
+	}
+	ri.FS_FreeFile( faceData );
+	return qtrue;
+}
+
 #ifdef BUILD_FREETYPE
+// Live-rasterizes fonts/<fontName>.ttf or .otf via FreeType into a runtime glyph atlas.
+static qboolean R_LoadScalableFont( const char *fontName, int pointSize, fontInfo_t *font ) {
 	FT_Face face;
 	int j, k, xOut, yOut, lastStart, imageNumber;
 	int scaledSize, newSize, maxHeight, left;
@@ -353,104 +399,56 @@ void RE_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font ) {
 	float max;
 	float dpi = 72;
 	float glyphScale;
-#endif
 	void *faceData;
-	int i, len;
+	int i, len, fmt;
+	char path[1024];
 	char name[1024];
+	qboolean found;
 
-	if (!fontName) {
-		ri.Printf(PRINT_ALL, "RE_RegisterFont: called with empty name\n");
-		return;
-	}
-
-	if ( pointSize <= 0 ) {
-		pointSize = 12;
-	}
-
-	R_IssuePendingRenderCommands();
-
-	if ( registeredFontCount >= MAX_FONTS ) {
-		ri.Printf( PRINT_WARNING, "RE_RegisterFont: Too many fonts registered already.\n" );
-		return;
-	}
-
-	Com_sprintf( name, sizeof( name ), "fonts/fontImage_%i.dat",pointSize );
-	for ( i = 0; i < registeredFontCount; i++ ) {
-		if ( Q_stricmp( name, registeredFont[i].name ) == 0 ) {
-			Com_Memcpy( font, &registeredFont[i], sizeof( fontInfo_t ) );
-			return;
-		}
-	}
-
-	len = ri.FS_ReadFile( name, NULL );
-	if ( len == sizeof( fontInfo_t ) ) {
-		ri.FS_ReadFile( name, &faceData );
-		fdOffset = 0;
-		fdFile = faceData;
-		for ( i = 0; i < GLYPHS_PER_FONT; i++ ) {
-			font->glyphs[i].height      = readInt();
-			font->glyphs[i].top         = readInt();
-			font->glyphs[i].bottom      = readInt();
-			font->glyphs[i].pitch       = readInt();
-			font->glyphs[i].xSkip       = readInt();
-			font->glyphs[i].imageWidth  = readInt();
-			font->glyphs[i].imageHeight = readInt();
-			font->glyphs[i].s           = readFloat();
-			font->glyphs[i].t           = readFloat();
-			font->glyphs[i].s2          = readFloat();
-			font->glyphs[i].t2          = readFloat();
-			font->glyphs[i].glyph       = readInt();
-			Q_strncpyz(font->glyphs[i].shaderName, (const char *)&fdFile[fdOffset], sizeof(font->glyphs[i].shaderName));
-			fdOffset += sizeof(font->glyphs[i].shaderName);
-		}
-		font->glyphScale = readFloat();
-		Com_Memcpy( font->name, &fdFile[fdOffset], MAX_QPATH );
-
-//		Com_Memcpy(font, faceData, sizeof(fontInfo_t));
-		Q_strncpyz( font->name, name, sizeof( font->name ) );
-		for ( i = GLYPH_START; i <= GLYPH_END; i++ ) {
-			font->glyphs[i].glyph = RE_RegisterShaderNoMip( font->glyphs[i].shaderName );
-		}
-		Com_Memcpy( &registeredFont[registeredFontCount++], font, sizeof( fontInfo_t ) );
-		ri.FS_FreeFile(faceData);
-		return;
-	}
-
-#ifndef BUILD_FREETYPE
-	ri.Printf( PRINT_WARNING, "RE_RegisterFont: FreeType code not available\n" ); // JPW NERVE was PRINT_ALL
-#else
 	if ( ftLibrary == NULL ) {
-		ri.Printf( PRINT_WARNING, "RE_RegisterFont: FreeType not initialized.\n" ); // JPW NERVE was PRINT_ALL
-		return;
+		return qfalse;
 	}
 
-	len = ri.FS_ReadFile( fontName, &faceData );
+	found = qfalse;
+	for ( fmt = 0; fmt < NUM_SUPPORTED_FONT_FORMATS; fmt++ ) {
+		Com_sprintf( path, sizeof( path ), "fonts/%s.%s", fontName, supportedFontFormats[fmt] );
+		if ( ri.FS_ReadFile( path, NULL ) > 0 ) {
+			found = qtrue;
+			break;
+		}
+	}
+
+	if ( !found ) {
+		return qfalse;
+	}
+
+	len = ri.FS_ReadFile( path, &faceData );
 	if ( len <= 0 ) {
-		ri.Printf(PRINT_WARNING, "RE_RegisterFont: Unable to read font file '%s'\n", fontName);
-		return;
+		ri.Printf( PRINT_WARNING, "R_LoadScalableFont: Unable to read font file '%s'\n", path );
+		return qfalse;
 	}
 
 	// allocate on the stack first in case we fail
 	if ( FT_New_Memory_Face( ftLibrary, faceData, len, 0, &face ) ) {
-		ri.Printf(PRINT_WARNING, "RE_RegisterFont: FreeType, unable to allocate new face.\n");
-		return;
+		ri.FS_FreeFile( faceData );
+		ri.Printf( PRINT_WARNING, "R_LoadScalableFont: FreeType, unable to allocate new face for '%s'.\n", path );
+		return qfalse;
 	}
-
 
 	if ( FT_Set_Char_Size( face, pointSize << 6, pointSize << 6, dpi, dpi ) ) {
-		ri.Printf(PRINT_WARNING, "RE_RegisterFont: FreeType, unable to set face char size.\n");
-		return;
+		ri.FS_FreeFile( faceData );
+		ri.Printf( PRINT_WARNING, "R_LoadScalableFont: FreeType, unable to set face char size for '%s'.\n", path );
+		return qfalse;
 	}
-
-	//*font = &registeredFonts[registeredFontCount++];
 
 	// make a 256x256 image buffer, once it is full, register it, clean it and keep going
 	// until all glyphs are rendered
 
 	out = ri.Z_Malloc( 256 * 256 );
 	if ( out == NULL ) {
-		ri.Printf(PRINT_WARNING, "RE_RegisterFont: ri.Z_Malloc failure during output image creation.\n");
-		return;
+		ri.FS_FreeFile( faceData );
+		ri.Printf( PRINT_WARNING, "R_LoadScalableFont: ri.Z_Malloc failure during output image creation.\n" );
+		return qfalse;
 	}
 	Com_Memset( out, 0, 256 * 256 );
 
@@ -503,12 +501,11 @@ void RE_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font ) {
 				imageBuff[left++] = ( (float)out[k] * max );
 			}
 
-			Com_sprintf( name, sizeof( name ), "fonts/fontImage_%i_%i.tga", imageNumber++, pointSize );
+			Com_sprintf( name, sizeof( name ), "fonts/%s_%i_%i.tga", fontName, imageNumber++, pointSize );
 			if ( r_saveFontData->integer ) {
 				WriteTGA( name, imageBuff, 256, 256 );
 			}
 
-			//Com_sprintf (name, sizeof(name), "fonts/fontImage_%i_%i", imageNumber++, pointSize);
 			image = R_CreateImage( name, imageBuff, 256, 256, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
 			h = RE_RegisterShaderFromImage( name, LIGHTMAP_2D, image, qfalse );
 			for ( j = lastStart; j < i; j++ ) {
@@ -534,18 +531,65 @@ void RE_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font ) {
 	// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
 	glyphScale *= 48.0f / pointSize;
 
-	registeredFont[registeredFontCount].glyphScale = glyphScale;
 	font->glyphScale = glyphScale;
-	Com_Memcpy( &registeredFont[registeredFontCount++], font, sizeof( fontInfo_t ) );
+	Com_sprintf( font->name, sizeof( font->name ), "fonts/%s_%i.dat", fontName, pointSize );
 
 	if ( r_saveFontData->integer ) {
-		ri.FS_WriteFile( va( "fonts/fontImage_%i.dat", pointSize ), font, sizeof( fontInfo_t ) );
+		ri.FS_WriteFile( font->name, font, sizeof( fontInfo_t ) );
 	}
 
 	ri.Free( out );
-
 	ri.FS_FreeFile( faceData );
+	FT_Done_Face( face );
+
+	return qtrue;
+}
 #endif
+
+void RE_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font ) {
+	char cacheName[1024];
+	int i;
+
+	if (!fontName) {
+		ri.Printf(PRINT_ALL, "RE_RegisterFont: called with empty name\n");
+		return;
+	}
+
+	if ( pointSize <= 0 ) {
+		pointSize = 12;
+	}
+
+	R_IssuePendingRenderCommands();
+
+	if ( registeredFontCount >= MAX_FONTS ) {
+		ri.Printf( PRINT_WARNING, "RE_RegisterFont: Too many fonts registered already.\n" );
+		return;
+	}
+
+	// cache key is fontName+pointSize so two different faces at the same point size
+	// (e.g. ariblk 16 and courbd 16) don't collide, unlike the old fontImage_<size>.dat scheme
+	Com_sprintf( cacheName, sizeof( cacheName ), "fonts/%s_%i.dat", fontName, pointSize );
+	for ( i = 0; i < registeredFontCount; i++ ) {
+		if ( Q_stricmp( cacheName, registeredFont[i].name ) == 0 ) {
+			Com_Memcpy( font, &registeredFont[i], sizeof( fontInfo_t ) );
+			return;
+		}
+	}
+
+#ifdef BUILD_FREETYPE
+	if ( R_LoadScalableFont( fontName, pointSize, font ) ) {
+		Com_Memcpy( &registeredFont[registeredFontCount++], font, sizeof( fontInfo_t ) );
+		return;
+	}
+#endif
+
+	// fall back to a legacy pre-baked font (e.g. retail fontImage_<size>.dat/.tga)
+	if ( R_LoadPreRenderedFont( va( "fonts/fontImage_%i.dat", pointSize ), font ) ) {
+		Com_Memcpy( &registeredFont[registeredFontCount++], font, sizeof( fontInfo_t ) );
+		return;
+	}
+
+	ri.Printf( PRINT_WARNING, "RE_RegisterFont: failed to register font '%s' at point size %i\n", fontName, pointSize );
 }
 
 

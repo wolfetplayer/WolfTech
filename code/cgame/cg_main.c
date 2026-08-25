@@ -1985,13 +1985,20 @@ qboolean CG_Asset_Parse( int handle ) {
 			return qtrue;
 		}
 
-		// font
+		// font: either "font \"<name>\" <size>" (legacy, -> textFont) or
+		// "font <index> \"<name>\" <size>" (indexed, -> extraFonts[index - UI_FONT_EXTRA_BASE])
 		if ( Q_stricmp( token.string, "font" ) == 0 ) {
-			int pointSize;
-			if ( !PC_String_Parse( handle, &tempStr ) || !PC_Int_Parse( handle, &pointSize ) ) {
+			int fontIndex, pointSize;
+			if ( !PC_Font_Parse( handle, &fontIndex, &tempStr, &pointSize ) ) {
 				return qfalse;
 			}
-			cgDC.registerFont( tempStr, pointSize, &cgDC.Assets.textFont );
+			if ( fontIndex < 0 ) {
+				cgDC.registerFont( tempStr, pointSize, &cgDC.Assets.textFont );
+			} else if ( fontIndex >= UI_FONT_EXTRA_BASE && fontIndex < UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT ) {
+				cgDC.registerFont( tempStr, pointSize, &cgDC.Assets.extraFonts[fontIndex - UI_FONT_EXTRA_BASE] );
+			} else {
+				CG_Printf( "CG_Asset_Parse: font index %i out of range (%i..%i)\n", fontIndex, UI_FONT_EXTRA_BASE, UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT - 1 );
+			}
 			continue;
 		}
 

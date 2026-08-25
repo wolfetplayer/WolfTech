@@ -3,10 +3,11 @@
 {
 	assetGlobalDef {
 	
-		smallFont "fonts/smallfont" 12
-		font "fonts/font" 16
-		handwritingFont "fonts/handfont" 17
-		bigFont "fonts/bigfont" 24
+		smallFont "ariblk" 12
+		font "ariblk" 16
+		handwritingFont "courbd" 17
+		bigFont "ariblk" 24
+		font UI_FONT_COURBD_24 "courbd" 24		// monospaced, for HUD numeric readouts (health/armor/ammo)
 		
 		// hints
 		breakableHint		"gfx/2d/breakableHint.tga"
@@ -279,7 +280,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -300,7 +301,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -498,7 +499,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_HEALTH
@@ -519,7 +520,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -540,7 +541,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_HEALTH
@@ -561,7 +562,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -731,7 +732,7 @@
 
 				decoration
 				foreColor 1 1 1 1
-				textFont UI_FONT_BIG
+				textFont UI_FONT_COURBD_24
 				textScale .28
 				visible MENU_TRUE
 
@@ -913,7 +914,7 @@
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "0" }
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
@@ -935,7 +936,7 @@
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "1" }
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
@@ -996,7 +997,7 @@
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "0" }
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_AMMO_VALUE
@@ -1018,7 +1019,7 @@
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "1" }
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_AMMO_VALUE

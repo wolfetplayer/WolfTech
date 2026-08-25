@@ -156,6 +156,19 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_FONT_SMALL           3
 #define UI_FONT_HANDWRITING     4
 
+// extra named fonts, registered in assetGlobalDef via:
+//   font <fontIndex> "<fontfile>" <pointSize>
+// and used by itemDefs via "textfont <fontIndex>". Slots UI_FONT_EXTRA_BASE
+// through UI_FONT_EXTRA_BASE+UI_FONT_EXTRA_COUNT-1 are free for menus to assign.
+#define UI_FONT_EXTRA_BASE      5
+#define UI_FONT_EXTRA_COUNT     16
+
+#define UI_FONT_ARIBLK_16       5
+#define UI_FONT_ARIBLK_27       6
+#define UI_FONT_COURBD_21       7
+#define UI_FONT_COURBD_30       8
+#define UI_FONT_COURBD_24       9   // monospaced, used for HUD numeric readouts (stable digit width)
+
 // owner draw types
 // ideally these should be done outside of this file but
 // this makes it much easier for the macro expansion to

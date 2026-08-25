@@ -316,6 +316,7 @@ typedef struct {
 	fontInfo_t smallFont;
 	fontInfo_t bigFont;
 	fontInfo_t handwritingFont;
+	fontInfo_t extraFonts[UI_FONT_EXTRA_COUNT]; // indexed by "textfont" values >= UI_FONT_EXTRA_BASE
 	qhandle_t cursor;
 	qhandle_t gradientBar;
 	qhandle_t scrollBarArrowUp;
@@ -491,6 +492,8 @@ qboolean PC_Rect_Parse( int handle, rectDef_t *r );
 qboolean PC_String_Parse( int handle, const char **out );
 qboolean PC_Script_Parse( int handle, const char **out );
 qboolean PC_Char_Parse( int handle, char *out );              // NERVE - SMF
+qboolean PC_Font_Parse( int handle, int *fontIndex, const char **fontName, int *pointSize );
+fontInfo_t *UI_SelectFont( cachedAssets_t *assets, int font, fontInfo_t *fallback );
 int Menu_Count( void );
 void Menu_New( int handle );
 void Menu_PaintAll( void );

@@ -625,6 +625,61 @@ qboolean PC_Int_Parse( int handle, int *i ) {
 
 /*
 =================
+PC_Font_Parse
+
+Parses the "font" assetGlobalDef keyword in either form:
+  font "<fontfile>" <pointSize>              (legacy, always the default/text font)
+  font <fontIndex> "<fontfile>" <pointSize>   (indexed, registers into extraFonts[])
+Sets *fontIndex to -1 for the legacy form, otherwise the parsed index.
+=================
+*/
+qboolean PC_Font_Parse( int handle, int *fontIndex, const char **fontName, int *pointSize ) {
+	pc_token_t token;
+
+	if ( !trap_PC_ReadToken( handle, &token ) ) {
+		return qfalse;
+	}
+
+	if ( token.type == TT_NUMBER ) {
+		*fontIndex = token.intvalue;
+		if ( !PC_String_Parse( handle, fontName ) || !PC_Int_Parse( handle, pointSize ) ) {
+			return qfalse;
+		}
+	} else {
+		*fontIndex = -1;
+		*fontName = String_Alloc( token.string );
+		if ( !PC_Int_Parse( handle, pointSize ) ) {
+			return qfalse;
+		}
+	}
+	return qtrue;
+}
+
+/*
+=================
+UI_SelectFont
+
+Resolves a "textfont" item value (UI_FONT_BIG/SMALL/HANDWRITING or an
+extraFonts[] index >= UI_FONT_EXTRA_BASE) to its fontInfo_t. Callers should
+pre-resolve UI_FONT_DEFAULT themselves (it depends on scale, not just index)
+and pass their default-selected font in as fallback.
+=================
+*/
+fontInfo_t *UI_SelectFont( cachedAssets_t *assets, int font, fontInfo_t *fallback ) {
+	if ( font == UI_FONT_BIG ) {
+		return &assets->bigFont;
+	} else if ( font == UI_FONT_SMALL ) {
+		return &assets->smallFont;
+	} else if ( font == UI_FONT_HANDWRITING ) {
+		return &assets->handwritingFont;
+	} else if ( font >= UI_FONT_EXTRA_BASE && font < UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT ) {
+		return &assets->extraFonts[font - UI_FONT_EXTRA_BASE];
+	}
+	return fallback;
+}
+
+/*
+=================
 Rect_Parse
 =================
 */

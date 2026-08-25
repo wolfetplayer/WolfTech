@@ -2,9 +2,11 @@ S#include "ui/menudef.h"
 
 {
 	assetGlobalDef {
-		font "fonts/normal" 16			
-		smallFont "fonts/smallFont" 12			
-		bigFont "fonts/bigFont" 24			
+		font "ariblk" 16
+		smallFont "ariblk" 12
+		bigFont "ariblk" 24
+		font UI_FONT_ARIBLK_27 "ariblk" 27
+		font UI_FONT_COURBD_21 "courbd" 21
 		cursor "ui/assets/3_cursor3"			
 		gradientBar "ui/assets/gradientbar2.tga"	
 		itemFocusSound "sound/misc/menu2.wav"
@@ -102,8 +104,8 @@ itemDef
 		group mainmenus
 		type 1
 	    rect 10 250 178 26
-		visible 1 
-		textfont UI_FONT_BIG
+		visible 1
+		textfont UI_FONT_ARIBLK_27
 	textalign 0
 	textaligny 20
 	textscale .60
@@ -127,7 +129,7 @@ itemDef
 		type 1
 	    rect 10 300 178 26
 		visible 1
-		textfont UI_FONT_BIG
+		textfont UI_FONT_ARIBLK_27
 	textalign 0
 	textaligny 20
 	textscale .60
@@ -167,6 +169,7 @@ itemDef
 		group mainmenus
  	    type 1
 	    rect 10 400 178 26
+		textfont UI_FONT_COURBD_21
 	textalign 0
 	textaligny 20
 	textscale .60

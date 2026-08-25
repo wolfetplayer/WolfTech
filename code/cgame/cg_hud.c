@@ -1270,12 +1270,8 @@ static void CG_Text_Paint_Limit( float *maxX, float x, float y, int font, float 
 			} else if ( scale > cg_bigFont.value ) {
 				fnt = &cgDC.Assets.bigFont;
 			}
-		} else if ( font == UI_FONT_BIG ) {
-			fnt = &cgDC.Assets.bigFont;
-		} else if ( font == UI_FONT_SMALL ) {
-			fnt = &cgDC.Assets.smallFont;
-		} else if ( font == UI_FONT_HANDWRITING ) {
-			fnt = &cgDC.Assets.handwritingFont;
+		} else {
+			fnt = UI_SelectFont( &cgDC.Assets, font, fnt );
 		}
 
 		useScale = scale * fnt->glyphScale;

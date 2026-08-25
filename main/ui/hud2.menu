@@ -7,12 +7,12 @@
 {
 	assetGlobalDef {
 	
-		font "fonts/font" 16						// font
-		handwritingFont "fonts/handfont" 17			// font (pt size needs to be diff than the others)
+		font "ariblk" 16							// font
+		handwritingFont "courbd" 17					// font (pt size needs to be diff than the others)
 
-		//	font "fonts/impact.ttf" 16				// font
-		smallFont "fonts/smallfont" 12				// font
-		bigFont "fonts/bigFont" 24					// font
+		smallFont "ariblk" 12						// font
+		bigFont "ariblk" 24							// font
+		font UI_FONT_COURBD_24 "courbd" 24			// monospaced, for HUD numeric readouts (health/armor/stamina/ammo/score)
 
 		cursor "ui/assets/3_cursor3"				// cursor	
 		gradientBar "ui/assets/gradientbar2.tga"	// gradient bar
@@ -481,7 +481,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -574,7 +574,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_HEALTH
@@ -595,7 +595,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_ARMOR_VALUE
@@ -735,7 +735,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_SCORE
@@ -756,7 +756,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_LIVES
@@ -777,7 +777,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_SPAWNPOINTS
@@ -916,7 +916,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_SCORE
@@ -937,7 +937,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_LIVES
@@ -958,7 +958,7 @@
 			visible MENU_TRUE
 			decoration
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_SPAWNPOINTS
@@ -1077,7 +1077,7 @@
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "0" }
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
@@ -1099,7 +1099,7 @@
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "1" }
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
@@ -1160,7 +1160,7 @@
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "0" }
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_AMMO_VALUE
@@ -1182,7 +1182,7 @@
 			cvarTest "cg_hudAmmoClip"
 			showCvar { "1" }
 			
-			textfont UI_FONT_BIG
+			textfont UI_FONT_COURBD_24
 			textscale .32
 			
 			ownerdraw CG_PLAYER_AMMO_VALUE
