@@ -13,6 +13,7 @@
 		smallFont "ariblk" 12						// font
 		bigFont "ariblk" 24							// font
 		font UI_FONT_COURBD_24 "courbd" 24			// monospaced, for HUD numeric readouts (health/armor/stamina/ammo/score)
+		font UI_FONT_COURBD_12 "courbd" 12			// monospaced, for chat feed / subtitle text
 
 		cursor "ui/assets/3_cursor3"				// cursor	
 		gradientBar "ui/assets/gradientbar2.tga"	// gradient bar

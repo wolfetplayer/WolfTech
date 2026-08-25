@@ -35,6 +35,9 @@ If you have questions concerning this license or the applicable additional terms
 
 
 #include "cg_local.h"
+#include "../ui/ui_shared.h"
+
+extern displayContextDef_t cgDC;
 
 ///////////////////////
 extern int propellerModel;
@@ -738,11 +741,10 @@ void CG_DrawHoldableSelect( void ) {
 			name = cgs.itemPrintNames[ item - bg_itemlist ];
 			if ( name ) {
 				//----(SA)	trying smaller text
-//				w = CG_DrawStrlen( name ) * BIGCHAR_WIDTH;
-				w = CG_DrawStrlen( name ) * 10;
+				float scale = CG_CHAT_TEXT_SCALE * ( 10.0f / SMALLCHAR_WIDTH );
+				w = CG_Text_Width_Ext( name, scale, 0, CG_CHAT_FONT );
 				x = ( SCREEN_WIDTH - w ) / 2;
-//				CG_DrawBigStringColor(x, y - 22, name, color);
-				CG_DrawStringExt2( x, y + 74, name, color, qfalse, qtrue, 10, 10, 0 );
+				CG_Text_Paint_Ext( x, y + 74, scale, scale, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 			}
 		}
 	}

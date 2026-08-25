@@ -168,6 +168,7 @@ If you have questions concerning this license or the applicable additional terms
 #define UI_FONT_COURBD_21       7
 #define UI_FONT_COURBD_30       8
 #define UI_FONT_COURBD_24       9   // monospaced, used for HUD numeric readouts (stable digit width)
+#define UI_FONT_COURBD_12       10  // monospaced, used for chat feed / subtitle text
 
 // owner draw types
 // ideally these should be done outside of this file but

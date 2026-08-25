@@ -329,10 +329,11 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 
 			if ( upgradeLevel > 0 ) {
 				const char *numeral = upgradeNumerals[ upgradeLevel ];
-				float badgeX = x + w - ( (float)strlen( numeral ) * TINYCHAR_WIDTH ) - 2;
+				int badgeW = CG_Text_Width_Ext( numeral, CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
+				float badgeX = x + w - badgeW - 2;
 				float badgeY = y + h - TINYCHAR_HEIGHT - 2;
 
-				CG_DrawStringExt( (int)badgeX, (int)badgeY, numeral, colorWhite, qtrue, qtrue, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+				CG_Text_Paint_Ext( badgeX, badgeY, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, colorWhite, numeral, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 			}
 		}
 	}

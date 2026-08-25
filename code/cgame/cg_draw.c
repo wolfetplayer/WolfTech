@@ -962,18 +962,20 @@ static float CG_DrawCoopOverlay( float y ) {
 	int pwidth, lwidth;
 	int plyrs;
 	char st[16];
+	char nameClean[MAX_QPATH];
 	clientInfo_t *ci;
 	// NERVE - SMF
 	char classType[2] = { 0, 0 };
 	int val;
 	vec4_t deathcolor, damagecolor;          // JPW NERVE
 	float       *pcolor;
+	int chW, chH;
 	// -NERVE - SMF
 
 	if ( !cg_drawTeamOverlay.integer ) {
 		return y;
 	}
-	
+
 	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
 		return y;
 	}
@@ -987,6 +989,10 @@ static float CG_DrawCoopOverlay( float y ) {
 	damagecolor[2] = 0;
 	damagecolor[3] = cg_hudAlpha.value;
 	maxCharsBeforeOverlay = 80;
+
+	// TTF-backed courbd cell size, replaces the fixed TINYCHAR_WIDTH/HEIGHT grid
+	chW = CG_Text_Width_Ext( "0", CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
+	chH = chW;
 
 	plyrs = 0;
 
@@ -1041,16 +1047,16 @@ static float CG_DrawCoopOverlay( float y ) {
 		lwidth = TEAM_OVERLAY_MAXLOCATION_WIDTH;
 	}
 
-	w = ( pwidth + lwidth + 7 + 7 ) * TINYCHAR_WIDTH;         // JPW NERVE was +4+7
+	w = ( pwidth + lwidth + 7 + 7 ) * chW;         // JPW NERVE was +4+7
 
 	x = 640 - w - 1;     // JPW was -32
-	h = plyrs * TINYCHAR_HEIGHT;
+	h = plyrs * chH;
 
 	// DHM - Nerve :: Set the max characters that can be printed before the left edge
 	if ( cg_fixedAspect.integer == 2 && ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) ) {
-		maxCharsBeforeOverlay = ( ( ( cgs.glconfig.vidWidth / cgs.screenXScale ) - w - 1 ) / TINYCHAR_WIDTH ) - 1;
+		maxCharsBeforeOverlay = ( ( ( cgs.glconfig.vidWidth / cgs.screenXScale ) - w - 1 ) / chW ) - 1;
 	} else {
-		maxCharsBeforeOverlay = ( x / TINYCHAR_WIDTH ) - 1;
+		maxCharsBeforeOverlay = ( x / chW ) - 1;
 	}
 
 	hcolor[0] = 0.25f;
@@ -1120,21 +1126,20 @@ static float CG_DrawCoopOverlay( float y ) {
 
 			Com_sprintf( st, sizeof( st ), "%s", classType );
 
-			xx = x + TINYCHAR_WIDTH;
+			xx = x + chW;
 
 
 			hcolor[0] = hcolor[1] = 1.0;
 			hcolor[2] = 0.0;
 			hcolor[3] = cg_hudAlpha.value;
 
-			CG_DrawStringExt( xx, y,
-							  st, hcolor, qtrue, qfalse,
-							  TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 1 );
+			CG_Text_Paint_Ext( xx, y, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
+							  st, 0, 1, 0, CG_CHAT_FONT );
 
 			hcolor[0] = hcolor[1] = hcolor[2] = 1.0;
 			hcolor[3] = cg_hudAlpha.value;
 
-			xx = x + 3 * TINYCHAR_WIDTH;
+			xx = x + 3 * chW;
 
 			// JPW NERVE
 			if ( ci->health > 80 ) {
@@ -1152,17 +1157,20 @@ static float CG_DrawCoopOverlay( float y ) {
 				bgcolor[1] = 0.0;
 				bgcolor[2] = 0.0;
 				bgcolor[3] = cg_hudAlpha.value;
-				CG_FillRect( xx, y + 1, CG_DrawStrlen( ci->name ) * TINYCHAR_WIDTH, TINYCHAR_HEIGHT - 1, bgcolor );
+				CG_FillRect( xx, y + 1, CG_DrawStrlen( ci->name ) * chW, chH - 1, bgcolor );
 			} else if ( ci->lastkilltime + 1000 >= cg.time ) {
 				pcolor[0] = 0.0;
 				pcolor[1] = 1.0;
 				pcolor[2] = 0.0;
 			}
 
-
-			CG_DrawStringExt( xx, y,
-							  ci->name, pcolor, qtrue, qfalse,
-							  TINYCHAR_WIDTH, TINYCHAR_HEIGHT, TEAM_OVERLAY_MAXNAME_WIDTH );
+			// force a solid color regardless of any ^N color codes in the player's name
+			// (CG_Text_Paint_Ext always honors inline color codes, unlike the old
+			// CG_DrawStringExt's forceColor flag), so strip them from a local copy
+			Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
+			Q_StripColorCodes( nameClean );
+			CG_Text_Paint_Ext( xx, y, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
+							  nameClean, 0, TEAM_OVERLAY_MAXNAME_WIDTH, 0, CG_CHAT_FONT );
 
 			if ( lwidth ) {
 				p = CG_ConfigString( CS_LOCATIONS + ci->location );
@@ -1175,22 +1183,20 @@ static float CG_DrawCoopOverlay( float y ) {
 					len = lwidth;
 				}
 
-				xx = x + TINYCHAR_WIDTH * 5 + TINYCHAR_WIDTH * pwidth +
-					 ( ( lwidth / 2 - len / 2 ) * TINYCHAR_WIDTH );
-				CG_DrawStringExt( xx, y,
-								  p, hcolor, qfalse, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT,
-								  TEAM_OVERLAY_MAXLOCATION_WIDTH );
+				xx = x + chW * 5 + chW * pwidth +
+					 ( ( lwidth / 2 - len / 2 ) * chW );
+				CG_Text_Paint_Ext( xx, y, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
+								  p, 0, TEAM_OVERLAY_MAXLOCATION_WIDTH, 0, CG_CHAT_FONT );
 			}
 
 			Com_sprintf( st, sizeof( st ), "%3i/%i", ci->health, ci->armor );             // JPW NERVE pulled class stuff since it's at top now
 
-			xx = x + TINYCHAR_WIDTH * 6 + TINYCHAR_WIDTH * pwidth + TINYCHAR_WIDTH * lwidth;
+			xx = x + chW * 6 + chW * pwidth + chW * lwidth;
 
-			CG_DrawStringExt( xx, y,
-							  st, pcolor, qfalse, qfalse,
-							  TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 7 );
+			CG_Text_Paint_Ext( xx, y, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
+							  st, 0, 7, 0, CG_CHAT_FONT );
 
-			y += TINYCHAR_HEIGHT;
+			y += chH;
 		}
 	}
 
@@ -1313,10 +1319,10 @@ static void CG_DrawTeamInfo( void ) {
 			hcolor[3] = alphapercent;
 			trap_R_SetColor( hcolor );
 
-			CG_DrawStringExt( CHATLOC_X + TINYCHAR_WIDTH,
+			CG_Text_Paint_Ext( CHATLOC_X + TINYCHAR_WIDTH,
 							  CHATLOC_Y - ( cgs.teamChatPos - i ) * TINYCHAR_HEIGHT,
-							  cgs.teamChatMsgs[i % chatHeight], hcolor, qfalse, qfalse,
-							  TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+							  CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
+							  cgs.teamChatMsgs[i % chatHeight], 0, 0, 0, CG_CHAT_FONT );
 		}
 // jpw
 	}
@@ -1334,6 +1340,7 @@ static void CG_DrawPickupItem( void ) {
 	char pickupText[256];
 	float color[4];
 	int w = 0;
+	float pickupScale = CG_CHAT_TEXT_SCALE * ( 10.0f / SMALLCHAR_WIDTH );
 
 	if ( cg_fixedAspect.integer == 2 ) {
 		CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
@@ -1364,11 +1371,15 @@ static void CG_DrawPickupItem( void ) {
 
 			color[0] = color[1] = color[2] = 1.0;
 			color[3] = fadeColor[0];
-			w = CG_DrawStrlen( pickupText ) * 10;
 #ifdef LOCALISATION
-			CG_DrawStringExt2( 320 - ( w / 2 ), 398, CG_TranslateString( pickupText ), color, qfalse, qtrue, 10, 10, 0 );
+			{
+				const char *translated = CG_TranslateString( pickupText );
+				w = CG_Text_Width_Ext( translated, pickupScale, 0, CG_CHAT_FONT );
+				CG_Text_Paint_Ext( 320 - ( w / 2 ), 398, pickupScale, pickupScale, color, translated, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+			}
 #else
-			CG_DrawStringExt2( 320 - ( w / 2 ), 398, pickupText, color, qfalse, qtrue, 10, 10, 0 );
+			w = CG_Text_Width_Ext( pickupText, pickupScale, 0, CG_CHAT_FONT );
+			CG_Text_Paint_Ext( 320 - ( w / 2 ), 398, pickupScale, pickupScale, color, pickupText, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 #endif
 
 			trap_R_SetColor( NULL );
@@ -1441,10 +1452,10 @@ static void CG_DrawNotify( void ) {
 			hcolor[3] = alphapercent;
 			trap_R_SetColor( hcolor );
 
-			CG_DrawStringExt( NOTIFYLOC_X + TINYCHAR_WIDTH,
+			CG_Text_Paint_Ext( NOTIFYLOC_X + TINYCHAR_WIDTH,
 							  NOTIFYLOC_Y - ( cgs.notifyPos - i ) * TINYCHAR_HEIGHT,
-							  cgs.notifyMsgs[i % chatHeight], hcolor, qfalse, qfalse,
-							  TINYCHAR_WIDTH, TINYCHAR_HEIGHT, maxCharsBeforeOverlay );
+							  CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
+							  cgs.notifyMsgs[i % chatHeight], 0, maxCharsBeforeOverlay, 0, CG_CHAT_FONT );
 		}
 	}
 
@@ -1776,6 +1787,7 @@ void CG_DrawFreeze( void ) {
 	int w, y, x;
 	vec4_t color;
 	char *linebuffer = va( "You are frozen" );
+	float scale = CG_CHAT_TEXT_SCALE * ( (float)BIGCHAR_WIDTH / SMALLCHAR_WIDTH );
 
 	if ( !( cg.snap->ps.eFlags & EF_FROZEN ) ) {
 		return;
@@ -1788,11 +1800,11 @@ void CG_DrawFreeze( void ) {
 	color[2] = 1;
 	color[3] = 1;
 
-	w = BIGCHAR_WIDTH * CG_DrawStrlen( linebuffer );
+	w = CG_Text_Width_Ext( linebuffer, scale, 0, CG_CHAT_FONT );
 
 	x = ( SCREEN_WIDTH - w ) / 2;
 
-	CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, BIGCHAR_WIDTH, BIGCHAR_WIDTH, 0 );
+	CG_Text_Paint_Ext( x, y, scale, scale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 }
 
 /*
@@ -2057,6 +2069,7 @@ static void CG_DrawCenterString( void ) {
 	int l;
 	int x, y, w;
 	float   *color;
+	float subScale;
 
 	if ( !cg.centerPrintTime ) {
 		return;
@@ -2077,6 +2090,11 @@ static void CG_DrawCenterString( void ) {
 
 	start = (char *)cg.centerPrint;
 
+	// scale the TTF-backed courbd font relative to the requested charWidth, so the
+	// caller-supplied size still controls centerprint size the way it did with the
+	// old fixed-cell bitmap glyphs
+	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.centerPrintCharWidth / SMALLCHAR_WIDTH );
+
 	y = cg.centerPrintY - cg.centerPrintLines * BIGCHAR_HEIGHT / 2;
 
 	while ( 1 ) {
@@ -2090,11 +2108,11 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = cg.centerPrintCharWidth * CG_DrawStrlen( linebuffer );
+		w = CG_Text_Width_Ext( linebuffer, subScale, 0, CG_CHAT_FONT );
 
 		x = ( SCREEN_WIDTH - w ) / 2;
 
-		CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, cg.centerPrintCharWidth, (int)( cg.centerPrintCharWidth * 1.5 ), 0 );
+		CG_Text_Paint_Ext( x, y, subScale, subScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 
 		y += cg.centerPrintCharWidth * 2;
 
@@ -2120,6 +2138,7 @@ static void CG_DrawBuyString( void ) {
 	int l;
 	int x, y, w;
 	float   *color;
+	float subScale;
 
 	if ( !cg.buyPrintTime ) {
 		return;
@@ -2139,6 +2158,11 @@ static void CG_DrawBuyString( void ) {
 
 	start = (char *)cg.buyPrint;
 
+	// scale the TTF-backed courbd font relative to the requested charWidth, so the
+	// caller-supplied size (SMALLCHAR_WIDTH for cpbuy) still controls buy-prompt size
+	// the way it did with the old fixed-cell bitmap glyphs
+	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.buyPrintCharWidth / SMALLCHAR_WIDTH );
+
 	y = cg.buyPrintY - cg.buyPrintLines * BIGCHAR_HEIGHT / 2;
 
 	while ( 1 ) {
@@ -2152,11 +2176,11 @@ static void CG_DrawBuyString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = cg.buyPrintCharWidth * CG_DrawStrlen( linebuffer );
+		w = CG_Text_Width_Ext( linebuffer, subScale, 0, CG_CHAT_FONT );
 
 		x = ( SCREEN_WIDTH - w ) / 2;
 
-		CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, cg.buyPrintCharWidth, (int)( cg.buyPrintCharWidth * 1.5 ), 0 );
+		CG_Text_Paint_Ext( x, y, subScale, subScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 
 		y += cg.buyPrintCharWidth * 2;
 
@@ -2186,6 +2210,8 @@ static void CG_DrawSubtitleString( void ) {
 	int l;
 	int x, y, w;
 	float   *color;
+	float subScale;
+	int style;
 
 	if ( !cg.subtitlePrintTime ) {
 		return;
@@ -2204,6 +2230,11 @@ static void CG_DrawSubtitleString( void ) {
 	trap_R_SetColor( color );
 
 	start = cg.subtitlePrint;
+
+	// scale the TTF-backed courbd font relative to cg_subtitleSize, so the cvar still
+	// controls subtitle size the way it did with the old fixed-cell bitmap glyphs
+	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.subtitlePrintCharWidth / SMALLCHAR_WIDTH );
+	style = cg_subtitleShadow.integer ? ITEM_TEXTSTYLE_SHADOWED : ITEM_TEXTSTYLE_NORMAL;
 
 	y = cg.subtitlePrintY - cg.subtitlePrintLines * BIGCHAR_HEIGHT / 2;
 
@@ -2224,15 +2255,11 @@ static void CG_DrawSubtitleString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = cg.subtitlePrintCharWidth * CG_DrawStrlen( linebuffer );
+		w = CG_Text_Width_Ext( linebuffer, subScale, 0, CG_CHAT_FONT );
 
 		x = ( SCREEN_WIDTH - w ) / 2;
 
-		if ( cg_subtitleShadow.integer ) {
-			CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, cg.subtitlePrintCharWidth, (int)( cg.subtitlePrintCharWidth * 1.5 ), 0 );
-		} else {
-			CG_DrawStringExt( x, y, linebuffer, color, qfalse, qfalse, cg.subtitlePrintCharWidth, (int)( cg.subtitlePrintCharWidth * 1.5 ), 0 );
-		}
+		CG_Text_Paint_Ext( x, y, subScale, subScale, color, linebuffer, 0, 0, style, CG_CHAT_FONT );
 
 		y += cg.subtitlePrintCharWidth * 2;
 
@@ -4019,14 +4046,17 @@ static void CG_DrawVote( void ) {
 		s = va( "VOTE(%i):%s", sec, cgs.voteString );
 #endif
 		// Should we push this down?
-		CG_DrawStringExt( 8, 200, s, color, qtrue, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 60 );
+		// cgs.voteString is server-controlled text; strip any ^N codes so it can't
+		// override the fixed vote-text color (matches the old forceColor behavior)
+		Q_StripColorCodes( s );
+		CG_Text_Paint_Ext( 8, 200, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
 
 #ifdef LOCALISATION
 		s = va( CG_TranslateString( "YES(%s):%i, NO(%s):%i" ), str1, cgs.voteYes, str2, cgs.voteNo );
 #else
 		s = va( "YES(%s):%i, NO(%s):%i", str1, cgs.voteYes, str2, cgs.voteNo );
 #endif
-		CG_DrawStringExt( 8, 214, s, color, qtrue, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 60 );
+		CG_Text_Paint_Ext( 8, 214, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
 	} else {
 
 #ifdef LOCALISATION
@@ -4034,7 +4064,7 @@ static void CG_DrawVote( void ) {
 #else
 		s = va( "Y:%i, N:%i", cgs.voteYes, cgs.voteNo );
 #endif
-		CG_DrawStringExt( 8, 214, s, color, qtrue, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 20 );
+		CG_Text_Paint_Ext( 8, 214, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 20, 0, CG_CHAT_FONT );
 	}
 }
 
@@ -4148,7 +4178,7 @@ static qboolean CG_DrawFollow( void ) {
 #endif
 		}
 
-		CG_DrawStringExt( INFOTEXT_STARTX, 68, deploytime, color, qtrue, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 80 );
+		CG_Text_Paint_Ext( INFOTEXT_STARTX, 68, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, deploytime, 0, 80, 0, CG_CHAT_FONT );
 
 		// DHM - Nerve :: Don't display if you're following yourself
 		if ( cg.snap->ps.clientNum != cg.clientNum ) {
@@ -4157,7 +4187,9 @@ static qboolean CG_DrawFollow( void ) {
 #else
 			Com_sprintf( deploytime, sizeof(deploytime), "(%s %s)", "Following", cgs.clientinfo[ cg.snap->ps.clientNum ].name );
 #endif
-			CG_DrawStringExt( INFOTEXT_STARTX, 86, deploytime, color, qtrue, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 80 );
+			// player name may contain ^N color codes; strip them to keep the fixed color
+			Q_StripColorCodes( deploytime );
+			CG_Text_Paint_Ext( INFOTEXT_STARTX, 86, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, deploytime, 0, 80, 0, CG_CHAT_FONT );
 		}
 	} else {
 		// jpw
@@ -4167,9 +4199,11 @@ static qboolean CG_DrawFollow( void ) {
 		CG_DrawSmallString( INFOTEXT_STARTX, 68, "following", 1.0F );
 #endif
 
-		name = cgs.clientinfo[ cg.snap->ps.clientNum ].name;
+		Q_strncpyz( deploytime, cgs.clientinfo[ cg.snap->ps.clientNum ].name, sizeof( deploytime ) );
+		Q_StripColorCodes( deploytime );
+		name = deploytime;
 
-		CG_DrawStringExt( 120, 68, name, color, qtrue, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0 );
+		CG_Text_Paint_Ext( 120, 68, CG_CHAT_TEXT_SCALE * ( (float)BIGCHAR_WIDTH / SMALLCHAR_WIDTH ), CG_CHAT_TEXT_SCALE * ( (float)BIGCHAR_WIDTH / SMALLCHAR_WIDTH ), color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 	} // JPW NERVE
 	return qtrue;
 }
@@ -4305,9 +4339,11 @@ static void CG_DrawWarmup( void ) {
 
 	cw = 16;
 
-	w = CG_DrawStrlen( s );
-	CG_DrawStringExt( 320 - w * cw / 2, 120, s, colorWhite,
-					  qfalse, qtrue, cw, (int)( cw * 1.5 ), 0 );
+	{
+		float scale = CG_CHAT_TEXT_SCALE * ( (float)cw / SMALLCHAR_WIDTH );
+		w = CG_Text_Width_Ext( s, scale, 0, CG_CHAT_FONT );
+		CG_Text_Paint_Ext( 320 - w / 2, 120, scale, scale, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
+	}
 }
 
 //==================================================================================
@@ -4617,6 +4653,7 @@ static void CG_DrawObjectiveInfo( void ) {
 	int x, y, w;
 	int x1, y1, x2, y2;
 	float   *color;
+	float oidScale;
 	vec4_t backColor = { 0.2f, 0.2f, 0.2f, 1.f };
 
 	if ( !cg.oidPrintTime ) {
@@ -4633,6 +4670,8 @@ static void CG_DrawObjectiveInfo( void ) {
 	}
 
 	trap_R_SetColor( color );
+
+	oidScale = CG_CHAT_TEXT_SCALE * ( (float)cg.oidPrintCharWidth / SMALLCHAR_WIDTH );
 
 	start = cg.oidPrint;
 
@@ -4654,7 +4693,7 @@ static void CG_DrawObjectiveInfo( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = cg.oidPrintCharWidth * CG_DrawStrlen( linebuffer );
+		w = CG_Text_Width_Ext( linebuffer, oidScale, 0, CG_CHAT_FONT );
 		if ( x1 + w > x2 ) {
 			x2 = x1 + w;
 		}
@@ -4696,15 +4735,14 @@ static void CG_DrawObjectiveInfo( void ) {
 		}
 		linebuffer[l] = 0;
 
-		w = cg.oidPrintCharWidth * CG_DrawStrlen( linebuffer );
+		w = CG_Text_Width_Ext( linebuffer, oidScale, 0, CG_CHAT_FONT );
 		if ( x1 + w > x2 ) {
 			x2 = x1 + w;
 		}
 
 		x = OID_LEFT;
 
-		CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue,
-						  cg.oidPrintCharWidth, (int)( cg.oidPrintCharWidth * 1.5 ), 0 );
+		CG_Text_Paint_Ext( x, y, oidScale, oidScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
 
 		y += cg.oidPrintCharWidth * 1.5;
 
