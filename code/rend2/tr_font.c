@@ -106,6 +106,8 @@ static const char *supportedFontFormats[] = { "ttf", "otf" };
 static int registeredFontCount = 0;
 static fontInfo_t registeredFont[MAX_FONTS];
 
+#define FONT_SUPERSAMPLE 4.0f
+
 #ifdef BUILD_FREETYPE
 void R_GetGlyphInfo( FT_GlyphSlot glyph, int *left, int *right, int *width, int *top, int *bottom, int *height, int *pitch ) {
 	*left  = _FLOOR( glyph->metrics.horiBearingX );
@@ -397,7 +399,7 @@ static qboolean R_LoadScalableFont( const char *fontName, int pointSize, fontInf
 	image_t *image;
 	qhandle_t h;
 	float max;
-	float dpi = 72;
+	float dpi = 72.0f * FONT_SUPERSAMPLE;
 	float glyphScale;
 	void *faceData;
 	int i, len, fmt;
