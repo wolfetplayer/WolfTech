@@ -372,9 +372,8 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 		VectorCopy( ent->e.origin, lightOrigin );
 	}
 
-	// if NOWORLDMODEL, only use dynamic lights (menu system, etc)
-	if ( !( refdef->rdflags & RDF_NOWORLDMODEL )
-		 && tr.world->lightGridData ) {
+
+	if ( tr.world && tr.world->lightGridData ) {
 		R_SetupEntityLightingGrid( ent, tr.world );
 	} else {
 		ent->ambientLight[0] = ent->ambientLight[1] =

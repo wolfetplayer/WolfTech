@@ -2469,6 +2469,33 @@ qboolean CG_DrawRealWeapons( centity_t *cent ) {
 
 /*
 ========================
+CG_AddWeaponRefEntity
+
+Entities belonging to the local player's first-person view weapon (ps != NULL) are
+cached instead of added to the scene immediately, so they can be rendered in their
+own pass at a fixed FOV (see CG_RenderViewWeapon) instead of the world's cg_fov.
+Third-person weapon entities (ps == NULL) are added to the current scene as usual.
+========================
+*/
+#define MAX_VIEWWEAPON_ENTITIES ( ( W_MAX_PARTS + 2 ) * 4 + 2 )
+static refEntity_t cg_viewWeaponEnts[MAX_VIEWWEAPON_ENTITIES];
+static int cg_numViewWeaponEnts;
+
+static void CG_AddWeaponRefEntity( refEntity_t *ent, playerState_t *ps ) {
+	if ( !ps ) {
+		trap_R_AddRefEntityToScene( ent );
+		return;
+	}
+
+	if ( cg_numViewWeaponEnts >= MAX_VIEWWEAPON_ENTITIES ) {
+		return;
+	}
+
+	cg_viewWeaponEnts[cg_numViewWeaponEnts++] = *ent;
+}
+
+/*
+========================
 CG_AddWeaponWithPowerups
 ========================
 */
@@ -2484,7 +2511,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 	if ( powerups & ( 1 << PW_INVIS ) ) {
 
 		gun->customShader = cgs.media.invisShader;
-		trap_R_AddRefEntityToScene( gun );
+		CG_AddWeaponRefEntity( gun, ps );
 
 		// restore and bail (invis usually replaces base draw)
 		gun->customShader = savedCustomShader;
@@ -2498,14 +2525,14 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 		} else {
 			gun->customShader = 0;
 		}
-		trap_R_AddRefEntityToScene( gun );
+		CG_AddWeaponRefEntity( gun, ps );
 		gun->customShader = savedCustomShader;
 
 	} else {
 
 		// always draw base weapon normally (no shader override)
 		gun->customShader = 0;
-		trap_R_AddRefEntityToScene( gun );
+		CG_AddWeaponRefEntity( gun, ps );
 
 		// blink if time left < 5s, toggling every 200ms for battlesuit
 		// NOTE: ps is NULL when drawing third-person weapons for other entities
@@ -2517,7 +2544,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 				// skip rendering to blink
 			} else {
 				gun->customShader = cgs.media.battleWeaponShader;
-				trap_R_AddRefEntityToScene( gun );
+				CG_AddWeaponRefEntity( gun, ps );
 				gun->customShader = 0;
 			}
 		}
@@ -2529,7 +2556,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 				// skip rendering to blink
 			} else {
 				gun->customShader = cgs.media.quadWeaponShader;
-				trap_R_AddRefEntityToScene( gun );
+				CG_AddWeaponRefEntity( gun, ps );
 				gun->customShader = 0;
 			}
 		}
@@ -2541,7 +2568,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 				// skip rendering to blink
 			} else {
 				gun->customShader = cgs.media.redQuadShader;
-				trap_R_AddRefEntityToScene( gun );
+				CG_AddWeaponRefEntity( gun, ps );
 				gun->customShader = 0;
 			}
 		}
@@ -3325,7 +3352,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			// RF, changed this so the muzzle flash stays onscreen for long enough to be seen
 			if ( cg.time - cent->muzzleFlashTime < MUZZLE_FLASH_TIME ) {
 //				if ( firing )	// Ridah
-					trap_R_AddRefEntityToScene( &flash );
+					CG_AddWeaponRefEntity( &flash, ps );
 			}
 		}
 	}
@@ -3403,7 +3430,7 @@ void CG_AddPlayerFoot( refEntity_t *parent, playerState_t *ps, centity_t *cent )
 	wolfkick.frame = frame;
 	wolfkick.oldframe = frame - 1;
 	wolfkick.backlerp = 1 - cg.frameInterpolation;
-	trap_R_AddRefEntityToScene( &wolfkick );
+	CG_AddWeaponRefEntity( &wolfkick, ps );
 
 }
 
@@ -3416,10 +3443,11 @@ Add the weapon, and flash for the player's view
 */
 void CG_AddViewWeapon( playerState_t *ps ) {
 	refEntity_t hand;
-	vec3_t fovOffset;
 	vec3_t angles;
 	vec3_t gunoff;
 	weaponInfo_t    *weapon;
+
+	cg_numViewWeaponEnts = 0;
 
 	if ( ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
 		return;
@@ -3466,21 +3494,6 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		return;
 	}
 
-	VectorClear(fovOffset);
-
-	if ( cg_fixedAspect.integer ) {
-		fovOffset[2] = 0;
-	} else if ( cg.fov > 90 ) {
-		// drop gun lower at higher fov
-		fovOffset[2] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
-	} else if ( cg.fov < 90 ) {
-		// move gun forward at lower fov
-		fovOffset[0] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
-	} else if ( cg_fov.integer > 90 ) {
-		// old auto adjust
-		fovOffset[2] = -0.2 * ( cg_fov.integer - 90 );
- 	}
-
 	memset( &hand, 0, sizeof( hand ) );
 	const ammotable_t *wt;
 
@@ -3496,9 +3509,9 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		gunoff[1] = wt->gunOffset[1] + cg_gun_y.value;
 		gunoff[2] = wt->gunOffset[2] + cg_gun_z.value;
 
-		VectorMA( hand.origin, ( gunoff[0] + fovOffset[0] ), cg.refdef.viewaxis[0], hand.origin );
-		VectorMA( hand.origin, ( gunoff[1] + fovOffset[1] ), cg.refdef.viewaxis[1], hand.origin );
-		VectorMA( hand.origin, ( gunoff[2] + fovOffset[2] ), cg.refdef.viewaxis[2], hand.origin );
+		VectorMA( hand.origin, gunoff[0], cg.refdef.viewaxis[0], hand.origin );
+		VectorMA( hand.origin, gunoff[1], cg.refdef.viewaxis[1], hand.origin );
+		VectorMA( hand.origin, gunoff[2], cg.refdef.viewaxis[2], hand.origin );
 
 		AnglesToAxis( angles, hand.axis );
 
@@ -3525,6 +3538,57 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	CG_AddPlayerFoot( &hand, ps, &cg.predictedPlayerEntity );
 
 	cg.predictedPlayerEntity.lastWeaponClientFrame = cg.clientFrame;
+}
+
+/*
+==============
+CG_RenderViewWeapon
+
+Renders the entities cached by CG_AddViewWeapon (the local player's hands/weapon/
+wolfkick) in their own scene pass at a fixed FOV (cg_gunFov), so that cg_fov and
+any other change to the world's FOV can't stretch or resize the view weapon model.
+Must be called after the main world scene has been rendered.
+==============
+*/
+void CG_RenderViewWeapon( void ) {
+	refdef_t weapdef;
+	float x, fov;
+	int i;
+
+	if ( !cg_numViewWeaponEnts ) {
+		return;
+	}
+
+	weapdef = cg.refdef;
+	weapdef.rdflags |= RDF_NOWORLDMODEL;
+
+	fov = cg_gunFov.value;
+	if ( fov < 1 ) {
+		fov = 1;
+	} else if ( fov > 160 ) {
+		fov = 160;
+	}
+
+	if ( cg_fixedAspect.integer ) {
+		// match the aspect correction applied to the world's fov (see CG_CalcFov)
+		const float baseAspect = 0.75f; // 3/4
+		const float aspect = (float)weapdef.width / (float)weapdef.height;
+
+		fov = atan2( tan( fov * M_PI / 360.0f ) * baseAspect * aspect, 1 ) * 360.0f / M_PI;
+	}
+
+	x = weapdef.width / tan( fov / 360 * M_PI );
+	weapdef.fov_x = fov;
+	weapdef.fov_y = atan2( weapdef.height, x ) * 360 / M_PI;
+
+	trap_R_ClearScene();
+
+	for ( i = 0; i < cg_numViewWeaponEnts; i++ ) {
+		trap_R_AddRefEntityToScene( &cg_viewWeaponEnts[i] );
+	}
+	cg_numViewWeaponEnts = 0;
+
+	trap_R_RenderScene( &weapdef );
 }
 
 /*

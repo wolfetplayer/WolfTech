@@ -195,6 +195,7 @@ vmCvar_t cg_autoswitch;
 vmCvar_t cg_ignore;
 vmCvar_t cg_simpleItems;
 vmCvar_t cg_fov;
+vmCvar_t cg_gunFov;
 vmCvar_t cg_fixedAspect;
 vmCvar_t cg_fixedAspectFOV;
 vmCvar_t cg_oldWolfUI;
@@ -358,6 +359,7 @@ cvarTable_t cvarTable[] = {
 	{&cg_zoomStepSnooper, "cg_zoomStepSnooper", "5", CVAR_ARCHIVE},
 	{&cg_zoomStepFG, "cg_zoomStepFG", "10", CVAR_ARCHIVE},				 //----(SA)	added
 	{&cg_fov, "cg_fov", "90", CVAR_ARCHIVE},							 // NOTE: there is already a dmflag (DF_FIXED_FOV) to allow server control of this cheat
+	{&cg_gunFov, "cg_gunFov", "90", CVAR_ARCHIVE},						 // first-person weapon is rendered in its own pass at this fixed FOV, so cg_fov can't stretch/resize it
 	{&cg_fixedAspect, "cg_fixedAspect", "2", CVAR_ARCHIVE | CVAR_LATCH}, // Essentially the same as setting DF_FIXED_FOV for widescreen aspects
 	{&cg_fixedAspectFOV, "cg_fixedAspectFOV", "0", CVAR_ARCHIVE}, // off by default so the cg_fov slider isn't silently overridden while cg_fixedAspect (HUD scaling) is on; set to 1 to re-enable the FOV lock
 	{&cg_oldWolfUI, "cg_oldWolfUI", "0", CVAR_ARCHIVE},

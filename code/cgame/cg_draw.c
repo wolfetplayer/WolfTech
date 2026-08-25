@@ -5194,6 +5194,9 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	trap_R_RenderScene( &cg.refdef );
 
+	// draw the first-person view weapon in its own pass, at a fixed FOV independent of cg_fov
+	CG_RenderViewWeapon();
+
 	if ( ( cg.snap->ps.pm_flags & PMF_LIMBO || cg.snap->ps.stats[STAT_HEALTH] <= 0 || cg.snap->ps.eFlags & EF_FROZEN ) && cg_fancyfx.integer ) {
 		static int texid = 0;
 
