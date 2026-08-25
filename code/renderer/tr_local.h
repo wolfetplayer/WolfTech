@@ -1162,10 +1162,6 @@ typedef struct {
 
 	int numLightmaps;
 	image_t                 **lightmaps;
-	qboolean    mergeLightmaps;      // true when tr.lightmaps[] holds atlas pages, not 1:1 lightmaps, see tr_bsp.c
-	float       lightmapScale[2];    // set per-surface during BSP parsing, before baking vertex lightmap UVs
-	float       lightmapOffset[2];   // ditto -- normalized (0..1) atlas cell position, not pixels
-	int         lightmapMod;         // tiles per atlas page (only meaningful when mergeLightmaps)
 
 	trRefEntity_t           *currentEntity;
 	trRefEntity_t worldEntity;                  // point currentEntity at this when rendering world
@@ -1395,7 +1391,6 @@ extern cvar_t  *r_offsetUnits;
 
 extern cvar_t  *r_fullbright;                   // avoid lightmap pass
 extern cvar_t  *r_lightmap;                     // render lightmaps only
-extern cvar_t  *r_mergeLightmaps;               // pack small per-surface lightmaps into shared atlas textures, see tr_bsp.c
 extern cvar_t  *r_vertexLight;                  // vertex lighting mode for better performance
 extern cvar_t  *r_uiFullScreen;                 // ui is running fullscreen
 

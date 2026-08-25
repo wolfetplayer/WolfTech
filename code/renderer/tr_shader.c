@@ -32,24 +32,6 @@ If you have questions concerning this license or the applicable additional terms
 
 static char *s_shaderText;
 
-/*
-==============
-R_LightmapImageForIndex
-
-Resolves a real (non-negative) BSP lightmap index to the image_t a shader
-stage should bind: the individual lightmap texture normally, or the atlas
-page holding it when \r_mergeLightmaps is active (tr_bsp.c bakes each
-surface's vertex UVs into that page's sub-rect at load time, so no other
-change is needed here beyond binding the right page).
-==============
-*/
-static ID_INLINE image_t *R_LightmapImageForIndex( int lightmapIndex ) {
-	if ( tr.mergeLightmaps ) {
-		return tr.lightmaps[ lightmapIndex / tr.lightmapMod ];
-	}
-	return tr.lightmaps[ lightmapIndex ];
-}
-
 // the shader is parsed into these global variables, then copied into
 // dynamically allocated memory if it is valid.
 static shaderStage_t stages[MAX_SHADER_STAGES];
@@ -638,7 +620,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text ) {
 				if ( shader.lightmapIndex < 0 || !tr.lightmaps ) {
 					stage->bundle[0].image[0] = tr.whiteImage;
 				} else {
-					stage->bundle[0].image[0] = R_LightmapImageForIndex( shader.lightmapIndex );
+					stage->bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
 				}
 				continue;
 			} else
@@ -2395,18 +2377,6 @@ static shader_t *FinishShader( void ) {
 				pStage->bundle[0].tcGen = TCGEN_LIGHTMAP;
 			}
 			hasLightmapStage = qtrue;
-
-			// tcMod transform's translate was authored for the original lightmap space, rescale it
-			if ( tr.mergeLightmaps ) {
-				int m;
-				for ( m = 0; m < pStage->bundle[0].numTexMods; m++ ) {
-					texModInfo_t *tmi = &pStage->bundle[0].texMods[m];
-					if ( tmi->type == TMOD_TRANSFORM ) {
-						tmi->translate[0] *= tr.lightmapScale[0];
-						tmi->translate[1] *= tr.lightmapScale[1];
-					}
-				}
-			}
 		} else {
 			if ( pStage->bundle[0].tcGen == TCGEN_BAD ) {
 				pStage->bundle[0].tcGen = TCGEN_TEXTURE;
@@ -2793,7 +2763,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
 	} else {
 		// two pass lightmap
-		stages[0].bundle[0].image[0] = R_LightmapImageForIndex( shader.lightmapIndex );
+		stages[0].bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
 		stages[0].bundle[0].isLightmap = qtrue;
 		stages[0].active = qtrue;
 		stages[0].rgbGen = CGEN_IDENTITY;   // lightmaps are scaled on creation
@@ -2885,7 +2855,7 @@ qhandle_t RE_RegisterShaderFromImage( const char *name, int lightmapIndex, image
 		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
 	} else {
 		// two pass lightmap
-		stages[0].bundle[0].image[0] = R_LightmapImageForIndex( shader.lightmapIndex );
+		stages[0].bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
 		stages[0].bundle[0].isLightmap = qtrue;
 		stages[0].active = qtrue;
 		stages[0].rgbGen = CGEN_IDENTITY;   // lightmaps are scaled on creation

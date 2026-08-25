@@ -346,7 +346,8 @@ void FBO_Init( void )
 		return;
 	}
 
-	// multisample target the 3D scene draws into, resolved into tr.mainFbo before gamma/bloom sample it
+	// multisample render target the 3D scene actually draws into (FBO_RenderTarget()), resolved
+	// into tr.mainFbo's texture once per frame before gamma/bloom sample it (FBO_ResolveMSAA)
 	samples = 0;
 	if ( glRefConfig.framebufferMultisample && r_ext_multisample->integer >= 2 ) {
 		maxSamples = 0;
