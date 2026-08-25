@@ -179,7 +179,7 @@ itemDef {
 		itemDef {
    		name graphics
 		group grpSystem
-   		type ITEM_TYPE_MULTI
+   		type ITEM_TYPE_COMBO
 		text "@SYSTEM_VIDEOMODE_LABEL"
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_mode"

@@ -462,7 +462,8 @@ typedef struct vidmode_s
 	float pixelAspect;              // pixel width / height
 } vidmode_t;
 
-// Note: Also add these modes to ui/ui_shared.c
+// Note: Also update the curated r_uiVidModes list in code/ui/ui_shared.c if you want
+// a mode added here to be selectable from the video mode dropdown
 vidmode_t r_vidModes[] =
 {
 	{ "Mode  0:   320x240   (4:3)",     320,     240,    1 },
@@ -494,7 +495,10 @@ vidmode_t r_vidModes[] =
 	{ "Mode 26: 1920x1080  (16:9)",    1920,    1080,    1 },
 	{ "Mode 27: 1920x1200 (16:10)",    1920,    1200,    1 },
 	{ "Mode 28: 1920x1440   (4:3)",    1920,    1440,    1 },
-	{ "Mode 29: 2560x1600 (16:10)",    2560,    1600,    1 }
+	{ "Mode 29: 2560x1600 (16:10)",    2560,    1600,    1 },
+	{ "Mode 30:  1366x768  (16:9)",    1366,     768,    1 },
+	{ "Mode 31: 2560x1440  (16:9)",    2560,    1440,    1 },
+	{ "Mode 32: 3840x2160  (16:9)",    3840,    2160,    1 }
 };
 static int	s_numVidModes = ARRAY_LEN( r_vidModes );
 

@@ -118,6 +118,8 @@ If you have questions concerning this license or the applicable additional terms
 #define SLIDER_THUMB_WIDTH  12.0
 #define SLIDER_THUMB_HEIGHT 20.0
 #define NUM_CROSSHAIRS      10
+#define COMBO_SELECTORCHAR  "V"
+#define COMBO_ROW_HEIGHT    12.0
 
 typedef struct {
 	const char *command;

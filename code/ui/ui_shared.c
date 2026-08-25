@@ -2530,6 +2530,38 @@ qboolean Item_Multi_HandleKey( itemDef_t *item, int key ) {
 	return qfalse;
 }
 
+void Item_ComboSelect( itemDef_t *item ) {
+	if ( item ) {
+		g_editingField = qtrue;
+		g_editItem = item;
+	}
+}
+
+void Item_ComboDeSelect( itemDef_t *item ) {
+	g_editingField = qfalse;
+	g_editItem = NULL;
+}
+
+qboolean Item_Combo_HandleKey( itemDef_t *item, int key ) {
+	multiDef_t *multiPtr;
+
+	if ( key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER ) {
+		if ( item->cursorPos >= 0 ) {
+			multiPtr = (multiDef_t*)item->typeData;
+			if ( multiPtr && item->cvar ) {
+				if ( multiPtr->strDef ) {
+					DC->setCVar( item->cvar, multiPtr->cvarStr[item->cursorPos] );
+				} else {
+					DC->setCVar( item->cvar, va( "%.0f", multiPtr->cvarValue[item->cursorPos] ) );
+				}
+				Item_RunScript( item, item->action );
+				return qtrue;
+			}
+		}
+	}
+	return qfalse;
+}
+
 qboolean Item_TextField_HandleKey( itemDef_t *item, int key ) {
 	char buff[1024];
 	int len;
@@ -3173,6 +3205,12 @@ void Menu_HandleKey( menuDef_t *menu, int key, qboolean down ) {
 		return;
 	}
 
+	if ( g_editingField && down && g_editItem && g_editItem->type == ITEM_TYPE_COMBO ) {
+		Item_Combo_HandleKey( g_editItem, key );
+		Item_ComboDeSelect( g_editItem );
+		return;
+	}
+
 	if ( g_editingField && down ) {
 		if ( !Item_TextField_HandleKey( g_editItem, key ) ) {
 			g_editingField = qfalse;
@@ -3288,6 +3326,10 @@ void Menu_HandleKey( menuDef_t *menu, int key, qboolean down ) {
 					g_editingField = qtrue;
 					g_editItem = item;
 				}
+			} else if ( item->type == ITEM_TYPE_COMBO ) {
+				if ( Rect_ContainsPoint( &item->window.rect, DC->cursorx, DC->cursory ) ) {
+					Item_ComboSelect( item );
+				}
 			} else {
 				if ( Rect_ContainsPoint( &item->window.rect, DC->cursorx, DC->cursory ) || Rect_ContainsPoint( Item_CorrectedTextRect( item ), DC->cursorx, DC->cursory ) ) {
 					Item_Action( item );
@@ -3324,6 +3366,8 @@ void Menu_HandleKey( menuDef_t *menu, int key, qboolean down ) {
 				item->cursorPos = 0;
 				g_editingField = qtrue;
 				g_editItem = item;
+			} else if ( item->type == ITEM_TYPE_COMBO ) {
+				Item_ComboSelect( item );
 			} else {
 				Item_Action( item );
 			}
@@ -3718,6 +3762,114 @@ void Item_Multi_Paint( itemDef_t *item ) {
 #endif
 	} else {
 		DC->drawText( item->textRect.x, item->textRect.y, item->font, item->textscale, newColor, text, 0, 0, item->textStyle );
+	}
+}
+
+void Item_Combo_Paint( itemDef_t *item ) {
+	vec4_t itemColor;
+	// a combo box needs to stay legible over whatever is drawn beneath/after it, so its
+	// chrome is always solid instead of relying on the item's own (often near-transparent
+	// or unset) backcolor/bordercolor/bordersize
+	vec4_t backColor = { 0, 0, 0, 1.0 };
+	vec4_t borderColor = { 1, 1, 1, 0.5 };
+	float borderSize = 1.0;
+	const char *text = Item_Multi_Setting( item );
+	int selectedTextOffset, selectorOffset, temp, widestText = 0, selectorSize;
+	rectDef_t rect, selectorRect;
+	multiDef_t *multiPtr;
+	char valueString[MAX_QPATH];
+	float valueFloat = 0;
+	int i;
+	float borderOffset = 4.0;
+
+	memcpy( &itemColor, &item->window.foreColor, sizeof( vec4_t ) );
+
+	if ( item->text ) {
+		Item_Text_Paint( item );
+		selectedTextOffset = item->textRect.x + item->textRect.w + 8;
+	} else {
+		selectedTextOffset = item->textRect.x;
+	}
+
+	multiPtr = (multiDef_t*)item->typeData;
+	if ( !multiPtr || !item->cvar ) {
+		return;
+	}
+
+	if ( multiPtr->strDef ) {
+		DC->getCVarString( item->cvar, valueString, MAX_QPATH );
+	} else {
+		valueFloat = DC->getCVarValue( item->cvar );
+	}
+
+	for ( i = 0; i < multiPtr->count; i++ ) {
+		temp = DC->textWidth( multiPtr->cvarList[i], item->font, item->textscale, 0 ) + borderOffset;
+		if ( temp > widestText ) {
+			widestText = temp;
+		}
+	}
+
+	selectorOffset = widestText + selectedTextOffset - 4 + borderOffset;
+	selectorSize = DC->textWidth( COMBO_SELECTORCHAR, item->font, item->textscale, 0 );
+
+	rect.x = selectedTextOffset;
+	rect.y = item->textRect.y - item->textRect.h - borderOffset;
+	rect.w = widestText + 4 + selectorSize + borderOffset;
+	rect.h = item->textRect.h + ( borderOffset * 2 );
+
+	selectorRect.x = rect.x + ( rect.w - selectorSize - 8 - ( borderOffset * 2 ) );
+	selectorRect.y = rect.y;
+	selectorRect.w = selectorSize + 8 + ( borderOffset * 2 );
+	selectorRect.h = rect.h;
+
+	DC->fillRect( rect.x, rect.y, rect.w, rect.h, backColor );
+	DC->drawRect( rect.x, rect.y, rect.w, rect.h, borderSize, borderColor );
+	DC->drawRect( selectorRect.x, selectorRect.y, selectorRect.w, selectorRect.h, borderSize, borderColor );
+
+	DC->drawText( selectedTextOffset + borderOffset, item->textRect.y, item->font, item->textscale, itemColor, text, 0, 0, item->textStyle );
+	DC->drawText( selectorOffset, item->textRect.y, item->font, item->textscale, itemColor, COMBO_SELECTORCHAR, 0, 0, item->textStyle );
+
+	// dropdown is open: draw the option list below the box and track which row the mouse is over
+	if ( ( item->window.flags & WINDOW_HASFOCUS ) && g_editingField && g_editItem == item ) {
+		float height;
+		vec4_t lowColor, redishColor;
+		vec4_t *currentColor;
+		rectDef_t rowRect;
+
+		lowColor[0] = 0.8 * itemColor[0];
+		lowColor[1] = 0.8 * itemColor[1];
+		lowColor[2] = 0.8 * itemColor[2];
+		lowColor[3] = 0.8 * itemColor[3];
+
+		memcpy( &redishColor, &lowColor, sizeof( vec4_t ) );
+		redishColor[0] = 1.0;
+
+		rowRect.x = selectedTextOffset;
+		rowRect.w = widestText;
+		rowRect.h = COMBO_ROW_HEIGHT;
+
+		height = ( multiPtr->count * COMBO_ROW_HEIGHT ) + 1.0;
+
+		DC->fillRect( rect.x, item->textRect.y + borderOffset, rect.w, height, backColor );
+
+		item->cursorPos = -1;
+
+		for ( i = 0; i < multiPtr->count; i++ ) {
+			rowRect.y = item->textRect.y + ( i * COMBO_ROW_HEIGHT ) + 2.0 + borderOffset;
+
+			if ( Rect_ContainsPoint( &rowRect, DC->cursorx, DC->cursory ) ) {
+				currentColor = &itemColor;
+				item->cursorPos = i;
+			} else if ( ( !multiPtr->strDef && multiPtr->cvarValue[i] == valueFloat ) || ( multiPtr->strDef && Q_stricmp( multiPtr->cvarStr[i], valueString ) == 0 ) ) {
+				currentColor = &redishColor;
+			} else {
+				currentColor = &lowColor;
+			}
+
+			DC->drawText( selectedTextOffset + borderOffset, item->textRect.y + ( i * COMBO_ROW_HEIGHT ) + 2.0 + item->textRect.h + borderOffset, item->font, item->textscale, *currentColor, multiPtr->cvarList[i], 0, 0, item->textStyle );
+		}
+
+		DC->drawRect( rect.x, item->textRect.y + borderOffset, rect.w, height, borderSize, borderColor );
 	}
 }
 
@@ -4731,6 +4883,7 @@ void Item_Paint( itemDef_t *item ) {
 		Item_TextField_Paint( item );
 		break;
 	case ITEM_TYPE_COMBO:
+		Item_Combo_Paint( item );
 		break;
 	case ITEM_TYPE_LISTBOX:
 		Item_ListBox_Paint( item );
@@ -5007,7 +5160,16 @@ void Menu_Paint( menuDef_t *menu, qboolean forcePaint ) {
 	Window_Paint( &menu->window, menu->fadeAmount, menu->fadeClamp, menu->fadeCycle );
 
 	for ( i = 0; i < menu->itemCount; i++ ) {
+		// skip drawing the expanded dropdown here so it can be redrawn on top of every other item below
+		if ( g_editingField && g_editItem == menu->items[i] && menu->items[i]->type == ITEM_TYPE_COMBO ) {
+			continue;
+		}
 		Item_Paint( menu->items[i] );
+	}
+
+	// redraw an open combo dropdown last so its option list isn't painted over by later items
+	if ( g_editingField && g_editItem && g_editItem->type == ITEM_TYPE_COMBO && g_editItem->parent == menu ) {
+		Item_Paint( g_editItem );
 	}
 
 	if ( debugMode ) {
@@ -5062,7 +5224,7 @@ void Item_ValidateTypeData( itemDef_t *item ) {
 				( (editFieldDef_t *) item->typeData )->maxPaintChars = MAX_EDITFIELD;
 			}
 		}
-	} else if ( item->type == ITEM_TYPE_MULTI ) {
+	} else if ( item->type == ITEM_TYPE_MULTI || item->type == ITEM_TYPE_COMBO ) {
 		item->typeData = UI_Alloc( sizeof( multiDef_t ) );
 	} else if ( item->type == ITEM_TYPE_MODEL ) {
 		item->typeData = UI_Alloc( sizeof( modelDef_t ) );
@@ -6113,42 +6275,32 @@ typedef struct vidmode_s
 	int mode;
 } vidmode_t;
 
-vidmode_t r_vidModes[] =
+// Curated subset of code/renderer & code/rend2's r_vidModes[] shown in the video mode dropdown
+// (ETLegacy-style short list). The mode numbers must match those tables' indices exactly -
+// this only picks which of those modes are offered, it doesn't invent new ones.
+vidmode_t r_uiVidModes[] =
 {
-	{ "320x240 (4:3)",          0 },
-	{ "400x300 (4:3)",          1 },
-	{ "512x384 (4:3)",          2 },
-	{ "640x480 (4:3)",          3 },
-	{ "800x600 (4:3)",          4 },
-	{ "960x720 (4:3)",          5 },
-	{ "1024x768 (4:3)",         6 },
-	{ "1152x864 (4:3)",         7 },
-	{ "1280x1024 (5:4)",        8 },
-	{ "1600x1200 (4:3)",        9 },
-	{ "2048x1536 (4:3)",       10 },
-	{ "856x480 (16:9)",        11 },
-	{ "640x360 (16:9)",        12 },
-	{ "640x400 (16:10)",       13 },
-	{ "800x450 (16:9)",        14 },
-	{ "800x500 (16:10)",       15 },
-	{ "1024x640 (16:10)",      16 },
-	{ "1024x576 (16:9)",       17 },
-	{ "1280x720 (16:9)",       18 },
-	{ "1280x768 (16:10)",      19 },
-	{ "1280x800 (16:10)",      20 },
-	{ "1280x960 (4:3)",        21 },
-	{ "1440x900 (16:10)",      22 },
-	{ "1600x900 (16:9)",       23 },
-	{ "1600x1000 (16:10)",     24 },
-	{ "1680x1050 (16:10)",     25 },
-	{ "1920x1080 (16:9)",      26 },
-	{ "1920x1200 (16:10)",     27 },
-	{ "1920x1440 (4:3)",       28 },
-	{ "2560x1600 (16:10)",     29 },
-	{ "Automatic (Native)",    -2 },
-	{ "Custom",                -1 }
+	{ "Desktop resolution",     -2 },
+	{ "Custom resolution",      -1 },
+	{ "640x480",                 3 },
+	{ "800x600",                 4 },
+	{ "960x720",                 5 },
+	{ "1024x768",                6 },
+	{ "1152x864",                7 },
+	{ "1280x1024",               8 },
+	{ "1600x1200",               9 },
+	{ "2048x1536",              10 },
+	{ "856x480 (16:9)",         11 },
+	{ "1366x768 (16:9)",        30 },
+	{ "1440x900 (16:10)",       22 },
+	{ "1680x1050 (16:10)",      25 },
+	{ "1920x1080 (16:9)",       26 },
+	{ "1920x1200 (16:10)",      27 },
+	{ "2560x1440 (16:9)",       31 },
+	{ "2560x1600 (16:10)",      29 },
+	{ "3840x2160 (16:9)",       32 }
 };
-static int	s_numVidModes = ARRAY_LEN( r_vidModes );
+static int	s_numUiVidModes = ARRAY_LEN( r_uiVidModes );
 
 /*
 ===============
@@ -6160,16 +6312,16 @@ Hacks to fix issues with menu scripts
 static void Item_ApplyHacks( itemDef_t *item ) {
 
 	// Add video modes to system menu
-	if ( item->type == ITEM_TYPE_MULTI && item->cvar && !Q_stricmp( item->cvar, "r_mode" ) ) {
+	if ( ( item->type == ITEM_TYPE_MULTI || item->type == ITEM_TYPE_COMBO ) && item->cvar && !Q_stricmp( item->cvar, "r_mode" ) ) {
 		int i;
 		multiDef_t *multiPtr = (multiDef_t*)item->typeData;;
 
-		DC->DPrint( "Found modelist with %d modes, extending list to %d modes\n", multiPtr->count, s_numVidModes );
+		DC->DPrint( "Found modelist with %d modes, extending list to %d modes\n", multiPtr->count, s_numUiVidModes );
 
 		multiPtr->count = 0;
-		for ( i = 0; i < s_numVidModes; i++ ) {
-			multiPtr->cvarList[multiPtr->count] = String_Alloc( r_vidModes[i].description );
-			multiPtr->cvarValue[multiPtr->count] = r_vidModes[i].mode;
+		for ( i = 0; i < s_numUiVidModes; i++ ) {
+			multiPtr->cvarList[multiPtr->count] = String_Alloc( r_uiVidModes[i].description );
+			multiPtr->cvarValue[multiPtr->count] = r_uiVidModes[i].mode;
 			multiPtr->count++;
 
 			if ( multiPtr->count >= MAX_MULTI_CVARS ) {
