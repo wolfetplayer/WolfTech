@@ -48,8 +48,9 @@ Cvars for the FBO pipeline (requires vid_restart to toggle):
                                    `r_fbo 1`, multisamples the FBO's own
                                    color target instead of the default
                                    framebuffer.
-                                     0   - None. (default)
-                                     1-4 - Some.
+                                     0    - None. (default)
+                                     1-16 - Some, clamped to what the GPU
+                                            driver reports as GL_MAX_SAMPLES.
 
 Cvars for bloom (requires r_fbo and r_bloom):
 

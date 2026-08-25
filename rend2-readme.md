@@ -82,10 +82,10 @@ Cvars for simple rendering features:
                                          supported.
                                      2 - BPTC texture compression if supported.
 
-*  `r_ext_framebuffer_multisample`  - Multisample Anti-aliasing.
+*  `r_ext_multisample`               - Multisample Anti-aliasing.
                                      0    - None. (default)
-                                     1-16 - Some.
-                                     17+  - Too much!
+                                     2-16 - Sample count, clamped to what the
+                                            GPU driver reports as GL_MAX_SAMPLES.
 
 *  `r_fxaa`                         - Fast approximate anti-aliasing, a cheap
                                    post-process edge smooth.  Can be used

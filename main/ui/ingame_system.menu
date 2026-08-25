@@ -441,7 +441,7 @@ itemDef {
 		text "@SYSTEM_MSAA_LABEL"
 		textfont		UI_FONT_BIG
 		cvar "r_ext_multisample"
-		cvarFloatList		{ "@GENERAL_OFF" 0 "@SYSTEM_MSAA_2X" 2 "@SYSTEM_MSAA_4X" 4 }
+		cvarFloatList		{ "@GENERAL_OFF" 0 "@SYSTEM_MSAA_2X" 2 "@SYSTEM_MSAA_4X" 4 "@SYSTEM_MSAA_8X" 8 "@SYSTEM_MSAA_16X" 16 }
 
 		rect 82 267 290 12
       	textalign ITEM_ALIGN_RIGHT
