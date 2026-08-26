@@ -228,6 +228,8 @@ typedef enum {
 	CG_S_STARTSOUNDVCONTROL,
 	CG_R_INPVS,
 
+	CG_R_REGISTERFONTEXTENDED, // Unicode-capable font registration (fontInfoExtra_t)
+
 	// New in IORTCW
 	CG_ALLOC = 900
 

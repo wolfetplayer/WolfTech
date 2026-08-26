@@ -312,11 +312,12 @@ typedef struct {
 	const char  *fontStr;
 	const char  *cursorStr;
 	const char  *gradientStr;
-	fontInfo_t textFont;
-	fontInfo_t smallFont;
-	fontInfo_t bigFont;
-	fontInfo_t handwritingFont;
-	fontInfo_t extraFonts[UI_FONT_EXTRA_COUNT]; // indexed by "textfont" values >= UI_FONT_EXTRA_BASE
+	// all fonts are Unicode-capable now, as long as the assigned font file has the glyphs
+	fontInfoExtra_t textFont;
+	fontInfoExtra_t smallFont;
+	fontInfoExtra_t bigFont;
+	fontInfoExtra_t handwritingFont;
+	fontInfoExtra_t extraFonts[UI_FONT_EXTRA_COUNT]; // indexed by "textfont" values >= UI_FONT_EXTRA_BASE
 	qhandle_t cursor;
 	qhandle_t gradientBar;
 	qhandle_t scrollBarArrowUp;
@@ -373,6 +374,7 @@ typedef struct {
 	void ( *addRefEntityToScene )( const refEntity_t *re );
 	void ( *renderScene )( const refdef_t *fd );
 	void ( *registerFont )( const char *pFontname, int pointSize, fontInfo_t *font );
+	void ( *registerFontExtended )( const char *pFontname, int pointSize, fontInfoExtra_t *font );
 	void ( *ownerDrawItem )( float x, float y, float w, float h, float text_x, float text_y, int ownerDraw, int ownerDrawFlags, int align, float special, int font, float scale, vec4_t color, qhandle_t shader, int textStyle );
 	float ( *getValue )( int ownerDraw, int type );
 	qboolean ( *ownerDrawVisible )( int flags );
@@ -493,7 +495,7 @@ qboolean PC_String_Parse( int handle, const char **out );
 qboolean PC_Script_Parse( int handle, const char **out );
 qboolean PC_Char_Parse( int handle, char *out );              // NERVE - SMF
 qboolean PC_Font_Parse( int handle, int *fontIndex, const char **fontName, int *pointSize );
-fontInfo_t *UI_SelectFont( cachedAssets_t *assets, int font, fontInfo_t *fallback );
+fontInfoExtra_t *UI_SelectFont( cachedAssets_t *assets, int font, fontInfoExtra_t *fallback );
 int Menu_Count( void );
 void Menu_New( int handle );
 void Menu_PaintAll( void );

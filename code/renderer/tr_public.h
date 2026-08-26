@@ -109,6 +109,7 @@ typedef struct {
 	void ( *ModelBounds )( qhandle_t model, vec3_t mins, vec3_t maxs );
 
 	void ( *RegisterFont )( const char *fontName, int pointSize, fontInfo_t *font );
+	void ( *RegisterFontExtended )( const char *fontName, int pointSize, fontInfoExtra_t *font );
 	void ( *RemapShader )( const char *oldShader, const char *newShader, const char *offsetTime );
 
 	// RF

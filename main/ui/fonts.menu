@@ -1,6 +1,6 @@
 // Central font bindings: the ONE place mapping a UI_FONT_* id to its file/size. #include this instead of hand-typing "font" lines per menu.
-// Console is still the legacy bitmap font (never got a working TTF wiring - reverted).
-// TEMP: the 4 base slots below still point at StardosStencilRegular for a full-system preview; revert to "ariblk"/"courbd" to restore the old look.
+// All fonts here are Unicode-capable, but glyph coverage depends on the font file (Courier Prime likely lacks Cyrillic/Greek; LiberationSans-Regular has broad coverage).
+// TEMP: the 4 base slots point at StardosStencilRegular for a full-system preview; revert to "ariblk"/"courbd" to restore the old look.
 
 font            "StardosStencilRegular" 16    // UI_FONT_DEFAULT / UI_FONT_NORMAL - legacy default text font
 smallFont       "StardosStencilRegular" 12    // UI_FONT_SMALL

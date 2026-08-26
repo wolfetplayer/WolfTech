@@ -715,6 +715,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_R_INPVS:
 		return CL_CM_inPVS( VMA( 1 ), VMA( 2 ) );
+	case CG_R_REGISTERFONTEXTENDED:
+		re.RegisterFontExtended( VMA( 1 ), args[2], VMA( 3 ) );
+		return 0;
 	case CG_S_STARTLOCALSOUND:
 		S_StartLocalSound( args[1], args[2] );
 		return 0;

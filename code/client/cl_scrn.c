@@ -29,6 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // cl_scrn.c -- master for refresh, status bar, console, chat, notify, etc
 
 #include "client.h"
+#include "../qcommon/q_unicode.h"
 
 qboolean scr_initialized;           // ready to draw
 
@@ -376,6 +377,165 @@ void SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, 
 		s++;
 	}
 	re.SetColor( NULL );
+}
+
+/*
+==================
+SCR_UTF8ScaleForHeight
+
+Multiplier so a reference 'M' renders at targetHeight pixels. Used directly
+on raw glyph metrics below, so do NOT also multiply by font->glyphScale.
+==================
+*/
+static float SCR_UTF8ScaleForHeight( fontInfoExtra_t *font, float targetHeight ) {
+	glyphInfo_t *ref = Q_UTF8_GetGlyphExtended( font, 'M' );
+	if ( ref->height <= 0 ) {
+		return 1.0f; // fallback if metrics are somehow missing
+	}
+	return targetHeight / (float)ref->height;
+}
+
+/*
+==================
+SCR_UTF8StringWidth
+
+Pixel width of the first byteLen bytes of a UTF-8 string in cls.fieldFont.
+Used for cursor positioning against proportional-width TTF text.
+==================
+*/
+float SCR_UTF8StringWidth( fontInfoExtra_t *font, float targetHeight, const char *text, int byteLen ) {
+	float scale = SCR_UTF8ScaleForHeight( font, targetHeight );
+	float width = 0;
+	const char *s = text;
+	const char *end = text + byteLen;
+
+	while ( s < end && *s ) {
+		glyphInfo_t *glyph;
+		if ( Q_IsColorString( s ) ) {
+			s += 2;
+			continue;
+		}
+		glyph = Q_UTF8_GetGlyphExtended( font, Q_UTF8_CodePoint( s ) );
+		width += glyph->xSkip * scale;
+		s += Q_UTF8_Width( s );
+	}
+
+	return width;
+}
+
+/*
+==================
+SCR_DrawSmallStringExtUTF8
+
+Same as SCR_DrawSmallStringExt, but UTF-8 aware via cls.fieldFont so typed
+non-ASCII text renders correctly. Falls back to the bitmap path if unregistered.
+==================
+*/
+void SCR_DrawSmallStringExtUTF8( int x, int y, const char *string, float *setColor, qboolean forceColor,
+		qboolean noColorEscape ) {
+	vec4_t newColor;
+	const char *s;
+	float xx;
+	float scale;
+	glyphInfo_t *glyph;
+
+	if ( !cls.fieldFontRegistered ) {
+		SCR_DrawSmallStringExt( x, y, string, setColor, forceColor, noColorEscape );
+		return;
+	}
+
+	scale = SCR_UTF8ScaleForHeight( &cls.fieldFont, (float)g_smallchar_height );
+
+	y += (int)g_smallchar_height; // baseline vs. caller's top-anchored y
+
+	s = string;
+	xx = (float)x;
+	re.SetColor( setColor );
+	memcpy( newColor, setColor, sizeof( vec4_t ) );
+	while ( *s ) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				memcpy( newColor, g_color_table[ColorIndex( *( s + 1 ) )], sizeof( newColor ) );
+				newColor[3] = setColor[3];
+				re.SetColor( newColor );
+			}
+			if ( !noColorEscape ) {
+				s += 2;
+				continue;
+			}
+		}
+
+		glyph = Q_UTF8_GetGlyphExtended( &cls.fieldFont, Q_UTF8_CodePoint( s ) );
+		re.DrawStretchPic( xx, (float)y - scale * glyph->top, glyph->imageWidth * scale, glyph->imageHeight * scale,
+						   glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+		xx += glyph->xSkip * scale;
+		s += Q_UTF8_Width( s );
+	}
+	re.SetColor( NULL );
+}
+
+/*
+==================
+SCR_DrawStringExtUTF8 / SCR_DrawBigStringUTF8[Color]
+
+UTF-8 aware SCR_DrawStringExt/SCR_DrawBigString, in 640x480 virtual coords.
+Used for the chat "SAY:" prompt.
+==================
+*/
+void SCR_DrawStringExtUTF8( int x, int y, float size, const char *string, float *setColor, qboolean forceColor,
+		qboolean noColorEscape ) {
+	vec4_t newColor;
+	const char *s;
+	float xx;
+	float scale;
+	glyphInfo_t *glyph;
+
+	if ( !cls.fieldFontRegistered ) {
+		SCR_DrawStringExt( x, y, size, string, setColor, forceColor, noColorEscape );
+		return;
+	}
+
+	scale = SCR_UTF8ScaleForHeight( &cls.fieldFont, size );
+
+	y += (int)size; // baseline vs. caller's top-anchored y
+
+	s = string;
+	xx = (float)x;
+	re.SetColor( setColor );
+	memcpy( newColor, setColor, sizeof( vec4_t ) );
+	while ( *s ) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				memcpy( newColor, g_color_table[ColorIndex( *( s + 1 ) )], sizeof( newColor ) );
+				newColor[3] = setColor[3];
+				re.SetColor( newColor );
+			}
+			if ( !noColorEscape ) {
+				s += 2;
+				continue;
+			}
+		}
+
+		glyph = Q_UTF8_GetGlyphExtended( &cls.fieldFont, Q_UTF8_CodePoint( s ) );
+		{
+			float gx = xx;
+			float gy = (float)y - scale * glyph->top;
+			float gw = glyph->imageWidth * scale;
+			float gh = glyph->imageHeight * scale;
+			SCR_AdjustFrom640( &gx, &gy, &gw, &gh );
+			re.DrawStretchPic( gx, gy, gw, gh, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+		}
+		xx += glyph->xSkip * scale;
+		s += Q_UTF8_Width( s );
+	}
+	re.SetColor( NULL );
+}
+
+void SCR_DrawBigStringUTF8( int x, int y, const char *s, float alpha, qboolean noColorEscape ) {
+	vec4_t color;
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	SCR_DrawStringExtUTF8( x, y, BIGCHAR_WIDTH, s, color, qfalse, noColorEscape );
 }
 
 

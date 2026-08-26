@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "cg_local.h"
 #include "../ui/ui_shared.h"
+#include "../qcommon/q_unicode.h"
 
 extern displayContextDef_t cgDC;
 
@@ -1843,7 +1844,7 @@ static void CG_Text_Paint_Limit( float *maxX, float x, float y, int font, float 
 		const char *s = text;
 		float max = *maxX;
 		float useScale;
-		fontInfo_t *fnt = &cgDC.Assets.textFont;
+		fontInfoExtra_t *fnt = &cgDC.Assets.textFont;
 		if ( font == UI_FONT_DEFAULT ) {
 			if ( scale <= cg_smallFont.value ) {
 				fnt = &cgDC.Assets.smallFont;
@@ -1855,13 +1856,13 @@ static void CG_Text_Paint_Limit( float *maxX, float x, float y, int font, float 
 		}
 		useScale = scale * fnt->glyphScale;
 		trap_R_SetColor( color );
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
 		count = 0;
 		while ( s && *s && count < len ) {
-			glyph = &fnt->glyphs[*s & 255];
+			glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 			if ( Q_IsColorString( s ) ) {
 				memcpy( newColor, g_color_table[ColorIndex( *( s + 1 ) )], sizeof( newColor ) );
 				newColor[3] = color[3];
@@ -1886,7 +1887,7 @@ static void CG_Text_Paint_Limit( float *maxX, float x, float y, int font, float 
 				x += ( glyph->xSkip * useScale ) + adjust;
 				*maxX = x;
 				count++;
-				s++;
+				s += Q_UTF8_Width( s );
 			}
 		}
 		trap_R_SetColor( NULL );

@@ -106,6 +106,11 @@ static const char *supportedFontFormats[] = { "ttf", "otf" };
 static int registeredFontCount = 0;
 static fontInfo_t registeredFont[MAX_FONTS];
 
+// extended fonts get their own smaller cache (fontInfoExtra_t is ~100KB each, rarely used)
+#define MAX_EXTENDED_FONTS 24
+static int registeredFontExtendedCount = 0;
+static fontInfoExtra_t registeredFontExtended[MAX_EXTENDED_FONTS];
+
 #define FONT_SUPERSAMPLE 4.0f
 
 #ifdef BUILD_FREETYPE
@@ -206,7 +211,7 @@ void WriteTGA (char *filename, byte *data, int width, int height) {
 	ri.Free( buffer );
 }
 
-static glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, int *yOut, int *maxHeight, FT_Face face, const unsigned char c, qboolean calcHeight ) {
+static glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, int *yOut, int *maxHeight, FT_Face face, const unsigned long c, qboolean calcHeight ) {
 	int i;
 	static glyphInfo_t glyph;
 	unsigned char *src, *dst;
@@ -347,8 +352,7 @@ float readFloat( void ) {
 	return me.ffred;
 }
 
-// Legacy pre-baked font: fonts/fontImage_<pointSize>.dat + fontImage_*.tga pages.
-// Kept as a fallback for assets that ship without a .ttf/.otf (e.g. retail RTCW data).
+// Legacy pre-baked font (fontImage_<pointSize>.dat/.tga), fallback for assets with no .ttf/.otf
 static qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 	void *faceData;
 	int i, len;
@@ -568,8 +572,7 @@ void RE_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font ) {
 		return;
 	}
 
-	// cache key is fontName+pointSize so two different faces at the same point size
-	// (e.g. ariblk 16 and courbd 16) don't collide, unlike the old fontImage_<size>.dat scheme
+	// cache key is fontName+pointSize so two faces at the same point size don't collide
 	Com_sprintf( cacheName, sizeof( cacheName ), "fonts/%s_%i.dat", fontName, pointSize );
 	for ( i = 0; i < registeredFontCount; i++ ) {
 		if ( Q_stricmp( cacheName, registeredFont[i].name ) == 0 ) {
@@ -594,6 +597,206 @@ void RE_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font ) {
 	ri.Printf( PRINT_WARNING, "RE_RegisterFont: failed to register font '%s' at point size %i\n", fontName, pointSize );
 }
 
+#ifdef BUILD_FREETYPE
+// Same as R_LoadScalableFont, but rasterizes the full extended Unicode range into a fontInfoExtra_t instead of just ASCII
+static qboolean R_LoadScalableFontExtended( const char *fontName, int pointSize, fontInfoExtra_t *font ) {
+	FT_Face face;
+	int j, k, xOut, yOut, lastStart, imageNumber;
+	int scaledSize, newSize, maxHeight, left;
+	unsigned char *out, *imageBuff;
+	glyphInfo_t *glyph;
+	image_t *image;
+	qhandle_t h;
+	float max;
+	float dpi = 72.0f * FONT_SUPERSAMPLE;
+	float glyphScale;
+	void *faceData;
+	int i, len, fmt;
+	char path[1024];
+	char name[1024];
+	qboolean found;
+
+	if ( ftLibrary == NULL ) {
+		return qfalse;
+	}
+
+	found = qfalse;
+	for ( fmt = 0; fmt < NUM_SUPPORTED_FONT_FORMATS; fmt++ ) {
+		Com_sprintf( path, sizeof( path ), "fonts/%s.%s", fontName, supportedFontFormats[fmt] );
+		if ( ri.FS_ReadFile( path, NULL ) > 0 ) {
+			found = qtrue;
+			break;
+		}
+	}
+
+	if ( !found ) {
+		return qfalse;
+	}
+
+	len = ri.FS_ReadFile( path, &faceData );
+	if ( len <= 0 ) {
+		ri.Printf( PRINT_WARNING, "R_LoadScalableFontExtended: Unable to read font file '%s'\n", path );
+		return qfalse;
+	}
+
+	if ( FT_New_Memory_Face( ftLibrary, faceData, len, 0, &face ) ) {
+		ri.FS_FreeFile( faceData );
+		ri.Printf( PRINT_WARNING, "R_LoadScalableFontExtended: FreeType, unable to allocate new face for '%s'.\n", path );
+		return qfalse;
+	}
+
+	if ( FT_Set_Char_Size( face, pointSize << 6, pointSize << 6, dpi, dpi ) ) {
+		ri.FS_FreeFile( faceData );
+		ri.Printf( PRINT_WARNING, "R_LoadScalableFontExtended: FreeType, unable to set face char size for '%s'.\n", path );
+		return qfalse;
+	}
+
+	out = ri.Z_Malloc( 256 * 256 );
+	if ( out == NULL ) {
+		ri.FS_FreeFile( faceData );
+		ri.Printf( PRINT_WARNING, "R_LoadScalableFontExtended: ri.Z_Malloc failure during output image creation.\n" );
+		return qfalse;
+	}
+	Com_Memset( out, 0, 256 * 256 );
+
+	maxHeight = 0;
+
+	for ( i = GLYPH_START; i <= GLYPH_UTF_END; i++ ) {
+		RE_ConstructGlyphInfo( out, &xOut, &yOut, &maxHeight, face, (unsigned long)i, qtrue );
+	}
+
+	xOut = 0;
+	yOut = 0;
+	i = GLYPH_START;
+	lastStart = i;
+	imageNumber = 0;
+
+	while ( i <= GLYPH_UTF_END + 1 ) {
+
+		if ( i == GLYPH_UTF_END + 1 ) {
+			// upload/save current image buffer
+			xOut = yOut = -1;
+		} else {
+			glyph = RE_ConstructGlyphInfo( out, &xOut, &yOut, &maxHeight, face, (unsigned long)i, qfalse );
+		}
+
+		if ( xOut == -1 || yOut == -1 ) {
+			// ran out of room
+			// we need to create an image from the bitmap, set all the handles in the glyphs to this point
+
+			scaledSize = 256 * 256;
+			newSize = scaledSize * 4;
+			imageBuff = ri.Z_Malloc( newSize );
+			left = 0;
+			max = 0;
+			for ( k = 0; k < ( scaledSize ) ; k++ ) {
+				if ( max < out[k] ) {
+					max = out[k];
+				}
+			}
+
+			if ( max > 0 ) {
+				max = 255 / max;
+			}
+
+			for ( k = 0; k < ( scaledSize ) ; k++ ) {
+				imageBuff[left++] = 255;
+				imageBuff[left++] = 255;
+				imageBuff[left++] = 255;
+
+				imageBuff[left++] = ( (float)out[k] * max );
+			}
+
+			Com_sprintf( name, sizeof( name ), "fonts/%s_%i_%i_utf8.tga", fontName, imageNumber++, pointSize );
+			if ( r_saveFontData->integer ) {
+				WriteTGA( name, imageBuff, 256, 256 );
+			}
+
+			image = R_CreateImage( name, imageBuff, 256, 256, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
+			h = RE_RegisterShaderFromImage( name, LIGHTMAP_2D, image, qfalse );
+			for ( j = lastStart; j < i; j++ ) {
+				if ( j <= GLYPH_END ) {
+					font->glyphs[j].glyph = h;
+					Q_strncpyz( font->glyphs[j].shaderName, name, sizeof( font->glyphs[j].shaderName ) );
+				} else {
+					font->glyphsUTF8[j].glyph = h;
+					Q_strncpyz( font->glyphsUTF8[j].shaderName, name, sizeof( font->glyphsUTF8[j].shaderName ) );
+				}
+			}
+			lastStart = i;
+			Com_Memset( out, 0, 256 * 256 );
+			xOut = 0;
+			yOut = 0;
+			ri.Free( imageBuff );
+			if ( i == GLYPH_UTF_END + 1 )
+				i++;
+		} else {
+			if ( i <= GLYPH_END ) {
+				Com_Memcpy( &font->glyphs[i], glyph, sizeof( glyphInfo_t ) );
+			} else {
+				Com_Memcpy( &font->glyphsUTF8[i], glyph, sizeof( glyphInfo_t ) );
+			}
+			i++;
+		}
+	}
+
+	// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
+	glyphScale = 72.0f / dpi;
+
+	// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
+	glyphScale *= 48.0f / pointSize;
+
+	font->glyphScale = glyphScale;
+	Com_sprintf( font->name, sizeof( font->name ), "fonts/%s_%i_utf8.dat", fontName, pointSize );
+
+	ri.Free( out );
+	ri.FS_FreeFile( faceData );
+	FT_Done_Face( face );
+
+	return qtrue;
+}
+#endif
+
+void RE_RegisterFontExtended( const char *fontName, int pointSize, fontInfoExtra_t *font ) {
+	char cacheName[1024];
+	int i;
+
+	if ( !fontName ) {
+		ri.Printf( PRINT_ALL, "RE_RegisterFontExtended: called with empty name\n" );
+		return;
+	}
+
+	if ( pointSize <= 0 ) {
+		pointSize = 12;
+	}
+
+	R_IssuePendingRenderCommands();
+
+	// cache key mirrors what R_LoadScalableFontExtended writes into font->name
+	Com_sprintf( cacheName, sizeof( cacheName ), "fonts/%s_%i_utf8.dat", fontName, pointSize );
+	for ( i = 0; i < registeredFontExtendedCount; i++ ) {
+		if ( Q_stricmp( cacheName, registeredFontExtended[i].name ) == 0 ) {
+			Com_Memcpy( font, &registeredFontExtended[i], sizeof( fontInfoExtra_t ) );
+			return;
+		}
+	}
+
+	Com_Memset( font, 0, sizeof( fontInfoExtra_t ) );
+
+#ifdef BUILD_FREETYPE
+	if ( R_LoadScalableFontExtended( fontName, pointSize, font ) ) {
+		if ( registeredFontExtendedCount < MAX_EXTENDED_FONTS ) {
+			Com_Memcpy( &registeredFontExtended[registeredFontExtendedCount++], font, sizeof( fontInfoExtra_t ) );
+		} else {
+			ri.Printf( PRINT_WARNING, "RE_RegisterFontExtended: extended font cache full, '%s' won't be cached (will re-rasterize if requested again)\n", fontName );
+		}
+		return;
+	}
+#endif
+
+	ri.Printf( PRINT_WARNING, "RE_RegisterFontExtended: failed to register font '%s' at point size %i (FreeType only; no legacy .dat fallback for extended fonts)\n", fontName, pointSize );
+}
+
 
 
 void R_InitFreeType( void ) {
@@ -603,6 +806,7 @@ void R_InitFreeType( void ) {
 	}
 #endif
 	registeredFontCount = 0;
+	registeredFontExtendedCount = 0;
 }
 
 
@@ -614,5 +818,6 @@ void R_DoneFreeType( void ) {
 	}
 #endif
 	registeredFontCount = 0;
+	registeredFontExtendedCount = 0;
 }
 

@@ -667,6 +667,13 @@ Usage: dumpsound <soundfile> [wait=N] [random=N] [volume=N] [range=N]
                   [looped=no|on|off] [broadcast=no|global|nopvs] [targetname=name]
 ===================
 */
+// TEMP: injects hardcoded UTF-8 literals into the notify feed to test the Unicode font path
+static void CG_TestUTF8_f( void ) {
+	CG_AddToNotify( "UTF8 test: Cyrillic \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82 (Privet)" );
+	CG_AddToNotify( "UTF8 test: accented caf\xC3\xA9 m\xC3\xB6tley na\xC3\xAFve" );
+	CG_AddToNotify( "UTF8 test: Greek \xCE\xB3\xCE\xB5\xCE\xB9\xCE\xB1 (geia)" );
+}
+
 static void CG_DumpSound_f( void ) {
 	scriptSpeaker_t speaker;
 	int             argc;
@@ -910,10 +917,12 @@ static consoleCommand_t commands[] = {
 	{ "nodebuglines", CG_DisableDebugLines_f },
 	// -NERVE - SMF
 
-	// Coop 
+	// Coop
 	{ "+vstr", CG_vstrDown_f },
-	{ "-vstr", CG_vstrUp_f }
+	{ "-vstr", CG_vstrUp_f },
 	// ~Coop
+
+	{ "utf8test", CG_TestUTF8_f }  // TEMP: tests the Unicode font path
 };
 
 

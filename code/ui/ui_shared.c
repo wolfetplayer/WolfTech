@@ -627,10 +627,7 @@ qboolean PC_Int_Parse( int handle, int *i ) {
 =================
 PC_Font_Parse
 
-Parses the "font" assetGlobalDef keyword in either form:
-  font "<fontfile>" <pointSize>              (legacy, always the default/text font)
-  font <fontIndex> "<fontfile>" <pointSize>   (indexed, registers into extraFonts[])
-Sets *fontIndex to -1 for the legacy form, otherwise the parsed index.
+Parses "font" as either "<fontfile>" <size> (legacy, sets *fontIndex to -1) or <idx> "<fontfile>" <size> (indexed)
 =================
 */
 qboolean PC_Font_Parse( int handle, int *fontIndex, const char **fontName, int *pointSize ) {
@@ -659,13 +656,10 @@ qboolean PC_Font_Parse( int handle, int *fontIndex, const char **fontName, int *
 =================
 UI_SelectFont
 
-Resolves a "textfont" item value (UI_FONT_BIG/SMALL/HANDWRITING or an
-extraFonts[] index >= UI_FONT_EXTRA_BASE) to its fontInfo_t. Callers should
-pre-resolve UI_FONT_DEFAULT themselves (it depends on scale, not just index)
-and pass their default-selected font in as fallback.
+Resolves a "textfont" value to its fontInfoExtra_t. Caller must pre-resolve UI_FONT_DEFAULT (scale-based) and pass it as fallback.
 =================
 */
-fontInfo_t *UI_SelectFont( cachedAssets_t *assets, int font, fontInfo_t *fallback ) {
+fontInfoExtra_t *UI_SelectFont( cachedAssets_t *assets, int font, fontInfoExtra_t *fallback ) {
 	if ( font == UI_FONT_BIG ) {
 		return &assets->bigFont;
 	} else if ( font == UI_FONT_SMALL ) {
@@ -6457,7 +6451,7 @@ qboolean MenuParse_font( itemDef_t *item, int handle ) {
 		return qfalse;
 	}
 	if ( !DC->Assets.fontRegistered ) {
-		DC->registerFont( menu->font, 48, &DC->Assets.textFont );
+		DC->registerFontExtended( menu->font, 48, &DC->Assets.textFont );
 		DC->Assets.fontRegistered = qtrue;
 	}
 	return qtrue;

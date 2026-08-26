@@ -39,6 +39,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "ui_local.h"
+#include "../qcommon/q_unicode.h"
 
 uiInfo_t uiInfo;
 
@@ -306,7 +307,7 @@ int Text_Width( const char *text, int font, float scale, int limit ) {
 	float useScale;
 	const char *s = text;
 
-	fontInfo_t *fnt = &uiInfo.uiDC.Assets.textFont;
+	fontInfoExtra_t *fnt = &uiInfo.uiDC.Assets.textFont;
 	if ( font == UI_FONT_DEFAULT ) {
 		if ( scale <= ui_smallFont.value ) {
 			fnt = &uiInfo.uiDC.Assets.smallFont;
@@ -320,7 +321,7 @@ int Text_Width( const char *text, int font, float scale, int limit ) {
 	useScale = scale * fnt->glyphScale;
 	out = 0;
 	if ( text ) {
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
@@ -330,9 +331,9 @@ int Text_Width( const char *text, int font, float scale, int limit ) {
 				s += 2;
 				continue;
 			} else {
-				glyph = &fnt->glyphs[*s & 255];
+				glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 				out += glyph->xSkip;
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -347,7 +348,7 @@ int Text_Height( const char *text, int font, float scale, int limit ) {
 	float useScale;
 	const char *s = text;
 
-	fontInfo_t *fnt = &uiInfo.uiDC.Assets.textFont;
+	fontInfoExtra_t *fnt = &uiInfo.uiDC.Assets.textFont;
 	if ( font == UI_FONT_DEFAULT ) {
 		if ( scale <= ui_smallFont.value ) {
 			fnt = &uiInfo.uiDC.Assets.smallFont;
@@ -361,7 +362,7 @@ int Text_Height( const char *text, int font, float scale, int limit ) {
 	useScale = scale * fnt->glyphScale;
 	max = 0;
 	if ( text ) {
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
@@ -371,11 +372,11 @@ int Text_Height( const char *text, int font, float scale, int limit ) {
 				s += 2;
 				continue;
 			} else {
-				glyph = &fnt->glyphs[*s & 255];
+				glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 				if ( max < glyph->height ) {
 					max = glyph->height;
 				}
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -398,7 +399,7 @@ void Text_Paint( float x, float y, int font, float scale, vec4_t color, const ch
 	float useScale;
 	int index;
 
-	fontInfo_t *fnt = &uiInfo.uiDC.Assets.textFont;
+	fontInfoExtra_t *fnt = &uiInfo.uiDC.Assets.textFont;
 	if ( font == UI_FONT_DEFAULT ) {
 		if ( scale <= ui_smallFont.value ) {
 			fnt = &uiInfo.uiDC.Assets.smallFont;
@@ -414,7 +415,7 @@ void Text_Paint( float x, float y, int font, float scale, vec4_t color, const ch
 		const char *s = text;
 		trap_R_SetColor( color );
 		memcpy( &newColor[0], &color[0], sizeof( vec4_t ) );
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
@@ -429,11 +430,7 @@ void Text_Paint( float x, float y, int font, float scale, vec4_t color, const ch
 				continue;
 			}
 
-			//glyph = &fnt->glyphs[(unsigned char)*s];
-			//glyph = &fnt->glyphs[index];                       // NERVE - SMF - this needs to be an unsigned cast for localization
-			glyph = &fnt->glyphs[index & 255];
-			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
+			glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 			if ( Q_IsColorString( s ) ) {
 				memcpy( newColor, g_color_table[ColorIndex( *( s + 1 ) )], sizeof( newColor ) );
 				newColor[3] = color[3];
@@ -471,7 +468,7 @@ void Text_Paint( float x, float y, int font, float scale, vec4_t color, const ch
 								glyph->glyph );
 
 				x += ( glyph->xSkip * useScale ) + adjust;
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -486,7 +483,7 @@ void Text_PaintWithCursor( float x, float y, int font, float scale, vec4_t color
 	float yadj;
 	float useScale;
 
-	fontInfo_t *fnt = &uiInfo.uiDC.Assets.textFont;
+	fontInfoExtra_t *fnt = &uiInfo.uiDC.Assets.textFont;
 	if ( font == UI_FONT_DEFAULT ) {
 		if ( scale <= ui_smallFont.value ) {
 			fnt = &uiInfo.uiDC.Assets.smallFont;
@@ -502,16 +499,14 @@ void Text_PaintWithCursor( float x, float y, int font, float scale, vec4_t color
 		const char *s = text;
 		trap_R_SetColor( color );
 		memcpy( &newColor[0], &color[0], sizeof( vec4_t ) );
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
 		count = 0;
 		glyph2 = &fnt->glyphs[cursor & 255];
 		while ( s && *s && count < len ) {
-			glyph = &fnt->glyphs[*s & 255];
-			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
+			glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 			if ( Q_IsColorString( s ) ) {
 				memcpy( newColor, g_color_table[ColorIndex( *( s + 1 ) )], sizeof( newColor ) );
 				newColor[3] = color[3];
@@ -564,7 +559,7 @@ void Text_PaintWithCursor( float x, float y, int font, float scale, vec4_t color
 				}
 
 				x += ( glyph->xSkip * useScale );
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -600,7 +595,7 @@ static void Text_Paint_Limit(float *maxX, float x, float y, int font, float scal
 		float max = *maxX;
 		float useScale;
 
-		fontInfo_t *fnt = &uiInfo.uiDC.Assets.textFont;
+		fontInfoExtra_t *fnt = &uiInfo.uiDC.Assets.textFont;
 		if(font == UI_FONT_DEFAULT) {
 			if (scale <= ui_smallFont.value) {
 				fnt = &uiInfo.uiDC.Assets.smallFont;
@@ -796,18 +791,17 @@ qboolean Asset_Parse( int handle ) {
 			return qtrue;
 		}
 
-		// font: either "font \"<name>\" <size>" (legacy, -> textFont) or
-		// "font <index> \"<name>\" <size>" (indexed, -> extraFonts[index - UI_FONT_EXTRA_BASE])
+		// "font <name> <size>" (legacy) or "font <index> <name> <size>" (indexed -> extraFonts[])
 		if ( Q_stricmp( token.string, "font" ) == 0 ) {
 			int fontIndex, pointSize;
 			if ( !PC_Font_Parse( handle, &fontIndex, &tempStr, &pointSize ) ) {
 				return qfalse;
 			}
 			if ( fontIndex < 0 ) {
-				trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.textFont );
+				trap_R_RegisterFontExtended( tempStr, pointSize, &uiInfo.uiDC.Assets.textFont );
 				uiInfo.uiDC.Assets.fontRegistered = qtrue;
 			} else if ( fontIndex >= UI_FONT_EXTRA_BASE && fontIndex < UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT ) {
-				trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.extraFonts[fontIndex - UI_FONT_EXTRA_BASE] );
+				trap_R_RegisterFontExtended( tempStr, pointSize, &uiInfo.uiDC.Assets.extraFonts[fontIndex - UI_FONT_EXTRA_BASE] );
 			} else {
 				Com_Printf( "Asset_Parse: font index %i out of range (%i..%i)\n", fontIndex, UI_FONT_EXTRA_BASE, UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT - 1 );
 			}
@@ -819,7 +813,7 @@ qboolean Asset_Parse( int handle ) {
 			if ( !PC_String_Parse( handle, &tempStr ) || !PC_Int_Parse( handle,&pointSize ) ) {
 				return qfalse;
 			}
-			trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.smallFont );
+			trap_R_RegisterFontExtended( tempStr, pointSize, &uiInfo.uiDC.Assets.smallFont );
 			continue;
 		}
 
@@ -828,7 +822,7 @@ qboolean Asset_Parse( int handle ) {
 			if ( !PC_String_Parse( handle, &tempStr ) || !PC_Int_Parse( handle,&pointSize ) ) {
 				return qfalse;
 			}
-			trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.bigFont );
+			trap_R_RegisterFontExtended( tempStr, pointSize, &uiInfo.uiDC.Assets.bigFont );
 			continue;
 		}
 
@@ -838,10 +832,9 @@ qboolean Asset_Parse( int handle ) {
 			if ( !PC_String_Parse( handle, &tempStr ) || !PC_Int_Parse( handle,&pointSize ) ) {
 				return qfalse;
 			}
-			trap_R_RegisterFont( tempStr, pointSize, &uiInfo.uiDC.Assets.handwritingFont );
+			trap_R_RegisterFontExtended( tempStr, pointSize, &uiInfo.uiDC.Assets.handwritingFont );
 			continue;
 		}
-
 
 		// gradientbar
 		if ( Q_stricmp( token.string, "gradientbar" ) == 0 ) {
@@ -7673,6 +7666,7 @@ void _UI_Init( qboolean inGameLoad ) {
 	uiInfo.uiDC.addRefEntityToScene = &trap_R_AddRefEntityToScene;
 	uiInfo.uiDC.renderScene = &trap_R_RenderScene;
 	uiInfo.uiDC.registerFont = &trap_R_RegisterFont;
+	uiInfo.uiDC.registerFontExtended = &trap_R_RegisterFontExtended;
 	uiInfo.uiDC.ownerDrawItem = &UI_OwnerDraw;
 	uiInfo.uiDC.getValue = &UI_GetValue;
 	uiInfo.uiDC.ownerDrawVisible = &UI_OwnerDrawVisible;

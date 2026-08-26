@@ -1842,6 +1842,7 @@ Q3OBJ = \
   \
   $(B)/client/q_math.o \
   $(B)/client/q_shared.o \
+  $(B)/client/q_unicode.o \
   \
   $(B)/client/unzip.o \
   $(B)/client/ioapi.o \
@@ -2613,7 +2614,8 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_shared.o \
   \
   $(B)/$(BASEGAME)/cgame/q_math.o \
-  $(B)/$(BASEGAME)/cgame/q_shared.o
+  $(B)/$(BASEGAME)/cgame/q_shared.o \
+  $(B)/$(BASEGAME)/cgame/q_unicode.o
 
 Q3CGOBJ = $(Q3CGOBJ_) $(B)/$(BASEGAME)/cgame/cg_syscalls.o
 Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
@@ -2734,7 +2736,8 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/bg_lib.o \
   \
   $(B)/$(BASEGAME)/ui/q_math.o \
-  $(B)/$(BASEGAME)/ui/q_shared.o
+  $(B)/$(BASEGAME)/ui/q_shared.o \
+  $(B)/$(BASEGAME)/ui/q_unicode.o
 
 Q3UIOBJ = $(Q3UIOBJ_) $(B)/$(BASEGAME)/ui/ui_syscalls.o
 Q3UIVMOBJ = $(Q3UIOBJ_:%.o=%.asm)
@@ -3033,9 +3036,13 @@ $(B)/$(BASEGAME)/cgame/q_math.o: $(CMDIR)/q_math.c
 	$(DO_CGAME_CC)
 $(B)/$(BASEGAME)/cgame/q_shared.o: $(CMDIR)/q_shared.c
 	$(DO_CGAME_CC)
+$(B)/$(BASEGAME)/cgame/q_unicode.o: $(CMDIR)/q_unicode.c
+	$(DO_CGAME_CC)
 $(B)/$(BASEGAME)/cgame/q_math.asm: $(CMDIR)/q_math.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC)
 $(B)/$(BASEGAME)/cgame/q_shared.asm: $(CMDIR)/q_shared.c $(Q3LCC)
+	$(DO_CGAME_Q3LCC)
+$(B)/$(BASEGAME)/cgame/q_unicode.asm: $(CMDIR)/q_unicode.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC)
 
 # Added
@@ -3053,9 +3060,13 @@ $(B)/$(BASEGAME)/ui/q_math.o: $(CMDIR)/q_math.c
 	$(DO_UI_CC)
 $(B)/$(BASEGAME)/ui/q_shared.o: $(CMDIR)/q_shared.c
 	$(DO_UI_CC)
+$(B)/$(BASEGAME)/ui/q_unicode.o: $(CMDIR)/q_unicode.c
+	$(DO_UI_CC)
 $(B)/$(BASEGAME)/ui/q_math.asm: $(CMDIR)/q_math.c $(Q3LCC)
 	$(DO_UI_Q3LCC)
 $(B)/$(BASEGAME)/ui/q_shared.asm: $(CMDIR)/q_shared.c $(Q3LCC)
+	$(DO_UI_Q3LCC)
+$(B)/$(BASEGAME)/ui/q_unicode.asm: $(CMDIR)/q_unicode.c $(Q3LCC)
 	$(DO_UI_Q3LCC)
 
 #############################################################################

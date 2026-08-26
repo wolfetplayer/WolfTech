@@ -1985,17 +1985,16 @@ qboolean CG_Asset_Parse( int handle ) {
 			return qtrue;
 		}
 
-		// font: either "font \"<name>\" <size>" (legacy, -> textFont) or
-		// "font <index> \"<name>\" <size>" (indexed, -> extraFonts[index - UI_FONT_EXTRA_BASE])
+		// "font <name> <size>" (legacy) or "font <index> <name> <size>" (indexed -> extraFonts[])
 		if ( Q_stricmp( token.string, "font" ) == 0 ) {
 			int fontIndex, pointSize;
 			if ( !PC_Font_Parse( handle, &fontIndex, &tempStr, &pointSize ) ) {
 				return qfalse;
 			}
 			if ( fontIndex < 0 ) {
-				cgDC.registerFont( tempStr, pointSize, &cgDC.Assets.textFont );
+				cgDC.registerFontExtended( tempStr, pointSize, &cgDC.Assets.textFont );
 			} else if ( fontIndex >= UI_FONT_EXTRA_BASE && fontIndex < UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT ) {
-				cgDC.registerFont( tempStr, pointSize, &cgDC.Assets.extraFonts[fontIndex - UI_FONT_EXTRA_BASE] );
+				cgDC.registerFontExtended( tempStr, pointSize, &cgDC.Assets.extraFonts[fontIndex - UI_FONT_EXTRA_BASE] );
 			} else {
 				CG_Printf( "CG_Asset_Parse: font index %i out of range (%i..%i)\n", fontIndex, UI_FONT_EXTRA_BASE, UI_FONT_EXTRA_BASE + UI_FONT_EXTRA_COUNT - 1 );
 			}
@@ -2008,7 +2007,7 @@ qboolean CG_Asset_Parse( int handle ) {
 			if ( !PC_String_Parse( handle, &tempStr ) || !PC_Int_Parse( handle, &pointSize ) ) {
 				return qfalse;
 			}
-			cgDC.registerFont( tempStr, pointSize, &cgDC.Assets.smallFont );
+			cgDC.registerFontExtended( tempStr, pointSize, &cgDC.Assets.smallFont );
 			continue;
 		}
 
@@ -2018,7 +2017,7 @@ qboolean CG_Asset_Parse( int handle ) {
 			if ( !PC_String_Parse( handle, &tempStr ) || !PC_Int_Parse( handle, &pointSize ) ) {
 				return qfalse;
 			}
-			cgDC.registerFont( tempStr, pointSize, &cgDC.Assets.bigFont );
+			cgDC.registerFontExtended( tempStr, pointSize, &cgDC.Assets.bigFont );
 			continue;
 		}
 
@@ -2028,7 +2027,7 @@ qboolean CG_Asset_Parse( int handle ) {
 			if ( !PC_String_Parse( handle, &tempStr ) || !PC_Int_Parse( handle, &pointSize ) ) {
 				return qfalse;
 			}
-			cgDC.registerFont( tempStr, pointSize, &cgDC.Assets.handwritingFont );
+			cgDC.registerFontExtended( tempStr, pointSize, &cgDC.Assets.handwritingFont );
 			continue;
 		}
 
@@ -2448,6 +2447,7 @@ void CG_LoadHudMenu( void ) {
 	cgDC.addRefEntityToScene = &trap_R_AddRefEntityToScene;
 	cgDC.renderScene = &trap_R_RenderScene;
 	cgDC.registerFont = &trap_R_RegisterFont;
+	cgDC.registerFontExtended = &trap_R_RegisterFontExtended;
 	cgDC.ownerDrawItem = &CG_OwnerDraw;
 	cgDC.getValue = &CG_GetValue;
 	cgDC.ownerDrawVisible = &CG_OwnerDrawVisible;

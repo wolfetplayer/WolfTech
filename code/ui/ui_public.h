@@ -159,6 +159,8 @@ typedef enum {
 	UI_FLOOR,
 	UI_CEIL,
 
+	UI_R_REGISTERFONTEXTENDED, // Unicode-capable font registration (fontInfoExtra_t)
+
 	// New in IORTCW
 	UI_ALLOC = 900
 

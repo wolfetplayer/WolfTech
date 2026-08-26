@@ -42,9 +42,12 @@ If you have questions concerning this license or the applicable additional terms
 #include "../game/bg_public.h"
 #include "cg_public.h"
 
-// TTF font for chat/notify/subtitle/HUD-message text, replacing the old TINYCHAR bitmap glyphs
+// TTF font for chat/notify/HUD-message text (Courier Prime, monospace for grid-aligned HUD readouts)
 #define CG_CHAT_TEXT_SCALE 0.19f
 #define CG_CHAT_FONT ( &cgDC.Assets.extraFonts[UI_FONT_COURIERPRIME_12 - UI_FONT_EXTRA_BASE] )
+
+// LiberationSans for the chat feed specifically -- proportional, broad Cyrillic/Greek coverage
+#define CG_CHAT_FONT_UNICODE ( &cgDC.Assets.extraFonts[UI_FONT_LIBERATIONSANS_12 - UI_FONT_EXTRA_BASE] )
 
 
 #define POWERUP_BLINKS      5
@@ -2083,9 +2086,9 @@ void CG_DrawEnemyHealthbars( void );
 void CG_SetAIHealth( int entnum, int health, int healthMax );
 void CG_SetAIName( int entnum, const char *name );
 void CG_DrawAINameDebug( void );
-int CG_Text_Width_Ext( const char *text, float scale, int limit, fontInfo_t* font );
-int CG_Text_Height_Ext( const char *text, float scale, int limit, fontInfo_t* font );
-void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font );
+int CG_Text_Width_Ext( const char *text, float scale, int limit, fontInfoExtra_t* font );
+int CG_Text_Height_Ext( const char *text, float scale, int limit, fontInfoExtra_t* font );
+void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfoExtra_t* font );
 
 // cg_atmospheric
 void CG_EffectParse(const char *effectstr);
@@ -2722,6 +2725,7 @@ void        testPrintFloat( char *string, float f );
 
 int         trap_MemoryRemaining( void );
 void        trap_R_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font );
+void        trap_R_RegisterFontExtended( const char *fontName, int pointSize, fontInfoExtra_t *font );
 qboolean    trap_Key_IsDown( int keynum );
 int         trap_Key_GetCatcher( void );
 void        trap_Key_SetCatcher( int catcher );

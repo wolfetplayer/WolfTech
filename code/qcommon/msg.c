@@ -328,9 +328,9 @@ void MSG_WriteString( msg_t *sb, const char *s ) {
 		}
 		Q_strncpyz( string, s, sizeof( string ) );
 
-		// get rid of 0x80+ and '%' chars, because old clients don't like them
+		// get rid of '%' chars; bytes >= 0x80 (UTF-8) are now allowed through for chat text
 		for ( i = 0 ; i < l ; i++ ) {
-			if ( ((byte *)string)[i] > 127 || string[i] == '%' ) {
+			if ( string[i] == '%' ) {
 				string[i] = '.';
 			}
 		}
@@ -354,9 +354,9 @@ void MSG_WriteBigString( msg_t *sb, const char *s ) {
 		}
 		Q_strncpyz( string, s, sizeof( string ) );
 
-		// get rid of 0x80+ and '%' chars, because old clients don't like them
+		// get rid of '%' chars; bytes >= 0x80 (UTF-8) are now allowed through, see MSG_WriteString
 		for ( i = 0 ; i < l ; i++ ) {
-			if ( ((byte *)string)[i] > 127 || string[i] == '%' ) {
+			if ( string[i] == '%' ) {
 				string[i] = '.';
 			}
 		}
@@ -460,10 +460,7 @@ char *MSG_ReadString( msg_t *msg ) {
 		if ( c == '%' ) {
 			c = '.';
 		}
-		// don't allow higher ascii values
-		if ( c > 127 ) {
-			c = '.';
-		}
+		// bytes >= 0x80 are allowed through -- see MSG_WriteString
 		// break only after reading all expected data from bitstream
 		if ( l >= sizeof( string ) - 1 ) {
 			break;
@@ -490,10 +487,7 @@ char *MSG_ReadBigString( msg_t *msg ) {
 		if ( c == '%' ) {
 			c = '.';
 		}
-		// don't allow higher ascii values
-		if ( c > 127 ) {
-			c = '.';
-		}
+		// bytes >= 0x80 are allowed through -- see MSG_WriteString
 		// break only after reading all expected data from bitstream
 		if ( l >= sizeof( string ) - 1 ) {
 			break;

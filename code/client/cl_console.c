@@ -690,14 +690,19 @@ void Con_DrawNotify( void ) {
 
 	// draw the chat line
 	if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
+		// fixed lower-middle position instead of the top-left corner
+#define CHAT_PROMPT_X 160
+#define CHAT_PROMPT_Y 340
+		v = CHAT_PROMPT_Y;
+
 		if ( chat_team ) {
 #ifdef LOCALISATION
 			char buf[128];
 			CL_TranslateString( "say_team:", buf );
-			SCR_DrawBigString( 8, v, buf, 1.0f, qfalse );
+			SCR_DrawBigString( CHAT_PROMPT_X, v, buf, 1.0f, qfalse );
 			skip = strlen( buf ) + 2;
 #else
-			SCR_DrawBigString (8, v, "say_team:", 1.0f, qfalse );
+			SCR_DrawBigString ( CHAT_PROMPT_X, v, "say_team:", 1.0f, qfalse );
 			skip = 10;
 #endif
 #ifdef USE_IRC
@@ -705,10 +710,10 @@ void Con_DrawNotify( void ) {
 #ifdef LOCALISATION
 			char buf[128];
 			CL_TranslateString( "say_irc:", buf );
-			SCR_DrawBigString( 8, v, buf, 1.0f, qfalse );
+			SCR_DrawBigString( CHAT_PROMPT_X, v, buf, 1.0f, qfalse );
 			skip = strlen( buf ) + 2;
 #else
-			SCR_DrawBigString( 8, v, "say_irc:", 1.0f, qfalse );
+			SCR_DrawBigString( CHAT_PROMPT_X, v, "say_irc:", 1.0f, qfalse );
 			skip = 10;
 #endif
 #endif // USE_IRC
@@ -716,15 +721,15 @@ void Con_DrawNotify( void ) {
 #ifdef LOCALISATION
 			char buf[128];
 			CL_TranslateString( "say:", buf );
-			SCR_DrawBigString( 8, v, buf, 1.0f, qfalse );
+			SCR_DrawBigString( CHAT_PROMPT_X, v, buf, 1.0f, qfalse );
 			skip = strlen( buf ) + 1;
 #else
-			SCR_DrawBigString (8, v, "say:", 1.0f, qfalse );
+			SCR_DrawBigString ( CHAT_PROMPT_X, v, "say:", 1.0f, qfalse );
 			skip = 5;
 #endif
 		}
 
-		Field_BigDraw( &chatField, skip * BIGCHAR_WIDTH, v, SCREEN_WIDTH - ( skip + 1 ) * BIGCHAR_WIDTH, qtrue, qtrue );
+		Field_BigDraw( &chatField, CHAT_PROMPT_X + skip * BIGCHAR_WIDTH, v, SCREEN_WIDTH - CHAT_PROMPT_X - ( skip + 1 ) * BIGCHAR_WIDTH, qtrue, qtrue );
 
 	}
 

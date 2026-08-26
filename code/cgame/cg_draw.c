@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "cg_local.h"
 #include "../ui/ui_shared.h"
+#include "../qcommon/q_unicode.h"
 
 //----(SA) added to make it easier to raise/lower our statsubar by only changing one thing
 #define STATUSBARHEIGHT 452
@@ -57,7 +58,7 @@ int CG_Text_Width( const char *text, int font, float scale, int limit ) {
 	glyphInfo_t *glyph;
 	float useScale;
 	const char *s = text;
-	fontInfo_t *fnt = &cgDC.Assets.textFont;
+	fontInfoExtra_t *fnt = &cgDC.Assets.textFont;
 
 	if ( font == UI_FONT_DEFAULT ) {
 		if ( scale <= cg_smallFont.value ) {
@@ -72,7 +73,7 @@ int CG_Text_Width( const char *text, int font, float scale, int limit ) {
 	useScale = scale * fnt->glyphScale;
 	out = 0;
 	if ( text ) {
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
@@ -82,9 +83,9 @@ int CG_Text_Width( const char *text, int font, float scale, int limit ) {
 				s += 2;
 				continue;
 			} else {
-				glyph = &fnt->glyphs[*s & 255];
+				glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 				out += glyph->xSkip;
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -98,7 +99,7 @@ int CG_Text_Height( const char *text, int font, float scale, int limit ) {
 	glyphInfo_t *glyph;
 	float useScale;
 	const char *s = text;
-	fontInfo_t *fnt = &cgDC.Assets.textFont;
+	fontInfoExtra_t *fnt = &cgDC.Assets.textFont;
 
 	if ( font == UI_FONT_DEFAULT ) {
 		if ( scale <= cg_smallFont.value ) {
@@ -113,7 +114,7 @@ int CG_Text_Height( const char *text, int font, float scale, int limit ) {
 	useScale = scale * fnt->glyphScale;
 	max = 0;
 	if ( text ) {
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
@@ -123,11 +124,11 @@ int CG_Text_Height( const char *text, int font, float scale, int limit ) {
 				s += 2;
 				continue;
 			} else {
-				glyph = &fnt->glyphs[*s & 255];
+				glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 				if ( max < glyph->height ) {
 					max = glyph->height;
 				}
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -148,7 +149,7 @@ void CG_Text_Paint( float x, float y, int font, float scale, vec4_t color, const
 	vec4_t newColor;
 	glyphInfo_t *glyph;
 	float useScale;
-	fontInfo_t *fnt = &cgDC.Assets.textFont;
+	fontInfoExtra_t *fnt = &cgDC.Assets.textFont;
 
 	if ( font == UI_FONT_DEFAULT ) {
 		if ( scale <= cg_smallFont.value ) {
@@ -168,15 +169,13 @@ void CG_Text_Paint( float x, float y, int font, float scale, vec4_t color, const
 		const char *s = text;
 		trap_R_SetColor( color );
 		memcpy( &newColor[0], &color[0], sizeof( vec4_t ) );
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
 		count = 0;
 		while ( s && *s && count < len ) {
-			glyph = &fnt->glyphs[*s & 255];
-			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
+			glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 			if ( Q_IsColorString( s ) ) {
 				memcpy( newColor, g_color_table[ColorIndex( *( s + 1 ) )], sizeof( newColor ) );
 				newColor[3] = color[3];
@@ -210,9 +209,8 @@ void CG_Text_Paint( float x, float y, int font, float scale, vec4_t color, const
 								   glyph->s2,
 								   glyph->t2,
 								   glyph->glyph );
-				// CG_DrawPic(x, y - yadj, scale * cgDC.Assets.textFont.glyphs[text[i]].imageWidth, scale * cgDC.Assets.textFont.glyphs[text[i]].imageHeight, cgDC.Assets.textFont.glyphs[text[i]].glyph);
 				x += ( glyph->xSkip * useScale ) + adjust;
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -955,7 +953,7 @@ int maxCharsBeforeOverlay;
 #define TEAM_OVERLAY_MAXLOCATION_WIDTH  20
 
 // CG_Text_Paint_Ext's y is a baseline (draws upward); this file's y positions were written for the old top-anchored CG_DrawStringExt, so shift down by the measured text height
-static void CG_ChatTextPaint( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t *font ) {
+static void CG_ChatTextPaint( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfoExtra_t *font ) {
 	CG_Text_Paint_Ext( x, y + CG_Text_Height_Ext( text, scaley, limit, font ), scalex, scaley, color, text, adjust, limit, style, font );
 }
 
@@ -995,8 +993,7 @@ static float CG_DrawCoopOverlay( float y ) {
 	damagecolor[3] = cg_hudAlpha.value;
 	maxCharsBeforeOverlay = 80;
 
-	// TTF-backed courbd cell size, replaces the fixed TINYCHAR_WIDTH/HEIGHT grid. chH is measured
-	// separately from chW (not assumed square) - Courier Prime renders taller than it is wide
+	// TTF cell size replacing the fixed TINYCHAR grid; chH measured separately, not assumed square
 	chW = CG_Text_Width_Ext( "0", CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
 	chH = CG_Text_Height_Ext( "Mg", CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
 
@@ -1172,9 +1169,7 @@ static float CG_DrawCoopOverlay( float y ) {
 				pcolor[2] = 0.0;
 			}
 
-			// force a solid color regardless of any ^N color codes in the player's name
-			// (CG_Text_Paint_Ext always honors inline color codes, unlike the old
-			// CG_DrawStringExt's forceColor flag), so strip them from a local copy
+			// strip ^N color codes from a copy so the player's name can't override the fixed color
 			Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
 			Q_StripColorCodes( nameClean );
 			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
@@ -1330,7 +1325,7 @@ static void CG_DrawTeamInfo( void ) {
 			CG_ChatTextPaint( CHATLOC_X + TINYCHAR_WIDTH,
 							  CHATLOC_Y - ( cgs.teamChatPos - i ) * TINYCHAR_HEIGHT,
 							  CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
-							  cgs.teamChatMsgs[i % chatHeight], 0, 0, 0, CG_CHAT_FONT );
+							  cgs.teamChatMsgs[i % chatHeight], 0, 0, 0, CG_CHAT_FONT_UNICODE );
 		}
 // jpw
 	}
@@ -1463,7 +1458,7 @@ static void CG_DrawNotify( void ) {
 			CG_ChatTextPaint( NOTIFYLOC_X + TINYCHAR_WIDTH,
 							  NOTIFYLOC_Y - ( cgs.notifyPos - i ) * TINYCHAR_HEIGHT,
 							  CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
-							  cgs.notifyMsgs[i % chatHeight], 0, maxCharsBeforeOverlay, 0, CG_CHAT_FONT );
+							  cgs.notifyMsgs[i % chatHeight], 0, maxCharsBeforeOverlay, 0, CG_CHAT_FONT_UNICODE );
 		}
 	}
 
@@ -2098,9 +2093,7 @@ static void CG_DrawCenterString( void ) {
 
 	start = (char *)cg.centerPrint;
 
-	// scale the TTF-backed hud font relative to the requested charWidth, so the
-	// caller-supplied size still controls centerprint size the way it did with the
-	// old fixed-cell bitmap glyphs
+	// scale the TTF font relative to the requested charWidth so it still controls centerprint size
 	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.centerPrintCharWidth / SMALLCHAR_WIDTH );
 
 	y = cg.centerPrintY - cg.centerPrintLines * BIGCHAR_HEIGHT / 2;
@@ -2166,9 +2159,7 @@ static void CG_DrawBuyString( void ) {
 
 	start = (char *)cg.buyPrint;
 
-	// scale the TTF-backed hud font relative to the requested charWidth, so the
-	// caller-supplied size (SMALLCHAR_WIDTH for cpbuy) still controls buy-prompt size
-	// the way it did with the old fixed-cell bitmap glyphs
+	// scale the TTF font relative to the requested charWidth so it still controls buy-prompt size
 	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.buyPrintCharWidth / SMALLCHAR_WIDTH );
 
 	y = cg.buyPrintY - cg.buyPrintLines * BIGCHAR_HEIGHT / 2;
@@ -2239,8 +2230,7 @@ static void CG_DrawSubtitleString( void ) {
 
 	start = cg.subtitlePrint;
 
-	// scale the TTF-backed courbd font relative to cg_subtitleSize, so the cvar still
-	// controls subtitle size the way it did with the old fixed-cell bitmap glyphs
+	// scale the TTF font relative to cg_subtitleSize so the cvar still controls subtitle size
 	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.subtitlePrintCharWidth / SMALLCHAR_WIDTH );
 	style = cg_subtitleShadow.integer ? ITEM_TEXTSTYLE_SHADOWED : ITEM_TEXTSTYLE_NORMAL;
 
@@ -3017,7 +3007,7 @@ static void CG_ColorForDamageRatio( float ratio, vec4_t color ) {
 
 void CG_DrawDamageNumbers( void ) {
 	int i;
-	fontInfo_t *font = &cgDC.Assets.bigFont;
+	fontInfoExtra_t *font = &cgDC.Assets.bigFont;
 
 	if ( !cg_drawDamageNumbers.integer ) {
 		return;
@@ -4054,8 +4044,7 @@ static void CG_DrawVote( void ) {
 		s = va( "VOTE(%i):%s", sec, cgs.voteString );
 #endif
 		// Should we push this down?
-		// cgs.voteString is server-controlled text; strip any ^N codes so it can't
-		// override the fixed vote-text color (matches the old forceColor behavior)
+		// strip ^N codes so server-controlled voteString can't override the fixed vote-text color
 		Q_StripColorCodes( s );
 		CG_ChatTextPaint( 8, 200, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
 
@@ -5253,14 +5242,36 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 // omnibot 3d text
 #define COLOR_NULL      '*' // probably should move to q_shared.h
 
-int CG_Text_Width_Ext( const char *text, float scale, int limit, fontInfo_t* font ) {
+void CG_Text_PaintChar_Ext( float x, float y, float w, float h, float scalex, float scaley, float s, float t, float s2, float t2, qhandle_t hShader ) {
+	w *= scalex;
+	h *= scaley;
+	CG_AdjustFrom640( &x, &y, &w, &h );
+	trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
+}
+
+/*
+================
+CG_Text_Width_Ext / CG_Text_Height_Ext / CG_Text_Paint_Ext
+
+All fonts are fontInfoExtra_t (Unicode-capable) now: text is decoded as UTF-8
+codepoint by codepoint instead of indexed byte-by-byte, and glyph lookup goes
+through Q_UTF8_GetGlyphExtended instead of a direct glyphs[c] index. ASCII
+text behaves identically to the old byte-indexed path (Q_UTF8_CodePoint of an
+ASCII byte returns that same byte, Q_UTF8_Width returns 1), so this is a
+drop-in replacement for existing callers.
+================
+*/
+int CG_Text_Width_Ext( const char *text, float scale, int limit, fontInfoExtra_t *font ) {
+	float out;
 	glyphInfo_t *glyph;
+	float useScale;
 	const char *s = text;
-	float out, useScale = scale * font->glyphScale;
+
+	useScale = scale * font->glyphScale;
 
 	out = 0;
 	if ( text ) {
-		int len = strlen( text );
+		int len = Q_UTF8_Strlen( text );
 		int count = 0;
 
 		if ( limit > 0 && len > limit ) {
@@ -5272,9 +5283,9 @@ int CG_Text_Width_Ext( const char *text, float scale, int limit, fontInfo_t* fon
 				s += 2;
 				continue;
 			} else {
-				glyph = &font->glyphs[(unsigned char)*s];
+				glyph = Q_UTF8_GetGlyphExtended( font, Q_UTF8_CodePoint( s ) );
 				out += glyph->xSkip;
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -5283,7 +5294,7 @@ int CG_Text_Width_Ext( const char *text, float scale, int limit, fontInfo_t* fon
 	return out * useScale;
 }
 
-int CG_Text_Height_Ext( const char *text, float scale, int limit, fontInfo_t* font ) {
+int CG_Text_Height_Ext( const char *text, float scale, int limit, fontInfoExtra_t *font ) {
 	float max;
 	glyphInfo_t *glyph;
 	float useScale;
@@ -5292,7 +5303,7 @@ int CG_Text_Height_Ext( const char *text, float scale, int limit, fontInfo_t* fo
 	useScale = scale * font->glyphScale;
 	max = 0;
 	if ( text ) {
-		int len = strlen( text );
+		int len = Q_UTF8_Strlen( text );
 		int count = 0;
 
 		if ( limit > 0 && len > limit ) {
@@ -5304,13 +5315,13 @@ int CG_Text_Height_Ext( const char *text, float scale, int limit, fontInfo_t* fo
 				s += 2;
 				continue;
 			} else {
-				glyph = &font->glyphs[(unsigned char)*s];
+				glyph = Q_UTF8_GetGlyphExtended( font, Q_UTF8_CodePoint( s ) );
 
 				if ( max < glyph->height ) {
 					max = glyph->height;
 				}
 
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -5318,14 +5329,7 @@ int CG_Text_Height_Ext( const char *text, float scale, int limit, fontInfo_t* fo
 	return max * useScale;
 }
 
-void CG_Text_PaintChar_Ext( float x, float y, float w, float h, float scalex, float scaley, float s, float t, float s2, float t2, qhandle_t hShader ) {
-	w *= scalex;
-	h *= scaley;
-	CG_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
-}
-
-void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfo_t* font ) {
+void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfoExtra_t *font ) {
 	int len, count;
 	vec4_t newColor;
 	glyphInfo_t *glyph;
@@ -5337,13 +5341,12 @@ void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t col
 		const char *s = text;
 		trap_R_SetColor( color );
 		memcpy( &newColor[0], &color[0], sizeof( vec4_t ) );
-		len = strlen( text );
+		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
 		}
 		count = 0;
 		while ( s && *s && count < len ) {
-			glyph = &font->glyphs[(unsigned char)*s];
 			if ( Q_IsColorString( s ) ) {
 				if ( *( s + 1 ) == COLOR_NULL ) {
 					memcpy( newColor, color, sizeof( newColor ) );
@@ -5355,7 +5358,9 @@ void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t col
 				s += 2;
 				continue;
 			} else {
-				float yadj = scaley * glyph->top;
+				float yadj;
+				glyph = Q_UTF8_GetGlyphExtended( font, Q_UTF8_CodePoint( s ) );
+				yadj = scaley * glyph->top;
 				if ( style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
 					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
 					colorBlack[3] = newColor[3];
@@ -5366,7 +5371,7 @@ void CG_Text_Paint_Ext( float x, float y, float scalex, float scaley, vec4_t col
 				}
 				CG_Text_PaintChar_Ext( x, y - yadj, glyph->imageWidth, glyph->imageHeight, scalex, scaley, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
 				x += ( glyph->xSkip * scalex ) + adjust;
-				s++;
+				s += Q_UTF8_Width( s );
 				count++;
 			}
 		}
@@ -5492,7 +5497,7 @@ void CG_DrawOnScreenText( void ) {
 			const char *tok = 0;
 			char temp[1024];
 			int heightOffset = 0;
-			fontInfo_t *font = &cgDC.Assets.bigFont;
+			fontInfoExtra_t *font = &cgDC.Assets.bigFont;
 
 			Q_strncpyz( temp,worldtext->text,1024 );
 			tok = (const char *)strtok( temp,tokens );

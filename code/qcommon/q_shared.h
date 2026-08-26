@@ -1816,6 +1816,16 @@ typedef struct {
 	char name[MAX_QPATH];
 } fontInfo_t;
 
+// extended (Unicode-capable) font: Latin Extended + Greek + Cyrillic, U+0000-U+052F. glyphsUTF8[] is indexed by raw codepoint (0-255 unused, ASCII lives in glyphs[])
+#define GLYPH_UTF_END 1327
+#define GLYPHS_UTF_PER_FONT ( GLYPH_UTF_END - GLYPH_START + 1 )
+typedef struct {
+	glyphInfo_t glyphs [GLYPHS_PER_FONT];
+	float glyphScale;
+	char name[MAX_QPATH];
+	glyphInfo_t glyphsUTF8[GLYPHS_UTF_PER_FONT];
+} fontInfoExtra_t;
+
 #define Square( x ) ( ( x ) * ( x ) )
 
 // real time

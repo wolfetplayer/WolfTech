@@ -4119,6 +4119,9 @@ void CL_InitRenderer( void ) {
 	cls.consoleShader2 = re.RegisterShader( "console2" );
 	g_console_field_width = cls.glconfig.vidWidth / g_smallchar_width - 2;
 	g_consoleField.widthInChars = g_console_field_width;
+
+	re.RegisterFontExtended( "LiberationSans-Regular", 12, &cls.fieldFont ); // chat/console field preview font
+	cls.fieldFontRegistered = ( cls.fieldFont.glyphScale != 0.0f );
 }
 
 /*

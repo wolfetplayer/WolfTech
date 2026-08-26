@@ -27,6 +27,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "client.h"
+#include "../qcommon/q_unicode.h"
 
 /*
 
@@ -1336,6 +1337,18 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 		drawLen = len - prestep;
 	}
 
+	// snap the slice to UTF-8 character boundaries so scrolling never cuts a multi-byte char in half
+	while ( prestep > 0 && prestep < len && Q_UTF8_ContByte( edit->buffer[prestep] ) ) {
+		prestep++;
+		drawLen--;
+	}
+	while ( drawLen > 0 && prestep + drawLen < len && Q_UTF8_ContByte( edit->buffer[prestep + drawLen] ) ) {
+		drawLen--;
+	}
+	if ( drawLen < 0 ) {
+		drawLen = 0;
+	}
+
 	// extract <drawLen> characters from the field at <prestep>
 	if ( drawLen >= MAX_STRING_CHARS ) {
 		Com_Error( ERR_DROP, "drawLen >= MAX_STRING_CHARS" );
@@ -1349,10 +1362,10 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 		float color[4];
 
 		color[0] = color[1] = color[2] = color[3] = 1.0;
-		SCR_DrawSmallStringExt( x, y, str, color, qfalse, noColorEscape );
+		SCR_DrawSmallStringExtUTF8( x, y, str, color, qfalse, noColorEscape );
 	} else {
 		// draw big string with drop shadow
-		SCR_DrawBigString( x, y, str, 1.0, noColorEscape );
+		SCR_DrawBigStringUTF8( x, y, str, 1.0, noColorEscape );
 	}
 
 	// draw the cursor
@@ -1370,12 +1383,20 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 		i = drawLen - strlen( str );
 
 		if ( drawSmall ) {
-			SCR_DrawSmallChar( x + ( edit->cursor - prestep - i ) * size, y, cursorChar );
+			int cursorX = x + ( edit->cursor - prestep - i ) * size;
+			if ( cls.fieldFontRegistered ) {
+				cursorX = x + (int)SCR_UTF8StringWidth( &cls.fieldFont, (float)g_smallchar_height, str, edit->cursor - prestep - i );
+			}
+			SCR_DrawSmallChar( cursorX, y, cursorChar );
 		} else {
+			int cursorX = x + ( edit->cursor - prestep - i ) * size;
+			if ( cls.fieldFontRegistered ) {
+				cursorX = x + (int)SCR_UTF8StringWidth( &cls.fieldFont, (float)size, str, edit->cursor - prestep - i );
+			}
 			str[0] = cursorChar;
 			str[1] = 0;
-			SCR_DrawBigString( x + ( edit->cursor - prestep - i ) * size, y, str, 1.0, qfalse );
- 
+			SCR_DrawBigString( cursorX, y, str, 1.0, qfalse );
+
 		}
 	}
 }
@@ -1395,7 +1416,7 @@ Field_Paste
 */
 void Field_Paste( field_t *edit ) {
 	char    *cbd;
-	int pasteLen, i;
+	const char *s;
 
 	cbd = Sys_GetClipboardData();
 
@@ -1403,10 +1424,11 @@ void Field_Paste( field_t *edit ) {
 		return;
 	}
 
-	// send as if typed, so insert / overstrike works properly
-	pasteLen = strlen( cbd );
-	for ( i = 0 ; i < pasteLen ; i++ ) {
-		Field_CharEvent( edit, cbd[i] );
+	// send as if typed, decoded codepoint by codepoint (SDL clipboard text is UTF-8; Field_CharEvent re-encodes each codepoint, so raw bytes would double-encode)
+	s = cbd;
+	while ( *s ) {
+		Field_CharEvent( edit, (int)Q_UTF8_CodePoint( s ) );
+		s += Q_UTF8_Width( s );
 	}
 
 	Z_Free( cbd );
@@ -1437,8 +1459,16 @@ void Field_KeyDownEvent( field_t *edit, int key ) {
 	switch ( key ) {
 		case K_DEL:
 			if ( edit->cursor < len ) {
+				// delete the whole UTF-8 character at the cursor, not just its first byte
+				int delBytes = Q_UTF8_Width( edit->buffer + edit->cursor );
+				if ( delBytes < 1 ) {
+					delBytes = 1;
+				}
+				if ( edit->cursor + delBytes > len ) {
+					delBytes = len - edit->cursor;
+				}
 				memmove( edit->buffer + edit->cursor,
-					edit->buffer + edit->cursor + 1, len - edit->cursor );
+					edit->buffer + edit->cursor + delBytes, len - edit->cursor - delBytes + 1 );
 			}
 			break;
 
@@ -1500,11 +1530,21 @@ void Field_CharEvent( field_t *edit, int ch ) {
 
 	if ( ch == 'h' - 'a' + 1 ) {      // ctrl-h is backspace
 		if ( edit->cursor > 0 ) {
-			memmove( edit->buffer + edit->cursor - 1,
+			// walk back over UTF-8 continuation bytes to delete the whole character in one press
+			int start = edit->cursor - 1;
+			int delBytes;
+			while ( start > 0 && Q_UTF8_ContByte( edit->buffer[start] ) && ( edit->cursor - start ) < 4 ) {
+				start--;
+			}
+			delBytes = edit->cursor - start;
+			memmove( edit->buffer + start,
 					 edit->buffer + edit->cursor, len + 1 - edit->cursor );
-			edit->cursor--;
+			edit->cursor = start;
 			if ( edit->cursor < edit->scroll ) {
-				edit->scroll--;
+				edit->scroll -= delBytes;
+				if ( edit->scroll < 0 ) {
+					edit->scroll = 0;
+				}
 			}
 		}
 		return;
@@ -1529,30 +1569,38 @@ void Field_CharEvent( field_t *edit, int ch ) {
 		return;
 	}
 
-	if ( key_overstrikeMode ) {
-		// - 2 to leave room for the leading slash and trailing \0
-		if ( edit->cursor == MAX_EDIT_LINE - 2 )
-			return;
-		edit->buffer[edit->cursor] = ch;
-		edit->cursor++;
-	} else {    // insert mode
-		// - 2 to leave room for the leading slash and trailing \0
-		if ( len == MAX_EDIT_LINE - 2 ) {
-			return; // all full
-		}
-		memmove( edit->buffer + edit->cursor + 1,
-				 edit->buffer + edit->cursor, len + 1 - edit->cursor );
-		edit->buffer[edit->cursor] = ch;
-		edit->cursor++;
-	}
+	// ch is a full Unicode codepoint; encode to 1-4 UTF-8 bytes instead of truncating to one char
+	{
+		char utf8bytes[4];
+		int utf8len = Q_UTF8_Encode( (uint32_t)ch, utf8bytes );
+		int b;
 
+		if ( key_overstrikeMode && utf8len == 1 ) {
+			// - 2 to leave room for the leading slash and trailing \0
+			if ( edit->cursor == MAX_EDIT_LINE - 2 )
+				return;
+			edit->buffer[edit->cursor] = utf8bytes[0];
+			edit->cursor++;
+			if ( edit->cursor == len + 1 ) {
+				edit->buffer[edit->cursor] = 0;
+			}
+		} else {
+			// insert mode; also used for multi-byte codepoints even in overstrike mode
+			// - 2 to leave room for the leading slash and trailing \0
+			if ( len + utf8len > MAX_EDIT_LINE - 2 ) {
+				return; // all full
+			}
+			memmove( edit->buffer + edit->cursor + utf8len,
+					 edit->buffer + edit->cursor, len + 1 - edit->cursor );
+			for ( b = 0; b < utf8len; b++ ) {
+				edit->buffer[edit->cursor + b] = utf8bytes[b];
+			}
+			edit->cursor += utf8len;
+		}
+	}
 
 	if ( edit->cursor >= edit->widthInChars ) {
 		edit->scroll++;
-	}
-
-	if ( edit->cursor == len + 1 ) {
-		edit->buffer[edit->cursor] = 0;
 	}
 }
 
