@@ -37,4 +37,6 @@
 "buy_regen"     "Resilience"
 
 "doubleshot_buy"  "Double Shot"
+
+"buy_choice"      "Buy Perk of your Choice"
 }
