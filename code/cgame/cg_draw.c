@@ -2301,11 +2301,16 @@ static void CG_DrawPerkChooser( void ) {
 	}
 
 	selItem = BG_FindItemForPerk( (perk_t)cg.perkChooserSelected );
-	if ( selItem && selItem->pickup_name ) {
-		vec4_t nameColor;
-		int w = CG_Text_Width( selItem->pickup_name, UI_FONT_DEFAULT, 0.28f, 0 );
-		Vector4Copy( colorYellow, nameColor );
-		CG_Text_Paint( boxX + ( boxW - w ) / 2, boxY + 20, UI_FONT_DEFAULT, 0.28f, nameColor, selItem->pickup_name, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
+	if ( selItem ) {
+		int selIndex = selItem - bg_itemlist;
+		const char *selName = cgs.itemPrintNames[selIndex][0] ? cgs.itemPrintNames[selIndex] : selItem->pickup_name;
+
+		if ( selName && selName[0] ) {
+			vec4_t nameColor;
+			int w = CG_Text_Width( selName, UI_FONT_DEFAULT, 0.28f, 0 );
+			Vector4Copy( colorYellow, nameColor );
+			CG_Text_Paint( boxX + ( boxW - w ) / 2, boxY + 20, UI_FONT_DEFAULT, 0.28f, nameColor, selName, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
+		}
 	}
 
 	{
