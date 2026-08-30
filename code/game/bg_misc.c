@@ -4099,6 +4099,32 @@ model="models/powerups/holdable/wine.md3"
 		{0,0,0,0}
 	},
 
+/*QUAKED item_powerup_random (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Spawns as a random powerup (Quad/Shield/Vampire/Resupply). Rerolls a new random type every time it respawns.
+*/
+		{
+		"item_powerup_random",
+		"",
+		{
+		0,
+		0,
+		0
+		},
+		"",
+		NULL,                       // ammo icon
+		"",
+		0,
+		IT_POWERUP,
+		WP_NONE,
+		PW_NONE,
+		0,
+		0,
+		0,
+		"",
+		"",
+		{0,0,0,0}
+	},
+
 	{
 		"key_binocs",
 		"sound/pickup/keys/binocs.wav",

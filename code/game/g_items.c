@@ -61,6 +61,21 @@ weapon_t GetSimpleWeapon( weapon_t weapon );
 qboolean IsWeaponComplex( weapon_t weapon );
 
 
+// pool of real powerup types item_powerup_random can roll
+static const powerup_t randomPowerupPool[] = { PW_QUAD, PW_BATTLESUIT_SURV, PW_VAMPIRE, PW_AMMO };
+
+/*
+===============
+G_RandomPowerupItem
+
+Picks a random real powerup item for item_powerup_random to stand in for.
+===============
+*/
+static gitem_t *G_RandomPowerupItem( void ) {
+	return BG_FindItemForPowerup( randomPowerupPool[ rand() % ARRAY_LEN( randomPowerupPool ) ] );
+}
+
+
 //======================================================================
 
 int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
@@ -588,6 +603,16 @@ void RespawnItem( gentity_t *ent ) {
 
 	if ( !ent ) {
 		return;
+	}
+
+	// item_powerup_random: pick a new random powerup type for this respawn
+	if ( !Q_stricmp( ent->classname, "item_powerup_random" ) ) {
+		gitem_t *newItem = G_RandomPowerupItem();
+
+		if ( newItem ) {
+			ent->item = newItem;
+			ent->s.modelindex = ent->item - bg_itemlist;
+		}
 	}
 
 	ent->r.contents = CONTENTS_TRIGGER;
@@ -1264,6 +1289,17 @@ be on an entity that hasn't spawned yet.
 void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 	char    *noise;
 	int page;
+
+	if ( !Q_stricmp( item->classname, "item_powerup_random" ) ) {
+		int i;
+
+		// register every possible outcome so respawn rerolls never hand out an unprecached model
+		for ( i = 0; i < ARRAY_LEN( randomPowerupPool ); i++ ) {
+			RegisterItem( BG_FindItemForPowerup( randomPowerupPool[i] ) );
+		}
+
+		item = G_RandomPowerupItem();
+	}
 
 	G_SpawnFloat( "random", "0", &ent->random );
 	G_SpawnFloat( "wait", "0", &ent->wait );
