@@ -1009,6 +1009,13 @@ typedef struct {
 	int weaponAnimation;
 	int weaponAnimationTime;
 
+	// perk choice machine (see g_survival_buy.c / cg_servercmds.c "perkmenu")
+	qboolean perkChooserActive;
+	int perkChooserSelected;          // perk_t currently highlighted
+	int perkChooserSelectTime;        // for cg_weaponCycleDelay pacing, mirrors weaponSelectTime
+	int perkChooserOwned[NUM_PERKS];  // 0/1/2 ownership level per perk, indexed by perk_t
+	int perkChooserPrice[NUM_PERKS];  // price per perk, indexed by perk_t
+
 	// blend blobs
 	viewDamage_t viewDamage[MAX_VIEWDAMAGE];
 	float damageTime;           // last time any kind of damage was recieved

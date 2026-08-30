@@ -4641,6 +4641,35 @@ void CG_PrevWeaponInBank_f( void ) {
 
 /*
 ==============
+CG_PerkChooserMove
+
+Moves the highlight in an open perk choice window (see "perkmenu" in
+cg_servercmds.c) and syncs it back to the server. Called instead of the
+normal weapon-cycle behavior below while the window is active, so mouse
+wheel browses the perk list rather than switching weapons.
+==============
+*/
+static void CG_PerkChooserMove( int dir ) {
+	int perk;
+
+	if ( cg.time - cg.perkChooserSelectTime < cg_weaponCycleDelay.integer ) {
+		return; // force pause so holding it down won't go too fast
+	}
+	cg.perkChooserSelectTime = cg.time;
+
+	perk = cg.perkChooserSelected + dir;
+	if ( perk < PERK_RESILIENCE ) {
+		perk = NUM_PERKS - 1;
+	} else if ( perk >= NUM_PERKS ) {
+		perk = PERK_RESILIENCE;
+	}
+
+	cg.perkChooserSelected = perk;
+	trap_SendClientCommand( va( "perksel %d", perk ) );
+}
+
+/*
+==============
 CG_NextWeapon_f
 ==============
 */
@@ -4651,6 +4680,11 @@ void CG_NextWeapon_f( void ) {
 	}
 
 	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
+	if ( cg.perkChooserActive ) {
+		CG_PerkChooserMove( 1 );
+		return;
+	}
 
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
 		return;
@@ -4689,6 +4723,11 @@ void CG_PrevWeapon_f( void ) {
 	}
 
 	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
+	if ( cg.perkChooserActive ) {
+		CG_PerkChooserMove( -1 );
+		return;
+	}
 
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
 		return;

@@ -525,6 +525,119 @@ qboolean Survival_HandleRandomPerkBox(gentity_t *ent, gentity_t *activator, char
 	G_AddEvent(activator, EV_GENERAL_SOUND, G_SoundIndex("sound/items/use_nothing.wav"));
 	return qfalse;
 }
+
+/*
+===========================================================================
+Perk choice machine, survival mode
+
+Flow: idle --(USE, free)--> open, sends the price/owned list to the
+      activator only and shows an on-screen list; mouse wheel moves the
+      highlight client-side and syncs it back via "perksel"
+      open --(USE by the SAME activator)--> confirm: buys whichever perk
+      is currently highlighted via the normal Survival_HandlePerkPurchase
+      path, then closes
+      open --(idle timeout, or a different activator tries to USE it)-->
+      closes with no charge / is denied
+
+State lives on the target_buy entity (ent->pcActivator/pcSelected), mirroring
+the random weapon box's rwb* fields above.
+===========================================================================
+*/
+
+#define PERK_CHOICE_PROXIMITY_GRACE 1000
+
+/*
+============
+Survival_PerkChoice_Close
+============
+*/
+static void Survival_PerkChoice_Close( gentity_t *ent ) {
+	if ( ent->pcActivator >= 0 && ent->pcActivator < MAX_CLIENTS ) {
+		trap_SendServerCommand( ent->pcActivator, "perkmenu close\n" );
+	}
+
+	ent->pcActivator = -1;
+	ent->think = NULL;
+	ent->nextthink = 0;
+}
+
+// idle timeout - closes the window if the player stops browsing without confirming
+static void Survival_PerkChoice_Think( gentity_t *ent ) {
+	Survival_PerkChoice_Close( ent );
+}
+
+static void Survival_PerkChoice_ClearActivatorDebounce( gentity_t *box ) {
+	if ( !box->targetname ) {
+		return;
+	}
+
+	for ( int i = 0; i < level.num_entities; i++ ) {
+		gentity_t *e = &g_entities[i];
+
+		if ( !e->inuse || Q_stricmp( e->classname, "func_invisible_user" ) != 0 ) {
+			continue;
+		}
+
+		if ( e->target && Q_stricmp( e->target, box->targetname ) == 0 ) {
+			e->wait = level.time - 1;
+		}
+	}
+}
+
+/*
+============
+Survival_HandlePerkChoiceOpen
+
+Opens the choice window for 'activator' and sends the price/owned list for
+all 6 perks (PRO-upgrade price already doubled, matching Survival_HandlePerkPurchase).
+Browsing is free - money is only taken on confirm.
+============
+*/
+static void Survival_HandlePerkChoiceOpen( gentity_t *ent, gentity_t *activator ) {
+	char cmd[192];
+	int perk;
+
+	Com_sprintf( cmd, sizeof( cmd ), "perkmenu open" );
+
+	for ( perk = PERK_RESILIENCE; perk < NUM_PERKS; perk++ ) {
+		int owned = activator->client->ps.perks[perk];
+		int price = Survival_GetDefaultPerkPrice( perk );
+
+		if ( owned == 1 ) {
+			price *= 2; // PRO upgrade costs double, matches Survival_HandlePerkPurchase
+		}
+
+		Q_strcat( cmd, sizeof( cmd ), va( " %d %d", owned, price ) );
+	}
+
+	ent->pcActivator = activator->s.number;
+	ent->pcSelected = PERK_RESILIENCE;
+
+	Survival_PerkChoice_ClearActivatorDebounce( ent );
+
+	ent->think = Survival_PerkChoice_Think;
+	ent->nextthink = level.time + PERK_CHOICE_TIMEOUT;
+
+	trap_SendServerCommand( activator->s.number, cmd );
+}
+
+/*
+============
+Survival_HandlePerkChoiceConfirm
+
+Buys whichever perk is currently highlighted via the normal single-perk
+purchase path, then closes the window either way (success or denied).
+============
+*/
+static qboolean Survival_HandlePerkChoiceConfirm( gentity_t *ent, gentity_t *activator ) {
+	gitem_t *item = BG_FindItemForPerk( ent->pcSelected );
+	qboolean success = item ? Survival_HandlePerkPurchase( activator, item, 0 ) : qfalse;
+
+	Survival_PerkChoice_Close( ent );
+
+	return success;
+}
+
 /*
 ============
 Survival_HandleAmmoPurchase
@@ -984,6 +1097,22 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 		return;
 	}
 
+	// Special case: perk choice (small on-screen list, player picks which perk to buy)
+	if (!Q_stricmp(itemName, "perk_choice")) {
+		if (ent->pcActivator == activator->s.number) {
+			success = Survival_HandlePerkChoiceConfirm(ent, activator);
+		} else if (ent->pcActivator < 0) {
+			Survival_HandlePerkChoiceOpen(ent, activator);
+		} else {
+			// someone else is currently browsing this machine
+			trap_SendServerCommand(-1, "mu_play sound/items/use_nothing.wav 0\n");
+		}
+		if (success) {
+			Survival_RefreshMaxHealth(activator);
+		}
+		return;
+	}
+
 	// Fallback: find item by name
 	if (itemIndex <= 0) {
 		for (int i = 1; bg_itemlist[i].classname; i++) {
@@ -1164,6 +1293,18 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 															   weaponName, price));
 				return;
 			}
+		}
+		else if (!Q_stricmp(techName, "perk_choice"))
+		{
+			if (buyEnt && buyEnt->pcActivator == other->s.number) {
+				buyEnt->nextthink = level.time + PERK_CHOICE_PROXIMITY_GRACE;
+				return;
+			}
+
+			trap_SendServerCommand(other - g_entities, va(
+				"cpbuy \"%s\nUSE to choose a perk\"",
+				weaponName ? weaponName : "Perk Machine"));
+			return;
 		}
 	}
 

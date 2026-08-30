@@ -73,6 +73,7 @@ void SP_target_give( gentity_t *ent ) {
 
 void SP_target_buy( gentity_t *ent ) {
 	ent->use = Use_Target_buy;
+	ent->pcActivator = -1;
 }
 
 

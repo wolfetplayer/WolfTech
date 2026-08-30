@@ -1607,6 +1607,26 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	// perk choice machine - see Survival_HandlePerkChoiceOpen/Confirm in g_survival_buy.c
+	if ( !strcmp( cmd, "perkmenu" ) ) {
+		if ( !strcmp( CG_Argv( 1 ), "open" ) ) {
+			int perk;
+			int argIndex = 2;
+
+			cg.perkChooserActive = qtrue;
+			cg.perkChooserSelected = PERK_RESILIENCE;
+			cg.buyPrintTime = 0; // kill any lingering "USE to choose a perk" prompt so it can't overlap the box
+
+			for ( perk = PERK_RESILIENCE; perk < NUM_PERKS; perk++, argIndex += 2 ) {
+				cg.perkChooserOwned[perk] = atoi( CG_Argv( argIndex ) );
+				cg.perkChooserPrice[perk] = atoi( CG_Argv( argIndex + 1 ) );
+			}
+		} else {
+			cg.perkChooserActive = qfalse;
+		}
+		return;
+	}
+
 	if ( !strcmp( cmd, "cpst" ) ) {    // dialogue subtitle print
 		if ( cg_drawSubtitles.value != 0 ) {
 			CG_SubtitlePrint( CG_Argv( 1 ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), cg_subtitleSize.integer );

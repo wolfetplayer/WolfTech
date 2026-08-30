@@ -3132,6 +3132,46 @@ void Cmd_ThrowKnives( gentity_t *ent ) {
 }
 
 /*
+==================
+Cmd_PerkSelect_f
+
+Updates which perk is highlighted in a perk choice window this client
+currently has open (see Survival_HandlePerkChoiceOpen/Confirm in
+g_survival_buy.c). No-op if the client has no such window open.
+==================
+*/
+static void Cmd_PerkSelect_f( gentity_t *ent ) {
+	char arg[8];
+	int perk;
+	int i;
+
+	if ( !ent->client ) {
+		return;
+	}
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+	perk = atoi( arg );
+
+	if ( perk < PERK_RESILIENCE || perk >= NUM_PERKS ) {
+		return;
+	}
+
+	for ( i = 0; i < level.num_entities; i++ ) {
+		gentity_t *machine = &g_entities[i];
+
+		if ( !machine->inuse || !machine->buy_item || Q_stricmp( machine->buy_item, "perk_choice" ) != 0 ) {
+			continue;
+		}
+
+		if ( machine->pcActivator == ent->s.number ) {
+			machine->pcSelected = perk;
+			machine->nextthink = level.time + PERK_CHOICE_TIMEOUT; // keep-alive while browsing
+			return;
+		}
+	}
+}
+
+/*
 =================
 ClientCommand
 =================
@@ -3240,6 +3280,8 @@ void ClientCommand( int clientNum ) {
 
 	if ( Q_stricmp( cmd, "give" ) == 0 ) {
 		Cmd_Give_f( ent );
+	} else if ( Q_stricmp( cmd, "perksel" ) == 0 )  {
+		Cmd_PerkSelect_f( ent );
 	} else if ( Q_stricmp( cmd, "god" ) == 0 )  {
 		Cmd_God_f( ent );
 	} else if ( Q_stricmp( cmd, "nofatigue" ) == 0 )  {

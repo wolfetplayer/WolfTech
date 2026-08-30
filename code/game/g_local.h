@@ -444,6 +444,10 @@ struct gentity_s {
 	int rwbChosenItemIndex;
 	qboolean rwbBlinking;
 	gentity_t *rwbDisplay;
+
+	// Perk choice machine (buy_item "perk_choice"), survival mode - see g_survival_buy.c
+	int pcActivator;     // entity number currently browsing/confirming, -1 = idle
+	perk_t pcSelected;   // perk currently highlighted, mirrors the client's local selection
 };
 
 // Ridah

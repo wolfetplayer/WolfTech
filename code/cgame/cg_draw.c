@@ -2199,6 +2199,124 @@ static void CG_DrawBuyString( void ) {
 	trap_R_SetColor( NULL );
 }
 
+#define PERK_ICON_SIZE 36
+#define PERK_ICON_GAP  10
+
+/*
+===================
+CG_DrawPerkChooser
+
+Small on-screen list for the perk_choice buy machine (see
+Survival_HandlePerkChoiceOpen/Confirm in g_survival_buy.c). Purely a display
+of server-authoritative state (cg.perkChooser*) - the highlight itself is
+moved by CG_NextWeapon_f/CG_PrevWeapon_f (mouse wheel) while active.
+===================
+*/
+static void CG_DrawPerkChooser( void ) {
+	int perk;
+	int count = NUM_PERKS - 1;
+	int totalWidth = count * PERK_ICON_SIZE + ( count - 1 ) * PERK_ICON_GAP;
+	int x, y, boxX, boxY, boxW, boxH;
+	int score;
+	gitem_t *selItem;
+
+	if ( !cg.perkChooserActive ) {
+		return;
+	}
+
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+	}
+
+	score = cg.snap ? cg.snap->ps.persistant[PERS_SCORE] : 0;
+
+	y = SCREEN_HEIGHT - 150;
+	x = ( SCREEN_WIDTH - totalWidth ) / 2;
+
+	boxX = x - 12;
+	boxY = y - 34;
+	boxW = totalWidth + 24;
+	boxH = PERK_ICON_SIZE + 34 + 40; // icons + name row above + price row & hint line below
+
+	{
+		vec4_t bgColor = { 0, 0, 0, 0.55f };
+		CG_FillRect( boxX, boxY, boxW, boxH, bgColor );
+	}
+
+	for ( perk = PERK_RESILIENCE; perk < NUM_PERKS; perk++ ) {
+		gitem_t *item = BG_FindItemForPerk( (perk_t)perk );
+		int itemIndex;
+		int owned, price;
+		qboolean selected = ( perk == cg.perkChooserSelected ) ? qtrue : qfalse;
+		char priceStr[32];
+		vec4_t priceColor; // local copy - CG_Text_Paint mutates color[3] in place, never alias the shared color* globals
+		vec4_t iconColor = { 1, 1, 1, 1 };
+		qhandle_t iconShader;
+
+		if ( !item ) {
+			continue;
+		}
+
+		itemIndex = item - bg_itemlist;
+		CG_RegisterItemVisuals( itemIndex );
+
+		owned = cg.perkChooserOwned[perk];
+		price = cg.perkChooserPrice[perk];
+
+		// already own the base level (either eligible for the PRO upgrade, or already PRO) -
+		// show the PRO icon, matching CG_DrawPerks' owned-perks status row
+		iconShader = cg_items[itemIndex].icons[0];
+		if ( owned >= 1 && cgs.media.perkProIcons[perk] ) {
+			iconShader = cgs.media.perkProIcons[perk];
+		}
+
+		if ( owned >= 2 ) {
+			Q_strncpyz( priceStr, "MAXED", sizeof( priceStr ) );
+			Vector4Copy( colorMdGrey, priceColor );
+			iconColor[3] = 0.4f;
+		} else if ( score < price ) {
+			Com_sprintf( priceStr, sizeof( priceStr ), "%d", price );
+			Vector4Copy( colorMdGrey, priceColor );
+			iconColor[3] = 0.55f;
+		} else {
+			Com_sprintf( priceStr, sizeof( priceStr ), "%d", price );
+			Vector4Copy( selected ? colorYellow : colorWhite, priceColor );
+		}
+
+		if ( selected ) {
+			vec4_t hi = { 1, 1, 0, 0.25f };
+			CG_FillRect( x - 3, y - 3, PERK_ICON_SIZE + 6, PERK_ICON_SIZE + 6, hi );
+		}
+
+		trap_R_SetColor( iconColor );
+		CG_DrawPic( x, y, PERK_ICON_SIZE, PERK_ICON_SIZE, iconShader );
+		trap_R_SetColor( NULL );
+
+		{
+			int w = CG_Text_Width( priceStr, UI_FONT_DEFAULT, 0.22f, 0 );
+			CG_Text_Paint( x + ( PERK_ICON_SIZE - w ) / 2, y + PERK_ICON_SIZE + 14, UI_FONT_DEFAULT, 0.22f, priceColor, priceStr, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
+		}
+
+		x += PERK_ICON_SIZE + PERK_ICON_GAP;
+	}
+
+	selItem = BG_FindItemForPerk( (perk_t)cg.perkChooserSelected );
+	if ( selItem && selItem->pickup_name ) {
+		vec4_t nameColor;
+		int w = CG_Text_Width( selItem->pickup_name, UI_FONT_DEFAULT, 0.28f, 0 );
+		Vector4Copy( colorYellow, nameColor );
+		CG_Text_Paint( boxX + ( boxW - w ) / 2, boxY + 20, UI_FONT_DEFAULT, 0.28f, nameColor, selItem->pickup_name, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
+	}
+
+	{
+		const char *hint = "Scroll to browse - USE to confirm";
+		vec4_t hintColor;
+		int w = CG_Text_Width( hint, UI_FONT_DEFAULT, 0.18f, 0 );
+		Vector4Copy( colorMdGrey, hintColor );
+		CG_Text_Paint( boxX + ( boxW - w ) / 2, boxY + boxH - 8, UI_FONT_DEFAULT, 0.18f, hintColor, hint, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
+	}
+}
+
 /*
 ===================
 CG_DrawSubtitleString
@@ -5015,6 +5133,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 
 		CG_DrawCenterString();
 		CG_DrawBuyString();
+		CG_DrawPerkChooser();
 		CG_DrawSubtitleString();
 
 		CG_DrawObjectiveInfo();     // NERVE - SMF
