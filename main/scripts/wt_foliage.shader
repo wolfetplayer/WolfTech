@@ -21,6 +21,7 @@ models/mapobjects/wt_foliage/leaves_01
 	surfaceparm alphashadow
 	surfaceparm trans
 	surfaceparm nomarks
+	deformVertexes wave 15 sin 0 1 0 0.25
      	{
 		map models/mapobjects/wt_foliage/leaves_01.tga
 		blendfunc GL_ONE GL_ZERO
@@ -39,6 +40,7 @@ models/mapobjects/wt_foliage/leaves_02
 	surfaceparm alphashadow
 	surfaceparm trans
 	surfaceparm nomarks
+	deformVertexes wave 15 sin 0 1 0 0.25
      	{
 		map models/mapobjects/wt_foliage/leaves_02.tga
 		blendfunc GL_ONE GL_ZERO
