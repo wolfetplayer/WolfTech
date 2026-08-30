@@ -3165,7 +3165,7 @@ static void Cmd_PerkSelect_f( gentity_t *ent ) {
 
 		if ( machine->pcActivator == ent->s.number ) {
 			machine->pcSelected = perk;
-			machine->nextthink = level.time + PERK_CHOICE_TIMEOUT; // keep-alive while browsing
+			machine->nextthink = level.time + PERK_CHOICE_PROXIMITY_GRACE;
 			return;
 		}
 	}

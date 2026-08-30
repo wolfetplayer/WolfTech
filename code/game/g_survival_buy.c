@@ -544,8 +544,6 @@ the random weapon box's rwb* fields above.
 ===========================================================================
 */
 
-#define PERK_CHOICE_PROXIMITY_GRACE 1000
-
 /*
 ============
 Survival_PerkChoice_Close

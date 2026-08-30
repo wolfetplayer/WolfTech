@@ -54,6 +54,7 @@ int Survival_GetDefaultPerkPrice(int perk);
 void Touch_objective_info ( gentity_t * ent , gentity_t * other , trace_t * trace ) ;
 
 #define PERK_CHOICE_TIMEOUT 8000
+#define PERK_CHOICE_PROXIMITY_GRACE 1000
 
 // Misc stuff
 void TossClientItems_Survival(gentity_t *self, gentity_t *attacker);
