@@ -1,6 +1,11 @@
 
 ///
-/// wolf.def
+/// WolfTech entity definitions (wulf_entities.def)
+///
+/// Base RTCW/RealRTCW set plus WolfTech additions. Sourced from the QUAKED
+/// blocks in code/game (spawns[] in g_spawn.c, bg_itemlist in bg_misc.c).
+/// WolfTech-specific and updated entities are grouped under the
+/// "WolfTech (...)" headers further down this file.
 ///
 
 /*QUAKED ai_soldier (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
@@ -27,13 +32,6 @@ zombie entity
 /*QUAKED ai_warzombie (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive PortalZombie
 warrior zombie entity
 "skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'warrior/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
-*/
-
-/*QUAKED ai_femzombie (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
-zombie entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'femzombie/default' is used)
 "head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
 "ainame" name of AI
 */
@@ -443,12 +441,11 @@ used by: German Panzerfaust
 model="models/powerups/ammo/ampf.md3"
 */
 
-/*QUAKED holdable_medkit (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+/*QUAKED ammo_landmine (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+used by: Engineer landmine
 
-pickup sound : "sound/pickup/holdable/get_medkit.wav"
-use sound : "sound/pickup/holdable/get_medkit.wav"
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/medkit.md3"
+model="models/multiplayer/landmine/landmine.md3"
 */
 
 /*QUAKED holdable_wine (.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
@@ -484,175 +481,12 @@ model="models/powerups/holdable/paranormal_book.md3"
 model="models/powerups/holdable/zemphr_book.md3"
 */
 
-/*QUAKED holdable_11(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/11.md3"
-*/
-
-/*QUAKED holdable_12(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/12.md3"
-*/
-
-/*QUAKED holdable_13(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/13.md3"
-*/
-
-/*QUAKED holdable_14(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/14.md3"
-*/
-
-/*QUAKED holdable_15(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-/
-	{
-		"holdable_15",
-		"sound/pickup/holdable/get_15.wav",
-        {
-			"models/powerups/holdable/15.md3",
-			0, 0, 0
-		,	0 },
-		"icons/15",				// icon
-		NULL,							// ammo icon
-		"15",					// pickup
-		1,
-		IT_HOLDABLE,
-		HI_15,
-		0,
-		"",								// precache
-		"sound/pickup/holdable/use_15.wav",	// sounds
-		{0,0,0,0,0}
-	},
-
-*/
-
-/*QUAKED key_skull1 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 1
-
-pickup sound : "sound/pickup/keys/skull.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/skull.md3"
-*/
-
-/*QUAKED key_chalice2 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 2
-
-pickup sound : "sound/pickup/keys/chalice.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/chalice.md3"
-*/
-
-/*QUAKED key_eye3 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 3
-
-pickup sound : "sound/pickup/keys/eye.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/eye.md3"
-*/
-
-/*QUAKED key_radio4 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 4
-
-pickup sound : "sound/pickup/keys/radio.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/radio_port.md3"
-*/
-
-/*QUAKED key_satchelcharge5 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 5
-
-pickup sound : "sound/pickup/keys/satchelcharge.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/satchel_charge.md3"
-*/
-
 /*QUAKED key_binocs (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
 Binoculars.
 
 pickup sound : "sound/pickup/keys/binocs.wav"
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model="models/powerups/keys/binoculars.md3"
-*/
-
-/*QUAKED key_7 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 7
-
-pickup sound : "sound/pickup/keys/key7.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key7.md3"
-*/
-
-/*QUAKED key_key8 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 8
-
-pickup sound : "sound/pickup/keys/key8.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
-*/
-
-/*QUAKED key_key9 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 9
-
-pickup sound : "sound/pickup/keys/key9.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
-*/
-
-/*QUAKED key_key10 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 10
-
-pickup sound : "sound/pickup/keys/key10.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
-*/
-
-/*QUAKED key_key11 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 11
-
-pickup sound : "sound/pickup/keys/key11.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
-*/
-
-/*QUAKED key_key12 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 12
-
-pickup sound : "sound/pickup/keys/key12.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
-*/
-
-/*QUAKED key_key13 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 13
-
-pickup sound : "sound/pickup/keys/key13.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
-*/
-
-/*QUAKED key_key14 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 14
-
-pickup sound : "sound/pickup/keys/key14.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
-*/
-
-/*QUAKED key_key15 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 15
-
-pickup sound : "sound/pickup/keys/key15.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
-*/
-
-/*QUAKED key_key16 (1 1 0) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-key 16
-
-pickup sound : "sound/pickup/keys/key16.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/keys/key.md3"
 */
 
 ///
@@ -687,11 +521,6 @@ Targets will be fired when someone spawns in on them.
 "nobots" will prevent bots from using this spot.
 "nohumans" will prevent non-bots from using this spot.
 If the start position is targeting an entity, the players camera will start out facing that ent (like an info_notnull)
-*/
-
-/*QUAKED info_player_checkpoint (1 0 0) (-18 -18 -24) (18 18 48) a b c d
-these are start points /after/ the level start
-the letter (a b c d) designates the checkpoint that needs to be complete in order to use this start position
 */
 
 /*QUAKED info_player_start (1 0 0) (-18 -18 -24) (18 18 48)
@@ -1190,10 +1019,11 @@ SHOOT-THRU	Bullets don't stop when they hit the door.  Set "shoot_thru_scale" wi
 "team"		team name.  other doors with same team name will open/close in syncronicity
 */
 
-/*QUAKED target_effect (0 .5 .8) (-6 -6 -6) (6 6 6) TNT explode smoke rubble gore lowgrav debris
+/*QUAKED target_effect (0 .5 .8) (-6 -6 -6) (6 6 6) TNT explode smoke rubble gore lowgrav debris player_damage
 "mass" defaults to 15.  This determines how much debris is emitted when it explodes.  (number of pieces)
 "dmg" defaults to 0.  damage radius blast when triggered
 "type" - if 'rubble' is specified, this is the model type ("glass", "wood", "metal", "gibs", "brick", "rock", "fabric") default is "wood"
+player_damage - the "dmg" radius blast is also allowed to hurt the player
 */
 
 /*QUAKED func_explosive (0 .5 .8) ? START_INVIS TOUCHABLE USESHADER LOWGRAV NOBLOCKAAS EXPLO DYNOMITE
@@ -1229,16 +1059,22 @@ the default sounds are:
 "fxdensity" size of explosion 1 - 100 (default is 10)
 */
 
-/*QUAKED func_invisible_user (.3 .5 .8) ? STARTOFF HAS_USER NO_OFF_NOISE NOT_KICKABLE
+/*QUAKED func_invisible_user (.3 .5 .8) ? STARTOFF HAS_USER NO_OFF_NOISE NOT_KICKABLE FREE_AFTER_USE CALLS_REINFORCEMENTS
 when activated will use its target
 "delay" - time (in seconds) before it can be used again
 "offnoise" - specifies an alternate sound
 "cursorhint" - overrides the auto-location of targeted entity (list below)
+"price" - in GT_COOP_SURVIVAL, points required to use this (deducted from the activating player's score)
+"wave" - in GT_COOP_SURVIVAL, minimum wave number before this can be used
 Normally when a player 'activates' this entity, if the entity has been turned 'off' (by a scripted command) you will hear a sound to indicate that you cannot activate the user.
 The sound defaults to "sound/movers/invis_user_off.wav"
 
+STARTOFF - spawns turned off; a scripted command must turn it on before players can use it
+HAS_USER - fire the target on the world (non-client) toggle path too
 NO_OFF_NOISE - no sound will play if the invis_user is used when 'off'
 NOT_KICKABLE - kicking doesn't fire, only player activating
+FREE_AFTER_USE - deletes this entity (and any trigger_objective_info targeting it) after one successful use
+CALLS_REINFORCEMENTS - in GT_COOP_SURVIVAL, revives every allied AI cast that is currently down; denied while none are down, regardless of price
 
 "cursorhint" cursor types: (probably more, ask sherman if you think the list is out of date)
 they /don't/ need to be all uppercase
@@ -1274,6 +1110,9 @@ they /don't/ need to be all uppercase
 	HINT_INVENTORY
 	HINT_SCENARIC
 	HINT_EXIT
+	HINT_NOEXIT
+	HINT_EXIT_FAR
+	HINT_NOEXIT_FAR
 	HINT_PLYR_FRIEND
 	HINT_PLYR_NEUTRAL
 	HINT_PLYR_ENEMY
@@ -1372,7 +1211,7 @@ shard =
 
 */
 
-*QUAKED props_chair_chatarm(.8 .6 .2) (-16 -16 0) (16 16 32)
+/*QUAKED props_chair_chatarm(.8 .6 .2) (-16 -16 0) (16 16 32)
 point entity
 health = default = 10
 wait = defaults to 5 how many shards to spawn ( try not to exceed 20 )
@@ -1428,18 +1267,6 @@ shard =
 /*QUAKED props_damageinflictor (.8 .6 .6) (-8 -8 -8) (8 8 8)
 this entity when used will cause 9999 damage to all entities it is targeting
 then it will be removed
-*/
-
-/*QUAKED props_shard_generator (.8 .5 .1) (-4 -4 -4) (4 4 4) 
-
-wait = defaults to 5 how many shards to spawn ( try not to exceed 20 )
-  
-shard =
-shard_glass = 0,
-shard_wood = 1,
-shard_metal = 2,
-shard_ceramic = 3
-
 */
 
 /*QUAKED props_desklamp (.8 .6 .2) (-16 -16 0) (16 16 32)
@@ -1582,20 +1409,6 @@ count = defaults 100 thru 500
 Pending:   
 delay before it happens again use trigger_relay for now
 assign a model
-*/
-
-/*QUAKED props_ExploPart (.3 .5 .7) (-8 -8 -16) (8 8 16) 
-"model" will load a discreet model
-"noise" will load looping sound for the model
-"target" point to an infonotnull to specify dir default will be up
-"speed"	default to 900
-
-"type"  wood concrete or stone
-"count"in the absense of a model count will determine the piece to spawn
-for wood:
-  it can be one of the following 64 48 32 24 16 8
-for concrete:
-for stone:
 */
 
 /*QUAKED props_decoration (.6 .7 .7) (-8 -8 0) (8 8 16) STARTINVIS DEBRIS ANIMATE KEEPBLOCK TOUCHACTIVATE LOOPING STARTON
@@ -1756,14 +1569,6 @@ straight through it
 "scriptname" name used for scripting purposes (like aiName in AI scripting)
 */
 
-/*QUAKED script_camera (1.0 0.25 1.0) (-8 -8 -8) (8 8 8) TriggerSpawn
-
-  This is a camera entity. Used by the scripting to show cinematics, via special
-  camera commands. See scripting documentation.
-
-"scriptname" name used for scripting purposes (like aiName in AI scripting)
-*/
-
 /*QUAKED script_multiplayer (1.0 0.25 1.0) (-8 -8 -8) (8 8 8)
 
   This is used to script multiplayer maps.  Entity not displayed in game.
@@ -1775,9 +1580,7 @@ straight through it
 ///
 ///
 
-/*QUAKED worldspawn (0 0 0) ? NO_GT_WOLF NO_STOPWATCH NO_CHECKPOINT
-DHM - Nerve :: Worldspawn spawnflags to indicate if a gametype is not supported
-
+/*QUAKED worldspawn (0 0 0) ? sun_cameraflare
 Every map should have exactly one worldspawn.
 "music"      Music wav file
 "gravity"    800 is default gravity
@@ -1785,18 +1588,17 @@ Every map should have exactly one worldspawn.
 "ambient"    Ambient light value (must use '_color')
 "_color"     Ambient light color (must be used with 'ambient')
 "sun"        Shader to use for 'sun' image
-"_blocksize" q3map always splits the BSP tree along the planes X=blocksize*n and Y=_blocksize*n. Default _blocksize value is 1024. Increase the _blocksize using larger powers of 2 to reduce compile times on very large maps with low structural brush density.
-"gridsize"   granularity of the light grid created by q3map. Values of three intergers by spaces, represents number of units between grid points in X, Y and Z. Default gridsize is 128 128 256. Use larger powers of 2 to reduce BSP size and compile time on very large maps.
-"fogclip"    Uses vis to exclude stuff beyond the specified distance. q3map support varies.
-"twoMinuteSound_axis"
-"twoMinuteSound_allied"
-"thirtySecondSound_axis"
-"thirtySecondSound_allied"  Use these to override the default round timer sounds (two minute and thirty second warnings). Setting them to 0 disables these sounds.
-"atmosphere"  Atmospheric effects system from Wolfenstein: Enemy Territory. It includes rain and snow.
-As a value for this key parameter you can use these presets:
-T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=50 50,GV=30 80,W=1 2,D=15000 (strong snow - used on norway)
-T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=20 30,GV=25 40,W=3 5,D=5000 (weaker snow - used on escape1)
-T=RAIN,B=5 10,C=0.5,G=0.5 2,BV=50 50,GV=200 200,W=1 2,D=5000 (strong rain - used on dark)
+"colorgradelut" Path to a color grading LUT (e.g. "gfx/luts/hoth"), no extension needed. Empty/omitted disables grading.
+"atmosphere" Atmospheric rain/snow effects from Wolfenstein: Enemy Territory. Preset values:
+             T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=50 50,GV=30 80,W=1 2,D=15000 (strong snow)
+             T=SNOW,B=5 10,C=0.5,G=0.3 2,BV=20 30,GV=25 40,W=3 5,D=5000  (weaker snow)
+             T=RAIN,B=5 10,C=0.5,G=0.5 2,BV=50 50,GV=200 200,W=1 2,D=5000 (strong rain)
+sun_cameraflare - draw a camera lens flare at the sun position
+
+q3map compile keys (not read by the game):
+"_blocksize" q3map splits the BSP tree along X=_blocksize*n and Y=_blocksize*n. Default 1024. Increase (powers of 2) to cut compile time on large, sparse maps.
+"gridsize"   light-grid granularity in X Y Z units. Default 128 128 256. Increase (powers of 2) to cut BSP size / compile time on large maps.
+"fogclip"    uses vis to exclude geometry beyond the specified distance.
 */
 
 ///
@@ -1869,15 +1671,6 @@ If targets, they will be killed when this is fired
 "kill_user_too" will still kill the activator when this ent has targets (default is only kill targets, not activator)
 */
 
-/*QUAKED target_location (0 0.5 0) (-8 -8 -8) (8 8 8)
-Set "message" to the name of this location.
-Set "count" to 0-7 for color.
-0:white 1:red 2:green 3:yellow 4:blue 5:cyan 6:magenta 7:white
-
-Closest target_location in sight used for the location, if none
-in site, closest in distance
-*/
-
 /*QUAKED target_fog (1 1 0) (-8 -8 -8) (8 8 8)
 color picker chooses color of fog
 "distance" sets fog distance.  Use value '0' to give control back to the game (and use the fog values specified in the sky shader if present)
@@ -1908,7 +1701,7 @@ key:n  means the door now requires key n
 does nothing yet (effectively a relay right now)
 */
 
-/*QUAKED target_smoke (1 0 0) (-32 -32 -16) (32 32 16) Black White SmokeON Gravity
+/*QUAKED target_smoke (1 0 0) (-4 -4 -4) (4 4 4) Black White SmokeON Gravity STEAM
 1 second = 1000
 1 FRAME = 100
 delay = 100 = one millisecond default this is the maximum smoke that will show up
@@ -1917,6 +1710,7 @@ duration = 2000 before the smoke starts to alpha
 start_size = 24 default
 end_size = 96 default
 wait	= default is 50 the rate at which it will travel up
+STEAM - emit a steam jet instead of a smoke plume
 */
 
 /*QUAKED target_script_trigger (1 .7 .2) (-8 -8 -8) (8 8 8)
@@ -1978,20 +1772,6 @@ If target is set, point spawnpoint toward target activation
 
 As of wolf version 1.32 using alertentity on the player start points and spawn
 points targetname toggles it's active/inactive state.
-*/
-
-/*QUAKED team_CTF_redflag (1 0 0) (-16 -16 -16) (16 16 16)
-Can be used as an objective in Wolf.
-
-	"model"		Set model to display in game
-	"message"	Name of object in game (ex: the War Documents)
-*/
-
-/*QUAKED team_CTF_blueflag (0 0 1) (-16 -16 -16) (16 16 16)
-Can be used as an objective in Wolf.
-
-	"model"		Set model to display in game
-	"message"	Name of object in game (ex: the War Documents)
 */
 
 /*QUAKED team_WOLF_objective (1 1 0.3) (-16 -16 -24) (16 16 32)
@@ -2077,14 +1857,16 @@ Allows client side prediction of teleportation events.
 Must point at a target_position, which will be the teleport destination.
 */
 
-/*QUAKED trigger_hurt (.5 .5 .5) ? START_OFF - SILENT NO_PROTECTION SLOW ONCE
+/*QUAKED trigger_hurt (.5 .5 .5) ? START_OFF PLAYER_ONLY SILENT NO_PROTECTION SLOW ONCE
 Any entity that touches this will be hurt.
 It does dmg points of damage each server frame
 Targeting the trigger will toggle its on / off state.
 
+PLAYER_ONLY		only damages the player
 SILENT			supresses playing the sound
 SLOW			changes the damage rate to once per second
 NO_PROTECTION	*nothing* stops the damage
+ONCE			fire once, then remove the trigger
 
 "dmg"			default 5 (whole numbers only)
 
@@ -2159,65 +1941,32 @@ of the trigger to blow up the objective.
 
 
 ///
-/// RealRTCW (AIs)
+/// WolfTech (AIs)
 ///
 
-/*QUAKED ai_dog (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
-dog entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'dog/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
-*/
-
-/*QUAKED ai_effect (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
-effect entity
-"skin" the .skin file to use for this character
-"head" the .skin file to use for his head
-"ainame" name of AI
-*/
-
-/*QUAKED ai_mercenary (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'merc/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
-*/
-
-/*QUAKED ai_russian (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'partisan/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
-*/
-
-/*QUAKED ai_priest (1 0.25 0) (-32 -32 -24) (32 32 48) TriggerSpawn NoRevive
-priest entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'priest/default' is used)
+/*QUAKED ai_trench (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
+trench soldier entity
+"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'trench/base1' is used)
 "head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
 "ainame" name of AI
 */
 
 /*QUAKED ai_loper_special (1 0.25 0) (-32 -32 -24) (32 32 48) TriggerSpawn NoRevive
-loper entity
+scripted-variant loper entity
 "skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'loper/default' is used)
 "head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
 "ainame" name of AI
 */
 
-/*QUAKED ai_supersoldier_lab (1 0.25 0) (-32 -32 -24) (32 32 64) TriggerSpawn NoRevive
-lab supersoldier entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'supersoldier/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
-*/
-
-/*QUAKED ai_xshepherd (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive
-xshepherd entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'xdog/default' is used)
+/*QUAKED ai_zombie_surv (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive PortalZombie
+survival zombie entity
+"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'zombie/default' is used)
 "head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
 "ainame" name of AI
 */
 
 /*QUAKED ai_zombie_flame (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive PortalZombie
-ghost zombie entity
+flame zombie entity
 "skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'zombie/flame' is used)
 "head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'flame' is used)
 "ainame" name of AI
@@ -2230,274 +1979,116 @@ ghost zombie entity
 "ainame" name of AI
 */
 
-/*QUAKED ai_zombie_surv (1 0.25 0) (-16 -16 -24) (16 16 64) TriggerSpawn NoRevive PortalZombie
-survival zombie entity
-"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'zombie/default' is used)
-"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
-"ainame" name of AI
+/*QUAKED ai_effect (0.3 0.8 0.2) (-4 -4 -4) (4 4 4)
+AI effect entity (used by AI scripting for placed effects, not a character)
+"ainame" is the name of the AI character that uses this entity for effects
 */
 
 
 ///
-/// RealRTCW (Ammo)
+/// WolfTech (Info)
 ///
 
-/*QUAKED ammo_poison_gas (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
+/*QUAKED info_ai_respawn (0 0.25 1) (-18 -18 -24) (18 18 48) START_OFF BIG
+GT_COOP_SURVIVAL AI wave respawn point. AI of a matching team spawn here between waves.
+START_OFF	spawns disabled; an AIScript "alertentity" call toggles it on/off
+BIG			reserved for large AI (protosoldier, supersoldier, helga, heinrich); normal AI ignore BIG spots, big AI only use BIG spots
+"aiteam"	team id this spot serves (strict match against the AI's team; default 0)
+"ainame"	restrict this spot to the single AI with this script name
+"target"	info_notnull to face when spawning
+"nobots"	set to 1 to forbid bots
+"nohumans"	set to 1 to forbid non-bots
 */
-
-/*QUAKED ammo_m7 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: M7 Grenade Launcher
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED ammo_holyspirit (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: Holy Cross
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED ammo_ttammo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: TT33, PPSh
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/ttammo.md3"
-*/
-
-/*QUAKED ammo_ttammo_l (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: TT33, PPSh
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/ttammo.md3"
-*/
-
-/*QUAKED ammo_mosina (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: Mosin Nagant
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/mosina.md3"
-*/
-
-/*QUAKED ammo_barammo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: Bar, M1 Garand, Browning
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/barammo.md3"
-*/
-
-/*QUAKED ammo_barammo_l (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: Bar, M1 Garand, Browning
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/barammo_l.md3"
-*/
-
-/*QUAKED ammo_44ammo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: MP44
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/44ammo.md3"
-*/
-
-/*QUAKED ammo_44ammo_l (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: MP44
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/44ammo_l.md3"
-*/
-
-/*QUAKED ammo_m97ammo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: M97
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/m97ammo.md3"
-*/
-		
-/*QUAKED ammo_revolver (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: Revolver
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/revolverammo.md3"
-*/
-
-/*QUAKED ammo_m1941 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: M1941
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/barammo.md3"
-*/
-
-/*QUAKED ammo_hdmammo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: HDM
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/22cal.md3"
-*/
-
 
 ///
-/// RealRTCW (Holdables)
+/// WolfTech (Items)
 ///
 
-/*QUAKED holdable_adrenaline(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-Protection from fatigue
-Using the "sprint" key will not fatigue the character
-
-pickup sound : "sound/pickup/holdable/get_adrenaline.wav"
-use sound : "sound/pickup/holdable/use_adrenaline.wav"
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/adrenaline.md3"
+/*QUAKED item_quad (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Powerup - "Veil Empower" (PW_QUAD): damage boost.
 */
 
-/*QUAKED holdable_bandages(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-Protection from fatigue
-Using the "sprint" key will not fatigue the character
+/*QUAKED item_vampire (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Powerup - "Veil Essence Reaver" (PW_VAMPIRE): heal for a fraction of the damage you deal.
+*/
 
-pickup sound : "sound/pickup/holdable/get_bandages.wav"
-use sound : "sound/pickup/holdable/use_bandages.wav"
+/*QUAKED item_venompw (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Powerup - "Venom" (PW_VENOM): temporary Venom gun.
+*/
+
+/*QUAKED item_ammopw (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Powerup - "Veil Resupply" (PW_AMMO): refills ammo over its duration.
+*/
+
+/*QUAKED item_enviro_surv (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Powerup - "Veil Shield" (PW_BATTLESUIT_SURV): damage-absorbing shield.
+*/
+
+/*QUAKED item_powerup_random (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Spawns as a random powerup (Empower / Shield / Essence Reaver / Resupply). Rerolls a new random type every time it respawns.
+*/
+
+///
+/// WolfTech (Perks)
+///
+
+/*QUAKED perk_resilience (.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Perk pickup: reduced damage taken.
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model="models/powerups/holdable/bandages.md3"
 */
 
-/*QUAKED holdable_book4(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+/*QUAKED perk_rifling (.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Perk pickup: improved long-range accuracy / penetration.
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/corps_book.md3"
+model="models/powerups/holdable/bandages.md3"
 */
 
-/*QUAKED holdable_bg_syringe(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-pickup sound : "sound/pickup/holdable/get_adrenaline.wav"
-use sound : "sound/pickup/holdable/use_adrenaline.wav"
+/*QUAKED perk_runner (.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Perk pickup: faster movement / stamina.
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/bg_syringe.md3"
+model="models/powerups/holdable/bandages.md3"
 */
 
-/*QUAKED holdable_eg_syringe(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-pickup sound : "sound/pickup/holdable/get_adrenaline.wav"
-use sound : "sound/pickup/holdable/use_adrenaline.wav"
+/*QUAKED perk_scavenger (.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Perk pickup: extra ammo from pickups / kills.
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/eg_syringe.md3"
+model="models/powerups/holdable/bandages.md3"
 */
 
-/*QUAKED holdable_lp_syringe(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
-pickup sound : "sound/pickup/holdable/get_adrenaline.wav"
-use sound : "sound/pickup/holdable/use_adrenaline.wav"
+/*QUAKED perk_secondchance (.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Perk pickup: revive once on lethal damage.
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/holdable/lp_syringe.md3"
+model="models/powerups/holdable/bandages.md3"
 */
 
+/*QUAKED perk_weaponhandling (.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+Perk pickup: faster reloads / ADS / weapon swap.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/bandages.md3"
+*/
 
 ///
-/// RealRTCW (Info)
-///
-
-/*QUAKED info_ai_respawn (0 0.25 1) (-18 -18 -24) (18 18 48) START_OFF BIG
-Potential spawning position for SURVIVAL
-*/
-
-/*QUAKED info_train_spline_control (0 1 0) (-8 -8 -8) (8 8 8)
-Train spline.
-*/
-
-/*QUAKED info_train_spline_main (0 1 0) (-8 -8 -8) (8 8 8)
-Train spline.
-*/
-
-
-///
-/// RealRTCW (Items)
-///
-
-/*QUAKED item_quad (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-
-/*QUAKED item_haste (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-
-/*QUAKED item_enviro (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-
-/*QUAKED item_invis (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-
-
-///
-/// RealRTCW (Misc)
-///
-
-/*QUAKED misc_cabinet_health (.5 .5 .5) (-20 -20 0) (20 20 60)
-*/
-
-/*QUAKED misc_cabinet_supply (.5 .5 .5) (-20 -20 0) (20 20 60)
-*/
-
-
-///
-/// RealRTCW (Props)
-///
-
-/*QUAKED props_grammofon (.4 .7 .7) (-16 -16 0) (16 16 32)
-
-"noise"  the looping sound entity is to make
-
-"type" type of debris ("glass", "wood", "metal", "ceramic", "rubble") default is "wood"
-
-*/
-
-
-///
-/// RealRTCW (Targets)
+/// WolfTech (Targets)
 ///
 
 /*QUAKED target_buy (1 1 0.5) (-8 -8 -8) (8 8 8)
-Buy item in survival mode.
-"price" - price of the item
-"buy_item" - name of the item (e.g weapon_mp40)
+GT_COOP_SURVIVAL purchase point. A player pressing USE on it (or on a trigger_objective_info that targets it) buys the item.
+"price"		point cost (0 = use the survival config default for the item)
+"buy_item"	item classname to grant (e.g. weapon_mp40, perk_runner), or one of the specials:
+			"ammo"           - refills the player's current weapon (upgrade-aware price)
+			"random_weapon"  - mystery box: first use rolls, second use hands over the result
 */
 
 
 ///
-/// RealRTCW (Triggers)
-///
-
-/*QUAKED trigger_ammo (.5 .5 .5) ?
-Any entity that touches this will get additional ammo a specified rate up to a
-specified maximum.
-
-"ammorate"		rate of ammo clips per second. default 1. (whole number only)
-"ammototal"		the maximum clips of ammo this trigger can add. if <= 0, it's unlimited.
-				default 0 (whole numbers only)
-"target"		cabinet that this entity is linked to
-*/
-
-/*QUAKED trigger_heal (.5 .5 .5) ?
-Any entity that touches this will be healed at a specified rate up to a specified
-maximum.
-
-"healrate"		rate of healing per second, default 5 (whole numbers only)
-"healtotal"		the maximum of healing this trigger can do. if <= 0, it's unlimited.
-				default 0 (whole numbers only)
-"target"		cabinet that this entity is linked to
-*/
-
-
-///
-/// RealRTCW (Weapons)
+/// WolfTech (Weapons)
 ///
 
 /*QUAKED weapon_auto5 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 "stand" values:
 	no value:	laying in a default position on it's side (default)
 	2:			upright, barrel pointing up, slightly angled (rack mount)
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_dagger (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model=""
 */
@@ -2510,7 +2101,7 @@ model=""
 model=""
 */
 
-/*QUAKED weapon_delisleScope (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+/*QUAKED weapon_delislescope (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 "stand" values:
 	no value:	laying in a default position on it's side (default)
 	2:			upright, barrel pointing up, slightly angled (rack mount)
@@ -2618,32 +2209,7 @@ model=""
 model=""
 */
 
-/*QUAKED weapon_m30 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_welrod (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_holyCross (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
 /*QUAKED weapon_revolver (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_grenadeSmoke (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_poisonGas (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model=""
 */
@@ -2651,6 +2217,40 @@ model=""
 /*QUAKED weapon_hdm (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model="models/weapons/pistols/hdm/hdm_3rd.md3"
+*/
+
+/*QUAKED weapon_landmine (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+Engineer landmine weapon pickup. (For a pre-placed armed mine use misc_landmine instead.)
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/multiplayer/landmine/landmine.md3"
+*/
+
+/*QUAKED weapon_akimbo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+Akimbo Colts pickup.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model=""
+*/
+
+/*QUAKED weapon_dualtt33 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+Dual TT-33 pistols pickup.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model=""
+*/
+
+/*QUAKED weapon_fg42scope (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+Scoped FG42 pickup.
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model=""
+*/
+
+/*
+The following weapon classnames exist in the item list but are class abilities or
+AI-only attacks, not real world pickups. They are listed here for reference only
+and should not be placed in a map:
+  weapon_grenadelauncher  weapon_grenadepineapple  weapon_dynamite  weapon_medcrate
+  weapon_airstrike  weapon_arty  weapon_mortar
+  weapon_monster_attack1  weapon_monster_attack2  weapon_monster_attack3
+Likewise ammo_monster_attack1 is internal only.
 */
 
 
@@ -2680,10 +2280,138 @@ Naming your flag is handy and simple: use 'target_location'
 */
 
 /*QUAKED target_location (0 0.5 0) (-8 -8 -8) (8 8 8)
-Location info. Works only on MP or COOP.
+Names an area. In SP the closest one in sight (else closest by distance) is used for
+kill/location messages; in COOP it can be linked to a coop_spawnpoint_trigger to name a flag.
 
-"targetname" can be linked to 'coop_spawn_trigger' to display during catpure
-"message" name of the location
-"count" set 0-7 for color
-0:white 1:red 2:green 3:yellow 4:blue 5:cyan 6:magenta 7:white
+"message"    name of the location
+"count"      colour 0-7 (0:white 1:red 2:green 3:yellow 4:blue 5:cyan 6:magenta 7:white)
+"targetname" set so a coop_spawnpoint_trigger can display this name on capture
+*/
+
+
+///
+/// WolfTech (Movers / brush entities)
+///
+
+/*QUAKED func_train (0 .5 .8) ? START_ON TOGGLE BLOCK_STOPS
+A train is a mover that moves between path_corner target points.
+Trains MUST HAVE AN ORIGIN BRUSH.
+The train spawns at the first target it is pointing at.
+"model2"	.md3 model to also draw
+"speed"		default 100
+"dmg"		default 2
+"noise"		looping sound to play when the train is in motion
+"target"	next path corner
+"color"		constantLight color
+"light"		constantLight radius
+*/
+
+/*QUAKED func_secret (0 .5 .8) ? REVERSE x CRUSHER TOUCH
+A one-shot sliding door: on trigger it slides aside (opposite its angle) and stays open.
+REVERSE		slide toward the angle instead of away from it
+CRUSHER		does not back off when blocked
+TOUCH		spawn a touch field so the player opens it by walking into it
+
+"key"		-1 for locked, key number for which key opens, 0 for open (default '0' unless door is targeted)
+"model2"	.md3 model to also draw
+"angle"		determines the opening direction
+"targetname" if set, no touch field is spawned; a remote button or trigger activates it
+"speed"		movement speed (100 default)
+"wait"		wait before returning (2 default, -1 = never return)
+"lip"		lip remaining at end of move (8 default)
+"dmg"		damage to inflict when blocked (2 default)
+"color"		constantLight color
+"light"		constantLight radius
+"health"	if set, the door must be shot open
+*/
+
+/*QUAKED func_tramcar (0 .5 .8) ? START_ON TOGGLE - LEADER
+A tramcar is a damageable mover that runs between path_corner points.
+health value of 999 designates a piece as non-damageable.
+The LEADER of a tramcar group MUST have the LEADER flag set. When the Leader's health
+hits zero it unlinks and the team becomes visible.
+All tramcar parts MUST HAVE AN ORIGIN BRUSH. The tramcar spawns at the first target it points at.
+Place it in its END position when compiling, then start it by targeting the desired path_corner.
+"model2"	.md3 model to also draw
+"speed"		default 100
+"dmg"		default 2
+"noise"		looping sound to play when in motion
+"target"	next path corner
+"color"		constantLight color
+"light"		constantLight radius
+"type"		debris type when destroyed ("glass", "wood", "metal", "gibs") default "wood"
+"mass"		debris amount, default 75 (one large chunk per 100 mass up to 8, one small per 25 up to 16)
+*/
+
+/*QUAKED func_train_particles ( 0.3 0.1 0.8) ? START_ON TOGGLE
+Brush that emits a particle stream while enabled. Target an info_notnull for direction.
+"health"	particle count, default 16
+*/
+
+/*QUAKED func_bats ( 0.3 0.1 0.8) (-32 -32 -32) (32 32 32) START_ON TOGGLE END_OUTER
+Spawns a flock of bats/spirits that fly a waypoint path.
+"count"		number of bats (default 10)
+"radius"	maximum distance from the entity centre to place each bat (default 32)
+"speed"		travel speed to the next waypoint (default 300)
+"wait"		(end-map) seconds between spawning
+"target"	(end-map) distance-check entity; spawning enables when the player is more than "radius" from it
+"delay"		(end-map) seconds after the player steps outside before spirits spawn
+*/
+
+/*QUAKED props_flippy_table (.8 .6 .2) ? - - X_AXIS Y_AXIS LEADER
+A table that flips over when triggered. Needs a LEADER part and an origin brush.
+Place the origin brush so the leader and slave flip over correctly.
+X_AXIS / Y_AXIS - axis to flip around
+*/
+
+/*QUAKED truck_cam (.7 .3 .1) ? START_ON TOGGLE - -
+Camera mover that rides a path_corner track (used with the truck cinematic).
+"target"	first path corner
+"count2"	on a path_corner, controls playback of gear-change sounds
+*/
+
+
+///
+/// WolfTech (Misc / point entities)
+///
+
+/*QUAKED misc_landmine (1 0 0) (-8 -8 -8) (8 8 8) INVISIBLE START_OFF TRIGGER_PLAYERS
+A pre-armed landmine, independent of the engineer class and the landmine weapon/ammo.
+On spawn it drops to the floor beneath it and detonates when a hostile AI walks into its trigger radius.
+INVISIBLE		no marker flag, and the mine can't be seen at all
+START_OFF		spawns inert; a targeting entity (func_invisible_user, trigger_*, ...) must arm it
+TRIGGER_PLAYERS	also detonates on players (default: hostile AI only)
+"wait"		seconds before the mine re-arms itself after going off (default 0 = never re-arms)
+"dmg"		splash damage override (default: standard landmine damage)
+"radius"	splash radius override (default 200)
+"targetname" so a func_invisible_user / trigger can (re)arm it
+Minefield for sale: give every misc_landmine the same "targetname", point a func_invisible_user
+(with "price", no "delay", no STARTOFF/FREE_AFTER_USE) at that targetname, and set START_OFF +
+"wait" 0 on the mines. The first purchase arms the field; every later purchase re-arms just the
+mines that have blown.
+*/
+
+/*QUAKED misc_tagemitter (.4 .9 .7) (-16 -16 -16) (16 16 16)
+Attaches a tag/effect emitter to a script_mover.
+Must target the script_mover it attaches to. 'use' toggles it on/off. An AIScript "alertentity" call kills it.
+*/
+
+/*QUAKED plane_waypoint (.5 .3 0) (-8 -8 -8) (8 8 8) SCRIPTS DIE EXPLODE LAPS ATTACK
+Waypoint for props_me109 aircraft paths. Fires its target when reached.
+"count"	number of AIScript "alertentity" calls needed before the aircraft branches tracks
+"track"	name of the track to branch to (several tracks may share a name; one is picked at random, max 8 per branch)
+*/
+
+/*QUAKED props_me109 (.7 .3 .1) (-128 -128 0) (128 128 64) START_ON TOGGLE SPINNINGPROP FIXED_DIE
+Scripted Me-109 aircraft that flies plane_waypoint paths.
+"health"	default 1000
+*/
+
+/*QUAKED test_gas (0 0.5 0) (-4 -4 -4) (4 4 4)
+Development/test entity that emits a gas cloud. Not for shipping maps.
+*/
+
+/*QUAKED target_position (0 0.5 0) (-4 -4 -4) (4 4 4)
+Positional target, identical to info_notnull / misc_teleporter_dest.
+Point teleporters, jumppads and cameras at one of these.
 */
