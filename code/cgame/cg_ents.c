@@ -1297,6 +1297,11 @@ static void CG_Missile( centity_t *cent ) {
 	}
 	weapon = &cg_weapons[s1->weapon];
 
+	// invisible misc_landmine: no marker, no trail, no sound
+	if ( s1->weapon == WP_LANDMINE && ( s1->eFlags & EF_NODRAW ) ) {
+		return;
+	}
+
 	// calculate the axis
 	VectorCopy( s1->angles, cent->lerpAngles );
 

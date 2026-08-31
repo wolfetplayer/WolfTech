@@ -282,6 +282,7 @@ void SP_misc_portal_surface( gentity_t *ent );
 void SP_misc_light_surface( gentity_t *ent );
 void SP_misc_grabber_trap( gentity_t *ent );
 void SP_misc_spotlight( gentity_t *ent ); //----(SA)	added
+void SP_misc_landmine( gentity_t *ent );
 
 void SP_shooter_rocket( gentity_t *ent );
 void SP_shooter_grenade( gentity_t *ent );
@@ -539,6 +540,7 @@ spawn_t spawns[] = {
 	{"misc_light_surface",   SP_misc_light_surface},
 	{"misc_grabber_trap",    SP_misc_grabber_trap},
 	{"misc_spotlight",       SP_misc_spotlight}, //----(SA)	added
+	{"misc_landmine",        SP_misc_landmine},
 	//----(SA) end
 
 

@@ -1713,4 +1713,10 @@ If you have questions concerning this license or the applicable additional terms
 {"AICast_GetCastState", (byte *)AICast_GetCastState},
 {"AICast_Printf", (byte *)AICast_Printf},
 {"Survival_RandomBox_Think", (byte *)Survival_RandomBox_Think},
+{"G_MapLandmineArm", (byte *)G_MapLandmineArm},
+{"G_MapLandmineThink", (byte *)G_MapLandmineThink},
+{"G_MapLandminePostThink", (byte *)G_MapLandminePostThink},
+{"G_MapLandmineExplode", (byte *)G_MapLandmineExplode},
+{"Use_MapLandmine", (byte *)Use_MapLandmine},
+{"SP_misc_landmine", (byte *)SP_misc_landmine},
 {0, 0}

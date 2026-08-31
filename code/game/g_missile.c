@@ -166,6 +166,13 @@ Auto-arms after landing; state lives in ent->s.effect1Time (0 = settling, 1 = ar
 #define LANDMINE_FUSE_TIME      300
 #define LANDMINE_ARM_DELAY      1500
 
+// misc_landmine (mapper-placed mine) spawnflags -- see SP_misc_landmine
+#define MISC_LANDMINE_INVISIBLE       1
+#define MISC_LANDMINE_START_OFF       2
+#define MISC_LANDMINE_TRIGGER_PLAYERS 4
+
+#define MISC_LANDMINE_ARM_DELAY  1000
+
 /*
 ================
 G_LandmineValidSurface
@@ -236,6 +243,7 @@ void G_ExplodeLandmine( gentity_t *self ) {
 G_LandmineWillTrigger
 
 Hostile AI and the owner always trigger it; other players only count if g_friendlyFire is on.
+Mapper-placed mines (misc_landmine, self-parented) trip on players only with the TRIGGER_PLAYERS flag.
 ================
 */
 static qboolean G_LandmineWillTrigger( gentity_t *self, gentity_t *ent ) {
@@ -245,6 +253,10 @@ static qboolean G_LandmineWillTrigger( gentity_t *self, gentity_t *ent ) {
 
 	if ( ent->aiCharacter ) {
 		return ent->aiTeam == AITEAM_NAZI || ent->aiTeam == AITEAM_MONSTER || ent->aiTeam == AITEAM_ENDMAPBOSS;
+	}
+
+	if ( self->parent == self ) {
+		return ( self->spawnflags & MISC_LANDMINE_TRIGGER_PLAYERS ) != 0;
 	}
 
 	if ( ent == self->parent ) {
@@ -379,6 +391,199 @@ void G_TryArmLandmine( gentity_t *ent, trace_t *trace ) {
 
 	ent->nextthink = level.time + LANDMINE_ARM_DELAY;
 	ent->think     = G_ArmLandmine;
+}
+
+/*
+===========================================================================
+
+MISC_LANDMINE  (mapper-placed armed mine)
+
+A map entity, independent of the engineer class and WP_LANDMINE ammo. It
+reuses the landmine missile machinery (model, splash, proximity scan) but
+runs its own arm/trigger/explode cycle so it can re-arm on a timer or be
+(re)armed by a targeting entity -- e.g. a bought func_invisible_user.
+
+Self-parented (parent == self) marks it as map-placed for G_LandmineWillTrigger.
+State lives in s.effect1Time (0 dormant, 1 armed, 2 triggered), same as the
+engineer mine, so cg_ents.c renders it identically; INVISIBLE mines also carry
+EF_NODRAW and are skipped entirely by CG_Missile.
+
+===========================================================================
+*/
+
+void G_MapLandmineArm( gentity_t *self );
+void G_MapLandmineThink( gentity_t *self );
+void G_MapLandminePostThink( gentity_t *self );
+void G_MapLandmineExplode( gentity_t *self );
+
+int G_GetWeaponDamage( int weapon, gentity_t *ent );
+
+/*
+================
+G_MapLandmineExplode
+
+Fires the same splash/FX as a real landmine but keeps the entity alive: it goes
+dormant and, if "wait" is set, re-arms itself that many seconds later.
+================
+*/
+void G_MapLandmineExplode( gentity_t *self ) {
+	gentity_t *tent;
+	vec3_t     dir = { 0, 0, 1 };
+
+	tent = G_TempEntity( self->r.currentOrigin, EV_MISSILE_MISS );
+	tent->s.weapon    = WP_LANDMINE;
+	tent->s.eventParm = DirToByte( dir );
+
+	if ( self->splashDamage ) {
+		G_RadiusDamage( self->r.currentOrigin, self, self->splashDamage, self->splashRadius, self, self->splashMethodOfDeath );
+	}
+
+	self->s.effect1Time = 0;   // dormant
+	self->think         = NULL;
+	self->nextthink     = 0;
+
+	if ( self->wait > 0 ) {
+		self->think     = G_MapLandmineArm;
+		self->nextthink = level.time + (int)( self->wait * 1000 );
+	}
+}
+
+/*
+================
+G_MapLandminePostThink
+
+Pressure-release fuse: once the trigger radius clears, blow after LANDMINE_FUSE_TIME.
+================
+*/
+void G_MapLandminePostThink( gentity_t *self ) {
+	self->nextthink = level.time + FRAMETIME;
+
+	if ( !G_LandmineSomeoneInRange( self ) ) {
+		self->nextthink = level.time + LANDMINE_FUSE_TIME;
+		self->think     = G_MapLandmineExplode;
+	}
+}
+
+/*
+================
+G_MapLandmineThink
+
+Armed poll: on first trip mark it triggered (effect1Time = 2) and hand off to the fuse.
+================
+*/
+void G_MapLandmineThink( gentity_t *self ) {
+	self->nextthink = level.time + FRAMETIME;
+
+	if ( G_LandmineSomeoneInRange( self ) ) {
+		self->s.effect1Time = 2;
+		self->think         = G_MapLandminePostThink;
+	}
+}
+
+/*
+================
+G_MapLandmineArm
+
+Brings a dormant mine live.
+================
+*/
+void G_MapLandmineArm( gentity_t *self ) {
+	self->s.effect1Time = 1;               // armed
+	self->s.frame       = rand() % 20;     // desync the marker's wave anim across mines (cg_ents.c)
+
+	self->think     = G_MapLandmineThink;
+	self->nextthink = level.time + FRAMETIME;
+}
+
+/*
+================
+Use_MapLandmine
+
+(Re)arms the mine. Idempotent -- a mine that's already live is left alone, so a
+re-triggered minefield only brings back the ones that have already gone off.
+================
+*/
+void Use_MapLandmine( gentity_t *self, gentity_t *other, gentity_t *activator ) {
+	if ( self->s.effect1Time != 0 ) {
+		return;   // already armed or mid-trigger
+	}
+
+	self->think     = G_MapLandmineArm;
+	self->nextthink = level.time + MISC_LANDMINE_ARM_DELAY;
+}
+
+/*QUAKED misc_landmine (1 0 0) (-8 -8 -8) (8 8 8) INVISIBLE START_OFF TRIGGER_PLAYERS
+A pre-armed landmine, independent of the engineer class and WP_LANDMINE ammo.
+On spawn it drops to the floor beneath it and detonates when a hostile AI walks
+into its trigger radius.
+
+INVISIBLE       - no marker flag, and the mine can't be seen at all
+START_OFF       - spawns inert; a targeting entity (func_invisible_user, trigger_*, ...) must arm it
+TRIGGER_PLAYERS - also detonates on players (default: hostile AI only)
+
+"wait"    seconds before the mine re-arms itself after going off (default 0 = never re-arms)
+"dmg"     splash damage override (default: standard landmine damage)
+"radius"  splash radius override (default 200)
+"targetname"  so a func_invisible_user / trigger can (re)arm it
+
+Minefield for sale: give every misc_landmine the same "targetname", point a
+func_invisible_user (with "price", no "delay", no STARTOFF/FREE_AFTER_USE) at
+that targetname, and set START_OFF + "wait" 0 on the mines. The first purchase
+arms the field; every later purchase re-arms just the mines that have blown.
+*/
+void SP_misc_landmine( gentity_t *self ) {
+	trace_t tr;
+	vec3_t  dest;
+
+	RegisterItem( BG_FindItemForWeapon( WP_LANDMINE ) );
+
+	self->s.eType             = ET_MISSILE;
+	self->s.weapon            = WP_LANDMINE;
+	self->parent              = self;              // marks it map-placed (G_LandmineWillTrigger)
+	self->r.ownerNum          = ENTITYNUM_WORLD;   // players/AI walk over it freely
+	self->methodOfDeath       = MOD_LANDMINE;
+	self->splashMethodOfDeath = MOD_LANDMINE;
+
+	if ( self->damage > 0 ) {
+		self->splashDamage = self->damage;        // "dmg" key override
+	} else {
+		self->splashDamage = G_GetWeaponDamage( WP_LANDMINE, self );
+	}
+	self->damage = 0;                             // splash only, no contact hit
+
+	self->splashRadius = self->radius > 0 ? self->radius : 200;   // "radius" key override
+
+	self->clipmask   = 0;
+	self->r.contents = 0;
+	self->r.svFlags  = SVF_USE_CURRENT_ORIGIN;
+	if ( !( self->spawnflags & MISC_LANDMINE_INVISIBLE ) ) {
+		self->r.svFlags |= SVF_BROADCAST;         // marker flag visible map-wide, like the engineer mine
+	} else {
+		self->s.eFlags |= EF_NODRAW;              // CG_Missile skips it
+	}
+
+	VectorSet( self->r.mins, -4, -4, 0 );
+	VectorSet( self->r.maxs, 4, 4, 8 );
+
+	// settle onto the floor beneath the mapper's placement
+	VectorCopy( self->s.origin, dest );
+	dest[2] -= 4096;
+	trap_Trace( &tr, self->s.origin, NULL, NULL, dest, self->s.number, MASK_SOLID );
+	if ( !tr.startsolid && tr.fraction < 1.0f ) {
+		G_SetOrigin( self, tr.endpos );
+	} else {
+		G_SetOrigin( self, self->s.origin );
+	}
+	self->s.time = level.time / 4;                // fixed resting orientation (cg_ents.c)
+
+	self->use = Use_MapLandmine;
+
+	trap_LinkEntity( self );
+
+	if ( !( self->spawnflags & MISC_LANDMINE_START_OFF ) ) {
+		self->think     = G_MapLandmineArm;
+		self->nextthink = level.time + FRAMETIME;
+	}
 }
 
 /*
@@ -1210,7 +1415,8 @@ void G_RunMissile( gentity_t *ent ) {
 
 	// Ridah, make AI aware of this danger
 	// DHM - Nerve :: Only in single player
-	if ( g_gametype.integer <= GT_SINGLE_PLAYER ) {
+	// misc_landmine (self-parented) is a deliberate trap -- don't let AI path around it
+	if ( g_gametype.integer <= GT_SINGLE_PLAYER && !( ent->s.weapon == WP_LANDMINE && ent->parent == ent ) ) {
 		AICast_CheckDangerousEntity( ent, DANGER_MISSILE, ent->splashRadius, 0.1, 1.0, qtrue );
 	}
 
