@@ -993,7 +993,12 @@ static void ComputeColors( shaderStage_t *pStage ) {
 	//
 	// software gamma correction
 	//
-	if (R_UseSoftwareGamma())
+	// skip cgens already gamma-corrected at map load, else foliage/models double-correct vs lightmapped geo
+	if (R_UseSoftwareGamma()
+		&& pStage->rgbGen != CGEN_EXACT_VERTEX
+		&& pStage->rgbGen != CGEN_VERTEX
+		&& pStage->rgbGen != CGEN_ONE_MINUS_VERTEX
+		&& pStage->rgbGen != CGEN_LIGHTING_DIFFUSE)
 	{
 		for (i = 0; i < tess.numVertexes; i++)
 		{
