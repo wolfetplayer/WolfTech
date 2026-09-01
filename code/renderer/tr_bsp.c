@@ -114,19 +114,26 @@ static void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
 	shift = r_mapOverBrightBits->integer - tr.overbrightBits;
 
 	// shift the data based on overbright range
-	r = in[0] << shift;
-	g = in[1] << shift;
-	b = in[2] << shift;
+	if ( shift >= 0 ) {
+		r = in[0] << shift;
+		g = in[1] << shift;
+		b = in[2] << shift;
 
-	// normalize by color instead of saturating to white
-	if ( ( r | g | b ) > 255 ) {
-		int max;
+		// normalize by color instead of saturating to white
+		if ( ( r | g | b ) > 255 ) {
+			int max;
 
-		max = r > g ? r : g;
-		max = max > b ? max : b;
-		r = r * 255 / max;
-		g = g * 255 / max;
-		b = b * 255 / max;
+			max = r > g ? r : g;
+			max = max > b ? max : b;
+			r = r * 255 / max;
+			g = g * 255 / max;
+			b = b * 255 / max;
+		}
+	} else {
+		// negative shift darkens - right shift instead of relying on UB
+		r = in[0] >> -shift;
+		g = in[1] >> -shift;
+		b = in[2] >> -shift;
 	}
 
 	out[0] = R_GammaByte(r);
