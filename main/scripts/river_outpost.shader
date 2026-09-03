@@ -143,17 +143,8 @@ textures/outpost/rainy_night
 	q3map_nofog
 	q3map_globaltexture
 	q3map_lightsubdivide 256 
-	q3map_sun 0.130 0.080 0.020 4 165 5
-	q3map_sun 0.281 0.288 0.370 12 35 40
-	q3map_sun 0.281 0.288 0.370 10 215 60
-	q3map_sun 0.281 0.288 0.370 4 35 50
-	q3map_sun 0.281 0.288 0.370 4 35 45
-	q3map_sun 0.281 0.288 0.370 4 35 35
-	q3map_sun 0.281 0.288 0.370 4 35 30
-	q3map_sun 0.281 0.288 0.370 4 40 40
-	q3map_sun 0.281 0.288 0.370 6 45 40
-	q3map_sun 0.281 0.288 0.370 4 30 40
-	q3map_sun 0.281 0.288 0.370 6 25 40
+	q3map_sun 0.130 0.080 0.020 6 165 5
+	q3map_skylight 60 4
 	q3map_surfacelight 12
 
 	surfaceparm noimpact
