@@ -2,13 +2,14 @@ textures/river_outpost/terrain_0
 {
 	q3map_lightmapsamplesize 64
 	q3map_lightmapaxis z
-	q3map_texturesize 512 512
-	q3map_tcGen ivector ( 128 0 0 ) ( 0 128 0 )
+	q3map_texturesize 1024 1024
+	q3map_tcGen ivector ( 192 0 0 ) ( 0 192 0 )
 	q3map_foliage models/foliage/grassfoliage1.md3 0.7 16 0.025 0
 	q3map_foliage models/foliage/grassfoliage2.md3 0.7 16 0.025 0
+	q3map_foliage models/foliage/grassfoliage3.md3 0.7 16 0.025 0
 	surfaceparm grasssteps
 	{
-		map textures/temperate_sd/grass_dense1.tga
+		map textures/wt_terrain/grass_dense1.png
 	}
 	{
 		map $lightmap
@@ -21,11 +22,11 @@ textures/river_outpost/terrain_1
 {
 	q3map_lightmapsamplesize 64
 	q3map_lightmapaxis z
-	q3map_texturesize 512 512
-	q3map_tcGen ivector ( 128 0 0 ) ( 0 128 0 )
+	q3map_texturesize 1024 1024
+	q3map_tcGen ivector ( 192 0 0 ) ( 0 192 0 )
 		surfaceparm grasssteps
 	{
-		map textures/temperate_sd/grass_path1.tga
+		map textures/wt_terrain/grass_path1.png
 	}
 	{
 		map $lightmap
@@ -38,13 +39,14 @@ textures/river_outpost/terrain_2
 {
 	q3map_lightmapsamplesize 64
 	q3map_lightmapaxis z
-	q3map_texturesize 512 512
-	q3map_tcGen ivector ( 128 0 0 ) ( 0 128 0 )
+	q3map_texturesize 1024 1024
+	q3map_tcGen ivector ( 192 0 0 ) ( 0 192 0 )
 		q3map_foliage models/foliage/grassfoliage1.md3 0.7 16 0.025 0
 	q3map_foliage models/foliage/grassfoliage2.md3 0.7 16 0.025 0
+	q3map_foliage models/foliage/grassfoliage3.md3 0.7 16 0.025 0
 	surfaceparm grasssteps
 	{
-		map textures/temperate_sd/master_grass_dirt3.tga
+		map textures/wt_terrain/grass_dirt3.png
 	}
 	{
 		map $lightmap
@@ -57,15 +59,15 @@ textures/river_outpost/terrain_0to1
 {
 	q3map_lightmapsamplesize 64
 	q3map_lightmapaxis z
-	q3map_texturesize 512 512
-	q3map_tcGen ivector ( 128 0 0 ) ( 0 128 0 )
+	q3map_texturesize 1024 1024
+	q3map_tcGen ivector ( 192 0 0 ) ( 0 192 0 )
 		surfaceparm grasssteps
 	
 	{
-		map textures/temperate_sd/grass_dense1.tga
+		map textures/wt_terrain/grass_dense1.png
 	}
 	{
-		map textures/temperate_sd/grass_path1.tga
+		map textures/wt_terrain/grass_path1.png
 		alphaGen vertex
 		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
 	}
@@ -80,15 +82,15 @@ textures/river_outpost/terrain_0to2
 {
 	q3map_lightmapsamplesize 64
 	q3map_lightmapaxis z
-	q3map_texturesize 512 512
-	q3map_tcGen ivector ( 128 0 0 ) ( 0 128 0 )
+	q3map_texturesize 1024 1024
+	q3map_tcGen ivector ( 192 0 0 ) ( 0 192 0 )
 		surfaceparm grasssteps
 	
 	{
-		map textures/temperate_sd/grass_dense1.tga
+		map textures/wt_terrain/grass_dense1.png
 	}
 	{
-		map textures/temperate_sd/master_grass_dirt3.tga
+		map textures/wt_terrain/grass_dirt3.png
 		alphaGen vertex
 		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
 	}
@@ -103,15 +105,15 @@ textures/river_outpost/terrain_1to2
 {
 	q3map_lightmapsamplesize 64
 	q3map_lightmapaxis z
-	q3map_texturesize 512 512
-	q3map_tcGen ivector ( 128 0 0 ) ( 0 128 0 )
+	q3map_texturesize 1024 1024
+	q3map_tcGen ivector ( 192 0 0 ) ( 0 192 0 )
 		surfaceparm grasssteps
 	
 	{
-		map textures/temperate_sd/grass_path1.tga
+		map textures/wt_terrain/grass_path1.png
 	}
 	{
-		map textures/temperate_sd/master_grass_dirt3.tga
+		map textures/wt_terrain/grass_dirt3.png
 		alphaGen vertex
 		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
 	}
@@ -125,7 +127,7 @@ textures/river_outpost/terrain_1to2
 textures/river_outpost/terrain.vertex
 {
 	{
-		map textures/temperate_sd/grass_dense1.tga
+		map textures/wt_terrain/grass_dense1.png
 		rgbGen vertex
 	}
 }
