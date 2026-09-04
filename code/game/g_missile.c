@@ -170,6 +170,7 @@ Auto-arms after landing; state lives in ent->s.effect1Time (0 = settling, 1 = ar
 #define MISC_LANDMINE_INVISIBLE       1
 #define MISC_LANDMINE_START_OFF       2
 #define MISC_LANDMINE_TRIGGER_PLAYERS 4
+#define MISC_LANDMINE_TOUCH_EXPLO     8   // blow the instant something trips it, instead of when the radius clears
 
 #define MISC_LANDMINE_ARM_DELAY  1000
 
@@ -470,7 +471,8 @@ void G_MapLandminePostThink( gentity_t *self ) {
 ================
 G_MapLandmineThink
 
-Armed poll: on first trip mark it triggered (effect1Time = 2) and hand off to the fuse.
+Armed poll: on first trip mark it triggered (effect1Time = 2). TOUCH_EXPLO mines
+fuse straight to the blast; the rest wait for the radius to clear (G_MapLandminePostThink).
 ================
 */
 void G_MapLandmineThink( gentity_t *self ) {
@@ -478,7 +480,13 @@ void G_MapLandmineThink( gentity_t *self ) {
 
 	if ( G_LandmineSomeoneInRange( self ) ) {
 		self->s.effect1Time = 2;
-		self->think         = G_MapLandminePostThink;
+
+		if ( self->spawnflags & MISC_LANDMINE_TOUCH_EXPLO ) {
+			self->think     = G_MapLandmineExplode;
+			self->nextthink = level.time + LANDMINE_FUSE_TIME;
+		} else {
+			self->think     = G_MapLandminePostThink;
+		}
 	}
 }
 
@@ -518,7 +526,7 @@ void Use_MapLandmine( gentity_t *self, gentity_t *other, gentity_t *activator ) 
 	self->nextthink = level.time + MISC_LANDMINE_ARM_DELAY;
 }
 
-/*QUAKED misc_landmine (1 0 0) (-8 -8 -8) (8 8 8) INVISIBLE START_OFF TRIGGER_PLAYERS
+/*QUAKED misc_landmine (1 0 0) (-8 -8 -8) (8 8 8) INVISIBLE START_OFF TRIGGER_PLAYERS TOUCH_EXPLO
 A pre-armed landmine, independent of the engineer class and WP_LANDMINE ammo.
 On spawn it drops to the floor beneath it and detonates when a hostile AI walks
 into its trigger radius.
@@ -526,6 +534,7 @@ into its trigger radius.
 INVISIBLE       - no marker flag, and the mine can't be seen at all
 START_OFF       - spawns inert; a targeting entity (func_invisible_user, trigger_*, ...) must arm it
 TRIGGER_PLAYERS - also detonates on players (default: hostile AI only)
+TOUCH_EXPLO     - blow the instant something steps on it (default: blow when it steps back off)
 
 "wait"    seconds before the mine re-arms itself after going off (default 0 = never re-arms)
 "dmg"     splash damage override (default: standard landmine damage)

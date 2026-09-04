@@ -2375,12 +2375,13 @@ Camera mover that rides a path_corner track (used with the truck cinematic).
 /// WolfTech (Misc / point entities)
 ///
 
-/*QUAKED misc_landmine (1 0 0) (-8 -8 -8) (8 8 8) INVISIBLE START_OFF TRIGGER_PLAYERS
+/*QUAKED misc_landmine (1 0 0) (-8 -8 -8) (8 8 8) INVISIBLE START_OFF TRIGGER_PLAYERS TOUCH_EXPLO
 A pre-armed landmine, independent of the engineer class and the landmine weapon/ammo.
 On spawn it drops to the floor beneath it and detonates when a hostile AI walks into its trigger radius.
 INVISIBLE		no marker flag, and the mine can't be seen at all
 START_OFF		spawns inert; a targeting entity (func_invisible_user, trigger_*, ...) must arm it
 TRIGGER_PLAYERS	also detonates on players (default: hostile AI only)
+TOUCH_EXPLO		blow the instant something steps on it (default: blow when it steps back off)
 "wait"		seconds before the mine re-arms itself after going off (default 0 = never re-arms)
 "dmg"		splash damage override (default: standard landmine damage)
 "radius"	splash radius override (default 200)

@@ -2562,6 +2562,7 @@ On spawn it drops to the floor beneath it and detonates when a hostile AI walks 
 INVISIBLE		no marker flag, and the mine can't be seen at all
 START_OFF		spawns inert; a targeting entity (func_invisible_user, trigger_*, ...) must arm it
 TRIGGER_PLAYERS	also detonates on players (default: hostile AI only)
+TOUCH_EXPLO		blow the instant something steps on it (default: blow when it steps back off)
 "wait"		seconds before the mine re-arms itself after going off (default 0 = never re-arms)
 "dmg"		splash damage override (default: standard landmine damage)
 "radius"	splash radius override (default 200)
@@ -2573,6 +2574,7 @@ mines that have blown.
 <flag key="INVISIBLE" name="INVISIBLE" bit="0"/>
 <flag key="START_OFF" name="START_OFF" bit="1"/>
 <flag key="TRIGGER_PLAYERS" name="TRIGGER_PLAYERS" bit="2"/>
+<flag key="TOUCH_EXPLO" name="TOUCH_EXPLO" bit="3"/>
 </point>
 
 <point name="misc_tagemitter" color=".4 .9 .7" box="-16 -16 -16 16 16 16">
