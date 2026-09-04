@@ -156,7 +156,7 @@ thunderstuff
 	spawn
 	{
 		accum 0 set 0		// randomiser to play different lightnings and thunders
-		trigger self random
+		trigger thunderstuff random
 	}
 
 	trigger random
@@ -168,7 +168,7 @@ thunderstuff
 		accum 0 trigger_if_equal 3 thunderstuff thunder04
 		accum 0 trigger_if_equal 4 thunderstuff thunder05
 		wait 25000
-		trigger self random
+		trigger thunderstuff random
 	}
 
 	trigger thunder01
