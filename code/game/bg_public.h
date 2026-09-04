@@ -990,6 +990,8 @@ typedef enum {
 
 	EV_MEDCRATE_HEAL_TICK, // fired by G_MedCrateThink once per tick while the crate is actively healing at least one player
 
+	EV_ALERT_SPEAKER,  // script-triggered map speaker (see BG_ParseSpeakerScript) -- otherEntityNum = speaker index, otherEntityNum2 = 0 toggle/1 disable/2 enable
+
 	EV_MAX_EVENTS   // just added as an 'endcap'
 
 } entity_event_t;
@@ -2063,6 +2065,48 @@ extern animStringItem_t animBodyPartsStr[];
 
 long BG_StringHashValue(const char *fname);
 long BG_StringHashValue_Lwr(const char *fname);
+
+// map speaker scripts (sound/maps/<mapname>.sps) -- point sound sources defined outside the BSP
+// entity lump, driven from map .script code via the togglespeaker/enablespeaker/disablespeaker
+// actions. Parsed identically by game and cgame (bg_misc.c) so both sides agree on speaker
+// indices; the server never plays sound, it only needs the list to turn EV_ALERT_SPEAKER events
+// into the right index.
+typedef enum {
+	SPKR_NOT_LOOPED = 0,
+	SPKR_LOOPED_ON,
+	SPKR_LOOPED_OFF
+} speakerLoopType_t;
+
+typedef enum {
+	SPKR_LOCAL = 0,
+	SPKR_GLOBAL,
+	SPKR_NOPVS
+} speakerBroadcastType_t;
+
+typedef struct {
+	char                    filename[MAX_QPATH];
+	sfxHandle_t             noise;
+	vec3_t                  origin;
+	char                    targetname[32];
+	long                    targetnamehash;
+
+	speakerLoopType_t       loop;
+	speakerBroadcastType_t  broadcast;
+	int                     wait;           // ms between auto-plays (SPKR_NOT_LOOPED only)
+	int                     random;         // random variance added to wait
+	int                     volume;         // 0-255, default 127
+	int                     range;          // attenuation distance, default 1250
+
+	qboolean                activated;
+	int                     nextActivateTime;
+} scriptSpeaker_t;
+
+#define MAX_SCRIPT_SPEAKERS 256
+extern scriptSpeaker_t scriptSpeakers[MAX_SCRIPT_SPEAKERS];
+extern int             numScriptSpeakers;
+
+void BG_ClearScriptSpeakers( void );
+qboolean BG_ParseSpeakerScript( const char *filename, char *data );
 
 int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus);
 int BG_GetMaxClip(const playerState_t *ps, int weapon);

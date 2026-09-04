@@ -144,7 +144,60 @@ radio
 		accum 5 abort_if_not_equal 3
 		resetscript
 		stopsound
-		playsound sound/scenaric/dam/cafemusic.wav looping	
+		playsound sound/scenaric/dam/cafemusic.wav looping
 	}
 
+}
+
+// Storm ambiance, same setup as radar's thunderstuff/lightning01-05/thunderspeaker01-05.
+// Bound to a target_relay with "scriptname" "thunderstuff" in sv_river_outpost.ents.
+thunderstuff
+{
+	spawn
+	{
+		accum 0 set 0		// randomiser to play different lightnings and thunders
+		trigger self random
+	}
+
+	trigger random
+	{
+		accum 0 random 5
+		accum 0 trigger_if_equal 0 thunderstuff thunder01
+		accum 0 trigger_if_equal 1 thunderstuff thunder02
+		accum 0 trigger_if_equal 2 thunderstuff thunder03
+		accum 0 trigger_if_equal 3 thunderstuff thunder04
+		accum 0 trigger_if_equal 4 thunderstuff thunder05
+		wait 25000
+		trigger self random
+	}
+
+	trigger thunder01
+	{
+		alertentity lightning01
+		togglespeaker thunderspeaker01
+	}
+
+	trigger thunder02
+	{
+		alertentity lightning02
+		togglespeaker thunderspeaker02
+	}
+
+	trigger thunder03
+	{
+		alertentity lightning03
+		togglespeaker thunderspeaker03
+	}
+
+	trigger thunder04
+	{
+		alertentity lightning04
+		togglespeaker thunderspeaker04
+	}
+
+	trigger thunder05
+	{
+		alertentity lightning05
+		togglespeaker thunderspeaker05
+	}
 }

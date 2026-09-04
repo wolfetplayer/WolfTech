@@ -987,6 +987,49 @@ qboolean G_LoadEntsFile( void ) {
 	return qtrue;
 }
 
+/*
+================
+G_LoadSpeakerScriptFile
+
+Loads sound/maps/<mapname>.sps, derived the same way G_LoadEntsFile derives its
+filename. The server never plays sound -- it only needs to know each speaker's
+targetname/index so togglespeaker/enablespeaker/disablespeaker can turn a map
+script trigger into an EV_ALERT_SPEAKER event cgame can act on. Not finding a
+.sps file is not an error -- most maps simply won't have one.
+================
+*/
+void G_LoadSpeakerScriptFile( void ) {
+	char filename[MAX_QPATH];
+	vmCvar_t mapname;
+	fileHandle_t f;
+	int len;
+	char *buf;
+
+	BG_ClearScriptSpeakers();
+
+	trap_Cvar_VariableStringBuffer( "g_scriptName", filename, sizeof( filename ) );
+	if ( strlen( filename ) > 0 ) {
+		trap_Cvar_Register( &mapname, "g_scriptName", "", CVAR_ROM );
+	} else {
+		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+	}
+	Q_strncpyz( filename, "sound/maps/", sizeof( filename ) );
+	Q_strcat( filename, sizeof( filename ), mapname.string );
+	Q_strcat( filename, sizeof( filename ), ".sps" );
+
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( len < 0 ) {
+		return;
+	}
+
+	buf = G_Alloc( len + 1 );
+	trap_FS_Read( buf, len, f );
+	buf[len] = '\0';
+	trap_FS_FCloseFile( f );
+
+	BG_ParseSpeakerScript( filename, buf );
+}
+
 qboolean G_ParseExtraSpawnVars( void ) {
 	char _keyname[MAX_TOKEN_CHARS];
 	char *keyname;
@@ -1213,6 +1256,8 @@ void G_SpawnEntitiesFromString( void ) {
 
 		G_ParseExtraSpawnVars();
 	}
+
+	G_LoadSpeakerScriptFile();
 
 	level.spawning = qfalse;            // any future calls to G_Spawn*() will be errors
 }

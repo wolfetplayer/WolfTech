@@ -5322,6 +5322,8 @@ char *eventnames[] = {
 
 	"EV_MEDCRATE_HEAL_TICK",
 
+	"EV_ALERT_SPEAKER",
+
 	"EV_MAX_EVENTS"
 };
 
@@ -5675,4 +5677,164 @@ float BG_GetWeaponAIRange( int weaponnum ) {
 	}
 
 	return AI_WEAPON_RANGE_NORMAL;
+}
+
+//==========================================================================
+// map speaker scripts (sound/maps/<mapname>.sps) -- see the scriptSpeaker_t
+// comment in bg_public.h. This is compiled into both game and cgame, each
+// getting its own private copy of the list; as long as both sides parse the
+// same file, a speaker's index is the same on both, which is all the
+// server needs to turn a scripted "togglespeaker <targetname>" into an
+// EV_ALERT_SPEAKER event cgame can act on.
+//==========================================================================
+
+scriptSpeaker_t scriptSpeakers[MAX_SCRIPT_SPEAKERS];
+int             numScriptSpeakers;
+
+/*
+================
+BG_ClearScriptSpeakers
+================
+*/
+void BG_ClearScriptSpeakers( void ) {
+	numScriptSpeakers = 0;
+}
+
+/*
+================
+BG_SS_ParseSpeaker
+
+Parses a single "speakerDef { ... }" block
+================
+*/
+static qboolean BG_SS_ParseSpeaker( const char *filename, char **data ) {
+	char            *token;
+	scriptSpeaker_t speaker;
+
+	Com_Memset( &speaker, 0, sizeof( speaker ) );
+	speaker.volume = 127;
+	speaker.range = 1250;
+
+	token = COM_Parse( data );
+	if ( Q_stricmp( token, "{" ) ) {
+		Com_Printf( S_COLOR_RED "ERROR: %s: expected '{'\n", filename );
+		return qfalse;
+	}
+
+	while ( 1 ) {
+		token = COM_Parse( data );
+		if ( !token[0] ) {
+			break;
+		}
+
+		if ( token[0] == '}' ) {
+			break;
+		}
+
+		if ( !Q_stricmp( token, "noise" ) ) {
+			token = COM_Parse( data );
+			Q_strncpyz( speaker.filename, token, sizeof( speaker.filename ) );
+		} else if ( !Q_stricmp( token, "origin" ) ) {
+			speaker.origin[0] = atof( COM_Parse( data ) );
+			speaker.origin[1] = atof( COM_Parse( data ) );
+			speaker.origin[2] = atof( COM_Parse( data ) );
+		} else if ( !Q_stricmp( token, "targetname" ) ) {
+			token = COM_Parse( data );
+			Q_strncpyz( speaker.targetname, token, sizeof( speaker.targetname ) );
+			speaker.targetnamehash = BG_StringHashValue( speaker.targetname );
+		} else if ( !Q_stricmp( token, "looped" ) ) {
+			token = COM_Parse( data );
+			if ( !Q_stricmp( token, "no" ) ) {
+				speaker.loop = SPKR_NOT_LOOPED;
+			} else if ( !Q_stricmp( token, "on" ) ) {
+				speaker.loop = SPKR_LOOPED_ON;
+				speaker.activated = qtrue;
+			} else if ( !Q_stricmp( token, "off" ) ) {
+				speaker.loop = SPKR_LOOPED_OFF;
+			} else {
+				Com_Printf( S_COLOR_RED "ERROR: %s: unknown loop value '%s'\n", filename, token );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token, "broadcast" ) ) {
+			token = COM_Parse( data );
+			if ( !Q_stricmp( token, "no" ) ) {
+				speaker.broadcast = SPKR_LOCAL;
+			} else if ( !Q_stricmp( token, "global" ) ) {
+				speaker.broadcast = SPKR_GLOBAL;
+			} else if ( !Q_stricmp( token, "nopvs" ) ) {
+				speaker.broadcast = SPKR_NOPVS;
+			} else {
+				Com_Printf( S_COLOR_RED "ERROR: %s: unknown broadcast value '%s'\n", filename, token );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token, "wait" ) ) {
+			speaker.wait = atoi( COM_Parse( data ) );
+		} else if ( !Q_stricmp( token, "random" ) ) {
+			speaker.random = atoi( COM_Parse( data ) );
+		} else if ( !Q_stricmp( token, "volume" ) ) {
+			speaker.volume = atoi( COM_Parse( data ) );
+		} else if ( !Q_stricmp( token, "range" ) ) {
+			speaker.range = atoi( COM_Parse( data ) );
+		} else {
+			Com_Printf( S_COLOR_RED "ERROR: %s: unknown token '%s'\n", filename, token );
+			return qfalse;
+		}
+	}
+
+	if ( numScriptSpeakers >= MAX_SCRIPT_SPEAKERS ) {
+		Com_Printf( S_COLOR_RED "ERROR: %s: MAX_SCRIPT_SPEAKERS (%i) reached\n", filename, MAX_SCRIPT_SPEAKERS );
+		return qfalse;
+	}
+
+	scriptSpeakers[numScriptSpeakers++] = speaker;
+
+	return qtrue;
+}
+
+/*
+================
+BG_ParseSpeakerScript
+
+Parses an already-loaded, NUL-terminated "sound/maps/<mapname>.sps" buffer into
+scriptSpeakers[]/numScriptSpeakers. Caller owns the buffer (only needed for the
+duration of this call) and decides what counts as "no such file" -- a missing
+.sps is normal for most maps and isn't handled here.
+================
+*/
+qboolean BG_ParseSpeakerScript( const char *filename, char *data ) {
+	char *token;
+
+	token = COM_Parse( &data );
+	if ( Q_stricmp( token, "speakerScript" ) ) {
+		Com_Printf( S_COLOR_RED "ERROR: %s: expected 'speakerScript'\n", filename );
+		return qfalse;
+	}
+
+	token = COM_Parse( &data );
+	if ( Q_stricmp( token, "{" ) ) {
+		Com_Printf( S_COLOR_RED "ERROR: %s: expected '{'\n", filename );
+		return qfalse;
+	}
+
+	while ( 1 ) {
+		token = COM_Parse( &data );
+		if ( !token[0] ) {
+			break;
+		}
+
+		if ( token[0] == '}' ) {
+			break;
+		}
+
+		if ( !Q_stricmp( token, "speakerDef" ) ) {
+			if ( !BG_SS_ParseSpeaker( filename, &data ) ) {
+				return qfalse;
+			}
+		} else {
+			Com_Printf( S_COLOR_RED "ERROR: %s: unknown token '%s'\n", filename, token );
+			return qfalse;
+		}
+	}
+
+	return qtrue;
 }

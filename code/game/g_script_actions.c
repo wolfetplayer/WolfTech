@@ -690,6 +690,114 @@ qboolean G_ScriptAction_AlertEntity( gentity_t *ent, char *params ) {
 
 /*
 =================
+G_ScriptAction_ToggleSpeaker
+
+  syntax: togglespeaker <targetname>
+=================
+*/
+qboolean G_ScriptAction_ToggleSpeaker( gentity_t *ent, char *params ) {
+	int i;
+	long hash;
+	gentity_t       *tent;
+	scriptSpeaker_t *speaker;
+
+	if ( !params || !*params ) {
+		G_Error( "G_Scripting: togglespeaker without targetname\n" );
+	}
+
+	hash = BG_StringHashValue( params );
+
+	// find this targetname
+	for ( i = 0; i < numScriptSpeakers; i++ ) {
+		speaker = &scriptSpeakers[i];
+
+		if ( hash != speaker->targetnamehash && Q_stricmp( params, speaker->targetname ) ) {
+			continue;
+		}
+
+		tent = G_TempEntity( speaker->origin, EV_ALERT_SPEAKER );
+		tent->r.svFlags = SVF_BROADCAST;
+		tent->s.otherEntityNum = i;
+		tent->s.otherEntityNum2 = 0;
+	}
+
+	return qtrue;
+}
+
+/*
+=================
+G_ScriptAction_DisableSpeaker
+
+  syntax: disablespeaker <targetname>
+=================
+*/
+qboolean G_ScriptAction_DisableSpeaker( gentity_t *ent, char *params ) {
+	int i;
+	long hash;
+	gentity_t       *tent;
+	scriptSpeaker_t *speaker;
+
+	if ( !params || !*params ) {
+		G_Error( "G_Scripting: disablespeaker without targetname\n" );
+	}
+
+	hash = BG_StringHashValue( params );
+
+	// find this targetname
+	for ( i = 0; i < numScriptSpeakers; i++ ) {
+		speaker = &scriptSpeakers[i];
+
+		if ( hash != speaker->targetnamehash && Q_stricmp( params, speaker->targetname ) ) {
+			continue;
+		}
+
+		tent = G_TempEntity( speaker->origin, EV_ALERT_SPEAKER );
+		tent->r.svFlags = SVF_BROADCAST;
+		tent->s.otherEntityNum = i;
+		tent->s.otherEntityNum2 = 1;
+	}
+
+	return qtrue;
+}
+
+/*
+=================
+G_ScriptAction_EnableSpeaker
+
+  syntax: enablespeaker <targetname>
+=================
+*/
+qboolean G_ScriptAction_EnableSpeaker( gentity_t *ent, char *params ) {
+	int i;
+	long hash;
+	gentity_t       *tent;
+	scriptSpeaker_t *speaker;
+
+	if ( !params || !*params ) {
+		G_Error( "G_Scripting: enablespeaker without targetname\n" );
+	}
+
+	hash = BG_StringHashValue( params );
+
+	// find this targetname
+	for ( i = 0; i < numScriptSpeakers; i++ ) {
+		speaker = &scriptSpeakers[i];
+
+		if ( hash != speaker->targetnamehash && Q_stricmp( params, speaker->targetname ) ) {
+			continue;
+		}
+
+		tent = G_TempEntity( speaker->origin, EV_ALERT_SPEAKER );
+		tent->r.svFlags = SVF_BROADCAST;
+		tent->s.otherEntityNum = i;
+		tent->s.otherEntityNum2 = 2;
+	}
+
+	return qtrue;
+}
+
+/*
+=================
 G_ScriptAction_Accum
 
   syntax: accum <buffer_index> <command> <paramater>

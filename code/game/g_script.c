@@ -101,6 +101,11 @@ qboolean G_ScriptAction_Atmosphere( gentity_t *ent, char *params );
 qboolean G_ScriptAction_ObjectivesNeeded( gentity_t *ent, char *params );
 qboolean G_ScriptAction_NumSecrets( gentity_t *ent, char *params );
 
+// map speaker scripts (sound/maps/<mapname>.sps)
+qboolean G_ScriptAction_ToggleSpeaker( gentity_t *ent, char *params );
+qboolean G_ScriptAction_DisableSpeaker( gentity_t *ent, char *params );
+qboolean G_ScriptAction_EnableSpeaker( gentity_t *ent, char *params );
+
 // these are the actions that each event can call
 g_script_stack_action_t gScriptActions[] =
 {
@@ -151,6 +156,9 @@ g_script_stack_action_t gScriptActions[] =
 	{"mu_queue",             G_ScriptAction_MusicQueue}, // (char *new_music)				// music that will start when previous fades to 0
 	{"objectivesneeded",    G_ScriptAction_ObjectivesNeeded},
 	{"numsecrets",  G_ScriptAction_NumSecrets},
+	{"togglespeaker",            G_ScriptAction_ToggleSpeaker},
+	{"disablespeaker",           G_ScriptAction_DisableSpeaker},
+	{"enablespeaker",            G_ScriptAction_EnableSpeaker},
 	{NULL,                      0}
 };
 

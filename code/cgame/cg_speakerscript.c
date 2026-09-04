@@ -27,12 +27,15 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 // cg_speakerscript.c -- map speaker scripts (sound/maps/<mapname>.sps), independent of target_speaker (game/g_target.c)
+//
+// Parsing and storage (scriptSpeaker_t, scriptSpeakers[], numScriptSpeakers, BG_ParseSpeakerScript)
+// live in bg_public.h/bg_misc.c, shared with the game module: both sides parse the identical file
+// the same way, so a speaker's index always matches between client and server. That's what lets
+// the server's togglespeaker/enablespeaker/disablespeaker script actions (g_script_actions.c) send
+// an EV_ALERT_SPEAKER event carrying just an index for CG_ToggleActiveOnScriptSpeaker() etc. below
+// to act on.
 
 #include "cg_local.h"
-#include "../ui/ui_shared.h"    // PC_Int_Parse / PC_Float_Parse / PC_String_Parse
-
-scriptSpeaker_t scriptSpeakers[MAX_SCRIPT_SPEAKERS];
-int             numScriptSpeakers;
 
 /*
 ================
@@ -40,142 +43,7 @@ CG_ClearScriptSpeakers
 ================
 */
 void CG_ClearScriptSpeakers( void ) {
-	numScriptSpeakers = 0;
-}
-
-/*
-================
-CG_SS_ParseError
-================
-*/
-static void CG_SS_ParseError( int handle, const char *filename, const char *format, ... ) {
-	va_list argptr;
-	char string[1024];
-
-	va_start( argptr, format );
-	Q_vsnprintf( string, sizeof( string ), format, argptr );
-	va_end( argptr );
-
-	CG_Printf( S_COLOR_RED "ERROR: %s: %s\n", filename, string );
-
-	trap_PC_FreeSource( handle );
-}
-
-/*
-================
-CG_SS_ParseSpeaker
-
-Parses a single "speakerDef { ... }" block
-================
-*/
-static qboolean CG_SS_ParseSpeaker( int handle, const char *filename ) {
-	pc_token_t      token;
-	scriptSpeaker_t speaker;
-
-	Com_Memset( &speaker, 0, sizeof( speaker ) );
-	speaker.volume = 127;
-	speaker.range = 1250;
-
-	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "{" ) ) {
-		CG_SS_ParseError( handle, filename, "expected '{'" );
-		return qfalse;
-	}
-
-	while ( 1 ) {
-		if ( !trap_PC_ReadToken( handle, &token ) ) {
-			break;
-		}
-
-		if ( token.string[0] == '}' ) {
-			break;
-		}
-
-		if ( !Q_stricmp( token.string, "noise" ) ) {
-			const char *s;
-			if ( !PC_String_Parse( handle, &s ) ) {
-				CG_SS_ParseError( handle, filename, "expected sound filename" );
-				return qfalse;
-			}
-			Q_strncpyz( speaker.filename, s, sizeof( speaker.filename ) );
-		} else if ( !Q_stricmp( token.string, "origin" ) ) {
-			if ( !PC_Float_Parse( handle, &speaker.origin[0] ) ||
-				 !PC_Float_Parse( handle, &speaker.origin[1] ) ||
-				 !PC_Float_Parse( handle, &speaker.origin[2] ) ) {
-				CG_SS_ParseError( handle, filename, "expected origin vector" );
-				return qfalse;
-			}
-		} else if ( !Q_stricmp( token.string, "targetname" ) ) {
-			const char *s;
-			if ( !PC_String_Parse( handle, &s ) ) {
-				CG_SS_ParseError( handle, filename, "expected targetname string" );
-				return qfalse;
-			}
-			Q_strncpyz( speaker.targetname, s, sizeof( speaker.targetname ) );
-		} else if ( !Q_stricmp( token.string, "looped" ) ) {
-			if ( !trap_PC_ReadToken( handle, &token ) ) {
-				CG_SS_ParseError( handle, filename, "expected loop value" );
-				return qfalse;
-			}
-			if ( !Q_stricmp( token.string, "no" ) ) {
-				speaker.loop = SPKR_NOT_LOOPED;
-			} else if ( !Q_stricmp( token.string, "on" ) ) {
-				speaker.loop = SPKR_LOOPED_ON;
-				speaker.activated = qtrue;
-			} else if ( !Q_stricmp( token.string, "off" ) ) {
-				speaker.loop = SPKR_LOOPED_OFF;
-			} else {
-				CG_SS_ParseError( handle, filename, "unknown loop value '%s'", token.string );
-				return qfalse;
-			}
-		} else if ( !Q_stricmp( token.string, "broadcast" ) ) {
-			if ( !trap_PC_ReadToken( handle, &token ) ) {
-				CG_SS_ParseError( handle, filename, "expected broadcast value" );
-				return qfalse;
-			}
-			if ( !Q_stricmp( token.string, "no" ) ) {
-				speaker.broadcast = SPKR_LOCAL;
-			} else if ( !Q_stricmp( token.string, "global" ) ) {
-				speaker.broadcast = SPKR_GLOBAL;
-			} else if ( !Q_stricmp( token.string, "nopvs" ) ) {
-				speaker.broadcast = SPKR_NOPVS;
-			} else {
-				CG_SS_ParseError( handle, filename, "unknown broadcast value '%s'", token.string );
-				return qfalse;
-			}
-		} else if ( !Q_stricmp( token.string, "wait" ) ) {
-			if ( !PC_Int_Parse( handle, &speaker.wait ) || speaker.wait < 0 ) {
-				CG_SS_ParseError( handle, filename, "expected wait value" );
-				return qfalse;
-			}
-		} else if ( !Q_stricmp( token.string, "random" ) ) {
-			if ( !PC_Int_Parse( handle, &speaker.random ) || speaker.random < 0 ) {
-				CG_SS_ParseError( handle, filename, "expected random value" );
-				return qfalse;
-			}
-		} else if ( !Q_stricmp( token.string, "volume" ) ) {
-			if ( !PC_Int_Parse( handle, &speaker.volume ) || speaker.volume < 0 || speaker.volume > 255 ) {
-				CG_SS_ParseError( handle, filename, "expected volume value (0-255)" );
-				return qfalse;
-			}
-		} else if ( !Q_stricmp( token.string, "range" ) ) {
-			if ( !PC_Int_Parse( handle, &speaker.range ) || speaker.range < 0 ) {
-				CG_SS_ParseError( handle, filename, "expected range value" );
-				return qfalse;
-			}
-		} else {
-			CG_SS_ParseError( handle, filename, "unknown token '%s'", token.string );
-			return qfalse;
-		}
-	}
-
-	if ( numScriptSpeakers >= MAX_SCRIPT_SPEAKERS ) {
-		CG_SS_ParseError( handle, filename, "MAX_SCRIPT_SPEAKERS (%i) reached", MAX_SCRIPT_SPEAKERS );
-		return qfalse;
-	}
-
-	scriptSpeakers[numScriptSpeakers++] = speaker;
-
-	return qtrue;
+	BG_ClearScriptSpeakers();
 }
 
 /*
@@ -210,54 +78,69 @@ Not finding a .sps file is not an error -- most maps simply won't have one.
 ================
 */
 void CG_LoadSpeakerScript( void ) {
-	char       filename[MAX_QPATH];
-	pc_token_t token;
-	int        handle;
-	int        i;
+	char         filename[MAX_QPATH];
+	fileHandle_t f;
+	int          len;
+	static char  buf[0x10000];
+	int          i;
 
 	CG_SpeakerScriptFilename( filename, sizeof( filename ) );
 
-	handle = trap_PC_LoadSource( filename );
-	if ( !handle ) {
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( len < 0 ) {
 		return;
 	}
 
-	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "speakerScript" ) ) {
-		CG_SS_ParseError( handle, filename, "expected 'speakerScript'" );
+	if ( len >= sizeof( buf ) ) {
+		CG_Printf( S_COLOR_RED "ERROR: %s: file too large (%i, max %i)\n", filename, len, (int)sizeof( buf ) - 1 );
+		trap_FS_FCloseFile( f );
 		return;
 	}
 
-	if ( !trap_PC_ReadToken( handle, &token ) || Q_stricmp( token.string, "{" ) ) {
-		CG_SS_ParseError( handle, filename, "expected '{'" );
+	trap_FS_Read( buf, len, f );
+	buf[len] = '\0';
+	trap_FS_FCloseFile( f );
+
+	if ( !BG_ParseSpeakerScript( filename, buf ) ) {
 		return;
 	}
-
-	while ( 1 ) {
-		if ( !trap_PC_ReadToken( handle, &token ) ) {
-			break;
-		}
-
-		if ( token.string[0] == '}' ) {
-			break;
-		}
-
-		if ( !Q_stricmp( token.string, "speakerDef" ) ) {
-			if ( !CG_SS_ParseSpeaker( handle, filename ) ) {
-				return;
-			}
-		} else {
-			CG_SS_ParseError( handle, filename, "unknown token '%s'", token.string );
-			return;
-		}
-	}
-
-	trap_PC_FreeSource( handle );
 
 	for ( i = 0; i < numScriptSpeakers; i++ ) {
 		scriptSpeakers[i].noise = trap_S_RegisterSound( scriptSpeakers[i].filename );
 	}
 
 	CG_Printf( "...loaded %i speaker%s from '%s'\n", numScriptSpeakers, numScriptSpeakers == 1 ? "" : "s", filename );
+}
+
+/*
+================
+CG_ToggleActiveOnScriptSpeaker
+CG_SetActiveOnScriptSpeaker
+CG_UnsetActiveOnScriptSpeaker
+
+Driven by EV_ALERT_SPEAKER (see cg_event.c), sent by the server's
+togglespeaker/enablespeaker/disablespeaker map script actions.
+================
+*/
+void CG_ToggleActiveOnScriptSpeaker( int index ) {
+	if ( index < 0 || index >= numScriptSpeakers ) {
+		return;
+	}
+	scriptSpeakers[index].activated = !scriptSpeakers[index].activated;
+}
+
+void CG_SetActiveOnScriptSpeaker( int index ) {
+	if ( index < 0 || index >= numScriptSpeakers ) {
+		return;
+	}
+	scriptSpeakers[index].activated = qtrue;
+}
+
+void CG_UnsetActiveOnScriptSpeaker( int index ) {
+	if ( index < 0 || index >= numScriptSpeakers ) {
+		return;
+	}
+	scriptSpeakers[index].activated = qfalse;
 }
 
 /*

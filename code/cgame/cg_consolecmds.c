@@ -715,6 +715,7 @@ static void CG_DumpSound_f( void ) {
 			speaker.range = atoi( value );
 		} else if ( !Q_stricmp( arg, "targetname" ) ) {
 			Q_strncpyz( speaker.targetname, value, sizeof( speaker.targetname ) );
+			speaker.targetnamehash = BG_StringHashValue( speaker.targetname );
 		} else if ( !Q_stricmp( arg, "looped" ) ) {
 			if ( !Q_stricmp( value, "on" ) ) {
 				speaker.loop      = SPKR_LOOPED_ON;

@@ -8,3 +8,58 @@
 {
 "classname" "info_player_intermission"
 "origin" "-964 955 194"
+}
+
+{
+"classname" "target_relay"
+"scriptname" "thunderstuff"
+}
+
+// Lightning flashes for thunderstuff (sv_river_outpost.coop.script). Placeholder origins --
+// reposition these in the editor so each one is up in open sky/visible from the play area,
+// same idea as radar's lightning01-05. STARTOFF|ONETIME (spawnflags 6): invisible until
+// alertentity fires it, then it flashes through the stylestring once and goes dark again.
+{
+"classname" "dlight"
+"targetname" "lightning01"
+"origin" "-964 955 3200"
+"spawnflags" "6"
+"stylestring" "zzzzzzzzaaaaaaaa"
+"color" "0.75 0.8 1"
+}
+
+{
+"classname" "dlight"
+"targetname" "lightning02"
+"origin" "-500 700 3200"
+"spawnflags" "6"
+"stylestring" "zzzzzzzzaaaaaaaa"
+"color" "0.75 0.8 1"
+}
+
+{
+"classname" "dlight"
+"targetname" "lightning03"
+"origin" "-1400 1200 3200"
+"spawnflags" "6"
+"stylestring" "zzzzzzzzaaaaaaaa"
+"color" "0.75 0.8 1"
+}
+
+{
+"classname" "dlight"
+"targetname" "lightning04"
+"origin" "-1800 400 3200"
+"spawnflags" "6"
+"stylestring" "zzzzzzzzaaaaaaaa"
+"color" "0.75 0.8 1"
+}
+
+{
+"classname" "dlight"
+"targetname" "lightning05"
+"origin" "-300 1500 3200"
+"spawnflags" "6"
+"stylestring" "zzzzzzzzaaaaaaaa"
+"color" "0.75 0.8 1"
+}

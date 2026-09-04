@@ -1653,40 +1653,9 @@ extern soundScript_t soundScripts[MAX_SOUND_SCRIPTS];
 extern soundScript_t soundScripts[MAX_SOUND_SCRIPTS];
 
 
-// map speaker scripts (sound/maps/<mapname>.sps) -- point sound sources defined outside the BSP entity lump
-
-typedef enum {
-	SPKR_NOT_LOOPED = 0,
-	SPKR_LOOPED_ON,
-	SPKR_LOOPED_OFF
-} speakerLoopType_t;
-
-typedef enum {
-	SPKR_LOCAL = 0,
-	SPKR_GLOBAL,
-	SPKR_NOPVS
-} speakerBroadcastType_t;
-
-typedef struct {
-	char                    filename[MAX_QPATH];
-	sfxHandle_t             noise;
-	vec3_t                  origin;
-	char                    targetname[32];
-
-	speakerLoopType_t       loop;
-	speakerBroadcastType_t  broadcast;
-	int                     wait;           // ms between auto-plays (SPKR_NOT_LOOPED only)
-	int                     random;         // random variance added to wait
-	int                     volume;         // 0-255, default 127
-	int                     range;          // attenuation distance, default 1250
-
-	qboolean                activated;
-	int                     nextActivateTime;
-} scriptSpeaker_t;
-
-#define MAX_SCRIPT_SPEAKERS 256
-extern scriptSpeaker_t scriptSpeakers[MAX_SCRIPT_SPEAKERS];
-extern int             numScriptSpeakers;
+// map speaker scripts (sound/maps/<mapname>.sps) -- point sound sources defined outside the BSP
+// entity lump. scriptSpeaker_t / scriptSpeakers[] / numScriptSpeakers / BG_ParseSpeakerScript()
+// live in bg_public.h + bg_misc.c, shared with the game module so both agree on speaker indices.
 
 
 
@@ -2418,6 +2387,9 @@ void CG_AddScriptSpeakers( void );
 qboolean CG_AddScriptSpeaker( scriptSpeaker_t *speaker );
 qboolean CG_DeleteScriptSpeaker( int index );
 qboolean CG_SaveSpeakerScript( void );
+void CG_ToggleActiveOnScriptSpeaker( int index );
+void CG_SetActiveOnScriptSpeaker( int index );
+void CG_UnsetActiveOnScriptSpeaker( int index );
 // done.
 
 // Ridah, flamethrower

@@ -2592,6 +2592,21 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 	// End
+	case EV_ALERT_SPEAKER:  // togglespeaker/enablespeaker/disablespeaker map script actions
+		DEBUGNAME( "EV_ALERT_SPEAKER" );
+		switch ( es->otherEntityNum2 ) {
+		case 1:
+			CG_UnsetActiveOnScriptSpeaker( es->otherEntityNum );
+			break;
+		case 2:
+			CG_SetActiveOnScriptSpeaker( es->otherEntityNum );
+			break;
+		case 0:
+		default:
+			CG_ToggleActiveOnScriptSpeaker( es->otherEntityNum );
+			break;
+		}
+		break;
 	case EV_PAIN:
 		// local player sounds are triggered in CG_CheckLocalSounds,
 		// so ignore events on the player
