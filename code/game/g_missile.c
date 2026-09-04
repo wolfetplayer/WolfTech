@@ -405,8 +405,9 @@ runs its own arm/trigger/explode cycle so it can re-arm on a timer or be
 
 Self-parented (parent == self) marks it as map-placed for G_LandmineWillTrigger.
 State lives in s.effect1Time (0 dormant, 1 armed, 2 triggered), same as the
-engineer mine, so cg_ents.c renders it identically; INVISIBLE mines also carry
-EF_NODRAW and are skipped entirely by CG_Missile.
+engineer mine, so cg_ents.c renders it identically. A dormant mine carries
+FL_NODRAW (g_main.c syncs it to EF_NODRAW each frame) so nothing shows on the
+ground until it's armed; INVISIBLE keeps FL_NODRAW set in every state.
 
 ===========================================================================
 */
@@ -439,6 +440,7 @@ void G_MapLandmineExplode( gentity_t *self ) {
 	}
 
 	self->s.effect1Time = 0;   // dormant
+	self->flags        |= FL_NODRAW;   // hidden again until re-armed
 	self->think         = NULL;
 	self->nextthink     = 0;
 
@@ -490,6 +492,10 @@ Brings a dormant mine live.
 void G_MapLandmineArm( gentity_t *self ) {
 	self->s.effect1Time = 1;               // armed
 	self->s.frame       = rand() % 20;     // desync the marker's wave anim across mines (cg_ents.c)
+
+	if ( !( self->spawnflags & MISC_LANDMINE_INVISIBLE ) ) {
+		self->flags &= ~FL_NODRAW;         // reveal the marker now that the mine is live
+	}
 
 	self->think     = G_MapLandmineThink;
 	self->nextthink = level.time + FRAMETIME;
@@ -556,10 +562,10 @@ void SP_misc_landmine( gentity_t *self ) {
 	self->clipmask   = 0;
 	self->r.contents = 0;
 	self->r.svFlags  = SVF_USE_CURRENT_ORIGIN;
+
+	self->flags |= FL_NODRAW;                     // dormant: nothing drawn until armed (G_MapLandmineArm clears it)
 	if ( !( self->spawnflags & MISC_LANDMINE_INVISIBLE ) ) {
-		self->r.svFlags |= SVF_BROADCAST;         // marker flag visible map-wide, like the engineer mine
-	} else {
-		self->s.eFlags |= EF_NODRAW;              // CG_Missile skips it
+		self->r.svFlags |= SVF_BROADCAST;         // once armed, marker flag is visible map-wide like the engineer mine
 	}
 
 	VectorSet( self->r.mins, -4, -4, 0 );
