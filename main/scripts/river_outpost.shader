@@ -132,7 +132,6 @@ textures/river_outpost/terrain.vertex
 	}
 }
 
-
 // Skybox
 
 textures/outpost/rainy_night
@@ -142,10 +141,10 @@ textures/outpost/rainy_night
 	q3map_lightimage textures/skies/n_blue2.tga
 	q3map_nofog
 	q3map_globaltexture
-	q3map_lightsubdivide 256 
-	q3map_sun 0.130 0.080 0.020 6 165 5
-	q3map_skylight 60 4
-	q3map_surfacelight 12
+	q3map_lightsubdivide 96 
+	q3map_sun 0.130 0.080 0.020 4 165 5
+	q3map_skylight 60 8
+	q3map_surfacelight 10
 
 	surfaceparm noimpact
 	surfaceparm nolightmap
