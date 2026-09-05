@@ -187,6 +187,15 @@ vmCvar_t cg_gun_z;
 vmCvar_t cg_gunAnglePitch;
 vmCvar_t cg_gunAngleYaw;
 vmCvar_t cg_gunAngleRoll;
+vmCvar_t cg_gunSwayIdleSpeed;
+vmCvar_t cg_gunSwayIdleAmp;
+vmCvar_t cg_gunSwayAmp;
+vmCvar_t cg_gunSwayDip;
+vmCvar_t cg_gunSwayRoll;
+vmCvar_t cg_gunSwayLower;
+vmCvar_t cg_gunSwayCenter;
+vmCvar_t cg_gunSwaySprintScale;
+vmCvar_t cg_gunSwayStrafeAmp;
 vmCvar_t cg_tracerChance;
 vmCvar_t cg_tracerWidth;
 vmCvar_t cg_tracerLength;
@@ -424,6 +433,15 @@ cvarTable_t cvarTable[] = {
 	{&cg_gunAnglePitch, "cg_gunAnglePitch", "0", CVAR_CHEAT},
 	{&cg_gunAngleYaw, "cg_gunAngleYaw", "0", CVAR_CHEAT},
 	{&cg_gunAngleRoll, "cg_gunAngleRoll", "0", CVAR_CHEAT},
+	{&cg_gunSwayIdleSpeed, "cg_gunSwayIdleSpeed", "0.001", CVAR_ARCHIVE},
+	{&cg_gunSwayIdleAmp, "cg_gunSwayIdleAmp", "0.8", CVAR_ARCHIVE},
+	{&cg_gunSwayAmp, "cg_gunSwayAmp", "0.2", CVAR_ARCHIVE},
+	{&cg_gunSwayDip, "cg_gunSwayDip", "0.3", CVAR_ARCHIVE},
+	{&cg_gunSwayRoll, "cg_gunSwayRoll", "0.4", CVAR_ARCHIVE},
+	{&cg_gunSwayLower, "cg_gunSwayLower", "1", CVAR_ARCHIVE},
+	{&cg_gunSwayCenter, "cg_gunSwayCenter", "1", CVAR_ARCHIVE}, // world units of pull, not a fraction
+	{&cg_gunSwaySprintScale, "cg_gunSwaySprintScale", "1", CVAR_ARCHIVE},
+	{&cg_gunSwayStrafeAmp, "cg_gunSwayStrafeAmp", "0.3", CVAR_ARCHIVE},
 	{&cg_centertime, "cg_centertime", "3", CVAR_CHEAT},
 	{&cg_buyprinttime, "cg_buyprinttime", "1", CVAR_CHEAT},
 	{&cg_drawSubtitles, "cg_drawSubtitles", "0", CVAR_ARCHIVE},

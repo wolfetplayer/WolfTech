@@ -2148,9 +2148,8 @@ CG_CalculateWeaponPosition
 ==============
 */
 static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles ) {
-	float scale;
 	int delta;
-	float fracsin, leanscale;
+	float leanscale;
 
 	VectorCopy( cg.refdef.vieworg, origin );
 	VectorCopy( cg.refdefViewAngles, angles );
@@ -2200,18 +2199,39 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles ) {
 	}
 
 
-	// on odd legs, invert some angles
-	if ( cg.bobcycle & 1 ) {
-		scale = -cg.xyspeed;
-	} else {
-		scale = cg.xyspeed;
+	// movement sway - smooth full-stride oval drift (lateral + out-of-phase dip) plus a speed droop
+	if ( cg.xyspeed > 0 ) {
+		vec3_t moveRight;
+		float bobPhase, lateral, speedFrac, strafe;
+
+		AngleVectors( cg.refdefViewAngles, NULL, moveRight, NULL );
+
+		speedFrac = cg.xyspeed / 320.0f;
+		if ( speedFrac > 1.0f ) {
+			speedFrac = 1.0f;
+		}
+		if ( cg.predictedPlayerState.pm_flags & PMF_SPRINTING ) {
+			speedFrac *= cg_gunSwaySprintScale.value;
+		}
+
+		bobPhase = ( cg.predictedPlayerState.bobCycle / 256.0f ) * 2.0f * M_PI;
+		lateral = sin( bobPhase ) * cg_gunSwayAmp.value * speedFrac;
+
+		// strafe lean - bias sway toward whichever side the player is actually moving
+		strafe = DotProduct( cg.predictedPlayerState.velocity, moveRight ) / 320.0f;
+		if ( strafe > 1.0f ) {
+			strafe = 1.0f;
+		} else if ( strafe < -1.0f ) {
+			strafe = -1.0f;
+		}
+		lateral += strafe * cg_gunSwayStrafeAmp.value;
+
+		VectorMA( origin, lateral, moveRight, origin );
+		origin[2] -= cg.bobfracsin * cg_gunSwayDip.value * speedFrac;
+
+		angles[ROLL] += lateral * cg_gunSwayRoll.value;
+		angles[PITCH] += speedFrac * cg_gunSwayLower.value;
 	}
-
-	// gun angles from bobbing
-
-	angles[ROLL] += scale * cg.bobfracsin * 0.005;
-	angles[YAW] += scale * cg.bobfracsin * 0.01;
-	angles[PITCH] += cg.xyspeed * cg.bobfracsin * 0.005;
 
 	// drop the weapon when landing
 	delta = cg.time - cg.landTime;
@@ -2232,15 +2252,10 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles ) {
 	}
 #endif
 
-	// idle drift
-//----(SA) adjustment for MAX KAUFMAN
-//	scale = cg.xyspeed + 40;
-	scale = 80;
-//----(SA)	end
-	fracsin = sin( cg.time * 0.001 );
-	angles[ROLL] += scale * fracsin * 0.01;
-	angles[YAW] += scale * fracsin * 0.01;
-	angles[PITCH] += scale * fracsin * 0.01;
+	// idle drift - out-of-phase sinusoids per axis trace a slow oval instead of one straight line
+	angles[YAW] += sin( cg.time * cg_gunSwayIdleSpeed.value ) * cg_gunSwayIdleAmp.value;
+	angles[PITCH] += cos( cg.time * cg_gunSwayIdleSpeed.value * 0.9f ) * cg_gunSwayIdleAmp.value * 0.6f;
+	angles[ROLL] += sin( cg.time * cg_gunSwayIdleSpeed.value * 1.3f ) * cg_gunSwayIdleAmp.value * 0.3f;
 
 	// RF, subtract the kickAngles
 	VectorMA( angles, -1.0, cg.kickAngles, angles );
@@ -3508,6 +3523,25 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		gunoff[0] = wt->gunOffset[0] + cg_gun_x.value;
 		gunoff[1] = wt->gunOffset[1] + cg_gun_y.value;
 		gunoff[2] = wt->gunOffset[2] + cg_gun_z.value;
+
+		// pull carry offset toward center while moving - fixed unit nudge, not a % of gunOffset[1]
+		{
+			float centerPull = ( cg.xyspeed / 320.0f ) * cg_gunSwayCenter.value;
+			if ( centerPull > cg_gunSwayCenter.value ) {
+				centerPull = cg_gunSwayCenter.value;
+			}
+			if ( gunoff[1] > 0.0f ) {
+				gunoff[1] -= centerPull;
+				if ( gunoff[1] < 0.0f ) {
+					gunoff[1] = 0.0f;
+				}
+			} else if ( gunoff[1] < 0.0f ) {
+				gunoff[1] += centerPull;
+				if ( gunoff[1] > 0.0f ) {
+					gunoff[1] = 0.0f;
+				}
+			}
+		}
 
 		VectorMA( hand.origin, gunoff[0], cg.refdef.viewaxis[0], hand.origin );
 		VectorMA( hand.origin, gunoff[1], cg.refdef.viewaxis[1], hand.origin );
