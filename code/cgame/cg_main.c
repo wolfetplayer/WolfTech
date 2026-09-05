@@ -1545,7 +1545,7 @@ static void CG_RegisterGraphics( void ) {
 //	cgs.media.hintShaders[HINT_PLYR_ENEMY]			= trap_R_RegisterShader( "gfx/2d/hintPlrEnemy" );
 //	cgs.media.hintShaders[HINT_PLYR_UNKNOWN]		= trap_R_RegisterShader( "gfx/2d/hintPlrUnknown" );
 
-//	cgs.media.hintShaders[HINT_BUILD]				= trap_R_RegisterShader( "gfx/2d/buildHint" );		// DHM - Nerve
+	cgs.media.hintShaders[HINT_BUILD]               = trap_R_RegisterShader( "gfx/2d/buildHint" );
 
 	cgs.media.youGotMailShader      = trap_R_RegisterShader( "gfx/2d/yougotmail" );    //----(SA)	added
 	cgs.media.youGotObjectiveShader = trap_R_RegisterShader( "gfx/2d/yougotobjective" );   //----(SA)	added
@@ -1622,6 +1622,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.reviveNeededShader = trap_R_RegisterShader( "sprites/voiceMedic" );
 	cgs.media.reviveLoopSound = trap_S_RegisterSound( "sound/misc/revive_loop.wav" );
 	cgs.media.reviveLoopMedicSound = trap_S_RegisterSound( "sound/misc/revive_loop_medic.wav" );
+	cgs.media.constructLoopSound = trap_S_RegisterSound( "sound/world/build_loop.wav" );
 
 	for ( i = 0; i < MAX_AISTATES; i++ ) {
 		cgs.media.aiStateShaders[i] = trap_R_RegisterShader( va( "sprites/aistate%i", i + 1 ) );

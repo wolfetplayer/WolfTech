@@ -2361,6 +2361,32 @@ void SP_func_door( gentity_t *ent ) {
 	ent->think = finishSpawningKeyedMover;
 }
 
+/*
+==================
+SP_func_constructible
+
+A solid brush that players build by holding ACTIVATE against it and watching
+a progress bar (see G_TickConstructionStates in g_combat.c). Any class can
+build; PC_ENGINEER builds faster. Never moves -- pos1 == pos2 makes InitMover's
+mover logic a no-op every frame, same trick func_button/func_door rely on for
+their own non-moving edge cases.
+==================
+*/
+void SP_func_constructible( gentity_t *ent ) {
+	VectorCopy( ent->s.origin, ent->pos1 );
+	VectorCopy( ent->s.origin, ent->pos2 );
+	trap_SetBrushModel( ent, ent->model );
+	InitMover( ent );
+
+	if ( ent->buildTime <= 0 ) {
+		ent->buildTime = 8000;
+	}
+
+	if ( ent->spawnflags & 1 ) {    // START_BUILT
+		ent->active = qtrue;
+	}
+}
+
 // JOSEPH 1-26-00
 /*QUAKED func_secret (0 .5 .8) ? REVERSE x CRUSHER TOUCH
 TOGGLE      wait in both the start and end states for a trigger event.

@@ -437,6 +437,9 @@ struct gentity_s {
 	int oneshot;
 	int wave;
 
+	float buildProgress;       // func_constructible: ms accumulated toward buildTime, persists
+	int buildTime;              // func_constructible: ms required to build at non-engineer speed
+
 	// Random weapon box (mystery box), survival mode - see g_survival_buy.c
 	int rwbState;
 	int rwbPhaseStartTime;
@@ -700,6 +703,7 @@ struct gclient_s {
 
 	int reviveTargetNum;            // clientNum this player is currently reviving, -1 if none
 	int reviveElapsedMs;            // ms elapsed on the current revive attempt (avoids integer-truncation drift in the 0-100 stat)
+	int constructDenySoundTime;      // level.time throttle so the "can't afford it" sound doesn't spam every frame held
 	int revivedByNum;                // clientNum currently reviving this player, -1 if none
 	int bleedoutAttackerNum;        // entity number to credit/blame if bleed-out expires into a real death
 	int bleedoutMOD;                 // means of death to use if bleed-out expires into a real death
@@ -1091,6 +1095,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 void G_EnterBleedout( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath );
 void G_ResolveRevive( gentity_t *reviver, gentity_t *target );
 void G_TickReviveStates( void );
+void G_TickConstructionStates( void );
 void AddScore( gentity_t *ent, int score );
 void CalculateRanks( void );
 qboolean SpotWouldTelefrag( gentity_t *spot );
@@ -1298,6 +1303,7 @@ extern vmCvar_t g_friendlyFire;
 extern vmCvar_t g_LTChargeTime; // JPW NERVE -- Lieutenant airstrike/artillery call-in cooldown, ms
 extern vmCvar_t g_medicChargeTime;
 extern vmCvar_t g_engineerChargeTime;
+extern vmCvar_t g_engineerBuildRate;   // func_constructible: speed multiplier for PC_ENGINEER
 extern vmCvar_t g_soldierChargeTime;
 extern vmCvar_t g_regenDelay;
 extern vmCvar_t g_password;

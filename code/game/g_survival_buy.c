@@ -1156,6 +1156,7 @@ void Use_Target_buy(gentity_t *ent, gentity_t *other, gentity_t *activator) {
 void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 	gentity_t *buyEnt = NULL;
 	gentity_t *funcUser = NULL;
+	gentity_t *constructible = NULL;
 	int price = 0;
 	int ammoPrice = 0;
 	int isWeapon = ent->isWeapon;
@@ -1202,6 +1203,30 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 				break;
 			}
 		}
+	}
+
+	// If neither of those was found but a target exists, try a linked func_constructible
+	if (!techName && !funcUser && ent->target)
+	{
+		for (int i = 0; i < level.num_entities; i++)
+		{
+			gentity_t *candidate = &g_entities[i];
+			if (!candidate->inuse)
+				continue;
+			if (Q_stricmp(candidate->classname, "func_constructible") != 0)
+				continue;
+			if (candidate->targetname && Q_stricmp(ent->target, candidate->targetname) == 0)
+			{
+				constructible = candidate;
+				break;
+			}
+		}
+	}
+
+	// Unbuilt and priced: show a price tip instead of falling through to the generic objective line
+	if (constructible && !constructible->active && constructible->price > 0)
+	{
+		price = constructible->price;
 	}
 
 	// Reinforcement callers show live squad-status text instead of a price prompt when nobody's down

@@ -793,12 +793,16 @@ health = density defaults to 32
 health = density defaults to 32
 */
 
-/*QUAKED misc_mg42 (1 0 0) (-16 -16 -24) (16 16 24) HIGH NOTRIPOD
+/*QUAKED misc_mg42 (1 0 0) (-16 -16 -24) (16 16 24) HIGH NOTRIPOD START_DISABLED
 harc = horizonal fire arc Default is 115
 varc = vertical fire arc Default is 45
 health = how much damage can it take default is 50
 damage = determines how much the weapon will inflict if a non player uses it
-"accuracy" all guns are 100% accurate an entry of 0.5 would make it 50% 
+"accuracy" all guns are 100% accurate an entry of 0.5 would make it 50%
+
+START_DISABLED -- spawns hidden and unmountable. Give it a "targetname" and
+point a func_constructible's "target" at it: completing construction fires
+G_UseTargets on it, which re-enables and reshows the gun.
 */
 
 /*QUAKED misc_flak (1 0 0) (-32 -32 0) (32 32 100)
@@ -1937,6 +1941,36 @@ of the trigger to blow up the objective.
 					allied dynamite will blow it up.
   ALLIED_OBJECTIVE -- Set if targeting an objective owned by ALLIES, then only 
 					axis dynamite will blow it up.
+*/
+
+
+///
+/// WolfTech (Constructibles)
+///
+
+/*QUAKED func_constructible (0 .5 .8) ? START_BUILT
+A brush that players build by holding ACTIVATE against it and watching the
+progress bar. Any class can build; engineers build faster (g_engineerBuildRate).
+The brush is unlinked (removed from the world) the moment construction
+completes, so it's meant as a temporary placeholder/obstruction -- e.g. a
+crate or scaffolding standing in front of whatever it's gating.
+
+"price"      Survival points cost to fully build, spent gradually. 0/unset = free.
+"buildTime"  Milliseconds to build at normal (non-engineer) speed. Default 8000.
+"target"     Fired via G_UseTargets when construction completes -- point this at a
+             START_DISABLED misc_mg42's targetname to reveal/enable the gun on completion.
+"targetname" So other entities (trigger_objective_info, misc_constructiblemarker) can reference this.
+"scriptName" Fires "buildstart" and "built" script events on this name.
+
+START_BUILT -- spawns already fully constructed, skipping the build phase.
+*/
+
+/*QUAKED misc_constructiblemarker (0 .5 .8) (-8 -8 -8) (8 8 8)
+Optional cosmetic prop (e.g. a pile of materials) shown at a constructible's
+site. Non-solid, purely decorative. Auto-removed once construction finishes.
+
+"model"  The prop model to display.
+"target" The func_constructible this marker belongs to.
 */
 
 

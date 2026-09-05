@@ -190,6 +190,8 @@ field_t fields[] = {
 	{"oneshot",          FOFS( oneshot ),                F_INT},
 	{"wave",             FOFS( wave ),                F_INT},
 
+	{"buildTime",        FOFS( buildTime ),            F_INT},   // func_constructible
+
 	{"stringname",       FOFS( translation ),          F_STRING},
 
 	{NULL}
@@ -216,6 +218,7 @@ void SP_func_pendulum( gentity_t *ent );
 void SP_func_button( gentity_t *ent );
 void SP_func_explosive( gentity_t *ent );
 void SP_func_door( gentity_t *ent );
+void SP_func_constructible( gentity_t *ent );
 void SP_func_train( gentity_t *ent );
 void SP_func_timer( gentity_t *self );
 // JOSEPH 1-26-00
@@ -277,6 +280,7 @@ void SP_path_corner( gentity_t *self );
 void SP_misc_teleporter_dest( gentity_t *self );
 void SP_misc_model( gentity_t *ent );
 void SP_misc_gamemodel( gentity_t *ent );
+void SP_misc_constructiblemarker( gentity_t *ent );
 void SP_misc_portal_camera( gentity_t *ent );
 void SP_misc_portal_surface( gentity_t *ent );
 void SP_misc_light_surface( gentity_t *ent );
@@ -451,6 +455,7 @@ spawn_t spawns[] = {
 	{"func_button", SP_func_button},
 	{"func_explosive", SP_func_explosive},
 	{"func_door", SP_func_door},
+	{"func_constructible", SP_func_constructible},
 	{"func_static", SP_func_static},
 	{"func_leaky", SP_func_leaky},
 	{"func_rotating", SP_func_rotating},
@@ -531,6 +536,7 @@ spawn_t spawns[] = {
 	{"misc_teleporter_dest", SP_misc_teleporter_dest},
 	{"misc_model", SP_misc_model},
 	{"misc_gamemodel", SP_misc_gamemodel},
+	{"misc_constructiblemarker", SP_misc_constructiblemarker},
 	{"misc_portal_surface", SP_misc_portal_surface},
 	{"misc_portal_camera", SP_misc_portal_camera},
 

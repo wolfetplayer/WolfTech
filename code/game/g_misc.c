@@ -619,6 +619,24 @@ void SP_misc_gamemodel( gentity_t *ent ) {
 
 }
 
+/*
+==================
+SP_misc_constructiblemarker
+
+Optional cosmetic prop (e.g. a pile of materials) shown at a
+func_constructible's site. Non-solid, purely decorative -- auto-removed by
+the constructible's completion handler once construction finishes.
+==================
+*/
+void SP_misc_constructiblemarker( gentity_t *ent ) {
+	ent->s.eType = ET_GAMEMODEL;
+	ent->s.modelindex = G_ModelIndex( ent->model );
+	VectorSet( ent->s.angles2, 1, 1, 1 );
+	G_SetOrigin( ent, ent->s.origin );
+	VectorCopy( ent->s.angles, ent->s.apos.trBase );
+	trap_LinkEntity( ent );
+}
+
 
 
 
@@ -2307,6 +2325,10 @@ void mg42_use( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 		owner->client->ps.viewlocked = 0;   // let them look around
 		owner->active = qfalse;
 		owner->client->ps.gunfx = 0;
+	} else if ( !ent->takedamage ) {
+		// START_DISABLED gun (e.g. a func_constructible not yet built) becoming usable
+		ent->takedamage = qtrue;
+		ent->s.modelindex = G_ModelIndex( "models/mapobjects/weapons/mg42a.md3" );
 	}
 
 	// G_Printf ("mg42 called use function\n");
@@ -2371,7 +2393,7 @@ void mg42_spawn( gentity_t *ent ) {
 	//gun->s.dmgFlags = HINT_MG42;	// identify this for cursorhints
 
 	gun->touch = mg42_touch;
-	gun->s.modelindex = G_ModelIndex( "models/mapobjects/weapons/mg42a.md3" );
+	gun->s.modelindex = ( ent->spawnflags & 4 ) ? 0 : G_ModelIndex( "models/mapobjects/weapons/mg42a.md3" );   // START_DISABLED
 	VectorCopy( ent->s.origin, offset );
 	offset[2] += 24;
 	G_SetOrigin( gun, offset );
@@ -2392,7 +2414,7 @@ void mg42_spawn( gentity_t *ent ) {
 	gun->harc = ent->harc;
 	gun->varc = ent->varc;
 	gun->s.apos.trType = TR_LINEAR_STOP;    // interpolate the angles
-	gun->takedamage = qtrue;
+	gun->takedamage = ( ent->spawnflags & 4 ) ? qfalse : qtrue;   // START_DISABLED: unmountable until mg42_use() re-enables it
 	gun->targetname = ent->targetname;      // need this for scripting
 	gun->damage = ent->damage;
 	gun->health = ent->health;  //----(SA)	added

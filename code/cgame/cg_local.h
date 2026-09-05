@@ -1187,6 +1187,7 @@ typedef struct {
 	qhandle_t reviveNeededShader;
 	sfxHandle_t reviveLoopSound;        // looped locally for the reviver's own client -- s.loopSound never reaches your own predicted entity
 	sfxHandle_t reviveLoopMedicSound;
+	sfxHandle_t constructLoopSound;     // looped locally while STAT_CONSTRUCT_PROGRESS > 0, same reason as reviveLoopSound
 
 	qhandle_t aiStateShaders[MAX_AISTATES];
 

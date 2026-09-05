@@ -935,6 +935,154 @@ void G_TickReviveStates( void ) {
 	}
 }
 
+/*
+==================
+G_CompleteConstructible
+
+Marks a func_constructible built, fires its target chain and "built" script
+event, and removes anything (trigger_objective_info, misc_constructiblemarker)
+that was pointing at it -- same targetname cleanup use_invisible_user does.
+The placeholder brush itself is unlinked out of the way (e.g. of whatever it
+was targeting, like a misc_mg42).
+==================
+*/
+static void G_CompleteConstructible( gentity_t *ent, gentity_t *activator ) {
+	int i;
+	gentity_t *e;
+
+	ent->active = qtrue;
+	trap_UnlinkEntity( ent );
+	G_UseTargets( ent, activator );
+
+	if ( ent->scriptName ) {
+		G_Script_ScriptEvent( ent, "built", "" );
+	}
+
+	if ( ent->targetname ) {
+		for ( i = 0; i < level.num_entities; i++ ) {
+			e = &g_entities[i];
+			if ( !e->inuse || !e->classname || !e->target ) {
+				continue;
+			}
+			if ( Q_stricmp( e->target, ent->targetname ) ) {
+				continue;
+			}
+			if ( !Q_stricmp( e->classname, "trigger_objective_info" ) || !Q_stricmp( e->classname, "misc_constructiblemarker" ) ) {
+				G_FreeEntity( e );
+			}
+		}
+	}
+
+	trap_SendServerCommand( activator->s.number, "cp \"Construction complete!\n\"" );
+}
+
+#define CONSTRUCT_DENY_SOUND_INTERVAL 1000
+
+/*
+==================
+G_ConstructDenySound
+
+Plays the same "can't afford it" cue survival purchases use, throttled per
+player so holding ACTIVATE against a constructible you can't afford doesn't
+spam it every server frame.
+==================
+*/
+static void G_ConstructDenySound( gentity_t *ent ) {
+	if ( ent->client->constructDenySoundTime > level.time ) {
+		return;
+	}
+	ent->client->constructDenySoundTime = level.time + CONSTRUCT_DENY_SOUND_INTERVAL;
+	trap_SendServerCommand( -1, "mu_play sound/items/use_nothing.wav 0\n" );
+}
+
+/*
+==================
+G_TickConstructionStates
+
+GT_COOP_SURVIVAL only (caller in G_RunFrame already gates on this, same as
+G_TickReviveStates). Any class holding ACTIVATE on an unbuilt
+func_constructible -- per the server cursor hint -- advances its buildProgress,
+paying its price gradually out of PERS_SCORE. Unlike revive, progress lives on
+the entity and is never reset on interrupt; running out of points just stalls
+it until someone (the same player or another) can afford to continue.
+==================
+*/
+void G_TickConstructionStates( void ) {
+	int i, frameTime;
+	gentity_t *ent, *target;
+
+	frameTime = level.time - level.previousTime;
+	if ( frameTime <= 0 ) {
+		return;
+	}
+
+	for ( i = 0; i < level.maxclients; i++ ) {
+		float rate, newProgress;
+		int oldCharged, newCharged, costThisTick;
+
+		ent = &g_entities[i];
+		if ( !ent->inuse || !ent->client ) {
+			continue;
+		}
+		if ( ent->client->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+
+		if ( ent->health <= 0 || ent->client->ps.stats[STAT_REVIVE_TIME] > 0 ||
+			 !( ent->client->buttons & BUTTON_ACTIVATE ) ||
+			 ent->client->ps.serverCursorHint != HINT_BUILD ||
+			 ent->client->ps.serverCursorHintVal <= 0 ) {
+			ent->client->ps.stats[STAT_CONSTRUCT_PROGRESS] = 0;
+			continue;
+		}
+
+		// re-validated fresh every player's turn to stop two builders double-firing completion in one frame
+		target = &g_entities[ ent->client->ps.serverCursorHintVal - 1 ];
+		if ( !target->inuse || Q_stricmp( target->classname, "func_constructible" ) || target->active ) {
+			ent->client->ps.stats[STAT_CONSTRUCT_PROGRESS] = 0;
+			continue;
+		}
+
+		// broke -- don't let a 0-point player nibble free progress before the gradual charge below catches up
+		if ( target->price > 0 && ent->client->ps.persistant[PERS_SCORE] <= 0 ) {
+			ent->client->ps.stats[STAT_CONSTRUCT_PROGRESS] = target->buildProgress * 100 / target->buildTime;
+			G_ConstructDenySound( ent );
+			continue;
+		}
+
+		rate = ( ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_ENGINEER ) ? g_engineerBuildRate.value : 1.0f;
+		newProgress = target->buildProgress + frameTime * rate;
+		if ( newProgress > target->buildTime ) {
+			newProgress = target->buildTime;
+		}
+
+		// points are spent gradually: charge only the slice this tick actually crossed
+		oldCharged = (int)( ( target->price * target->buildProgress ) / target->buildTime );
+		newCharged = (int)( ( target->price * newProgress ) / target->buildTime );
+		costThisTick = newCharged - oldCharged;
+
+		if ( costThisTick > 0 ) {
+			if ( ent->client->ps.persistant[PERS_SCORE] < costThisTick ) {
+				// can't afford the next slice -- hold here, don't advance or charge
+				ent->client->ps.stats[STAT_CONSTRUCT_PROGRESS] = target->buildProgress * 100 / target->buildTime;
+				G_ConstructDenySound( ent );
+				continue;
+			}
+			Survival_AwardScore( ent, -costThisTick );
+		}
+
+		if ( target->buildProgress <= 0 && newProgress > 0 && target->scriptName ) {
+			G_Script_ScriptEvent( target, "buildstart", "" );
+		}
+
+		target->buildProgress = newProgress;
+		ent->client->ps.stats[STAT_CONSTRUCT_PROGRESS] = target->buildProgress * 100 / target->buildTime;
+
+		if ( target->buildProgress >= target->buildTime ) {
+			G_CompleteConstructible( target, ent );
+		}
+	}
+}
 
 /*
 ================

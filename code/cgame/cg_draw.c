@@ -3865,6 +3865,52 @@ static void CG_DrawReviveProgress( void ) {
 	CG_DrawSmallStringColor( centerX - w / 2, 384, s, colorWhite );
 }
 
+/*
+==============
+CG_DrawConstructProgress
+
+GT_COOP_SURVIVAL only: progress bar shown to a player currently holding
+ACTIVATE to build a func_constructible.
+==============
+*/
+#define CONSTRUCT_SOUND_TAIL_MS 600
+static int cg_constructLastActiveTime = 0;
+
+static void CG_DrawConstructProgress( void ) {
+	vec4_t color = { 0.8f, 0.6f, 0.2f, 1.0f };
+	vec4_t bgColor = { 0, 0, 0, 0.6f };
+	float frac, centerX, barW;
+	char *s;
+	float w;
+
+	if ( cg.snap->ps.stats[STAT_CONSTRUCT_PROGRESS] > 0 ) {
+		cg_constructLastActiveTime = cg.time;
+	}
+
+	// local-add since s.loopSound never reaches our own predicted entity; kept alive briefly after stopping so it isn't cut off mid-cycle
+	if ( cg.time - cg_constructLastActiveTime < CONSTRUCT_SOUND_TAIL_MS ) {
+		CG_S_AddLoopingSound( cg.snap->ps.clientNum, cg.snap->ps.origin, vec3_origin, cgs.media.constructLoopSound, 255 );
+	}
+
+	if ( cg.snap->ps.stats[STAT_CONSTRUCT_PROGRESS] <= 0 ) {
+		return;
+	}
+
+	frac = (float)cg.snap->ps.stats[STAT_CONSTRUCT_PROGRESS] / 100.0f;
+	if ( frac > 1.0f ) {
+		frac = 1.0f;
+	}
+
+	centerX = CG_ReviveBarCenterX();
+	barW = 200;
+
+	CG_FilledBar( centerX - barW / 2, 400, barW, 14, color, NULL, bgColor, frac, BAR_BG );
+
+	s = "Building...";
+	w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
+	CG_DrawSmallStringColor( centerX - w / 2, 384, s, colorWhite );
+}
+
 
 
 /*
@@ -5085,6 +5131,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawDynamiteStatus();
 			CG_DrawGrenadeCount();
 			CG_DrawReviveProgress();
+			CG_DrawConstructProgress();
 			CG_DrawCoopCrosshairNames();
 			CG_DrawEnemyHealthbars();
 			CG_DrawDamageNumbers();

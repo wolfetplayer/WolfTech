@@ -90,6 +90,7 @@ vmCvar_t g_friendlyFire;
 vmCvar_t g_LTChargeTime; // JPW NERVE -- Lieutenant airstrike/artillery call-in cooldown, ms
 vmCvar_t g_medicChargeTime;
 vmCvar_t g_engineerChargeTime;
+vmCvar_t g_engineerBuildRate;
 vmCvar_t g_soldierChargeTime;
 vmCvar_t g_regenDelay; // ms of no damage taken before passive health regen (ClientTimerActions) may resume
 vmCvar_t g_password;
@@ -264,6 +265,7 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_LTChargeTime, "g_LTChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
 	{ &g_medicChargeTime, "g_medicChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
 	{ &g_engineerChargeTime, "g_engineerChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
+	{ &g_engineerBuildRate, "g_engineerBuildRate", "2.0", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
 	{ &g_soldierChargeTime, "g_soldierChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
 	{ &g_regenDelay, "g_regenDelay", "5000", CVAR_ARCHIVE, 0, qtrue  },
 
@@ -899,6 +901,12 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 					{
 						hintDist = CH_ACTIVATE_DIST;
 						hintType = HINT_BUTTON;
+					}
+					else if (!Q_stricmp(checkEnt->classname, "func_constructible") && !checkEnt->active)
+					{
+						hintDist = CH_ACTIVATE_DIST;
+						hintType = HINT_BUILD;
+						hintVal = tr->entityNum + 1;
 					}
 					else if (!Q_stricmp(checkEnt->classname, "props_flamebarrel"))
 					{
@@ -3004,6 +3012,7 @@ void G_RunFrame( int levelTime ) {
 		AICast_TickSurvivalWave();
 		Survival_CheckWipe();
 		G_TickReviveStates();
+		G_TickConstructionStates();
 	}
 
 	// perform final fixups on the players

@@ -386,7 +386,8 @@ typedef enum {
 	STAT_PERK,
 	STAT_REVIVE_TIME,               // ms left in bleed-out before real death; 0 = not downed
 	STAT_REVIVE_PROGRESS,           // 0-100, % complete of a revive this player is performing on someone else
-	STAT_GAMEOVER                   // GT_COOP_SURVIVAL: non-zero while the post-wipe game-over sequence is active (see gameOverPhase_t)
+	STAT_GAMEOVER,                  // GT_COOP_SURVIVAL: non-zero while the post-wipe game-over sequence is active (see gameOverPhase_t)
+	STAT_CONSTRUCT_PROGRESS         // 0-100, % complete of a func_constructible this player is currently building
 } statIndex_t;
 
 
