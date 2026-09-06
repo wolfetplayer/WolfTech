@@ -173,6 +173,16 @@ speakerScript
 	}
 	speakerDef
 	{
+		noise "sound/world/generator_hum.wav"
+		origin -426 808 216
+		looped "off"
+		broadcast "no"
+		volume 255
+		targetname "generator1_hum"
+		range 200
+	}
+	speakerDef
+	{
 		noise "sound/working/xl_mach_04.wav"
 		origin -1235.15 -1163.51 200.81
 		looped "on"

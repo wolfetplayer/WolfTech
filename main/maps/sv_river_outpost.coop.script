@@ -86,6 +86,14 @@ game_manager
 	}
 }
 
+generator1
+{
+	built
+	{
+		enablespeaker generator1_hum
+	}
+}
+
 radio	
 {
 	spawn
