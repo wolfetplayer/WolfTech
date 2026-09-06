@@ -13,7 +13,7 @@ menuDef {
     	style 1
     	border 1
 
-		onopen { close ingame_options ; close ingame_controls ; close ingame_callvote ; hide grpsystem ; hide grpapplysystem ; hide rend2page ; hide rend2apply ; show graphics ; show graphicsapply ; setitemcolor ctr_graphics backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 }
+		onopen { close ingame_options ; close ingame_controls ; close ingame_callvote ; hide grpsystem ; hide grpapplysystem ; hide rend2page ; hide rend2apply ; hide performance ; show graphics ; show graphicsapply ; setitemcolor ctr_graphics backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 ; setitemcolor ctr_performance backcolor .1 .1 .1 .25 }
 
 
 itemDef {
@@ -38,17 +38,17 @@ itemDef {
 		textscale .23
 		group grpControlbutton
 		style WINDOW_STYLE_FILLED
-		rect 2 4 145 20
+		rect 2 4 108 20
 		textalign ITEM_ALIGN_CENTER
-		textalignx 72
+		textalignx 54
 		textaligny 14
 		border 1
 		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
 		backcolor .3 0.5 0.2 .25
  		visible 1
-		action { hide grpSystem ; hide rend2page ; hide rend2apply ; show graphics ; show graphicsapply ;
-		setitemcolor ctr_graphics backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 }
+		action { hide grpSystem ; hide rend2page ; hide rend2apply ; hide performance ; show graphics ; show graphicsapply ;
+		setitemcolor ctr_graphics backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 ; setitemcolor ctr_performance backcolor .1 .1 .1 .25 }
 		}
 
 //	itemDef {
@@ -512,18 +512,18 @@ itemDef {
 	textscale .23
 	group grpControlbutton
 	style WINDOW_STYLE_FILLED
-	rect 149 4 145 20
+	rect 112 4 108 20
 	textalign ITEM_ALIGN_CENTER
-	textalignx 72
+	textalignx 54
 	textaligny 14
 	border 1
 	bordercolor .5 .5 .5 .5
 	forecolor 1 1 1 1
 	backcolor .1 .1 .1 .25
 	visible 1
-	action { hide grpSystem ; hide graphicsapply ;
+	action { hide grpSystem ; hide graphicsapply ; hide performance ;
 	show rend2page ; show rend2apply ;
-	setitemcolor ctr_rend2 backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 }
+	setitemcolor ctr_rend2 backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 ; setitemcolor ctr_performance backcolor .1 .1 .1 .25 }
 	}
 
 
@@ -930,19 +930,252 @@ itemDef {
 		textscale .23
 		group grpControlbutton
 		style WINDOW_STYLE_FILLED
-		rect 296 4 145 20
+		rect 222 4 108 20
 		textalign ITEM_ALIGN_CENTER
-		textalignx 72
+		textalignx 54
 		textaligny 14
 		border 1
 		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
 		backcolor .1 .1 .1 .25
 		visible 1
-		action { hide grpSystem ; hide graphicsapply ; hide rend2page ; hide rend2apply ; show sound ;
-		setitemcolor ctr_sound backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 }
+		action { hide grpSystem ; hide graphicsapply ; hide rend2page ; hide rend2apply ; hide performance ; show sound ;
+		setitemcolor ctr_sound backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_performance backcolor .1 .1 .1 .25 }
 	}
-	
+
+	itemDef {
+		name ctr_performance
+		text "@SYSTEM_PERFORMANCE"
+		textfont		UI_FONT_BIG
+		type ITEM_TYPE_BUTTON
+		textscale .23
+		group grpControlbutton
+		style WINDOW_STYLE_FILLED
+		rect 332 4 108 20
+		textalign ITEM_ALIGN_CENTER
+		textalignx 54
+		textaligny 14
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .1 .1 .1 .25
+		visible 1
+		action { hide grpSystem ; hide graphicsapply ; hide rend2page ; hide rend2apply ; show performance ;
+		setitemcolor ctr_performance backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 }
+	}
+
+
+//
+// Performance
+//
+	itemDef {
+		name performance
+		group grpSystem
+		style 1
+		text "@PERF_MISC_LABEL"
+		textfont		UI_FONT_BIG
+		rect 82 27 290 12
+		textalign ITEM_ALIGN_CENTER
+		textalignx 145
+		textaligny 10
+		textscale .18
+		forecolor .75 .75 .75 1
+		visible 0
+		decoration
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_WALLMARK"
+		textfont		UI_FONT_BIG
+		cvar "cg_markTime"
+		cvarFloatList { "@PERF_MARK_NORMAL" 20000 "@PERF_MARK_SHORT" 10000 "@GENERAL_OFF" 0 "@PERF_MARK_LONG" 30000 "@PERF_MARK_VERYLONG" 99999 "@PERF_MARK_PERMANENT" 3600000 }
+		rect 82 41 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_BRASS"
+		textfont		UI_FONT_BIG
+		cvar "cg_brassTime"
+		cvarFloatList { "@PERF_BRASS_ULTRA" 10000 "@PERF_BRASS_HIGH" 2500 "@PERF_BRASS_MED" 1250 "@GENERAL_OFF" 0 }
+		rect 82 55 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_CORONA"
+		textfont		UI_FONT_BIG
+		cvar "cg_coronafardist"
+		cvarFloatList { "@PERF_CORONA_NEAR" 800 "@PERF_CORONA_NORMAL" 1536 "@PERF_CORONA_FAR" 4096 "@PERF_CORONA_VERYFAR" 8000 "@PERF_CORONA_ULTRA" 16000 "@PERF_CORONA_EXTREME" 32000 "@GENERAL_OFF" 0 }
+		rect 82 69 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_FOLIAGE"
+		textfont		UI_FONT_BIG
+		cvar "r_drawfoliage"
+		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 82 83 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_DYNAMICLIGHTS"
+		textfont		UI_FONT_BIG
+		cvar "r_dynamiclight"
+		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 82 97 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_LQSKY"
+		textfont		UI_FONT_BIG
+		cvar "r_fastsky"
+		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 82 111 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_PORTALSKIES"
+		textfont		UI_FONT_BIG
+		cvar "cg_skybox"
+		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 82 125 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_SYNCFRAME"
+		textfont		UI_FONT_BIG
+		cvar "r_finish"
+		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 82 139 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_PARTICLES"
+		textfont		UI_FONT_BIG
+		cvar "cg_wolfparticles"
+		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 82 153 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
+	itemDef {
+		name performance
+		group grpSystem
+		type ITEM_TYPE_MULTI
+		text "@PERF_FOGTYPE"
+		textfont		UI_FONT_BIG
+		cvarTest "r_ext_NV_fog_dist"
+		showcvar { "1" }
+		cvar "r_nv_fogdist_mode"
+		cvarStrList { "@PERF_RADIAL", "GL_EYE_RADIAL_NV", "@PERF_PLANE", "GL_EYE_PLANE_ABSOLUTE_NV" }
+		rect 82 167 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		}
+
 
 	itemDef {
 		name sound
