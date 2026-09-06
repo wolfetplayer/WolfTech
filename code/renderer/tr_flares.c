@@ -564,6 +564,12 @@ void RB_RenderFlares( void ) {
 	RB_AddDlightFlares();
 	RB_AddCoronaFlares();
 
+	// qglReadPixels can't read a still-multisampled depth buffer, so resolve into tr.mainFbo first
+	if ( tr.msaaFbo ) {
+		FBO_FastBlit( tr.msaaFbo, tr.mainFbo, GL_DEPTH_BUFFER_BIT, GL_NEAREST );
+		FBO_Bind( tr.mainFbo );
+	}
+
 	// perform z buffer readback on each flare in this view
 	draw = qfalse;
 	prev = &r_activeFlares;
@@ -593,6 +599,11 @@ void RB_RenderFlares( void ) {
 		}
 
 		prev = &f->next;
+	}
+
+	// done reading depth -- back to whatever the 3D scene actually renders into
+	if ( tr.msaaFbo ) {
+		FBO_Bind( tr.msaaFbo );
 	}
 
 	if ( !draw ) {
