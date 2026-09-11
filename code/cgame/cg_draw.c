@@ -5091,7 +5091,9 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 		CG_DrawOnScreenText();
 	}
 
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
+	if ( CG_Intro_Active() ) {
+		// titles own the screen while they're up - no HUD/crosshair/scoreboard underneath
+	} else if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
 		CG_DrawSpectator();
 
 		if(stereoFrame == STEREO_CENTER) {
@@ -5172,28 +5174,30 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 //		CG_DrawTeamInfo();
 //	}
 
-	CG_DrawVote();
+	if ( !CG_Intro_Active() ) {
+		CG_DrawVote();
 
-	CG_DrawLagometer();
+		CG_DrawLagometer();
 
-	if ( !cg_paused.integer ) {
-		CG_DrawUpperRight(stereoFrame);
-	}
+		if ( !cg_paused.integer ) {
+			CG_DrawUpperRight(stereoFrame);
+		}
 
-	if ( !CG_DrawFollow() ) {
-		CG_DrawWarmup();
-	}
+		if ( !CG_DrawFollow() ) {
+			CG_DrawWarmup();
+		}
 
-	// don't draw center string if scoreboard is up
-	if ( !CG_DrawScoreboard() ) {
-		CG_DrawNotify();
+		// don't draw center string if scoreboard is up
+		if ( !CG_DrawScoreboard() ) {
+			CG_DrawNotify();
 
-		CG_DrawCenterString();
-		CG_DrawBuyString();
-		CG_DrawPerkChooser();
-		CG_DrawSubtitleString();
+			CG_DrawCenterString();
+			CG_DrawBuyString();
+			CG_DrawPerkChooser();
+			CG_DrawSubtitleString();
 
-		CG_DrawObjectiveInfo();     // NERVE - SMF
+			CG_DrawObjectiveInfo();     // NERVE - SMF
+		}
 	}
 
 	// announcer
@@ -5201,6 +5205,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 
 	// Ridah, draw flash blends now
 	CG_DrawFlashBlend();
+
+	CG_DrawIntroTitles(); // must come after CG_DrawFlashBlend() to paint on top of its fade quad
 
 	CG_DrawFreeze();
 }

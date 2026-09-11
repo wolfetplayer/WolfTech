@@ -964,6 +964,18 @@ typedef struct {
 	char subtitlePrint[1024];
 	int subtitlePrintLines;
 
+	// intro titles - see cg_intro.c / g_intro.c
+	qboolean introActive;
+	qboolean introFreeze;
+	qboolean introHasMission;
+	qboolean introFadeOutSent;
+	int introStartTime;
+	int introFadeIn, introHold, introFadeOut, introStagger;
+	int introFadeOutStart;                          // = introStartTime + visible phase, when lines start fading out
+	int introEndTime;                               // = introFadeOutStart + introFadeOut
+	int introNumLines;
+	char introLines[MAX_INTRO_LINES][MAX_INTRO_LINE_LEN];  // already translated
+
 	// fade in/out
 	int fadeTime;
 	float fadeRate;
@@ -2230,6 +2242,11 @@ qboolean CG_YourTeamHasFlag( void );
 qboolean CG_OtherTeamHasFlag( void );
 qhandle_t CG_StatusHandle( int task );
 void CG_Fade( int r, int g, int b, int a, int time, int duration ); //----(SA)	modified
+
+// cg_intro.c - mission intro titles, see g_intro.c for the server side
+void CG_Intro_Parse( void );
+void CG_DrawIntroTitles( void );
+qboolean CG_Intro_Active( void );
 
 void CG_CalcShakeCamera( void );
 void CG_ApplyShakeCamera( void );

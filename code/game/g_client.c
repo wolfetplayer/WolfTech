@@ -1684,6 +1684,11 @@ void ClientBegin( int clientNum ) {
 		trap_SendServerCommand( ent->s.clientNum, "rockandroll\n" );
 	}
 
+	// intro titles - no !localClient guard here, this needs to reach the local SP player too (see g_intro.c)
+	if ( !( ent->r.svFlags & SVF_CASTAI ) ) {
+		G_Intro_ClientBegin( ent->s.clientNum );
+	}
+
 	if ( client->sess.sessionTeam != TEAM_SPECTATOR ) {
 		if ( !( ent->r.svFlags & SVF_CASTAI ) && !( client->pers.localClient ) ) {
 			// done.

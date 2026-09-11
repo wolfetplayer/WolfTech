@@ -8,6 +8,7 @@ game_manager
 {
 	spawn
 	{
+		introtitle line "November,1944" line "Hurtgen Forest,Germany" mission "River Outpost" fadein 500 hold 4000 fadeout 1200 stagger 1400
 		trigger player map_start	//Prevents late players affecting the game
 	}
 	

@@ -1894,3 +1894,63 @@ qboolean G_ScriptAction_SetHealth( gentity_t *ent, char *params ) {
 	ent->health = atoi( params );
 	return qtrue;
 }
+
+/*
+=================
+G_ScriptAction_IntroTitle
+
+  syntax: introtitle line "<text>" [line "<text>" ...] [mission "<text>"]
+                      [fadein <ms>] [hold <ms>] [fadeout <ms>] [stagger <ms>] [nofreeze]
+
+  A stack of intro caption lines, optionally ending on an emphasized "mission"
+  line. Screen is already black; lines reveal one "stagger" apart. Players are
+  frozen unless "nofreeze" is given. Unspecified timings fall back to the
+  g_intro* cvars. See g_intro.c.
+=================
+*/
+qboolean G_ScriptAction_IntroTitle( gentity_t *ent, char *params ) {
+	char *pString, *token;
+	char lines[MAX_INTRO_LINES][MAX_INTRO_LINE_LEN];
+	char mission[MAX_INTRO_LINE_LEN];
+	int numLines = 0;
+	int fadeIn = g_introFadeIn.integer;
+	int hold = g_introHold.integer;
+	int fadeOut = g_introFadeOut.integer;
+	int stagger = g_introStagger.integer;
+	qboolean freeze = qtrue;
+
+	mission[0] = 0;
+
+	if ( !params || !params[0] ) {
+		G_Error( "G_Scripting: introtitle requires at least one \"line\"\n" );
+	}
+
+	pString = params;
+	while ( ( token = COM_ParseExt( &pString, qfalse ) ) && token[0] ) {
+		if ( !Q_stricmp( token, "line" ) ) {
+			if ( numLines >= MAX_INTRO_LINES ) {
+				G_Error( "G_Scripting: introtitle: too many lines (max %d)\n", MAX_INTRO_LINES );
+			}
+			token = COM_ParseExt( &pString, qfalse );
+			Q_strncpyz( lines[numLines++], token, MAX_INTRO_LINE_LEN );
+		} else if ( !Q_stricmp( token, "mission" ) ) {
+			token = COM_ParseExt( &pString, qfalse );
+			Q_strncpyz( mission, token, MAX_INTRO_LINE_LEN );
+		} else if ( !Q_stricmp( token, "fadein" ) ) {
+			fadeIn = atoi( COM_ParseExt( &pString, qfalse ) );
+		} else if ( !Q_stricmp( token, "hold" ) ) {
+			hold = atoi( COM_ParseExt( &pString, qfalse ) );
+		} else if ( !Q_stricmp( token, "fadeout" ) ) {
+			fadeOut = atoi( COM_ParseExt( &pString, qfalse ) );
+		} else if ( !Q_stricmp( token, "stagger" ) ) {
+			stagger = atoi( COM_ParseExt( &pString, qfalse ) );
+		} else if ( !Q_stricmp( token, "nofreeze" ) ) {
+			freeze = qfalse;
+		} else {
+			G_Error( "G_Scripting: introtitle: unknown keyword '%s'\n", token );
+		}
+	}
+
+	G_Intro_Start( lines, numLines, mission, fadeIn, hold, fadeOut, stagger, freeze );
+	return qtrue;
+}

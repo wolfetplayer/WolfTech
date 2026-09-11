@@ -207,6 +207,12 @@ vmCvar_t g_survivalAiHealthCap;
 vmCvar_t g_survivalDifficulty;
 vmCvar_t g_specialWaves;
 
+vmCvar_t g_introTitles;
+vmCvar_t g_introFadeIn;
+vmCvar_t g_introHold;
+vmCvar_t g_introFadeOut;
+vmCvar_t g_introStagger;
+
 vmCvar_t g_mapname;
 
 cvarTable_t gameCvarTable[] = {
@@ -379,6 +385,13 @@ cvarTable_t gameCvarTable[] = {
 	{&g_specialWaves, "g_specialwaves", "1", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qfalse},
 	{&g_survivalAiHealthCap, "g_survivalAiHealthCap", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qfalse},
 	{&g_survivalDifficulty, "g_survivalDifficulty", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qfalse},
+
+	// intro titles - see g_intro.c
+	{&g_introTitles, "g_introTitles", "1", CVAR_ARCHIVE, 0, qfalse},        // 0 disables all intros
+	{&g_introFadeIn, "g_introFadeIn", "350", CVAR_ARCHIVE, 0, qfalse},      // ms per line fade-in
+	{&g_introHold, "g_introHold", "4000", CVAR_ARCHIVE, 0, qfalse},         // ms fully visible
+	{&g_introFadeOut, "g_introFadeOut", "1200", CVAR_ARCHIVE, 0, qfalse},   // ms fade back to gameplay
+	{&g_introStagger, "g_introStagger", "700", CVAR_ARCHIVE, 0, qfalse},    // ms between lines appearing
 
 	{&g_mapname, "mapname", "", CVAR_ARCHIVE}
 };
@@ -3007,6 +3020,8 @@ void G_RunFrame( int levelTime ) {
 
 	// Ridah, move the AI
 	AICast_StartServerFrame( level.time );
+
+	G_Intro_Tick();
 
 	if (g_gametype.integer == GT_COOP_SURVIVAL)
 	{

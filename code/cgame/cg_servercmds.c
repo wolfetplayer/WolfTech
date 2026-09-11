@@ -1634,6 +1634,12 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	// mission intro titles - see g_intro.c / cg_intro.c
+	if ( !strcmp( cmd, "introtitle" ) ) {
+		CG_Intro_Parse();
+		return;
+	}
+
 	if ( !strcmp( cmd, "cs" ) ) {
 		CG_ConfigStringModified();
 		return;

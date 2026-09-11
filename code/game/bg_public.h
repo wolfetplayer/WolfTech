@@ -219,6 +219,10 @@ typedef enum {
 #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS
 #endif
 
+// Intro titles - see g_intro.c/cg_intro.c
+#define MAX_INTRO_LINES     8       // caption lines, plus the optional emphasized "mission" line
+#define MAX_INTRO_LINE_LEN  128     // per line, after translation
+
 typedef enum {
 	GT_COOP_SURVIVAL,
 

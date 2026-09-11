@@ -1142,6 +1142,19 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.pm_type = PM_FREEZE;
 	}
 
+	// intro titles: freeze players while the mission intro plays (see g_intro.c)
+	if ( G_Intro_Active() && client->ps.stats[STAT_HEALTH] > 0 &&
+		 client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		ucmd->buttons = 0;
+		ucmd->forwardmove = 0;
+		ucmd->rightmove = 0;
+		ucmd->upmove = 0;
+		ucmd->wbuttons = 0;
+		ucmd->wolfkick = 0;
+		VectorClear( client->ps.velocity );
+		client->ps.pm_type = PM_FREEZE;
+	}
+
 	// set parachute anim condition flag
 	BG_UpdateConditionValue( ent->s.number, ANIM_COND_PARACHUTE, ( ent->flags & FL_PARACHUTE ) != 0, qfalse );
 

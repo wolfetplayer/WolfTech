@@ -21,3 +21,32 @@
 	hungarian	""
 	dutch		""
 }
+
+// sv_river_outpost.coop.script "introtitle" example (see g_intro.c/cg_intro.c)
+{
+	english		"November,1944"
+	french		""
+	german		""
+	italian		""
+	spanish		""
+	hungarian	""
+	dutch		""
+}
+{
+	english		"Hurtgen Forest,Germany"
+	french		""
+	german		""
+	italian		""
+	spanish		""
+	hungarian	""
+	dutch		""
+}
+{
+	english		"River Outpost"
+	french		""
+	german		""
+	italian		""
+	spanish		""
+	hungarian	""
+	dutch		""
+}

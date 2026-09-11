@@ -2597,6 +2597,7 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_flamethrower.o \
   $(B)/$(BASEGAME)/cgame/cg_hud.o \
   $(B)/$(BASEGAME)/cgame/cg_info.o \
+  $(B)/$(BASEGAME)/cgame/cg_intro.o \
   $(B)/$(BASEGAME)/cgame/cg_localents.o \
   $(B)/$(BASEGAME)/cgame/cg_marks.o \
   $(B)/$(BASEGAME)/cgame/cg_omnibot.o \
@@ -2679,6 +2680,7 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/g_combat.o \
   $(B)/$(BASEGAME)/game/g_coop.o \
   $(B)/$(BASEGAME)/game/g_files.o \
+  $(B)/$(BASEGAME)/game/g_intro.o \
   $(B)/$(BASEGAME)/game/g_items.o \
   $(B)/$(BASEGAME)/game/g_mem.o \
   $(B)/$(BASEGAME)/game/g_misc.o \

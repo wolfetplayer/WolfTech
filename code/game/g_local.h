@@ -1682,6 +1682,9 @@ typedef enum
 // Coop
 #include "g_coop.h"
 
+// Intro titles
+#include "g_intro.h"
+
 #ifdef _ADMINS
 #include "g_admin.h"
 #endif
