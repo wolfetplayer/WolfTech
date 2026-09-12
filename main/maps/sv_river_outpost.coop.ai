@@ -24,8 +24,8 @@ player
 	playerstart
 	{
 		mu_stop 0 1000
-		wait 2000
-		mu_play sound/misc/prepare
+		wait 8500
+		mu_play sound/music/survival_start
 	}
 	
 	trigger reinforce

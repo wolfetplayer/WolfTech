@@ -177,6 +177,7 @@ g_script_event_define_t gScriptEvents[] =
 	{"activate",     G_Script_EventMatch_StringEqual},   // something has triggered us (always followed by an identifier)
 	{"stopcam",          0},
 	{"wave_start",          0},
+	{"first_wave_start",         0},
 	{"wave_end",          0},
 	{"start_survival",          0},
 	{"specialwave_start",            0},

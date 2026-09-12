@@ -2008,6 +2008,8 @@ if ( wave == 1 ) {
 
 	if ( svParams.specialWaveActive ) {
 		Survival_GameManagerEvent( "specialwave_start" );
+	} else if ( wave == 1 ) {
+		Survival_GameManagerEvent( "first_wave_start" );
 	} else {
 		Survival_GameManagerEvent( "wave_start" );
 	}
