@@ -49,3 +49,22 @@ models/mapobjects/wt_foliage/leaves_02
 		rgbGen vertex
 		}
 }
+
+models/mapobjects/wt_foliage/bush
+{
+	nopicmip
+	qer_alphafunc greater 0.5
+	qer_editorimage models/mapobjects/wt_foliage/bush.tga
+	cull disable
+	surfaceparm alphashadow
+	surfaceparm trans
+	surfaceparm nomarks
+	deformVertexes wave 15 sin 0 1 0 0.25
+     	{
+		map models/mapobjects/wt_foliage/bush.tga
+		blendfunc GL_ONE GL_ZERO
+		alphaFunc GE128
+		depthWrite
+		rgbGen vertex
+		}
+}
