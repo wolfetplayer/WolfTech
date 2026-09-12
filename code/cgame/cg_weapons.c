@@ -3679,7 +3679,7 @@ void CG_RenderViewWeapon( void ) {
 	weapdef = cg.refdef;
 	weapdef.rdflags |= RDF_NOWORLDMODEL;
 
-	fov = cg_gunFov.value;
+	fov = CG_ApplySimpleZoomFov( cg_gunFov.value );
 	if ( fov < 1 ) {
 		fov = 1;
 	} else if ( fov > 160 ) {

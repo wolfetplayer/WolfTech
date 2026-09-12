@@ -2114,6 +2114,7 @@ void CG_ZoomDown_f( void );
 void CG_ZoomIn_f( void );
 void CG_ZoomOut_f( void );
 void CG_ZoomUp_f( void );
+float CG_ApplySimpleZoomFov( float currentFovX );
 
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback );
 
