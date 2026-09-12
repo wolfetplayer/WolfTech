@@ -1814,9 +1814,20 @@ SortRanks
 */
 int QDECL SortRanks( const void *a, const void *b ) {
 	gclient_t   *ca, *cb;
+	qboolean aIsBot, bIsBot;
 
 	ca = &level.clients[*(int *)a];
 	cb = &level.clients[*(int *)b];
+
+	// bots aren't part of the human coop player count, keep them out of the human scoreboard slots
+	aIsBot = ( g_entities[*(int *)a].r.svFlags & SVF_BOT ) ? qtrue : qfalse;
+	bIsBot = ( g_entities[*(int *)b].r.svFlags & SVF_BOT ) ? qtrue : qfalse;
+	if ( aIsBot && !bIsBot ) {
+		return 1;
+	}
+	if ( bIsBot && !aIsBot ) {
+		return -1;
+	}
 
 	// sort special clients last
 	if ( ca->sess.spectatorState == SPECTATOR_SCOREBOARD || ca->sess.spectatorClient < 0 ) {
