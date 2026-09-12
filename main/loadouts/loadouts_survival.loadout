@@ -6,10 +6,10 @@ loadout survival_default_soldier
 		givescore 50
 
 		giveweapon weapon_knife
-		giveweapon weapon_thompson
-		setammo weapon_thompson full
-		setclip weapon_thompson full
-		selectweapon weapon_thompson
+		giveweapon weapon_mp40
+		setammo weapon_mp40 full
+		setclip weapon_mp40 full
+		selectweapon weapon_mp40
 }
 
 loadout survival_default_medic
@@ -67,10 +67,10 @@ loadout survival_default_lt
 loadout survival_hardcore_soldier
 {
 		giveweapon weapon_knife
-		giveweapon weapon_thompson
-		setammo weapon_thompson full
-		setclip weapon_thompson full
-		selectweapon weapon_thompson
+		giveweapon weapon_mp40
+		setammo weapon_mp40 full
+		setclip weapon_mp40 full
+		selectweapon weapon_mp40
 }
 
 loadout survival_hardcore_medic
