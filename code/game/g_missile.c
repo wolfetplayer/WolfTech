@@ -696,7 +696,7 @@ static qboolean G_MedCrateEligible( gentity_t *ent ) {
 		return qfalse;
 	}
 
-	if ( ent->aiCharacter && ent->aiTeam == AITEAM_MONSTER ) {
+	if ( ent->aiCharacter && ( ent->aiTeam == AITEAM_NAZI || ent->aiTeam == AITEAM_MONSTER || ent->aiTeam == AITEAM_ENDMAPBOSS ) ) {
 		return qfalse;
 	}
 
