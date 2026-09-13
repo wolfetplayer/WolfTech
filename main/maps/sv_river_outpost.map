@@ -14020,7 +14020,7 @@ sfx/xflame2_3000
 // entity 64
 {
 "classname" "trigger_objective_info"
-"stringname" "weapon_upgrade_buy"
+"stringname" "buy_weapon_upgrade"
 "target" "buy_speed1"
 // brush 0
 {
@@ -33419,7 +33419,7 @@ sfx/xflame2_3000
 // entity 199
 {
 "classname" "trigger_objective_info"
-"stringname" "grenades_buy"
+"stringname" "buy_grenades"
 "target" "buy_gren1"
 // brush 0
 {
@@ -33692,7 +33692,7 @@ sfx/xflame2_3000
 // entity 214
 {
 "classname" "trigger_objective_info"
-"stringname" "reinforce_buy"
+"stringname" "buy_reinforce"
 "target" "reinforce_call_custom"
 "targetname" "reinforce_info"
 // brush 0
@@ -35408,7 +35408,7 @@ sfx/xflame2_3000
 // entity 383
 {
 "classname" "trigger_objective_info"
-"stringname" "mp40_buy"
+"stringname" "buy_mp40"
 "isWeapon" "1"
 "target" "buy_mp40"
 // brush 0
@@ -38597,7 +38597,7 @@ sfx/xflame2_3000
 // entity 606
 {
 "classname" "trigger_objective_info"
-"stringname" "mp44_buy"
+"stringname" "buy_mp44"
 "isWeapon" "1"
 "target" "buy_mp44"
 // brush 0
@@ -38645,7 +38645,7 @@ sfx/xflame2_3000
 // entity 610
 {
 "classname" "trigger_objective_info"
-"stringname" "g43_buy"
+"stringname" "buy_g43"
 "isWeapon" "1"
 "target" "buy_g43"
 // brush 0
@@ -39726,7 +39726,7 @@ sfx/xflame2_3000
 "classname" "func_constructible"
 "price" "150"
 "target" "mg42_1"
-"targetname" "build_mg42_1"
+"targetname" "buy_mg42_1"
 // brush 0
 {
 ( -60 1568 301 ) ( -57 1568 301 ) ( -57 1572 301 ) common/trigger 27.9976119995 51.9987792969 -180 0.4999999702 0.4999999702 134217728 0 0
@@ -39740,8 +39740,8 @@ sfx/xflame2_3000
 // entity 726
 {
 "classname" "trigger_objective_info"
-"stringname" "build_mg42_1"
-"target" "build_mg42_1"
+"stringname" "buy_mg42_1"
+"target" "buy_mg42_1"
 // brush 0
 {
 ( -50 1610 376 ) ( -50 1528 376 ) ( -86 1610 376 ) common/trigger 0 0 0 0.5 0.5 0 0 0
@@ -39757,7 +39757,7 @@ sfx/xflame2_3000
 "classname" "func_constructible"
 "price" "150"
 "target" "mg42_2"
-"targetname" "build_mg42_2"
+"targetname" "buy_mg42_2"
 // brush 0
 {
 ( -183 -1775 276 ) ( -173 -1775 276 ) ( -173 -1769 276 ) common/trigger 36.0002746582 88 -180 0.4999999702 0.4999999702 134217728 0 0
@@ -39771,8 +39771,8 @@ sfx/xflame2_3000
 // entity 728
 {
 "classname" "trigger_objective_info"
-"target" "build_mg42_2"
-"stringname" "build_mg42_2"
+"target" "buy_mg42_2"
+"stringname" "buy_mg42_2"
 // brush 0
 {
 ( -180 -1738 360 ) ( -180 -1798 360 ) ( -214 -1738 360 ) common/trigger 0 0 0 0.5 0.5 0 0 0

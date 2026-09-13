@@ -1153,12 +1153,6 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		re.RemapShader( VMA( 1 ), VMA( 2 ), VMA( 3 ) );
 		return 0;
 
-#ifdef LOCALISATION
-	case UI_CL_TRANSLATE_STRING:
-		CL_TranslateString( VMA( 1 ), VMA( 2 ) );
-		return 0;
-#endif
-
 	case UI_VERIFY_CDKEY:
 		return CL_CDKeyValidate( VMA( 1 ), VMA( 2 ) );
 

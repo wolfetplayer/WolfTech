@@ -561,23 +561,6 @@ qboolean trap_GetModelInfo( int clientNum, char *modelName, animModelInfo_t **mo
 	return syscall( CG_GETMODELINFO, clientNum, modelName, modelInfo );
 }
 
-#ifdef LOCALISATION
-#define MAX_VA_STRING       32000
-
-char* trap_TranslateString( const char *string ) {
-	static char staticbuf[2][MAX_VA_STRING];
-	static int bufcount = 0;
-	char *buf;
-
-	buf = staticbuf[bufcount++ % 2];
-
-	syscall( CG_TRANSLATE_STRING, string, buf );
-
-	return buf;
-}
-// -NERVE - SMF
-#endif
-
 // New in IORTCW
 void *trap_Alloc( int size ) {
 	return (void*)syscall( CG_ALLOC, size );

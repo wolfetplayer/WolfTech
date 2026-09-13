@@ -137,11 +137,7 @@ cvar_t  *cl_serverStatusResendTime;
 cvar_t  *cl_missionStats;
 cvar_t  *cl_waitForFire;
 
-// NERVE - SMF - localization
-cvar_t  *cl_language;
-cvar_t  *cl_debugTranslation;
 cvar_t	*cl_drawCineSubtitles;
-// -NERVE - SMF
 cvar_t	*cl_lanForcePackets;
 
 cvar_t	*cl_guidServerUniq;
@@ -153,11 +149,6 @@ cvar_t	*cl_rate;
 cvar_t  *cl_missionStats;
 cvar_t  *cl_waitForFire;
 cvar_t  *cl_master;
-
-// NERVE - SMF - localization
-cvar_t  *cl_language;
-cvar_t  *cl_debugTranslation;
-// -NERVE - SMF
 
 // DHM - Nerve :: Auto-Update
 cvar_t  *cl_updateavailable;
@@ -2772,12 +2763,7 @@ void CL_InitDownloads( void ) {
 		}
 
 		else if ( FS_ComparePaks( clc.downloadList, sizeof( clc.downloadList ), qtrue ) ) {
-			// this gets printed to UI, i18n
-#ifdef LOCALISATION
-			Com_Printf( CL_TranslateStringBuf( "Need paks: %s\n" ), clc.downloadList );
-#else
 			Com_Printf("Need paks: %s\n", clc.downloadList );
-#endif
 
 			if ( *clc.downloadList ) {
 				// if autodownloading is not enabled on the server
@@ -2924,11 +2910,7 @@ void CL_PrintPacket( netadr_t from, msg_t *msg ) {
 		Cvar_Set( "com_errorMessage", clc.serverMessage );
 	} else if ( !Q_stricmpn( s, "[err_prot]", 10 ) ) {
 		Q_strncpyz( clc.serverMessage, s + 10, sizeof( clc.serverMessage ) );
-#ifdef LOCALISATION
-		Cvar_Set( "com_errorMessage", CL_TranslateStringBuf( PROTOCOL_MISMATCH_ERROR_LONG ) );
-#else
 		Cvar_Set( "com_errorMessage", PROTOCOL_MISMATCH_ERROR_LONG );
-#endif
 	} else {
 		Q_strncpyz( clc.serverMessage, s, sizeof( clc.serverMessage ) );
 	}
@@ -3414,21 +3396,12 @@ void CL_CheckTimeout( void ) {
 	//
 	// check timeout
 	//
-#ifdef LOCALISATION
-	const char *message;
-#endif
-	if ( ( !CL_CheckPaused() || !sv_paused->integer ) 
+	if ( ( !CL_CheckPaused() || !sv_paused->integer )
 		&& clc.state >= CA_CONNECTED && clc.state != CA_CINEMATIC
 		&& cls.realtime - clc.lastPacketTime > cl_timeout->value * 1000 ) {
 		if ( ++cl.timeoutcount > 5 ) {	// timeoutcount saves debugger
-#ifdef LOCALISATION
-			message = CL_TranslateStringBuf( "Server connection timed out.\n" );
-			Com_Printf( "%s", message );
-			Cvar_Set( "com_errorMessage", message );
-#else
 			Com_Printf( "\nServer connection timed out.\n" );
 			Cvar_Set( "com_errorMessage", "Server connection timed out.\n" );
-#endif
 			CL_Disconnect( qtrue );
 			return;
 		}
@@ -3502,9 +3475,6 @@ void CL_Frame( int msec ) {
 		uint64_t owner;
 		uint64_t peerSteamID;
 		int peerConnected;
-#ifdef LOCALISATION
-		const char *message;
-#endif
 
 		steamRun();
 		CL_UpdateSteamServers();
@@ -3711,26 +3681,13 @@ void CL_Frame( int msec ) {
 		if ( steamCheckHostLeft() && !isHostingServer ) {
 			if ( clc.state != CA_DISCONNECTED ) {
 				// Com_Error (not a bare CL_Disconnect) so cgame/ui VMs get torn down - avoids crashing mid-game.
-#ifdef LOCALISATION
-				message = CL_TranslateStringBuf( "Host has disconnected from the game.\n" );
-				Com_Printf( "%s", message );
-				Cvar_Set( "com_errorMessage", message );
-				Com_Error( ERR_DISCONNECT, "%s", message );
-#else
 				Com_Printf( "Host has disconnected from the game.\n" );
 				Cvar_Set( "com_errorMessage", "Host has disconnected from the game.\n" );
 				Com_Error( ERR_DISCONNECT, "Host has disconnected from the game.\n" );
-#endif
 			} else if ( steamLobbyCurrent() != 0 ) {
 				// Still in the pre-game lobby - boot everyone back to the main menu instead of stranding them with no leader.
-#ifdef LOCALISATION
-				message = CL_TranslateStringBuf( "Lobby has been disbanded by the host.\n" );
-				Com_Printf( "%s", message );
-				Cvar_Set( "com_errorMessage", message );
-#else
 				Com_Printf( "Lobby has been disbanded by the host.\n" );
 				Cvar_Set( "com_errorMessage", "Lobby has been disbanded by the host.\n" );
-#endif
 				steamLobbyLeave();
 				if ( uivm ) {
 					VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
@@ -3742,16 +3699,9 @@ void CL_Frame( int msec ) {
 			if ( !peerConnected && clc.serverAddress.type == NA_STEAM_P2P &&
 				 clc.serverAddress.steamID == peerSteamID ) {
 				// Same reasoning as the steamCheckHostLeft() block above - use Com_Error, not a bare CL_Disconnect.
-#ifdef LOCALISATION
-				message = CL_TranslateStringBuf( "Lost connection to the host.\n" );
-				Com_Printf( "%s", message );
-				Cvar_Set( "com_errorMessage", message );
-				Com_Error( ERR_DISCONNECT, "%s", message );
-#else
 				Com_Printf( "Lost connection to the host.\n" );
 				Cvar_Set( "com_errorMessage", "Lost connection to the host.\n" );
 				Com_Error( ERR_DISCONNECT, "Lost connection to the host.\n" );
-#endif
 			}
 		}
 	}
@@ -4466,30 +4416,6 @@ void CL_ShellExecute_URL_f( void ) {
 }
 //----(SA) end
 
-#ifdef LOCALISATION
-void CL_SaveTranslations_f( void ) {
-	CL_SaveTransTable( "scripts/translation.lang", qfalse );
-}
-
-void CL_SaveNewTranslations_f( void ) {
-	char fileName[512];
-
-	if ( Cmd_Argc() != 2 ) {
-		Com_Printf( "usage: SaveNewTranslations <filename>\n" );
-		return;
-	}
-
-	strcpy( fileName, va( "translations/%s.lang", Cmd_Argv( 1 ) ) );
-
-	CL_SaveTransTable( fileName, qtrue );
-}
-
-void CL_LoadTranslations_f( void ) {
-	CL_ReloadTranslation();
-}
-// -NERVE - SMF
-#endif
-
 //===========================================================================================
 
 /*
@@ -4871,9 +4797,6 @@ void CL_Init( void ) {
 	cl_missionStats = Cvar_Get( "g_missionStats", "0", CVAR_ROM );
 	cl_waitForFire = Cvar_Get( "cl_waitForFire", "0", CVAR_ROM );
 
-	// NERVE - SMF - localization
-	cl_language = Cvar_Get( "cl_language", "0", CVAR_ARCHIVE );
-	cl_debugTranslation = Cvar_Get( "cl_debugTranslation", "0", 0 );
 	cl_drawCineSubtitles = Cvar_Get( "cl_drawCineSubtitles", "0", CVAR_ARCHIVE );
 	// -NERVE - SMF
 
@@ -4935,11 +4858,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "updatescreen", SCR_UpdateScreen );
 	// done.
 
-#ifdef LOCALISATION
-	Cmd_AddCommand( "SaveTranslations", CL_SaveTranslations_f );     // NERVE - SMF - localization
-	Cmd_AddCommand( "SaveNewTranslations", CL_SaveNewTranslations_f );   // NERVE - SMF - localization
-	Cmd_AddCommand( "LoadTranslations", CL_LoadTranslations_f );     // NERVE - SMF - localization
-#endif
 	// NERVE - SMF - don't do this in multiplayer
 	// RF, add this command so clients can't bind a key to send client damage commands to the server
 	Cmd_AddCommand( "cld", CL_ClientDamageCommand );
@@ -4980,9 +4898,7 @@ void CL_Init( void ) {
 	autoupdateChecked = qfalse;
 	autoupdateStarted = qfalse;
 
-#ifdef LOCALISATION
-	CL_InitTranslation();   // NERVE - SMF - localization
-#endif
+	CL_LoadKeyNames();
 
 	CL_GenerateQKey();
 	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM );
@@ -6110,656 +6026,6 @@ qboolean CL_GetLimboString( int index, char *buf ) {
 }
 // -NERVE - SMF
 
-#ifdef LOCALISATION
-// NERVE - SMF - Localization code
-#define FILE_HASH_SIZE      1024
-#define MAX_VA_STRING       32000
-#define MAX_TRANS_STRING    4096
-
-typedef struct trans_s {
-	char original[MAX_TRANS_STRING];
-	char translated[MAX_LANGUAGES][MAX_TRANS_STRING];
-	struct      trans_s *next;
-	float x_offset;
-	float y_offset;
-	qboolean fromFile;
-} trans_t;
-
-static trans_t* transTable[FILE_HASH_SIZE];
-
-/*
-=======================
-AllocTrans
-=======================
-*/
-static trans_t* AllocTrans( char *original, char *translated[MAX_LANGUAGES] ) {
-	trans_t *t;
-	int i;
-
-	t = malloc( sizeof( trans_t ) );
-	memset( t, 0, sizeof( trans_t ) );
-
-	if ( original ) {
-		strncpy( t->original, original, MAX_TRANS_STRING );
-	}
-
-	if ( translated ) {
-		for ( i = 0; i < MAX_LANGUAGES; i++ )
-			strncpy( t->translated[i], translated[i], MAX_TRANS_STRING );
-	}
-
-	return t;
-}
-
-/*
-=======================
-generateHashValue
-=======================
-*/
-static long generateHashValue( const char *fname ) {
-	int i;
-	long hash;
-	char letter;
-
-	hash = 0;
-	i = 0;
-	while ( fname[i] != '\0' ) {
-		letter = tolower( fname[i] );
-		hash += (long)( letter ) * ( i + 119 );
-		i++;
-	}
-	hash &= ( FILE_HASH_SIZE - 1 );
-	return hash;
-}
-
-/*
-=======================
-LookupTrans
-=======================
-*/
-static trans_t* LookupTrans( char *original, char *translated[MAX_LANGUAGES], qboolean isLoading ) {
-	trans_t *t, *newt, *prev = NULL;
-	long hash;
-
-	hash = generateHashValue( original );
-
-	for ( t = transTable[hash]; t; prev = t, t = t->next ) {
-		if ( !Q_stricmp( original, t->original ) ) {
-			if ( isLoading ) {
-				Com_DPrintf( S_COLOR_YELLOW "WARNING: Duplicate string found: \"%s\"\n", original );
-			}
-			return t;
-		}
-	}
-
-	newt = AllocTrans( original, translated );
-
-	if ( prev ) {
-		prev->next = newt;
-	} else {
-		transTable[hash] = newt;
-	}
-
-	if ( cl_debugTranslation->integer >= 1 && !isLoading ) {
-		Com_Printf( "Missing translation: \'%s\'\n", original );
-	}
-
-	// see if we want to save out the translation table everytime a string is added
-	if ( cl_debugTranslation->integer == 2 && !isLoading ) {
-		CL_SaveTransTable( "scripts/translation.lang", qtrue );
-	}
-
-	return newt;
-}
-
-/*
-=======================
-CL_SaveTransTable
-=======================
-*/
-void CL_SaveTransTable( const char *fileName, qboolean newOnly ) {
-	int bucketlen, bucketnum, maxbucketlen, avebucketlen;
-	int untransnum, transnum;
-	const char *buf;
-	fileHandle_t f;
-	trans_t *t;
-	int i, j, len;
-
-	if ( cl.corruptedTranslationFile ) {
-		Com_Printf( S_COLOR_YELLOW "WARNING: Cannot save corrupted translation file. Please reload first." );
-		return;
-	}
-
-	FS_FOpenFileByMode( fileName, &f, FS_WRITE );
-
-	bucketnum = 0;
-	maxbucketlen = 0;
-	avebucketlen = 0;
-	transnum = 0;
-	untransnum = 0;
-
-	// write out version, if one
-	if ( strlen( cl.translationVersion ) ) {
-		buf = va( "#version\t\t\"%s\"\n", cl.translationVersion );
-	} else {
-		buf = va( "#version\t\t\"1.0 01/01/01\"\n" );
-	}
-
-	len = strlen( buf );
-	FS_Write( buf, len, f );
-
-	// write out translated strings
-	for ( j = 0; j < 2; j++ ) {
-
-		for ( i = 0; i < FILE_HASH_SIZE; i++ ) {
-			t = transTable[i];
-
-			if ( !t || ( newOnly && t->fromFile ) ) {
-				continue;
-			}
-
-			bucketlen = 0;
-
-			for ( ; t; t = t->next ) {
-				bucketlen++;
-
-				if ( strlen( t->translated[0] ) ) {
-					if ( j ) {
-						continue;
-					}
-					transnum++;
-				} else {
-					if ( !j ) {
-						continue;
-					}
-					untransnum++;
-				}
-
-				buf = va( "{\n\tenglish\t\t\"%s\"\n", t->original );
-				len = strlen( buf );
-				FS_Write( buf, len, f );
-
-				buf = va( "\tfrench\t\t\"%s\"\n", t->translated[LANGUAGE_FRENCH] );
-				len = strlen( buf );
-				FS_Write( buf, len, f );
-
-				buf = va( "\tgerman\t\t\"%s\"\n", t->translated[LANGUAGE_GERMAN] );
-				len = strlen( buf );
-				FS_Write( buf, len, f );
-
-				buf = va( "\titalian\t\t\"%s\"\n", t->translated[LANGUAGE_ITALIAN] );
-				len = strlen( buf );
-				FS_Write( buf, len, f );
-
-				buf = va( "\tspanish\t\t\"%s\"\n", t->translated[LANGUAGE_SPANISH] );
-				len = strlen( buf );
-				FS_Write( buf, len, f );
-
-				buf = va( "\thungarian\t\"%s\"\n", t->translated[LANGUAGE_HUNGARIAN] );
-				len = strlen( buf );
-				FS_Write( buf, len, f );
-
-				buf = va( "\tdutch\t\t\"%s\"\n", t->translated[LANGUAGE_DUTCH] );
-				len = strlen( buf );
-				FS_Write( buf, len, f );
-
-				buf = va( "}\n" );
-				len = strlen( buf );
-				FS_Write( buf, len, f );
-			}
-
-			if ( bucketlen > maxbucketlen ) {
-				maxbucketlen = bucketlen;
-			}
-
-			if ( bucketlen ) {
-				bucketnum++;
-				avebucketlen += bucketlen;
-			}
-		}
-	}
-
-	Com_Printf( "Saved translation table.\nTotal = %i, Translated = %i, Untranslated = %i, aveblen = %2.2f, maxblen = %i\n",
-				transnum + untransnum, transnum, untransnum, (float)avebucketlen / bucketnum, maxbucketlen );
-
-	FS_FCloseFile( f );
-}
-
-/*
-=======================
-CL_CheckTranslationString
-
-NERVE - SMF - compare formatting characters
-=======================
-*/
-qboolean CL_CheckTranslationString( char *original, char *translated ) {
-	char format_org[128], format_trans[128];
-	int len, i;
-
-	memset( format_org, 0, 128 );
-	memset( format_trans, 0, 128 );
-
-	// generate formatting string for original
-	len = strlen( original );
-
-	for ( i = 0; i < len; i++ ) {
-		if ( original[i] != '%' ) {
-			continue;
-		}
-
-		strcat( format_org, va( "%c%c ", '%', original[i + 1] ) );
-	}
-
-	// generate formatting string for translated
-	len = strlen( translated );
-	if ( !len ) {
-		return qtrue;
-	}
-
-	for ( i = 0; i < len; i++ ) {
-		if ( translated[i] != '%' ) {
-			continue;
-		}
-
-		strcat( format_trans, va( "%c%c ", '%', translated[i + 1] ) );
-	}
-
-	// compare
-	len = strlen( format_org );
-
-	if ( len != strlen( format_trans ) ) {
-		return qfalse;
-	}
-
-	for ( i = 0; i < len; i++ ) {
-		if ( format_org[i] != format_trans[i] ) {
-			return qfalse;
-		}
-	}
-
-	return qtrue;
-}
-
-/*
-=======================
-CL_LoadTransTable
-=======================
-*/
-void CL_LoadTransTable( const char *fileName ) {
-	char translated[MAX_LANGUAGES][MAX_VA_STRING];
-	char original[MAX_VA_STRING];
-	qboolean aborted;
-	char *text;
-	fileHandle_t f;
-	char *text_p;
-	char *token;
-	int len, i;
-	trans_t *t;
-	int count;
-
-	count = 0;
-	aborted = qfalse;
-	cl.corruptedTranslationFile = qfalse;
-
-	len = FS_FOpenFileByMode( fileName, &f, FS_READ );
-	if ( len <= 0 ) {
-		return;
-	}
-
-	text = malloc( len + 1 );
-	if ( !text ) {
-		return;
-	}
-
-	FS_Read( text, len, f );
-	text[len] = 0;
-	FS_FCloseFile( f );
-
-	// parse the text
-	text_p = text;
-
-	do {
-		token = COM_Parse( &text_p );
-		if ( Q_stricmp( "{", token ) ) {
-			// parse version number
-			if ( !Q_stricmp( "#version", token ) ) {
-				token = COM_Parse( &text_p );
-				strcpy( cl.translationVersion, token );
-				continue;
-			}
-
-			break;
-		}
-
-		// english
-		token = COM_Parse( &text_p );
-		if ( Q_stricmp( "english", token ) ) {
-			aborted = qtrue;
-			break;
-		}
-
-		token = COM_Parse( &text_p );
-		strcpy( original, token );
-
-		if ( cl_debugTranslation->integer == 3 ) {
-			Com_Printf( "%i Loading: \"%s\"\n", count, original );
-		}
-
-		// french
-		token = COM_Parse( &text_p );
-		if ( Q_stricmp( "french", token ) ) {
-			aborted = qtrue;
-			break;
-		}
-
-		token = COM_Parse( &text_p );
-		strcpy( translated[LANGUAGE_FRENCH], token );
-		if ( !CL_CheckTranslationString( original, translated[LANGUAGE_FRENCH] ) ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: Translation formatting doesn't match up with English version!\n" );
-			aborted = qtrue;
-			break;
-		}
-
-		// german
-		token = COM_Parse( &text_p );
-		if ( Q_stricmp( "german", token ) ) {
-			aborted = qtrue;
-			break;
-		}
-
-		token = COM_Parse( &text_p );
-		strcpy( translated[LANGUAGE_GERMAN], token );
-		if ( !CL_CheckTranslationString( original, translated[LANGUAGE_GERMAN] ) ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: Translation formatting doesn't match up with English version!\n" );
-			aborted = qtrue;
-			break;
-		}
-
-		// italian
-		token = COM_Parse( &text_p );
-		if ( Q_stricmp( "italian", token ) ) {
-			aborted = qtrue;
-			break;
-		}
-
-		token = COM_Parse( &text_p );
-		strcpy( translated[LANGUAGE_ITALIAN], token );
-		if ( !CL_CheckTranslationString( original, translated[LANGUAGE_ITALIAN] ) ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: Translation formatting doesn't match up with English version!\n" );
-			aborted = qtrue;
-			break;
-		}
-
-		// spanish
-		token = COM_Parse( &text_p );
-		if ( Q_stricmp( "spanish", token ) ) {
-			aborted = qtrue;
-			break;
-		}
-
-		token = COM_Parse( &text_p );
-		strcpy( translated[LANGUAGE_SPANISH], token );
-		if ( !CL_CheckTranslationString( original, translated[LANGUAGE_SPANISH] ) ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: Translation formatting doesn't match up with English version!\n" );
-			aborted = qtrue;
-			break;
-		}
-
-		// hungarian
-		token = COM_Parse( &text_p );
-		if ( Q_stricmp( "hungarian", token ) ) {
-			aborted = qtrue;
-			break;
-		}
-
-		token = COM_Parse( &text_p );
-		strcpy( translated[LANGUAGE_HUNGARIAN], token );
-		if ( !CL_CheckTranslationString( original, translated[LANGUAGE_HUNGARIAN] ) ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: Translation formatting doesn't match up with English version!\n" );
-			aborted = qtrue;
-			break;
-		}
-
-		// dutch
-		token = COM_Parse( &text_p );
-		if ( Q_stricmp( "dutch", token ) ) {
-			aborted = qtrue;
-			break;
-		}
-
-		token = COM_Parse( &text_p );
-		strcpy( translated[LANGUAGE_DUTCH], token );
-		if ( !CL_CheckTranslationString( original, translated[LANGUAGE_DUTCH] ) ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: Translation formatting doesn't match up with English version!\n" );
-			aborted = qtrue;
-			break;
-		}
-
-		// do lookup
-		t = LookupTrans( original, NULL, qtrue );
-
-		if ( t ) {
-			t->fromFile = qtrue;
-
-			for ( i = 0; i < MAX_LANGUAGES; i++ )
-				strncpy( t->translated[i], translated[i], MAX_TRANS_STRING );
-		}
-
-		token = COM_Parse( &text_p );
-
-		// set offset if we have one
-		if ( !Q_stricmp( "offset", token ) ) {
-			if ( t )
-			{
-				token = COM_Parse( &text_p );
-				t->x_offset = atof( token );
-
-				token = COM_Parse( &text_p );
-				t->y_offset = atof( token );
-
-				token = COM_Parse( &text_p );
-			}
-		}
-
-		if ( Q_stricmp( "}", token ) ) {
-			aborted = qtrue;
-			break;
-		}
-
-		count++;
-	} while ( token );
-
-	if ( aborted ) {
-		int i, line = 1;
-
-		for ( i = 0; i < len && ( text + i ) < text_p; i++ ) {
-			if ( text[i] == '\n' ) {
-				line++;
-			}
-		}
-
-		Com_Printf( S_COLOR_YELLOW "WARNING: Problem loading %s on line %i\n", fileName, line );
-		cl.corruptedTranslationFile = qtrue;
-	} else {
-		Com_Printf( "Loaded %i translation strings from %s\n", count, fileName );
-	}
-
-	// cleanup
-	free( text );
-}
-
-/*
-=======================
-CL_ReloadTranslation
-=======================
-*/
-void CL_ReloadTranslation( void ) {
-	char    **fileList;
-	int numFiles, i;
-	char fileName[MAX_QPATH];
-
-	for ( i = 0; i < FILE_HASH_SIZE; i++ ) {
-		if ( transTable[i] ) {
-			free( transTable[i] );
-		}
-	}
-
-	memset( transTable, 0, sizeof( trans_t* ) * FILE_HASH_SIZE );
-	CL_LoadTransTable( "scripts/translation.lang" );
-
-	fileList = FS_ListFiles( "translations", ".lang", &numFiles );
-
-	for ( i = 0; i < numFiles; i++ ) {
-		Com_sprintf( fileName, sizeof( fileName ), "translations/%s", fileList[i] );
-		CL_LoadTransTable( fileName );
-	}
-}
-
-/*
-=======================
-CL_InitTranslation
-=======================
-*/
-void CL_InitTranslation( void ) {
-	char    **fileList;
-	int numFiles, i;
-	char fileName[MAX_QPATH];
-
-	memset( transTable, 0, sizeof( trans_t* ) * FILE_HASH_SIZE );
-	CL_LoadTransTable( "scripts/translation.lang" );
-
-	fileList = FS_ListFiles( "translations", ".lang", &numFiles );
-
-	for ( i = 0; i < numFiles; i++ ) {
-		Com_sprintf( fileName, sizeof( fileName ), "translations/%s", fileList[i] );
-		CL_LoadTransTable( fileName );
-	}
-}
-
-/*
-=======================
-CL_TranslateString
-=======================
-*/
-void CL_TranslateString( const char *string, char *dest_buffer ) {
-	int i, count, currentLanguage;
-	trans_t *t;
-	qboolean newline = qfalse;
-	char *buf;
-
-	buf = dest_buffer;
-	currentLanguage = cl_language->integer - 1;
-
-	// early bail if we only want english or bad language type
-	if ( !string ) {
-		strcpy( buf, "(null)" );
-		return;
-	} else if ( currentLanguage == -1 || currentLanguage >= MAX_LANGUAGES || !strlen( string ) ) {
-		strcpy( buf, string );
-		return;
-	}
-
-	// ignore newlines
-	if ( string[strlen( string ) - 1] == '\n' ) {
-		newline = qtrue;
-	}
-
-	for ( i = 0, count = 0; string[i] != '\0'; i++ ) {
-		if ( string[i] != '\n' ) {
-			buf[count++] = string[i];
-		}
-	}
-	buf[count] = '\0';
-
-	t = LookupTrans( buf, NULL, qfalse );
-
-	if ( t && strlen( t->translated[currentLanguage] ) ) {
-		int offset = 0;
-
-		if ( cl_debugTranslation->integer >= 1 ) {
-			buf[0] = '^';
-			buf[1] = '1';
-			buf[2] = '[';
-			offset = 3;
-		}
-
-		strcpy( buf + offset, t->translated[currentLanguage] );
-
-		if ( cl_debugTranslation->integer >= 1 ) {
-			int len2 = strlen( buf );
-
-			buf[len2] = ']';
-			buf[len2 + 1] = '^';
-			buf[len2 + 2] = '7';
-			buf[len2 + 3] = '\0';
-		}
-
-		if ( newline ) {
-			int len2 = strlen( buf );
-
-			buf[len2] = '\n';
-			buf[len2 + 1] = '\0';
-		}
-	} else {
-		int offset = 0;
-
-		if ( cl_debugTranslation->integer >= 1 ) {
-			buf[0] = '^';
-			buf[1] = '1';
-			buf[2] = '[';
-			offset = 3;
-		}
-
-		strcpy( buf + offset, string );
-
-		if ( cl_debugTranslation->integer >= 1 ) {
-			int len2 = strlen( buf );
-			qboolean addnewline = qfalse;
-
-			if ( buf[len2 - 1] == '\n' ) {
-				len2--;
-				addnewline = qtrue;
-			}
-
-			buf[len2] = ']';
-			buf[len2 + 1] = '^';
-			buf[len2 + 2] = '7';
-			buf[len2 + 3] = '\0';
-
-			if ( addnewline ) {
-				buf[len2 + 3] = '\n';
-				buf[len2 + 4] = '\0';
-			}
-		}
-	}
-}
-
-/*
-=======================
-CL_TranslateStringBuf
-TTimo - handy, stores in a static buf, converts \n to chr(13)
-=======================
-*/
-const char* CL_TranslateStringBuf( const char *string ) {
-	char *p;
-	int i,l;
-	static char buf[MAX_VA_STRING];
-	CL_TranslateString( string, buf );
-	while ( ( p = strstr( buf, "\\n" ) ) )
-	{
-		*p = '\n';
-		p++;
-		// Com_Memcpy(p, p+1, strlen(p) ); b0rks on win32
-		l = strlen( p );
-		for ( i = 0; i < l; i++ )
-		{
-			*p = *( p + 1 );
-			p++;
-		}
-	}
-	return buf;
-}
-#endif
 
 /*
 =======================
@@ -6768,11 +6034,7 @@ CL_OpenURLForCvar
 */
 void CL_OpenURL( const char *url ) {
 	if ( !url || !strlen( url ) ) {
-#ifdef LOCALISATION
-		Com_Printf( "%s", CL_TranslateStringBuf( "invalid/empty URL\n" ) );
-#else
 		Com_Printf( "invalid/empty URL\n" );
-#endif
 		return;
 	}
 	Sys_OpenURL( url, qtrue );

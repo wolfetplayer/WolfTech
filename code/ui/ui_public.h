@@ -145,10 +145,6 @@ typedef enum {
 	UI_CL_GETLIMBOSTRING,           // NERVE - SMF
 	UI_FS_GETFILEMTIME,             // returns file modification time (seconds since epoch)
 
-#ifdef LOCALISATION
-	UI_CL_TRANSLATE_STRING,
-#endif
-
 	UI_MEMSET = 100,
 	UI_MEMCPY,
 	UI_STRNCPY,

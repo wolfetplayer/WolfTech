@@ -1,5 +1,4 @@
 
-//@$& layerdef "0" -1 0 0 0
 // entity 0
 {
 "classname" "worldspawn"
@@ -40088,6 +40087,7 @@ castle_wall/castle_c46_on_grid
 "angle" "-61.7806"
 "varc" "22"
 "harc" "120"
+"spawnflags" "4"
 "health" "9999"
 }
 // entity 712

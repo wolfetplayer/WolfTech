@@ -365,12 +365,12 @@ static void CG_LimboMessage_f( void ) {
 		return;
 	}
 
-	Q_strncpyz( teamStr, CG_TranslateString( CG_Argv( 1 ) ), 80 );
-	Q_strncpyz( classStr, CG_TranslateString( CG_Argv( 2 ) ), 80 );
-	Q_strncpyz( weapStr, CG_TranslateString( CG_Argv( 3 ) ), 80 );
+	Q_strncpyz( teamStr, CG_translateString( CG_Argv( 1 ) ), 80 );
+	Q_strncpyz( classStr, CG_translateString( CG_Argv( 2 ) ), 80 );
+	Q_strncpyz( weapStr, CG_translateString( CG_Argv( 3 ) ), 80 );
 
-	CG_PriorityCenterPrint( va( "%s %s %s %s %s.", CG_TranslateString( "You will spawn as an" ),
-								teamStr, classStr, CG_TranslateString( "with a" ), weapStr ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH, -1 );
+	CG_PriorityCenterPrint( va( "%s %s %s %s %s.", CG_translateString( "You will spawn as an" ),
+								teamStr, classStr, CG_translateString( "with a" ), weapStr ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH, -1 );
 }
 // -NERVE - SMF
 

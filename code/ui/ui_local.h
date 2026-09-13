@@ -1094,10 +1094,6 @@ void            trap_R_RemapShader( const char *oldShader, const char *newShader
 qboolean        trap_VerifyCDKey( const char *key, const char *chksum );
 qboolean        trap_GetLimboString( int index, char *buf );            // NERVE - SMF
 
-#ifdef LOCALISATION
-char*           trap_TranslateString( const char *string );
-#endif
-
 // New in IORTCW
 void			*trap_Alloc( int size );
 

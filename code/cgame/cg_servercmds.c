@@ -1461,7 +1461,7 @@ const char* CG_LocalizeServerCommand( const char *buf ) {
 			if ( togloc ) {
 				memset( temp, 0, sizeof( temp ) );
 				strncpy( temp, buf + prev, i - prev );
-				strcat( token, CG_TranslateString( temp ) );
+				strcat( token, CG_translateString( temp ) );
 			} else {
 				strncat( token, buf + prev, i - prev );
 			}
@@ -1481,7 +1481,7 @@ const char* CG_LocalizeServerCommand( const char *buf ) {
 	if ( togloc ) {
 		memset( temp, 0, sizeof( temp ) );
 		strncpy( temp, buf + prev, i - prev );
-		strcat( token, CG_TranslateString( temp ) );
+		strcat( token, CG_translateString( temp ) );
 	} else {
 		strncat( token, buf + prev, i - prev );
 	}
@@ -1538,13 +1538,8 @@ static void CG_ServerCommand( void ) {
 
 	if ( !strcmp( cmd, "dp" ) ) {    // dynamite print (what a hack :(
 		int time = atoi( CG_Argv( 1 ) );
-#ifdef LOCALISATION
-		CG_CenterPrint( va( "%s %d %s", CG_TranslateString( "Dynamite timer set at" ), time, CG_TranslateString( "seconds" ) ),
-						SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#else
 		CG_CenterPrint( va( "%s %d %s", CG_translateString( "dynamitetimer" ), time, CG_translateString( "seconds" ) ),
 						SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#endif
 		return;
 	}
 
@@ -1579,10 +1574,10 @@ static void CG_ServerCommand( void ) {
 	if ( !strcmp( cmd, "cp" ) ) {
 		// NERVE - SMF
 		int args = trap_Argc();
-		char *s;
+		const char *s;
 
 		if ( args >= 3 ) {
-			s = CG_TranslateString( CG_Argv( 1 ) );
+			s = CG_translateString( CG_Argv( 1 ) );
 
 			if ( args == 4 ) {
 				s = va( "%s%s", CG_Argv( 3 ), s );

@@ -1,0 +1,11 @@
+{
+
+"buy_reinforce"  "Call Backup"
+
+// "introtitle" mission intro card (see sv_escape2.coop.script / cg_intro.c)
+"March 1943" "March 1943"
+
+"Castle Wolfenstein, Germany" "Castle Wolfenstein, Germany"
+
+"Escape!" "Escape!"
+}

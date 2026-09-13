@@ -100,34 +100,14 @@ void CG_DrawCoopScoreboard( void ) {
 
 	// text boxes
 	color2[0] = color2[1] = color2[2] = 0.4f;
-#ifdef LOCALISATION
-	CG_ScoreboardText( 105, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Name" ), 25, ITEM_TEXTSTYLE_SHADOWED );
-#else
 	CG_ScoreboardText( 105, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Name", 25, ITEM_TEXTSTYLE_SHADOWED );
-#endif
-#ifdef LOCALISATION
-	CG_ScoreboardText( 280, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Class" ), 25, ITEM_TEXTSTYLE_SHADOWED );
-#else
 	CG_ScoreboardText( 280, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Class", 25, ITEM_TEXTSTYLE_SHADOWED );
-#endif
 	w = CG_Text_Width( "Kills", SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
-#ifdef LOCALISATION
-	CG_ScoreboardText( 100 + 320 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Kills" ), 25, ITEM_TEXTSTYLE_SHADOWED );
-#else
 	CG_ScoreboardText( 100 + 320 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Kills", 25, ITEM_TEXTSTYLE_SHADOWED );
-#endif
 	w = CG_Text_Width( "Score", SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
-#ifdef LOCALISATION
-	CG_ScoreboardText( 100 + 375 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Score" ), 25, ITEM_TEXTSTYLE_SHADOWED );
-#else
 	CG_ScoreboardText( 100 + 375 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Score", 25, ITEM_TEXTSTYLE_SHADOWED );
-#endif
 	w = CG_Text_Width( "Ping", SCOREBOARD_FONT, SCOREBOARD_SCALE, 0 );
-#ifdef LOCALISATION
-	CG_ScoreboardText( 100 + 420 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, CG_TranslateString( "Ping" ), 25, ITEM_TEXTSTYLE_SHADOWED );
-#else
 	CG_ScoreboardText( 100 + 420 - w, 130, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, "Ping", 25, ITEM_TEXTSTYLE_SHADOWED );
-#endif
 	//if (cg.scores[0].respawnsLeft != -1)
 	//        maxlives = qtrue;
 
@@ -158,11 +138,7 @@ void CG_DrawCoopScoreboard( void ) {
 
 			place++;
 			if ( ci->team == TEAM_SPECTATOR ) {
-#ifdef LOCALISATION
-				CG_ScoreboardText( 105, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( CG_TranslateString( "[SPECTATOR] %s" ), ci->name ), 20, ITEM_TEXTSTYLE_SHADOWED );
-#else
 				CG_ScoreboardText( 105, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "[SPECTATOR] %s", ci->name ), 20, ITEM_TEXTSTYLE_SHADOWED );
-#endif
 			} else if ( ci->team == TEAM_RED ) {
 				CG_ScoreboardText( 105, 154 + ( 28 * i ) + 1, SCOREBOARD_FONT, SCOREBOARD_SCALE, color3, va( "^1%i^7. %s", place, ci->name ), 20, ITEM_TEXTSTYLE_SHADOWED );
 			} else {
@@ -230,13 +206,8 @@ void CG_DrawCoopScoreboard( void ) {
 	color2[0] = color2[1] = color2[2] = 1;
 	color2[3] = color[3];
 	if ( cgs.gametype == GT_COOP ) {
-#ifdef LOCALISATION
-		w = CG_Text_Width( CG_TranslateString( "Score" ), SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, 0 );
-		CG_ScoreboardText( 100 + ( 484 / 2 ) - ( w - 2 ), 105, SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, color3, CG_TranslateString( "Score" ), 25, ITEM_TEXTSTYLE_NORMAL );
-#else
 		w = CG_Text_Width( "scores", SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, 0 );
 		CG_ScoreboardText( 100 + ( 484 / 2 ) - ( w - 2 ), 105, SCOREBOARD_TITLE_FONT, SCOREBOARD_TITLE_SCALE, color3, "scores", 25, ITEM_TEXTSTYLE_NORMAL );
-#endif
 	}
 
 

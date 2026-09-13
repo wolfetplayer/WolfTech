@@ -67,8 +67,8 @@ void CG_Intro_Parse( void ) {
 		if ( nl ) {
 			*nl = '\0';
 		}
-		// translated immediately, same as the "cp"/"cpst" handlers in cg_servercmds.c
-		Q_strncpyz( cg.introLines[cg.introNumLines], CG_TranslateString( line ), MAX_INTRO_LINE_LEN );
+		// routed through the map-subtitle keyed table (like "cpst"), falling back to the literal text if unmatched
+		Q_strncpyz( cg.introLines[cg.introNumLines], CG_translateTextString( line ), MAX_INTRO_LINE_LEN );
 		cg.introNumLines++;
 		line = nl ? nl + 1 : NULL;
 	}

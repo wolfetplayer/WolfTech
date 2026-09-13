@@ -393,17 +393,11 @@ typedef struct {
 
 	const char *( *fileText )( char *flieName );    //----(SA)	added
 
-#ifndef LOCALISATION
 	const char *( *getTranslatedString )( const char *inString );   //----(SA)	added
-#endif
 
 	qhandle_t ( *feederItemImage )( float feederID, int index );
 	void ( *feederSelection )( float feederID, int index );
 	void ( *feederAddItem )( float feederID, const char *name, int index );           // NERVE - SMF
-
-#ifdef LOCALISATION
-	char* ( *translateString )( const char *string );
-#endif
 
 	void ( *keynumToStringBuf )( int keynum, char *buf, int buflen );
 	void ( *getBindingBuf )( int keynum, char *buf, int buflen );

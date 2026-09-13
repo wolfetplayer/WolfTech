@@ -895,6 +895,7 @@ CG_LoadPickupNames
 ==============
 */
 #define MAX_BUFFER          20000
+// pickupnames.txt is a { classname "Name" } block; slots are pre-filled from bg_itemlist so missing ones still show a real name
 static void CG_LoadPickupNames( void ) {
 	char buffer[MAX_BUFFER];
 	char *text;
@@ -902,6 +903,14 @@ static void CG_LoadPickupNames( void ) {
 	fileHandle_t f;
 	int len, i;
 	char *token;
+
+	for ( i = 0; i < bg_numItems; i++ ) {
+		if ( bg_itemlist[i].pickup_name && strlen( bg_itemlist[i].pickup_name ) ) {
+			Com_sprintf( cgs.itemPrintNames[i], MAX_QPATH, "%s", bg_itemlist[ i ].pickup_name );
+		} else {
+			cgs.itemPrintNames[i][0] = 0;
+		}
+	}
 
 	Com_sprintf( filename, MAX_QPATH, "text/pickupnames.txt" );
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
@@ -920,30 +929,47 @@ static void CG_LoadPickupNames( void ) {
 	// parse the list
 	text = buffer;
 
-	for ( i = 0; i < bg_numItems; i++ ) {
+	token = COM_ParseExt( &text, qtrue );
+	if ( token[0] != '{' ) {
+		CG_Printf( S_COLOR_RED "WARNING: expecting '{', found '%s' instead in %s\n", token, filename );
+		return;
+	}
+
+	while ( 1 ) {
+		char classname[MAX_QPATH];
+		gitem_t *item;
+
 		token = COM_ParseExt( &text, qtrue );
 		if ( !token[0] ) {
+			CG_Printf( S_COLOR_RED "WARNING: no concluding '}' in %s\n", filename );
 			break;
 		}
-		if ( !Q_stricmp( token, "---" ) ) {   // no name.  use hardcoded value
-			if ( bg_itemlist[i].pickup_name && strlen( bg_itemlist[i].pickup_name ) ) {
-				Com_sprintf( cgs.itemPrintNames[i], MAX_QPATH, "%s", bg_itemlist[ i ].pickup_name );
-			} else {
-				cgs.itemPrintNames[i][0] = 0;
-			}
-		} else {
+		if ( token[0] == '}' ) {
+			break;
+		}
+		Q_strncpyz( classname, token, sizeof( classname ) );
+
+		token = COM_ParseExt( &text, qfalse );
+
+		item = BG_FindItemForClassName( classname );
+		if ( !item ) {
+			CG_Printf( S_COLOR_YELLOW "WARNING: %s has unknown item classname \"%s\"\n", filename, classname );
+			continue;
+		}
+		if ( Q_stricmp( token, "---" ) ) {   // "---" means: keep the hardcoded default already pre-filled above
+			i = item - bg_itemlist;
 			Com_sprintf( cgs.itemPrintNames[i], MAX_QPATH, "%s", token );
 		}
 	}
 }
 
-// a straight dupe right now so I don't mess anything up while adding this
+// strings.txt is a { KEY "value" } block matched by name; keys the file omits keep their compiled-in default
 static void CG_LoadTranslationStrings( void ) {
 	char buffer[MAX_BUFFER];
 	char *text;
 	char filename[MAX_QPATH];
 	fileHandle_t f;
-	int len, i, numStrings;
+	int len, numStrings;
 	char *token;
 
 	Com_sprintf( filename, MAX_QPATH, "text/strings.txt" );
@@ -963,39 +989,70 @@ static void CG_LoadTranslationStrings( void ) {
 	// parse the list
 	text = buffer;
 
-	numStrings = sizeof( translateStrings ) / sizeof( translateStrings[0] ) - 1;
+	numStrings = sizeof( translateStrings ) / sizeof( translateStrings[0] );
 
-	for ( i = 0; i < numStrings; i++ ) {
+	token = COM_ParseExt( &text, qtrue );
+	if ( token[0] != '{' ) {
+		CG_Printf( S_COLOR_RED "WARNING: expecting '{', found '%s' instead in %s\n", token, filename );
+		return;
+	}
+
+	while ( 1 ) {
+		char key[MAX_QPATH];
+		int i;
+
 		token = COM_ParseExt( &text, qtrue );
 		if ( !token[0] ) {
+			CG_Printf( S_COLOR_RED "WARNING: no concluding '}' in %s\n", filename );
 			break;
 		}
+		if ( token[0] == '}' ) {
+			break;
+		}
+		Q_strncpyz( key, token, sizeof( key ) );
+
+		token = COM_ParseExt( &text, qfalse );
+
+		for ( i = 0; i < numStrings; i++ ) {
+			if ( Q_stricmp( translateStrings[i].name, key ) ) {
+				continue;
+			}
 #ifdef Q3_VM // new IORTCW syscall (works for qvms and dlls), but have dlls use vanilla rtcw compatible code
-		translateStrings[i].localname = (char *)trap_Alloc( strlen( token ) + 1 );
+			translateStrings[i].localname = (char *)trap_Alloc( strlen( token ) + 1 );
 #else
-		translateStrings[i].localname = (char *)malloc( strlen( token ) + 1 );
+			translateStrings[i].localname = (char *)malloc( strlen( token ) + 1 );
 #endif
-		strcpy( translateStrings[i].localname, token );
+			strcpy( translateStrings[i].localname, token );
+			break;
+		}
+		if ( i == numStrings ) {
+			CG_Printf( S_COLOR_YELLOW "WARNING: %s has unknown translation key \"%s\"\n", filename, key );
+		}
 	}
 }
 
+
+// shared fill cursor: lets multiple files (a per-map file plus a common file) accumulate
+// into translateTextStrings[] instead of each call overwriting from index 0
+static int translateTextStringCount = 0;
 
 static void CG_LoadTranslationTextStrings( const char *file ) {
 	char buffer[MAX_BUFFER];
 	char *text;
 	char filename[MAX_QPATH];
 	fileHandle_t f;
-	int len, i;
+	int len;
 	char *token;
 
 	Q_strncpyz( filename, file, sizeof( filename ) );
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( len <= 0 ) {
-		CG_Printf( S_COLOR_RED "WARNING: string translation file (main/%s)\n", filename );
-		return;
+		return;   // optional file - a map isn't required to have its own subtitle/buyprint overrides
 	}
 	if ( len > MAX_BUFFER ) {
 		CG_Printf( "%s is too big, make it smaller (max = %i bytes)\n", filename, MAX_BUFFER );
+		trap_FS_FCloseFile( f );
+		return;
 	}
 
 	// load the file into memory
@@ -1006,27 +1063,30 @@ static void CG_LoadTranslationTextStrings( const char *file ) {
 	text = buffer;
 	token = COM_ParseExt( &text, qtrue );
 	if ( token[0] != '{' ) {
-		CG_Printf( "^1WARNING: expecting '{', found '%s' instead in translation file \"text/translate.txt\"\n", token );
+		CG_Printf( "^1WARNING: expecting '{', found '%s' instead in %s\n", token, filename );
 		return;
 	}
-	i = 0;
 	while ( 1 )
 	{
+		if ( translateTextStringCount >= MAX_TRANSLATETEXTSTRINGS - 1 ) {
+			CG_Printf( S_COLOR_RED "WARNING: too many translated subtitle strings, %s truncated\n", filename );
+			break;
+		}
 		token = COM_ParseExt( &text, qtrue );
 		if ( !token[0] ) {
-			CG_Printf( "^1WARNING: no concluding '}' in translation file \"text/translate.txt\"\n" );
+			CG_Printf( "^1WARNING: no concluding '}' in %s\n", filename );
 			break;
 		}
 		// end of shader definition
 		if ( token[0] == '}' ) {
 			break;
 		}
-		translateTextStrings[i].stringname = malloc( strlen( token ) + 1 );
-		strcpy( translateTextStrings[i].stringname, token );
+		translateTextStrings[translateTextStringCount].stringname = malloc( strlen( token ) + 1 );
+		strcpy( translateTextStrings[translateTextStringCount].stringname, token );
 		token = COM_ParseExt( &text, qfalse );
-		translateTextStrings[i].stringtext = malloc( strlen( token ) + 1 );
-		strcpy( translateTextStrings[i].stringtext, token );
-		i++;
+		translateTextStrings[translateTextStringCount].stringtext = malloc( strlen( token ) + 1 );
+		strcpy( translateTextStrings[translateTextStringCount].stringtext, token );
+		translateTextStringCount++;
 	}
 }
 
@@ -1073,7 +1133,14 @@ static void CG_LoadTranslateStrings( void ) {
 
 	CG_LoadPickupNames();
 	CG_LoadTranslationStrings();    // right now just centerprint
-	CG_LoadTranslationTextStrings( va( "text/EnglishUSA/maps/%s.txt", mapname ) );
+
+	memset( translateTextStrings, 0, sizeof( translateTextStrings ) );
+	translateTextStringCount = 0;
+	// per-map file loads first so its entries win over survival_common.txt on any key collision
+	// (e.g. two survival maps can use the same "reinforce_buy" key for different flavor text)
+	CG_LoadTranslationTextStrings( va( "text/maps/%s.txt", mapname ) );
+	CG_LoadTranslationTextStrings( "text/maps/survival_common.txt" );
+
 	CG_LoadIgnoredTranslationTextStrings();
 }
 
@@ -2499,9 +2566,7 @@ void CG_LoadHudMenu( void ) {
 	//cgDC.getBindingBuf = &trap_Key_GetBindingBuf;
 	//cgDC.keynumToStringBuf = &trap_Key_KeynumToStringBuf;
 
-#ifndef LOCALISATION
 	cgDC.getTranslatedString = &CG_translateString;     //----(SA)	added
-#endif
 
 	//cgDC.executeText = &trap_Cmd_ExecuteText;
 	cgDC.Error = &Com_Error;
@@ -2515,10 +2580,6 @@ void CG_LoadHudMenu( void ) {
 	cgDC.stopCinematic = &CG_StopCinematic;
 	cgDC.drawCinematic = &CG_DrawCinematic;
 	cgDC.runCinematicFrame = &CG_RunCinematicFrame;
-
-#ifdef LOCALISATION
-	cgDC.translateString = &CG_TranslateString;
-#endif
 
 	Init_Display( &cgDC );
 

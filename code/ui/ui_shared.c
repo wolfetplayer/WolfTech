@@ -99,76 +99,79 @@ static qboolean Menu_OverActiveItem( menuDef_t *menu, float x, float y );
 static char memoryPool[MEM_POOL_SIZE];
 static int allocPoint, outOfMemory;
 
-// these are expected to be translated by the strings.txt file
+// text/strings.txt lookup table; second field is the English default used when a key is missing
 translateString_t translateStrings[] = {
-	{"end_time"},                //	"Time"
-	{"end_objectives"},          //	"Objectives"
-	{"end_secrets"},         //	"Secret Areas"
-	{"end_treasure"},            //	"Treasure"
-	{"end_attempts"},            //	"Attempts"
+	{"end_time", "Time"},
+	{"end_objectives", "Objectives"},
+	{"end_secrets", "Secret Areas"},
+	{"end_treasure", "Treasure"},
+	{"end_attempts", "Attempts"},
 
-	{"missionfail0"},            //	"Mission Failed"
-	{"secretarea"},              //	"You found a secret area"
-	{"objectivesnotcomplete"},   //	"Objectives not complete"
-	{"drankwine"},               //	"You drank the wine"
-	{"usedadrenaline"},          //	"You used the adrenaline"
-	{"usedcross"},               //	"You used the cross"
-	{"usedemp"},                 //	"You used the EMP device"
-	{"usedshield"},              //	"You used the shield"
-	{"noitem"},                  //	"No item to use"
-	{"gamesaved"},               //	"Game Saved"
-	{"noquickgrenammo"},         //	"No grenades left"
+	{"missionfail0", "Mission Failed"},
+	{"secretarea", "You found a secret area"},
+	{"objectivesnotcomplete", "Objectives not complete"},
+	{"drankwine", "You drank the wine"},
+	{"usedadrenaline", "You used the adrenaline"},
+	{"usedcross", "You used the cross"},
+	{"usedemp", "You used the EMP device"},
+	{"usedshield", "You used the shield"},
+	{"noitem", "No item to use"},
+	{"gamesaved", "Game Saved"},
+	{"noquickgrenammo", "No grenades left"},
 
-	{"missionfail1"},            //	"Mission Failed\nYou Killed a Civilian"
-	{"missionfail2"},            //	"Mission Failed\nYou Killed a Kreisau Agent"
-	{"missionfail3"},            //	"Mission Failed\nYou Killed Kessler"
-	{"missionfail4"},            //	"Mission Failed\nYou Killed Karl"
-	{"missionfail5"},            //	"Mission Failed\nYou Have Been Detected"
-	{"missionfail6"},            //	"Mission Failed\nRocket Launched"
-	{"missionfail7"},            //	"Mission Failed\nThe Scientist Has Been Killed"
-	{"missionfail8"},            //	"fail 8"
-	{"missionfail9"},            //	"fail 9"
-	{"missionfail10"},           //	"fail 10"
-	{"missionfail11"},           //	"fail 11"
-	{"missionfail12"},           //	"fail 12"
-	{"missionfail13"},           //	"fail 13"
-	{"missionfail14"},           //	"fail 14"
-	{"missionfail15"},           //	"fail 15"
-	{"missionfail16"},           //	"fail 16"
-	{"end_title"},               //	"Mission Stats"
-	{"end_exit"},                //	"Proceed forward to exit..."
-	{"end_noexit"},              //	"Exit not yet available"
+	{"missionfail1", "Mission Failed\nYou Killed a Civilian"},
+	{"missionfail2", "Mission Failed\nYou Killed a Kreisau Agent"},
+	{"missionfail3", "Mission Failed\nYou Killed Kessler"},
+	{"missionfail4", "Mission Failed\nYou Killed Karl"},
+	{"missionfail5", "Mission Failed\nYou Have Been Detected"},
+	{"missionfail6", "Mission Failed\nRocket Launched"},
+	{"missionfail7", "Mission Failed\nThe Scientist Has Been Killed"},
+	{"missionfail8", "Mission Failed\nTank Destroyed"},
+	{"missionfail9", "Mission Failed\nYou Failed to Enter\nthe Rocket Base"},
+	{"missionfail10", "fail 10"},
+	{"missionfail11", "fail 11"},
+	{"missionfail12", "fail 12"},
+	{"missionfail13", "fail 13"},
+	{"missionfail14", "fail 14"},
+	{"missionfail15", "fail 15"},
+	{"missionfail16", "fail 16"},
+	{"end_title", "Mission Stats"},
+	{"end_exit", "Proceed forward to exit..."},
+	{"end_noexit", "Exit not yet available"},
 
-	{"yes"},                 //
-	{"no"},                      //
-	{"keywait"},             //	"Waiting for new key... Press ESCAPE to cancel"
-	{"keychange"},               //	"Press ENTER or CLICK to change, Press BACKSPACE to clear"
-	{"pleasewait"},              //	"Please Wait..."
-	{"dynamitetimer"},           //	"Dynamite timer set at"
-	{"second"},                  //
-	{"seconds"},             //
-	{"minute"},                  //
-	{"minutes"},             //
-	{"hour"},                    //
-	{"hours"},                   //
-	{"day"},                 //
-	{"days"},                    //
-	{"month"},                   //
-	{"months"},                  //
-	{"year"},                    //
-	{"years"},                   //
-	{"or"},                       //
-	{"item"},
-	{"weapon"},
-	{"price"},
-	{"ammo_price"},
-    {"survival_gameover"},
-	{"usedcross"},
-	{"usedemp"},
-	{"usedshield"}
+	{"yes", "yes"},
+	{"no", "no"},
+	{"keywait", "Waiting for new key... Press ESCAPE to cancel"},
+	{"keychange", "Press ENTER or CLICK to change, Press BACKSPACE to clear"},
+	{"pleasewait", "Please Wait..."},
+	{"dynamitetimer", "Dynamite timer set at"},
+	{"second", "second"},
+	{"seconds", "seconds"},
+	{"minute", "minute"},
+	{"minutes", "minutes"},
+	{"hour", "hour"},
+	{"hours", "hours"},
+	{"day", "day"},
+	{"days", "days"},
+	{"month", "month"},
+	{"months", "months"},
+	{"year", "year"},
+	{"years", "years"},
+	{"or", "or"},
+	{"item", "Item"},
+	{"weapon", "Weapon"},
+	{"price", "Price"},
+	{"ammo_price", "Ammo Price"},
+	{"survival_gameover", "Game Over"},
+
+	// keyed by literal text here, not a symbolic name - "Complete!" must match what g_combat.c sends over the network
+	{"working", "Working..."},
+	{"Complete!", "Complete!"},
+	{"Player Slot Available", "Player Slot Available"},
+	{"Lobby Leader:", "Lobby Leader:"}
 };
 
-// map-specific subtitle translations, populated at runtime from text/EnglishUSA/maps/<mapname>.txt
+// map-specific subtitle translations, populated at runtime from text/maps/<mapname>.txt
 translateTextString_t translateTextStrings[MAX_TRANSLATETEXTSTRINGS] = {
 };
 
@@ -743,26 +746,6 @@ qboolean PC_String_Parse( int handle, const char **out ) {
 	*( out ) = String_Alloc( token.string );
 	return qtrue;
 }
-
-#ifdef LOCALISATION
-/*
-=================
-PC_String_Parse_Trans
-
-NERVE - SMF - translates string
-=================
-*/
-qboolean PC_String_Parse_Trans( int handle, const char **out ) {
-	pc_token_t token;
-
-	if ( !trap_PC_ReadToken( handle, &token ) ) {
-		return qfalse;
-	}
- 
-	*( out ) = String_Alloc( DC->translateString( token.string ) );
-	return qtrue;
-}
-#endif
 
 // NERVE - SMF
 /*
@@ -3626,11 +3609,7 @@ void Item_Text_Wrapped_Paint( itemDef_t *item ) {
 		start += p - start + 1;
 		p = strchr( p + 1, '\r' );
 	}
-#ifdef LOCALISATION
-	DC->drawText( x, y, item->font, item->textscale, color, DC->translateString( start ), 0, 0, item->textStyle );
-#else
 	DC->drawText( x, y, item->font, item->textscale, color, start, 0, 0, item->textStyle );
-#endif
 }
 
 void Item_Text_Paint( itemDef_t *item ) {
@@ -3707,11 +3686,7 @@ void Item_Text_Paint( itemDef_t *item ) {
 //		DC->drawText(item->textRect.x - 1, item->textRect.y + 1, item->textscale * 1.02, item->window.outlineColor, textPtr, adjust);
 //	}
 
-#ifdef LOCALISATION
-	DC->drawText( item->textRect.x, item->textRect.y, item->font, item->textscale, color, DC->translateString( textPtr ), 0, 0, item->textStyle );
-#else
 	DC->drawText( item->textRect.x, item->textRect.y, item->font, item->textscale, color, textPtr, 0, 0, item->textStyle );
-#endif
 }
 
 
@@ -3773,13 +3748,8 @@ void Item_YesNo_Paint( itemDef_t *item ) {
 		memcpy( &newColor, &item->window.foreColor, sizeof( vec4_t ) );
 	}
 
-#ifdef LOCALISATION
-	yes_str = DC->translateString( yes_str );
-	no_str = DC->translateString( no_str );
-#else
 	yes_str = DC->getTranslatedString( yes_str );
 	no_str = DC->getTranslatedString( no_str );
-#endif
 
 	if ( item->text ) {
 		Item_Text_Paint( item );
@@ -3808,11 +3778,7 @@ void Item_Multi_Paint( itemDef_t *item ) {
 
 	if ( item->text ) {
 		Item_Text_Paint( item );
-#ifdef LOCALISATION
-		DC->drawText( item->textRect.x + item->textRect.w + 8, item->textRect.y, item->font, item->textscale, newColor, DC->translateString( text ), 0, 0, item->textStyle );
-#else
 		DC->drawText( item->textRect.x + item->textRect.w + 8, item->textRect.y, item->font, item->textscale, newColor, text, 0, 0, item->textStyle );
-#endif
 	} else {
 		DC->drawText( item->textRect.x, item->textRect.y, item->font, item->textscale, newColor, text, 0, 0, item->textStyle );
 	}
@@ -4217,11 +4183,7 @@ char* BindingFromName( const char *cvar ) {
 			if ( b2 != -1 ) {
 				DC->keynumToStringBuf( b2, g_nameBind2, 32 );
 				Q_strupr( g_nameBind2 );
-#ifdef LOCALISATION
-				strcat( g_nameBind1, va( " %s ", DC->translateString( "or" ) ) );
-#else
 				strcat( g_nameBind1, va( " %s ", DC->getTranslatedString( "or" ) ) );
-#endif
 				strcat( g_nameBind1, g_nameBind2 );
 			}
 			return g_nameBind1;         // NERVE - SMF
@@ -5245,13 +5207,8 @@ void Menu_Paint( menuDef_t *menu, qboolean forcePaint ) {
 
 		// MAYBE: if they click on the fillrect, sys_openurl ?
 		DC->fillRect( 5, 415, 640, 65, color );
-#ifndef LOCALISATION
 		DC->drawText( 10, 441, 0, .25, v, va( "You are running an old version (^3%s) ^7 and there is a new version (^2%s) ^7 available!", RTCWCOOP_VERSION_NUMBER, latest_version ), 0, 0, 0 );
 		DC->drawText( 10, 463, 0, .25, v, va( "Please search the internet for an update. http://www.rtcwcoop.com" ), 0, 0, 0 );
-#else
-		DC->drawText( 10, 441, 0, .25, v, DC->translateString( va( "You are running an old version (^3%s) ^7 and there is a new version (^2%s) ^7 available!", RTCWCOOP_VERSION_NUMBER, latest_version ) ), 0, 0, 0 );
-		DC->drawText( 10, 463, 0, .25, v, DC->translateString( va( "Please search the internet for an update. http://www.rtcwcoop.com" ) ), 0, 0, 0 );
-#endif
 
 	}
 }

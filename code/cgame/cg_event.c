@@ -478,11 +478,7 @@ static void CG_UseItem( centity_t *cent ) {
 	// print a message if the local player
 	if ( es->number == cg.snap->ps.clientNum ) {
 		if ( !itemNum ) {
-#ifdef LOCALISATION
-			CG_CenterPrint( "No item to use", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );	//----(SA)	modified
-#else
 			CG_CenterPrint( "noitem", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );	//----(SA)	modified
-#endif
 		} else {
 			item = BG_FindItemForHoldable( itemNum );
 
@@ -495,39 +491,19 @@ static void CG_UseItem( centity_t *cent ) {
 				case HI_BOOK3:
 					break;
 				case HI_WINE:
-#ifdef LOCALISATION
-					CG_CenterPrint( "You drank the wine", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#else
 					CG_CenterPrint( "drankwine", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#endif
 					break;
 				case HI_ADRENALINE:
-#ifdef LOCALISATION
-					CG_CenterPrint( "You used the adrenaline", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#else
 					CG_CenterPrint( "usedadrenaline", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#endif
 					break;
 				case HI_CROSS:
-#ifdef LOCALISATION
-					CG_CenterPrint( "You used the cross", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#else
 					CG_CenterPrint( "usedcross", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#endif
 					break;
 				case HI_EMP:
-#ifdef LOCALISATION
-					CG_CenterPrint( "You used the EMP device", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#else
 					CG_CenterPrint( "usedemp", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#endif
 					break;
 				case HI_XSHIELD:
-#ifdef LOCALISATION
-					CG_CenterPrint( "You used the shield", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#else
 					CG_CenterPrint( "usedshield", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-#endif
 					break;
 				default:
 					CG_CenterPrint( va( "Use %s", cgs.itemPrintNames[item - bg_itemlist] ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );

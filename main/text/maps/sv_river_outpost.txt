@@ -1,0 +1,18 @@
+{
+
+"buy_reinforce"  "Reinforce the Base"
+
+"secret_door" "Open the Lab"
+
+"buy_mg42_1" "MG42 Nest"
+
+"buy_mg42_2" "MG42 Nest"
+
+"buy_mine_field_1" "Mine Field"
+
+"November,1944" "November,1944"
+
+"Hurtgen Forest,Germany" "Hurtgen Forest,Germany"
+
+"River Outpost" "River Outpost"
+}

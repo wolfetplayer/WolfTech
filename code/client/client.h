@@ -175,11 +175,6 @@ typedef struct {
 	int limboChatPos;
 
 	qboolean cameraMode;
-
-#ifdef LOCALISATION
-	qboolean corruptedTranslationFile;
-	char translationVersion[MAX_STRING_TOKENS];
-#endif
 } clientActive_t;
 
 extern clientActive_t cl;
@@ -550,10 +545,7 @@ extern cvar_t *cl_IRC_reconnect_delay;
 extern cvar_t  *cl_missionStats;
 extern cvar_t  *cl_waitForFire;
 
-// NERVE - SMF - localization
-extern cvar_t  *cl_language;
 extern cvar_t  *cl_drawCineSubtitles;
-// -NERVE - SMF
 
 //=================================================
 
@@ -601,16 +593,7 @@ qboolean CL_CheckPaused(void);
 
 void CL_AddToLimboChat( const char *str );                  // NERVE - SMF
 qboolean CL_GetLimboString( int index, char *buf );         // NERVE - SMF
-
-#ifdef LOCALISATION
-// NERVE - SMF - localization
-void CL_InitTranslation( void );
-void CL_SaveTransTable( const char *fileName, qboolean newOnly );
-void CL_ReloadTranslation( void );
-void CL_TranslateString( const char *string, char *dest_buffer );
-const char* CL_TranslateStringBuf( const char *string ); // TTimo
-// -NERVE - SMF
-#endif
+void CL_LoadKeyNames( void );
 
 void CL_OpenURL( const char *url ); // TTimo
 

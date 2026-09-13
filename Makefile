@@ -305,10 +305,6 @@ ifndef USE_MONEY
 USE_MONEY=1
 endif
 
-ifndef USE_LOCALISATION
-USE_LOCALISATION=1
-endif
-
 ifndef USE_OPENGLES
 USE_OPENGLES=0
 endif
@@ -1245,11 +1241,6 @@ endif
 ifeq ($(USE_MONEY),1)
   CLIENT_CFLAGS += -DMONEY
   CFLAGS += -DMONEY
-endif
-
-ifeq ($(USE_LOCALISATION),1)
-  CLIENT_CFLAGS += -DLOCALISATION
-  CFLAGS += -DLOCALISATION
 endif
 
 # https://reproducible-builds.org/specs/source-date-epoch/

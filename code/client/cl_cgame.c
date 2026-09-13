@@ -1015,10 +1015,6 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_KEY_KEYNUMTOSTRINGBUF:
 		Key_KeynumToStringBuf( args[1], VMA( 2 ), args[3] );
 		return 0;
-
-	case CG_TRANSLATE_STRING:
-		CL_TranslateString( VMA( 1 ), VMA( 2 ) );
-		return 0;
 	*/
 	// - NERVE - SMF
 
@@ -1043,11 +1039,6 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	//bani - flush gl rendering buffers
 	case CG_R_GETTEXTUREID:
 		return re.GetTextureId( VMA( 1 ) );
-#ifdef LOCALISATION
-	case CG_TRANSLATE_STRING:
-		CL_TranslateString( VMA( 1 ), VMA( 2 ) );
-		return 0;
-#endif
 
 	// New in IORTCW
 	case CG_ALLOC:

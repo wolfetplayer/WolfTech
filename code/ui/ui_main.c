@@ -994,7 +994,6 @@ qboolean UI_ParseMenu( const char *menuFile ) {
 
 qboolean Load_Menu( int handle ) {
 	pc_token_t token;
-	int cl_language;        // NERVE - SMF
 
 	if ( !trap_PC_ReadToken( handle, &token ) ) {
 		return qfalse;
@@ -1017,37 +1016,6 @@ qboolean Load_Menu( int handle ) {
 			return qtrue;
 		}
 
-		// NERVE - SMF - localization crap
-		cl_language = atoi( UI_Cvar_VariableString( "cl_language" ) );
-
-		if ( cl_language ) {
-			const char *s = NULL;             // TTimo: init
-			const char *filename;
-			char out[256];
-//                      char filename[256];
-
-			COM_StripFilename( token.string, out );
-
-			filename = COM_SkipPath( token.string );
-
-			if ( cl_language == 1 ) {
-				s = va( "%s%s", out, "french/" );
-			} else if ( cl_language == 2 ) {
-				s = va( "%s%s", out, "german/" );
-			} else if ( cl_language == 3 ) {
-				s = va( "%s%s", out, "italian/" );
-			} else if ( cl_language == 4 ) {
-				s = va( "%s%s", out, "spanish/" );
-			} else if ( cl_language == 5 ) {
-				s = va( "%s%s", out, "hungarian/" );
-			} else if ( cl_language == 6 ) {
-				s = va( "%s%s", out, "dutch/" );
-			}
-
-			if ( UI_ParseMenu( va( "%s%s", s, filename ) ) ) {
-				continue;
-			}
-		}
 		// -NERVE
 		// if token.string == ui/clipboard.menu or ui/notebook.menu
 		// we should first try to load ui/mapname_clipboard.menu or ui/mapname_notebook.menu
@@ -1145,14 +1113,14 @@ void UI_LoadMenus( const char *menuFile, qboolean reset ) {
 UI_LoadTranslationStrings
 ==============
 */
-#ifndef LOCALISATION
 #define MAX_BUFFER          20000
+// strings.txt is a { KEY "value" } block matched by name; keys the file omits keep their compiled-in default
 static void UI_LoadTranslationStrings( void ) {
 	char buffer[MAX_BUFFER];
 	char *text;
 	char filename[MAX_QPATH];
 	fileHandle_t f;
-	int len, i, numStrings;
+	int len, numStrings;
 	char *token;
 
 	Com_sprintf( filename, MAX_QPATH, "text/strings.txt" );
@@ -1172,22 +1140,47 @@ static void UI_LoadTranslationStrings( void ) {
 	// parse the list
 	text = buffer;
 
-	numStrings = sizeof( translateStrings ) / sizeof( translateStrings[0] ) - 1;
+	numStrings = sizeof( translateStrings ) / sizeof( translateStrings[0] );
 
-	for ( i = 0; i < numStrings; i++ ) {
+	token = COM_ParseExt( &text, qtrue );
+	if ( token[0] != '{' ) {
+		Com_Printf( S_COLOR_RED "WARNING: expecting '{', found '%s' instead in %s\n", token, filename );
+		return;
+	}
+
+	while ( 1 ) {
+		char key[MAX_QPATH];
+		int i;
+
 		token = COM_ParseExt( &text, qtrue );
 		if ( !token[0] ) {
+			Com_Printf( S_COLOR_RED "WARNING: no concluding '}' in %s\n", filename );
 			break;
 		}
+		if ( token[0] == '}' ) {
+			break;
+		}
+		Q_strncpyz( key, token, sizeof( key ) );
+
+		token = COM_ParseExt( &text, qfalse );
+
+		for ( i = 0; i < numStrings; i++ ) {
+			if ( Q_stricmp( translateStrings[i].name, key ) ) {
+				continue;
+			}
 #ifdef Q3_VM // new IORTCW syscall (works for qvms and dlls), but have dlls use vanilla rtcw compatible code
-		translateStrings[i].localname = (char *)trap_Alloc( strlen( token ) + 1 );
+			translateStrings[i].localname = (char *)trap_Alloc( strlen( token ) + 1 );
 #else
-		translateStrings[i].localname = (char *)malloc( strlen( token ) + 1 );
+			translateStrings[i].localname = (char *)malloc( strlen( token ) + 1 );
 #endif
-		strcpy( translateStrings[i].localname, token );
+			strcpy( translateStrings[i].localname, token );
+			break;
+		}
+		if ( i == numStrings ) {
+			Com_Printf( S_COLOR_YELLOW "WARNING: %s has unknown translation key \"%s\"\n", filename, key );
+		}
 	}
 }
-#endif
 
 /*
 ==============
@@ -1270,12 +1263,6 @@ static void UI_LoadTranslateFile( const char *filename ) {
 
 static void UI_LoadTranslateTable( void ) {
 	UI_LoadTranslateFile( "text/text.txt" );
-
-	for ( int i = 1; i < 10; i++ ) {
-		char filename[MAX_QPATH];
-		Com_sprintf( filename, sizeof( filename ), "text/text_%d.txt", i );
-		UI_LoadTranslateFile( filename );
-	}
 }
 
 
@@ -1297,9 +1284,7 @@ void UI_Load( void ) {
 	String_Init();
 
 	// load translation text
-#ifndef LOCALISATION
 	UI_LoadTranslationStrings();
-#endif
 
 	UI_ParseGameInfo( "coopgameinfo.txt" );
 	UI_LoadArenas();
@@ -1878,11 +1863,7 @@ static void UI_DrawLoadStatus( rectDef_t *rect, vec4_t color, int align ) {
 		UI_FilledBar( rect->x, rect->y, rect->w, rect->h, color, NULL, NULL, percentDone, flags ); // flags (BAR_CENTER|BAR_VERT|BAR_LERP_COLOR)
 	} else {
 //		Text_Paint( rect->x, rect->y, UI_FONT_DEFAULT, 0.2f, color, "Please Wait...", 0, 0, 0);
-#ifdef LOCALISATION
-		Text_Paint( rect->x, rect->y, UI_FONT_DEFAULT, 0.2f, color, DC->translateString( "Please Wait..." ), 0, 0, 0 );
-#else
 		Text_Paint( rect->x, rect->y, UI_FONT_DEFAULT, 0.2f, color, DC->getTranslatedString( "pleasewait" ), 0, 0, 0 );
-#endif
 	}
 
 }
@@ -2099,11 +2080,7 @@ static void UI_DrawLobbySlot( rectDef_t *rect, int font, float scale, vec4_t col
 	trap_Cvar_VariableStringBuffer( va( "cl_lobbySlot%d", slotIndex ), name, sizeof( name ) );
 
 	if ( !name[0] ) {
-#ifdef LOCALISATION
-		Q_strncpyz( name, DC->translateString( "Player Slot Available" ), sizeof( name ) );
-#else
 		Q_strncpyz( name, DC->getTranslatedString( "Player Slot Available" ), sizeof( name ) );
-#endif
 	}
 
 	Text_Paint( rect->x, rect->y, font, scale, color, name, 0, 0, textStyle );
@@ -2158,11 +2135,7 @@ static void UI_DrawLobbyLeaderName( rectDef_t *rect, int font, float scale, vec4
 	char line[128];
 	const char *label;
 
-#ifdef LOCALISATION
-	label = DC->translateString( "Lobby Leader:" );
-#else
 	label = DC->getTranslatedString( "Lobby Leader:" );
-#endif
 
 	trap_Cvar_VariableStringBuffer( "cl_lobbyLeaderName", leaderName, sizeof( leaderName ) );
 
@@ -2291,10 +2264,9 @@ UI_LobbyString
 Looks up a main/text/text.txt "@KEY" string from C code (pass the key without
 the leading @) - the same table ItemParse_text() resolves an itemDef's "text"
 field through, via translateTable[]/countTranslate (populated by
-UI_LoadTranslateFile at startup). NOT the same table as DC->getTranslatedString/
-DC->translateString, which look up a small separate set of hardcoded literal
-strings (e.g. "Lobby Leader:", "pleasewait") and would silently return an
-unresolved "@KEY" back unchanged if used here instead.
+UI_LoadTranslateFile at startup). NOT the same table as DC->getTranslatedString,
+which looks up main/text/strings.txt's keyed entries (e.g. "pleasewait") and
+would silently return an unresolved "@KEY" back unchanged if used here instead.
 ===============
 */
 static const char *UI_LobbyString( const char *key ) {
@@ -2883,19 +2855,9 @@ static int UI_OwnerDrawWidth( int ownerDraw, int font, float scale ) {
 		break;
 	case UI_KEYBINDSTATUS:
 		if ( Display_KeyBindPending() ) {
-//			s = "Waiting for new key... Press ESCAPE to cancel";
-#ifdef LOCALISATION
-			s = DC->translateString( "Waiting for new key... Press ESCAPE to cancel" );
-#else
 			s = DC->getTranslatedString( "keywait" );
-#endif
 		} else {
-//			s = "Press ENTER or CLICK to change, Press BACKSPACE to clear";
-#ifdef LOCALISATION
-			s = DC->translateString( "Press ENTER or CLICK to change, Press BACKSPACE to clear" );
-#else
 			s = DC->getTranslatedString( "keychange" );
-#endif
 		}
 		break;
 	case UI_SERVERREFRESHDATE:
@@ -3011,19 +2973,9 @@ static void UI_DrawServerMOTD( rectDef_t *rect, int font, float scale, vec4_t co
 static void UI_DrawKeyBindStatus( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
 	//int ofs = 0; // TTimo: unused
 	if ( Display_KeyBindPending() ) {
-//		Text_Paint(rect->x, rect->y, font, scale, color, "Waiting for new key... Press ESCAPE to cancel", 0, 0, textStyle);
-#ifdef LOCALISATION
-		Text_Paint( rect->x, rect->y, font, scale, color, DC->translateString( "keywait" ), 0, 0, textStyle );
-#else
 		Text_Paint( rect->x, rect->y, font, scale, color, DC->getTranslatedString( "keywait" ), 0, 0, textStyle );
-#endif
 	} else {
-//		Text_Paint(rect->x, rect->y, font, scale, color, "Press ENTER or CLICK to change, Press BACKSPACE to clear", 0, 0, textStyle);
-#ifdef LOCALISATION
-		Text_Paint( rect->x, rect->y, font, scale, color, DC->translateString( "keychange" ), 0, 0, textStyle );
-#else
 		Text_Paint( rect->x, rect->y, font, scale, color, DC->getTranslatedString( "keychange" ), 0, 0, textStyle );
-#endif
 	}
 }
 
@@ -4560,10 +4512,6 @@ static playerType_t playerTypes[] = {
 	{ "player_window_lieutenant",    PT_KNIFE | PT_PISTOL | PT_RIFLE | PT_EXPLOSIVES }
 };
 
-// TTimo
-#ifdef LOCALISATION
-static char translated_yes[4], translated_no[4];
-#endif
 typedef struct {
 	int weapindex;
 
@@ -6734,7 +6682,6 @@ static const char *UI_FileText( char *fileName ) {
 UI_translateString
 ==============
 */
-#ifndef LOCALISATION
 static const char *UI_translateString( const char *inString ) {
 	int i, numStrings;
 
@@ -6755,7 +6702,6 @@ static const char *UI_translateString( const char *inString ) {
 
 	return inString;
 }
-#endif
 //----(SA)	end
 
 
@@ -7685,11 +7631,7 @@ void _UI_Init( qboolean inGameLoad ) {
 	uiInfo.uiDC.feederItemText = &UI_FeederItemText;
 	uiInfo.uiDC.fileText = &UI_FileText;    //----(SA)
 
-#ifndef LOCALISATION
 	uiInfo.uiDC.getTranslatedString = &UI_translateString;  //----(SA) added
-#else
-	uiInfo.uiDC.translateString = &trap_TranslateString;
-#endif
 
 	uiInfo.uiDC.feederSelection = &UI_FeederSelection;
 	uiInfo.uiDC.feederAddItem = &UI_FeederAddItem;                  // NERVE - SMF
@@ -7715,9 +7657,7 @@ void _UI_Init( qboolean inGameLoad ) {
 	String_Init();
 
 	// load translation text
-#ifndef LOCALISATION
 	UI_LoadTranslationStrings();
-#endif
 
 	// load "@key" translate table used by menu text/cvarStrList/cvarFloatList
 	UI_LoadTranslateTable();
@@ -7781,12 +7721,6 @@ void _UI_Init( qboolean inGameLoad ) {
 	}
 
 	trap_Cvar_Register( NULL, "debug_protocol", "", 0 );
-
-	// init Yes/No once for cl_language -> server browser
-#ifdef LOCALISATION
-	Q_strncpyz( translated_yes, DC->translateString( "Yes" ), sizeof( translated_yes ) );
-	Q_strncpyz( translated_no, DC->translateString( "No" ), sizeof( translated_no ) );
-#endif
 }
 
 

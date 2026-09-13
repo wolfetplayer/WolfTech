@@ -696,37 +696,16 @@ void Con_DrawNotify( void ) {
 		v = CHAT_PROMPT_Y;
 
 		if ( chat_team ) {
-#ifdef LOCALISATION
-			char buf[128];
-			CL_TranslateString( "say_team:", buf );
-			SCR_DrawBigString( CHAT_PROMPT_X, v, buf, 1.0f, qfalse );
-			skip = strlen( buf ) + 2;
-#else
 			SCR_DrawBigString ( CHAT_PROMPT_X, v, "say_team:", 1.0f, qfalse );
 			skip = 10;
-#endif
 #ifdef USE_IRC
 		} else if ( chat_irc ) {
-#ifdef LOCALISATION
-			char buf[128];
-			CL_TranslateString( "say_irc:", buf );
-			SCR_DrawBigString( CHAT_PROMPT_X, v, buf, 1.0f, qfalse );
-			skip = strlen( buf ) + 2;
-#else
 			SCR_DrawBigString( CHAT_PROMPT_X, v, "say_irc:", 1.0f, qfalse );
 			skip = 10;
-#endif
 #endif // USE_IRC
 		} else {
-#ifdef LOCALISATION
-			char buf[128];
-			CL_TranslateString( "say:", buf );
-			SCR_DrawBigString( CHAT_PROMPT_X, v, buf, 1.0f, qfalse );
-			skip = strlen( buf ) + 1;
-#else
 			SCR_DrawBigString ( CHAT_PROMPT_X, v, "say:", 1.0f, qfalse );
 			skip = 5;
-#endif
 		}
 
 		Field_BigDraw( &chatField, CHAT_PROMPT_X + skip * BIGCHAR_WIDTH, v, SCREEN_WIDTH - CHAT_PROMPT_X - ( skip + 1 ) * BIGCHAR_WIDTH, qtrue, qtrue );

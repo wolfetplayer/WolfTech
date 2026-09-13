@@ -2936,25 +2936,7 @@ qboolean AICast_ScriptAction_MissionFailed( cast_state_t *cs, char *params ) {
 	if ( mof < 0 ) {
 		mof = 0;
 	}
-#ifdef LOCALISATION
-	if ( mof == 1 ) {
-		trap_SendServerCommand( -1, "cp \"Mission Failed\nYou Killed a Civilian\"" );
-	} else if ( mof == 2 ) {
-		trap_SendServerCommand( -1, "cp \"Mission Failed\nYou Killed a Kreisau Agent\"" );
-	} else if ( mof == 3 ) {
-		trap_SendServerCommand( -1, "cp \"Mission Failed\nYou Killed Kessler\"" );
-	} else if ( mof == 4 ) {
-		trap_SendServerCommand( -1, "cp \"Mission Failed\nYou Killed Karl\"" );
-	} else if ( mof == 5 ) {
-		trap_SendServerCommand( -1, "cp \"Mission Failed\nYou Have Been Detected\"" );
-	} else if ( mof == 6 ) {
-		trap_SendServerCommand( -1, "cp \"Mission Failed\nRocket Launched\"" );
-	} else if ( mof == 7 ) {
-		trap_SendServerCommand( -1, "cp \"Mission Failed\nThe Scientist Has Been Killed\"" );
-	}
-#else
 	trap_SendServerCommand( -1, va( "cp missionfail%d", mof ) );
-#endif
 	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
 		// reload the current savegame, after a delay
 		trap_SetConfigstring( CS_SCREENFADE, va( "1 %i %i", level.time + 250, time * 1000 ) );
@@ -3447,20 +3429,12 @@ qboolean AICast_ScriptAction_ChangeLevel( cast_state_t *cs, char *params ) {
 		for ( i = 0; i < level.numObjectives; i++ ) {
 			if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
 				if ( !( player->missionObjectives & ( 1 << i ) ) ) {
-#ifdef LOCALISATION
-					trap_SendServerCommand( -1, "cp \"Objectives not complete\"" );
-#else
 					trap_SendServerCommand( -1, "cp objectivesnotcomplete" );
-#endif
 					return qtrue;
 				}
 			} else {
 				if ( !( level.missionObjectives & ( 1 << i ) ) ) {
-#ifdef LOCALISATION
-					trap_SendServerCommand( -1, "cp \"Objectives not complete\"" );
-#else
 					trap_SendServerCommand( -1, "cp objectivesnotcomplete" );
-#endif
 					return qtrue;
 				}
 			}
@@ -3583,11 +3557,7 @@ qboolean AICast_ScriptAction_FoundSecret( cast_state_t *cs, char *params ) {
 	gentity_t *ent;
 
 	level.numSecretsFound++;
-#ifdef LOCALISATION
-	trap_SendServerCommand( cs->entityNum, "cp \"You found a secret area\"" );
-#else
 	trap_SendServerCommand( cs->entityNum, "cp secretarea" );
-#endif
 	G_SendMissionStats();
 
 	ent = &g_entities[cs->entityNum];

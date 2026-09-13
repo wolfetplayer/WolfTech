@@ -1374,16 +1374,8 @@ static void CG_DrawPickupItem( void ) {
 
 			color[0] = color[1] = color[2] = 1.0;
 			color[3] = fadeColor[0];
-#ifdef LOCALISATION
-			{
-				const char *translated = CG_TranslateString( pickupText );
-				w = CG_Text_Width_Ext( translated, pickupScale, 0, CG_CHAT_FONT );
-				CG_ChatTextPaint( 320 - ( w / 2 ), 398, pickupScale, pickupScale, color, translated, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
-			}
-#else
 			w = CG_Text_Width_Ext( pickupText, pickupScale, 0, CG_CHAT_FONT );
 			CG_ChatTextPaint( 320 - ( w / 2 ), 398, pickupScale, pickupScale, color, pickupText, 0, 0, ITEM_TEXTSTYLE_SHADOWED, CG_CHAT_FONT );
-#endif
 
 			trap_R_SetColor( NULL );
 		}
@@ -1840,11 +1832,7 @@ void CG_CenterPrint( const char *str, int y, int charWidth ) {
 	}
 
 //----(SA)	added translation lookup
-#ifdef LOCALISATION
-	Q_strncpyz( (char *)cg.centerPrint, CG_TranslateString( (char*)str ), sizeof( cg.centerPrint ) );
-#else
 	Q_strncpyz( (char *)cg.centerPrint, CG_translateString( (char*)str ), sizeof( cg.centerPrint ) );
-#endif
 //----(SA)	end
 
 	cg.centerPrintPriority = priority;  // NERVE - SMF
@@ -1903,11 +1891,7 @@ void CG_PriorityCenterPrint( const char *str, int y, int charWidth, int priority
 	}
 
 //----(SA)	added translation lookup
-#ifdef LOCALISATION
-	Q_strncpyz( (char *)cg.centerPrint, CG_TranslateString( (char*)str ), sizeof( cg.centerPrint ) );
-#else
 	Q_strncpyz( (char *)cg.centerPrint, CG_translateString( (char*)str ), sizeof( cg.centerPrint ) );
-#endif
 //----(SA)	end
 	cg.centerPrintPriority = priority;  // NERVE - SMF
 
@@ -3880,7 +3864,7 @@ static void CG_DrawConstructProgress( void ) {
 	vec4_t color = { 0.8f, 0.6f, 0.2f, 1.0f };
 	vec4_t bgColor = { 0, 0, 0, 0.6f };
 	float frac, centerX, barW;
-	char *s;
+	const char *s;
 	float w;
 
 	if ( cg.snap->ps.stats[STAT_CONSTRUCT_PROGRESS] > 0 ) {
@@ -3906,11 +3890,7 @@ static void CG_DrawConstructProgress( void ) {
 
 	CG_FilledBar( centerX - barW / 2, 400, barW, 14, color, NULL, bgColor, frac, BAR_BG );
 
-#ifdef LOCALISATION
-	s = CG_TranslateString( "Working..." );   // msgid lives in translations/wolftech.lang
-#else
-	s = "Working...";
-#endif
+	s = CG_translateString( "working" );
 	w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
 	CG_DrawSmallStringColor( centerX - w / 2, 384, s, colorWhite );
 }
@@ -4211,29 +4191,17 @@ static void CG_DrawVote( void ) {
 	}
 
 	if ( !( cg.snap->ps.eFlags & EF_VOTED ) ) {
-#ifdef LOCALISATION
-		s = va( CG_TranslateString( "VOTE(%i):%s" ), sec, cgs.voteString );
-#else
 		s = va( "VOTE(%i):%s", sec, cgs.voteString );
-#endif
 		// Should we push this down?
 		// strip ^N codes so server-controlled voteString can't override the fixed vote-text color
 		Q_StripColorCodes( s );
 		CG_ChatTextPaint( 8, 200, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
 
-#ifdef LOCALISATION
-		s = va( CG_TranslateString( "YES(%s):%i, NO(%s):%i" ), str1, cgs.voteYes, str2, cgs.voteNo );
-#else
 		s = va( "YES(%s):%i, NO(%s):%i", str1, cgs.voteYes, str2, cgs.voteNo );
-#endif
 		CG_ChatTextPaint( 8, 214, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 60, 0, CG_CHAT_FONT );
 	} else {
 
-#ifdef LOCALISATION
-		s = va( CG_TranslateString( "Y:%i, N:%i" ), cgs.voteYes, cgs.voteNo );
-#else
 		s = va( "Y:%i, N:%i", cgs.voteYes, cgs.voteNo );
-#endif
 		CG_ChatTextPaint( 8, 214, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, s, 0, 20, 0, CG_CHAT_FONT );
 	}
 }
@@ -4327,47 +4295,26 @@ static qboolean CG_DrawFollow( void ) {
 		color[1] = 0.0;
 		color[2] = 0.0;
 		if ( cgs.gametype == GT_COOP_SURVIVAL ) {
-#ifdef LOCALISATION
-			Q_strncpyz( deploytime, CG_TranslateString( "Waiting for next wave..." ), sizeof(deploytime) );
-#else
 			Q_strncpyz( deploytime, "Waiting for next wave...", sizeof(deploytime) );
-#endif
 		} else if ( cg.snap->ps.persistant[PERS_RESPAWNS_LEFT] == 0 ) {
-#ifdef LOCALISATION
-			Q_strncpyz( deploytime, CG_TranslateString( "No more deployments this round" ), sizeof(deploytime) );
-#else
 			Q_strncpyz( deploytime, "No more deployments this round", sizeof(deploytime) );
-#endif
 		} else {
-#ifdef LOCALISATION
-			Com_sprintf( deploytime, sizeof(deploytime), CG_TranslateString( "Deploying in %d seconds" ),
-					 (int)( 1 + (float)( cg_limbotime.integer - ( cg.time % cg_limbotime.integer ) ) * 0.001f ) );
-#else
 			Com_sprintf( deploytime, sizeof(deploytime), "Deploying in %d seconds",
 					 (int)( 1 + (float)( cg_limbotime.integer - ( cg.time % cg_limbotime.integer ) ) * 0.001f ) );
-#endif
 		}
 
 		CG_ChatTextPaint( INFOTEXT_STARTX, 68, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, deploytime, 0, 80, 0, CG_CHAT_FONT );
 
 		// DHM - Nerve :: Don't display if you're following yourself
 		if ( cg.snap->ps.clientNum != cg.clientNum ) {
-#ifdef LOCALISATION
-			Com_sprintf( deploytime, sizeof(deploytime), "(%s %s)", CG_TranslateString( "Following" ), cgs.clientinfo[ cg.snap->ps.clientNum ].name );
-#else
 			Com_sprintf( deploytime, sizeof(deploytime), "(%s %s)", "Following", cgs.clientinfo[ cg.snap->ps.clientNum ].name );
-#endif
 			// player name may contain ^N color codes; strip them to keep the fixed color
 			Q_StripColorCodes( deploytime );
 			CG_ChatTextPaint( INFOTEXT_STARTX, 86, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, color, deploytime, 0, 80, 0, CG_CHAT_FONT );
 		}
 	} else {
 		// jpw
-#ifdef LOCAISATION
-		CG_DrawSmallString( INFOTEXT_STARTX, 68, CG_TranslateString( "following" ), 1.0F );
-#else
 		CG_DrawSmallString( INFOTEXT_STARTX, 68, "following", 1.0F );
-#endif
 
 		Q_strncpyz( deploytime, cgs.clientinfo[ cg.snap->ps.clientNum ].name, sizeof( deploytime ) );
 		Q_StripColorCodes( deploytime );

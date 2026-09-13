@@ -2,6 +2,7 @@ game_manager
 {
 	spawn
 	{
+		introtitle line "March 1943" line "Castle Wolfenstein, Germany" mission "Escape!" fadein 500 hold 4000 fadeout 1200 stagger 1400
 		trigger player map_start	//Prevents late players affecting the game
 	}
 	
