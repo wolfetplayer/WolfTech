@@ -694,6 +694,12 @@ qboolean    ConsoleCommand( void ) {
 		return qtrue;
 	}
 
+	// Recast/Detour navigation (AAS migration, Phase 0: smoke test only)
+	if ( Q_stricmp( cmd, "navtest" ) == 0 ) {
+		G_Printf( "navtest: trap_Nav_Test() returned %d\n", trap_Nav_Test() );
+		return qtrue;
+	}
+
 	if ( Q_stricmp( cmd, "forceteam" ) == 0 ) {
 		Svcmd_ForceTeam_f();
 		return qtrue;

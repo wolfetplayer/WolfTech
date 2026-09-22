@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "server.h"
 
 #include "../botlib/botlib.h"
+#include "../botlib/nav/nav_public.h"
 
 botlib_export_t *botlib_export;
 
@@ -556,6 +557,10 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->aas.AAS_SetAASBlockingEntity( VMA( 1 ), VMA( 2 ), args[3] );
 		return 0;
 		// done.
+
+		// Recast/Detour navigation (AAS migration, Phase 0: smoke test only)
+	case BOTLIB_NAV_TEST:
+		return Nav_Test();
 
 	case BOTLIB_EA_SAY:
 		botlib_export->ea.EA_Say( args[1], VMA( 2 ) );

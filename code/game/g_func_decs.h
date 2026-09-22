@@ -500,6 +500,7 @@ extern int trap_AAS_FindAttackSpotWithinRange ( int srcnum , int rangenum , int 
 extern qboolean trap_AAS_RT_GetHidePos ( vec3_t srcpos , int srcnum , int srcarea , vec3_t destpos , int destnum , int destarea , vec3_t returnPos ) ;
 extern void trap_AAS_RT_ShowRoute ( vec3_t srcpos , int srcnum , int destnum ) ;
 extern int trap_AAS_PredictClientMovement ( void * move , int entnum , vec3_t origin , int presencetype , int onground , vec3_t velocity , vec3_t cmdmove , int cmdframes , int maxframes , float frametime , int stopevent , int stopareanum , int visualize ) ;
+extern int trap_Nav_Test ( void ) ;
 extern int trap_AAS_Swimming ( vec3_t origin ) ;
 extern int trap_AAS_AreaTravelTimeToGoalArea ( int areanum , vec3_t origin , int goalareanum , int travelflags ) ;
 extern int trap_AAS_AreaReachability ( int areanum ) ;

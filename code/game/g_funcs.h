@@ -500,6 +500,7 @@ If you have questions concerning this license or the applicable additional terms
 {"trap_AAS_RT_GetHidePos", (byte *)trap_AAS_RT_GetHidePos},
 {"trap_AAS_RT_ShowRoute", (byte *)trap_AAS_RT_ShowRoute},
 {"trap_AAS_PredictClientMovement", (byte *)trap_AAS_PredictClientMovement},
+{"trap_Nav_Test", (byte *)trap_Nav_Test},
 {"trap_AAS_Swimming", (byte *)trap_AAS_Swimming},
 {"trap_AAS_AreaTravelTimeToGoalArea", (byte *)trap_AAS_AreaTravelTimeToGoalArea},
 {"trap_AAS_AreaReachability", (byte *)trap_AAS_AreaReachability},

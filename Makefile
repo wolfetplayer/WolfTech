@@ -342,6 +342,8 @@ SYSDIR=$(MOUNT_DIR)/sys
 GDIR=$(MOUNT_DIR)/game
 CGDIR=$(MOUNT_DIR)/cgame
 BLIBDIR=$(MOUNT_DIR)/botlib
+NAVDIR=$(MOUNT_DIR)/botlib/nav
+RECASTDIR=$(MOUNT_DIR)/recastnavigation
 NDIR=$(MOUNT_DIR)/null
 UIDIR=$(MOUNT_DIR)/ui
 JPDIR=$(MOUNT_DIR)/jpeg-8c
@@ -1294,6 +1296,14 @@ $(echo_cmd) "BOT_CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(BOTCFLAGS) $(OPTIMIZE) -DBOTLIB -o $@ -c $<
 endef
 
+# Recast/Detour navigation (AAS migration); shared by client and ded like DO_BOT_CC.
+NAVCXXFLAGS=-std=c++11 -I$(RECASTDIR)/Recast/Include -I$(RECASTDIR)/Detour/Include -I$(RECASTDIR)/DetourTileCache/Include
+
+define DO_NAV_CXX
+$(echo_cmd) "NAV_CXX $<"
+$(Q)$(CXX) $(NOTSHLIBCFLAGS) $(CFLAGS) $(BOTCFLAGS) $(NAVCXXFLAGS) $(OPTIMIZE) -DBOTLIB -o $@ -c $<
+endef
+
 ifeq ($(GENERATE_DEPENDENCIES),1)
   DO_QVM_DEP=cat $(@:%.o=%.d) | sed -e 's/\.o/\.asm/g' >> $(@:%.o=%.d)
 endif
@@ -1481,6 +1491,7 @@ $(B).zip: $(TARGETS)
 
 makedirs:
 	@$(MKDIR) $(B)/splines
+	@$(MKDIR) $(B)/recast
 	@$(MKDIR) $(B)/client/opus
 	@$(MKDIR) $(B)/client/vorbis
 	@$(MKDIR) $(B)/renderer
@@ -1870,6 +1881,28 @@ Q3OBJ = \
   $(B)/client/l_precomp.o \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o \
+  \
+  $(B)/client/nav_main.o \
+  $(B)/recast/Recast.o \
+  $(B)/recast/RecastAlloc.o \
+  $(B)/recast/RecastArea.o \
+  $(B)/recast/RecastAssert.o \
+  $(B)/recast/RecastContour.o \
+  $(B)/recast/RecastFilter.o \
+  $(B)/recast/RecastLayers.o \
+  $(B)/recast/RecastMesh.o \
+  $(B)/recast/RecastMeshDetail.o \
+  $(B)/recast/RecastRasterization.o \
+  $(B)/recast/RecastRegion.o \
+  $(B)/recast/DetourAlloc.o \
+  $(B)/recast/DetourAssert.o \
+  $(B)/recast/DetourCommon.o \
+  $(B)/recast/DetourNavMesh.o \
+  $(B)/recast/DetourNavMeshBuilder.o \
+  $(B)/recast/DetourNavMeshQuery.o \
+  $(B)/recast/DetourNode.o \
+  $(B)/recast/DetourTileCache.o \
+  $(B)/recast/DetourTileCacheBuilder.o \
   \
   $(B)/splines/math_angles.o \
   $(B)/splines/math_matrix.o \
@@ -2493,6 +2526,28 @@ Q3DOBJ = \
   $(B)/ded/l_script.o \
   $(B)/ded/l_struct.o \
   \
+  $(B)/ded/nav_main.o \
+  $(B)/recast/Recast.o \
+  $(B)/recast/RecastAlloc.o \
+  $(B)/recast/RecastArea.o \
+  $(B)/recast/RecastAssert.o \
+  $(B)/recast/RecastContour.o \
+  $(B)/recast/RecastFilter.o \
+  $(B)/recast/RecastLayers.o \
+  $(B)/recast/RecastMesh.o \
+  $(B)/recast/RecastMeshDetail.o \
+  $(B)/recast/RecastRasterization.o \
+  $(B)/recast/RecastRegion.o \
+  $(B)/recast/DetourAlloc.o \
+  $(B)/recast/DetourAssert.o \
+  $(B)/recast/DetourCommon.o \
+  $(B)/recast/DetourNavMesh.o \
+  $(B)/recast/DetourNavMeshBuilder.o \
+  $(B)/recast/DetourNavMeshQuery.o \
+  $(B)/recast/DetourNode.o \
+  $(B)/recast/DetourTileCache.o \
+  $(B)/recast/DetourTileCacheBuilder.o \
+  \
   $(B)/ded/null_client.o \
   $(B)/ded/null_input.o \
   $(B)/ded/null_snddma.o \
@@ -2560,7 +2615,7 @@ endif
 
 $(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) -o $@ $(Q3DOBJ) $(LIBS)
+	$(Q)$(CXX) $(CFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) -o $@ $(Q3DOBJ) $(LIBS)
 
 
 
@@ -2811,6 +2866,18 @@ $(B)/client/%.o: $(CMDIR)/%.c
 $(B)/client/%.o: $(BLIBDIR)/%.c
 	$(DO_BOT_CC)
 
+$(B)/client/%.o: $(NAVDIR)/%.cpp
+	$(DO_NAV_CXX)
+
+$(B)/recast/%.o: $(RECASTDIR)/Recast/Source/%.cpp
+	$(DO_NAV_CXX)
+
+$(B)/recast/%.o: $(RECASTDIR)/Detour/Source/%.cpp
+	$(DO_NAV_CXX)
+
+$(B)/recast/%.o: $(RECASTDIR)/DetourTileCache/Source/%.cpp
+	$(DO_NAV_CXX)
+
 $(B)/client/%.o: $(OGGDIR)/src/%.c
 	$(DO_CC)
 
@@ -2964,6 +3031,9 @@ $(B)/ded/%.o: $(ZDIR)/%.c
 
 $(B)/ded/%.o: $(BLIBDIR)/%.c
 	$(DO_BOT_CC)
+
+$(B)/ded/%.o: $(NAVDIR)/%.cpp
+	$(DO_NAV_CXX)
 
 $(B)/ded/%.o: $(SYSDIR)/%.c
 	$(DO_DED_CC)

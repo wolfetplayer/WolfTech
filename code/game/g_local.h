@@ -1525,6 +1525,9 @@ qboolean    trap_AAS_GetRouteFirstVisPos( vec3_t srcpos, vec3_t destpos, int tra
 void        trap_AAS_SetAASBlockingEntity( vec3_t absmin, vec3_t absmax, qboolean blocking );
 // done.
 
+// Recast/Detour navigation (AAS migration, Phase 0: smoke test only)
+int         trap_Nav_Test( void );
+
 void    trap_EA_Say( int client, char *str );
 void    trap_EA_SayTeam( int client, char *str );
 void    trap_EA_UseItem( int client, char *it );

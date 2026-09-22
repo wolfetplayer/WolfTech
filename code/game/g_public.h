@@ -31,7 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 // g_public.h -- game module information visible to server
 
-#define GAME_API_VERSION    8
+#define GAME_API_VERSION    9
 
 // entity->svFlags
 // the server does not know how to interpret most of the values
@@ -300,6 +300,9 @@ typedef enum {
 	BOTLIB_AAS_GETROUTEFIRSTVISPOS,
 	BOTLIB_AAS_SETAASBLOCKINGENTITY,
 	// done.
+
+	// Recast/Detour navigation (AAS migration, Phase 0: smoke test only)
+	BOTLIB_NAV_TEST = 350,
 
 	BOTLIB_EA_SAY = 400,
 	BOTLIB_EA_SAY_TEAM,

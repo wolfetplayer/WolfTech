@@ -393,6 +393,11 @@ void trap_AAS_SetAASBlockingEntity( vec3_t absmin, vec3_t absmax, qboolean block
 }
 // done.
 
+// Recast/Detour navigation (AAS migration, Phase 0: smoke test only)
+int trap_Nav_Test( void ) {
+	return syscall( BOTLIB_NAV_TEST );
+}
+
 void trap_EA_Say( int client, char *str ) {
 	syscall( BOTLIB_EA_SAY, client, str );
 }
