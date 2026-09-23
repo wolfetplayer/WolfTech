@@ -43,6 +43,9 @@ endif
 ifndef BUILD_BSPC
   BUILD_BSPC = 0
 endif
+ifndef BUILD_NAVGEN
+  BUILD_NAVGEN = 0
+endif
 ifndef ONLY_BSPC
   ONLY_BSPC = 0
 endif
@@ -159,6 +162,10 @@ ifndef BSPCBIN
   else
     BSPCBIN=bspc
   endif
+endif
+
+ifndef NAVGENBIN
+  NAVGENBIN=navgen
 endif
 
 ifndef SERVERBIN
@@ -362,6 +369,7 @@ Q3LCCSRCDIR=$(MOUNT_DIR)/tools/lcc/src
 SDLHDIR=$(MOUNT_DIR)/SDL3
 LIBSDIR=$(MOUNT_DIR)/libs
 BSPCDIR=$(MOUNT_DIR)/bspc
+NAVGENDIR=$(MOUNT_DIR)/navgen
 BSPCBLIBDIR=$(MOUNT_DIR)/botlib
 BSPCCMDIR=$(MOUNT_DIR)/qcommon
 
@@ -1069,6 +1077,10 @@ ifneq ($(BUILD_BSPC),0)
     BSPC_CFLAGS += -DBSPC
 endif
 
+ifneq ($(BUILD_NAVGEN),0)
+    TARGETS += $(B)/$(NAVGENBIN)$(FULLBINEXT)
+endif
+
 ifneq ($(ONLY_BSPC),0)
     TARGETS = $(B)/$(BSPCBIN)$(FULLBINEXT)
     BSPC_CFLAGS += -DBSPC
@@ -1357,6 +1369,11 @@ $(echo_cmd) "CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(BSPC_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
+define DO_NAVGEN_CXX
+$(echo_cmd) "NAVGEN_CXX $<"
+$(Q)$(CXX) $(NOTSHLIBCFLAGS) $(CFLAGS) $(CLIENT_CFLAGS) $(NAVCXXFLAGS) $(OPTIMIZE) -o $@ -c $<
+endef
+
 
 #############################################################################
 # STEAMWORKS INTEGRATION
@@ -1499,6 +1516,7 @@ makedirs:
 	@$(MKDIR) $(B)/rend2/glsl
 	@$(MKDIR) $(B)/ded
 	@$(MKDIR) $(B)/bspc
+	@$(MKDIR) $(B)/navgen
 	@$(MKDIR) $(B)/$(BASEGAME)/cgame
 	@$(MKDIR) $(B)/$(BASEGAME)/game
 	@$(MKDIR) $(B)/$(BASEGAME)/ui
@@ -1604,6 +1622,44 @@ $(B)/$(BSPCBIN)$(FULLBINEXT): $(Q3BSPCOBJ)# $(ZLIB_LIBS)
 		-o $@ $(Q3BSPCOBJ) # $(ZLIB_LIBS)
 
     # add $(ZLIB_CFLAGS) if you want
+
+#############################################################################
+## NAVGEN
+#############################################################################
+
+Q3NAVGENOBJ = \
+  $(B)/navgen/navgen_main.o \
+  $(B)/navgen/navgen_geom.o \
+  $(B)/navgen/navgen_winding.o \
+  $(B)/navgen/navgen_patch.o \
+  $(B)/navgen/navgen_classes.o \
+  $(B)/navgen/navgen_bake.o \
+  \
+  $(B)/recast/Recast.o \
+  $(B)/recast/RecastAlloc.o \
+  $(B)/recast/RecastArea.o \
+  $(B)/recast/RecastAssert.o \
+  $(B)/recast/RecastContour.o \
+  $(B)/recast/RecastFilter.o \
+  $(B)/recast/RecastLayers.o \
+  $(B)/recast/RecastMesh.o \
+  $(B)/recast/RecastMeshDetail.o \
+  $(B)/recast/RecastRasterization.o \
+  $(B)/recast/RecastRegion.o \
+  $(B)/recast/DetourAlloc.o \
+  $(B)/recast/DetourAssert.o \
+  $(B)/recast/DetourCommon.o \
+  $(B)/recast/DetourNavMesh.o \
+  $(B)/recast/DetourNavMeshBuilder.o \
+  $(B)/recast/DetourNavMeshQuery.o \
+  $(B)/recast/DetourNode.o \
+  $(B)/recast/DetourTileCache.o \
+  $(B)/recast/DetourTileCacheBuilder.o
+
+$(B)/$(NAVGENBIN)$(FULLBINEXT): $(Q3NAVGENOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CXX) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
+		-o $@ $(Q3NAVGENOBJ)
 
 #############################################################################
 # QVM BUILD TOOLS
@@ -2816,6 +2872,9 @@ $(B)/bspc/%.o: $(BSPCBLIBDIR)/%.c
 
 $(B)/bspc/%.o: $(BSPCCMDIR)/%.c
 	$(DO_BSPC_CC)
+
+$(B)/navgen/%.o: $(NAVGENDIR)/%.cpp
+	$(DO_NAVGEN_CXX)
 
 #############################################################################
 ## STEAM INTEGRATION

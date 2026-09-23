@@ -5,14 +5,29 @@
 
 #include <cstdio>
 
+/*
+========
+Nav_Init
+========
+*/
 void Nav_Init( void ) {
 	printf( "Nav_Init: navigation module initialized\n" );
 }
 
+/*
+============
+Nav_Shutdown
+============
+*/
 void Nav_Shutdown( void ) {
 	printf( "Nav_Shutdown: navigation module shut down\n" );
 }
 
+/*
+========
+Nav_Test
+========
+*/
 int Nav_Test( void ) {
 	dtNavMesh *mesh = dtAllocNavMesh();
 
