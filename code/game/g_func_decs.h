@@ -500,7 +500,16 @@ extern int trap_AAS_FindAttackSpotWithinRange ( int srcnum , int rangenum , int 
 extern qboolean trap_AAS_RT_GetHidePos ( vec3_t srcpos , int srcnum , int srcarea , vec3_t destpos , int destnum , int destarea , vec3_t returnPos ) ;
 extern void trap_AAS_RT_ShowRoute ( vec3_t srcpos , int srcnum , int destnum ) ;
 extern int trap_AAS_PredictClientMovement ( void * move , int entnum , vec3_t origin , int presencetype , int onground , vec3_t velocity , vec3_t cmdmove , int cmdframes , int maxframes , float frametime , int stopevent , int stopareanum , int visualize ) ;
-extern int trap_Nav_Test ( void ) ;
+extern void trap_Nav_LoadMap ( const char * mapname ) ;
+extern void trap_Nav_SelectClass ( int classIndex ) ;
+extern int trap_Nav_PointToPoly ( vec3_t point ) ;
+extern int trap_Nav_MoveToGoal ( navMoveResult_t * result , vec3_t start , vec3_t goal ) ;
+extern int trap_Nav_TravelTimeEstimate ( vec3_t start , vec3_t goal ) ;
+extern int trap_Nav_Reachable ( vec3_t point ) ;
+extern int trap_Nav_FindHidePosition ( vec3_t from , vec3_t threat , float radius , vec3_t outPos ) ;
+extern int trap_Nav_FindAttackSpot ( vec3_t from , vec3_t target , float minRange , float maxRange , vec3_t outPos ) ;
+extern void trap_Nav_SetBlockingEntity ( vec3_t absmin , vec3_t absmax , qboolean blocking ) ;
+extern void trap_Nav_TestPath ( vec3_t start , vec3_t end ) ;
 extern int trap_AAS_Swimming ( vec3_t origin ) ;
 extern int trap_AAS_AreaTravelTimeToGoalArea ( int areanum , vec3_t origin , int goalareanum , int travelflags ) ;
 extern int trap_AAS_AreaReachability ( int areanum ) ;

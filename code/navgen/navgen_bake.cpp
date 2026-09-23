@@ -2,6 +2,7 @@
 
 #include "navgen_bake.h"
 #include "navgen_types.h"
+#include "navcache_format.h"
 
 #include "Recast.h"
 #include "RecastAlloc.h"
@@ -13,25 +14,7 @@
 #include <math.h>
 #include <vector>
 
-static const int NAVCACHE_MAGIC = ( 'N' << 24 ) | ( 'G' << 16 ) | ( 'C' << 8 ) | '1';
-static const int NAVCACHE_VERSION = 1;
 static const int NAVGEN_TILE_SIZE = 64; // cells
-
-struct NavCacheHeader {
-	int magic;
-	int version;
-	float cellSize;
-	float cellHeight;
-	float orig[3];
-	int tileSize;
-	int tw, th;
-	int numTiles;
-};
-
-struct NavCacheTileEntry {
-	int tx, ty, tlayer;
-	int dataSize;
-};
 
 // no compression: an offline tool has no reason to pay that cost.
 /*
@@ -290,7 +273,7 @@ static void rcFilterGaps( rcContext *ctx, int walkableRadius, int walkableClimb,
 BakeTile
 ========
 */
-static bool BakeTile( rcContext &ctx, const rcConfig &cfg, const navGeom_t *geom,
+static bool BakeTile( rcContext &ctx, const rcConfig &cfg, const navGeom_t *geom, int tx, int ty,
 					   std::vector<unsigned char *> &tileBlobs, std::vector<int> &tileBlobSizes ) {
 	rcHeightfield *solid = rcAllocHeightfield();
 	if ( !rcCreateHeightfield( &ctx, *solid, cfg.width, cfg.height, cfg.bmin, cfg.bmax, cfg.cs, cfg.ch ) ) {
@@ -336,7 +319,9 @@ static bool BakeTile( rcContext &ctx, const rcConfig &cfg, const navGeom_t *geom
 		dtTileCacheLayerHeader header;
 		header.magic = DT_TILECACHE_MAGIC;
 		header.version = DT_TILECACHE_VERSION;
-		header.tx = header.ty = header.tlayer = i; // overwritten by caller
+		header.tx = tx;
+		header.ty = ty;
+		header.tlayer = i;
 		header.bmin[0] = layer->bmin[0]; header.bmin[1] = layer->bmin[1]; header.bmin[2] = layer->bmin[2];
 		header.bmax[0] = layer->bmax[0]; header.bmax[1] = layer->bmax[1]; header.bmax[2] = layer->bmax[2];
 		header.width = (unsigned char)layer->width;
@@ -385,8 +370,8 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 	cfg.walkableRadius = (int)ceil( cls->radius / cellSize );
 	cfg.maxEdgeLen = 0;
 	cfg.maxSimplificationError = 1.3f;
-	cfg.minRegionArea = 25 * 25;
-	cfg.mergeRegionArea = 50 * 50;
+	cfg.minRegionArea = 8 * 8;
+	cfg.mergeRegionArea = 20 * 20;
 	cfg.maxVertsPerPoly = 6;
 	cfg.tileSize = NAVGEN_TILE_SIZE;
 	cfg.borderSize = cfg.walkableRadius * 2;
@@ -410,6 +395,7 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 
 	std::vector<NavCacheTileEntry> entries;
 	std::vector<unsigned char *> allBlobs;
+	int tilesWithLayers = 0;
 
 	for ( int ty = 0; ty < th; ty++ ) {
 		for ( int tx = 0; tx < tw; tx++ ) {
@@ -428,11 +414,14 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 
 			std::vector<unsigned char *> tileBlobs;
 			std::vector<int> tileBlobSizes;
-			if ( !BakeTile( ctx, tileCfg, geom, tileBlobs, tileBlobSizes ) ) {
+			if ( !BakeTile( ctx, tileCfg, geom, tx, ty, tileBlobs, tileBlobSizes ) ) {
 				fprintf( stderr, "  tile %d,%d failed to bake\n", tx, ty );
 				continue;
 			}
 
+			if ( !tileBlobs.empty() ) {
+				tilesWithLayers++;
+			}
 			for ( size_t i = 0; i < tileBlobs.size(); i++ ) {
 				NavCacheTileEntry entry;
 				entry.tx = tx;
@@ -444,6 +433,9 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 			}
 		}
 	}
+
+	printf( "  [%s] %d/%d grid tiles have walkable floor (rest are void, walls, or too-steep terrain)\n",
+			cls->name, tilesWithLayers, tw * th );
 
 	char path[1024];
 	snprintf( path, sizeof( path ), "%s/%s_%s.navcache", outDir, mapName, cls->name );
@@ -464,6 +456,10 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 	header.tw = tw;
 	header.th = th;
 	header.numTiles = (int)entries.size();
+	header.walkableHeight = cls->height;
+	header.walkableRadius = cls->radius;
+	header.walkableClimb = cls->climb;
+	header.maxSimplificationError = cfg.maxSimplificationError;
 	fwrite( &header, sizeof( header ), 1, f );
 
 	for ( size_t i = 0; i < entries.size(); i++ ) {

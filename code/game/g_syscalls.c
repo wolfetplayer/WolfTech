@@ -393,9 +393,45 @@ void trap_AAS_SetAASBlockingEntity( vec3_t absmin, vec3_t absmax, qboolean block
 }
 // done.
 
-// Recast/Detour navigation (AAS migration, Phase 0: smoke test only)
-int trap_Nav_Test( void ) {
-	return syscall( BOTLIB_NAV_TEST );
+// Recast/Detour navigation (AAS migration)
+void trap_Nav_LoadMap( const char *mapname ) {
+	syscall( BOTLIB_NAV_LOAD_MAP, mapname );
+}
+
+void trap_Nav_SelectClass( int classIndex ) {
+	syscall( BOTLIB_NAV_SELECT_CLASS, classIndex );
+}
+
+int trap_Nav_PointToPoly( vec3_t point ) {
+	return syscall( BOTLIB_NAV_POINT_TO_POLY, point );
+}
+
+int trap_Nav_MoveToGoal( navMoveResult_t *result, vec3_t start, vec3_t goal ) {
+	return syscall( BOTLIB_NAV_MOVE_TO_GOAL, result, start, goal );
+}
+
+int trap_Nav_TravelTimeEstimate( vec3_t start, vec3_t goal ) {
+	return syscall( BOTLIB_NAV_TRAVEL_TIME_ESTIMATE, start, goal );
+}
+
+int trap_Nav_Reachable( vec3_t point ) {
+	return syscall( BOTLIB_NAV_REACHABLE, point );
+}
+
+int trap_Nav_FindHidePosition( vec3_t from, vec3_t threat, float radius, vec3_t outPos ) {
+	return syscall( BOTLIB_NAV_FIND_HIDE_POSITION, from, threat, PASSFLOAT( radius ), outPos );
+}
+
+int trap_Nav_FindAttackSpot( vec3_t from, vec3_t target, float minRange, float maxRange, vec3_t outPos ) {
+	return syscall( BOTLIB_NAV_FIND_ATTACK_SPOT, from, target, PASSFLOAT( minRange ), PASSFLOAT( maxRange ), outPos );
+}
+
+void trap_Nav_SetBlockingEntity( vec3_t absmin, vec3_t absmax, qboolean blocking ) {
+	syscall( BOTLIB_NAV_SET_BLOCKING_ENTITY, absmin, absmax, blocking );
+}
+
+void trap_Nav_TestPath( vec3_t start, vec3_t end ) {
+	syscall( BOTLIB_NAV_TEST_PATH, start, end );
 }
 
 void trap_EA_Say( int client, char *str ) {

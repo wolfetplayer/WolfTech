@@ -839,6 +839,8 @@ int BotAILoadMap( int restart ) {
 	if ( !restart ) {
 		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 		trap_BotLibLoadMap( mapname.string );
+		// Recast/Detour navigation (AAS migration)
+		trap_Nav_LoadMap( mapname.string );
 	}
 
 	for ( i = 0; i < MAX_CLIENTS; i++ ) {

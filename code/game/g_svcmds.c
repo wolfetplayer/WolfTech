@@ -694,9 +694,30 @@ qboolean    ConsoleCommand( void ) {
 		return qtrue;
 	}
 
-	// Recast/Detour navigation (AAS migration, Phase 0: smoke test only)
+	// Recast/Detour navigation (AAS migration)
 	if ( Q_stricmp( cmd, "navtest" ) == 0 ) {
-		G_Printf( "navtest: trap_Nav_Test() returned %d\n", trap_Nav_Test() );
+		char arg[MAX_TOKEN_CHARS];
+		vec3_t start, end;
+		int i;
+
+		if ( trap_Argc() < 8 ) {
+			G_Printf( "usage: navtest <class 0=small|1=large> <x1> <y1> <z1> <x2> <y2> <z2>\n" );
+			return qtrue;
+		}
+
+		trap_Argv( 1, arg, sizeof( arg ) );
+		trap_Nav_SelectClass( atoi( arg ) );
+
+		for ( i = 0; i < 3; i++ ) {
+			trap_Argv( 2 + i, arg, sizeof( arg ) );
+			start[i] = atof( arg );
+		}
+		for ( i = 0; i < 3; i++ ) {
+			trap_Argv( 5 + i, arg, sizeof( arg ) );
+			end[i] = atof( arg );
+		}
+
+		trap_Nav_TestPath( start, end );
 		return qtrue;
 	}
 

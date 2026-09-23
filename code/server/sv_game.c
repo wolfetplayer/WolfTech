@@ -558,9 +558,31 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 		// done.
 
-		// Recast/Detour navigation (AAS migration, Phase 0: smoke test only)
-	case BOTLIB_NAV_TEST:
-		return Nav_Test();
+		// Recast/Detour navigation (AAS migration)
+	case BOTLIB_NAV_LOAD_MAP:
+		Nav_LoadMap( VMA( 1 ) );
+		return 0;
+	case BOTLIB_NAV_SELECT_CLASS:
+		Nav_SelectClass( args[1] );
+		return 0;
+	case BOTLIB_NAV_POINT_TO_POLY:
+		return Nav_PointToPoly( VMA( 1 ) );
+	case BOTLIB_NAV_MOVE_TO_GOAL:
+		return Nav_MoveToGoal( VMA( 1 ), VMA( 2 ), VMA( 3 ) );
+	case BOTLIB_NAV_TRAVEL_TIME_ESTIMATE:
+		return Nav_TravelTimeEstimate( VMA( 1 ), VMA( 2 ) );
+	case BOTLIB_NAV_REACHABLE:
+		return Nav_Reachable( VMA( 1 ) );
+	case BOTLIB_NAV_FIND_HIDE_POSITION:
+		return Nav_FindHidePosition( VMA( 1 ), VMA( 2 ), VMF( 3 ), VMA( 4 ) );
+	case BOTLIB_NAV_FIND_ATTACK_SPOT:
+		return Nav_FindAttackSpot( VMA( 1 ), VMA( 2 ), VMF( 3 ), VMF( 4 ), VMA( 5 ) );
+	case BOTLIB_NAV_SET_BLOCKING_ENTITY:
+		Nav_SetBlockingEntity( VMA( 1 ), VMA( 2 ), args[3] );
+		return 0;
+	case BOTLIB_NAV_TEST_PATH:
+		Nav_TestPath( VMA( 1 ), VMA( 2 ) );
+		return 0;
 
 	case BOTLIB_EA_SAY:
 		botlib_export->ea.EA_Say( args[1], VMA( 2 ) );

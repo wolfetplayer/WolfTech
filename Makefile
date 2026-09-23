@@ -1939,6 +1939,9 @@ Q3OBJ = \
   $(B)/client/l_struct.o \
   \
   $(B)/client/nav_main.o \
+  $(B)/client/nav_load.o \
+  $(B)/client/nav_query.o \
+  $(B)/client/navgen_classes.o \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \
   $(B)/recast/RecastArea.o \
@@ -2583,6 +2586,9 @@ Q3DOBJ = \
   $(B)/ded/l_struct.o \
   \
   $(B)/ded/nav_main.o \
+  $(B)/ded/nav_load.o \
+  $(B)/ded/nav_query.o \
+  $(B)/ded/navgen_classes.o \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \
   $(B)/recast/RecastArea.o \
@@ -2928,6 +2934,9 @@ $(B)/client/%.o: $(BLIBDIR)/%.c
 $(B)/client/%.o: $(NAVDIR)/%.cpp
 	$(DO_NAV_CXX)
 
+$(B)/client/%.o: $(NAVGENDIR)/%.cpp
+	$(DO_NAV_CXX)
+
 $(B)/recast/%.o: $(RECASTDIR)/Recast/Source/%.cpp
 	$(DO_NAV_CXX)
 
@@ -3092,6 +3101,9 @@ $(B)/ded/%.o: $(BLIBDIR)/%.c
 	$(DO_BOT_CC)
 
 $(B)/ded/%.o: $(NAVDIR)/%.cpp
+	$(DO_NAV_CXX)
+
+$(B)/ded/%.o: $(NAVGENDIR)/%.cpp
 	$(DO_NAV_CXX)
 
 $(B)/ded/%.o: $(SYSDIR)/%.c

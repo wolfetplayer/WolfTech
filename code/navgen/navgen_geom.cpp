@@ -10,18 +10,20 @@
 #include <string.h>
 #include <vector>
 
+// Recast requires Y-up; Quake is Z-up. Swap Y/Z on the way out to Recast space.
 static void AddVert( std::vector<float> &verts, std::vector<int> &tris, const vec_t *v ) {
 	int index = (int)( verts.size() / 3 );
 	verts.push_back( v[0] );
-	verts.push_back( v[1] );
 	verts.push_back( v[2] );
+	verts.push_back( v[1] );
 	tris.push_back( index );
 }
 
+// the Y/Z swap above is a reflection, so reverse winding to keep normals outward-facing.
 static void AddTri( std::vector<float> &verts, std::vector<int> &tris, const vec_t *a, const vec_t *b, const vec_t *c ) {
 	AddVert( verts, tris, a );
-	AddVert( verts, tris, b );
 	AddVert( verts, tris, c );
+	AddVert( verts, tris, b );
 }
 
 static int SolidContents( int contentFlags ) {
@@ -216,7 +218,7 @@ void NavGen_WriteObj( const navGeom_t *geom, const char *path ) {
 
 	for ( int i = 0; i < geom->numVerts; i++ ) {
 		const float *v = &geom->verts[i * 3];
-		fprintf( f, "v %f %f %f\n", v[0], v[2], -v[1] ); // Quake Z-up -> OBJ Y-up
+		fprintf( f, "v %f %f %f\n", v[0], v[1], v[2] ); // already Y-up (see AddVert)
 	}
 	for ( int i = 0; i < geom->numTris; i++ ) {
 		const int *t = &geom->tris[i * 3];
