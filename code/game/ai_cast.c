@@ -80,6 +80,8 @@ float aicast_skillscale;
 vmCvar_t aicast_debug;
 vmCvar_t aicast_debugname;
 vmCvar_t aicast_scripts;
+// Recast/Detour navigation (AAS migration)
+vmCvar_t bot_navsystem;
 
 // string versions of the attributes used for per-level, per-character definitions
 char *castAttributeStrings[] =
@@ -503,6 +505,8 @@ void AICast_Init( void ) {
 	trap_Cvar_Register( &aicast_debug, "aicast_debug", "0", 0 );
 	trap_Cvar_Register( &aicast_debugname, "aicast_debugname", "", 0 );
 	trap_Cvar_Register( &aicast_scripts, "aicast_scripts", "1", 0 );
+	// Recast/Detour navigation (AAS migration)
+	trap_Cvar_Register( &bot_navsystem, "bot_navsystem", "0", 0 );
 
 	// (aicast_thinktime / sv_fps) * aicast_maxthink = number of cast's to think between each aicast frame
 	// so..
@@ -530,6 +534,7 @@ void AICast_Init( void ) {
 	// try and load in the AAS now, so we can interact with it during spawning of entities
 	i = 0;
 	trap_AAS_SetCurrentWorld( 0 );
+	trap_Nav_SelectClass( 0 );
 	while ( !trap_AAS_Initialized() && ( i++ < 10 ) ) {
 		trap_BotLibStartFrame( (float) level.time / 1000 );
 	}

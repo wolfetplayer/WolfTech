@@ -510,6 +510,7 @@ If you have questions concerning this license or the applicable additional terms
 {"trap_Nav_FindAttackSpot", (byte *)trap_Nav_FindAttackSpot},
 {"trap_Nav_SetBlockingEntity", (byte *)trap_Nav_SetBlockingEntity},
 {"trap_Nav_TestPath", (byte *)trap_Nav_TestPath},
+{"trap_Nav_DumpMesh", (byte *)trap_Nav_DumpMesh},
 {"trap_AAS_Swimming", (byte *)trap_AAS_Swimming},
 {"trap_AAS_AreaTravelTimeToGoalArea", (byte *)trap_AAS_AreaTravelTimeToGoalArea},
 {"trap_AAS_AreaReachability", (byte *)trap_AAS_AreaReachability},

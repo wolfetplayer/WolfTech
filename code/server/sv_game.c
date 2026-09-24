@@ -584,6 +584,10 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		Nav_TestPath( VMA( 1 ), VMA( 2 ) );
 		return 0;
 
+	case BOTLIB_NAV_DUMP_MESH:
+		Nav_DumpMesh( args[1] );
+		return 0;
+
 	case BOTLIB_EA_SAY:
 		botlib_export->ea.EA_Say( args[1], VMA( 2 ) );
 		return 0;

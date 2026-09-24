@@ -510,6 +510,7 @@ extern int trap_Nav_FindHidePosition ( vec3_t from , vec3_t threat , float radiu
 extern int trap_Nav_FindAttackSpot ( vec3_t from , vec3_t target , float minRange , float maxRange , vec3_t outPos ) ;
 extern void trap_Nav_SetBlockingEntity ( vec3_t absmin , vec3_t absmax , qboolean blocking ) ;
 extern void trap_Nav_TestPath ( vec3_t start , vec3_t end ) ;
+extern void trap_Nav_DumpMesh ( int classIndex ) ;
 extern int trap_AAS_Swimming ( vec3_t origin ) ;
 extern int trap_AAS_AreaTravelTimeToGoalArea ( int areanum , vec3_t origin , int goalareanum , int travelflags ) ;
 extern int trap_AAS_AreaReachability ( int areanum ) ;

@@ -37,6 +37,9 @@ void Nav_SetBlockingEntity( const float *absmin, const float *absmax, int blocki
 // debug: runs Nav_MoveToGoal/Nav_TravelTimeEstimate between two points and prints to the engine console.
 void Nav_TestPath( const float *start, const float *end );
 
+// debug: writes classIndex's baked navmesh polygons to navdump_<class>.obj (quake space) for visual inspection.
+void Nav_DumpMesh( int classIndex );
+
 #ifdef __cplusplus
 }
 #endif

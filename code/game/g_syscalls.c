@@ -434,6 +434,10 @@ void trap_Nav_TestPath( vec3_t start, vec3_t end ) {
 	syscall( BOTLIB_NAV_TEST_PATH, start, end );
 }
 
+void trap_Nav_DumpMesh( int classIndex ) {
+	syscall( BOTLIB_NAV_DUMP_MESH, classIndex );
+}
+
 void trap_EA_Say( int client, char *str ) {
 	syscall( BOTLIB_EA_SAY, client, str );
 }

@@ -216,8 +216,32 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 	}
 	//move towards the goal
 	if ( !( cs->aiFlags & AIFL_EXPLICIT_ROUTING ) || ( entnum < 0 ) || Q_strcasecmp( g_entities[entnum].classname, "ai_marker" ) ) {
-		// use AAS routing
-		trap_BotMoveToGoal( &lmoveresult, bs->ms, &goal, tfl );
+		// Recast/Detour navigation (AAS migration)
+		if ( bot_navsystem.integer ) {
+			navMoveResult_t navResult;
+			trap_Nav_MoveToGoal( &navResult, bs->origin, pos );
+			memset( &lmoveresult, 0, sizeof( lmoveresult ) );
+			lmoveresult.failure = navResult.failure;
+			VectorCopy( navResult.movedir, lmoveresult.movedir );
+			// unlike trap_BotMoveToGoal, Nav_MoveToGoal doesn't queue the movement action itself.
+			if ( !navResult.failure ) {
+				trap_EA_Move( cs->entityNum, navResult.movedir, 400 );
+
+				// Nav has no AAS-style jump/step-up logic, so try a jump if stuck against a ledge.
+				if ( level.time >= cs->navStuckCheckTime ) {
+					if ( cs->navStuckCheckTime && VectorDistance( bs->origin, cs->navStuckCheckOrg ) < 20 &&
+						 VectorDistance( bs->origin, pos ) > 40 && cs->navJumpTime < level.time ) {
+						trap_EA_Jump( cs->entityNum );
+						cs->navJumpTime = level.time + 1000;
+					}
+					VectorCopy( bs->origin, cs->navStuckCheckOrg );
+					cs->navStuckCheckTime = level.time + 500;
+				}
+			}
+		} else {
+			// use AAS routing
+			trap_BotMoveToGoal( &lmoveresult, bs->ms, &goal, tfl );
+		}
 		//if the movement failed
 		if ( lmoveresult.failure ) {
 
@@ -2930,7 +2954,11 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 			if ( cs->combatGoalTime < level.time && cs->attackSpotTime < level.time ) {
 				cs->attackSpotTime = level.time + 500 + rand() % 500;
 
-				if ( trap_AAS_FindAttackSpotWithinRange( cs->entityNum, cs->leaderNum,
+				// Recast/Detour navigation (AAS migration)
+				if ( bot_navsystem.integer ?
+					 trap_Nav_FindAttackSpot( g_entities[cs->leaderNum].r.currentOrigin, g_entities[cs->enemyNum].r.currentOrigin,
+											  0.0f, MAX_LEADER_DIST, cs->combatGoalOrigin ) :
+					 trap_AAS_FindAttackSpotWithinRange( cs->entityNum, cs->leaderNum,
 														 cs->enemyNum, MAX_LEADER_DIST,
 														 AICAST_TFL_DEFAULT, cs->combatGoalOrigin ) ) {
 					cs->combatGoalTime = level.time + 2000;
@@ -2960,7 +2988,11 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 			if ( cs->combatGoalTime < level.time && cs->attackSpotTime < level.time ) {
 				cs->attackSpotTime = level.time + 500 + rand() % 500;
 
-				if ( trap_AAS_FindAttackSpotWithinRange( cs->entityNum, cs->entityNum,
+				// Recast/Detour navigation (AAS migration)
+				if ( bot_navsystem.integer ?
+					 trap_Nav_FindAttackSpot( cs->bs->origin, g_entities[cs->enemyNum].r.currentOrigin,
+											  0.0f, 512.0f, cs->combatGoalOrigin ) :
+					 trap_AAS_FindAttackSpotWithinRange( cs->entityNum, cs->entityNum,
 														 cs->enemyNum, 512,
 														 AICAST_TFL_DEFAULT, cs->combatGoalOrigin ) ) {
 					cs->combatGoalTime = level.time + 2000;
@@ -3062,18 +3094,27 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 					cs->attackcrouch_time < level.time ) {
 			int destarea, simarea, starttravel, simtravel;
 
-			destarea = BotPointAreaNum( destorg );
-			simarea = BotPointAreaNum( move.endpos );
+			// Recast/Detour navigation (AAS migration)
+			if ( bot_navsystem.integer ) {
+				starttravel = trap_Nav_TravelTimeEstimate( cs->bs->origin, destorg );
+				simtravel = trap_Nav_TravelTimeEstimate( move.endpos, destorg );
+				if ( starttravel < 0 || simtravel < 0 ) {
+					simtravel = starttravel; // unknown either way; don't treat as an improvement
+				}
+			} else {
+				destarea = BotPointAreaNum( destorg );
+				simarea = BotPointAreaNum( move.endpos );
 
-			starttravel = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum,
-															 cs->bs->origin,
-															 destarea,
-															 cs->travelflags );
+				starttravel = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum,
+																 cs->bs->origin,
+																 destarea,
+																 cs->travelflags );
 
-			simtravel = trap_AAS_AreaTravelTimeToGoalArea( simarea,
-														   move.endpos,
-														   destarea,
-														   cs->travelflags );
+				simtravel = trap_AAS_AreaTravelTimeToGoalArea( simarea,
+															   move.endpos,
+															   destarea,
+															   cs->travelflags );
+			}
 
 			if ( simtravel < starttravel ) {
 				return AIFunc_FlipMoveStart( cs, vec );
@@ -3559,18 +3600,27 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 			 cs->attackcrouch_time < level.time ) {
 			int destarea, simarea, starttravel, simtravel;
 
-			destarea = BotPointAreaNum( destorg );
-			simarea = BotPointAreaNum( move.endpos );
+			// Recast/Detour navigation (AAS migration)
+			if ( bot_navsystem.integer ) {
+				starttravel = trap_Nav_TravelTimeEstimate( cs->bs->origin, destorg );
+				simtravel = trap_Nav_TravelTimeEstimate( move.endpos, destorg );
+				if ( starttravel < 0 || simtravel < 0 ) {
+					simtravel = starttravel; // unknown either way; don't treat as an improvement
+				}
+			} else {
+				destarea = BotPointAreaNum( destorg );
+				simarea = BotPointAreaNum( move.endpos );
 
-			starttravel = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum,
-															 cs->bs->origin,
-															 destarea,
-															 cs->travelflags );
+				starttravel = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum,
+																 cs->bs->origin,
+																 destarea,
+																 cs->travelflags );
 
-			simtravel = trap_AAS_AreaTravelTimeToGoalArea( simarea,
-														   move.endpos,
-														   destarea,
-														   cs->travelflags );
+				simtravel = trap_AAS_AreaTravelTimeToGoalArea( simarea,
+															   move.endpos,
+															   destarea,
+															   cs->travelflags );
+			}
 
 			if ( simtravel < starttravel ) {
 				return AIFunc_FlipMoveStart( cs, vec );
@@ -4756,7 +4806,8 @@ char *AIFunc_Battle( cast_state_t *cs ) {
 	if ( cs->bs->cur_ps.weaponTime < 100 &&
 		 cs->castScriptStatus.scriptNoMoveTime < level.time &&
 		 !AICast_CheckAttack( cs, cs->enemyNum, qfalse ) ) {
-		if ( !cs->bs->areanum ) {
+		// areanum is raw-AAS-only and always 0 without a .aas; skip this AAS-only fallback under Nav.
+		if ( !bot_navsystem.integer && !cs->bs->areanum ) {
 			// If outside valid AAS, try to move out of the bad area
 			if ( cs->obstructingTime >= level.time ) {
 				trap_EA_Move( cs->entityNum, cs->takeCoverPos, 200 );

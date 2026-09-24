@@ -4,13 +4,15 @@
 #include "nav_public.h"
 
 #include <cstring>
+#include <cstdio>
 
 extern "C" {
 #include "../../qcommon/q_shared.h"
 #include "../../qcommon/qcommon.h"
 }
 
-static const float NAV_SEARCH_EXTENTS[3] = { 64, 128, 64 };
+// widened from {64,128,64} so characters slightly off the baked surface still snap to a poly.
+static const float NAV_SEARCH_EXTENTS[3] = { 96, 160, 96 };
 static const int NAV_MAX_CANDIDATES = 64;
 
 // the navmesh is built Y-up (see navgen_geom.cpp's AddVert); Quake is Z-up.
@@ -59,13 +61,13 @@ static bool Nav_ComputeStraightPath( NavData_t *data, const float *start, const 
 		return false;
 	}
 
-	dtPolyRef path[64];
+	// 512 polys: a smaller buffer makes findPath truncate on long cross-map routes, which looks like "unreachable".
+	dtPolyRef path[512];
 	int pathCount = 0;
-	if ( dtStatusFailed( data->query->findPath( startRef, endRef, startNearest, endNearest, &filter, path, &pathCount, 64 ) ) || pathCount == 0 ) {
+	if ( dtStatusFailed( data->query->findPath( startRef, endRef, startNearest, endNearest, &filter, path, &pathCount, 512 ) ) || pathCount == 0 ) {
 		return false;
 	}
-	// findPath returns a partial path (ending short of endRef) when start and
-	// goal aren't connected; treat that as a failure rather than a real route.
+	// a partial path (ending short of endRef) means start/goal aren't connected, not a real route.
 	if ( path[pathCount - 1] != endRef ) {
 		return false;
 	}
@@ -129,7 +131,12 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 	const float *target = ( straightCount > 1 ) ? &straight[3] : &straight[0];
 	vec3_t navDir;
 	VectorSubtract( target, navStart, navDir );
-	VectorNormalize2( navDir, navDir );
+	// AICast_InputToUserCommand wants a horizontal dir (AAS's own "hordir"); Z feeds ucmd->upmove instead.
+	navDir[1] = 0.0f; // navmesh Y = vertical (quake Z) after SwapYZ
+	if ( VectorNormalize2( navDir, navDir ) < 0.0001f ) {
+		result->failure = 1;
+		return 0;
+	}
 	SwapYZ( navDir, result->movedir );
 	return 1;
 }
@@ -326,4 +333,70 @@ void Nav_TestPath( const float *start, const float *end ) {
 
 	Com_Printf( "Nav_TestPath: OK dist=%d movedir=(%.2f %.2f %.2f)\n",
 				dist, result.movedir[0], result.movedir[1], result.movedir[2] );
+}
+
+/*
+============
+Nav_DumpMesh
+
+Writes classIndex's baked navmesh polygons (not navgen's raw input geometry)
+to an .obj in quake space, for visual inspection in any 3D viewer.
+============
+*/
+void Nav_DumpMesh( int classIndex ) {
+	if ( classIndex < 0 || classIndex >= NAV_MAX_CLASSES ) {
+		Com_Printf( "Nav_DumpMesh: invalid class %d\n", classIndex );
+		return;
+	}
+
+	NavData_t *data = &navData[classIndex];
+	if ( !data->loaded || !data->mesh ) {
+		Com_Printf( "Nav_DumpMesh: no navmesh loaded for class %d\n", classIndex );
+		return;
+	}
+
+	char filename[256];
+	snprintf( filename, sizeof( filename ), "navdump_%s.obj", navGenClasses[classIndex].name );
+	FILE *f = fopen( filename, "w" );
+	if ( !f ) {
+		Com_Printf( "Nav_DumpMesh: could not open %s for writing\n", filename );
+		return;
+	}
+
+	const dtNavMesh *mesh = data->mesh;
+	int vertBase = 1; // OBJ indices are 1-based
+	int totalPolys = 0, totalVerts = 0;
+
+	for ( int i = 0; i < mesh->getMaxTiles(); i++ ) {
+		const dtMeshTile *tile = mesh->getTile( i );
+		if ( !tile || !tile->header ) {
+			continue;
+		}
+
+		for ( int j = 0; j < tile->header->vertCount; j++ ) {
+			const float *v = &tile->verts[j * 3];
+			vec3_t quakeV;
+			SwapYZ( v, quakeV ); // navmesh is Y-up; write back out in quake's Z-up space
+			fprintf( f, "v %f %f %f\n", quakeV[0], quakeV[1], quakeV[2] );
+		}
+
+		for ( int j = 0; j < tile->header->polyCount; j++ ) {
+			const dtPoly *poly = &tile->polys[j];
+			if ( poly->getType() != DT_POLYTYPE_GROUND ) {
+				continue;
+			}
+			fprintf( f, "f" );
+			for ( int k = 0; k < poly->vertCount; k++ ) {
+				fprintf( f, " %d", vertBase + poly->verts[k] );
+			}
+			fprintf( f, "\n" );
+			totalPolys++;
+		}
+
+		vertBase += tile->header->vertCount;
+		totalVerts += tile->header->vertCount;
+	}
+
+	fclose( f );
+	Com_Printf( "Nav_DumpMesh: wrote %s (%d verts, %d polys)\n", filename, totalVerts, totalPolys );
 }

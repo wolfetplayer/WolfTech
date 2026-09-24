@@ -1527,6 +1527,7 @@ void        trap_AAS_SetAASBlockingEntity( vec3_t absmin, vec3_t absmax, qboolea
 
 // Recast/Detour navigation (AAS migration)
 #include "../botlib/nav/nav_public.h"
+extern vmCvar_t bot_navsystem;
 
 void        trap_Nav_LoadMap( const char *mapname );
 void        trap_Nav_SelectClass( int classIndex );
@@ -1538,6 +1539,7 @@ int         trap_Nav_FindHidePosition( vec3_t from, vec3_t threat, float radius,
 int         trap_Nav_FindAttackSpot( vec3_t from, vec3_t target, float minRange, float maxRange, vec3_t outPos );
 void        trap_Nav_SetBlockingEntity( vec3_t absmin, vec3_t absmax, qboolean blocking );
 void        trap_Nav_TestPath( vec3_t start, vec3_t end );
+void        trap_Nav_DumpMesh( int classIndex );
 
 void    trap_EA_Say( int client, char *str );
 void    trap_EA_SayTeam( int client, char *str );

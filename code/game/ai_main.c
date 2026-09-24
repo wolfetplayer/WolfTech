@@ -877,8 +877,11 @@ int BotAIStartFrame( int time ) {
 	trap_Cvar_Update( &bot_nochat );
 	trap_Cvar_Update( &bot_testrchat );
 	trap_Cvar_Update( &bot_thinktime );
+	// Recast/Detour navigation (AAS migration)
+	trap_Cvar_Update( &bot_navsystem );
 	// Ridah, set the default AAS world
 	trap_AAS_SetCurrentWorld( 0 );
+	trap_Nav_SelectClass( 0 );
 	trap_Cvar_Update( &memorydump );
 
 	if ( memorydump.integer ) {
@@ -909,6 +912,7 @@ int BotAIStartFrame( int time ) {
 
 		// Ridah, only check the default world
 		trap_AAS_SetCurrentWorld( 0 );
+		trap_Nav_SelectClass( 0 );
 
 		if ( !trap_AAS_Initialized() ) {
 			return BLERR_NOERROR;

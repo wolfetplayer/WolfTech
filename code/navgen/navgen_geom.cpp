@@ -1,4 +1,5 @@
 // navgen_geom.cpp -- brushes mirror Q3_BSPBrushToMapBrush (bspc/map_q3.c); patches mirror CM_GeneratePatchCollide's grid prep.
+// deliberately brush+patch only: CMod_LoadPatches (cm_load.c) only reads MST_PATCH surfaces; MST_PLANAR/TRIANGLE_SOUP have no real collision.
 
 #include "navgen_geom.h"
 #include "navgen_bspformat.h"
@@ -26,8 +27,10 @@ static void AddTri( std::vector<float> &verts, std::vector<int> &tris, const vec
 	AddVert( verts, tris, b );
 }
 
+// all ordinary AI-collision brushes; wall vs walkable comes from shape, not the flag.
+// FRIENDLYCLIP is excluded - it only blocks allied AI, not the enemy horde.
 static int SolidContents( int contentFlags ) {
-	return ( contentFlags & ( CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_MONSTERCLIP ) ) != 0;
+	return ( contentFlags & ( CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_MONSTERCLIP | CONTENTS_PLAYERCLIP2 ) ) != 0;
 }
 
 static int SkipFace( int surfaceFlags ) {
@@ -77,8 +80,9 @@ static void LoadBrushes( const byte *base, const dheader_t *header, std::vector<
 
 			if ( w ) {
 				RemoveColinearPoints( w );
+				// j/j-1 swapped to match cm_polylib.c's WindingPlane normal convention (p2-p0)x(p1-p0), not a plain fan's.
 				for ( int j = 2; j < w->numpoints; j++ ) {
-					AddTri( verts, tris, w->p[0], w->p[j - 1], w->p[j] );
+					AddTri( verts, tris, w->p[0], w->p[j], w->p[j - 1] );
 				}
 				FreeWinding( w );
 			}
@@ -125,10 +129,11 @@ static void LoadPatches( const byte *base, const dheader_t *header, std::vector<
 
 		NavGen_SubdividePatch( &grid );
 
+		// b/c swapped: patch verts are already front-facing, unlike brush windings AddTri expects.
 		for ( int x = 0; x < grid.width - 1; x++ ) {
 			for ( int y = 0; y < grid.height - 1; y++ ) {
-				AddTri( verts, tris, grid.points[x][y], grid.points[x + 1][y], grid.points[x + 1][y + 1] );
-				AddTri( verts, tris, grid.points[x + 1][y + 1], grid.points[x][y + 1], grid.points[x][y] );
+				AddTri( verts, tris, grid.points[x][y], grid.points[x + 1][y + 1], grid.points[x + 1][y] );
+				AddTri( verts, tris, grid.points[x + 1][y + 1], grid.points[x][y], grid.points[x][y + 1] );
 			}
 		}
 	}

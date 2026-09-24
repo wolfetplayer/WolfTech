@@ -110,6 +110,7 @@ typedef struct {
 #define CONTENTS_SOLID          1
 #define CONTENTS_PLAYERCLIP     0x10000
 #define CONTENTS_MONSTERCLIP    0x20000
+#define CONTENTS_PLAYERCLIP2    0x800000 // true playerclip - a second, engine-specific playerclip flag (see textures/common/clip_player)
 #define SURF_SKY                0x4
 #define SURF_LADDER             0x8
 #define SURF_NODRAW             0x80

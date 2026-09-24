@@ -491,6 +491,11 @@ typedef struct cast_state_s
 
 	vec3_t lastMoveToPosGoalOrg;    // if this changes, we should reset the Bot Avoid Reach
 
+	// Recast/Detour navigation: tracks progress so we can try a jump if stuck (no AAS-style travel types here).
+	vec3_t navStuckCheckOrg;
+	int navStuckCheckTime;
+	int navJumpTime;
+
 	int noAttackTime;               // used by dynamic AI to stop attacking for set time
 
 	int lastRollMove;

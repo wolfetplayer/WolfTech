@@ -10,7 +10,7 @@ typedef struct {
 	int numTris;
 } navGeom_t;
 
-// loads solid/playerclip/monsterclip brush + patch geometry only; qfalse on failure.
+// loads solid/playerclip/monsterclip brush + patch geometry only (the only two sources with real collision); qfalse on failure.
 int NavGen_LoadGeometry( const char *mapPath, navGeom_t *outGeom );
 void NavGen_FreeGeometry( navGeom_t *geom );
 

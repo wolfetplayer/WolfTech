@@ -2178,6 +2178,7 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				cs->bs->eye[2] += ent->client->ps.viewheight;
 				// make sure we're using the right AAS world - this can run outside cs's own AICast_Think
 				trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
+				trap_Nav_SelectClass( cs->aasWorldIndex );
 				cs->bs->areanum = BotPointAreaNum( cs->bs->origin );
 				if ( cs->bs->areanum ) {
 					cs->lastValidAreaNum[cs->aasWorldIndex] = cs->bs->areanum;

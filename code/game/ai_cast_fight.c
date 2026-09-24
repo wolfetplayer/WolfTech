@@ -52,6 +52,21 @@ If you have questions concerning this license or the applicable additional terms
 Support routines for the Decision Making layer.
 */
 
+// Recast/Detour navigation (AAS migration)
+#define AICAST_HIDE_SEARCH_RADIUS 600.0f
+
+/*
+================
+AICast_FindHidePos
+================
+*/
+static qboolean AICast_FindHidePos( cast_state_t *cs, vec3_t enemyPos, int enemyNum, vec3_t outPos ) {
+	if ( bot_navsystem.integer ) {
+		return trap_Nav_FindHidePosition( cs->bs->origin, enemyPos, AICAST_HIDE_SEARCH_RADIUS, outPos );
+	}
+	return trap_AAS_RT_GetHidePos( cs->bs->origin, cs->bs->entitynum, cs->bs->areanum, enemyPos, enemyNum, BotPointAreaNum( enemyPos ), outPos );
+}
+
 // FIXME: go through here and convert all weapon/character parameters to #define's
 // and move them to a seperate header file for easy modification
 
@@ -1485,7 +1500,7 @@ bot_moveresult_t AICast_CombatMove( cast_state_t *cs, int tfl ) {
 					&&  ( cs->combatSpotDelayTime < level.time ) ) ) {
 
 			if (    ( cs->attributes[TACTICAL] > 0.3 + random() * 0.5 )
-					&&  trap_AAS_RT_GetHidePos( cs->bs->origin, cs->bs->entitynum, cs->bs->areanum, cs->vislist[cs->enemyNum].visible_pos, cs->enemyNum, BotPointAreaNum( cs->vislist[cs->enemyNum].visible_pos ), cs->combatGoalOrigin ) ) {
+					&&  AICast_FindHidePos( cs, cs->vislist[cs->enemyNum].visible_pos, cs->enemyNum, cs->combatGoalOrigin ) ) {
 				cs->combatGoalTime = level.time + 10000;                // give us plenty of time to get there
 				//cs->combatSpotAttackCount = cs->startAttackCount + 3;	// don't keep moving around to different positions on our own
 				cs->combatSpotDelayTime = level.time + 3000 + rand() % 3000;
@@ -1811,9 +1826,8 @@ qboolean AICast_GetTakeCoverPos( cast_state_t *cs, int enemyNum, vec3_t enemyPos
 			return qtrue;
 		}
 	}
-	// if we are in a void, then we can't hide
-	// look for a hiding spot
-	if ( cs->bs->areanum && trap_AAS_RT_GetHidePos( cs->bs->origin, cs->bs->entitynum, cs->bs->areanum, enemyPos, enemyNum, BotPointAreaNum( enemyPos ), returnPos ) ) {
+	// if we are in a void, then we can't hide - look for a hiding spot (areanum is raw-AAS-only, so let bot_navsystem through too)
+	if ( ( bot_navsystem.integer || cs->bs->areanum ) && AICast_FindHidePos( cs, enemyPos, enemyNum, returnPos ) ) {
 		return qtrue;
 	}
 	// if we are hiding from a dangerous entity, try and avoid it

@@ -721,6 +721,19 @@ qboolean    ConsoleCommand( void ) {
 		return qtrue;
 	}
 
+	if ( Q_stricmp( cmd, "navdump" ) == 0 ) {
+		char arg[MAX_TOKEN_CHARS];
+
+		if ( trap_Argc() < 2 ) {
+			G_Printf( "usage: navdump <class 0=small|1=large>\n" );
+			return qtrue;
+		}
+
+		trap_Argv( 1, arg, sizeof( arg ) );
+		trap_Nav_DumpMesh( atoi( arg ) );
+		return qtrue;
+	}
+
 	if ( Q_stricmp( cmd, "forceteam" ) == 0 ) {
 		Svcmd_ForceTeam_f();
 		return qtrue;

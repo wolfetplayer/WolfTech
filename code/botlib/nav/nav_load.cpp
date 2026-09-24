@@ -169,15 +169,28 @@ static bool Nav_LoadClass( const char *mapname, int classIndex ) {
 
 	{
 		int totalPolys = 0;
+		int totalLinks = 0, externalLinks = 0;
 		const dtNavMesh *constMesh = data->mesh;
 		for ( int i = 0; i < constMesh->getMaxTiles(); i++ ) {
 			const dtMeshTile *tile = constMesh->getTile( i );
 			if ( tile && tile->header ) {
 				totalPolys += tile->header->polyCount;
+				for ( int j = 0; j < tile->header->polyCount; j++ ) {
+					const dtPoly *poly = &tile->polys[j];
+					unsigned int linkIdx = poly->firstLink;
+					while ( linkIdx != DT_NULL_LINK ) {
+						const dtLink &link = tile->links[linkIdx];
+						totalLinks++;
+						if ( link.side != 0xff ) {
+							externalLinks++;
+						}
+						linkIdx = link.next;
+					}
+				}
 			}
 		}
-		Com_Printf( "Nav_LoadClass: %s addTile %d/%d ok, buildNavMeshTilesAt %d/%d ok, %d polys built\n",
-					cls->name, addOk, addOk + addFail, buildOk, buildOk + buildFail, totalPolys );
+		Com_Printf( "Nav_LoadClass: %s addTile %d/%d ok, buildNavMeshTilesAt %d/%d ok, %d polys built, %d links (%d external)\n",
+					cls->name, addOk, addOk + addFail, buildOk, buildOk + buildFail, totalPolys, totalLinks, externalLinks );
 	}
 
 	data->query = new dtNavMeshQuery();

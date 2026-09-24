@@ -452,10 +452,11 @@ void AICast_Think( int client, float thinktime ) {
 	//
 	// make sure we are using the right AAS data for this entity (one's that don't get set will default to the player's AAS data)
 	trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
+	trap_Nav_SelectClass( cs->aasWorldIndex );
 	//
-	// make sure we have a valid navigation system
+	// make sure we have a valid navigation system (AAS degrades to safe no-ops when unloaded, so only require it when Nav isn't driving movement)
 	//
-	if ( !trap_AAS_Initialized() ) {
+	if ( !bot_navsystem.integer && !trap_AAS_Initialized() ) {
 		return;
 	}
 	//
@@ -940,6 +941,7 @@ void AICast_StartFrame( int time ) {
 	// update the player's area, only update if it's valid
 	for ( i = 0; i < 2; i++ ) {
 		trap_AAS_SetCurrentWorld( i );
+		trap_Nav_SelectClass( i );
 		for ( j = 0; j < level.maxclients; j++ ) {
 			// if AI, continue;
 			if ( caststates[j].bs ) {
@@ -1367,7 +1369,12 @@ qboolean AICast_GetAvoid( cast_state_t *cs, bot_goal_t *goal, vec3_t outpos, qbo
 	// look for a good direction to move out of the way
 	bestmoved = 0;
 	if ( goal ) {
-		starttraveltime = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum, cs->bs->origin, goal->areanum, cs->travelflags );
+		// Recast/Detour navigation (AAS migration)
+		if ( bot_navsystem.integer ) {
+			starttraveltime = trap_Nav_TravelTimeEstimate( cs->bs->origin, goal->origin );
+		} else {
+			starttraveltime = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum, cs->bs->origin, goal->areanum, cs->travelflags );
+		}
 	}
 	memcpy( &ucmd, &cs->lastucmd, sizeof( usercmd_t ) );
 	ucmd.forwardmove = 127;
@@ -1423,7 +1430,22 @@ qboolean AICast_GetAvoid( cast_state_t *cs, bot_goal_t *goal, vec3_t outpos, qbo
 				&&  ( castmove.groundEntityNum != ENTITYNUM_NONE ) ) {
 			// they all passed, check any other stuff
 			if ( !enemyVisible || AICast_CheckAttackAtPos( cs->entityNum, cs->enemyNum, castmove.endpos, qfalse, qfalse ) ) {
-				if ( !goal || ( traveltime = trap_AAS_AreaTravelTimeToGoalArea( BotPointAreaNum( castmove.endpos ), castmove.endpos, goal->areanum, cs->travelflags ) ) < ( starttraveltime + 200 ) ) {
+				qboolean goodCandidate = qtrue;
+				if ( goal ) {
+					// Recast/Detour navigation (AAS migration)
+					if ( bot_navsystem.integer ) {
+						traveltime = trap_Nav_TravelTimeEstimate( castmove.endpos, goal->origin );
+						if ( traveltime < 0 ) {
+							goodCandidate = qfalse; // unreachable from here; don't accept it
+						}
+					} else {
+						traveltime = trap_AAS_AreaTravelTimeToGoalArea( BotPointAreaNum( castmove.endpos ), castmove.endpos, goal->areanum, cs->travelflags );
+					}
+					if ( goodCandidate && traveltime >= ( starttraveltime + 200 ) ) {
+						goodCandidate = qfalse;
+					}
+				}
+				if ( goodCandidate ) {
 					bestmoved = distmoved;
 					VectorCopy( castmove.endpos, bestpos );
 				}
@@ -1676,6 +1698,7 @@ void AICast_EvaluatePmove( int clientnum, pmove_t *pm ) {
 	cs = AICast_GetCastState( clientnum );
 	// make sure we are using the right AAS data for this entity (one's that don't get set will default to the player's AAS data)
 	trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
+	trap_Nav_SelectClass( cs->aasWorldIndex );
 
 	// NOTE: this is only enabled for real clients, so their followers get out of their way
 	//if (cs->bs)
