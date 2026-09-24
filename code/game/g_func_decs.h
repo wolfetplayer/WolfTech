@@ -511,6 +511,9 @@ extern int trap_Nav_FindAttackSpot ( vec3_t from , vec3_t target , float minRang
 extern void trap_Nav_SetBlockingEntity ( vec3_t absmin , vec3_t absmax , qboolean blocking ) ;
 extern void trap_Nav_TestPath ( vec3_t start , vec3_t end ) ;
 extern void trap_Nav_DumpMesh ( int classIndex ) ;
+extern void trap_Nav_DebugShowNearby ( vec3_t origin , float radius ) ;
+extern void trap_Nav_DebugShowPath ( vec3_t start , vec3_t goal , int slot ) ;
+extern void trap_Nav_DebugClear ( void ) ;
 extern int trap_AAS_Swimming ( vec3_t origin ) ;
 extern int trap_AAS_AreaTravelTimeToGoalArea ( int areanum , vec3_t origin , int goalareanum , int travelflags ) ;
 extern int trap_AAS_AreaReachability ( int areanum ) ;

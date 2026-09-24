@@ -45,11 +45,13 @@ static bool Nav_FindNearest( NavData_t *data, const float *pos, dtPolyRef *ref, 
 ====================
 Nav_ComputeStraightPath
 
-start, goal and straight are all in navmesh (Y-up) space.
+start, goal and straight are all in navmesh (Y-up) space. outFlags[i] carries
+DT_STRAIGHTPATH_OFFMESH_CONNECTION when straight[i] is the takeoff point of a
+bridged jump/step-across link (navgen_offmesh.cpp), not ordinary floor.
 ====================
 */
 static bool Nav_ComputeStraightPath( NavData_t *data, const float *start, const float *goal,
-									  float *straight, int maxStraight, int *straightCount ) {
+									  float *straight, unsigned char *outFlags, int maxStraight, int *straightCount ) {
 	dtQueryFilter filter;
 	dtPolyRef startRef, endRef;
 	float startNearest[3], endNearest[3];
@@ -72,10 +74,9 @@ static bool Nav_ComputeStraightPath( NavData_t *data, const float *start, const 
 		return false;
 	}
 
-	unsigned char straightFlags[32];
 	dtPolyRef straightRefs[32];
 	if ( dtStatusFailed( data->query->findStraightPath( startNearest, endNearest, path, pathCount,
-														 straight, straightFlags, straightRefs, straightCount, maxStraight ) ) ) {
+														 straight, outFlags, straightRefs, straightCount, maxStraight ) ) ) {
 		return false;
 	}
 	return *straightCount > 0;
@@ -122,8 +123,9 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 	SwapYZ( goal, navGoal );
 
 	float straight[32 * 3];
+	unsigned char straightFlags[32];
 	int straightCount = 0;
-	if ( !data || !Nav_ComputeStraightPath( data, navStart, navGoal, straight, 32, &straightCount ) ) {
+	if ( !data || !Nav_ComputeStraightPath( data, navStart, navGoal, straight, straightFlags, 32, &straightCount ) ) {
 		result->failure = 1;
 		return 0;
 	}
@@ -138,6 +140,10 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 		return 0;
 	}
 	SwapYZ( navDir, result->movedir );
+	// flags[0] is our snapped position: if that's a link's takeoff, target (straight[1]) is the landing point.
+	if ( straightFlags[0] & DT_STRAIGHTPATH_OFFMESH_CONNECTION ) {
+		result->onOffMeshConnection = 1;
+	}
 	return 1;
 }
 
@@ -157,8 +163,9 @@ int Nav_TravelTimeEstimate( const float *start, const float *goal ) {
 	SwapYZ( goal, navGoal );
 
 	float straight[32 * 3];
+	unsigned char straightFlags[32];
 	int straightCount = 0;
-	if ( !data || !Nav_ComputeStraightPath( data, navStart, navGoal, straight, 32, &straightCount ) ) {
+	if ( !data || !Nav_ComputeStraightPath( data, navStart, navGoal, straight, straightFlags, 32, &straightCount ) ) {
 		return -1;
 	}
 

@@ -1634,6 +1634,7 @@ Q3NAVGENOBJ = \
   $(B)/navgen/navgen_patch.o \
   $(B)/navgen/navgen_classes.o \
   $(B)/navgen/navgen_bake.o \
+  $(B)/navgen/navgen_offmesh.o \
   \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \
@@ -1941,6 +1942,7 @@ Q3OBJ = \
   $(B)/client/nav_main.o \
   $(B)/client/nav_load.o \
   $(B)/client/nav_query.o \
+  $(B)/client/nav_debug.o \
   $(B)/client/navgen_classes.o \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \
@@ -2588,6 +2590,7 @@ Q3DOBJ = \
   $(B)/ded/nav_main.o \
   $(B)/ded/nav_load.o \
   $(B)/ded/nav_query.o \
+  $(B)/ded/nav_debug.o \
   $(B)/ded/navgen_classes.o \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \

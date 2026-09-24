@@ -3,6 +3,7 @@
 #include "navgen_bake.h"
 #include "navgen_types.h"
 #include "navcache_format.h"
+#include "navgen_offmesh.h"
 
 #include "Recast.h"
 #include "RecastAlloc.h"
@@ -460,7 +461,25 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 	header.walkableRadius = cls->radius;
 	header.walkableClimb = cls->climb;
 	header.maxSimplificationError = cfg.maxSimplificationError;
+
+	std::vector<NavGenTileBlob> tileBlobs( entries.size() );
+	for ( size_t i = 0; i < entries.size(); i++ ) {
+		tileBlobs[i].tx = entries[i].tx;
+		tileBlobs[i].ty = entries[i].ty;
+		tileBlobs[i].tlayer = entries[i].tlayer;
+		tileBlobs[i].data = allBlobs[i];
+		tileBlobs[i].dataSize = entries[i].dataSize;
+	}
+	std::vector<NavCacheOffMeshConn> offMeshConns;
+	NavGen_FindOffMeshConns( header, tileBlobs, geom, offMeshConns );
+	header.numOffMeshConns = (int)offMeshConns.size();
+
 	fwrite( &header, sizeof( header ), 1, f );
+
+	// written right after the header so the loader has them ready before it builds any tile.
+	for ( size_t i = 0; i < offMeshConns.size(); i++ ) {
+		fwrite( &offMeshConns[i], sizeof( NavCacheOffMeshConn ), 1, f );
+	}
 
 	for ( size_t i = 0; i < entries.size(); i++ ) {
 		fwrite( &entries[i], sizeof( NavCacheTileEntry ), 1, f );
@@ -470,6 +489,6 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 
 	fclose( f );
 
-	printf( "  wrote %s (%d tile layers)\n", path, (int)entries.size() );
+	printf( "  wrote %s (%d tile layers, %d off-mesh links)\n", path, (int)entries.size(), (int)offMeshConns.size() );
 	return qtrue;
 }

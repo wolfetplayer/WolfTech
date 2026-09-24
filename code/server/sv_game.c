@@ -587,6 +587,15 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_NAV_DUMP_MESH:
 		Nav_DumpMesh( args[1] );
 		return 0;
+	case BOTLIB_NAV_DEBUG_SHOW_NEARBY:
+		Nav_DebugShowNearby( VMA( 1 ), VMF( 2 ) );
+		return 0;
+	case BOTLIB_NAV_DEBUG_SHOW_PATH:
+		Nav_DebugShowPath( VMA( 1 ), VMA( 2 ), args[3] );
+		return 0;
+	case BOTLIB_NAV_DEBUG_CLEAR:
+		Nav_DebugClear();
+		return 0;
 
 	case BOTLIB_EA_SAY:
 		botlib_export->ea.EA_Say( args[1], VMA( 2 ) );

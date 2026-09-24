@@ -880,6 +880,16 @@ void AICast_StartFrame( int time ) {
 	static vmCvar_t aicast_disable;
 	gentity_t *ent;
 
+	// clear debug polys the instant a debug cvar toggles off, before any early return below can skip it.
+	{
+		static int prevDebugMesh = 0, prevDebugPath = 0;
+		if ( ( prevDebugMesh && !nav_debugmesh.integer ) || ( prevDebugPath && !nav_debugpath.integer ) ) {
+			trap_Nav_DebugClear();
+		}
+		prevDebugMesh = nav_debugmesh.integer;
+		prevDebugPath = nav_debugpath.integer;
+	}
+
 	if ( trap_Cvar_VariableIntegerValue( "savegame_loading" ) ) {
 		return;
 	}
@@ -952,6 +962,11 @@ void AICast_StartFrame( int time ) {
 			if ( castcount ) {
 				caststates[j].lastValidAreaNum[i] = castcount;
 				caststates[j].lastValidAreaTime[i] = level.time;
+			}
+
+			// Recast/Detour navigation (AAS migration): live "reachable from here" mesh debug draw
+			if ( nav_debugmesh.integer == i + 1 && g_entities[j].inuse && g_entities[j].client ) {
+				trap_Nav_DebugShowNearby( g_entities[j].s.pos.trBase, 500.0f );
 			}
 		}
 	}

@@ -82,6 +82,9 @@ vmCvar_t aicast_debugname;
 vmCvar_t aicast_scripts;
 // Recast/Detour navigation (AAS migration)
 vmCvar_t bot_navsystem;
+// live navmesh debug draw (needs a local game + r_debugSurface 2 on the client)
+vmCvar_t nav_debugmesh;    // 0=off, 1=small class, 2=large class - polys near each player, green=reachable/red=not
+vmCvar_t nav_debugpath;    // 0=off, 1=on - each active AI's current straight path as a yellow line
 
 // string versions of the attributes used for per-level, per-character definitions
 char *castAttributeStrings[] =
@@ -507,6 +510,8 @@ void AICast_Init( void ) {
 	trap_Cvar_Register( &aicast_scripts, "aicast_scripts", "1", 0 );
 	// Recast/Detour navigation (AAS migration)
 	trap_Cvar_Register( &bot_navsystem, "bot_navsystem", "0", 0 );
+	trap_Cvar_Register( &nav_debugmesh, "nav_debugmesh", "0", 0 );
+	trap_Cvar_Register( &nav_debugpath, "nav_debugpath", "0", 0 );
 
 	// (aicast_thinktime / sv_fps) * aicast_maxthink = number of cast's to think between each aicast frame
 	// so..

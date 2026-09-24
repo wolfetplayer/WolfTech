@@ -13,6 +13,8 @@ extern "C" {
 typedef struct {
 	int failure;
 	float movedir[3];
+	// set when the next step is an off-mesh link (navgen_offmesh.cpp) - needs an explicit jump, not just movement.
+	int onOffMeshConnection;
 } navMoveResult_t;
 
 void Nav_Init( void );
@@ -39,6 +41,13 @@ void Nav_TestPath( const float *start, const float *end );
 
 // debug: writes classIndex's baked navmesh polygons to navdump_<class>.obj (quake space) for visual inspection.
 void Nav_DumpMesh( int classIndex );
+
+// live debug: draws nearby navmesh polys (green=reachable/red=not) via the engine's bot debug-polygon channel.
+void Nav_DebugShowNearby( const float *origin, float radius );
+// live debug: draws the straight path from start to goal as lines; slot 0..3 (see nav_debug.cpp) keeps AI separate.
+void Nav_DebugShowPath( const float *start, const float *goal, int slot );
+// clears anything currently shown by either of the above.
+void Nav_DebugClear( void );
 
 #ifdef __cplusplus
 }

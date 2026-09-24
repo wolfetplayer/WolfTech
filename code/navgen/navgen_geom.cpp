@@ -28,11 +28,17 @@ static void AddTri( std::vector<float> &verts, std::vector<int> &tris, const vec
 }
 
 // all ordinary AI-collision brushes; wall vs walkable comes from shape, not the flag.
-// FRIENDLYCLIP is excluded - it only blocks allied AI, not the enemy horde.
+// FRIENDLYCLIP and PLAYERCLIP2 are excluded - see clipmask in g_client.c/ai_cast_survival.c, never the enemy horde.
 static int SolidContents( int contentFlags ) {
-	return ( contentFlags & ( CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_MONSTERCLIP | CONTENTS_PLAYERCLIP2 ) ) != 0;
+	return ( contentFlags & ( CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_MONSTERCLIP ) ) != 0;
 }
 
+// every clip texture compiles with SURF_NODRAW set, so skipping nodraw sides dropped clip brushes entirely.
+static int SkipBrushSide( int surfaceFlags ) {
+	return ( surfaceFlags & SURF_SKY ) != 0;
+}
+
+// patch surfaces: no clip-shaped patches in practice, so nodraw decorative curves are still worth dropping here.
 static int SkipFace( int surfaceFlags ) {
 	return ( surfaceFlags & ( SURF_SKY | SURF_NODRAW ) ) != 0;
 }
@@ -60,7 +66,7 @@ static void LoadBrushes( const byte *base, const dheader_t *header, std::vector<
 			const dbrushside_t *side = &sides[brush->firstSide + s];
 			const dplane_t *plane = &planes[side->planeNum];
 
-			if ( SkipFace( shaders[side->shaderNum].surfaceFlags ) ) {
+			if ( SkipBrushSide( shaders[side->shaderNum].surfaceFlags ) ) {
 				continue;
 			}
 

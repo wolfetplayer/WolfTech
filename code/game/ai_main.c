@@ -879,6 +879,8 @@ int BotAIStartFrame( int time ) {
 	trap_Cvar_Update( &bot_thinktime );
 	// Recast/Detour navigation (AAS migration)
 	trap_Cvar_Update( &bot_navsystem );
+	trap_Cvar_Update( &nav_debugmesh );
+	trap_Cvar_Update( &nav_debugpath );
 	// Ridah, set the default AAS world
 	trap_AAS_SetCurrentWorld( 0 );
 	trap_Nav_SelectClass( 0 );

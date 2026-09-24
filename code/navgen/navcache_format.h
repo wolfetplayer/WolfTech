@@ -4,7 +4,7 @@
 #define __NAVCACHE_FORMAT_H
 
 static const int NAVCACHE_MAGIC = ( 'N' << 24 ) | ( 'G' << 16 ) | ( 'C' << 8 ) | '1';
-static const int NAVCACHE_VERSION = 2;
+static const int NAVCACHE_VERSION = 3;
 
 struct NavCacheHeader {
 	int magic;
@@ -20,11 +20,21 @@ struct NavCacheHeader {
 	float walkableRadius;
 	float walkableClimb;
 	float maxSimplificationError;
+	// added in version 3: jump/step-across links Recast can't connect as ordinary floor (see NavCacheOffMeshConn).
+	int numOffMeshConns;
 };
 
 struct NavCacheTileEntry {
 	int tx, ty, tlayer;
 	int dataSize;
+};
+
+// a single bridged connection between two points not reachable as contiguous walkable floor; navmesh (Y-up) space, written right after the header.
+struct NavCacheOffMeshConn {
+	float startPos[3];
+	float endPos[3];
+	float radius;
+	unsigned char bidir;
 };
 
 #endif // __NAVCACHE_FORMAT_H

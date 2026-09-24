@@ -140,6 +140,64 @@ float AICast_GetRandomViewAngle( cast_state_t *cs, float tracedist ) {
 	return cs->ideal_viewangles[YAW];
 }
 
+// Recast/Detour navigation (AAS migration)
+// matches be_aas_move.c's sv_maxbarrier (max height reachable by a single jump, from the jump/gravity formula).
+#define NAV_MAXBARRIER 49.0f
+// matches bg_local.h's STEPSIZE / botlib's sv_maxstep (not included here - bg_local.h is private to the bg_*.c files).
+#define NAV_STEPSIZE 18.0f
+
+/*
+================
+AICast_NavBarrierAhead
+
+Nav has no AAS-style jump reachabilities to tell us when a jump is actually warranted, so
+this approximates AAS's own reactive check (BotCheckBarrierJump in be_ai_move.c): trace up
+from our feet, forward in the movement direction, then back down, to find whether there's
+really a ledge out there taller than a walkable step. Without this, "haven't moved much"
+alone can't tell a real ledge apart from being crowded by other AI, cornering, or walking
+into geometry the navmesh doesn't know is solid.
+================
+*/
+static qboolean AICast_NavBarrierAhead( cast_state_t *cs, vec3_t movedir ) {
+	gentity_t *ent = &g_entities[cs->entityNum];
+	vec3_t start, end, hordir;
+	trace_t tr;
+
+	VectorCopy( movedir, hordir );
+	hordir[2] = 0.0f;
+	if ( VectorNormalize( hordir ) < 0.0001f ) {
+		return qfalse;
+	}
+
+	// trace straight up from our feet - is there even room to start a jump this high?
+	VectorCopy( cs->bs->origin, end );
+	end[2] += NAV_MAXBARRIER;
+	trap_Trace( &tr, cs->bs->origin, ent->r.mins, ent->r.maxs, end, cs->entityNum, ent->clipmask );
+	if ( tr.startsolid || tr.endpos[2] - cs->bs->origin[2] < NAV_STEPSIZE ) {
+		return qfalse;
+	}
+
+	// trace forward from there, in the direction we're trying to move
+	VectorCopy( tr.endpos, start );
+	VectorMA( start, 32.0f, hordir, end );
+	trap_Trace( &tr, start, ent->r.mins, ent->r.maxs, end, cs->entityNum, ent->clipmask );
+	if ( tr.startsolid ) {
+		return qfalse;
+	}
+
+	// trace back down to find the top of whatever's out there
+	VectorCopy( tr.endpos, start );
+	VectorCopy( tr.endpos, end );
+	end[2] = cs->bs->origin[2];
+	trap_Trace( &tr, start, ent->r.mins, ent->r.maxs, end, cs->entityNum, ent->clipmask );
+	if ( tr.startsolid || tr.fraction >= 1.0f ) {
+		return qfalse; // nothing solid between barrier-height and our own height - a gap, not a ledge
+	}
+
+	// a real ledge: taller than a walkable step (upper bound is implicit - we never traced above NAV_MAXBARRIER)
+	return ( tr.endpos[2] - cs->bs->origin[2] >= NAV_STEPSIZE ) ? qtrue : qfalse;
+}
+
 /*
 ============
 AICast_MoveToPos()
@@ -220,6 +278,9 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 		if ( bot_navsystem.integer ) {
 			navMoveResult_t navResult;
 			trap_Nav_MoveToGoal( &navResult, bs->origin, pos );
+			if ( nav_debugpath.integer ) {
+				trap_Nav_DebugShowPath( bs->origin, pos, cs->entityNum % 4 );
+			}
 			memset( &lmoveresult, 0, sizeof( lmoveresult ) );
 			lmoveresult.failure = navResult.failure;
 			VectorCopy( navResult.movedir, lmoveresult.movedir );
@@ -227,10 +288,17 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 			if ( !navResult.failure ) {
 				trap_EA_Move( cs->entityNum, navResult.movedir, 400 );
 
-				// Nav has no AAS-style jump/step-up logic, so try a jump if stuck against a ledge.
-				if ( level.time >= cs->navStuckCheckTime ) {
+				if ( navResult.onOffMeshConnection ) {
+					// path says this step is a bridged link (navgen_offmesh.cpp) - jump now, toward movedir.
+					if ( cs->navJumpTime < level.time ) {
+						trap_EA_Jump( cs->entityNum );
+						cs->navJumpTime = level.time + 1000;
+					}
+				} else if ( level.time >= cs->navStuckCheckTime ) {
+					// fallback for gaps off-mesh didn't catch: jump only if stuck AND a ledge is actually there.
 					if ( cs->navStuckCheckTime && VectorDistance( bs->origin, cs->navStuckCheckOrg ) < 20 &&
-						 VectorDistance( bs->origin, pos ) > 40 && cs->navJumpTime < level.time ) {
+						 VectorDistance( bs->origin, pos ) > 40 && cs->navJumpTime < level.time &&
+						 AICast_NavBarrierAhead( cs, navResult.movedir ) ) {
 						trap_EA_Jump( cs->entityNum );
 						cs->navJumpTime = level.time + 1000;
 					}

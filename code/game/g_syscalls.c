@@ -438,6 +438,18 @@ void trap_Nav_DumpMesh( int classIndex ) {
 	syscall( BOTLIB_NAV_DUMP_MESH, classIndex );
 }
 
+void trap_Nav_DebugShowNearby( vec3_t origin, float radius ) {
+	syscall( BOTLIB_NAV_DEBUG_SHOW_NEARBY, origin, PASSFLOAT( radius ) );
+}
+
+void trap_Nav_DebugShowPath( vec3_t start, vec3_t goal, int slot ) {
+	syscall( BOTLIB_NAV_DEBUG_SHOW_PATH, start, goal, slot );
+}
+
+void trap_Nav_DebugClear( void ) {
+	syscall( BOTLIB_NAV_DEBUG_CLEAR );
+}
+
 void trap_EA_Say( int client, char *str ) {
 	syscall( BOTLIB_EA_SAY, client, str );
 }
