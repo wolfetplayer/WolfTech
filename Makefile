@@ -1945,6 +1945,11 @@ Q3OBJ = \
   $(B)/client/nav_debug.o \
   $(B)/client/nav_tilecache.o \
   $(B)/client/navgen_classes.o \
+  $(B)/client/navgen_geom.o \
+  $(B)/client/navgen_winding.o \
+  $(B)/client/navgen_patch.o \
+  $(B)/client/navgen_bake.o \
+  $(B)/client/navgen_offmesh.o \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \
   $(B)/recast/RecastArea.o \
@@ -2594,6 +2599,11 @@ Q3DOBJ = \
   $(B)/ded/nav_debug.o \
   $(B)/ded/nav_tilecache.o \
   $(B)/ded/navgen_classes.o \
+  $(B)/ded/navgen_geom.o \
+  $(B)/ded/navgen_winding.o \
+  $(B)/ded/navgen_patch.o \
+  $(B)/ded/navgen_bake.o \
+  $(B)/ded/navgen_offmesh.o \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \
   $(B)/recast/RecastArea.o \

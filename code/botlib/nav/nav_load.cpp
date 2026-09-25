@@ -3,6 +3,8 @@
 #include "nav_local.h"
 #include "nav_public.h"
 #include "../../navgen/navcache_format.h"
+#include "../../navgen/navgen_geom.h"
+#include "../../navgen/navgen_bake.h"
 
 #include <cstdio>
 #include <cstring>
@@ -112,6 +114,51 @@ struct NavMeshProcess : public dtTileCacheMeshProcess {
 };
 
 /*
+=================
+Nav_AutoBakeClass
+
+Bakes classIndex's navcache from the map's .bsp and writes it to qpath, in-process, on the calling
+(main) thread. Only called when nav_autobake is set and the cached file is missing or stale - this
+runs the full Recast pipeline synchronously, so it can stall a cold map load for a while on a map
+that hasn't been baked yet.
+=================
+*/
+static bool Nav_AutoBakeClass( const char *mapname, const navGenClass_t *cls, const char *qpath ) {
+	char bspPath[MAX_QPATH];
+	snprintf( bspPath, sizeof( bspPath ), "maps/%s.bsp", mapname );
+
+	void *bspBuf = NULL;
+	long bspLen = FS_ReadFile( bspPath, &bspBuf );
+	if ( bspLen <= 0 || !bspBuf ) {
+		Com_Printf( "Nav_AutoBakeClass: could not read %s\n", bspPath );
+		return false;
+	}
+
+	navGeom_t geom;
+	memset( &geom, 0, sizeof( geom ) );
+	bool geomOk = NavGen_LoadGeometryFromMemory( (const unsigned char *)bspBuf, (int)bspLen, &geom ) != 0;
+	FS_FreeFile( bspBuf );
+	if ( !geomOk ) {
+		Com_Printf( "Nav_AutoBakeClass: no walkable geometry extracted from %s\n", bspPath );
+		return false;
+	}
+
+	Com_Printf( "Nav_AutoBakeClass: no cached navmesh for class %s, baking %s now (this can take a while)...\n", cls->name, bspPath );
+
+	std::vector<unsigned char> bytes;
+	bool bakeOk = NavGen_BakeClassToBuffer( &geom, cls, bytes ) != 0;
+	NavGen_FreeGeometry( &geom );
+	if ( !bakeOk || bytes.empty() ) {
+		Com_Printf( "Nav_AutoBakeClass: bake failed for class %s\n", cls->name );
+		return false;
+	}
+
+	FS_WriteFile( qpath, bytes.data(), (int)bytes.size() );
+	Com_Printf( "Nav_AutoBakeClass: generated %s (%d bytes)\n", qpath, (int)bytes.size() );
+	return true;
+}
+
+/*
 ============
 Nav_LoadClass
 ============
@@ -125,6 +172,24 @@ static bool Nav_LoadClass( const char *mapname, int classIndex ) {
 
 	void *buf = NULL;
 	long len = FS_ReadFile( qpath, &buf );
+
+	bool needsBake = len <= 0 || !buf;
+	if ( !needsBake ) {
+		NavCacheHeader peek;
+		memcpy( &peek, buf, sizeof( peek ) );
+		needsBake = ( peek.magic != NAVCACHE_MAGIC || peek.version != NAVCACHE_VERSION );
+	}
+
+	if ( needsBake && Cvar_VariableIntegerValue( "nav_autobake" ) ) {
+		if ( buf ) {
+			FS_FreeFile( buf );
+			buf = NULL;
+		}
+		if ( Nav_AutoBakeClass( mapname, cls, qpath ) ) {
+			len = FS_ReadFile( qpath, &buf );
+		}
+	}
+
 	if ( len <= 0 || !buf ) {
 		Com_Printf( "Nav_LoadClass: no navcache for %s (%s)\n", cls->name, qpath );
 		return false;

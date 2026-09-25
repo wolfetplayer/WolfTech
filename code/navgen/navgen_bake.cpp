@@ -350,11 +350,11 @@ static bool BakeTile( rcContext &ctx, const rcConfig &cfg, const navGeom_t *geom
 }
 
 /*
-===============
-NavGen_BakeClass
-===============
+=======================
+NavGen_BakeClassToBuffer
+=======================
 */
-int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const char *mapName, const char *outDir ) {
+int NavGen_BakeClassToBuffer( const navGeom_t *geom, const navGenClass_t *cls, std::vector<unsigned char> &outBytes ) {
 	float bmin[3], bmax[3];
 	rcCalcBounds( geom->verts, geom->numVerts, bmin, bmax );
 
@@ -438,15 +438,6 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 	printf( "  [%s] %d/%d grid tiles have walkable floor (rest are void, walls, or too-steep terrain)\n",
 			cls->name, tilesWithLayers, tw * th );
 
-	char path[1024];
-	snprintf( path, sizeof( path ), "%s/%s_%s.navcache", outDir, mapName, cls->name );
-
-	FILE *f = fopen( path, "wb" );
-	if ( !f ) {
-		fprintf( stderr, "NavGen_BakeClass: could not open %s for writing\n", path );
-		return qfalse;
-	}
-
 	NavCacheHeader header;
 	header.magic = NAVCACHE_MAGIC;
 	header.version = NAVCACHE_VERSION;
@@ -474,21 +465,53 @@ int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const cha
 	NavGen_FindOffMeshConns( header, tileBlobs, geom, offMeshConns );
 	header.numOffMeshConns = (int)offMeshConns.size();
 
-	fwrite( &header, sizeof( header ), 1, f );
+	outBytes.clear();
+	outBytes.reserve( sizeof( header ) + offMeshConns.size() * sizeof( NavCacheOffMeshConn ) +
+					   entries.size() * sizeof( NavCacheTileEntry ) );
+
+	const unsigned char *headerBytes = (const unsigned char *)&header;
+	outBytes.insert( outBytes.end(), headerBytes, headerBytes + sizeof( header ) );
 
 	// written right after the header so the loader has them ready before it builds any tile.
 	for ( size_t i = 0; i < offMeshConns.size(); i++ ) {
-		fwrite( &offMeshConns[i], sizeof( NavCacheOffMeshConn ), 1, f );
+		const unsigned char *connBytes = (const unsigned char *)&offMeshConns[i];
+		outBytes.insert( outBytes.end(), connBytes, connBytes + sizeof( NavCacheOffMeshConn ) );
 	}
 
 	for ( size_t i = 0; i < entries.size(); i++ ) {
-		fwrite( &entries[i], sizeof( NavCacheTileEntry ), 1, f );
-		fwrite( allBlobs[i], 1, entries[i].dataSize, f );
+		const unsigned char *entryBytes = (const unsigned char *)&entries[i];
+		outBytes.insert( outBytes.end(), entryBytes, entryBytes + sizeof( NavCacheTileEntry ) );
+		outBytes.insert( outBytes.end(), allBlobs[i], allBlobs[i] + entries[i].dataSize );
 		dtFree( allBlobs[i] );
 	}
 
+	printf( "  [%s] baked %d tile layers, %d off-mesh links, %d bytes\n",
+			cls->name, (int)entries.size(), (int)offMeshConns.size(), (int)outBytes.size() );
+	return qtrue;
+}
+
+/*
+===============
+NavGen_BakeClass
+===============
+*/
+int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const char *mapName, const char *outDir ) {
+	std::vector<unsigned char> bytes;
+	if ( !NavGen_BakeClassToBuffer( geom, cls, bytes ) ) {
+		return qfalse;
+	}
+
+	char path[1024];
+	snprintf( path, sizeof( path ), "%s/%s_%s.navcache", outDir, mapName, cls->name );
+
+	FILE *f = fopen( path, "wb" );
+	if ( !f ) {
+		fprintf( stderr, "NavGen_BakeClass: could not open %s for writing\n", path );
+		return qfalse;
+	}
+	fwrite( bytes.data(), 1, bytes.size(), f );
 	fclose( f );
 
-	printf( "  wrote %s (%d tile layers, %d off-mesh links)\n", path, (int)entries.size(), (int)offMeshConns.size() );
+	printf( "  wrote %s\n", path );
 	return qtrue;
 }

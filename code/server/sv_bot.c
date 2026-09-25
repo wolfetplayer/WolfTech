@@ -556,6 +556,7 @@ void SV_BotInitCvars( void ) {
 
 	// Recast/Detour navigation (AAS migration)
 	Cvar_Get( "bot_navsystem", "0", 0 );        //0 = legacy AAS, 1 = Recast/Detour navmesh
+	Cvar_Get( "nav_autobake", "0", 0 );         //bake a class's navcache on the fly if it's missing/stale
 }
 
 // Ridah, Cast AI

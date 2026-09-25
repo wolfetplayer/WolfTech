@@ -146,6 +146,46 @@ static void LoadPatches( const byte *base, const dheader_t *header, std::vector<
 }
 
 /*
+========================
+NavGen_LoadGeometryFromMemory
+========================
+*/
+int NavGen_LoadGeometryFromMemory( const unsigned char *data, int size, navGeom_t *outGeom ) {
+	if ( size < (int)sizeof( dheader_t ) ) {
+		fprintf( stderr, "NavGen_LoadGeometryFromMemory: buffer too small to be a .bsp\n" );
+		return qfalse;
+	}
+
+	const dheader_t *header = (const dheader_t *)data;
+	if ( header->ident != BSP_IDENT || header->version != BSP_VERSION ) {
+		fprintf( stderr, "NavGen_LoadGeometryFromMemory: not a recognized .bsp (ident %x version %d)\n",
+				 header->ident, header->version );
+		return qfalse;
+	}
+
+	std::vector<float> verts;
+	std::vector<int> tris;
+
+	LoadBrushes( data, header, verts, tris );
+	LoadPatches( data, header, verts, tris );
+
+	if ( tris.empty() ) {
+		fprintf( stderr, "NavGen_LoadGeometryFromMemory: no walkable geometry found\n" );
+		return qfalse;
+	}
+
+	outGeom->numVerts = (int)( verts.size() / 3 );
+	outGeom->verts = (float *)malloc( verts.size() * sizeof( float ) );
+	memcpy( outGeom->verts, verts.data(), verts.size() * sizeof( float ) );
+
+	outGeom->numTris = (int)( tris.size() / 3 );
+	outGeom->tris = (int *)malloc( tris.size() * sizeof( int ) );
+	memcpy( outGeom->tris, tris.data(), tris.size() * sizeof( int ) );
+
+	return qtrue;
+}
+
+/*
 ==================
 NavGen_LoadGeometry
 ==================
@@ -170,36 +210,12 @@ int NavGen_LoadGeometry( const char *mapPath, navGeom_t *outGeom ) {
 	}
 	fclose( f );
 
-	const dheader_t *header = (const dheader_t *)data;
-	if ( header->ident != BSP_IDENT || header->version != BSP_VERSION ) {
-		fprintf( stderr, "NavGen_LoadGeometry: %s is not a recognized .bsp (ident %x version %d)\n",
-				 mapPath, header->ident, header->version );
-		free( data );
-		return qfalse;
+	int ok = NavGen_LoadGeometryFromMemory( data, (int)size, outGeom );
+	if ( !ok ) {
+		fprintf( stderr, "NavGen_LoadGeometry: failed on %s\n", mapPath );
 	}
-
-	std::vector<float> verts;
-	std::vector<int> tris;
-
-	LoadBrushes( data, header, verts, tris );
-	LoadPatches( data, header, verts, tris );
-
 	free( data );
-
-	if ( tris.empty() ) {
-		fprintf( stderr, "NavGen_LoadGeometry: no walkable geometry found in %s\n", mapPath );
-		return qfalse;
-	}
-
-	outGeom->numVerts = (int)( verts.size() / 3 );
-	outGeom->verts = (float *)malloc( verts.size() * sizeof( float ) );
-	memcpy( outGeom->verts, verts.data(), verts.size() * sizeof( float ) );
-
-	outGeom->numTris = (int)( tris.size() / 3 );
-	outGeom->tris = (int *)malloc( tris.size() * sizeof( int ) );
-	memcpy( outGeom->tris, tris.data(), tris.size() * sizeof( int ) );
-
-	return qtrue;
+	return ok;
 }
 
 /*
