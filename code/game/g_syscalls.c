@@ -426,8 +426,12 @@ int trap_Nav_FindAttackSpot( vec3_t from, vec3_t target, float minRange, float m
 	return syscall( BOTLIB_NAV_FIND_ATTACK_SPOT, from, target, PASSFLOAT( minRange ), PASSFLOAT( maxRange ), outPos );
 }
 
-void trap_Nav_SetBlockingEntity( vec3_t absmin, vec3_t absmax, qboolean blocking ) {
-	syscall( BOTLIB_NAV_SET_BLOCKING_ENTITY, absmin, absmax, blocking );
+int trap_Nav_AddObstacle( vec3_t absmin, vec3_t absmax ) {
+	return syscall( BOTLIB_NAV_ADD_OBSTACLE, absmin, absmax );
+}
+
+void trap_Nav_RemoveObstacle( int handle ) {
+	syscall( BOTLIB_NAV_REMOVE_OBSTACLE, handle );
 }
 
 void trap_Nav_TestPath( vec3_t start, vec3_t end ) {

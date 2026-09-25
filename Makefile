@@ -1943,6 +1943,7 @@ Q3OBJ = \
   $(B)/client/nav_load.o \
   $(B)/client/nav_query.o \
   $(B)/client/nav_debug.o \
+  $(B)/client/nav_tilecache.o \
   $(B)/client/navgen_classes.o \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \
@@ -2591,6 +2592,7 @@ Q3DOBJ = \
   $(B)/ded/nav_load.o \
   $(B)/ded/nav_query.o \
   $(B)/ded/nav_debug.o \
+  $(B)/ded/nav_tilecache.o \
   $(B)/ded/navgen_classes.o \
   $(B)/recast/Recast.o \
   $(B)/recast/RecastAlloc.o \

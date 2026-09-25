@@ -306,18 +306,6 @@ int Nav_FindAttackSpot( const float *from, const float *target, float minRange, 
 }
 
 /*
-====================
-Nav_SetBlockingEntity
-====================
-*/
-void Nav_SetBlockingEntity( const float *absmin, const float *absmax, int blocking ) {
-	// Phase 4 wires this to real DetourTileCache obstacles; no-op for now.
-	(void)absmin;
-	(void)absmax;
-	(void)blocking;
-}
-
-/*
 ============
 Nav_TestPath
 ============

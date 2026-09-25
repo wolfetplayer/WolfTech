@@ -577,8 +577,10 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return Nav_FindHidePosition( VMA( 1 ), VMA( 2 ), VMF( 3 ), VMA( 4 ) );
 	case BOTLIB_NAV_FIND_ATTACK_SPOT:
 		return Nav_FindAttackSpot( VMA( 1 ), VMA( 2 ), VMF( 3 ), VMF( 4 ), VMA( 5 ) );
-	case BOTLIB_NAV_SET_BLOCKING_ENTITY:
-		Nav_SetBlockingEntity( VMA( 1 ), VMA( 2 ), args[3] );
+	case BOTLIB_NAV_ADD_OBSTACLE:
+		return Nav_AddObstacle( VMA( 1 ), VMA( 2 ) );
+	case BOTLIB_NAV_REMOVE_OBSTACLE:
+		Nav_RemoveObstacle( args[1] );
 		return 0;
 	case BOTLIB_NAV_TEST_PATH:
 		Nav_TestPath( VMA( 1 ), VMA( 2 ) );

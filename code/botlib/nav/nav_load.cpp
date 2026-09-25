@@ -160,7 +160,7 @@ static bool Nav_LoadClass( const char *mapname, int classIndex ) {
 	tcparams.walkableClimb = header.walkableClimb;
 	tcparams.maxSimplificationError = header.maxSimplificationError;
 	tcparams.maxTiles = header.numTiles > 0 ? header.numTiles : 1;
-	tcparams.maxObstacles = 128; // unused until Phase 4
+	tcparams.maxObstacles = 128; // doors/movers/constructibles, see nav_tilecache.cpp
 
 	data->alloc = new dtTileCacheAlloc();
 	data->compressor = new NavLoadPassthroughCompressor();
@@ -269,6 +269,9 @@ Nav_LoadMap
 ===========
 */
 void Nav_LoadMap( const char *mapname ) {
+	// every tracked handle points at a cache we're about to delete below.
+	Nav_ClearObstacles();
+
 	for ( int i = 0; i < NAV_MAX_CLASSES; i++ ) {
 		NavData_t *data = &navData[i];
 		delete data->query;

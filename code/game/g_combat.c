@@ -949,6 +949,7 @@ static void G_CompleteConstructible( gentity_t *ent, gentity_t *activator ) {
 	gentity_t *e;
 
 	ent->active = qtrue;
+	G_SetAASBlockingEntity( ent, qfalse );
 	trap_UnlinkEntity( ent );
 	G_UseTargets( ent, activator );
 

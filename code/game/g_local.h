@@ -412,6 +412,7 @@ struct gentity_s {
 	int scriptAccumBuffer[G_MAX_SCRIPT_ACCUM_BUFFERS];
 
 	qboolean AASblocking;
+	int navObstacleId;          // 1-based handle from trap_Nav_AddObstacle; 0 = not registered
 	float accuracy;
 
 	char        *tagName;       // name of the tag we are attached to
@@ -1539,7 +1540,8 @@ int         trap_Nav_TravelTimeEstimate( vec3_t start, vec3_t goal );
 int         trap_Nav_Reachable( vec3_t point );
 int         trap_Nav_FindHidePosition( vec3_t from, vec3_t threat, float radius, vec3_t outPos );
 int         trap_Nav_FindAttackSpot( vec3_t from, vec3_t target, float minRange, float maxRange, vec3_t outPos );
-void        trap_Nav_SetBlockingEntity( vec3_t absmin, vec3_t absmax, qboolean blocking );
+int         trap_Nav_AddObstacle( vec3_t absmin, vec3_t absmax );
+void        trap_Nav_RemoveObstacle( int handle );
 void        trap_Nav_TestPath( vec3_t start, vec3_t end );
 void        trap_Nav_DumpMesh( int classIndex );
 void        trap_Nav_DebugShowNearby( vec3_t origin, float radius );

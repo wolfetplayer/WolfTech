@@ -2396,6 +2396,9 @@ void SP_func_constructible( gentity_t *ent ) {
 	InitMover( ent );
 	ent->use = constructible_use;   // override InitMover's binary-mover use; a locked one unlocks here
 
+	// solid from spawn; G_CompleteConstructible clears this once it's built.
+	G_SetAASBlockingEntity( ent, qtrue );
+
 	if ( ent->buildTime <= 0 ) {
 		ent->buildTime = 8000;
 	}

@@ -31,4 +31,7 @@ extern int navCurrentClass;
 // current class's loaded data, or NULL if it failed/hasn't loaded.
 NavData_t *Nav_CurrentData( void );
 
+// drops every tracked obstacle handle; call before the caches are destroyed/recreated.
+void Nav_ClearObstacles( void );
+
 #endif // __NAV_LOCAL_H

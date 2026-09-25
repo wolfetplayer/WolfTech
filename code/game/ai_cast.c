@@ -992,6 +992,20 @@ G_SetAASBlockingEntity
 void G_SetAASBlockingEntity( gentity_t *ent, qboolean blocking ) {
 	ent->AASblocking = blocking;
 	trap_AAS_SetAASBlockingEntity( ent->r.absmin, ent->r.absmax, blocking );
+
+	// keyed per-entity, so re-blocking at a new position without a qfalse is safe.
+	if ( ent->navObstacleId ) {
+		trap_Nav_RemoveObstacle( ent->navObstacleId );
+		ent->navObstacleId = 0;
+	}
+	if ( blocking ) {
+		ent->navObstacleId = trap_Nav_AddObstacle( ent->r.absmin, ent->r.absmax );
+	}
+
+	G_DPrintf( "G_SetAASBlockingEntity: %s(%i) spawnflags=%i blocking=%i navObstacleId=%i absmin=(%.0f %.0f %.0f) absmax=(%.0f %.0f %.0f)\n",
+			   ent->classname, ent->s.number, ent->spawnflags, blocking, ent->navObstacleId,
+			   ent->r.absmin[0], ent->r.absmin[1], ent->r.absmin[2],
+			   ent->r.absmax[0], ent->r.absmax[1], ent->r.absmax[2] );
 }
 
 /*

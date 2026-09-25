@@ -33,8 +33,13 @@ int Nav_Reachable( const float *point );
 int Nav_FindHidePosition( const float *from, const float *threat, float radius, float *outPos );
 int Nav_FindAttackSpot( const float *from, const float *target, float minRange, float maxRange, float *outPos );
 
-// Phase 4 wires this up to real DetourTileCache obstacles; no-op for now.
-void Nav_SetBlockingEntity( const float *absmin, const float *absmax, int blocking );
+// Phase 4: dynamic obstacles for doors/movers/constructibles. absmin/absmax are in
+// quake space; returns a handle (>=1) for Nav_RemoveObstacle, or 0 on failure.
+int Nav_AddObstacle( const float *absmin, const float *absmax );
+void Nav_RemoveObstacle( int handle );
+
+// ticks pending obstacle add/removes into incremental tile rebuilds; call once per server frame.
+void Nav_UpdateObstacles( void );
 
 // debug: runs Nav_MoveToGoal/Nav_TravelTimeEstimate between two points and prints to the engine console.
 void Nav_TestPath( const float *start, const float *end );

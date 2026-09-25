@@ -488,6 +488,7 @@ void SV_BotFrame( int time ) {
 	if ( !gvm ) {
 		return;
 	}
+	Nav_UpdateObstacles();
 	VM_Call( gvm, BOTAI_START_FRAME, time );
 }
 
