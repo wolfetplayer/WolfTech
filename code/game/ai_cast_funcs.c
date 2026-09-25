@@ -2961,7 +2961,7 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 		usercmd_t ucmd;
 		trace_t tr;
 
-		trap_Trace( &tr, cs->bs->origin, NULL, NULL,
+		trap_Trace( &tr, cs->bs->origin, cs->bs->cur_ps.mins, cs->bs->cur_ps.maxs,
 					followent->r.currentOrigin, cs->entityNum, ent->clipmask );
 
 		if ( tr.entityNum == followent->s.number ) {
@@ -4957,7 +4957,16 @@ char *AIFunc_Battle( cast_state_t *cs ) {
 		cs->attackcrouch_time = 0;
 	}
 
-	AICast_Blocked( cs, &moveresult, qfalse, NULL );
+	{
+		bot_goal_t enemyGoal;
+		memset( &enemyGoal, 0, sizeof( enemyGoal ) );
+		enemyGoal.entitynum = cs->enemyNum;
+		VectorCopy( g_entities[cs->enemyNum].r.currentOrigin, enemyGoal.origin );
+		enemyGoal.areanum = BotPointAreaNum( enemyGoal.origin );
+		VectorSet( enemyGoal.mins, -8, -8, -8 );
+		VectorSet( enemyGoal.maxs, 8, 8, 8 );
+		AICast_Blocked( cs, &moveresult, qfalse, &enemyGoal );
+	}
 
 	// Retreat into cover when needed
 	if ( cs->castScriptStatus.scriptNoMoveTime < level.time && AICast_WantToRetreat( cs ) ) {

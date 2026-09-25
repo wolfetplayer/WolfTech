@@ -4226,9 +4226,7 @@ ClearExplosive
 */
 void ClearExplosive( gentity_t *self ) {
 	// RF, AAS areas are now free
-	if ( !( self->spawnflags & 16 ) ) {
-		G_SetAASBlockingEntity( self, qfalse );
-	}
+	G_SetAASBlockingEntity( self, qfalse );
 
 	self->die   = NULL;
 	self->pain  = NULL;
@@ -4377,9 +4375,7 @@ void func_explosive_spawn( gentity_t *self, gentity_t *other, gentity_t *activat
 	// turn the brush to visible
 
 	// RF, AAS areas are now occupied
-	if ( !( self->spawnflags & 16 ) ) {
-		G_SetAASBlockingEntity( self, qtrue );
-	}
+	G_SetAASBlockingEntity( self, qtrue );
 }
 
 
@@ -4423,10 +4419,8 @@ void InitExplosive( gentity_t *ent ) {
 	ent->s.eType = ET_EXPLOSIVE;
 	trap_LinkEntity( ent );
 
-	if ( !( ent->spawnflags & 16 ) ) {
-		ent->think = G_BlockThink;
-		ent->nextthink = level.time + FRAMETIME;
-	}
+	ent->think = G_BlockThink;
+	ent->nextthink = level.time + FRAMETIME;
 }
 
 

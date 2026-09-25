@@ -68,6 +68,14 @@ int Nav_AddObstacle( const float *absmin, const float *absmax ) {
 		if ( dtStatusSucceed( data->cache->addBoxObstacle( boxMin, boxMax, &obstacle->ref[c] ) ) ) {
 			anyAdded = true;
 			navObstaclesUpToDate[c] = false;
+
+			dtCompressedTileRef touchedTiles[8];
+			int touchedCount = 0;
+			data->cache->queryTiles( boxMin, boxMax, touchedTiles, &touchedCount, 8 );
+			if ( touchedCount == 0 ) {
+				Com_Printf( "Nav_AddObstacle: WARNING %s obstacle touches 0 tiles, it will never carve (bmin=%.0f %.0f %.0f bmax=%.0f %.0f %.0f)\n",
+							navGenClasses[c].name, boxMin[0], boxMin[1], boxMin[2], boxMax[0], boxMax[1], boxMax[2] );
+			}
 		}
 	}
 
