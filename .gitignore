@@ -63,3 +63,7 @@ main/maps/sv_escape2.srf
 main/cgame_x64.dll
 main/qagame_x64.dll
 main/ui_x64.dll
+main/maps/nav/sv_escape2_large.navcache
+main/maps/nav/sv_escape2_small.navcache
+main/maps/nav/sv_river_outpost_large.navcache
+main/maps/nav/sv_river_outpost_small.navcache
