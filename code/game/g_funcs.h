@@ -508,6 +508,7 @@ If you have questions concerning this license or the applicable additional terms
 {"trap_Nav_Reachable", (byte *)trap_Nav_Reachable},
 {"trap_Nav_FindHidePosition", (byte *)trap_Nav_FindHidePosition},
 {"trap_Nav_FindAttackSpot", (byte *)trap_Nav_FindAttackSpot},
+{"trap_Nav_GetRouteFirstVisPos", (byte *)trap_Nav_GetRouteFirstVisPos},
 {"trap_Nav_AddObstacle", (byte *)trap_Nav_AddObstacle},
 {"trap_Nav_RemoveObstacle", (byte *)trap_Nav_RemoveObstacle},
 {"trap_Nav_TestPath", (byte *)trap_Nav_TestPath},

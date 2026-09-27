@@ -37,6 +37,9 @@ int Nav_Reachable( const float *point );
 int Nav_FindHidePosition( const float *from, const float *threat, float radius, float *outPos );
 int Nav_FindAttackSpot( const float *from, const float *target, float minRange, float maxRange, float *outPos );
 
+// first raycast-visible point along the corridor from srcpos toward destpos; 0 if none.
+int Nav_GetRouteFirstVisPos( const float *srcpos, const float *destpos, float *outPos );
+
 // Phase 4: dynamic obstacles for doors/movers/constructibles. absmin/absmax are in
 // quake space; returns a handle (>=1) for Nav_RemoveObstacle, or 0 on failure.
 int Nav_AddObstacle( const float *absmin, const float *absmax );

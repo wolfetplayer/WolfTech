@@ -426,6 +426,10 @@ int trap_Nav_FindAttackSpot( vec3_t from, vec3_t target, float minRange, float m
 	return syscall( BOTLIB_NAV_FIND_ATTACK_SPOT, from, target, PASSFLOAT( minRange ), PASSFLOAT( maxRange ), outPos );
 }
 
+int trap_Nav_GetRouteFirstVisPos( vec3_t srcpos, vec3_t destpos, vec3_t outPos ) {
+	return syscall( BOTLIB_NAV_GET_ROUTE_FIRST_VIS_POS, srcpos, destpos, outPos );
+}
+
 int trap_Nav_AddObstacle( vec3_t absmin, vec3_t absmax ) {
 	return syscall( BOTLIB_NAV_ADD_OBSTACLE, absmin, absmax );
 }

@@ -508,6 +508,7 @@ extern int trap_Nav_TravelTimeEstimate ( vec3_t start , vec3_t goal ) ;
 extern int trap_Nav_Reachable ( vec3_t point ) ;
 extern int trap_Nav_FindHidePosition ( vec3_t from , vec3_t threat , float radius , vec3_t outPos ) ;
 extern int trap_Nav_FindAttackSpot ( vec3_t from , vec3_t target , float minRange , float maxRange , vec3_t outPos ) ;
+extern int trap_Nav_GetRouteFirstVisPos ( vec3_t srcpos , vec3_t destpos , vec3_t outPos ) ;
 extern int trap_Nav_AddObstacle ( vec3_t absmin , vec3_t absmax ) ;
 extern void trap_Nav_RemoveObstacle ( int handle ) ;
 extern void trap_Nav_TestPath ( vec3_t start , vec3_t end ) ;

@@ -982,7 +982,10 @@ char *AIFunc_InspectFriendly( cast_state_t *cs ) {
 			// If pathing failed, face toward the first visible route point if possible.
 			if ( !moveresult || moveresult->failure ) {
 				if ( !( cs->aiFlags & AIFL_MISCFLAG2 ) ) {
-					if ( trap_AAS_GetRouteFirstVisPos( followEnt->r.currentOrigin, cs->bs->origin, cs->travelflags, cs->takeCoverEnemyPos ) ) {
+					// Recast/Detour navigation (AAS migration)
+					if ( bot_navsystem.integer ?
+						 trap_Nav_GetRouteFirstVisPos( followEnt->r.currentOrigin, cs->bs->origin, cs->takeCoverEnemyPos ) :
+						 trap_AAS_GetRouteFirstVisPos( followEnt->r.currentOrigin, cs->bs->origin, cs->travelflags, cs->takeCoverEnemyPos ) ) {
 						cs->aiFlags |= AIFL_MISCFLAG2;
 					} else {
 						VectorCopy( followEnt->r.currentOrigin, cs->takeCoverEnemyPos );
@@ -1289,7 +1292,12 @@ char *AIFunc_InspectBulletImpactStart( cast_state_t *cs ) {
 	// if the origin is not visible, set the bullet origin to the closest visible area from the src
 	if ( !trap_InPVS( cs->bulletImpactStart, cs->bs->origin ) ) {
 		// if it fails, then just look at the source
-		trap_AAS_GetRouteFirstVisPos( g_entities[cs->bulletImpactEntity].s.pos.trBase, cs->bs->origin, cs->travelflags, cs->bulletImpactStart );
+		// Recast/Detour navigation (AAS migration)
+		if ( bot_navsystem.integer ) {
+			trap_Nav_GetRouteFirstVisPos( g_entities[cs->bulletImpactEntity].s.pos.trBase, cs->bs->origin, cs->bulletImpactStart );
+		} else {
+			trap_AAS_GetRouteFirstVisPos( g_entities[cs->bulletImpactEntity].s.pos.trBase, cs->bs->origin, cs->travelflags, cs->bulletImpactStart );
+		}
 	}
 	//
 	cs->aifunc = AIFunc_InspectBulletImpact;
@@ -1430,10 +1438,10 @@ char *AIFunc_InspectAudibleEvent( cast_state_t *cs ) {
 
 			if ( moveresult && moveresult->failure ) {
 				// If route fails, face the first visible route point if possible
-				if ( trap_AAS_GetRouteFirstVisPos( cs->audibleEventOrg,
-												   cs->bs->origin,
-												   cs->travelflags,
-												   destorg ) ) {
+				// Recast/Detour navigation (AAS migration)
+				if ( bot_navsystem.integer ?
+					 trap_Nav_GetRouteFirstVisPos( cs->audibleEventOrg, cs->bs->origin, destorg ) :
+					 trap_AAS_GetRouteFirstVisPos( cs->audibleEventOrg, cs->bs->origin, cs->travelflags, destorg ) ) {
 					cs->aiFlags |= AIFL_MISCFLAG2;
 
 					VectorSubtract( destorg, cs->bs->origin, destorg );

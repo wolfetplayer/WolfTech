@@ -330,6 +330,70 @@ int Nav_FindAttackSpot( const float *from, const float *target, float minRange, 
 }
 
 /*
+================
+Nav_RaycastClear
+================
+*/
+static bool Nav_RaycastClear( NavData_t *data, dtPolyRef fromRef, const float *fromPos, const float *toPos ) {
+	dtQueryFilter filter;
+	float t = 0.0f;
+	float hitNormal[3];
+	dtPolyRef path[64];
+	int pathCount = 0;
+	if ( dtStatusFailed( data->query->raycast( fromRef, fromPos, toPos, &filter, &t, hitNormal, path, &pathCount, 64 ) ) ) {
+		return false;
+	}
+	return t >= 1.0f;
+}
+
+/*
+=======================
+Nav_GetRouteFirstVisPos
+=======================
+*/
+int Nav_GetRouteFirstVisPos( const float *srcpos, const float *destpos, float *outPos ) {
+	NavData_t *data = Nav_CurrentData();
+	if ( !data ) {
+		return 0;
+	}
+	vec3_t navSrc, navDest;
+	SwapYZ( srcpos, navSrc );
+	SwapYZ( destpos, navDest );
+
+	dtPolyRef srcRef, destRef;
+	float srcNearest[3], destNearest[3];
+	if ( !Nav_FindNearest( data, navSrc, &srcRef, srcNearest ) ) {
+		return 0;
+	}
+	if ( !Nav_FindNearest( data, navDest, &destRef, destNearest ) ) {
+		return 0;
+	}
+
+	// already visible directly from dest? just use src as-is.
+	if ( Nav_RaycastClear( data, destRef, destNearest, srcNearest ) ) {
+		SwapYZ( srcpos, outPos );
+		return 1;
+	}
+
+	float straight[32 * 3];
+	unsigned char straightFlags[32];
+	dtPolyRef straightRefs[32];
+	int straightCount = 0;
+	if ( !Nav_ComputeStraightPath( data, navSrc, navDest, straight, straightFlags, straightRefs, 32, &straightCount ) ) {
+		return 0;
+	}
+
+	// first corridor point (walking from src) that dest can see wins.
+	for ( int i = 0; i < straightCount; i++ ) {
+		if ( Nav_RaycastClear( data, destRef, destNearest, &straight[i * 3] ) ) {
+			SwapYZ( &straight[i * 3], outPos );
+			return 1;
+		}
+	}
+	return 0;
+}
+
+/*
 ============
 Nav_TestPath
 ============
