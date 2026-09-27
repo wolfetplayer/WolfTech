@@ -3696,6 +3696,7 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 		}
 
 		// Cache predicted cover endpoint if it is already hidden and valid
+		// Recast/Detour navigation (AAS migration)
 		if ( !( cs->aiFlags & AIFL_MISCFLAG1 ) &&
 			 !AICast_VisibleFromPos( cs->vislist[cs->enemyNum].real_visible_pos,
 									 cs->enemyNum, move.endpos,
@@ -3703,7 +3704,7 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 			 !AICast_VisibleFromPos( cs->vislist[cs->enemyNum].real_visible_pos,
 									 cs->enemyNum, cs->bs->origin,
 									 cs->entityNum, qfalse ) &&
-			 trap_AAS_PointAreaNum( move.endpos ) ) {
+			 ( bot_navsystem.integer ? trap_Nav_Reachable( move.endpos ) : trap_AAS_PointAreaNum( move.endpos ) ) ) {
 			VectorCopy( move.endpos, cs->takeCoverPos );
 			cs->aiFlags |= AIFL_MISCFLAG1;
 		}
