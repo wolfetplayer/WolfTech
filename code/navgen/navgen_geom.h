@@ -3,6 +3,8 @@
 #ifndef __NAVGEN_GEOM_H
 #define __NAVGEN_GEOM_H
 
+#include <vector>
+
 typedef struct {
 	float *verts;   // numVerts * 3 floats
 	int numVerts;
@@ -10,10 +12,17 @@ typedef struct {
 	int numTris;
 } navGeom_t;
 
+// AABB and outward face normals of one SURF_LADDER brush, quake space.
+typedef struct {
+	float mins[3], maxs[3];
+	float faceNormals[4][3];
+	int numFaceNormals;
+} navLadder_t;
+
 // loads solid/playerclip/monsterclip brush + patch geometry only (the only two sources with real collision); qfalse on failure.
-int NavGen_LoadGeometry( const char *mapPath, navGeom_t *outGeom );
+int NavGen_LoadGeometry( const char *mapPath, navGeom_t *outGeom, std::vector<navLadder_t> *outLadders = nullptr );
 // same, from an already-loaded .bsp buffer (e.g. the engine's FS_ReadFile) instead of an OS path.
-int NavGen_LoadGeometryFromMemory( const unsigned char *data, int size, navGeom_t *outGeom );
+int NavGen_LoadGeometryFromMemory( const unsigned char *data, int size, navGeom_t *outGeom, std::vector<navLadder_t> *outLadders = nullptr );
 void NavGen_FreeGeometry( navGeom_t *geom );
 
 // dumps the extracted triangle soup as a .obj for visual sanity-checking.

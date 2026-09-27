@@ -7,6 +7,7 @@
 #include "RecastAlloc.h"
 #include "DetourNavMesh.h"
 #include "DetourNavMeshBuilder.h"
+#include "DetourNavMeshQuery.h"
 #include "DetourCommon.h"
 #include "DetourTileCache.h"
 #include "DetourTileCacheBuilder.h"
@@ -188,13 +189,59 @@ static bool JumpPathClear( const float *aIn, const float *bIn, const navGeom_t *
 	return true;
 }
 
+// like findNearestPoly, but snaps within the largest nearby connected component, not just whatever's closest.
+static dtPolyRef PickBestConnectedPoly( dtNavMeshQuery *query, const float *center, const float *halfExtents,
+										 const dtQueryFilter *filter, NavGenUnionFind &uf,
+										 std::unordered_map<dtPolyRef, int> &refToIndex, float *outPoint ) {
+	dtPolyRef candidates[256];
+	int count = 0;
+	if ( dtStatusFailed( query->queryPolygons( center, halfExtents, filter, candidates, &count, 256 ) ) || count == 0 ) {
+		return 0;
+	}
+
+	std::unordered_map<int, int> clusterCount;
+	for ( int i = 0; i < count; i++ ) {
+		std::unordered_map<dtPolyRef, int>::iterator it = refToIndex.find( candidates[i] );
+		if ( it == refToIndex.end() ) { continue; }
+		clusterCount[uf.find( it->second )]++;
+	}
+	if ( clusterCount.empty() ) { return 0; }
+
+	int bestRoot = -1, bestClusterSize = -1;
+	for ( std::unordered_map<int, int>::iterator it = clusterCount.begin(); it != clusterCount.end(); ++it ) {
+		if ( it->second > bestClusterSize ) { bestClusterSize = it->second; bestRoot = it->first; }
+	}
+
+	dtPolyRef bestRef = 0;
+	float bestDistSq = 0;
+	for ( int i = 0; i < count; i++ ) {
+		std::unordered_map<dtPolyRef, int>::iterator it = refToIndex.find( candidates[i] );
+		if ( it == refToIndex.end() || uf.find( it->second ) != bestRoot ) { continue; }
+
+		float closest[3];
+		bool overPoly;
+		if ( dtStatusFailed( query->closestPointOnPoly( candidates[i], center, closest, &overPoly ) ) ) { continue; }
+
+		float d[3];
+		VectorSubtract( closest, center, d );
+		float distSq = DotProduct( d, d );
+		if ( !bestRef || distSq < bestDistSq ) {
+			bestDistSq = distSq;
+			bestRef = candidates[i];
+			VectorCopy( closest, outPoint );
+		}
+	}
+	return bestRef;
+}
+
 /*
 ====================
 NavGen_FindOffMeshConns
 ====================
 */
 void NavGen_FindOffMeshConns( const NavCacheHeader &header, const std::vector<NavGenTileBlob> &tiles,
-							   const navGeom_t *geom, std::vector<NavCacheOffMeshConn> &outConns ) {
+							   const navGeom_t *geom, const std::vector<navLadder_t> &ladders,
+							   std::vector<NavCacheOffMeshConn> &outConns ) {
 	if ( tiles.empty() ) {
 		return;
 	}
@@ -455,7 +502,64 @@ void NavGen_FindOffMeshConns( const NavCacheHeader &header, const std::vector<Na
 		VectorCopy( &matchPtB[m * 3], conn.endPos );
 		conn.radius = header.walkableRadius;
 		conn.bidir = 1;
+		conn.isLadder = 0;
+		VectorClear( conn.wallNormal );
 		outConns.push_back( conn );
+	}
+
+	if ( !ladders.empty() ) {
+		dtNavMeshQuery *query = dtAllocNavMeshQuery();
+		if ( query && dtStatusSucceed( query->init( mesh, 2048 ) ) ) {
+			dtQueryFilter filter;
+			const float halfExtents[3] = { 160.0f, 192.0f, 160.0f };
+
+			for ( size_t i = 0; i < ladders.size(); i++ ) {
+				const navLadder_t &ladder = ladders[i];
+				float cx = ( ladder.mins[0] + ladder.maxs[0] ) * 0.5f;
+				float cy = ( ladder.mins[1] + ladder.maxs[1] ) * 0.5f;
+
+				// quake -> navmesh (x,z,y) swap
+				float bottomPt[3] = { cx, ladder.mins[2], cy };
+				float topPt[3] = { cx, ladder.maxs[2], cy };
+
+				float bottomNearest[3], topNearest[3];
+				dtPolyRef bottomRef = PickBestConnectedPoly( query, bottomPt, halfExtents, &filter, uf, refToIndex, bottomNearest );
+				dtPolyRef topRef = PickBestConnectedPoly( query, topPt, halfExtents, &filter, uf, refToIndex, topNearest );
+
+				if ( !bottomRef || !topRef || bottomRef == topRef ) {
+					continue;
+				}
+
+				// face normal pointing toward the known-reachable floor
+				float approach[3] = { bottomNearest[0] - cx, bottomNearest[2] - cy, 0.0f };
+				VectorNormalize2( approach, approach );
+
+				float wallNormalQuake[3];
+				if ( ladder.numFaceNormals > 0 ) {
+					int best = 0;
+					float bestDot = DotProduct( ladder.faceNormals[0], approach );
+					for ( int fn = 1; fn < ladder.numFaceNormals; fn++ ) {
+						float d = DotProduct( ladder.faceNormals[fn], approach );
+						if ( d > bestDot ) { bestDot = d; best = fn; }
+					}
+					VectorCopy( ladder.faceNormals[best], wallNormalQuake );
+				} else {
+					VectorCopy( approach, wallNormalQuake );
+				}
+
+				NavCacheOffMeshConn conn;
+				VectorCopy( bottomNearest, conn.startPos );
+				VectorCopy( topNearest, conn.endPos );
+				conn.radius = header.walkableRadius;
+				conn.bidir = 1;
+				conn.isLadder = 1;
+				conn.wallNormal[0] = wallNormalQuake[0];
+				conn.wallNormal[1] = wallNormalQuake[2];
+				conn.wallNormal[2] = wallNormalQuake[1];
+				outConns.push_back( conn );
+			}
+		}
+		dtFreeNavMeshQuery( query );
 	}
 
 	dtFreeNavMesh( mesh );

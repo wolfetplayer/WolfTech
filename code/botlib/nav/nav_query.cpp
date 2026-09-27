@@ -51,7 +51,8 @@ bridged jump/step-across link (navgen_offmesh.cpp), not ordinary floor.
 ====================
 */
 static bool Nav_ComputeStraightPath( NavData_t *data, const float *start, const float *goal,
-									  float *straight, unsigned char *outFlags, int maxStraight, int *straightCount ) {
+									  float *straight, unsigned char *outFlags, dtPolyRef *outRefs,
+									  int maxStraight, int *straightCount ) {
 	dtQueryFilter filter;
 	dtPolyRef startRef, endRef;
 	float startNearest[3], endNearest[3];
@@ -74,9 +75,8 @@ static bool Nav_ComputeStraightPath( NavData_t *data, const float *start, const 
 		return false;
 	}
 
-	dtPolyRef straightRefs[32];
 	if ( dtStatusFailed( data->query->findStraightPath( startNearest, endNearest, path, pathCount,
-														 straight, outFlags, straightRefs, straightCount, maxStraight ) ) ) {
+														 straight, outFlags, outRefs, straightCount, maxStraight ) ) ) {
 		return false;
 	}
 	return *straightCount > 0;
@@ -124,10 +124,37 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 
 	float straight[32 * 3];
 	unsigned char straightFlags[32];
+	dtPolyRef straightRefs[32];
 	int straightCount = 0;
-	if ( !data || !Nav_ComputeStraightPath( data, navStart, navGoal, straight, straightFlags, 32, &straightCount ) ) {
+	if ( !data || !Nav_ComputeStraightPath( data, navStart, navGoal, straight, straightFlags, straightRefs, 32, &straightCount ) ) {
 		result->failure = 1;
 		return 0;
+	}
+
+	if ( straightFlags[0] & DT_STRAIGHTPATH_OFFMESH_CONNECTION ) {
+		result->onOffMeshConnection = 1;
+	}
+
+	// ladders need to be caught one step early too, at index 1, or it's already too late to grab correctly.
+	int ladderIdx = -1;
+	if ( straightFlags[0] & DT_STRAIGHTPATH_OFFMESH_CONNECTION ) {
+		ladderIdx = 0;
+	} else if ( straightCount > 1 && ( straightFlags[1] & DT_STRAIGHTPATH_OFFMESH_CONNECTION ) ) {
+		ladderIdx = 1;
+	}
+	if ( ladderIdx >= 0 ) {
+		const dtOffMeshConnection *conn = data->mesh->getOffMeshConnectionByRef( straightRefs[ladderIdx] );
+		if ( conn ) {
+			const NavCacheOffMeshConn *rec = Nav_LookupOffMeshConn( data, conn->userId );
+			if ( rec && rec->isLadder ) {
+				result->onOffMeshConnection = 1;
+				result->onLadderConnection = 1;
+				SwapYZ( &conn->pos[0], result->ladderStart );
+				SwapYZ( &conn->pos[3], result->ladderEnd );
+				SwapYZ( rec->wallNormal, result->ladderWallNormal );
+				return 1;
+			}
+		}
 	}
 
 	const float *target = ( straightCount > 1 ) ? &straight[3] : &straight[0];
@@ -140,10 +167,6 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 		return 0;
 	}
 	SwapYZ( navDir, result->movedir );
-	// flags[0] is our snapped position: if that's a link's takeoff, target (straight[1]) is the landing point.
-	if ( straightFlags[0] & DT_STRAIGHTPATH_OFFMESH_CONNECTION ) {
-		result->onOffMeshConnection = 1;
-	}
 	return 1;
 }
 
@@ -164,8 +187,9 @@ int Nav_TravelTimeEstimate( const float *start, const float *goal ) {
 
 	float straight[32 * 3];
 	unsigned char straightFlags[32];
+	dtPolyRef straightRefs[32];
 	int straightCount = 0;
-	if ( !data || !Nav_ComputeStraightPath( data, navStart, navGoal, straight, straightFlags, 32, &straightCount ) ) {
+	if ( !data || !Nav_ComputeStraightPath( data, navStart, navGoal, straight, straightFlags, straightRefs, 32, &straightCount ) ) {
 		return -1;
 	}
 

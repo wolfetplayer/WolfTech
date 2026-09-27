@@ -9,9 +9,11 @@
 #include "navgen_classes.h"
 
 // bakes geom for cls into <outDir>/<mapName>_<cls->name>.navcache; qfalse on failure.
-int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const char *mapName, const char *outDir );
+int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const char *mapName, const char *outDir,
+					  const std::vector<navLadder_t> &ladders );
 
 // same bake, serialized into memory instead of written to an OS path (e.g. for the engine's FS_WriteFile); qfalse on failure.
-int NavGen_BakeClassToBuffer( const navGeom_t *geom, const navGenClass_t *cls, std::vector<unsigned char> &outBytes );
+int NavGen_BakeClassToBuffer( const navGeom_t *geom, const navGenClass_t *cls, std::vector<unsigned char> &outBytes,
+							  const std::vector<navLadder_t> &ladders );
 
 #endif // __NAVGEN_BAKE_H

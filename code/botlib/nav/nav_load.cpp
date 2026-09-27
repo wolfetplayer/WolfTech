@@ -114,6 +114,22 @@ struct NavMeshProcess : public dtTileCacheMeshProcess {
 };
 
 /*
+======================
+Nav_LookupOffMeshConn
+======================
+*/
+const NavCacheOffMeshConn *Nav_LookupOffMeshConn( NavData_t *data, unsigned int userID ) {
+	if ( !data || !data->meshProcess ) {
+		return NULL;
+	}
+	const NavMeshProcess *meshProcess = static_cast<const NavMeshProcess *>( data->meshProcess );
+	if ( userID >= meshProcess->conns.size() ) {
+		return NULL;
+	}
+	return &meshProcess->conns[userID];
+}
+
+/*
 =================
 Nav_AutoBakeClass
 
@@ -136,7 +152,8 @@ static bool Nav_AutoBakeClass( const char *mapname, const navGenClass_t *cls, co
 
 	navGeom_t geom;
 	memset( &geom, 0, sizeof( geom ) );
-	bool geomOk = NavGen_LoadGeometryFromMemory( (const unsigned char *)bspBuf, (int)bspLen, &geom ) != 0;
+	std::vector<navLadder_t> ladders;
+	bool geomOk = NavGen_LoadGeometryFromMemory( (const unsigned char *)bspBuf, (int)bspLen, &geom, &ladders ) != 0;
 	FS_FreeFile( bspBuf );
 	if ( !geomOk ) {
 		Com_Printf( "Nav_AutoBakeClass: no walkable geometry extracted from %s\n", bspPath );
@@ -146,7 +163,7 @@ static bool Nav_AutoBakeClass( const char *mapname, const navGenClass_t *cls, co
 	Com_Printf( "Nav_AutoBakeClass: no cached navmesh for class %s, baking %s now (this can take a while)...\n", cls->name, bspPath );
 
 	std::vector<unsigned char> bytes;
-	bool bakeOk = NavGen_BakeClassToBuffer( &geom, cls, bytes ) != 0;
+	bool bakeOk = NavGen_BakeClassToBuffer( &geom, cls, bytes, ladders ) != 0;
 	NavGen_FreeGeometry( &geom );
 	if ( !bakeOk || bytes.empty() ) {
 		Com_Printf( "Nav_AutoBakeClass: bake failed for class %s\n", cls->name );

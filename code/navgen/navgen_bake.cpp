@@ -354,7 +354,8 @@ static bool BakeTile( rcContext &ctx, const rcConfig &cfg, const navGeom_t *geom
 NavGen_BakeClassToBuffer
 =======================
 */
-int NavGen_BakeClassToBuffer( const navGeom_t *geom, const navGenClass_t *cls, std::vector<unsigned char> &outBytes ) {
+int NavGen_BakeClassToBuffer( const navGeom_t *geom, const navGenClass_t *cls, std::vector<unsigned char> &outBytes,
+							   const std::vector<navLadder_t> &ladders ) {
 	float bmin[3], bmax[3];
 	rcCalcBounds( geom->verts, geom->numVerts, bmin, bmax );
 
@@ -462,7 +463,7 @@ int NavGen_BakeClassToBuffer( const navGeom_t *geom, const navGenClass_t *cls, s
 		tileBlobs[i].dataSize = entries[i].dataSize;
 	}
 	std::vector<NavCacheOffMeshConn> offMeshConns;
-	NavGen_FindOffMeshConns( header, tileBlobs, geom, offMeshConns );
+	NavGen_FindOffMeshConns( header, tileBlobs, geom, ladders, offMeshConns );
 	header.numOffMeshConns = (int)offMeshConns.size();
 
 	outBytes.clear();
@@ -495,9 +496,10 @@ int NavGen_BakeClassToBuffer( const navGeom_t *geom, const navGenClass_t *cls, s
 NavGen_BakeClass
 ===============
 */
-int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const char *mapName, const char *outDir ) {
+int NavGen_BakeClass( const navGeom_t *geom, const navGenClass_t *cls, const char *mapName, const char *outDir,
+					   const std::vector<navLadder_t> &ladders ) {
 	std::vector<unsigned char> bytes;
-	if ( !NavGen_BakeClassToBuffer( geom, cls, bytes ) ) {
+	if ( !NavGen_BakeClassToBuffer( geom, cls, bytes, ladders ) ) {
 		return qfalse;
 	}
 

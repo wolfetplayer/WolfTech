@@ -48,7 +48,8 @@ static int SkipFace( int surfaceFlags ) {
 LoadBrushes
 ===========
 */
-static void LoadBrushes( const byte *base, const dheader_t *header, std::vector<float> &verts, std::vector<int> &tris ) {
+static void LoadBrushes( const byte *base, const dheader_t *header, std::vector<float> &verts, std::vector<int> &tris,
+						  std::vector<navLadder_t> *outLadders ) {
 	const dmodel_t *model = (const dmodel_t *)( base + header->lumps[LUMP_MODELS].fileofs );
 	const dbrush_t *brushes = (const dbrush_t *)( base + header->lumps[LUMP_BRUSHES].fileofs );
 	const dbrushside_t *sides = (const dbrushside_t *)( base + header->lumps[LUMP_BRUSHSIDES].fileofs );
@@ -62,10 +63,30 @@ static void LoadBrushes( const byte *base, const dheader_t *header, std::vector<
 			continue;
 		}
 
+		bool brushIsLadder = false;
+		bool haveBounds = false;
+		vec3_t brushMins = { 0, 0, 0 }, brushMaxs = { 0, 0, 0 };
+		vec3_t faceNormals[4];
+		int numFaceNormals = 0;
+
 		for ( int s = 0; s < brush->numSides; s++ ) {
 			const dbrushside_t *side = &sides[brush->firstSide + s];
 			const dplane_t *plane = &planes[side->planeNum];
 
+			if ( shaders[side->shaderNum].surfaceFlags & SURF_LADDER ) {
+				brushIsLadder = true;
+				// vertical faces only - skips the box's top/bottom caps.
+				if ( fabsf( plane->normal[2] ) < 0.3f && numFaceNormals < 4 ) {
+					bool dup = false;
+					for ( int fn = 0; fn < numFaceNormals; fn++ ) {
+						if ( DotProduct( plane->normal, faceNormals[fn] ) > 0.98f ) { dup = true; break; }
+					}
+					if ( !dup ) {
+						VectorCopy( plane->normal, faceNormals[numFaceNormals] );
+						numFaceNormals++;
+					}
+				}
+			}
 			if ( SkipBrushSide( shaders[side->shaderNum].surfaceFlags ) ) {
 				continue;
 			}
@@ -90,8 +111,28 @@ static void LoadBrushes( const byte *base, const dheader_t *header, std::vector<
 				for ( int j = 2; j < w->numpoints; j++ ) {
 					AddTri( verts, tris, w->p[0], w->p[j], w->p[j - 1] );
 				}
+				if ( outLadders ) {
+					for ( int p = 0; p < w->numpoints; p++ ) {
+						for ( int k = 0; k < 3; k++ ) {
+							if ( !haveBounds || w->p[p][k] < brushMins[k] ) { brushMins[k] = w->p[p][k]; }
+							if ( !haveBounds || w->p[p][k] > brushMaxs[k] ) { brushMaxs[k] = w->p[p][k]; }
+						}
+						haveBounds = true;
+					}
+				}
 				FreeWinding( w );
 			}
+		}
+
+		if ( outLadders && brushIsLadder && haveBounds ) {
+			navLadder_t ladder;
+			VectorCopy( brushMins, ladder.mins );
+			VectorCopy( brushMaxs, ladder.maxs );
+			for ( int fn = 0; fn < numFaceNormals; fn++ ) {
+				VectorCopy( faceNormals[fn], ladder.faceNormals[fn] );
+			}
+			ladder.numFaceNormals = numFaceNormals;
+			outLadders->push_back( ladder );
 		}
 	}
 }
@@ -150,7 +191,7 @@ static void LoadPatches( const byte *base, const dheader_t *header, std::vector<
 NavGen_LoadGeometryFromMemory
 ========================
 */
-int NavGen_LoadGeometryFromMemory( const unsigned char *data, int size, navGeom_t *outGeom ) {
+int NavGen_LoadGeometryFromMemory( const unsigned char *data, int size, navGeom_t *outGeom, std::vector<navLadder_t> *outLadders ) {
 	if ( size < (int)sizeof( dheader_t ) ) {
 		fprintf( stderr, "NavGen_LoadGeometryFromMemory: buffer too small to be a .bsp\n" );
 		return qfalse;
@@ -166,7 +207,7 @@ int NavGen_LoadGeometryFromMemory( const unsigned char *data, int size, navGeom_
 	std::vector<float> verts;
 	std::vector<int> tris;
 
-	LoadBrushes( data, header, verts, tris );
+	LoadBrushes( data, header, verts, tris, outLadders );
 	LoadPatches( data, header, verts, tris );
 
 	if ( tris.empty() ) {
@@ -190,7 +231,7 @@ int NavGen_LoadGeometryFromMemory( const unsigned char *data, int size, navGeom_
 NavGen_LoadGeometry
 ==================
 */
-int NavGen_LoadGeometry( const char *mapPath, navGeom_t *outGeom ) {
+int NavGen_LoadGeometry( const char *mapPath, navGeom_t *outGeom, std::vector<navLadder_t> *outLadders ) {
 	FILE *f = fopen( mapPath, "rb" );
 	if ( !f ) {
 		fprintf( stderr, "NavGen_LoadGeometry: could not open %s\n", mapPath );
@@ -210,7 +251,7 @@ int NavGen_LoadGeometry( const char *mapPath, navGeom_t *outGeom ) {
 	}
 	fclose( f );
 
-	int ok = NavGen_LoadGeometryFromMemory( data, (int)size, outGeom );
+	int ok = NavGen_LoadGeometryFromMemory( data, (int)size, outGeom, outLadders );
 	if ( !ok ) {
 		fprintf( stderr, "NavGen_LoadGeometry: failed on %s\n", mapPath );
 	}

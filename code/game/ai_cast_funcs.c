@@ -286,24 +286,67 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 			VectorCopy( navResult.movedir, lmoveresult.movedir );
 			// unlike trap_BotMoveToGoal, Nav_MoveToGoal doesn't queue the movement action itself.
 			if ( !navResult.failure ) {
-				trap_EA_Move( cs->entityNum, navResult.movedir, 400 );
+				if ( navResult.onLadderConnection ) {
+					// must face almost straight into the wall or PM_CheckLadderMove drops an airborne AI off it.
+					vec3_t viewDir;
+					qboolean goingDown = ( navResult.ladderEnd[2] < navResult.ladderStart[2] ) ? qtrue : qfalse;
 
-				if ( navResult.onOffMeshConnection ) {
-					// path says this step is a bridged link (navgen_offmesh.cpp) - jump now, toward movedir.
-					if ( cs->navJumpTime < level.time ) {
-						trap_EA_Jump( cs->entityNum );
-						cs->navJumpTime = level.time + 1000;
+					VectorCopy( navResult.ladderWallNormal, viewDir );
+					VectorInverse( viewDir );
+					viewDir[2] = 0;
+					VectorNormalize( viewDir );
+					vectoangles( viewDir, lmoveresult.ideal_viewangles );
+					lmoveresult.flags |= MOVERESULT_MOVEMENTVIEW;
+
+					trap_EA_Move( cs->entityNum, vec3_origin, 0 );
+					if ( goingDown ) {
+						trap_EA_MoveBack( cs->entityNum );
+					} else {
+						trap_EA_MoveForward( cs->entityNum );
 					}
-				} else if ( level.time >= cs->navStuckCheckTime ) {
-					// fallback for gaps off-mesh didn't catch: jump only if stuck AND a ledge is actually there.
-					if ( cs->navStuckCheckTime && VectorDistance( bs->origin, cs->navStuckCheckOrg ) < 20 &&
-						 VectorDistance( bs->origin, pos ) > 40 && cs->navJumpTime < level.time &&
-						 AICast_NavBarrierAhead( cs, navResult.movedir ) ) {
-						trap_EA_Jump( cs->entityNum );
-						cs->navJumpTime = level.time + 1000;
+
+					// stay centered on the ladder's own line, not just facing perpendicular to the wall beside it.
+					{
+						vec3_t v1, v2, lineDir, predicted, onLine, offset, right;
+						VectorCopy( navResult.ladderStart, v1 ); v1[2] = bs->origin[2];
+						VectorCopy( navResult.ladderEnd, v2 ); v2[2] = bs->origin[2];
+						VectorSubtract( v2, v1, lineDir );
+						if ( VectorNormalize( lineDir ) > 0.001f ) {
+							VectorMA( v1, -32, lineDir, v1 );
+							VectorMA( v2, 32, lineDir, v2 );
+							VectorMA( bs->origin, 18, viewDir, predicted );
+							ProjectPointOntoVector( predicted, v1, v2, onLine );
+							VectorSubtract( onLine, predicted, offset );
+							if ( VectorLength( offset ) > 2 ) {
+								AngleVectors( lmoveresult.ideal_viewangles, NULL, right, NULL );
+								if ( DotProduct( offset, right ) > 0 ) {
+									trap_EA_MoveRight( cs->entityNum );
+								} else {
+									trap_EA_MoveLeft( cs->entityNum );
+								}
+							}
+						}
 					}
-					VectorCopy( bs->origin, cs->navStuckCheckOrg );
-					cs->navStuckCheckTime = level.time + 500;
+				} else {
+					trap_EA_Move( cs->entityNum, navResult.movedir, 400 );
+
+					if ( navResult.onOffMeshConnection ) {
+						// path says this step is a bridged link (navgen_offmesh.cpp) - jump now, toward movedir.
+						if ( cs->navJumpTime < level.time ) {
+							trap_EA_Jump( cs->entityNum );
+							cs->navJumpTime = level.time + 1000;
+						}
+					} else if ( level.time >= cs->navStuckCheckTime ) {
+						// fallback for gaps off-mesh didn't catch: jump only if stuck AND a ledge is actually there.
+						if ( cs->navStuckCheckTime && VectorDistance( bs->origin, cs->navStuckCheckOrg ) < 20 &&
+							 VectorDistance( bs->origin, pos ) > 40 && cs->navJumpTime < level.time &&
+							 AICast_NavBarrierAhead( cs, navResult.movedir ) ) {
+							trap_EA_Jump( cs->entityNum );
+							cs->navJumpTime = level.time + 1000;
+						}
+						VectorCopy( bs->origin, cs->navStuckCheckOrg );
+						cs->navStuckCheckTime = level.time + 500;
+					}
 				}
 			}
 		} else {

@@ -4,7 +4,7 @@
 #define __NAVCACHE_FORMAT_H
 
 static const int NAVCACHE_MAGIC = ( 'N' << 24 ) | ( 'G' << 16 ) | ( 'C' << 8 ) | '1';
-static const int NAVCACHE_VERSION = 3;
+static const int NAVCACHE_VERSION = 6;
 
 struct NavCacheHeader {
 	int magic;
@@ -35,6 +35,8 @@ struct NavCacheOffMeshConn {
 	float endPos[3];
 	float radius;
 	unsigned char bidir;
+	unsigned char isLadder;  // added in version 5
+	float wallNormal[3];     // added in version 6; navmesh Y-up space, only set when isLadder
 };
 
 #endif // __NAVCACHE_FORMAT_H

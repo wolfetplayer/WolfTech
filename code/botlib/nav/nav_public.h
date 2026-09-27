@@ -15,6 +15,10 @@ typedef struct {
 	float movedir[3];
 	// set when the next step is an off-mesh link (navgen_offmesh.cpp) - needs an explicit jump, not just movement.
 	int onOffMeshConnection;
+	int onLadderConnection; // set when that link is a ladder - forced forward/back + view lock instead of a jump
+	float ladderStart[3];
+	float ladderEnd[3];
+	float ladderWallNormal[3]; // outward normal of the ladder's wall face, quake space
 } navMoveResult_t;
 
 void Nav_Init( void );

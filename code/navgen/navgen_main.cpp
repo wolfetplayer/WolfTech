@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -48,10 +49,11 @@ int main( int argc, char **argv ) {
 	printf( "navgen: loading %s\n", bspPath );
 
 	navGeom_t geom;
-	if ( !NavGen_LoadGeometry( bspPath, &geom ) ) {
+	std::vector<navLadder_t> ladders;
+	if ( !NavGen_LoadGeometry( bspPath, &geom, &ladders ) ) {
 		return 1;
 	}
-	printf( "navgen: %d verts, %d tris of walkable geometry\n", geom.numVerts, geom.numTris );
+	printf( "navgen: %d verts, %d tris of walkable geometry, %d ladders\n", geom.numVerts, geom.numTris, (int)ladders.size() );
 
 	NAVGEN_MKDIR( outDir );
 
@@ -62,7 +64,7 @@ int main( int argc, char **argv ) {
 
 	int ok = qtrue;
 	for ( int i = 0; i < NAVGEN_NUM_CLASSES; i++ ) {
-		if ( !NavGen_BakeClass( &geom, &navGenClasses[i], mapName, outDir ) ) {
+		if ( !NavGen_BakeClass( &geom, &navGenClasses[i], mapName, outDir, ladders ) ) {
 			ok = qfalse;
 		}
 	}

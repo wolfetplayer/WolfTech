@@ -18,6 +18,7 @@ struct NavGenTileBlob {
 void NavGen_FindOffMeshConns( const NavCacheHeader &header,
 							   const std::vector<NavGenTileBlob> &tiles,
 							   const navGeom_t *geom,
+							   const std::vector<navLadder_t> &ladders,
 							   std::vector<NavCacheOffMeshConn> &outConns );
 
 #endif // __NAVGEN_OFFMESH_H

@@ -12,6 +12,7 @@
 #include "../../recastnavigation/DetourTileCache/Include/DetourTileCacheBuilder.h"
 
 #include "../../navgen/navgen_classes.h"
+#include "../../navgen/navcache_format.h"
 
 #define NAV_MAX_CLASSES NAVGEN_NUM_CLASSES
 
@@ -30,6 +31,9 @@ extern int navCurrentClass;
 
 // current class's loaded data, or NULL if it failed/hasn't loaded.
 NavData_t *Nav_CurrentData( void );
+
+// looks up an off-mesh connection record by Detour's userID; NULL if out of range.
+const NavCacheOffMeshConn *Nav_LookupOffMeshConn( NavData_t *data, unsigned int userID );
 
 // drops every tracked obstacle handle; call before the caches are destroyed/recreated.
 void Nav_ClearObstacles( void );
