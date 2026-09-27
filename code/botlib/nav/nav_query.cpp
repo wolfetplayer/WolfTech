@@ -83,6 +83,26 @@ static bool Nav_ComputeStraightPath( NavData_t *data, const float *start, const 
 }
 
 /*
+================
+Nav_RaycastClear
+
+true if a straight walkability ray from fromPos (in poly fromRef) reaches
+toPos with no wall hit; used for real line-of-sight checks, not just distance.
+================
+*/
+static bool Nav_RaycastClear( NavData_t *data, dtPolyRef fromRef, const float *fromPos, const float *toPos ) {
+	dtQueryFilter filter;
+	float t = 0.0f;
+	float hitNormal[3];
+	dtPolyRef path[64];
+	int pathCount = 0;
+	if ( dtStatusFailed( data->query->raycast( fromRef, fromPos, toPos, &filter, &t, hitNormal, path, &pathCount, 64 ) ) ) {
+		return false;
+	}
+	return t >= 1.0f;
+}
+
+/*
 ==============
 Nav_PointToPoly
 ==============
@@ -206,8 +226,8 @@ int Nav_TravelTimeEstimate( const float *start, const float *goal ) {
 ==================
 Nav_FindHidePosition
 
-Farthest-from-threat candidate within radius; straight-line distance only,
-no visibility raycast yet (see the migration plan's Phase 2 scope note).
+Farthest-from-threat candidate within radius that the threat can't actually
+raycast to; falls back to farthest-by-distance if nothing is fully hidden.
 ==================
 */
 int Nav_FindHidePosition( const float *from, const float *threat, float radius, float *outPos ) {
@@ -220,9 +240,12 @@ int Nav_FindHidePosition( const float *from, const float *threat, float radius, 
 	SwapYZ( threat, navThreat );
 
 	dtQueryFilter filter;
-	dtPolyRef startRef;
-	float startNearest[3];
+	dtPolyRef startRef, threatRef;
+	float startNearest[3], threatNearest[3];
 	if ( !Nav_FindNearest( data, navFrom, &startRef, startNearest ) ) {
+		return 0;
+	}
+	if ( !Nav_FindNearest( data, navThreat, &threatRef, threatNearest ) ) {
 		return 0;
 	}
 
@@ -235,9 +258,9 @@ int Nav_FindHidePosition( const float *from, const float *threat, float radius, 
 		return 0;
 	}
 
-	bool found = false;
-	float bestDist = -1.0f;
-	vec3_t bestPos = { 0, 0, 0 };
+	bool found = false, foundHidden = false;
+	float bestDist = -1.0f, bestHiddenDist = -1.0f;
+	vec3_t bestPos = { 0, 0, 0 }, bestHiddenPos = { 0, 0, 0 };
 
 	for ( int i = 0; i < resultCount; i++ ) {
 		float pt[3];
@@ -254,8 +277,18 @@ int Nav_FindHidePosition( const float *from, const float *threat, float radius, 
 			VectorCopy( pt, bestPos );
 			found = true;
 		}
+
+		if ( dist > bestHiddenDist && !Nav_RaycastClear( data, threatRef, threatNearest, pt ) ) {
+			bestHiddenDist = dist;
+			VectorCopy( pt, bestHiddenPos );
+			foundHidden = true;
+		}
 	}
 
+	if ( foundHidden ) {
+		SwapYZ( bestHiddenPos, outPos );
+		return 1;
+	}
 	if ( found ) {
 		SwapYZ( bestPos, outPos );
 	}
@@ -267,7 +300,8 @@ int Nav_FindHidePosition( const float *from, const float *threat, float radius, 
 Nav_FindAttackSpot
 
 Closest-to-"from" candidate whose range to target falls in [minRange,
-maxRange]; same straight-line-only caveat as Nav_FindHidePosition.
+maxRange] and that can actually raycast to target; falls back to
+closest-in-range if nothing in range has line of sight.
 =================
 */
 int Nav_FindAttackSpot( const float *from, const float *target, float minRange, float maxRange, float *outPos ) {
@@ -280,9 +314,12 @@ int Nav_FindAttackSpot( const float *from, const float *target, float minRange, 
 	SwapYZ( target, navTarget );
 
 	dtQueryFilter filter;
-	dtPolyRef startRef;
-	float startNearest[3];
+	dtPolyRef startRef, targetRef;
+	float startNearest[3], targetNearest[3];
 	if ( !Nav_FindNearest( data, navFrom, &startRef, startNearest ) ) {
+		return 0;
+	}
+	if ( !Nav_FindNearest( data, navTarget, &targetRef, targetNearest ) ) {
 		return 0;
 	}
 
@@ -295,9 +332,9 @@ int Nav_FindAttackSpot( const float *from, const float *target, float minRange, 
 		return 0;
 	}
 
-	bool found = false;
-	float bestCost = -1.0f;
-	vec3_t bestPos = { 0, 0, 0 };
+	bool found = false, foundVisible = false;
+	float bestCost = -1.0f, bestVisibleCost = -1.0f;
+	vec3_t bestPos = { 0, 0, 0 }, bestVisiblePos = { 0, 0, 0 };
 
 	for ( int i = 0; i < resultCount; i++ ) {
 		float pt[3];
@@ -321,29 +358,23 @@ int Nav_FindAttackSpot( const float *from, const float *target, float minRange, 
 			VectorCopy( pt, bestPos );
 			found = true;
 		}
+
+		if ( ( bestVisibleCost < 0.0f || travelCost < bestVisibleCost ) &&
+			 Nav_RaycastClear( data, targetRef, targetNearest, pt ) ) {
+			bestVisibleCost = travelCost;
+			VectorCopy( pt, bestVisiblePos );
+			foundVisible = true;
+		}
 	}
 
+	if ( foundVisible ) {
+		SwapYZ( bestVisiblePos, outPos );
+		return 1;
+	}
 	if ( found ) {
 		SwapYZ( bestPos, outPos );
 	}
 	return found ? 1 : 0;
-}
-
-/*
-================
-Nav_RaycastClear
-================
-*/
-static bool Nav_RaycastClear( NavData_t *data, dtPolyRef fromRef, const float *fromPos, const float *toPos ) {
-	dtQueryFilter filter;
-	float t = 0.0f;
-	float hitNormal[3];
-	dtPolyRef path[64];
-	int pathCount = 0;
-	if ( dtStatusFailed( data->query->raycast( fromRef, fromPos, toPos, &filter, &t, hitNormal, path, &pathCount, 64 ) ) ) {
-		return false;
-	}
-	return t >= 1.0f;
 }
 
 /*
