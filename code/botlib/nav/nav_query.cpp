@@ -15,6 +15,12 @@ extern "C" {
 static const float NAV_SEARCH_EXTENTS[3] = { 96, 160, 96 };
 static const int NAV_MAX_CANDIDATES = 64;
 
+// how close to a jump/drop link's takeoff point before we actually commit to it.
+static const float NAV_OFFMESH_JUMP_RANGE = 48.0f;
+
+// landing this much below the takeoff counts as a plain fall, not a jump.
+static const float NAV_OFFMESH_DROP_TOLERANCE = 24.0f;
+
 // the navmesh is built Y-up (see navgen_geom.cpp's AddVert); Quake is Z-up.
 // Every Nav_* entry point converts at its boundary so callers stay in Quake
 // space and all internal Detour calls stay in navmesh space. Swapping the
@@ -151,19 +157,16 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 		return 0;
 	}
 
+	// off-mesh links get flagged one step early, at index 1, or it's too late to grab.
+	int offMeshIdx = -1;
 	if ( straightFlags[0] & DT_STRAIGHTPATH_OFFMESH_CONNECTION ) {
-		result->onOffMeshConnection = 1;
-	}
-
-	// ladders need to be caught one step early too, at index 1, or it's already too late to grab correctly.
-	int ladderIdx = -1;
-	if ( straightFlags[0] & DT_STRAIGHTPATH_OFFMESH_CONNECTION ) {
-		ladderIdx = 0;
+		offMeshIdx = 0;
 	} else if ( straightCount > 1 && ( straightFlags[1] & DT_STRAIGHTPATH_OFFMESH_CONNECTION ) ) {
-		ladderIdx = 1;
+		offMeshIdx = 1;
 	}
-	if ( ladderIdx >= 0 ) {
-		const dtOffMeshConnection *conn = data->mesh->getOffMeshConnectionByRef( straightRefs[ladderIdx] );
+	bool offMeshCommitted = false; // close enough to the link to steer at its landing point
+	if ( offMeshIdx >= 0 ) {
+		const dtOffMeshConnection *conn = data->mesh->getOffMeshConnectionByRef( straightRefs[offMeshIdx] );
 		if ( conn ) {
 			const NavCacheOffMeshConn *rec = Nav_LookupOffMeshConn( data, conn->userId );
 			if ( rec && rec->isLadder ) {
@@ -175,9 +178,23 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 				return 1;
 			}
 		}
+		// jump/drop links need to be close before we commit, unlike ladders above.
+		if ( VectorDistance( navStart, &straight[offMeshIdx * 3] ) <= NAV_OFFMESH_JUMP_RANGE ) {
+			offMeshCommitted = true;
+			// a plain drop just needs a walk off the ledge, not a jump.
+			float takeoffY = straight[offMeshIdx * 3 + 1];
+			float landingY = ( offMeshIdx + 1 < straightCount ) ? straight[( offMeshIdx + 1 ) * 3 + 1] : takeoffY;
+			if ( landingY >= takeoffY - NAV_OFFMESH_DROP_TOLERANCE ) {
+				result->onOffMeshConnection = 1;
+			}
+		}
 	}
 
 	const float *target = ( straightCount > 1 ) ? &straight[3] : &straight[0];
+	// committed: steer at the landing point, not the now-underfoot takeoff point.
+	if ( offMeshCommitted && offMeshIdx + 1 < straightCount ) {
+		target = &straight[( offMeshIdx + 1 ) * 3];
+	}
 	vec3_t navDir;
 	VectorSubtract( target, navStart, navDir );
 	// AICast_InputToUserCommand wants a horizontal dir (AAS's own "hordir"); Z feeds ucmd->upmove instead.
