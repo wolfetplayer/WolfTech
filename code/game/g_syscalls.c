@@ -291,7 +291,6 @@ void trap_BotUserCommand( int clientNum, usercmd_t *ucmd ) {
 	syscall( BOTLIB_USER_COMMAND, clientNum, ucmd );
 }
 
-// Recast/Detour navigation (AAS migration)
 void trap_Nav_LoadMap( const char *mapname ) {
 	syscall( BOTLIB_NAV_LOAD_MAP, mapname );
 }

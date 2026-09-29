@@ -478,7 +478,6 @@ it is changing to a different game directory.
 */
 int SV_BotLibShutdown( void ) {
 
-	// Recast/Detour navigation (AAS migration)
 	Nav_Shutdown();
 
 	if ( !botlib_export ) {
@@ -510,7 +509,6 @@ void SV_BotInitCvars( void ) {
 	Cvar_Get( "bot_rocketjump", "1", 0 );           //enable rocket jumping
 	Cvar_Get( "bot_minplayers", "0", 0 );      //minimum players in a team or the game
 
-	// Recast/Detour navigation (AAS migration)
 	Cvar_Get( "nav_autobake", "0", 0 );         //bake a class's navcache on the fly if it's missing/stale
 }
 
@@ -612,7 +610,6 @@ void SV_BotInitBotLib( void ) {
 	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
 	assert(botlib_export); 	// somehow we end up with a zero import.
 
-	// Recast/Detour navigation (AAS migration)
 	Nav_Init();
 }
 

@@ -27,7 +27,7 @@ void Nav_Shutdown( void );
 // loads <mapname>'s per-class .navcache files; call once per map load.
 void Nav_LoadMap( const char *mapname );
 
-// selects which class's navmesh subsequent Nav_* calls query, mirroring trap_AAS_SetCurrentWorld.
+// selects which class's navmesh subsequent Nav_* calls query
 void Nav_SelectClass( int classIndex );
 
 int Nav_PointToPoly( const float *point );

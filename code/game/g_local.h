@@ -411,7 +411,7 @@ struct gentity_s {
 	// the accumulation buffer
 	int scriptAccumBuffer[G_MAX_SCRIPT_ACCUM_BUFFERS];
 
-	qboolean AASblocking;
+	qboolean navBlocking;
 	int navObstacleId;          // 1-based handle from trap_Nav_AddObstacle; 0 = not registered
 	float accuracy;
 
@@ -1489,7 +1489,6 @@ int     trap_BotGetServerCommand( int clientNum, char *message, int size );
 //int		trap_BotGetConsoleMessage(int clientNum, char *message, int size);
 void    trap_BotUserCommand( int client, usercmd_t *ucmd );
 
-// Recast/Detour navigation (AAS migration)
 #include "../botlib/nav/nav_public.h"
 extern vmCvar_t nav_debugmesh;
 extern vmCvar_t nav_debugpath;

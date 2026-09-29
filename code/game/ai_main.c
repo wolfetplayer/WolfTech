@@ -917,7 +917,6 @@ int BotAILoadMap( int restart ) {
 	if ( !restart ) {
 		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 		trap_BotLibLoadMap( mapname.string );
-		// Recast/Detour navigation (AAS migration)
 		trap_Nav_LoadMap( mapname.string );
 	}
 
@@ -950,10 +949,8 @@ int BotAIStartFrame( int time ) {
 	trap_Cvar_Update( &bot_nochat );
 	trap_Cvar_Update( &bot_testrchat );
 	trap_Cvar_Update( &bot_thinktime );
-	// Recast/Detour navigation (AAS migration)
 	trap_Cvar_Update( &nav_debugmesh );
 	trap_Cvar_Update( &nav_debugpath );
-	// Ridah, set the default AAS world
 	trap_Nav_SelectClass( 0 );
 	trap_Cvar_Update( &memorydump );
 
@@ -1008,20 +1005,10 @@ int BotInitLibrary( void ) {
 	if ( strlen( buf ) ) {
 		trap_BotLibVarSet( "sv_mapChecksum", buf );
 	}
-	//maximum number of aas links
-	trap_Cvar_VariableStringBuffer( "max_aaslinks", buf, sizeof( buf ) );
-	if ( strlen( buf ) ) {
-		trap_BotLibVarSet( "max_aaslinks", buf );
-	}
 	//maximum number of items in a level
 	trap_Cvar_VariableStringBuffer( "max_levelitems", buf, sizeof( buf ) );
 	if ( strlen( buf ) ) {
 		trap_BotLibVarSet( "max_levelitems", buf );
-	}
-	//automatically launch WinBSPC if AAS file not available
-	trap_Cvar_VariableStringBuffer( "autolaunchbspc", buf, sizeof( buf ) );
-	if ( strlen( buf ) ) {
-		trap_BotLibVarSet( "autolaunchbspc", "1" );
 	}
 	//
 	trap_Cvar_VariableStringBuffer( "g_gametype", buf, sizeof( buf ) );
@@ -1055,32 +1042,6 @@ int BotInitLibrary( void ) {
 	if ( strlen( buf ) ) {
 		trap_BotLibVarSet( "nochat", buf );
 	}
-	//forced clustering calculations
-	trap_Cvar_VariableStringBuffer( "forceclustering", buf, sizeof( buf ) );
-	if ( strlen( buf ) ) {
-		trap_BotLibVarSet( "forceclustering", buf );
-	}
-	//forced reachability calculations
-	trap_Cvar_VariableStringBuffer( "forcereachability", buf, sizeof( buf ) );
-	if ( strlen( buf ) ) {
-		trap_BotLibVarSet( "forcereachability", buf );
-	}
-	//force writing of AAS to file
-	trap_Cvar_VariableStringBuffer( "forcewrite", buf, sizeof( buf ) );
-	if ( strlen( buf ) ) {
-		trap_BotLibVarSet( "forcewrite", buf );
-	}
-	//no AAS optimization
-	trap_Cvar_VariableStringBuffer( "nooptimize", buf, sizeof( buf ) );
-	if ( strlen( buf ) ) {
-		trap_BotLibVarSet( "nooptimize", buf );
-	}
-	//number of reachabilities to calculate each frame
-	trap_Cvar_VariableStringBuffer( "framereachability", buf, sizeof( buf ) );
-	if ( !strlen( buf ) ) {
-		strcpy( buf, "20" );
-	}
-	trap_BotLibVarSet( "framereachability", buf );
 	//
 	trap_Cvar_VariableStringBuffer( "bot_reloadcharacters", buf, sizeof( buf ) );
 	if ( !strlen( buf ) ) {

@@ -610,7 +610,7 @@ void AICast_SightUpdate( int numchecks ) {
 			continue;
 		}
 
-		trap_Nav_SelectClass( cs->aasWorldIndex );
+		trap_Nav_SelectClass( cs->navClassIndex );
 
 		for (   destcount = 0, dest = 0, destent = g_entities;
 			// check all players
@@ -687,7 +687,7 @@ void AICast_SightUpdate( int numchecks ) {
 			continue;
 		}
 
-		trap_Nav_SelectClass( cs->aasWorldIndex );
+		trap_Nav_SelectClass( cs->navClassIndex );
 
 		if ( lastdest < 0 ) {
 			lastdest = 0;

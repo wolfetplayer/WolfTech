@@ -800,12 +800,12 @@ void SetMoverState( gentity_t *ent, moverState_t moverState, int time ) {
 	BG_EvaluateTrajectory( &ent->s.pos, level.time, ent->r.currentOrigin );
 	if ( !( ent->r.svFlags & SVF_NOCLIENT ) || ( ent->r.contents ) ) {    // RF, added this for bats, but this is safe for all movers, since if they aren't solid, and aren't visible to the client, they don't need to be linked
 		trap_LinkEntity( ent );
-		// if this entity is blocking AAS, then update it
-		if ( ent->AASblocking && ent->s.pos.trType == TR_STATIONARY ) {
+		// if this entity is nav blocking, then update it
+		if ( ent->navBlocking && ent->s.pos.trType == TR_STATIONARY ) {
 			// reset old blocking areas
-			G_SetAASBlockingEntity( ent, qfalse );
+			G_SetNavBlockingEntity( ent, qfalse );
 			// set new areas
-			G_SetAASBlockingEntity( ent, qtrue );
+			G_SetNavBlockingEntity( ent, qtrue );
 		}
 	}
 }
@@ -2039,7 +2039,7 @@ void finishSpawningKeyedMover( gentity_t *ent ) {
 //----(SA)	end
 
 	if ( ent->key ) {
-		G_SetAASBlockingEntity( ent, qtrue );
+		G_SetNavBlockingEntity( ent, qtrue );
 	}
 
 	ent->nextthink = level.time + FRAMETIME;
@@ -2066,7 +2066,7 @@ void finishSpawningKeyedMover( gentity_t *ent ) {
 			slave->key = ent->key;
 
 			if ( slave->key ) {
-				G_SetAASBlockingEntity( slave, qtrue );
+				G_SetNavBlockingEntity( slave, qtrue );
 			}
 		}
 	}
@@ -2397,7 +2397,7 @@ void SP_func_constructible( gentity_t *ent ) {
 	ent->use = constructible_use;   // override InitMover's binary-mover use; a locked one unlocks here
 
 	// solid from spawn; G_CompleteConstructible clears this once it's built.
-	G_SetAASBlockingEntity( ent, qtrue );
+	G_SetNavBlockingEntity( ent, qtrue );
 
 	if ( ent->buildTime <= 0 ) {
 		ent->buildTime = 8000;
@@ -3648,9 +3648,9 @@ void Static_Pain( gentity_t *ent, gentity_t *attacker, int damage, vec3_t point 
 
 void G_BlockThink( gentity_t *ent ) {
 	if ( ent->r.linked ) {
-		G_SetAASBlockingEntity( ent, qtrue );
+		G_SetNavBlockingEntity( ent, qtrue );
 	} else {
-		G_SetAASBlockingEntity( ent, qfalse );
+		G_SetNavBlockingEntity( ent, qfalse );
 	}
 }
 
@@ -4225,8 +4225,8 @@ ClearExplosive
 ==============
 */
 void ClearExplosive( gentity_t *self ) {
-	// RF, AAS areas are now free
-	G_SetAASBlockingEntity( self, qfalse );
+	// RF, nav obstacle is now free
+	G_SetNavBlockingEntity( self, qfalse );
 
 	self->die   = NULL;
 	self->pain  = NULL;
@@ -4374,8 +4374,8 @@ void func_explosive_spawn( gentity_t *self, gentity_t *other, gentity_t *activat
 	self->use = func_explosive_use;
 	// turn the brush to visible
 
-	// RF, AAS areas are now occupied
-	G_SetAASBlockingEntity( self, qtrue );
+	// RF, nav obstacle is now occupied
+	G_SetNavBlockingEntity( self, qtrue );
 }
 
 

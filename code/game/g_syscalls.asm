@@ -78,43 +78,6 @@ equ trap_BotGetSnapshotEntity			-210
 equ trap_BotGetServerCommand		-211
 equ trap_BotUserCommand					-212
 
-
-
-; BOTLIB_AAS_ENTITY_VISIBLE				-301
-; BOTLIB_AAS_IN_FIELD_OF_VISION			-302
-; BOTLIB_AAS_VISIBLE_CLIENTS			-303
-equ trap_AAS_EntityInfo					-304
-
-equ trap_AAS_Initialized				-305
-equ trap_AAS_PresenceTypeBoundingBox	-306
-equ trap_AAS_Time						-307
-
-equ trap_AAS_SetCurrentWorld			-308
-
-equ trap_AAS_PointAreaNum				-309
-equ trap_AAS_TraceAreas					-310
-
-equ trap_AAS_PointContents				-311
-equ trap_AAS_NextBSPEntity				-312
-equ trap_AAS_ValueForBSPEpairKey		-313
-equ trap_AAS_VectorForBSPEpairKey		-314
-equ trap_AAS_FloatForBSPEpairKey		-315
-equ trap_AAS_IntForBSPEpairKey			-316
-
-equ trap_AAS_AreaReachability			-317
-
-equ trap_AAS_AreaTravelTimeToGoalArea	-318
-
-equ trap_AAS_Swimming					-319
-equ trap_AAS_PredictClientMovement		-320
-
-equ trap_AAS_RT_ShowRoute				-321
-equ trap_AAS_RT_GetHidePos				-322
-equ trap_AAS_FindAttackSpotWithinRange	-323
-equ trap_AAS_GetRouteFirstVisPos		-324
-equ trap_AAS_SetAASBlockingEntity		-325
-
-
 equ trap_EA_Say							-401
 equ trap_EA_SayTeam						-402
 equ trap_EA_UseItem						-403
@@ -228,9 +191,6 @@ equ trap_BotRemoveFromAvoidGoals		-573
 equ trap_BotPredictVisiblePosition		-574
 equ trap_BotSetAvoidGoalTime			-575
 equ trap_BotAddAvoidSpot				-576
-equ trap_AAS_AlternativeRouteGoals		-577
-equ trap_AAS_PredictRoute				-578
-equ trap_AAS_PointReachabilityAreaIndex	-579
 
 equ trap_BotLibLoadSource				-580
 equ trap_BotLibFreeSource				-581

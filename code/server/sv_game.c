@@ -487,7 +487,6 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		}
 		return 0;
 
-		// Recast/Detour navigation (AAS migration)
 	case BOTLIB_NAV_LOAD_MAP:
 		Nav_LoadMap( VMA( 1 ) );
 		return 0;

@@ -138,22 +138,12 @@ float AICast_GetRandomViewAngle( cast_state_t *cs, float tracedist ) {
 	return cs->ideal_viewangles[YAW];
 }
 
-// Recast/Detour navigation (AAS migration)
-// matches be_aas_move.c's sv_maxbarrier (max height reachable by a single jump, from the jump/gravity formula).
 #define NAV_MAXBARRIER 49.0f
-// matches bg_local.h's STEPSIZE / botlib's sv_maxstep (not included here - bg_local.h is private to the bg_*.c files).
 #define NAV_STEPSIZE 18.0f
 
 /*
 ================
 AICast_NavBarrierAhead
-
-Nav has no AAS-style jump reachabilities to tell us when a jump is actually warranted, so
-this approximates AAS's own reactive check (BotCheckBarrierJump in be_ai_move.c): trace up
-from our feet, forward in the movement direction, then back down, to find whether there's
-really a ledge out there taller than a walkable step. Without this, "haven't moved much"
-alone can't tell a real ledge apart from being crowded by other AI, cornering, or walking
-into geometry the navmesh doesn't know is solid.
 ================
 */
 static qboolean AICast_NavBarrierAhead( cast_state_t *cs, vec3_t movedir ) {
@@ -922,7 +912,7 @@ char *AIFunc_InspectFriendly( cast_state_t *cs ) {
 			}
 		}
 
-		// If direct movement failed, use AAS routing.
+		// If direct movement failed, use nav routing.
 		if ( !moved ) {
 			moveresult = AICast_MoveToPos( cs, followEnt->r.currentOrigin, cs->followEntity );
 
@@ -1316,7 +1306,7 @@ char *AIFunc_InspectAudibleEvent( cast_state_t *cs ) {
 			cs->movestateType = MSTYPE_TEMPORARY;
 		}
 
-		// Try direct movement before falling back to AAS routing
+		// Try direct movement before falling back to nav routing
 		if ( cs->bs->cur_ps.groundEntityNum != ENTITYNUM_NONE || ent->waterlevel > 1 ) {
 			aicast_predictmove_t move;
 			vec3_t dir;
@@ -1683,7 +1673,7 @@ char *AIFunc_ChaseGoalIdleStart( cast_state_t *cs, int entitynum, float reachdis
 ============
 AIFunc_ChaseGoal
 
-Follows a target entity using direct movement when possible, otherwise AAS routing.
+Follows a target entity using direct movement when possible, otherwise nav routing.
 Handles danger, doors, scripted goto expiry, leader spacing, obstruction, and enemy scanning.
 ============
 */
@@ -1788,7 +1778,7 @@ char *AIFunc_ChaseGoal( cast_state_t *cs ) {
 		}
 	}
 
-	// Try direct movement before falling back to AAS routing
+	// Try direct movement before falling back to nav routing
 	if ( cs->bs->cur_ps.groundEntityNum != ENTITYNUM_NONE || ent->waterlevel > 1 ) {
 		aicast_predictmove_t move;
 		vec3_t dir;

@@ -261,7 +261,6 @@ typedef enum {
 	BOTLIB_GET_CONSOLE_MESSAGE,     // ( int client, char *message, int size );
 	BOTLIB_USER_COMMAND,            // ( int client, usercmd_t *ucmd );
 
-	// Recast/Detour navigation (AAS migration)
 	BOTLIB_NAV_LOAD_MAP = 350,
 	BOTLIB_NAV_SELECT_CLASS,
 	BOTLIB_NAV_POINT_TO_POLY,

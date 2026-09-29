@@ -1651,7 +1651,7 @@ extern int AICast_PlayTime ( int entnum ) ;
 extern int AICast_NoReload ( int entnum ) ;
 extern void AICast_AgePlayTime ( int entnum ) ;
 extern void AICast_AdjustIdealYawForMover ( int entnum , float yaw ) ;
-extern void G_SetAASBlockingEntity ( gentity_t * ent , qboolean blocking ) ;
+extern void G_SetNavBlockingEntity ( gentity_t * ent , qboolean blocking ) ;
 extern void AICast_SetFlameDamage ( int entNum , qboolean status ) ;
 extern qboolean AICast_NoFlameDamage ( int entNum ) ;
 extern void AICast_Activate ( int activatorNum , int entNum ) ;
@@ -1665,7 +1665,7 @@ extern gentity_t * AICast_TravEntityForName ( gentity_t * startent , char * name
 extern gentity_t * AICast_FindEntityForName ( char * name ) ;
 extern void AICast_Init ( void ) ;
 extern gentity_t * AICast_CreateCharacter ( gentity_t * ent , float * attributes , cast_weapon_info_t * weaponInfo , char * castname , char * model , char * head , char * sex , char * color , char * handicap ) ;
-extern void AICast_SetAASIndex ( cast_state_t * cs ) ;
+extern void AICast_SetNavClass ( cast_state_t * cs ) ;
 extern void AICast_CheckLevelAttributes ( cast_state_t * cs , gentity_t * ent , char * * ppStr ) ;
 extern gentity_t * AICast_AddCastToGame ( gentity_t * ent , char * castname , char * model , char * head , char * sex , char * color , char * handicap ) ;
 extern int AICast_ShutdownClient ( int client ) ;

@@ -1084,7 +1084,7 @@ cast_weapon_info_t weaponInfo;
 AIChar_SetBBox
 
   FIXME: pass a maxZ into this so we can tailor the height for each character,
-  since height isn't important for the AAS routing (whereas width is very important)
+  since height isn't important for the nav routing (whereas width is very important)
 ============
 */
 void AIChar_SetBBox( gentity_t *ent, cast_state_t *cs, qboolean useHeadTag ) {
@@ -1093,8 +1093,8 @@ void AIChar_SetBBox( gentity_t *ent, cast_state_t *cs, qboolean useHeadTag ) {
 	orientation_t or;
 
 	if ( !useHeadTag ) {
-		VectorCopy( bbmins[cs->aasWorldIndex], ent->client->ps.mins );
-		VectorCopy( bbmaxs[cs->aasWorldIndex], ent->client->ps.maxs );
+		VectorCopy( bbmins[cs->navClassIndex], ent->client->ps.mins );
+		VectorCopy( bbmaxs[cs->navClassIndex], ent->client->ps.maxs );
 		if ( ent->client->ps.pm_type == PM_DEAD ) {
 			ent->client->ps.maxs[2] = -8;
 		} else {
@@ -1103,7 +1103,7 @@ void AIChar_SetBBox( gentity_t *ent, cast_state_t *cs, qboolean useHeadTag ) {
 		VectorCopy( ent->client->ps.mins, ent->r.mins );
 		VectorCopy( ent->client->ps.maxs, ent->r.maxs );
 		ent->client->ps.crouchMaxZ = aiDefaults[cs->aiCharacter].crouchstandZ[0];
-		ent->s.density = cs->aasWorldIndex;
+		ent->s.density = cs->navClassIndex;
 	} else if ( trap_GetTag( ent->s.number, "tag_head", &or ) ) {  // if not found, then just leave it
 		or.origin[2] -= ent->client->ps.origin[2];  // convert to local coordinates
 		or.origin[2] += 11;
@@ -1117,8 +1117,8 @@ void AIChar_SetBBox( gentity_t *ent, cast_state_t *cs, qboolean useHeadTag ) {
 		memset( &tr, 0, sizeof( tr ) );
 
 		// check that the new height is ok first, otherwise leave it alone
-		VectorCopy( bbmins[cs->aasWorldIndex], bbox[0] );
-		VectorCopy( bbmaxs[cs->aasWorldIndex], bbox[1] );
+		VectorCopy( bbmins[cs->navClassIndex], bbox[0] );
+		VectorCopy( bbmaxs[cs->navClassIndex], bbox[1] );
 		// set the head tag height
 		bbox[1][2] = or.origin[2];
 
@@ -1133,7 +1133,7 @@ void AIChar_SetBBox( gentity_t *ent, cast_state_t *cs, qboolean useHeadTag ) {
 			VectorCopy( ent->client->ps.mins, ent->r.mins );
 			VectorCopy( ent->client->ps.maxs, ent->r.maxs );
 			ent->client->ps.crouchMaxZ = aiDefaults[cs->aiCharacter].crouchstandZ[0];
-			ent->s.density = cs->aasWorldIndex;
+			ent->s.density = cs->navClassIndex;
 		}
 	}
 

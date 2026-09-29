@@ -43,7 +43,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "l_struct.h"
 #include "l_utils.h"
 #include "l_log.h"
-#include "aasfile.h"
 #include "botlib.h"
 #include "be_interface.h"
 #include "be_ea.h"

@@ -1271,7 +1271,7 @@ $(echo_cmd) "BOT_CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(BOTCFLAGS) $(OPTIMIZE) -DBOTLIB -o $@ -c $<
 endef
 
-# Recast/Detour navigation (AAS migration); shared by client and ded like DO_BOT_CC.
+# Recast/Detour navigation ; shared by client and ded like DO_BOT_CC.
 NAVCXXFLAGS=-std=c++11 -I$(RECASTDIR)/Recast/Include -I$(RECASTDIR)/Detour/Include -I$(RECASTDIR)/DetourTileCache/Include
 
 define DO_NAV_CXX

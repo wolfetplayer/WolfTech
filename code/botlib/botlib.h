@@ -38,8 +38,6 @@ If you have questions concerning this license or the applicable additional terms
 
 #define BOTLIB_API_VERSION      2
 
-struct aas_clientmove_s;
-struct aas_entityinfo_s;
 struct bot_consolemessage_s;
 struct bot_match_s;
 struct bot_goal_s;
@@ -73,13 +71,6 @@ struct weaponinfo_s;
 #define BLERR_LIBRARYALREADYSETUP       2   //BotSetupLibrary: library already setup
 #define BLERR_INVALIDCLIENTNUMBER       3   //invalid client number
 #define BLERR_INVALIDENTITYNUMBER       4   //invalid entity number
-#define BLERR_NOAASFILE                 5   //BotLoadMap: no AAS file available
-#define BLERR_CANNOTOPENAASFILE         6   //BotLoadMap: cannot open AAS file
-#define BLERR_CANNOTSEEKTOAASFILE       7   //BotLoadMap: cannot seek to AAS file
-#define BLERR_CANNOTREADAASHEADER       8   //BotLoadMap: cannot read AAS header
-#define BLERR_WRONGAASFILEID            9   //BotLoadMap: incorrect AAS file id
-#define BLERR_WRONGAASFILEVERSION       10  //BotLoadMap: incorrect AAS file version
-#define BLERR_CANNOTREADAASLUMP         11  //BotLoadMap: cannot read AAS file lump
 #define BLERR_NOBSPFILE                 12  //BotLoadMap: no BSP file available
 #define BLERR_CANNOTOPENBSPFILE         13  //BotLoadMap: cannot open BSP file
 #define BLERR_CANNOTSEEKTOBSPFILE       14  //BotLoadMap: cannot seek to BSP file
@@ -345,61 +336,4 @@ typedef struct botlib_export_s
 
 //linking of bot library
 botlib_export_t *GetBotLibAPI( int apiVersion, botlib_import_t *import );
-
-/* Library variables:
-
-name:						default:			module(s):			description:
-
-"basedir"					""					-			base directory
-"homedir"					""					be_interface.c			game directory
-"gamedir"					""					be_interface.c			game directory
-"basegame"					""					be_interface.c			game directory
-
-"autolaunchbspc"			"0"					be_aas_load.c		automatically launch (Win)BSPC
-"log"						"0"					l_log.c				enable/disable creating a log file
-"maxclients"				"4"					be_interface.c		maximum number of clients
-"maxentities"				"2048"				be_interface.c		maximum number of entities
-"bot_developer"				"0"					be_interface.c		bot developer mode (it's "botDeveloper" in C to prevent symbol clash).
-
-"sv_friction"				"6"					be_aas_move.c		ground friction
-"sv_stopspeed"				"100"				be_aas_move.c		stop speed
-"sv_gravity"				"800"				be_aas_move.c		gravity value
-"sv_waterfriction"			"1"					be_aas_move.c		water friction
-"sv_watergravity"			"400"				be_aas_move.c		gravity in water
-"sv_maxvelocity"			"300"				be_aas_move.c		maximum velocity
-"sv_maxwalkvelocity"		"300"				be_aas_move.c		maximum walk velocity
-"sv_maxcrouchvelocity"		"100"				be_aas_move.c		maximum crouch velocity
-"sv_maxswimvelocity"		"150"				be_aas_move.c		maximum swim velocity
-"sv_walkaccelerate"			"10"				be_aas_move.c		walk acceleration
-"sv_airaccelerate"			"1"					be_aas_move.c		air acceleration
-"sv_swimaccelerate"			"4"					be_aas_move.c		swim acceleration
-"sv_maxstep"				"18"				be_aas_move.c		maximum step height
-"sv_maxbarrier"				"32"				be_aas_move.c		maximum barrier height
-"sv_maxsteepness"			"0.7"				be_aas_move.c		maximum floor steepness
-"sv_jumpvel"				"270"				be_aas_move.c		jump z velocity
-"sv_maxwaterjump"			"20"				be_aas_move.c		maximum waterjump height
-
-"max_aaslinks"				"4096"				be_aas_sample.c		maximum links in the AAS
-"max_bsplinks"				"4096"				be_aas_bsp.c		maximum links in the BSP
-
-"notspawnflags"				"2048"				be_ai_goal.c		entities with these spawnflags will be removed
-"itemconfig"				"items.c"			be_ai_goal.c		item configuration file
-"weaponconfig"				"weapons.c"			be_ai_weap.c		weapon configuration file
-"synfile"					"syn.c"				be_ai_chat.c		file with synonyms
-"rndfile"					"rnd.c"				be_ai_chat.c		file with random strings
-"matchfile"					"match.c"			be_ai_chat.c		file with match strings
-"max_messages"				"1024"				be_ai_chat.c		console message heap size
-"max_weaponinfo"			"32"				be_ai_weap.c		maximum number of weapon info
-"max_projectileinfo"		"32"				be_ai_weap.c		maximum number of projectile info
-"max_iteminfo"				"256"				be_ai_goal.c		maximum number of item info
-"max_levelitems"			"256"				be_ai_goal.c		maximum number of level items
-"framereachability"			""					be_aas_reach.c		number of reachabilities to calucate per frame
-"forceclustering"			"0"					be_aas_main.c		force recalculation of clusters
-"forcereachability"			"0"					be_aas_main.c		force recalculation of reachabilities
-"forcewrite"				"0"					be_aas_main.c		force writing of aas file
-"nooptimize"				"0"					be_aas_main.c		no aas optimization
-
-"laserhook"					"0"					be_ai_move.c		0 = CTF hook, 1 = laser hook
-
-*/
 

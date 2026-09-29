@@ -2172,7 +2172,7 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				VectorCopy( ent->client->ps.origin, cs->bs->origin );
 				VectorCopy( ent->client->ps.origin, cs->bs->eye );
 				cs->bs->eye[2] += ent->client->ps.viewheight;
-				trap_Nav_SelectClass( cs->aasWorldIndex );
+				trap_Nav_SelectClass( cs->navClassIndex );
 
 				// clear stale goto target BEFORE the respawn script runs, not after (it may gotomarker itself)
 				cs->castScriptStatus.scriptGotoId = -1;

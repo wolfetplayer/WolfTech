@@ -764,7 +764,7 @@ void Use_Target_Lock( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 
 	while ( ( t = G_Find( t, FOFS( targetname ), ent->target ) ) != NULL ) {
 		t->key = ent->key;
-		G_SetAASBlockingEntity( t, t->key != 0 );
+		G_SetNavBlockingEntity( t, t->key != 0 );
 	}
 
 }

@@ -444,7 +444,7 @@ void AICast_Think( int client, float thinktime ) {
 	cs = AICast_GetCastState( client );
 	ent = &g_entities[client];
 	//
-	trap_Nav_SelectClass( cs->aasWorldIndex );
+	trap_Nav_SelectClass( cs->navClassIndex );
 	//
 	trap_EA_ResetInput( client, NULL );
 	cs->aiFlags &= ~AIFL_VIEWLOCKED;
@@ -1672,7 +1672,7 @@ void AICast_EvaluatePmove( int clientnum, pmove_t *pm ) {
 
 	//vec3_t pos, dir;
 	cs = AICast_GetCastState( clientnum );
-	trap_Nav_SelectClass( cs->aasWorldIndex );
+	trap_Nav_SelectClass( cs->navClassIndex );
 
 	// NOTE: this is only enabled for real clients, so their followers get out of their way
 	//if (cs->bs)

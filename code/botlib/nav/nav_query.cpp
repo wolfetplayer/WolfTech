@@ -197,7 +197,6 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 	}
 	vec3_t navDir;
 	VectorSubtract( target, navStart, navDir );
-	// AICast_InputToUserCommand wants a horizontal dir (AAS's own "hordir"); Z feeds ucmd->upmove instead.
 	navDir[1] = 0.0f; // navmesh Y = vertical (quake Z) after SwapYZ
 	if ( VectorNormalize2( navDir, navDir ) < 0.0001f ) {
 		result->failure = 1;

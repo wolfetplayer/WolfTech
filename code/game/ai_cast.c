@@ -306,16 +306,16 @@ void AICast_CheckLevelAttributes( cast_state_t *cs, gentity_t *ent, char **ppStr
 
 /*
 ============
-AICast_SetAASIndex
+AICast_SetNavClass
 ============
 */
-void AICast_SetAASIndex( cast_state_t *cs ) {
+void AICast_SetNavClass( cast_state_t *cs ) {
 	if ( aiDefaults[cs->aiCharacter].bboxType == BBOX_SMALL ) {
-		cs->aasWorldIndex = AASWORLD_STANDARD;
+		cs->navClassIndex = NAV_CLASS_STANDARD;
 	} else if ( aiDefaults[cs->aiCharacter].bboxType == BBOX_LARGE ) {
-		cs->aasWorldIndex = AASWORLD_LARGE;
+		cs->navClassIndex = NAV_CLASS_LARGE;
 	} else {
-		Com_Error( ERR_DROP, "AICast_SetAASIndex: unsupported bounds size (%i)", aiDefaults[cs->aiCharacter].bboxType );
+		Com_Error( ERR_DROP, "AICast_SetNavClass: unsupported bounds size (%i)", aiDefaults[cs->aiCharacter].bboxType );
 	}
 }
 
@@ -391,7 +391,7 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	newent->aiName = ent->aiName;
 	newent->aiTeam = ent->aiTeam;
 	// RF, must run after aiTeam is set above, since it strips TFL_FRIENDLYCLIP for allies only
-	AICast_SetAASIndex( cs );
+	AICast_SetNavClass( cs );
 	newent->targetname = ent->targetname;
 	newent->oneshot = ent->oneshot;
 	//
@@ -483,7 +483,6 @@ void AICast_Init( void ) {
 	trap_Cvar_Register( &aicast_debug, "aicast_debug", "0", 0 );
 	trap_Cvar_Register( &aicast_debugname, "aicast_debugname", "", 0 );
 	trap_Cvar_Register( &aicast_scripts, "aicast_scripts", "1", 0 );
-	// Recast/Detour navigation (AAS migration)
 	trap_Cvar_Register( &nav_debugmesh, "nav_debugmesh", "0", 0 );
 	trap_Cvar_Register( &nav_debugpath, "nav_debugpath", "0", 0 );
 
@@ -949,13 +948,13 @@ void AICast_SetFlameDamage( int entNum, qboolean status ) {
 
 /*
 ===============
-G_SetAASBlockingEntity
+G_SetNavBlockingEntity
 
   Adjusts routing so AI knows it can't move through this entity
 ===============
 */
-void G_SetAASBlockingEntity( gentity_t *ent, qboolean blocking ) {
-	ent->AASblocking = blocking;
+void G_SetNavBlockingEntity( gentity_t *ent, qboolean blocking ) {
+	ent->navBlocking = blocking;
 
 	// keyed per-entity, so re-blocking at a new position without a qfalse is safe.
 	if ( ent->navObstacleId ) {
@@ -966,7 +965,7 @@ void G_SetAASBlockingEntity( gentity_t *ent, qboolean blocking ) {
 		ent->navObstacleId = trap_Nav_AddObstacle( ent->r.absmin, ent->r.absmax );
 	}
 
-	G_DPrintf( "G_SetAASBlockingEntity: %s(%i) spawnflags=%i blocking=%i navObstacleId=%i absmin=(%.0f %.0f %.0f) absmax=(%.0f %.0f %.0f)\n",
+	G_DPrintf( "G_SetNavBlockingEntity: %s(%i) spawnflags=%i blocking=%i navObstacleId=%i absmin=(%.0f %.0f %.0f) absmax=(%.0f %.0f %.0f)\n",
 			   ent->classname, ent->s.number, ent->spawnflags, blocking, ent->navObstacleId,
 			   ent->r.absmin[0], ent->r.absmin[1], ent->r.absmin[2],
 			   ent->r.absmax[0], ent->r.absmax[1], ent->r.absmax[2] );

@@ -43,7 +43,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "l_script.h"
 #include "l_precomp.h"
 #include "l_struct.h"
-#include "aasfile.h"
 #include "botlib.h"
 #include "be_interface.h"
 #include "be_ai_weight.h"        //fuzzy weights

@@ -49,7 +49,6 @@ If you have questions concerning this license or the applicable additional terms
 Support routines for the Decision Making layer.
 */
 
-// Recast/Detour navigation (AAS migration)
 #define AICAST_HIDE_SEARCH_RADIUS 600.0f
 
 /*
@@ -2057,7 +2056,7 @@ qboolean AICast_WantToRetreat( cast_state_t *cs ) {
 	}
 
 	// Big/special characters should never retreat.
-	if ( cs->aasWorldIndex != 0 ) {
+	if ( cs->navClassIndex != 0 ) {
 		return qfalse;
 	}
 

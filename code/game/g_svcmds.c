@@ -694,7 +694,6 @@ qboolean    ConsoleCommand( void ) {
 		return qtrue;
 	}
 
-	// Recast/Detour navigation (AAS migration)
 	if ( Q_stricmp( cmd, "navtest" ) == 0 ) {
 		char arg[MAX_TOKEN_CHARS];
 		vec3_t start, end;

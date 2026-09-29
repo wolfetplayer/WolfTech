@@ -57,13 +57,13 @@ If you have questions concerning this license or the applicable additional terms
 //
 #define MAX_LEADER_DIST     256
 //
-#define AASWORLD_STANDARD   0
-#define AASWORLD_LARGE      1
+#define NAV_CLASS_STANDARD  0
+#define NAV_CLASS_LARGE     1
 //
 // use this for returning the length of an anim
 #define ANIMLENGTH( frames,fps )  ( ( frames * 1000 ) / fps )
 //
-#define AICAST_TFL_DEFAULT  ( ( TFL_DEFAULT | TFL_FRIENDLYCLIP ) & ~( TFL_JUMPPAD | TFL_ROCKETJUMP | TFL_BFGJUMP | TFL_GRAPPLEHOOK | TFL_DOUBLEJUMP | TFL_RAMPJUMP | TFL_STRAFEJUMP | TFL_LAVA ) ) //----(SA)	modified since slime is no longer deadly; RF, TFL_FRIENDLYCLIP allowed by default here, stripped per-entity for allies only in AICast_SetAASIndex
+#define AICAST_TFL_DEFAULT  ( ( TFL_DEFAULT | TFL_FRIENDLYCLIP ) & ~( TFL_JUMPPAD | TFL_ROCKETJUMP | TFL_BFGJUMP | TFL_GRAPPLEHOOK | TFL_DOUBLEJUMP | TFL_RAMPJUMP | TFL_STRAFEJUMP | TFL_LAVA ) ) //----(SA)	modified since slime is no longer deadly; RF, TFL_FRIENDLYCLIP allowed by default here, stripped per-entity for allies only in AICast_SetNavClass
 //#define AICAST_TFL_DEFAULT	TFL_DEFAULT & ~(TFL_JUMPPAD|TFL_ROCKETJUMP|TFL_BFGJUMP|TFL_GRAPPLEHOOK|TFL_DOUBLEJUMP|TFL_RAMPJUMP|TFL_STRAFEJUMP|TFL_SLIME|TFL_LAVA)
 //
 // AI flags
@@ -92,7 +92,7 @@ If you have questions concerning this license or the applicable additional terms
 #define AIFL_NO_HEADSHOT_DMG    0x400000
 #define AIFL_DIVE_ANIM          0x800000    // able to dive to cover
 #define AIFL_NO_TESLA_DAMAGE    0x1000000
-#define AIFL_EXPLICIT_ROUTING   0x2000000   // direct routing towards ai_markers, rather than using AAS
+#define AIFL_EXPLICIT_ROUTING   0x2000000   // direct routing towards ai_markers
 #define AIFL_DISMOUNTING        0x4000000
 #define AIFL_SPECIAL_FUNC       0x8000000   // prevent external interuption of current think func
 #define AIFL_NOLADDER           0x10000000  // ported from RealRTCW - this character can't use ladders (quadrupeds)
@@ -333,7 +333,7 @@ typedef struct cast_state_s
 	bot_state_t     *bs;
 	int entityNum;
 
-	int aasWorldIndex;              // set this according to our bounding box type
+	int navClassIndex;              // set this according to our bounding box type
 
 	// Cast specific information follows. Add to this as needed, this way the bot_state_t structure
 	// remains untouched.
@@ -489,7 +489,6 @@ typedef struct cast_state_s
 
 	vec3_t lastMoveToPosGoalOrg;    // if this changes, we should reset the Bot Avoid Reach
 
-	// Recast/Detour navigation: tracks progress so we can try a jump if stuck (no AAS-style travel types here).
 	vec3_t navStuckCheckOrg;
 	int navStuckCheckTime;
 	int navJumpTime;

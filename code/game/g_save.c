@@ -848,9 +848,9 @@ void ReadEntity( fileHandle_t f, gentity_t *ent, int size ) {
 		}
 	}
 
-	// check for blocking AAS at save time
-	if ( ent->AASblocking ) {
-		G_SetAASBlockingEntity( ent, qtrue );
+	// check for nav blocking at save time
+	if ( ent->navBlocking ) {
+		G_SetNavBlockingEntity( ent, qtrue );
 	}
 
 	// check for this being a tagconnect entity
