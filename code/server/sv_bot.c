@@ -115,56 +115,12 @@ BotDrawDebugPolygons
 ==================
 */
 void BotDrawDebugPolygons( void ( *drawPoly )( int color, int numPoints, float *points ), int value ) {
-	static cvar_t *bot_debug, *bot_groundonly, *bot_reachability, *bot_highlightarea;
-	static cvar_t *bot_testhidepos, *bot_testroutevispos;
 	bot_debugpoly_t *poly;
-	int i, parm0;
+	int i;
 
 	if ( !bot_enable ) {
 		return;
 	}
-	//bot debugging
-	if ( !bot_debug ) {
-		bot_debug = Cvar_Get( "bot_debug", "0", 0 );
-	}
-	//show reachabilities
-	if ( !bot_reachability ) {
-		bot_reachability = Cvar_Get( "bot_reachability", "0", 0 );
-	}
-	//show ground faces only
-	if ( !bot_groundonly ) {
-		bot_groundonly = Cvar_Get( "bot_groundonly", "1", 0 );
-	}
-	//get the hightlight area
-	if ( !bot_highlightarea ) {
-		bot_highlightarea = Cvar_Get( "bot_highlightarea", "0", 0 );
-	}
-	//
-	if ( !bot_testhidepos ) {
-		bot_testhidepos = Cvar_Get( "bot_testhidepos", "0", 0 );
-	}
-	//
-	if ( !bot_testroutevispos ) {
-		bot_testroutevispos = Cvar_Get( "bot_testroutevispos", "0", 0 );
-	}
-	//
-	if ( bot_debug->integer ) {
-		parm0 = 0;
-		if ( svs.clients[0].lastUsercmd.buttons & BUTTON_ATTACK ) {
-			parm0 |= 1;
-		}
-		if ( bot_reachability->integer ) {
-			parm0 |= 2;
-		}
-		if ( bot_groundonly->integer ) {
-			parm0 |= 4;
-		}
-		botlib_export->BotLibVarSet( "bot_highlightarea", bot_highlightarea->string );
-		botlib_export->BotLibVarSet( "bot_testhidepos", bot_testhidepos->string );
-		botlib_export->BotLibVarSet( "bot_testroutevispos", bot_testroutevispos->string );
-		botlib_export->Test( parm0, NULL, svs.clients[0].gentity->r.currentOrigin,
-							 svs.clients[0].gentity->r.currentAngles );
-	} //end if
 	for ( i = 0; i < MAX_DEBUGPOLYS; i++ ) {
 		poly = &debugpolygons[i];
 		if ( !poly->inuse ) {
@@ -555,7 +511,6 @@ void SV_BotInitCvars( void ) {
 	Cvar_Get( "bot_minplayers", "0", 0 );      //minimum players in a team or the game
 
 	// Recast/Detour navigation (AAS migration)
-	Cvar_Get( "bot_navsystem", "0", 0 );        //0 = legacy AAS, 1 = Recast/Detour navmesh
 	Cvar_Get( "nav_autobake", "0", 0 );         //bake a class's navcache on the fly if it's missing/stale
 }
 

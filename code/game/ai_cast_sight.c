@@ -37,14 +37,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 #include "../qcommon/q_shared.h"
 #include "../botlib/botlib.h"      //bot lib interface
-#include "../botlib/be_aas.h"
 #include "../botlib/be_ea.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
 #include "../botlib/botai.h"          //bot ai interface
-
-int BotPointAreaNum( vec3_t origin );  // ai_dmq3.c - handles floor-edge cases raw trap_AAS_PointAreaNum misses
 
 #include "ai_cast.h"
 
@@ -615,8 +610,6 @@ void AICast_SightUpdate( int numchecks ) {
 			continue;
 		}
 
-		// make sure we are using the right AAS data for this entity (one's that don't get set will default to the player's AAS data)
-		trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
 		trap_Nav_SelectClass( cs->aasWorldIndex );
 
 		for (   destcount = 0, dest = 0, destent = g_entities;
@@ -694,8 +687,6 @@ void AICast_SightUpdate( int numchecks ) {
 			continue;
 		}
 
-		// make sure we are using the right AAS data for this entity (one's that don't get set will default to the player's AAS data)
-		trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
 		trap_Nav_SelectClass( cs->aasWorldIndex );
 
 		if ( lastdest < 0 ) {

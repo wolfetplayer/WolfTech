@@ -37,11 +37,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 #include "../qcommon/q_shared.h"
 #include "../botlib/botlib.h"      //bot lib interface
-#include "../botlib/be_aas.h"
 #include "../botlib/be_ea.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
@@ -80,8 +77,6 @@ float aicast_skillscale;
 vmCvar_t aicast_debug;
 vmCvar_t aicast_debugname;
 vmCvar_t aicast_scripts;
-// Recast/Detour navigation (AAS migration)
-vmCvar_t bot_navsystem;
 // live navmesh debug draw (needs a local game + r_debugSurface 2 on the client)
 vmCvar_t nav_debugmesh;    // 0=off, 1=small class, 2=large class - polys near each player, green=reachable/red=not
 vmCvar_t nav_debugpath;    // 0=off, 1=on - each active AI's current straight path as a yellow line
@@ -177,15 +172,10 @@ int AICast_SetupClient( int client ) {
 	cs = AICast_GetCastState( client );
 	cs->bs = bs;
 
-	//allocate a goal state
-	bs->gs = trap_BotAllocGoalState( client );
-
 	bs->inuse = qtrue;
 	bs->client = client;
 	bs->entitynum = client;
 	bs->setupcount = qtrue;
-	bs->entergame_time = trap_AAS_Time();
-	bs->ms = trap_BotAllocMoveState();
 
 	return qtrue;
 }
@@ -218,10 +208,6 @@ int AICast_ShutdownClient( int client ) {
 //	botai_import.DebugLineDelete(bs->debugline);
 #endif //DEBUG
 
-	trap_BotFreeMoveState( bs->ms );
-	//free the goal state
-	trap_BotFreeGoalState( bs->gs );
-	//
 	//clear the bot state
 	memset( bs, 0, sizeof( bot_state_t ) );
 	//set the inuse flag to qfalse
@@ -326,21 +312,10 @@ AICast_SetAASIndex
 void AICast_SetAASIndex( cast_state_t *cs ) {
 	if ( aiDefaults[cs->aiCharacter].bboxType == BBOX_SMALL ) {
 		cs->aasWorldIndex = AASWORLD_STANDARD;
-		cs->travelflags = AICAST_TFL_DEFAULT;
 	} else if ( aiDefaults[cs->aiCharacter].bboxType == BBOX_LARGE ) {
 		cs->aasWorldIndex = AASWORLD_LARGE;
-		cs->travelflags = AICAST_TFL_DEFAULT & ~TFL_DONOTENTER_LARGE;
 	} else {
 		Com_Error( ERR_DROP, "AICast_SetAASIndex: unsupported bounds size (%i)", aiDefaults[cs->aiCharacter].bboxType );
-	}
-
-	// RF, allied AI should never path through areas reserved for enemy spawns/patrols
-	if ( g_entities[cs->entityNum].aiTeam == AITEAM_ALLIES ) {
-		cs->travelflags &= ~TFL_FRIENDLYCLIP;
-	}
-
-	if ( !cs->attributes[ATTACK_CROUCH] ) {
-		cs->travelflags &= ~TFL_CROUCH;
 	}
 }
 
@@ -509,7 +484,6 @@ void AICast_Init( void ) {
 	trap_Cvar_Register( &aicast_debugname, "aicast_debugname", "", 0 );
 	trap_Cvar_Register( &aicast_scripts, "aicast_scripts", "1", 0 );
 	// Recast/Detour navigation (AAS migration)
-	trap_Cvar_Register( &bot_navsystem, "bot_navsystem", "0", 0 );
 	trap_Cvar_Register( &nav_debugmesh, "nav_debugmesh", "0", 0 );
 	trap_Cvar_Register( &nav_debugpath, "nav_debugpath", "0", 0 );
 
@@ -535,15 +509,6 @@ void AICast_Init( void ) {
 		caststates[i].entityNum = i;
 	}
 
-/* RF, this is useless, since the AAS hasnt been loaded yet
-	// try and load in the AAS now, so we can interact with it during spawning of entities
-	i = 0;
-	trap_AAS_SetCurrentWorld( 0 );
-	trap_Nav_SelectClass( 0 );
-	while ( !trap_AAS_Initialized() && ( i++ < 10 ) ) {
-		trap_BotLibStartFrame( (float) level.time / 1000 );
-	}
-*/
 }
 
 /*
@@ -991,7 +956,6 @@ G_SetAASBlockingEntity
 */
 void G_SetAASBlockingEntity( gentity_t *ent, qboolean blocking ) {
 	ent->AASblocking = blocking;
-	trap_AAS_SetAASBlockingEntity( ent->r.absmin, ent->r.absmax, blocking );
 
 	// keyed per-entity, so re-blocking at a new position without a qfalse is safe.
 	if ( ent->navObstacleId ) {

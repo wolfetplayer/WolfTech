@@ -37,14 +37,12 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 #include "../qcommon/q_shared.h"
 #include "../botlib/botlib.h"      //bot lib interface
-#include "../botlib/be_aas.h"
 #include "../botlib/be_ea.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
+#include "inv.h"       // INVENTORY_* - needed by the relocated BotCheckAir
 
 /*
 This file contains the generic thinking states for the characters.
@@ -210,7 +208,6 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 	bot_goal_t goal;
 	vec3_t /*target,*/ dir;
 	static bot_moveresult_t lmoveresult;
-	int tfl;
 	bot_state_t *bs;
 	float dist;
 
@@ -226,29 +223,10 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 	}
 	//
 	bs = cs->bs;
-	tfl = cs->travelflags;
-	//if in lava or slime the bot should be able to get out
-	if ( BotInLava( bs ) ) {
-		tfl |= TFL_LAVA;
-	}
-	if ( BotInSlime( bs ) ) {
-		tfl |= TFL_SLIME;
-	}
 	//
 	//create the chase goal
 	memset( &goal, 0, sizeof( goal ) );
 	goal.entitynum = entnum;
-	if ( entnum >= 0 && entnum < level.maxclients && caststates[entnum].lastValidAreaTime[cs->aasWorldIndex] > level.time - 100 ) {
-		goal.areanum = caststates[entnum].lastValidAreaNum[cs->aasWorldIndex];
-	} else {
-		goal.areanum = BotPointAreaNum( pos );
-		if ( entnum >= 0 && entnum < level.maxclients ) {
-			if ( !goal.areanum ) {
-				// use the last valid area
-				goal.areanum = caststates[entnum].lastValidAreaNum[cs->aasWorldIndex];
-			}
-		}
-	}
 	VectorCopy( pos, goal.origin );
 	VectorSet( goal.mins, -8, -8, -8 );
 	VectorSet( goal.maxs, 8, 8, 8 );
@@ -256,26 +234,9 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 		goal.flags |= GFL_NOSLOWAPPROACH;   // just speed right passed it
 	}
 	//
-	// debugging, show the route
-	if ( aicast_debug.integer == 2 && ( g_entities[cs->entityNum].aiName && !strcmp( aicast_debugname.string, g_entities[cs->entityNum].aiName ) ) ) {
-		trap_AAS_RT_ShowRoute( cs->bs->origin, cs->bs->areanum, goal.areanum );
-	}
-	//
-	//initialize the movement state
-	BotSetupForMovement( bs );
-	//if this is a slow moving creature, don't use avoidreach
-	if ( cs->attributes[RUNNING_SPEED] < 100 ) {
-		//reset the avoid reach, otherwise bot is stuck in current area
-		trap_BotResetAvoidReach( bs->ms );
-	} else if ( !VectorCompare( cs->lastMoveToPosGoalOrg, pos ) ) {
-		//reset the avoid reach, otherwise bot is stuck in current area
-		trap_BotResetAvoidReach( bs->ms );
-		VectorCopy( pos, cs->lastMoveToPosGoalOrg );
-	}
 	//move towards the goal
 	if ( !( cs->aiFlags & AIFL_EXPLICIT_ROUTING ) || ( entnum < 0 ) || Q_strcasecmp( g_entities[entnum].classname, "ai_marker" ) ) {
-		// Recast/Detour navigation (AAS migration)
-		if ( bot_navsystem.integer ) {
+		{
 			navMoveResult_t navResult;
 			trap_Nav_MoveToGoal( &navResult, bs->origin, pos );
 			if ( nav_debugpath.integer ) {
@@ -284,7 +245,7 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 			memset( &lmoveresult, 0, sizeof( lmoveresult ) );
 			lmoveresult.failure = navResult.failure;
 			VectorCopy( navResult.movedir, lmoveresult.movedir );
-			// unlike trap_BotMoveToGoal, Nav_MoveToGoal doesn't queue the movement action itself.
+			// Nav_MoveToGoal doesn't queue the movement action itself, unlike the old bot movement API.
 			if ( !navResult.failure ) {
 				if ( navResult.onLadderConnection ) {
 					// must face almost straight into the wall or PM_CheckLadderMove drops an airborne AI off it.
@@ -349,26 +310,15 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 					}
 				}
 			}
-		} else {
-			// use AAS routing
-			trap_BotMoveToGoal( &lmoveresult, bs->ms, &goal, tfl );
 		}
 		//if the movement failed
 		if ( lmoveresult.failure ) {
 
-			//reset the avoid reach, otherwise bot is stuck in current area
-			trap_BotResetAvoidReach( bs->ms );
 			//BotAI_Print(PRT_MESSAGE, "movement failure %d\n", lmoveresult.traveltype);
 			// clear all movement
 			trap_EA_Move( cs->entityNum, vec3_origin, 0 );
 
 		} else {
-
-			if ( entnum > 0 && goal.areanum && entnum >= 0 && entnum < level.maxclients ) {   // NOTE: dont do this for the player
-				// save this destination point
-				caststates[entnum].lastValidAreaNum[cs->aasWorldIndex] = goal.areanum;
-				caststates[entnum].lastValidAreaTime[cs->aasWorldIndex] = level.time;
-			}
 
 			if ( lmoveresult.flags & ( MOVERESULT_MOVEMENTVIEW | MOVERESULT_SWIMVIEW ) ) {
 				VectorCopy( lmoveresult.ideal_viewangles, cs->ideal_viewangles );
@@ -813,9 +763,6 @@ char *AIFunc_IdleStart( cast_state_t *cs ) {
 		cs->enemyNum = -1;
 	}
 
-	// Clear old movement avoidance state before returning to idle.
-	trap_BotInitAvoidReach( cs->bs->ms );
-
 	// Use alternate idle standing animation if this AI is configured for it.
 	if ( cs->aiFlags & AIFL_STAND_IDLE2 ) {
 		ent->client->ps.eFlags |= EF_STAND_IDLE2;
@@ -982,10 +929,7 @@ char *AIFunc_InspectFriendly( cast_state_t *cs ) {
 			// If pathing failed, face toward the first visible route point if possible.
 			if ( !moveresult || moveresult->failure ) {
 				if ( !( cs->aiFlags & AIFL_MISCFLAG2 ) ) {
-					// Recast/Detour navigation (AAS migration)
-					if ( bot_navsystem.integer ?
-						 trap_Nav_GetRouteFirstVisPos( followEnt->r.currentOrigin, cs->bs->origin, cs->takeCoverEnemyPos ) :
-						 trap_AAS_GetRouteFirstVisPos( followEnt->r.currentOrigin, cs->bs->origin, cs->travelflags, cs->takeCoverEnemyPos ) ) {
+					if ( trap_Nav_GetRouteFirstVisPos( followEnt->r.currentOrigin, cs->bs->origin, cs->takeCoverEnemyPos ) ) {
 						cs->aiFlags |= AIFL_MISCFLAG2;
 					} else {
 						VectorCopy( followEnt->r.currentOrigin, cs->takeCoverEnemyPos );
@@ -1292,12 +1236,7 @@ char *AIFunc_InspectBulletImpactStart( cast_state_t *cs ) {
 	// if the origin is not visible, set the bullet origin to the closest visible area from the src
 	if ( !trap_InPVS( cs->bulletImpactStart, cs->bs->origin ) ) {
 		// if it fails, then just look at the source
-		// Recast/Detour navigation (AAS migration)
-		if ( bot_navsystem.integer ) {
-			trap_Nav_GetRouteFirstVisPos( g_entities[cs->bulletImpactEntity].s.pos.trBase, cs->bs->origin, cs->bulletImpactStart );
-		} else {
-			trap_AAS_GetRouteFirstVisPos( g_entities[cs->bulletImpactEntity].s.pos.trBase, cs->bs->origin, cs->travelflags, cs->bulletImpactStart );
-		}
+		trap_Nav_GetRouteFirstVisPos( g_entities[cs->bulletImpactEntity].s.pos.trBase, cs->bs->origin, cs->bulletImpactStart );
 	}
 	//
 	cs->aifunc = AIFunc_InspectBulletImpact;
@@ -1438,10 +1377,7 @@ char *AIFunc_InspectAudibleEvent( cast_state_t *cs ) {
 
 			if ( moveresult && moveresult->failure ) {
 				// If route fails, face the first visible route point if possible
-				// Recast/Detour navigation (AAS migration)
-				if ( bot_navsystem.integer ?
-					 trap_Nav_GetRouteFirstVisPos( cs->audibleEventOrg, cs->bs->origin, destorg ) :
-					 trap_AAS_GetRouteFirstVisPos( cs->audibleEventOrg, cs->bs->origin, cs->travelflags, destorg ) ) {
+				if ( trap_Nav_GetRouteFirstVisPos( cs->audibleEventOrg, cs->bs->origin, destorg ) ) {
 					cs->aiFlags |= AIFL_MISCFLAG2;
 
 					VectorSubtract( destorg, cs->bs->origin, destorg );
@@ -1728,9 +1664,6 @@ Resets avoid-reach data, sets idle animation style, and stores follow target/ran
 ============
 */
 char *AIFunc_ChaseGoalIdleStart( cast_state_t *cs, int entitynum, float reachdist ) {
-	// Clear old avoid-reach data when entering follow idle
-	trap_BotInitAvoidReach( cs->bs->ms );
-
 	if ( entitynum < MAX_CLIENTS ) {
 		// Followers of clients should stay in ready/default idle
 		g_entities[cs->entityNum].client->ps.eFlags &= ~EF_STAND_IDLE2;
@@ -2510,7 +2443,6 @@ Keeps facing likely threat directions, reacquires enemies, and waits in cover in
 =============
 */
 char *AIFunc_BattleAmbush( cast_state_t *cs ) {
-	bot_state_t *bs;
 	vec3_t destorg, vec, dir;
 	float dist;
 	int enemies[MAX_CLIENTS], numEnemies, i;
@@ -2536,8 +2468,6 @@ char *AIFunc_BattleAmbush( cast_state_t *cs ) {
 	if ( AICast_Defend_Update( cs ) ) {
 		return NULL;
 	}
-
-	bs = cs->bs;
 
 	if ( cs->enemyNum < 0 ) {
 		return AIFunc_IdleStart( cs );
@@ -2636,7 +2566,6 @@ char *AIFunc_BattleAmbush( cast_state_t *cs ) {
 
 		if ( moveresult ) {
 			if ( moveresult->failure ) {
-				trap_BotResetAvoidReach( bs->ms );
 				VectorClear( cs->takeCoverPos );
 				dist = 0;
 			}
@@ -3073,13 +3002,8 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 			if ( cs->combatGoalTime < level.time && cs->attackSpotTime < level.time ) {
 				cs->attackSpotTime = level.time + 500 + rand() % 500;
 
-				// Recast/Detour navigation (AAS migration)
-				if ( bot_navsystem.integer ?
-					 trap_Nav_FindAttackSpot( g_entities[cs->leaderNum].r.currentOrigin, g_entities[cs->enemyNum].r.currentOrigin,
-											  0.0f, MAX_LEADER_DIST, cs->combatGoalOrigin ) :
-					 trap_AAS_FindAttackSpotWithinRange( cs->entityNum, cs->leaderNum,
-														 cs->enemyNum, MAX_LEADER_DIST,
-														 AICAST_TFL_DEFAULT, cs->combatGoalOrigin ) ) {
+				if ( trap_Nav_FindAttackSpot( g_entities[cs->leaderNum].r.currentOrigin, g_entities[cs->enemyNum].r.currentOrigin,
+											  0.0f, MAX_LEADER_DIST, cs->combatGoalOrigin ) ) {
 					cs->combatGoalTime = level.time + 2000;
 				}
 			}
@@ -3107,13 +3031,8 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 			if ( cs->combatGoalTime < level.time && cs->attackSpotTime < level.time ) {
 				cs->attackSpotTime = level.time + 500 + rand() % 500;
 
-				// Recast/Detour navigation (AAS migration)
-				if ( bot_navsystem.integer ?
-					 trap_Nav_FindAttackSpot( cs->bs->origin, g_entities[cs->enemyNum].r.currentOrigin,
-											  0.0f, 512.0f, cs->combatGoalOrigin ) :
-					 trap_AAS_FindAttackSpotWithinRange( cs->entityNum, cs->entityNum,
-														 cs->enemyNum, 512,
-														 AICAST_TFL_DEFAULT, cs->combatGoalOrigin ) ) {
+				if ( trap_Nav_FindAttackSpot( cs->bs->origin, g_entities[cs->enemyNum].r.currentOrigin,
+											  0.0f, 512.0f, cs->combatGoalOrigin ) ) {
 					cs->combatGoalTime = level.time + 2000;
 				}
 			}
@@ -3211,28 +3130,12 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 					moveDist > simTime * cs->attributes[RUNNING_SPEED] * 0.9 &&
 					move.groundEntityNum == ENTITYNUM_WORLD &&
 					cs->attackcrouch_time < level.time ) {
-			int destarea, simarea, starttravel, simtravel;
+			int starttravel, simtravel;
 
-			// Recast/Detour navigation (AAS migration)
-			if ( bot_navsystem.integer ) {
-				starttravel = trap_Nav_TravelTimeEstimate( cs->bs->origin, destorg );
-				simtravel = trap_Nav_TravelTimeEstimate( move.endpos, destorg );
-				if ( starttravel < 0 || simtravel < 0 ) {
-					simtravel = starttravel; // unknown either way; don't treat as an improvement
-				}
-			} else {
-				destarea = BotPointAreaNum( destorg );
-				simarea = BotPointAreaNum( move.endpos );
-
-				starttravel = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum,
-																 cs->bs->origin,
-																 destarea,
-																 cs->travelflags );
-
-				simtravel = trap_AAS_AreaTravelTimeToGoalArea( simarea,
-															   move.endpos,
-															   destarea,
-															   cs->travelflags );
+			starttravel = trap_Nav_TravelTimeEstimate( cs->bs->origin, destorg );
+			simtravel = trap_Nav_TravelTimeEstimate( move.endpos, destorg );
+			if ( starttravel < 0 || simtravel < 0 ) {
+				simtravel = starttravel; // unknown either way; don't treat as an improvement
 			}
 
 			if ( simtravel < starttravel ) {
@@ -3299,7 +3202,6 @@ AIFunc_AvoidDanger()
 ============
 */
 char *AIFunc_AvoidDanger( cast_state_t *cs ) {
-	bot_state_t *bs;
 	vec3_t destorg, vec;
 	float dist;
 	int enemies[MAX_CLIENTS], numEnemies, i;
@@ -3310,7 +3212,6 @@ char *AIFunc_AvoidDanger( cast_state_t *cs ) {
 	gentity_t *danger;
 
 	// we need to move towards it
-	bs = cs->bs;
 	ent = g_entities + cs->entityNum;
 	//
 	// TODO: if we are on fire, play the correct torso animation
@@ -3424,8 +3325,6 @@ char *AIFunc_AvoidDanger( cast_state_t *cs ) {
 		if ( moveresult ) {
 			//if the movement failed
 			if ( moveresult->failure || moveresult->blocked ) {
-				//reset the avoid reach, otherwise bot is stuck in current area
-				trap_BotResetAvoidReach( bs->ms );
 				if ( g_entities[cs->dangerEntity].inuse ) {
 					// find a better spot?
 					AICast_GetTakeCoverPos( cs, cs->dangerEntity, cs->dangerEntityPos, cs->takeCoverPos );
@@ -3656,7 +3555,6 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 		moveresult = AICast_MoveToPos( cs, destorg, -1 );
 		if ( moveresult ) {
 			if ( moveresult->failure ) {
-				trap_BotResetAvoidReach( bs->ms );
 				VectorClear( cs->takeCoverPos );
 				dist = 0;
 			}
@@ -3696,7 +3594,6 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 		}
 
 		// Cache predicted cover endpoint if it is already hidden and valid
-		// Recast/Detour navigation (AAS migration)
 		if ( !( cs->aiFlags & AIFL_MISCFLAG1 ) &&
 			 !AICast_VisibleFromPos( cs->vislist[cs->enemyNum].real_visible_pos,
 									 cs->enemyNum, move.endpos,
@@ -3704,7 +3601,7 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 			 !AICast_VisibleFromPos( cs->vislist[cs->enemyNum].real_visible_pos,
 									 cs->enemyNum, cs->bs->origin,
 									 cs->entityNum, qfalse ) &&
-			 ( bot_navsystem.integer ? trap_Nav_Reachable( move.endpos ) : trap_AAS_PointAreaNum( move.endpos ) ) ) {
+			 trap_Nav_Reachable( move.endpos ) ) {
 			VectorCopy( move.endpos, cs->takeCoverPos );
 			cs->aiFlags |= AIFL_MISCFLAG1;
 		}
@@ -3718,28 +3615,12 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 			 moveDist > simTime * cs->attributes[RUNNING_SPEED] * 0.9 &&
 			 move.groundEntityNum == ENTITYNUM_WORLD &&
 			 cs->attackcrouch_time < level.time ) {
-			int destarea, simarea, starttravel, simtravel;
+			int starttravel, simtravel;
 
-			// Recast/Detour navigation (AAS migration)
-			if ( bot_navsystem.integer ) {
-				starttravel = trap_Nav_TravelTimeEstimate( cs->bs->origin, destorg );
-				simtravel = trap_Nav_TravelTimeEstimate( move.endpos, destorg );
-				if ( starttravel < 0 || simtravel < 0 ) {
-					simtravel = starttravel; // unknown either way; don't treat as an improvement
-				}
-			} else {
-				destarea = BotPointAreaNum( destorg );
-				simarea = BotPointAreaNum( move.endpos );
-
-				starttravel = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum,
-																 cs->bs->origin,
-																 destarea,
-																 cs->travelflags );
-
-				simtravel = trap_AAS_AreaTravelTimeToGoalArea( simarea,
-															   move.endpos,
-															   destarea,
-															   cs->travelflags );
+			starttravel = trap_Nav_TravelTimeEstimate( cs->bs->origin, destorg );
+			simtravel = trap_Nav_TravelTimeEstimate( move.endpos, destorg );
+			if ( starttravel < 0 || simtravel < 0 ) {
+				simtravel = starttravel; // unknown either way; don't treat as an improvement
 			}
 
 			if ( simtravel < starttravel ) {
@@ -4376,7 +4257,6 @@ Interrupts for danger, scripts, new enemies, friendly inspection, bullet impacts
 ============
 */
 char *AIFunc_InspectBody( cast_state_t *cs ) {
-	bot_state_t *bs;
 	vec3_t destorg, enemyOrg;
 	vec3_t vec;
 	char *retval;
@@ -4410,8 +4290,6 @@ char *AIFunc_InspectBody( cast_state_t *cs ) {
 		cs->enemyNum = -1;
 		return AIFunc_IdleStart( cs );
 	}
-
-	bs = cs->bs;
 
 	if ( cs->enemyNum < 0 ) {
 		return AIFunc_IdleStart( cs );
@@ -4464,7 +4342,6 @@ char *AIFunc_InspectBody( cast_state_t *cs ) {
 		moveresult = AICast_MoveToPos( cs, enemyOrg, -1 );
 
 		if ( moveresult && ( moveresult->failure || moveresult->blocked ) ) {
-			trap_BotResetAvoidReach( bs->ms );
 			cs->enemyNum = -1;
 			return AIFunc_IdleStart( cs );
 		}
@@ -4497,7 +4374,6 @@ char *AIFunc_InspectBody( cast_state_t *cs ) {
 			moveresult = AICast_MoveToPos( cs, cs->startOrigin, -1 );
 
 			if ( moveresult && ( moveresult->failure || moveresult->blocked ) ) {
-				trap_BotResetAvoidReach( bs->ms );
 				cs->enemyNum = -1;
 				return AIFunc_IdleStart( cs );
 			}
@@ -4796,8 +4672,6 @@ char *AIFunc_GrenadeKick( cast_state_t *cs ) {
 		if ( moveresult ) {
 			//if the movement failed
 			if ( moveresult->failure ) {
-				//reset the avoid reach, otherwise bot is stuck in current area
-				trap_BotResetAvoidReach( bs->ms );
 				// couldn't get there, so stop trying to get there
 				level.lastGrenadeKick = level.time;
 				return AIFunc_DefaultStart( cs );
@@ -4926,21 +4800,7 @@ char *AIFunc_Battle( cast_state_t *cs ) {
 	if ( cs->bs->cur_ps.weaponTime < 100 &&
 		 cs->castScriptStatus.scriptNoMoveTime < level.time &&
 		 !AICast_CheckAttack( cs, cs->enemyNum, qfalse ) ) {
-		// areanum is raw-AAS-only and always 0 without a .aas; skip this AAS-only fallback under Nav.
-		if ( !bot_navsystem.integer && !cs->bs->areanum ) {
-			// If outside valid AAS, try to move out of the bad area
-			if ( cs->obstructingTime >= level.time ) {
-				trap_EA_Move( cs->entityNum, cs->takeCoverPos, 200 );
-			} else if ( AICast_GetAvoid( cs, NULL, cs->takeCoverPos, qtrue, cs->enemyNum ) ) {
-				VectorSubtract( cs->takeCoverPos, cs->bs->origin, cs->takeCoverPos );
-
-				if ( VectorNormalize( cs->takeCoverPos ) > 60 ) {
-					cs->obstructingTime = level.time + 1000 + rand() % 600;
-				}
-
-				return NULL;
-			}
-		} else if ( cs->combatGoalTime > level.time ) {
+		if ( cs->combatGoalTime > level.time ) {
 			// Give active combat goals time to resolve
 			if ( cs->combatGoalTime > level.time + 3000 ) {
 				cs->combatGoalTime = level.time + 2000 + rand() % 1000;
@@ -5014,7 +4874,6 @@ char *AIFunc_Battle( cast_state_t *cs ) {
 		memset( &enemyGoal, 0, sizeof( enemyGoal ) );
 		enemyGoal.entitynum = cs->enemyNum;
 		VectorCopy( g_entities[cs->enemyNum].r.currentOrigin, enemyGoal.origin );
-		enemyGoal.areanum = BotPointAreaNum( enemyGoal.origin );
 		VectorSet( enemyGoal.mins, -8, -8, -8 );
 		VectorSet( enemyGoal.maxs, 8, 8, 8 );
 		AICast_Blocked( cs, &moveresult, qfalse, &enemyGoal );
@@ -5149,9 +5008,6 @@ May start a special monster attack, chase if out of range, or fall back to gener
 char *AIFunc_BattleStart( cast_state_t *cs ) {
 	char *rval;
 	int lastweap;
-
-	// Clear old avoid-reach data when entering combat again
-	trap_BotInitAvoidReach( cs->bs->ms );
 
 	// Delay cover/combat-spot decisions so AI does not instantly reposition every combat start
 	cs->takeCoverTime = level.time + 300 + rand() % ( 2000 + (int)( 2000.0 * cs->attributes[AGGRESSION] ) );

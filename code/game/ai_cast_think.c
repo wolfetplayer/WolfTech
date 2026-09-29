@@ -37,11 +37,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 #include "../qcommon/q_shared.h"
 #include "../botlib/botlib.h"      //bot lib interface
-#include "../botlib/be_aas.h"
 #include "../botlib/be_ea.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
@@ -59,8 +56,6 @@ void AICast_ProcessAIFunctions( cast_state_t *cs, float thinktime ) {
 	int i;
 	char    *funcname;
 
-	//check for air
-	BotCheckAir( cs->bs );
 	//if the cast has no ai function
 	if ( !cs->aifunc ) {
 		AIFunc_DefaultStart( cs );
@@ -76,7 +71,6 @@ void AICast_ProcessAIFunctions( cast_state_t *cs, float thinktime ) {
 		if ( !( funcname = cs->aifunc( cs ) ) ) {
 			break;
 		} else {
-			trap_BotResetAvoidReach( cs->bs->ms );    // reset avoidreach
 			cs->thinkFuncChangeTime = level.time;
 			AICast_DBG_AddAIFunc( cs, funcname );
 		}
@@ -450,15 +444,7 @@ void AICast_Think( int client, float thinktime ) {
 	cs = AICast_GetCastState( client );
 	ent = &g_entities[client];
 	//
-	// make sure we are using the right AAS data for this entity (one's that don't get set will default to the player's AAS data)
-	trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
 	trap_Nav_SelectClass( cs->aasWorldIndex );
-	//
-	// make sure we have a valid navigation system (AAS degrades to safe no-ops when unloaded, so only require it when Nav isn't driving movement)
-	//
-	if ( !bot_navsystem.integer && !trap_AAS_Initialized() ) {
-		return;
-	}
 	//
 	trap_EA_ResetInput( client, NULL );
 	cs->aiFlags &= ~AIFL_VIEWLOCKED;
@@ -493,12 +479,6 @@ void AICast_Think( int client, float thinktime ) {
 	//eye coordinates of the cast
 	VectorCopy( ent->client->ps.origin, cs->bs->eye );
 	cs->bs->eye[2] += ent->client->ps.viewheight;
-	//get the area the cast is in
-	cs->bs->areanum = BotPointAreaNum( cs->bs->origin );
-	if ( cs->bs->areanum ) {
-		cs->lastValidAreaNum[cs->aasWorldIndex] = cs->bs->areanum;
-		cs->lastValidAreaTime[cs->aasWorldIndex] = level.time;
-	}
 	// if we're dead, do special stuff only
 	if ( ent->health <= 0 || cs->revivingTime || cs->rebirthTime ) {
 		//
@@ -948,9 +928,8 @@ void AICast_StartFrame( int time ) {
 	}
 	AICast_SightUpdate( (int)( (float)SIGHT_PER_SEC * ( (float)elapsed / 1000 ) ) );
 	//
-	// update the player's area, only update if it's valid
+	// live "reachable from here" mesh debug draw
 	for ( i = 0; i < 2; i++ ) {
-		trap_AAS_SetCurrentWorld( i );
 		trap_Nav_SelectClass( i );
 		for ( j = 0; j < level.maxclients; j++ ) {
 			// if AI, continue;
@@ -958,13 +937,6 @@ void AICast_StartFrame( int time ) {
 				continue;
 			}
 
-			castcount = BotPointAreaNum( g_entities[j].s.pos.trBase );
-			if ( castcount ) {
-				caststates[j].lastValidAreaNum[i] = castcount;
-				caststates[j].lastValidAreaTime[i] = level.time;
-			}
-
-			// Recast/Detour navigation (AAS migration): live "reachable from here" mesh debug draw
 			if ( nav_debugmesh.integer == i + 1 && g_entities[j].inuse && g_entities[j].client ) {
 				trap_Nav_DebugShowNearby( g_entities[j].s.pos.trBase, 500.0f );
 			}
@@ -1384,12 +1356,7 @@ qboolean AICast_GetAvoid( cast_state_t *cs, bot_goal_t *goal, vec3_t outpos, qbo
 	// look for a good direction to move out of the way
 	bestmoved = 0;
 	if ( goal ) {
-		// Recast/Detour navigation (AAS migration)
-		if ( bot_navsystem.integer ) {
-			starttraveltime = trap_Nav_TravelTimeEstimate( cs->bs->origin, goal->origin );
-		} else {
-			starttraveltime = trap_AAS_AreaTravelTimeToGoalArea( cs->bs->areanum, cs->bs->origin, goal->areanum, cs->travelflags );
-		}
+		starttraveltime = trap_Nav_TravelTimeEstimate( cs->bs->origin, goal->origin );
 	}
 	memcpy( &ucmd, &cs->lastucmd, sizeof( usercmd_t ) );
 	ucmd.forwardmove = 127;
@@ -1435,7 +1402,6 @@ qboolean AICast_GetAvoid( cast_state_t *cs, bot_goal_t *goal, vec3_t outpos, qbo
 		if ( cs->dangerEntity >= 0 && cs->dangerEntityValidTime >= level.time ) {
 			distmoved = Distance( castmove.endpos, cs->dangerEntityPos );
 		} else if ( goal ) {
-			//distmoved = 99999 - trap_AAS_AreaTravelTimeToGoalArea( BotPointAreaNum(castmove.endpos), castmove.endpos, goal->areanum, cs->travelflags );
 			distmoved = 99999 - Distance( castmove.endpos, goal->origin );
 		} else {
 			distmoved = Distance( castmove.endpos, cs->bs->cur_ps.origin );
@@ -1447,14 +1413,9 @@ qboolean AICast_GetAvoid( cast_state_t *cs, bot_goal_t *goal, vec3_t outpos, qbo
 			if ( !enemyVisible || AICast_CheckAttackAtPos( cs->entityNum, cs->enemyNum, castmove.endpos, qfalse, qfalse ) ) {
 				qboolean goodCandidate = qtrue;
 				if ( goal ) {
-					// Recast/Detour navigation (AAS migration)
-					if ( bot_navsystem.integer ) {
-						traveltime = trap_Nav_TravelTimeEstimate( castmove.endpos, goal->origin );
-						if ( traveltime < 0 ) {
-							goodCandidate = qfalse; // unreachable from here; don't accept it
-						}
-					} else {
-						traveltime = trap_AAS_AreaTravelTimeToGoalArea( BotPointAreaNum( castmove.endpos ), castmove.endpos, goal->areanum, cs->travelflags );
+					traveltime = trap_Nav_TravelTimeEstimate( castmove.endpos, goal->origin );
+					if ( traveltime < 0 ) {
+						goodCandidate = qfalse; // unreachable from here; don't accept it
 					}
 					if ( goodCandidate && traveltime >= ( starttraveltime + 200 ) ) {
 						goodCandidate = qfalse;
@@ -1711,8 +1672,6 @@ void AICast_EvaluatePmove( int clientnum, pmove_t *pm ) {
 
 	//vec3_t pos, dir;
 	cs = AICast_GetCastState( clientnum );
-	// make sure we are using the right AAS data for this entity (one's that don't get set will default to the player's AAS data)
-	trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
 	trap_Nav_SelectClass( cs->aasWorldIndex );
 
 	// NOTE: this is only enabled for real clients, so their followers get out of their way
@@ -1764,7 +1723,6 @@ void AICast_EvaluatePmove( int clientnum, pmove_t *pm ) {
 				}
 				if ( ocs->leaderNum >= 0 ) {
 					VectorCopy( g_entities[ocs->leaderNum].r.currentOrigin, ogoal.origin );
-					ogoal.areanum = BotPointAreaNum( ogoal.origin );
 					ogoal.entitynum = ocs->leaderNum;
 					if ( ocs->bs && AICast_GetAvoid( ocs, &ogoal, ocs->obstructingPos, qfalse, cs->entityNum ) ) { // give them time to move somewhere else
 						ocs->obstructingTime = level.time + 1000;

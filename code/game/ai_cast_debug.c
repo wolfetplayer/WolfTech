@@ -36,16 +36,11 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 #include "../botlib/botlib.h"      //bot lib interface
-#include "../botlib/be_aas.h"
 #include "../botlib/be_ea.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
-
-int BotPointAreaNum( vec3_t origin );  // ai_dmq3.c - handles floor-edge cases raw trap_AAS_PointAreaNum misses
 
 static int numaifuncs;
 static char     *aifuncs[MAX_AIFUNCS];
@@ -110,52 +105,6 @@ void AICast_DebugFrame( cast_state_t *cs ) {
 }
 
 /*
-===========
-AICast_DBG_RouteTable_f
-===========
-*/
-void AICast_DBG_RouteTable_f( vec3_t org, char *param ) {
-	static int srcarea = 0, dstarea = 0;
-	static vec3_t srcorg;
-//	extern botlib_export_t botlib;
-
-	if ( !param || strlen( param ) < 1 ) {
-		trap_Print( "You must specify 'src', 'dest' or 'show'\n" );
-		return;
-	}
-
-	trap_AAS_SetCurrentWorld( 0 );  // use the default world, which should have a routetable
-	trap_Nav_SelectClass( 0 );
-
-	if ( Q_stricmp( param, "toggle" ) == 0 ) {
-		trap_AAS_RT_ShowRoute( vec3_origin, -666, -666 );   // stupid toggle hack
-		return;
-	}
-
-	if ( Q_stricmp( param, "src" ) == 0 ) { // set the src
-		srcarea = 1 + BotPointAreaNum( org );  // BotPointAreaNum handles floor-edge points, raw trap call doesn't
-		VectorCopy( org, srcorg );
-		trap_Print( va( "dbg_routetable: src area=%i\n", srcarea - 1 ) );
-		return;
-	} else if ( Q_stricmp( param, "dest" ) == 0 )        {
-		dstarea = 1 + BotPointAreaNum( org );
-		trap_Print( va( "dbg_routetable: dest area=%i\n", dstarea - 1 ) );
-	}
-
-	if ( srcarea && dstarea ) { // show the path
-		int traveltime = trap_AAS_AreaTravelTimeToGoalArea( srcarea - 1, srcorg, dstarea - 1, AICAST_TFL_DEFAULT );
-
-		trap_Print( va( "dbg_routetable: srcarea=%i dstarea=%i traveltime=%i (0 = unreachable)\n",
-						 srcarea - 1, dstarea - 1, traveltime ) );
-
-		trap_AAS_RT_ShowRoute( org, srcarea - 1, dstarea - 1 );
-	} else
-	{
-		trap_Print( "You must specify 'src' & 'dest' first\n" );
-	}
-}
-
-/*
 ===============
 AICast_DBG_Spawn_f
 ===============
@@ -195,11 +144,6 @@ void AICast_DBG_Cmd_f( int clientNum ) {
 	// get the first word following "aicast"
 	trap_Argv( 1, cmd, sizeof( cmd ) );
 
-	if ( Q_stricmp( cmd, "dbg_routetable" ) == 0 ) {
-		trap_Argv( 2, cmd, sizeof( cmd ) );
-		AICast_DBG_RouteTable_f( ent->client->ps.origin, cmd );
-		return;
-	}
 	if ( Q_stricmp( cmd, "spawn" ) == 0 ) {
 		// spawn a given character
 		trap_Argv( 2, cmd, sizeof( cmd ) );

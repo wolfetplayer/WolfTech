@@ -45,8 +45,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "l_struct.h"
 #include "aasfile.h"
 #include "botlib.h"
-#include "be_aas.h"
-#include "be_aas_funcs.h"
 #include "be_interface.h"
 #include "be_ai_weight.h"        //fuzzy weights
 #include "be_ai_weap.h"

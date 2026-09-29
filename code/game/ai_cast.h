@@ -35,7 +35,6 @@ If you have questions concerning this license or the applicable additional terms
 //===========================================================================
 
 #include "ai_main.h"    // just so we can use the structures
-#include "ai_dmq3.h"    // just so we can use the structures
 
 #include "ai_cast_fight.h"
 
@@ -344,7 +343,6 @@ typedef struct cast_state_s
 	int lastThink;                  // time they last thinked, so we can vary the think times
 	int actionFlags;                // cast AI specific movement flags
 	int lastPain, lastPainDamage;
-	int travelflags;
 	int thinkFuncChangeTime;
 
 	aistateEnum_t aiState;
@@ -543,9 +541,6 @@ typedef struct cast_state_s
 
 	int noReloadTime;           // dont reload prematurely until this time has expired
 
-	int lastValidAreaNum[2];        // last valid area within each AAS world
-	int lastValidAreaTime[2];       // time we last got the area
-
 	int weaponNum;              // our current weapon
 	int enemyNum;               // our current enemy
 	vec3_t ideal_viewangles, viewangles;
@@ -636,7 +631,6 @@ qboolean AICast_CheckVisibility( gentity_t *srcent, gentity_t *destent );
 void    AICast_DBG_InitAIFuncs( void );
 void    AICast_DBG_AddAIFunc( cast_state_t *cs, char *funcname );
 void    AICast_DBG_ListAIFuncs( cast_state_t *cs, int numprint );
-void    AICast_DBG_RouteTable_f( vec3_t org, char *param );
 int     Sys_MilliSeconds( void );
 void    AICast_DebugFrame( cast_state_t *cs );
 //
@@ -763,7 +757,6 @@ qboolean AICast_ScriptRun( cast_state_t *cs, qboolean force );
 void    AIChar_spawn( gentity_t *ent );
 //
 // other/external defines
-void    BotCheckAir( bot_state_t *bs );
 void    BotUpdateInput( bot_state_t *bs, int time );
 float   AngleDifference( float ang1, float ang2 );
 float   BotChangeViewAngle( float angle, float ideal_angle, float speed );

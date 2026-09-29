@@ -34,11 +34,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 #include "../qcommon/q_shared.h"
 #include "../botlib/botlib.h"      //bot lib interface
-#include "../botlib/be_aas.h"
 #include "../botlib/be_ea.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
@@ -1510,9 +1507,6 @@ void G_LoadGame( char *filename ) {
 			aicast_skillscale = (float)i / (float)GSKILL_MAX;
 		}
 	}
-
-	// reset all AAS blocking entities
-	trap_AAS_SetAASBlockingEntity( vec3_origin, vec3_origin, -1 );
 
 	// Don't read in this stuff for mid-game cutscenes
 	if ( !( !Q_stricmpn( mapstr, "cutscene6", 9 ) || !Q_stricmpn( mapstr, "cutscene9", 9 ) || !Q_stricmpn( mapstr, "cutscene11", 10 ) || !Q_stricmpn( mapstr, "cutscene14", 10 ) ) ) {

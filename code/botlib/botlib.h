@@ -229,69 +229,6 @@ typedef struct botlib_import_s
 	// done.
 } botlib_import_t;
 
-typedef struct aas_export_s
-{
-	//-----------------------------------
-	// be_aas_entity.h
-	//-----------------------------------
-	void ( *AAS_EntityInfo )( int entnum, struct aas_entityinfo_s *info );
-	//-----------------------------------
-	// be_aas_main.h
-	//-----------------------------------
-	int ( *AAS_Initialized )( void );
-	void ( *AAS_PresenceTypeBoundingBox )( int presencetype, vec3_t mins, vec3_t maxs );
-	float ( *AAS_Time )( void );
-	//--------------------------------------------
-	// be_aas_sample.c
-	//--------------------------------------------
-	int ( *AAS_PointAreaNum )( vec3_t point );
-	int ( *AAS_TraceAreas )( vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas );
-	//--------------------------------------------
-	// be_aas_bspq3.c
-	//--------------------------------------------
-	int ( *AAS_PointContents )( vec3_t point );
-	int ( *AAS_NextBSPEntity )( int ent );
-	int ( *AAS_ValueForBSPEpairKey )( int ent, char *key, char *value, int size );
-	int ( *AAS_VectorForBSPEpairKey )( int ent, char *key, vec3_t v );
-	int ( *AAS_FloatForBSPEpairKey )( int ent, char *key, float *value );
-	int ( *AAS_IntForBSPEpairKey )( int ent, char *key, int *value );
-	//--------------------------------------------
-	// be_aas_reach.c
-	//--------------------------------------------
-	int ( *AAS_AreaReachability )( int areanum );
-	//--------------------------------------------
-	// be_aas_route.c
-	//--------------------------------------------
-	int ( *AAS_AreaTravelTimeToGoalArea )( int areanum, vec3_t origin, int goalareanum, int travelflags );
-	//--------------------------------------------
-	// be_aas_move.c
-	//--------------------------------------------
-	int ( *AAS_Swimming )( vec3_t origin );
-	int ( *AAS_PredictClientMovement )( struct aas_clientmove_s *move,
-										int entnum, vec3_t origin,
-										int presencetype, int onground,
-										vec3_t velocity, vec3_t cmdmove,
-										int cmdframes,
-										int maxframes, float frametime,
-										int stopevent, int stopareanum, int visualize );
-
-	// Ridah, route-tables
-	//--------------------------------------------
-	// be_aas_routetable.c
-	//--------------------------------------------
-	void ( *AAS_RT_ShowRoute )( vec3_t srcpos, int srcnum, int destnum );
-	qboolean ( *AAS_RT_GetHidePos )( vec3_t srcpos, int srcnum, int srcarea, vec3_t destpos, int destnum, int destarea, vec3_t returnPos );
-	int ( *AAS_FindAttackSpotWithinRange )( int srcnum, int rangenum, int enemynum, float rangedist, int travelflags, float *outpos );
-	qboolean ( *AAS_GetRouteFirstVisPos )( vec3_t srcpos, vec3_t destpos, int travelflags, vec3_t retpos );
-	void ( *AAS_SetAASBlockingEntity )( vec3_t absmin, vec3_t absmax, qboolean blocking );
-	// done.
-
-	// Ridah
-	void ( *AAS_SetCurrentWorld )( int index );
-	// done.
-
-} aas_export_t;
-
 typedef struct ea_export_s
 {
 	//ClientCommand elementary actions
@@ -363,55 +300,6 @@ typedef struct ai_export_s
 	void ( *BotSetChatGender )( int chatstate, int gender );
 	void ( *BotSetChatName )( int chatstate, char *name );
 	//-----------------------------------
-	// be_ai_goal.h
-	//-----------------------------------
-	void ( *BotResetGoalState )( int goalstate );
-	void ( *BotResetAvoidGoals )( int goalstate );
-	void ( *BotRemoveFromAvoidGoals )( int goalstate, int number );
-	void ( *BotPushGoal )( int goalstate, struct bot_goal_s *goal );
-	void ( *BotPopGoal )( int goalstate );
-	void ( *BotEmptyGoalStack )( int goalstate );
-	void ( *BotDumpAvoidGoals )( int goalstate );
-	void ( *BotDumpGoalStack )( int goalstate );
-	void ( *BotGoalName )( int number, char *name, int size );
-	int ( *BotGetTopGoal )( int goalstate, struct bot_goal_s *goal );
-	int ( *BotGetSecondGoal )( int goalstate, struct bot_goal_s *goal );
-	int ( *BotChooseLTGItem )( int goalstate, vec3_t origin, int *inventory, int travelflags );
-	int ( *BotChooseNBGItem )( int goalstate, vec3_t origin, int *inventory, int travelflags,
-							   struct bot_goal_s *ltg, float maxtime );
-	int ( *BotTouchingGoal )( vec3_t origin, struct bot_goal_s *goal );
-	int ( *BotItemGoalInVisButNotVisible )( int viewer, vec3_t eye, vec3_t viewangles, struct bot_goal_s *goal );
-	int ( *BotGetLevelItemGoal )( int index, char *classname, struct bot_goal_s *goal );
-	int ( *BotGetNextCampSpotGoal )( int num, struct bot_goal_s *goal );
-	int ( *BotGetMapLocationGoal )( char *name, struct bot_goal_s *goal );
-	float ( *BotAvoidGoalTime )( int goalstate, int number );
-	void ( *BotInitLevelItems )( void );
-	void ( *BotUpdateEntityItems )( void );
-	int ( *BotLoadItemWeights )( int goalstate, char *filename );
-	void ( *BotFreeItemWeights )( int goalstate );
-	void ( *BotInterbreedGoalFuzzyLogic )( int parent1, int parent2, int child );
-	void ( *BotSaveGoalFuzzyLogic )( int goalstate, char *filename );
-	void ( *BotMutateGoalFuzzyLogic )( int goalstate, float range );
-	int ( *BotAllocGoalState )( int client );
-	void ( *BotFreeGoalState )( int handle );
-	//-----------------------------------
-	// be_ai_move.h
-	//-----------------------------------
-	void ( *BotResetMoveState )( int movestate );
-	void ( *BotMoveToGoal )( struct bot_moveresult_s *result, int movestate, struct bot_goal_s *goal, int travelflags );
-	int ( *BotMoveInDirection )( int movestate, vec3_t dir, float speed, int type );
-	void ( *BotResetAvoidReach )( int movestate );
-	void ( *BotResetLastAvoidReach )( int movestate );
-	int ( *BotReachabilityArea )( vec3_t origin, int testground );
-	int ( *BotMovementViewTarget )( int movestate, struct bot_goal_s *goal, int travelflags, float lookahead, vec3_t target );
-	int ( *BotPredictVisiblePosition )( vec3_t origin, int areanum, struct bot_goal_s *goal, int travelflags, vec3_t target );
-	int ( *BotAllocMoveState )( void );
-	void ( *BotFreeMoveState )( int handle );
-	void ( *BotInitMoveState )( int handle, struct bot_initmove_s *initmove );
-	// Ridah
-	void ( *BotInitAvoidReach )( int handle );
-	// done.
-	//-----------------------------------
 	// be_ai_weap.h
 	//-----------------------------------
 	int ( *BotChooseBestFightWeapon )( int weaponstate, int *inventory );
@@ -429,8 +317,6 @@ typedef struct ai_export_s
 //bot AI library imported functions
 typedef struct botlib_export_s
 {
-	//Area Awareness System functions
-	aas_export_t aas;
 	//Elementary Action functions
 	ea_export_t ea;
 	//AI functions
@@ -455,10 +341,6 @@ typedef struct botlib_export_s
 	int ( *BotLibStartFrame )( float time );
 	//load a new map in the bot library
 	int ( *BotLibLoadMap )( const char *mapname );
-	//entity updates
-	int ( *BotLibUpdateEntity )( int ent, bot_entitystate_t *state );
-	//just for testing
-	int ( *Test )( int parm0, char *parm1, vec3_t parm2, vec3_t parm3 );
 } botlib_export_t;
 
 //linking of bot library

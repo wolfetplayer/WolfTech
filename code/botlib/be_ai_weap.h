@@ -35,6 +35,9 @@ If you have questions concerning this license or the applicable additional terms
  *
  *****************************************************************************/
 
+#ifndef MAX_STRINGFIELD
+#define MAX_STRINGFIELD             80
+#endif
 //projectile flags
 #define PFL_WINDOWDAMAGE            1       //projectile damages through window
 #define PFL_RETURN                  2       //set when projectile returns to owner

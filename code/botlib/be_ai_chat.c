@@ -45,8 +45,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "l_log.h"
 #include "aasfile.h"
 #include "botlib.h"
-#include "be_aas.h"
-#include "be_aas_funcs.h"
 #include "be_interface.h"
 #include "be_ea.h"
 #include "be_ai_chat.h"
@@ -352,7 +350,7 @@ void BotQueueConsoleMessage( int chatstate, int type, char *message ) {
 		cs->handle = 1;
 	}
 	m->handle = cs->handle;
-	m->time = AAS_Time();
+	m->time = botlibglobals.time;
 	m->type = type;
 	Q_strncpyz( m->message, message, MAX_MESSAGE_SIZE );
 	m->next = NULL;
@@ -2331,7 +2329,7 @@ char *BotChooseInitialChatMessage( bot_chatstate_t *cs, char *type ) {
 			numchatmessages = 0;
 			for ( m = t->firstchatmessage; m; m = m->next )
 			{
-				if ( m->time > AAS_Time() ) {
+				if ( m->time > botlibglobals.time ) {
 					continue;
 				}
 				numchatmessages++;
@@ -2356,11 +2354,11 @@ char *BotChooseInitialChatMessage( bot_chatstate_t *cs, char *type ) {
 				n = random() * numchatmessages;
 				for ( m = t->firstchatmessage; m; m = m->next )
 				{
-					if ( m->time > AAS_Time() ) {
+					if ( m->time > botlibglobals.time ) {
 						continue;
 					}
 					if ( --n < 0 ) {
-						m->time = AAS_Time() + CHATMESSAGE_RECENTTIME;
+						m->time = botlibglobals.time + CHATMESSAGE_RECENTTIME;
 						return m->chatmessage;
 					} //end if
 				} //end for
@@ -2583,7 +2581,7 @@ int BotReplyChat( int chatstate, char *message, int mcontext, int vcontext, char
 				numchatmessages = 0;
 				for ( m = rchat->firstchatmessage; m; m = m->next )
 				{
-					if ( m->time > AAS_Time() ) {
+					if ( m->time > botlibglobals.time ) {
 						continue;
 					}
 					numchatmessages++;
@@ -2594,7 +2592,7 @@ int BotReplyChat( int chatstate, char *message, int mcontext, int vcontext, char
 					if ( --num < 0 ) {
 						break;
 					}
-					if ( m->time > AAS_Time() ) {
+					if ( m->time > botlibglobals.time ) {
 						continue;
 					}
 				} //end for
@@ -2651,7 +2649,7 @@ int BotReplyChat( int chatstate, char *message, int mcontext, int vcontext, char
 		} //end if
 		else
 		{
-			bestchatmessage->time = AAS_Time() + CHATMESSAGE_RECENTTIME;
+			bestchatmessage->time = botlibglobals.time + CHATMESSAGE_RECENTTIME;
 			BotConstructChatMessage( cs, bestchatmessage->chatmessage, mcontext, bestmatch.variables, vcontext, qtrue );
 		} //end else
 		return qtrue;

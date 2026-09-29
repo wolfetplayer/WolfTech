@@ -39,11 +39,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 #include "../qcommon/q_shared.h"
 #include "../botlib/botlib.h"      //bot lib interface
-#include "../botlib/be_aas.h"
 #include "../botlib/be_ea.h"
 #include "../botlib/be_ai_gen.h"
-#include "../botlib/be_ai_goal.h"
-#include "../botlib/be_ai_move.h"
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
@@ -51,7 +48,6 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../steam/steam.h"
 
-int BotPointAreaNum( vec3_t origin );  // ai_dmq3.c - handles floor-edge cases raw trap_AAS_PointAreaNum misses
 void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client back into the game
 
 // Balance values below all come from survCfg (see g_survival.h / g_survival_config.c) - no more compile-time defines here.
@@ -2176,14 +2172,7 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 				VectorCopy( ent->client->ps.origin, cs->bs->origin );
 				VectorCopy( ent->client->ps.origin, cs->bs->eye );
 				cs->bs->eye[2] += ent->client->ps.viewheight;
-				// make sure we're using the right AAS world - this can run outside cs's own AICast_Think
-				trap_AAS_SetCurrentWorld( cs->aasWorldIndex );
 				trap_Nav_SelectClass( cs->aasWorldIndex );
-				cs->bs->areanum = BotPointAreaNum( cs->bs->origin );
-				if ( cs->bs->areanum ) {
-					cs->lastValidAreaNum[cs->aasWorldIndex] = cs->bs->areanum;
-					cs->lastValidAreaTime[cs->aasWorldIndex] = level.time;
-				}
 
 				// clear stale goto target BEFORE the respawn script runs, not after (it may gotomarker itself)
 				cs->castScriptStatus.scriptGotoId = -1;

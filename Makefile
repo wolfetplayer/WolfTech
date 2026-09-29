@@ -1072,18 +1072,8 @@ ifneq ($(BUILD_GAME_QVM),0)
   endif
 endif
 
-ifneq ($(BUILD_BSPC),0)
-    TARGETS += $(B)/$(BSPCBIN)$(FULLBINEXT)
-    BSPC_CFLAGS += -DBSPC
-endif
-
 ifneq ($(BUILD_NAVGEN),0)
     TARGETS += $(B)/$(NAVGENBIN)$(FULLBINEXT)
-endif
-
-ifneq ($(ONLY_BSPC),0)
-    TARGETS = $(B)/$(BSPCBIN)$(FULLBINEXT)
-    BSPC_CFLAGS += -DBSPC
 endif
 
 ifeq ($(USE_OPENAL),1)
@@ -1909,29 +1899,13 @@ Q3OBJ = \
   $(B)/client/vm.o \
   $(B)/client/vm_interpreted.o \
   \
-  $(B)/client/be_aas_bspq3.o \
-  $(B)/client/be_aas_cluster.o \
-  $(B)/client/be_aas_debug.o \
-  $(B)/client/be_aas_entity.o \
-  $(B)/client/be_aas_file.o \
-  $(B)/client/be_aas_main.o \
-  $(B)/client/be_aas_move.o \
-  $(B)/client/be_aas_optimize.o \
-  $(B)/client/be_aas_reach.o \
-  $(B)/client/be_aas_route.o \
-  $(B)/client/be_aas_routealt.o \
-  $(B)/client/be_aas_routetable.o \
-  $(B)/client/be_aas_sample.o \
   $(B)/client/be_ai_char.o \
   $(B)/client/be_ai_chat.o \
   $(B)/client/be_ai_gen.o \
-  $(B)/client/be_ai_goal.o \
-  $(B)/client/be_ai_move.o \
   $(B)/client/be_ai_weap.o \
   $(B)/client/be_ai_weight.o \
   $(B)/client/be_ea.o \
   $(B)/client/be_interface.o \
-  $(B)/client/l_crc.o \
   $(B)/client/l_libvar.o \
   $(B)/client/l_log.o \
   $(B)/client/l_memory.o \
@@ -2563,29 +2537,13 @@ Q3DOBJ = \
   $(B)/ded/vm.o \
   $(B)/ded/vm_interpreted.o \
   \
-  $(B)/ded/be_aas_bspq3.o \
-  $(B)/ded/be_aas_cluster.o \
-  $(B)/ded/be_aas_debug.o \
-  $(B)/ded/be_aas_entity.o \
-  $(B)/ded/be_aas_file.o \
-  $(B)/ded/be_aas_main.o \
-  $(B)/ded/be_aas_move.o \
-  $(B)/ded/be_aas_optimize.o \
-  $(B)/ded/be_aas_reach.o \
-  $(B)/ded/be_aas_route.o \
-  $(B)/ded/be_aas_routealt.o \
-  $(B)/ded/be_aas_routetable.o \
-  $(B)/ded/be_aas_sample.o \
   $(B)/ded/be_ai_char.o \
   $(B)/ded/be_ai_chat.o \
   $(B)/ded/be_ai_gen.o \
-  $(B)/ded/be_ai_goal.o \
-  $(B)/ded/be_ai_move.o \
   $(B)/ded/be_ai_weap.o \
   $(B)/ded/be_ai_weight.o \
   $(B)/ded/be_ea.o \
   $(B)/ded/be_interface.o \
-  $(B)/ded/l_crc.o \
   $(B)/ded/l_libvar.o \
   $(B)/ded/l_log.o \
   $(B)/ded/l_memory.o \
@@ -2780,12 +2738,7 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/ai_cast_survival.o \
   $(B)/$(BASEGAME)/game/ai_cast_sight.o \
   $(B)/$(BASEGAME)/game/ai_cast_think.o \
-  $(B)/$(BASEGAME)/game/ai_chat.o \
-  $(B)/$(BASEGAME)/game/ai_cmd.o \
-  $(B)/$(BASEGAME)/game/ai_dmnet.o \
-  $(B)/$(BASEGAME)/game/ai_dmq3.o \
   $(B)/$(BASEGAME)/game/ai_main.o \
-  $(B)/$(BASEGAME)/game/ai_team.o \
   $(B)/$(BASEGAME)/game/bg_animation.o \
   $(B)/$(BASEGAME)/game/bg_character.o \
   $(B)/$(BASEGAME)/game/bg_animgroup.o \

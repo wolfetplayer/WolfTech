@@ -80,6 +80,40 @@ If you have questions concerning this license or the applicable additional terms
 #define PRESENCE_NORMAL             2
 #define PRESENCE_CROUCH             4
 
+//goal flags
+#define GFL_NOSLOWAPPROACH          4
+//move result flags
+#define MOVERESULT_MOVEMENTVIEW     1   //bot uses view for movement
+#define MOVERESULT_SWIMVIEW         2   //bot uses view for swimming
+#define MOVERESULT_ONTOPOFOBSTACLE  32  //bot is ontop of obstacle
+#define MOVERESULT_FUTUREVIEW       256 // RF, if we want to look ahead of time, this is a good direction
+
+// pure data holders, formerly in the deleted botlib/be_ai_goal.h and be_ai_move.h;
+// kept here since the Nav-ported movement code still uses them as move/goal result carriers.
+typedef struct bot_goal_s
+{
+	vec3_t origin;              //origin of the goal
+	int areanum;                //area number of the goal
+	vec3_t mins, maxs;          //mins and maxs of the goal
+	int entitynum;              //number of the goal entity
+	int number;                 //goal number
+	int flags;                  //goal flags
+	int iteminfo;               //item information
+} bot_goal_t;
+
+typedef struct bot_moveresult_s
+{
+	int failure;                //true if movement failed all together
+	int type;                   //failure or blocked type
+	int blocked;                //true if blocked by an entity
+	int blockentity;            //entity blocking the bot
+	int traveltype;             //last executed travel type
+	int flags;                  //result flags
+	int weapon;                 //weapon used for movement
+	vec3_t movedir;             //movement direction
+	vec3_t ideal_viewangles;    //ideal viewangles for the movement
+} bot_moveresult_t;
+
 //check points
 typedef struct bot_waypoint_s
 {
@@ -218,8 +252,6 @@ typedef struct bot_state_s
 void BotResetState( bot_state_t *bs );
 //returns the number of bots in the game
 int NumBots( void );
-//returns info about the entity
-void BotEntityInfo( int entnum, aas_entityinfo_t *info );
 
 // Ridah, defines for AI Cast system
 int AICast_ShutdownClient( int client );
