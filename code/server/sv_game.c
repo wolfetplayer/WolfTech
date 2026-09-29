@@ -496,7 +496,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_NAV_POINT_TO_POLY:
 		return Nav_PointToPoly( VMA( 1 ) );
 	case BOTLIB_NAV_MOVE_TO_GOAL:
-		return Nav_MoveToGoal( VMA( 1 ), VMA( 2 ), VMA( 3 ) );
+		return Nav_MoveToGoal( VMA( 1 ), VMA( 2 ), VMA( 3 ), args[4] );
 	case BOTLIB_NAV_TRAVEL_TIME_ESTIMATE:
 		return Nav_TravelTimeEstimate( VMA( 1 ), VMA( 2 ) );
 	case BOTLIB_NAV_REACHABLE:
@@ -527,6 +527,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case BOTLIB_NAV_DEBUG_CLEAR:
 		Nav_DebugClear();
+		return 0;
+	case BOTLIB_NAV_REMOVE_AGENT:
+		Nav_RemoveAgent( args[1] );
 		return 0;
 
 	case BOTLIB_EA_SAY:

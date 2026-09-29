@@ -228,7 +228,7 @@ bot_moveresult_t *AICast_MoveToPos( cast_state_t *cs, vec3_t pos, int entnum ) {
 	if ( !( cs->aiFlags & AIFL_EXPLICIT_ROUTING ) || ( entnum < 0 ) || Q_strcasecmp( g_entities[entnum].classname, "ai_marker" ) ) {
 		{
 			navMoveResult_t navResult;
-			trap_Nav_MoveToGoal( &navResult, bs->origin, pos );
+			trap_Nav_MoveToGoal( &navResult, bs->origin, pos, cs->entityNum );
 			if ( nav_debugpath.integer ) {
 				trap_Nav_DebugShowPath( bs->origin, pos, cs->entityNum % 4 );
 			}

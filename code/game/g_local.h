@@ -1496,7 +1496,7 @@ extern vmCvar_t nav_debugpath;
 void        trap_Nav_LoadMap( const char *mapname );
 void        trap_Nav_SelectClass( int classIndex );
 int         trap_Nav_PointToPoly( vec3_t point );
-int         trap_Nav_MoveToGoal( navMoveResult_t *result, vec3_t start, vec3_t goal );
+int         trap_Nav_MoveToGoal( navMoveResult_t *result, vec3_t start, vec3_t goal, int agentId );
 int         trap_Nav_TravelTimeEstimate( vec3_t start, vec3_t goal );
 int         trap_Nav_Reachable( vec3_t point );
 int         trap_Nav_FindHidePosition( vec3_t from, vec3_t threat, float radius, vec3_t outPos );
@@ -1509,6 +1509,7 @@ void        trap_Nav_DumpMesh( int classIndex );
 void        trap_Nav_DebugShowNearby( vec3_t origin, float radius );
 void        trap_Nav_DebugShowPath( vec3_t start, vec3_t goal, int slot );
 void        trap_Nav_DebugClear( void );
+void        trap_Nav_RemoveAgent( int agentId );
 
 void    trap_EA_Say( int client, char *str );
 void    trap_EA_SayTeam( int client, char *str );

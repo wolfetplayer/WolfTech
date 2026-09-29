@@ -340,6 +340,35 @@ static bool Nav_LoadClass( const char *mapname, int classIndex ) {
 		return false;
 	}
 
+	for ( int i = 0; i < NAV_MAX_TRACKED_AGENTS; i++ ) {
+		data->crowdAgentIdx[i] = -1;
+		data->crowdStuckTicks[i] = 0;
+	}
+	data->crowd = dtAllocCrowd();
+	if ( !data->crowd || !data->crowd->init( NAV_CROWD_MAX_AGENTS, cls->radius, data->mesh ) ) {
+		// advisory only - straight-path steering still works without it, see Nav_MoveToGoal.
+		Com_Printf( "Nav_LoadClass: dtCrowd::init failed for %s, local avoidance disabled\n", cls->name );
+		if ( data->crowd ) {
+			dtFreeCrowd( data->crowd );
+			data->crowd = NULL;
+		}
+	} else {
+		// standard RecastDemo sample values - a reasonable default until this needs per-class tuning.
+		dtObstacleAvoidanceParams avoidance;
+		memset( &avoidance, 0, sizeof( avoidance ) );
+		avoidance.velBias = 0.4f;
+		avoidance.weightDesVel = 2.0f;
+		avoidance.weightCurVel = 0.75f;
+		avoidance.weightSide = 0.75f;
+		avoidance.weightToi = 2.5f;
+		avoidance.horizTime = 2.5f;
+		avoidance.gridSize = 33;
+		avoidance.adaptiveDivs = 7;
+		avoidance.adaptiveRings = 2;
+		avoidance.adaptiveDepth = 5;
+		data->crowd->setObstacleAvoidanceParams( 0, &avoidance );
+	}
+
 	data->loaded = true;
 	Com_Printf( "Nav_LoadClass: loaded %s (%d tile layers)\n", qpath, header.numTiles );
 	return true;
@@ -356,6 +385,9 @@ void Nav_LoadMap( const char *mapname ) {
 
 	for ( int i = 0; i < NAV_MAX_CLASSES; i++ ) {
 		NavData_t *data = &navData[i];
+		if ( data->crowd ) {
+			dtFreeCrowd( data->crowd );
+		}
 		delete data->query;
 		delete data->mesh;
 		delete data->cache;

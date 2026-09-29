@@ -21,6 +21,11 @@ static const float NAV_OFFMESH_JUMP_RANGE = 48.0f;
 // landing this much below the takeoff counts as a plain fall, not a jump.
 static const float NAV_OFFMESH_DROP_TOLERANCE = 24.0f;
 
+// below this fraction of desired speed, avoidance counts as deadlocked rather than just yielding.
+static const float NAV_CROWD_STUCK_SPEED_FRAC = 0.15f;
+// consecutive stalled calls before falling back to raw path steering for that agent.
+static const int NAV_CROWD_STUCK_TICKS = 5;
+
 // the navmesh is built Y-up (see navgen_geom.cpp's AddVert); Quake is Z-up.
 // Every Nav_* entry point converts at its boundary so callers stay in Quake
 // space and all internal Detour calls stay in navmesh space. Swapping the
@@ -136,11 +141,64 @@ int Nav_Reachable( const float *point ) {
 }
 
 /*
+========================
+Nav_GetOrAddCrowdAgent
+
+Looks up agentId's crowd-agent index for data's class, lazily adding it if this is the first
+call for that agent. Returns -1 if there's no crowd for this class, agentId isn't trackable
+(Nav_TestPath's debug calls pass -1), or the add failed - callers fall back to raw straight-path
+steering in that case, same as if the crowd module weren't vendored at all.
+========================
+*/
+static int Nav_GetOrAddCrowdAgent( NavData_t *data, int agentId, const float *navPos ) {
+	if ( !data->crowd || agentId < 0 || agentId >= NAV_MAX_TRACKED_AGENTS ) {
+		return -1;
+	}
+
+	int idx = data->crowdAgentIdx[agentId];
+	if ( idx >= 0 ) {
+		const dtCrowdAgent *ag = data->crowd->getAgent( idx );
+		if ( ag && ag->active ) {
+			return idx;
+		}
+		// slot was reused/removed out from under us; fall through and re-add.
+		data->crowdAgentIdx[agentId] = -1;
+	}
+
+	const navGenClass_t *cls = &navGenClasses[navCurrentClass];
+	dtCrowdAgentParams params;
+	memset( &params, 0, sizeof( params ) );
+	params.radius = cls->radius;
+	params.height = cls->height;
+	// well above maxSpeed so direction reversals don't take ~2s (vel is rate-limited, not snapped).
+	params.maxAcceleration = 3000.0f;
+	params.maxSpeed = 400.0f; // matches trap_EA_Move's existing hardcoded speed cap
+	params.collisionQueryRange = params.radius * 8.0f;
+	params.pathOptimizationRange = params.radius * 30.0f;
+	params.separationWeight = 2.0f;
+	params.updateFlags = DT_CROWD_ANTICIPATE_TURNS | DT_CROWD_OBSTACLE_AVOIDANCE |
+						  DT_CROWD_SEPARATION | DT_CROWD_OPTIMIZE_VIS | DT_CROWD_OPTIMIZE_TOPO;
+	params.obstacleAvoidanceType = 0;
+
+	idx = data->crowd->addAgent( navPos, &params );
+	data->crowdAgentIdx[agentId] = idx;
+	data->crowdStuckTicks[agentId] = 0; // fresh agent - don't inherit a stale slot's stuck count
+	return idx;
+}
+
+/*
 =============
 Nav_MoveToGoal
+
+agentId (the entity number; -1 for none) tracks a persistent dtCrowd agent across calls so
+nearby bots steer around each other (RVO/separation) instead of all following the identical
+straight-path line. The crowd is advisory only - Nav_CrowdUpdate() (sv_bot.c's SV_BotFrame)
+computes agent->vel once a frame, this just reads it back as the steering direction; actual
+movement still runs through the same trap_EA_Move -> Pmove path as always, so a crowd failure
+here never stops movement, it just falls back to the original raw straight-path direction.
 =============
 */
-int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *goal ) {
+int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *goal, int agentId ) {
 	memset( result, 0, sizeof( *result ) );
 
 	NavData_t *data = Nav_CurrentData();
@@ -195,13 +253,56 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 	if ( offMeshCommitted && offMeshIdx + 1 < straightCount ) {
 		target = &straight[( offMeshIdx + 1 ) * 3];
 	}
+
 	vec3_t navDir;
-	VectorSubtract( target, navStart, navDir );
-	navDir[1] = 0.0f; // navmesh Y = vertical (quake Z) after SwapYZ
-	if ( VectorNormalize2( navDir, navDir ) < 0.0001f ) {
-		result->failure = 1;
-		return 0;
+	bool haveDir = false;
+
+	// skip crowd steering once committed to a jump/drop link (ladders already returned above).
+	if ( !offMeshCommitted ) {
+		int agentIdx = Nav_GetOrAddCrowdAgent( data, agentId, navStart );
+		if ( agentIdx >= 0 ) {
+			dtCrowdAgent *ag = data->crowd->getEditableAgent( agentIdx );
+			// resync every call so the crowd's own tracked position can't drift from the real one.
+			VectorCopy( navStart, ag->npos );
+
+			// only re-request on a real goal change - requestMoveTarget() forces a full replan.
+			if ( !ag->targetRef || dtVdist2DSqr( ag->targetPos, navGoal ) > 4.0f ) {
+				dtPolyRef endRef;
+				float endNearest[3];
+				if ( Nav_FindNearest( data, navGoal, &endRef, endNearest ) ) {
+					data->crowd->requestMoveTarget( agentIdx, endRef, endNearest );
+				}
+			}
+
+			// whatever Nav_CrowdUpdate() computed last frame - one frame of latency.
+			VectorCopy( ag->vel, navDir );
+			navDir[1] = 0.0f;
+			haveDir = VectorNormalize2( navDir, navDir ) > 0.0001f;
+
+			// deadlocked (not just yielding to a neighbor) if avoidance holds speed near zero.
+			float actualSpeed = haveDir ? VectorLength( ag->vel ) : 0.0f;
+			if ( ag->desiredSpeed > 10.0f && actualSpeed < ag->desiredSpeed * NAV_CROWD_STUCK_SPEED_FRAC ) {
+				if ( data->crowdStuckTicks[agentId] < 255 ) {
+					data->crowdStuckTicks[agentId]++;
+				}
+			} else {
+				data->crowdStuckTicks[agentId] = 0;
+			}
+			if ( data->crowdStuckTicks[agentId] > NAV_CROWD_STUCK_TICKS ) {
+				haveDir = false;
+			}
+		}
 	}
+
+	if ( !haveDir ) {
+		VectorSubtract( target, navStart, navDir );
+		navDir[1] = 0.0f; // navmesh Y = vertical (quake Z) after SwapYZ
+		if ( VectorNormalize2( navDir, navDir ) < 0.0001f ) {
+			result->failure = 1;
+			return 0;
+		}
+	}
+
 	SwapYZ( navDir, result->movedir );
 	return 1;
 }
@@ -452,7 +553,7 @@ void Nav_TestPath( const float *start, const float *end ) {
 	}
 
 	navMoveResult_t result;
-	int ok = Nav_MoveToGoal( &result, start, end );
+	int ok = Nav_MoveToGoal( &result, start, end, -1 );
 	int dist = Nav_TravelTimeEstimate( start, end );
 
 	if ( !ok ) {
@@ -463,6 +564,33 @@ void Nav_TestPath( const float *start, const float *end ) {
 
 	Com_Printf( "Nav_TestPath: OK dist=%d movedir=(%.2f %.2f %.2f)\n",
 				dist, result.movedir[0], result.movedir[1], result.movedir[2] );
+}
+
+/*
+================
+Nav_RemoveAgent
+
+Removes agentId's crowd agent from whichever class it was tracked under (only NAV_MAX_CLASSES
+of them, cheap to check both). Must be called when an AI dies/disconnects - without it, a long
+wave-based level cycling many spawns through a few client slots would leak crowd agents until
+NAV_CROWD_MAX_AGENTS is exhausted.
+================
+*/
+void Nav_RemoveAgent( int agentId ) {
+	if ( agentId < 0 || agentId >= NAV_MAX_TRACKED_AGENTS ) {
+		return;
+	}
+	for ( int i = 0; i < NAV_MAX_CLASSES; i++ ) {
+		NavData_t *data = &navData[i];
+		if ( !data->loaded || !data->crowd ) {
+			continue;
+		}
+		int idx = data->crowdAgentIdx[agentId];
+		if ( idx >= 0 ) {
+			data->crowd->removeAgent( idx );
+			data->crowdAgentIdx[agentId] = -1;
+		}
+	}
 }
 
 /*

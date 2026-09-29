@@ -1272,7 +1272,7 @@ $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(BOTCFLAGS) $(OPTIMIZE) -DBOTLIB -o $@ -c
 endef
 
 # Recast/Detour navigation ; shared by client and ded like DO_BOT_CC.
-NAVCXXFLAGS=-std=c++11 -I$(RECASTDIR)/Recast/Include -I$(RECASTDIR)/Detour/Include -I$(RECASTDIR)/DetourTileCache/Include
+NAVCXXFLAGS=-std=c++11 -I$(RECASTDIR)/Recast/Include -I$(RECASTDIR)/Detour/Include -I$(RECASTDIR)/DetourTileCache/Include -I$(RECASTDIR)/DetourCrowd/Include
 
 define DO_NAV_CXX
 $(echo_cmd) "NAV_CXX $<"
@@ -1817,6 +1817,12 @@ Q3OBJ = \
   $(B)/recast/DetourNode.o \
   $(B)/recast/DetourTileCache.o \
   $(B)/recast/DetourTileCacheBuilder.o \
+  $(B)/recast/DetourCrowd.o \
+  $(B)/recast/DetourLocalBoundary.o \
+  $(B)/recast/DetourObstacleAvoidance.o \
+  $(B)/recast/DetourPathCorridor.o \
+  $(B)/recast/DetourPathQueue.o \
+  $(B)/recast/DetourProximityGrid.o \
   \
   $(B)/splines/math_angles.o \
   $(B)/splines/math_matrix.o \
@@ -2455,6 +2461,12 @@ Q3DOBJ = \
   $(B)/recast/DetourNode.o \
   $(B)/recast/DetourTileCache.o \
   $(B)/recast/DetourTileCacheBuilder.o \
+  $(B)/recast/DetourCrowd.o \
+  $(B)/recast/DetourLocalBoundary.o \
+  $(B)/recast/DetourObstacleAvoidance.o \
+  $(B)/recast/DetourPathCorridor.o \
+  $(B)/recast/DetourPathQueue.o \
+  $(B)/recast/DetourProximityGrid.o \
   \
   $(B)/ded/null_client.o \
   $(B)/ded/null_input.o \
@@ -2776,6 +2788,9 @@ $(B)/recast/%.o: $(RECASTDIR)/Detour/Source/%.cpp
 	$(DO_NAV_CXX)
 
 $(B)/recast/%.o: $(RECASTDIR)/DetourTileCache/Source/%.cpp
+	$(DO_NAV_CXX)
+
+$(B)/recast/%.o: $(RECASTDIR)/DetourCrowd/Source/%.cpp
 	$(DO_NAV_CXX)
 
 $(B)/client/%.o: $(OGGDIR)/src/%.c

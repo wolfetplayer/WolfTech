@@ -199,6 +199,8 @@ int AICast_ShutdownClient( int client ) {
 
 	cs = AICast_GetCastState( client );
 	//
+	trap_Nav_RemoveAgent( client ); // drop this cast's crowd agent, if it had one
+	//
 	memset( cs, 0, sizeof( cast_state_t ) );
 	numcast--;
 

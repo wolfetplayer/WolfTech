@@ -469,6 +469,7 @@ If you have questions concerning this license or the applicable additional terms
 {"trap_Nav_DebugShowNearby", (byte *)trap_Nav_DebugShowNearby},
 {"trap_Nav_DebugShowPath", (byte *)trap_Nav_DebugShowPath},
 {"trap_Nav_DebugClear", (byte *)trap_Nav_DebugClear},
+{"trap_Nav_RemoveAgent", (byte *)trap_Nav_RemoveAgent},
 {"trap_BotUserCommand", (byte *)trap_BotUserCommand},
 {"trap_BotGetServerCommand", (byte *)trap_BotGetServerCommand},
 {"trap_BotGetSnapshotEntity", (byte *)trap_BotGetSnapshotEntity},

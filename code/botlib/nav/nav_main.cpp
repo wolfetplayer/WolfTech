@@ -38,6 +38,9 @@ Nav_Shutdown
 void Nav_Shutdown( void ) {
 	for ( int i = 0; i < NAV_MAX_CLASSES; i++ ) {
 		NavData_t *data = &navData[i];
+		if ( data->crowd ) {
+			dtFreeCrowd( data->crowd );
+		}
 		delete data->query;
 		delete data->mesh;
 		delete data->cache;
@@ -59,4 +62,23 @@ void Nav_SelectClass( int classIndex ) {
 		return;
 	}
 	navCurrentClass = classIndex;
+}
+
+/*
+================
+Nav_CrowdUpdate
+
+Advances local avoidance for every loaded class's crowd. Must be called exactly once per server
+frame (see sv_bot.c's SV_BotFrame, after Nav_UpdateObstacles so the crowd's own path-validity
+recheck sees that frame's rebuilt mesh) - dtCrowd computes neighbor separation across its whole
+agent set in one pass, so per-bot calls would be wrong as well as wasteful.
+================
+*/
+void Nav_CrowdUpdate( float dt ) {
+	for ( int i = 0; i < NAV_MAX_CLASSES; i++ ) {
+		NavData_t *data = &navData[i];
+		if ( data->loaded && data->crowd ) {
+			data->crowd->update( dt, NULL );
+		}
+	}
 }

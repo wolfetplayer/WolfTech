@@ -303,8 +303,8 @@ int trap_Nav_PointToPoly( vec3_t point ) {
 	return syscall( BOTLIB_NAV_POINT_TO_POLY, point );
 }
 
-int trap_Nav_MoveToGoal( navMoveResult_t *result, vec3_t start, vec3_t goal ) {
-	return syscall( BOTLIB_NAV_MOVE_TO_GOAL, result, start, goal );
+int trap_Nav_MoveToGoal( navMoveResult_t *result, vec3_t start, vec3_t goal, int agentId ) {
+	return syscall( BOTLIB_NAV_MOVE_TO_GOAL, result, start, goal, agentId );
 }
 
 int trap_Nav_TravelTimeEstimate( vec3_t start, vec3_t goal ) {
@@ -353,6 +353,10 @@ void trap_Nav_DebugShowPath( vec3_t start, vec3_t goal, int slot ) {
 
 void trap_Nav_DebugClear( void ) {
 	syscall( BOTLIB_NAV_DEBUG_CLEAR );
+}
+
+void trap_Nav_RemoveAgent( int agentId ) {
+	syscall( BOTLIB_NAV_REMOVE_AGENT, agentId );
 }
 
 void trap_EA_Say( int client, char *str ) {

@@ -31,7 +31,8 @@ void Nav_LoadMap( const char *mapname );
 void Nav_SelectClass( int classIndex );
 
 int Nav_PointToPoly( const float *point );
-int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *goal );
+// agentId (entity number) tracks a persistent local-avoidance crowd agent; -1 for none (Nav_TestPath).
+int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *goal, int agentId );
 int Nav_TravelTimeEstimate( const float *start, const float *goal );
 int Nav_Reachable( const float *point );
 int Nav_FindHidePosition( const float *from, const float *threat, float radius, float *outPos );
@@ -47,6 +48,11 @@ void Nav_RemoveObstacle( int handle );
 
 // ticks pending obstacle add/removes into incremental tile rebuilds; call once per server frame.
 void Nav_UpdateObstacles( void );
+
+// call once, when an AI dies/disconnects, to drop its crowd agent (see Nav_MoveToGoal's agentId).
+void Nav_RemoveAgent( int agentId );
+// advances local avoidance for every loaded class; call once per server frame, after Nav_UpdateObstacles.
+void Nav_CrowdUpdate( float dt );
 
 // debug: runs Nav_MoveToGoal/Nav_TravelTimeEstimate between two points and prints to the engine console.
 void Nav_TestPath( const float *start, const float *end );

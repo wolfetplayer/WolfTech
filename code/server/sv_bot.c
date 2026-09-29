@@ -437,6 +437,8 @@ SV_BotFrame
 ==================
 */
 void SV_BotFrame( int time ) {
+	static int lastNavTime = 0;
+
 	if ( !bot_enable ) {
 		return;
 	}
@@ -445,6 +447,11 @@ void SV_BotFrame( int time ) {
 		return;
 	}
 	Nav_UpdateObstacles();
+	// after obstacles, so the crowd's own path-validity recheck sees this frame's rebuilt mesh.
+	if ( lastNavTime && time > lastNavTime ) {
+		Nav_CrowdUpdate( (float)( time - lastNavTime ) / 1000.0f );
+	}
+	lastNavTime = time;
 	VM_Call( gvm, BOTAI_START_FRAME, time );
 }
 
