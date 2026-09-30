@@ -301,4 +301,24 @@ typedef struct svParams_s
 
 extern svParams_t svParams;
 
+// Attack-spot spreading (flanking): lets simultaneous attackers on the same
+// enemy avoid clustering on the same trap_Nav_FindAttackSpot() result. One
+// slot per potential attacker, keyed by owner entity number.
+#define MAX_CLAIMED_ATTACK_SPOTS   MAX_CLIENTS
+#define ATTACK_SPOT_MIN_SEPARATION 160.0f
+#define ATTACK_SPOT_MAX_RETRIES    4
+
+typedef struct claimedAttackSpot_s
+{
+	int    ownerEntityNum;   // -1 = free slot
+	int    enemyNum;         // which enemy this spot is an attack position against
+	vec3_t pos;
+	int    claimedTime;      // level.time claimed; stale claims are ignored, not actively expired
+} claimedAttackSpot_t;
+
+extern claimedAttackSpot_t claimedAttackSpots[MAX_CLAIMED_ATTACK_SPOTS];
+
+qboolean AICast_FindSpreadAttackSpot( struct cast_state_s *cs, vec3_t from, vec3_t target,
+									   float minRange, float maxRange, vec3_t outPos );
+
 #endif // __G_SURVIVAL_H__

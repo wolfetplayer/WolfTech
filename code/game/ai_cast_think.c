@@ -927,6 +927,7 @@ void AICast_StartFrame( int time ) {
 		elapsed = 100;
 	}
 	AICast_SightUpdate( (int)( (float)SIGHT_PER_SEC * ( (float)elapsed / 1000 ) ) );
+	AICast_SurvivalPhantomSighting();
 	//
 	// live "reachable from here" mesh debug draw
 	for ( i = 0; i < 2; i++ ) {

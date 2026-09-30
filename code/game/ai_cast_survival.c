@@ -52,13 +52,21 @@ void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client b
 
 // Balance values below all come from survCfg (see g_survival.h / g_survival_config.c) - no more compile-time defines here.
 
+claimedAttackSpot_t claimedAttackSpots[MAX_CLAIMED_ATTACK_SPOTS];
+
 /*
 ============
 AICast_InitSurvival
 ============
 */
 void AICast_InitSurvival(void) {
+	int i;
+
 	Survival_LoadConfig();
+
+	for ( i = 0; i < MAX_CLAIMED_ATTACK_SPOTS; i++ ) {
+		claimedAttackSpots[i].ownerEntityNum = -1;
+	}
 
 	svParams.killCountRequirement = survCfg.initialKillCountReq;
 	svParams.spawnedThisWave = 0;
@@ -111,6 +119,157 @@ void AICast_InitSurvival(void) {
 	svParams.maxActiveAI[AICHAR_HEINRICH] = survCfg.initialHeinrichs;
 	svParams.maxActiveAI[AICHAR_PRIEST] = survCfg.initialPriests;
 	svParams.maxActiveAI[AICHAR_XSHEPHERD] = survCfg.initialXshepherds;
+}
+
+/*
+============
+AICast_SurvivalPhantomSighting
+
+  Survival mode: hostile AI must always know roughly where the player(s) are,
+  so they never stall out hunting - but this must only feed the "hunt memory"
+  track (visible_pos/visible_timestamp), never the "genuine sighting" track
+  (real_visible_pos/real_visible_timestamp), which stays driven exclusively by
+  real raycasts from AICast_SightUpdate. Combat/cover/aim code all keys off the
+  real_* fields, so this cannot be (ab)used as a wallhack for those.
+============
+*/
+void AICast_SurvivalPhantomSighting( void ) {
+	int src, dest;
+	gentity_t *srcent, *destent;
+	cast_state_t *cs;
+	cast_visibility_t *vis;
+
+	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
+		return;
+	}
+
+	for ( src = 0; src < aicast_maxclients; src++ ) {
+		srcent = &g_entities[src];
+
+		if ( !srcent->inuse || srcent->aiInactive || srcent->health <= 0 ) {
+			continue;
+		}
+		if ( !( srcent->r.svFlags & SVF_CASTAI ) ) {
+			continue;
+		}
+
+		cs = AICast_GetCastState( src );
+		if ( !cs || !cs->bs ) {
+			continue;
+		}
+		if ( cs->castScriptStatus.scriptNoSightTime >= level.time ) {
+			continue;   // scripting has explicitly blinded this AI; respect it
+		}
+
+		for ( dest = 0; dest < MAX_COOP_CLIENTS; dest++ ) {
+			destent = &g_entities[dest];
+
+			if ( !destent->inuse || !destent->client ) {
+				continue;
+			}
+			if ( destent->client->pers.connected != CON_CONNECTED ) {
+				continue;
+			}
+			if ( destent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+				continue;
+			}
+			if ( destent->health <= 0 ) {
+				continue;   // don't phantom-track a downed player; real sighting still applies once they're back up
+			}
+			if ( destent->flags & FL_NOTARGET ) {
+				continue;
+			}
+			if ( AICast_SameTeam( cs, dest ) ) {
+				continue;
+			}
+
+			vis = &cs->vislist[dest];
+
+			vis->lastcheck_timestamp = level.time;
+			vis->visible_timestamp = level.time;
+			VectorCopy( destent->client->ps.origin, vis->visible_pos );
+			VectorCopy( destent->client->ps.velocity, vis->visible_vel );
+			vis->flags |= AIVIS_PROCESS_SIGHTING | AIVIS_ENEMY;
+		}
+	}
+}
+
+/*
+============
+AICast_FindSpreadAttackSpot
+
+  Survival-mode wrapper around trap_Nav_FindAttackSpot() that avoids picking a
+  spot too close to one another attacker already claimed against the same
+  enemy, so simultaneous attackers spread out instead of stacking on the same
+  spot. Never performs worse than the vanilla call: if no clear alternative is
+  found within a bounded number of retries, falls back to whatever the last
+  attempt (or the plain unfiltered call) returned.
+============
+*/
+qboolean AICast_FindSpreadAttackSpot( cast_state_t *cs, vec3_t from, vec3_t target,
+									   float minRange, float maxRange, vec3_t outPos ) {
+	int attempt, i;
+	float tryMinRange, tryMaxRange;
+	vec3_t candidate;
+	qboolean gotCandidate;
+
+	tryMinRange = minRange;
+	tryMaxRange = maxRange;
+	VectorClear( candidate );
+	gotCandidate = qfalse;
+
+	for ( attempt = 0; attempt < ATTACK_SPOT_MAX_RETRIES; attempt++ ) {
+		qboolean tooClose;
+
+		gotCandidate = trap_Nav_FindAttackSpot( from, target, tryMinRange, tryMaxRange, candidate );
+		if ( !gotCandidate ) {
+			break;   // no spot exists at all in this range; nothing to spread among
+		}
+
+		tooClose = qfalse;
+		for ( i = 0; i < aicast_maxclients; i++ ) {
+			if ( claimedAttackSpots[i].ownerEntityNum < 0 ) {
+				continue;
+			}
+			if ( claimedAttackSpots[i].ownerEntityNum == cs->entityNum ) {
+				continue;   // don't compare against our own previous claim
+			}
+			if ( claimedAttackSpots[i].enemyNum != cs->enemyNum ) {
+				continue;   // only spread among attackers of the same target
+			}
+			if ( claimedAttackSpots[i].claimedTime < level.time - 4000 ) {
+				continue;   // stale claim, owner likely died or switched targets
+			}
+			if ( Distance( claimedAttackSpots[i].pos, candidate ) < ATTACK_SPOT_MIN_SEPARATION ) {
+				tooClose = qtrue;
+				break;
+			}
+		}
+
+		if ( !tooClose ) {
+			break;
+		}
+
+		// narrow the search annulus inward so the next query centers on a
+		// meaningfully different candidate set than the one that got rejected
+		tryMinRange = tryMinRange + ( tryMaxRange - tryMinRange ) * 0.2f;
+		if ( tryMinRange >= tryMaxRange ) {
+			break;
+		}
+	}
+
+	if ( !gotCandidate ) {
+		return qfalse;
+	}
+
+	VectorCopy( candidate, outPos );
+
+	claimedAttackSpots[cs->entityNum].ownerEntityNum = cs->entityNum;
+	claimedAttackSpots[cs->entityNum].enemyNum = cs->enemyNum;
+	VectorCopy( candidate, claimedAttackSpots[cs->entityNum].pos );
+	claimedAttackSpots[cs->entityNum].claimedTime = level.time;
+
+	return qtrue;
 }
 
 

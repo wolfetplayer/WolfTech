@@ -42,6 +42,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
+#include "g_survival.h"    // AICast_FindSpreadAttackSpot - Survival attack-spot spreading
 #include "inv.h"       // INVENTORY_* - needed by the relocated BotCheckAir
 
 /*
@@ -2759,7 +2760,9 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 		if ( AICast_GetTakeCoverPos( cs, cs->enemyNum,
 									 cs->vislist[cs->enemyNum].visible_pos,
 									 cs->takeCoverPos ) ) {
-			cs->takeCoverTime = level.time + 2000 + rand() % 3000;
+			// tactical-lite: cover should be brief and reactive in Survival, not a standoff
+			cs->takeCoverTime = level.time + ( ( g_gametype.integer == GT_COOP_SURVIVAL ) ?
+												( 800 + rand() % 700 ) : ( 2000 + rand() % 3000 ) );
 			return AIFunc_BattleTakeCoverStart( cs );
 		}
 	}
@@ -2990,10 +2993,21 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 
 		if ( cs->leaderNum >= 0 ) {
 			if ( cs->combatGoalTime < level.time && cs->attackSpotTime < level.time ) {
+				qboolean gotSpot;
+
 				cs->attackSpotTime = level.time + 500 + rand() % 500;
 
-				if ( trap_Nav_FindAttackSpot( g_entities[cs->leaderNum].r.currentOrigin, g_entities[cs->enemyNum].r.currentOrigin,
-											  0.0f, MAX_LEADER_DIST, cs->combatGoalOrigin ) ) {
+				// Survival: spread simultaneous attackers across different spots
+				// instead of everyone converging on the single nearest one.
+				if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+					gotSpot = AICast_FindSpreadAttackSpot( cs, g_entities[cs->leaderNum].r.currentOrigin, g_entities[cs->enemyNum].r.currentOrigin,
+															0.0f, MAX_LEADER_DIST, cs->combatGoalOrigin );
+				} else {
+					gotSpot = trap_Nav_FindAttackSpot( g_entities[cs->leaderNum].r.currentOrigin, g_entities[cs->enemyNum].r.currentOrigin,
+														0.0f, MAX_LEADER_DIST, cs->combatGoalOrigin );
+				}
+
+				if ( gotSpot ) {
 					cs->combatGoalTime = level.time + 2000;
 				}
 			}
@@ -3019,10 +3033,21 @@ char *AIFunc_BattleChase( cast_state_t *cs ) {
 			}
 		} else {
 			if ( cs->combatGoalTime < level.time && cs->attackSpotTime < level.time ) {
+				qboolean gotSpot;
+
 				cs->attackSpotTime = level.time + 500 + rand() % 500;
 
-				if ( trap_Nav_FindAttackSpot( cs->bs->origin, g_entities[cs->enemyNum].r.currentOrigin,
-											  0.0f, 512.0f, cs->combatGoalOrigin ) ) {
+				// Survival: spread simultaneous attackers across different spots
+				// instead of everyone converging on the single nearest one.
+				if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+					gotSpot = AICast_FindSpreadAttackSpot( cs, cs->bs->origin, g_entities[cs->enemyNum].r.currentOrigin,
+															0.0f, 512.0f, cs->combatGoalOrigin );
+				} else {
+					gotSpot = trap_Nav_FindAttackSpot( cs->bs->origin, g_entities[cs->enemyNum].r.currentOrigin,
+														0.0f, 512.0f, cs->combatGoalOrigin );
+				}
+
+				if ( gotSpot ) {
 					cs->combatGoalTime = level.time + 2000;
 				}
 			}
@@ -3497,14 +3522,19 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 				if ( AICast_GetTakeCoverPos( cs, cs->enemyNum,
 											 cs->vislist[cs->enemyNum].visible_pos,
 											 cs->takeCoverPos ) ) {
-					cs->takeCoverTime = level.time + 2000 + rand() % 3000;
+					// tactical-lite: cover should be brief and reactive in Survival, not a standoff
+					cs->takeCoverTime = level.time + ( ( g_gametype.integer == GT_COOP_SURVIVAL ) ?
+														( 800 + rand() % 700 ) : ( 2000 + rand() % 3000 ) );
 				}
 			}
 		}
 	}
 
 	// Revalidate cover. If the cover point is exposed, try to find a better one.
-	if ( AICast_VisibleFromPos( cs->vislist[cs->enemyNum].visible_pos,
+	// Gated by coverCommitTime so a freshly-chosen cover spot can't be aborted
+	// on the very next tick (tactical-lite hysteresis, not a tuning knob).
+	if ( cs->coverCommitTime < level.time &&
+		 AICast_VisibleFromPos( cs->vislist[cs->enemyNum].visible_pos,
 								cs->enemyNum, cs->takeCoverPos,
 								bs->entitynum, qfalse ) ) {
 		if ( !AICast_GetTakeCoverPos( cs, cs->enemyNum,
@@ -3540,7 +3570,9 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 		const float simTime = 1.5;
 		float enemyDist;
 
-		cs->takeCoverTime = level.time + 2000 + rand() % 2000;
+		// tactical-lite: shorter re-arm in Survival so pacing doesn't extend the standoff
+		cs->takeCoverTime = level.time + ( ( g_gametype.integer == GT_COOP_SURVIVAL ) ?
+											( 650 + rand() % 500 ) : ( 2000 + rand() % 2000 ) );
 
 		moveresult = AICast_MoveToPos( cs, destorg, -1 );
 		if ( moveresult ) {
@@ -3678,7 +3710,8 @@ char *AIFunc_BattleTakeCover( cast_state_t *cs ) {
 			}
 		}
 
-		if ( cs->thinkFuncChangeTime < level.time - 1000 &&
+		if ( cs->coverCommitTime < level.time &&
+			 cs->thinkFuncChangeTime < level.time - 1000 &&
 			 AICast_VisibleFromPos( g_entities[cs->enemyNum].client->ps.origin,
 									 cs->enemyNum, cs->takeCoverPos,
 									 bs->entitynum, qfalse ) ) {
@@ -3747,6 +3780,11 @@ char *AIFunc_BattleTakeCoverStart( cast_state_t *cs ) {
 
 	// Clear cached predicted cover goal
 	cs->aiFlags &= ~AIFL_MISCFLAG1;
+
+	// Hard floor before the exposure re-check below is allowed to abort/re-pick
+	// cover - prevents same-tick flapping between cover and attack regardless
+	// of whether the exposure reading is real or (formerly) hack-driven.
+	cs->coverCommitTime = level.time + 600;
 
 	cs->aifunc = AIFunc_BattleTakeCover;
 	return "AIFunc_BattleTakeCover";
