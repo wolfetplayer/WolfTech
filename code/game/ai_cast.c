@@ -42,7 +42,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "../botlib/botai.h"          //bot ai interface
 
 #include "ai_cast.h"
-#include "g_survival.h"
 
 /*
 The Wolfenstein AI uses the bot movement functions, and goal handling.
@@ -204,10 +203,6 @@ int AICast_ShutdownClient( int client ) {
 	//
 	memset( cs, 0, sizeof( cast_state_t ) );
 	numcast--;
-
-	if ( client >= 0 && client < MAX_CLAIMED_ATTACK_SPOTS ) {
-		claimedAttackSpots[client].ownerEntityNum = -1;
-	}
 
 	// now do the other bot stuff
 

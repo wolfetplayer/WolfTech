@@ -429,7 +429,6 @@ typedef struct cast_state_s
 
 	vec3_t takeCoverPos, takeCoverEnemyPos;
 	int takeCoverTime;
-	int coverCommitTime;   // hard floor before exposure re-check can abort cover (tactical-lite hysteresis)
 
 	int attackSpotTime;
 
@@ -736,7 +735,6 @@ void AIChar_AIScript_AlertEntity_Survival(gentity_t *ent);
 void AICast_CreateCharacter_Survival(gentity_t *newent, cast_state_t *cs);
 void AICast_UpdateMaxActiveAI( void );
 void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs);
-void AICast_SurvivalPhantomSighting( void );
 
 //
 // ai_cast_think.c
