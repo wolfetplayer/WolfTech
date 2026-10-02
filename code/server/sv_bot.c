@@ -519,6 +519,20 @@ void SV_BotInitCvars( void ) {
 	Cvar_Get( "nav_autobake", "0", 0 );         //bake a class's navcache on the fly if it's missing/stale
 }
 
+/*
+===============
+BotImport_NavLineClear
+
+World-only trace for the nav hide/attack-spot searches.
+===============
+*/
+static int BotImport_NavLineClear( const float *from, const float *to, const float *mins, const float *maxs, int contentMask ) {
+	trace_t trace;
+
+	CM_BoxTrace( &trace, from, to, mins, maxs, 0, contentMask, qfalse );
+	return trace.fraction >= 1.0f;
+}
+
 // Ridah, Cast AI
 /*
 ===============
@@ -544,6 +558,21 @@ qboolean BotImport_AICast_VisibleFromPos(   vec3_t srcpos, int srcnum,
 
 		return ret;
 	}
+}
+
+/*
+===============
+BotImport_NavGameVisible
+
+The game visibility test for the nav hide search.
+===============
+*/
+static int BotImport_NavGameVisible( const float *srcPos, int srcNum, const float *destPos, int destNum ) {
+	vec3_t src, dest;
+
+	VectorCopy( srcPos, src );
+	VectorCopy( destPos, dest );
+	return BotImport_AICast_VisibleFromPos( src, srcNum, dest, destNum, qfalse );
 }
 
 /*
@@ -618,6 +647,8 @@ void SV_BotInitBotLib( void ) {
 	assert(botlib_export); 	// somehow we end up with a zero import.
 
 	Nav_Init();
+	Nav_SetLineClearFn( BotImport_NavLineClear );
+	Nav_SetGameVisibleFn( BotImport_NavGameVisible );
 }
 
 

@@ -7,9 +7,7 @@
 extern "C" {
 #endif
 
-// deliberately not botlib's bot_moveresult_t: Phase 3 copies these two
-// fields across at the ai_cast_funcs.c call site instead of coupling
-// this module to botlib's header, which isn't safe to include standalone.
+
 typedef struct {
 	int failure;
 	float movedir[3];
@@ -31,18 +29,16 @@ void Nav_LoadMap( const char *mapname );
 void Nav_SelectClass( int classIndex );
 
 int Nav_PointToPoly( const float *point );
-// agentId (entity number) tracks a persistent local-avoidance crowd agent; -1 for none (Nav_TestPath).
 int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *goal, int agentId );
 int Nav_TravelTimeEstimate( const float *start, const float *goal );
 int Nav_Reachable( const float *point );
-int Nav_FindHidePosition( const float *from, const float *threat, float radius, float *outPos );
+typedef int ( *navLineClearFn_t )( const float *from, const float *to, const float *mins, const float *maxs, int contentMask );
+void Nav_SetLineClearFn( navLineClearFn_t fn );
+typedef int ( *navGameVisibleFn_t )( const float *srcPos, int srcNum, const float *destPos, int destNum );
+void Nav_SetGameVisibleFn( navGameVisibleFn_t fn );
+int Nav_FindHidePosition( const float *from, const float *threat, float radius, int selfNum, int enemyNum, float *outPos );
 int Nav_FindAttackSpot( const float *from, const float *target, float minRange, float maxRange, float *outPos );
-
-// first raycast-visible point along the corridor from srcpos toward destpos; 0 if none.
 int Nav_GetRouteFirstVisPos( const float *srcpos, const float *destpos, float *outPos );
-
-// Phase 4: dynamic obstacles for doors/movers/constructibles. absmin/absmax are in
-// quake space; returns a handle (>=1) for Nav_RemoveObstacle, or 0 on failure.
 int Nav_AddObstacle( const float *absmin, const float *absmax );
 void Nav_RemoveObstacle( int handle );
 

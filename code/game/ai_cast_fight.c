@@ -57,7 +57,7 @@ AICast_FindHidePos
 ================
 */
 static qboolean AICast_FindHidePos( cast_state_t *cs, vec3_t enemyPos, int enemyNum, vec3_t outPos ) {
-	return trap_Nav_FindHidePosition( cs->bs->origin, enemyPos, AICAST_HIDE_SEARCH_RADIUS, outPos );
+	return trap_Nav_FindHidePosition( cs->bs->origin, enemyPos, AICAST_HIDE_SEARCH_RADIUS, cs->entityNum, enemyNum, outPos );
 }
 
 // FIXME: go through here and convert all weapon/character parameters to #define's

@@ -1499,7 +1499,7 @@ int         trap_Nav_PointToPoly( vec3_t point );
 int         trap_Nav_MoveToGoal( navMoveResult_t *result, vec3_t start, vec3_t goal, int agentId );
 int         trap_Nav_TravelTimeEstimate( vec3_t start, vec3_t goal );
 int         trap_Nav_Reachable( vec3_t point );
-int         trap_Nav_FindHidePosition( vec3_t from, vec3_t threat, float radius, vec3_t outPos );
+int         trap_Nav_FindHidePosition( vec3_t from, vec3_t threat, float radius, int selfNum, int enemyNum, vec3_t outPos );
 int         trap_Nav_FindAttackSpot( vec3_t from, vec3_t target, float minRange, float maxRange, vec3_t outPos );
 int         trap_Nav_GetRouteFirstVisPos( vec3_t srcpos, vec3_t destpos, vec3_t outPos );
 int         trap_Nav_AddObstacle( vec3_t absmin, vec3_t absmax );

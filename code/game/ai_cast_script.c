@@ -59,6 +59,7 @@ qboolean AICast_ScriptAction_Wait( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_AbortIfLoadgame( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_Trigger( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_FollowCast( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_HuntCast( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_PlaySound( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_NoAttack( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_Attack( cast_state_t *cs, char *params );
@@ -162,6 +163,7 @@ cast_script_stack_action_t scriptActions[] =
 	{"walktocast",       AICast_ScriptAction_WalkToCast},
 	{"crouchtocast", AICast_ScriptAction_CrouchToCast},
 	{"followcast",       AICast_ScriptAction_FollowCast},
+	{"huntcast",       AICast_ScriptAction_HuntCast},
 	{"playsound",        AICast_ScriptAction_PlaySound},
 	{"playanim",     AICast_ScriptAction_PlayAnim},
 	{"clearanim",        AICast_ScriptAction_ClearAnim},

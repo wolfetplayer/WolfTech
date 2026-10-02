@@ -112,14 +112,14 @@ qboolean AICast_VisibleFromPos( vec3_t srcpos, int srcnum,
 	vec3_t right, vec;
 	qboolean inPVS;
 
-	if ( g_gametype.integer == GT_COOP_SURVIVAL && destnum < MAX_COOP_CLIENTS ) {
+	/*if ( g_gametype.integer == GT_COOP_SURVIVAL && destnum < MAX_COOP_CLIENTS ) {
 		cast_state_t *hostileCs = AICast_GetCastState( srcnum );
 
 		if ( hostileCs && !AICast_SameTeam( hostileCs, destnum ) ) {
 			// Hostile AI vs player -> always visible.
 			return qtrue;
 		}
-	}
+	}*/
 
 	if ( g_entities[destnum].flags & FL_NOTARGET ) {
 		return qfalse;

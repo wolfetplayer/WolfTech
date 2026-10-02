@@ -106,6 +106,7 @@ zomb25
 	{
 	resetscript
 	statetype alert
+	huntcast player
 	}
 	
 	enemysight
@@ -160,6 +161,7 @@ war7
 	{
 	resetscript
 	statetype alert
+	huntcast player
 	}
 	
 	enemysight
@@ -209,6 +211,7 @@ flame_zomb2
 	{
 	resetscript
 	statetype alert
+	huntcast player
 	}
 	
 	enemysight
@@ -267,6 +270,7 @@ ghost10
 	{
 	resetscript
 	statetype alert
+	huntcast player
 	}
 	
 	enemysight

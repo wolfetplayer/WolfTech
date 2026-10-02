@@ -459,7 +459,7 @@ extern int trap_Nav_PointToPoly ( vec3_t point ) ;
 extern int trap_Nav_MoveToGoal ( navMoveResult_t * result , vec3_t start , vec3_t goal , int agentId ) ;
 extern int trap_Nav_TravelTimeEstimate ( vec3_t start , vec3_t goal ) ;
 extern int trap_Nav_Reachable ( vec3_t point ) ;
-extern int trap_Nav_FindHidePosition ( vec3_t from , vec3_t threat , float radius , vec3_t outPos ) ;
+extern int trap_Nav_FindHidePosition ( vec3_t from , vec3_t threat , float radius , int selfNum , int enemyNum , vec3_t outPos ) ;
 extern int trap_Nav_FindAttackSpot ( vec3_t from , vec3_t target , float minRange , float maxRange , vec3_t outPos ) ;
 extern int trap_Nav_GetRouteFirstVisPos ( vec3_t srcpos , vec3_t destpos , vec3_t outPos ) ;
 extern int trap_Nav_AddObstacle ( vec3_t absmin , vec3_t absmax ) ;
@@ -1452,6 +1452,7 @@ extern qboolean AICast_ScriptAction_Attack ( cast_state_t * cs , char * params )
 extern qboolean AICast_ScriptAction_NoAttack ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_PlaySound ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_FollowCast ( cast_state_t * cs , char * params ) ;
+extern qboolean AICast_ScriptAction_HuntCast ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_Trigger ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_Wait ( cast_state_t * cs , char * params ) ;
 extern qboolean AICast_ScriptAction_AbortIfLoadgame ( cast_state_t * cs , char * params ) ;
@@ -1499,6 +1500,8 @@ extern char * AIFunc_ChaseGoalStart ( cast_state_t * cs , int entitynum , float 
 extern char * AIFunc_ChaseGoal ( cast_state_t * cs ) ;
 extern char * AIFunc_ChaseGoalIdleStart ( cast_state_t * cs , int entitynum , float reachdist ) ;
 extern char * AIFunc_ChaseGoalIdle ( cast_state_t * cs ) ;
+extern char * AIFunc_HuntStart ( cast_state_t * cs , int entitynum , qboolean huntAll ) ;
+extern char * AIFunc_Hunt ( cast_state_t * cs ) ;
 extern char * AIFunc_InspectAudibleEventStart ( cast_state_t * cs , int entnum ) ;
 extern char * AIFunc_InspectAudibleEvent ( cast_state_t * cs ) ;
 extern char * AIFunc_InspectBulletImpactStart ( cast_state_t * cs ) ;

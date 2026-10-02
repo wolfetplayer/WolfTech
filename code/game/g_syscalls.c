@@ -315,8 +315,8 @@ int trap_Nav_Reachable( vec3_t point ) {
 	return syscall( BOTLIB_NAV_REACHABLE, point );
 }
 
-int trap_Nav_FindHidePosition( vec3_t from, vec3_t threat, float radius, vec3_t outPos ) {
-	return syscall( BOTLIB_NAV_FIND_HIDE_POSITION, from, threat, PASSFLOAT( radius ), outPos );
+int trap_Nav_FindHidePosition( vec3_t from, vec3_t threat, float radius, int selfNum, int enemyNum, vec3_t outPos ) {
+	return syscall( BOTLIB_NAV_FIND_HIDE_POSITION, from, threat, PASSFLOAT( radius ), selfNum, enemyNum, outPos );
 }
 
 int trap_Nav_FindAttackSpot( vec3_t from, vec3_t target, float minRange, float maxRange, vec3_t outPos ) {

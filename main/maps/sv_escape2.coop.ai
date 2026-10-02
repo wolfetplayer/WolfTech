@@ -54,6 +54,7 @@ nazi10
 	resetscript
 	statetype alert
 	giveweaponfull weapon_mp40 weapon_luger weapon_mauserrifle
+	huntcast player
 	}
 	
 	enemysight
@@ -106,6 +107,7 @@ eg4
 	resetscript
 	giveweaponfull weapon_sten weapon_silencer
 	statetype alert
+	huntcast player
 	}
 	
 	enemysight
@@ -158,6 +160,7 @@ bg4
 	resetscript
 	giveweaponfull weapon_fg42
 	statetype alert
+	huntcast player
 	}
 	
 	enemysight
@@ -210,6 +213,7 @@ v4
 	resetscript
 	giveweaponfull weapon_flamethrower weapon_venom
 	statetype alert
+	huntcast player
 	}
 	
 	enemysight
@@ -259,6 +263,7 @@ proto2
 		knockback off
 		statetype alert
         giveweaponfull weapon_panzerfaust weapon_venom
+	    huntcast player
 	}
 	
 	inspectfriendlycombatstart
@@ -311,6 +316,7 @@ loper10
 	{
 	resetscript
 	statetype alert
+	huntcast player
 	}
 	
 	enemysight

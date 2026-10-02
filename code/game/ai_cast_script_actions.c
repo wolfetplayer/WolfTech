@@ -859,6 +859,34 @@ qboolean AICast_ScriptAction_FollowCast( cast_state_t *cs, char *params ) {
 }
 
 
+/*
+===================
+AICast_ScriptAction_HuntCast
+
+  syntax: huntcast <ainame>
+  "player" hunts every living coop player
+===================
+*/
+qboolean AICast_ScriptAction_HuntCast( cast_state_t *cs, char *params ) {
+	gentity_t *ent;
+
+	if ( !Q_stricmp( params, "player" ) ) {
+		AIFunc_HuntStart( cs, -1, qtrue );
+		return qtrue;
+	}
+
+	ent = AICast_FindEntityForName( params );
+	if ( !ent ) {
+		G_Error( "AI Scripting: huntcast can't find AI cast with \"ainame\" = \"%s\"\n", params );
+	}
+
+	AIFunc_HuntStart( cs, ent->s.number, qfalse );
+
+	return qtrue;
+}
+
+
+
 #define SUBTITLE_HEAR_RANGE 1250
 /*
 ================

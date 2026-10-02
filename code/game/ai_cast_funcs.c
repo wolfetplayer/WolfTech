@@ -1926,6 +1926,269 @@ char *AIFunc_ChaseGoalStart( cast_state_t *cs, int entitynum, float reachdist, q
 	return "AIFunc_ChaseGoal";
 }
 
+#define HUNT_RETARGET_TIME  1000
+#define HUNT_HOLD_SLACK     64
+#define HUNT_MELEE_DIST     40
+#define HUNT_MAX_HOLD_TIME  5000
+
+/*
+============
+AICast_HuntValidTarget
+============
+*/
+static qboolean AICast_HuntValidTarget( gentity_t *t ) {
+	return t->inuse && t->client && !( t->r.svFlags & SVF_CASTAI ) && t->health > 0 &&
+		   !( t->flags & FL_NOTARGET ) && t->client->pers.connected == CON_CONNECTED &&
+		   t->client->sess.sessionTeam != TEAM_SPECTATOR && t->client->ps.pm_type != PM_SPECTATOR;
+}
+
+/*
+============
+AICast_HuntPickTarget
+
+Nearest living coop player by route, sticking with the current one unless another is clearly closer.
+============
+*/
+static int AICast_HuntPickTarget( cast_state_t *cs ) {
+	int pass, i, travel, best = -1;
+	float cost, bestCost = 0, curCost = -1;
+	gentity_t *t;
+
+	for ( pass = 0; pass < 2 && best < 0; pass++ ) {
+		for ( i = 0; i < level.maxclients; i++ ) {
+			t = &g_entities[i];
+			if ( !AICast_HuntValidTarget( t ) ) {
+				continue;
+			}
+			// the second pass accepts targets we recently failed to path to
+			if ( pass == 0 && cs->huntBlockedTime > level.time && cs->huntBlockedEnt == i ) {
+				continue;
+			}
+
+			travel = trap_Nav_TravelTimeEstimate( cs->bs->origin, t->client->ps.origin );
+			cost = travel >= 0 ? (float)travel : Distance( cs->bs->origin, t->client->ps.origin ) * 3;
+
+			if ( i == cs->followEntity ) {
+				curCost = cost;
+			}
+			if ( best < 0 || cost < bestCost ) {
+				best = i;
+				bestCost = cost;
+			}
+		}
+	}
+
+	if ( best >= 0 && best != cs->followEntity && curCost >= 0 && bestCost > curCost * 0.75f ) {
+		best = cs->followEntity;
+	}
+	return best;
+}
+
+/*
+============
+AICast_HuntHoldDist
+
+How close this AI wants to get before it stops and shoots; varies per pick so a group does not stack up at one range.
+============
+*/
+static float AICast_HuntHoldDist( cast_state_t *cs ) {
+	float range, dist;
+
+	if ( g_entities[cs->entityNum].aiTeam == AITEAM_MONSTER ) {
+		return HUNT_MELEE_DIST;
+	}
+
+	range = AICast_WeaponRange( cs, cs->weaponNum );
+	if ( range < 200 ) {
+		return HUNT_MELEE_DIST;
+	}
+
+	dist = range * 0.3f * ( 1.3f - 0.6f * cs->attributes[AGGRESSION] );
+	if ( dist < 160 ) {
+		dist = 160;
+	} else if ( dist > 700 ) {
+		dist = 700;
+	}
+	return dist * ( 0.75f + 0.5f * random() );
+}
+
+/*
+============
+AIFunc_Hunt
+
+Hunts living coop players: closes in along the nav route, stops to shoot once it has a shot inside its hold
+distance, and keeps pressing forward when it can't see them or has held too long.
+============
+*/
+char *AIFunc_Hunt( cast_state_t *cs ) {
+	gentity_t *ent, *target;
+	vec3_t dest;
+	float dist;
+	qboolean canAttack, hold;
+
+	ent = &g_entities[cs->entityNum];
+
+	if ( cs->dangerEntityValidTime >= level.time ) {
+		if ( AICast_GetTakeCoverPos( cs, cs->dangerEntity, cs->dangerEntityPos, cs->takeCoverPos ) ) {
+			cs->takeCoverTime = cs->dangerEntityValidTime + 1000;
+			cs->attackcrouch_time = 0;
+			cs->movestate = MS_DEFAULT;
+			cs->movestateType = MSTYPE_NONE;
+			return AIFunc_AvoidDangerStart( cs );
+		}
+	}
+
+	if ( cs->doorMarkerTime > level.time - 100 ) {
+		return AIFunc_DoorMarkerStart( cs, cs->doorMarkerDoor, cs->doorMarkerNum );
+	}
+
+	if ( AICast_Defend_Update( cs ) ) {
+		return NULL;
+	}
+
+	if ( cs->huntAll && cs->huntRetargetTime < level.time ) {
+		int pick = AICast_HuntPickTarget( cs );
+
+		cs->huntRetargetTime = level.time + ( pick >= 0 ? HUNT_RETARGET_TIME : 500 );
+		if ( pick != cs->followEntity ) {
+			cs->followEntity = pick;
+			cs->huntDistTime = 0;
+			cs->huntHoldStart = 0;
+		}
+	}
+
+	if ( cs->followEntity < 0 ) {
+		return NULL;
+	}
+
+	target = &g_entities[cs->followEntity];
+	if ( !AICast_HuntValidTarget( target ) ) {
+		if ( !cs->huntAll ) {
+			cs->enemyNum = -1;
+			return AIFunc_IdleStart( cs );
+		}
+		cs->followEntity = -1;
+		cs->enemyNum = -1;
+		cs->huntRetargetTime = 0;
+		return NULL;
+	}
+
+	VectorCopy( target->client->ps.origin, dest );
+	dist = Distance( cs->bs->origin, dest );
+
+	cs->enemyNum = target->s.number;
+	if ( cs->aiState < AISTATE_COMBAT ) {
+		AICast_StateChange( cs, AISTATE_COMBAT );
+	}
+
+	// a hunter knows where its prey is, so a clear line counts as a sighting whatever the field of view
+	if ( cs->huntSightTime < level.time - 200 ) {
+		cs->huntSightTime = level.time;
+		if ( AICast_VisibleFromPos( ent->client->ps.origin, cs->entityNum, dest, target->s.number, qfalse ) ) {
+			AICast_UpdateVisibility( ent, target, qtrue, qtrue );
+		}
+	}
+
+	if ( cs->huntDistTime < level.time ) {
+		cs->followDist = AICast_HuntHoldDist( cs );
+		cs->huntDistTime = level.time + 3000 + rand() % 3000;
+	}
+
+	canAttack = AICast_CheckAttack( cs, cs->enemyNum, qfalse );
+
+	if ( canAttack && dist <= cs->followDist ) {
+		hold = qtrue;
+	} else if ( canAttack && cs->huntHoldStart && dist <= cs->followDist + HUNT_HOLD_SLACK ) {
+		hold = qtrue;
+	} else {
+		hold = qfalse;
+	}
+
+	if ( hold ) {
+		if ( !cs->huntHoldStart ) {
+			cs->huntHoldStart = level.time;
+		} else if ( level.time - cs->huntHoldStart > HUNT_MAX_HOLD_TIME ) {
+			// dug in too long, push closer
+			cs->followDist *= 0.6f;
+			if ( cs->followDist < HUNT_MELEE_DIST ) {
+				cs->followDist = HUNT_MELEE_DIST;
+			}
+			cs->huntHoldStart = 0;
+			hold = qfalse;
+		}
+	} else {
+		cs->huntHoldStart = 0;
+	}
+
+	if ( !hold ) {
+		moveresult = AICast_MoveToPos( cs, dest, target->s.number );
+
+		if ( moveresult && moveresult->failure && cs->huntAll ) {
+			cs->huntBlockedEnt = cs->followEntity;
+			cs->huntBlockedTime = level.time + 3000;
+			cs->huntRetargetTime = 0;
+		}
+
+		if ( canAttack && dist < cs->followDist + 150 ) {
+			cs->speedScale = AICast_SpeedScaleForDistance( cs, dist, cs->followDist );
+		}
+	} else if ( AICast_CanMoveWhileFiringWeapon( cs->weaponNum ) ) {
+		switch ( ( ( level.time + cs->entityNum * 700 ) / 1500 ) % 3 ) {
+		case 0:
+			trap_EA_MoveLeft( cs->entityNum );
+			break;
+		case 2:
+			trap_EA_MoveRight( cs->entityNum );
+			break;
+		default:
+			if ( cs->attributes[ATTACK_CROUCH] > 0.1 ) {
+				cs->attackcrouch_time = level.time + 1000;
+			}
+			break;
+		}
+	}
+
+	if ( cs->obstructingTime > level.time ) {
+		AICast_MoveToPos( cs, cs->obstructingPos, -1 );
+
+		if ( cs->movestate != MS_CROUCH ) {
+			cs->movestate = MS_WALK;
+		}
+		cs->movestateType = MSTYPE_TEMPORARY;
+	}
+
+	AICast_ProcessAttack( cs );
+	if ( !canAttack ) {
+		AICast_IdleReload( cs );
+	}
+
+	return NULL;
+}
+
+/*
+============
+AIFunc_HuntStart
+
+entitynum is the fixed prey, or -1 with huntAll to hunt every living coop player.
+============
+*/
+char *AIFunc_HuntStart( cast_state_t *cs, int entitynum, qboolean huntAll ) {
+	cs->followEntity = entitynum;
+	cs->followDist = 0;
+	cs->followIsGoto = qfalse;
+	cs->followSlowApproach = qfalse;
+
+	cs->huntAll = huntAll;
+	cs->huntRetargetTime = 0;
+	cs->huntDistTime = 0;
+	cs->huntHoldStart = 0;
+	cs->huntSightTime = 0;
+	cs->huntBlockedTime = 0;
+
+	cs->aifunc = AIFunc_Hunt;
+	return "AIFunc_Hunt";
+}
+
 /*
 ============
 AIFunc_DoorMarker()

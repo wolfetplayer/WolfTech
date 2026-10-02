@@ -399,6 +399,14 @@ typedef struct cast_state_s
 	int followTime;             // if this runs out, the scripting has probably been interupted
 	qboolean followSlowApproach;
 
+	qboolean huntAll;           // hunting every coop player, followEntity is the current pick
+	int huntRetargetTime;
+	int huntDistTime;
+	int huntHoldStart;
+	int huntSightTime;
+	int huntBlockedEnt;         // target we could not path to, skipped until huntBlockedTime
+	int huntBlockedTime;
+
 	int leaderNum;              // entnum of player we are following
 
 	float speedScale;           // so we can vary movement speed
@@ -641,6 +649,7 @@ char    *AIFunc_DefaultStart( cast_state_t *cs );
 char    *AIFunc_IdleStart( cast_state_t *cs );
 char    *AIFunc_ChaseGoalIdleStart( cast_state_t *cs, int entitynum, float reachdist );
 char    *AIFunc_ChaseGoalStart( cast_state_t *cs, int entitynum, float reachdist, qboolean slowApproach );
+char    *AIFunc_HuntStart( cast_state_t *cs, int entitynum, qboolean huntAll );
 char    *AIFunc_BattleChaseStart( cast_state_t *cs );
 char    *AIFunc_BattleStart( cast_state_t *cs );
 char    *AIFunc_DoorMarkerStart( cast_state_t *cs, int doornum, int markernum );

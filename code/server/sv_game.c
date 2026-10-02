@@ -502,7 +502,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_NAV_REACHABLE:
 		return Nav_Reachable( VMA( 1 ) );
 	case BOTLIB_NAV_FIND_HIDE_POSITION:
-		return Nav_FindHidePosition( VMA( 1 ), VMA( 2 ), VMF( 3 ), VMA( 4 ) );
+		return Nav_FindHidePosition( VMA( 1 ), VMA( 2 ), VMF( 3 ), args[4], args[5], VMA( 6 ) );
 	case BOTLIB_NAV_FIND_ATTACK_SPOT:
 		return Nav_FindAttackSpot( VMA( 1 ), VMA( 2 ), VMF( 3 ), VMF( 4 ), VMA( 5 ) );
 	case BOTLIB_NAV_GET_ROUTE_FIRST_VIS_POS:

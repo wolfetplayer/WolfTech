@@ -8,7 +8,11 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cmath>
 #include <vector>
+
+// most a jump link may climb: jump apex (~46) plus the 18 unit step-up; anything higher is only a drop.
+static const float NAV_OFFMESH_MAX_JUMP_UP = 64.0f;
 
 extern "C" {
 #include "../../qcommon/q_shared.h"
@@ -90,12 +94,23 @@ struct NavMeshProcess : public dtTileCacheMeshProcess {
 				 midZ < params->bmin[2] || midZ > params->bmax[2] ) {
 				continue;
 			}
-			scratchVerts.push_back( c.startPos[0] ); scratchVerts.push_back( c.startPos[1] ); scratchVerts.push_back( c.startPos[2] );
-			scratchVerts.push_back( c.endPos[0] ); scratchVerts.push_back( c.endPos[1] ); scratchVerts.push_back( c.endPos[2] );
+			// navgen flags every jump link bidirectional, so a drop is also planned as an impossible climb; past a jump's reach make it one-way, high end first.
+			const float *linkFrom = c.startPos;
+			const float *linkTo = c.endPos;
+			bool linkBidir = c.bidir != 0;
+			if ( !c.isLadder && fabsf( c.endPos[1] - c.startPos[1] ) > NAV_OFFMESH_MAX_JUMP_UP ) {
+				linkBidir = false;
+				if ( c.endPos[1] > c.startPos[1] ) {
+					linkFrom = c.endPos;
+					linkTo = c.startPos;
+				}
+			}
+			scratchVerts.push_back( linkFrom[0] ); scratchVerts.push_back( linkFrom[1] ); scratchVerts.push_back( linkFrom[2] );
+			scratchVerts.push_back( linkTo[0] ); scratchVerts.push_back( linkTo[1] ); scratchVerts.push_back( linkTo[2] );
 			scratchRad.push_back( c.radius );
 			scratchFlags.push_back( 1 );
 			scratchAreas.push_back( 0 );
-			scratchDir.push_back( c.bidir ? DT_OFFMESH_CON_BIDIR : 0 );
+			scratchDir.push_back( linkBidir ? DT_OFFMESH_CON_BIDIR : 0 );
 			scratchUserID.push_back( (unsigned int)i );
 		}
 
