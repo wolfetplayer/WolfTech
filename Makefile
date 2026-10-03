@@ -168,6 +168,10 @@ ifndef COPYBINDIR
 COPYBINDIR=$(COPYDIR)
 endif
 
+ifndef STEAMGAMEDIR
+STEAMGAMEDIR="G:/Steam/steamapps/common/Tides of War"
+endif
+
 ifndef MOUNT_DIR
 MOUNT_DIR=code
 endif
@@ -3099,6 +3103,41 @@ ifneq ($(BUILD_GAME_SO),0)
                                         $(COPYDIR)/$(BASEGAME)/.
   endif
 endif
+
+# Builds the release target, then copies the exe/dlls straight into a Steam
+# install so there's no manual copy-paste after every compile.
+deploysteam: release
+	@echo "Deploying release build to $(STEAMGAMEDIR)"
+ifneq ($(BUILD_GAME_SO),0)
+  ifneq ($(BUILD_BASEGAME),0)
+	-$(MKDIR) -m 0755 $(STEAMGAMEDIR)/$(BASEGAME)
+  endif
+endif
+ifneq ($(BUILD_CLIENT),0)
+	$(INSTALL) -m 0755 $(BR)/$(CLIENTBIN)$(FULLBINEXT) $(STEAMGAMEDIR)/$(CLIENTBIN)$(FULLBINEXT)
+  ifneq ($(USE_RENDERER_DLOPEN),0)
+	$(INSTALL) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(STEAMGAMEDIR)/renderer_opengl1_$(SHLIBNAME)
+    ifneq ($(BUILD_RENDERER_REND2),0)
+	$(INSTALL) -m 0755 $(BR)/renderer_rend2_$(SHLIBNAME) $(STEAMGAMEDIR)/renderer_rend2_$(SHLIBNAME)
+    endif
+  endif
+endif
+ifneq ($(BUILD_SERVER),0)
+	@if [ -f $(BR)/$(SERVERBIN)$(FULLBINEXT) ]; then \
+		$(INSTALL) -m 0755 $(BR)/$(SERVERBIN)$(FULLBINEXT) $(STEAMGAMEDIR)/$(SERVERBIN)$(FULLBINEXT); \
+	fi
+endif
+ifneq ($(BUILD_GAME_SO),0)
+  ifneq ($(BUILD_BASEGAME),0)
+	$(INSTALL) -m 0755 $(BR)/$(BASEGAME)/cgame_$(SHLIBNAME) \
+                                        $(STEAMGAMEDIR)/$(BASEGAME)/.
+	$(INSTALL) -m 0755 $(BR)/$(BASEGAME)/qagame_$(SHLIBNAME) \
+                                        $(STEAMGAMEDIR)/$(BASEGAME)/.
+	$(INSTALL) -m 0755 $(BR)/$(BASEGAME)/ui_$(SHLIBNAME) \
+                                        $(STEAMGAMEDIR)/$(BASEGAME)/.
+  endif
+endif
+	@echo "Deploy to Steam complete."
 
 clean: clean-debug clean-release
 

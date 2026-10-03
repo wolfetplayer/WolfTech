@@ -44,6 +44,20 @@
       }
     },
     {
+      "label": "build-steam-release-deploy",
+      "type": "shell",
+      "command": "ARCH=x86_64 BUILD_STANDALONE=1 STEAM=1 mingw32-make deploysteam",
+      "group": "build",
+      "problemMatcher": ["$gcc"],
+      "detail": "Builds the Steam version of WolfTech (release build) and copies the exe/dlls into the Steam install.",
+      "options": {
+        "shell": {
+          "executable": "C:/msys64/usr/bin/bash.exe",
+          "args": ["-c"]
+        }
+      }
+    },
+    {
       "label": "build-nonsteam-release",
       "type": "shell",
       "command": "ARCH=x86_64 BUILD_STANDALONE=1 mingw32-make release",
