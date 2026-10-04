@@ -16,19 +16,18 @@ player
 		mu_start sound/music/l_briefing_2
 	}
 	
-	playerstart
-	{
-		mu_stop 0 1000
-		wait 2000
-		mu_play sound/misc/prepare
-	}
-	
 	trigger map_start
 	{
 		//If something breaks at late player joining, move it here
-		accum 1 set 0
-		accum 2 set 0
+        accum 0 set 0     // number of friendlies already spawned
 		globalaccum 0 set 0
+	}
+	
+	playerstart
+	{
+		mu_stop 0 1000
+		wait 8500
+		mu_play sound/music/survival_start
 	}
 
 }

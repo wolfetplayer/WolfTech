@@ -15,7 +15,7 @@ game_manager
 
 	first_wave_start
 	{
-     mu_play sound/music/survival_wave_start
+
 	}
 
 	wave_end
