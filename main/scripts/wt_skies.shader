@@ -14,16 +14,16 @@ textures/wt_skies/sky_castle_night
 	sunshader sun
 	
 	{
-		map textures/skies/nightsky1.tga
+		map textures/wt_skies/night_sky.jpg
 		tcMod scale 16.0 16.0
 		depthWrite
 	}
 
-	{
-		map textures/skies/vil_clouds1.tga
-		blendfunc blend
-		tcMod scroll 0.001 0.00
-		tcMod scale 2 1
-	}
+	//{
+	//	map textures/wt_skies/clouds_1.tga
+		//blendfunc blend
+		//tcMod scroll 0.001 0.00
+		//tcMod scale 2 1
+	//}
 
 }
