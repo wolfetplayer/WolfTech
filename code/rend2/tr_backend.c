@@ -1526,6 +1526,151 @@ const void *RB_StretchPicGradient( const void *data ) {
 	return (const void *)( cmd + 1 );
 }
 
+// corner arc tessellation: segments per 90-degree corner, and the AA feather width in pixels
+#define RPIC_CORNER_SEGS   8
+#define RPIC_NUM_BOUNDARY  ( 4 * ( RPIC_CORNER_SEGS + 1 ) )
+#define RPIC_NUM_VERTS     ( 1 + 2 * RPIC_NUM_BOUNDARY )
+#define RPIC_NUM_INDEXES   ( RPIC_NUM_BOUNDARY * 9 )
+#define RPIC_FEATHER       1.0f
+
+/*
+==============
+RB_StretchPicRounded
+
+Builds a rounded rect as a center fill fan plus a 1px alpha-feathered
+boundary ring (so corners anti-alias without relying on MSAA).
+==============
+*/
+const void *RB_StretchPicRounded( const void *data ) {
+	const stretchPicCommand_t  *cmd;
+	shader_t *shader;
+	int numVerts, numIndexes;
+	int centerIdx, innerBase, outerBase;
+	int i, k;
+	float radius;
+	float cx[4], cy[4], startAngle[4];
+	float midx, midy;
+	uint16_t innerColor[4], outerColor[4];
+
+	cmd = (const stretchPicCommand_t *)data;
+
+	// FIXME: HUGE hack
+	if (glRefConfig.framebufferObject)
+	{
+		if (!tr.renderFbo || backEnd.framePostProcessed)
+		{
+			FBO_Bind(backEnd.framePostProcessed ? RB_PostProcessedTarget() : NULL);
+		}
+		else
+		{
+			FBO_Bind(tr.renderFbo);
+		}
+	}
+
+	RB_SetGL2D();
+
+	shader = cmd->shader;
+	if ( shader != tess.shader ) {
+		if ( tess.numIndexes ) {
+			RB_EndSurface();
+		}
+		backEnd.currentEntity = &backEnd.entity2D;
+		RB_BeginSurface( shader, 0, 0 );
+	}
+
+	RB_CHECKOVERFLOW( RPIC_NUM_VERTS, RPIC_NUM_INDEXES );
+	numVerts = tess.numVertexes;
+	numIndexes = tess.numIndexes;
+
+	radius = cmd->radius;
+	if ( radius > cmd->w * 0.5f ) {
+		radius = cmd->w * 0.5f;
+	}
+	if ( radius > cmd->h * 0.5f ) {
+		radius = cmd->h * 0.5f;
+	}
+	if ( radius < 0 ) {
+		radius = 0;
+	}
+
+	VectorScale4( backEnd.color2D, 257, innerColor );
+	outerColor[0] = innerColor[0];
+	outerColor[1] = innerColor[1];
+	outerColor[2] = innerColor[2];
+	outerColor[3] = 0;
+
+	// corner circle centers and sweep start angle (degrees), clockwise: TL, TR, BR, BL
+	cx[0] = cmd->x + radius;            cy[0] = cmd->y + radius;            startAngle[0] = 180.0f;
+	cx[1] = cmd->x + cmd->w - radius;   cy[1] = cmd->y + radius;            startAngle[1] = 270.0f;
+	cx[2] = cmd->x + cmd->w - radius;   cy[2] = cmd->y + cmd->h - radius;   startAngle[2] = 0.0f;
+	cx[3] = cmd->x + radius;            cy[3] = cmd->y + cmd->h - radius;   startAngle[3] = 90.0f;
+
+	centerIdx = numVerts;
+	innerBase = numVerts + 1;
+	outerBase = innerBase + RPIC_NUM_BOUNDARY;
+
+	tess.numVertexes += RPIC_NUM_VERTS;
+	tess.numIndexes += RPIC_NUM_INDEXES;
+
+	midx = cmd->x + cmd->w * 0.5f;
+	midy = cmd->y + cmd->h * 0.5f;
+	tess.xyz[ centerIdx ][0] = midx;
+	tess.xyz[ centerIdx ][1] = midy;
+	tess.xyz[ centerIdx ][2] = 0;
+	tess.texCoords[ centerIdx ][0] = ( cmd->s1 + cmd->s2 ) * 0.5f;
+	tess.texCoords[ centerIdx ][1] = ( cmd->t1 + cmd->t2 ) * 0.5f;
+	VectorCopy4( innerColor, tess.color[ centerIdx ] );
+
+	k = 0;
+	for ( i = 0; i < 4; i++ ) {
+		int seg;
+		for ( seg = 0; seg <= RPIC_CORNER_SEGS; seg++, k++ ) {
+			float angle = DEG2RAD( startAngle[i] + ( seg * ( 90.0f / RPIC_CORNER_SEGS ) ) );
+			float dirx = cos( angle );
+			float diry = sin( angle );
+			float px = cx[i] + dirx * radius;
+			float py = cy[i] + diry * radius;
+			float ox = cx[i] + dirx * ( radius + RPIC_FEATHER );
+			float oy = cy[i] + diry * ( radius + RPIC_FEATHER );
+			float s = cmd->s1 + ( cmd->s2 - cmd->s1 ) * ( ( px - cmd->x ) / cmd->w );
+			float t = cmd->t1 + ( cmd->t2 - cmd->t1 ) * ( ( py - cmd->y ) / cmd->h );
+
+			tess.xyz[ innerBase + k ][0] = px;
+			tess.xyz[ innerBase + k ][1] = py;
+			tess.xyz[ innerBase + k ][2] = 0;
+			tess.texCoords[ innerBase + k ][0] = s;
+			tess.texCoords[ innerBase + k ][1] = t;
+			VectorCopy4( innerColor, tess.color[ innerBase + k ] );
+
+			tess.xyz[ outerBase + k ][0] = ox;
+			tess.xyz[ outerBase + k ][1] = oy;
+			tess.xyz[ outerBase + k ][2] = 0;
+			tess.texCoords[ outerBase + k ][0] = s;
+			tess.texCoords[ outerBase + k ][1] = t;
+			VectorCopy4( outerColor, tess.color[ outerBase + k ] );
+		}
+	}
+
+	for ( i = 0; i < RPIC_NUM_BOUNDARY; i++ ) {
+		int j = ( i + 1 ) % RPIC_NUM_BOUNDARY;
+		int idx = numIndexes + i * 9;
+
+		tess.indexes[ idx + 0 ] = centerIdx;
+		tess.indexes[ idx + 1 ] = innerBase + i;
+		tess.indexes[ idx + 2 ] = innerBase + j;
+
+		tess.indexes[ idx + 3 ] = innerBase + i;
+		tess.indexes[ idx + 4 ] = outerBase + i;
+		tess.indexes[ idx + 5 ] = innerBase + j;
+
+		tess.indexes[ idx + 6 ] = innerBase + j;
+		tess.indexes[ idx + 7 ] = outerBase + i;
+		tess.indexes[ idx + 8 ] = outerBase + j;
+	}
+
+	return (const void *)( cmd + 1 );
+}
+
 
 /*
 =============
@@ -2618,6 +2763,9 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 		case RC_STRETCH_PIC_GRADIENT:
 			data = RB_StretchPicGradient( data );
+			break;
+		case RC_STRETCH_PIC_ROUNDED:
+			data = RB_StretchPicRounded( data );
 			break;
 		case RC_DRAW_SURFS:
 			data = RB_DrawSurfs( data );

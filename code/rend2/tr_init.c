@@ -1913,6 +1913,7 @@ refexport_t *GetRefAPI( int apiVersion, refimport_t *rimp ) {
 	re.DrawStretchPic   = RE_StretchPic;
 	re.DrawRotatedPic   = RE_RotatedPic;        // NERVE - SMF
 	re.DrawStretchPicGradient   = RE_StretchPicGradient;
+	re.DrawStretchPicRounded   = RE_StretchPicRounded;
 	re.DrawStretchRaw   = RE_StretchRaw;
 	re.UploadCinematic  = RE_UploadCinematic;
 	re.RegisterFont     = RE_RegisterFont;

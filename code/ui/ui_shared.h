@@ -150,6 +150,7 @@ typedef struct {
 	int ownerDraw;                  // ownerDraw style
 	int ownerDrawFlags;             // show flags for ownerdraw items
 	float borderSize;               //
+	float cornerRadius;             // corner radius for WINDOW_STYLE_ROUNDED, 640x480 virtual units
 	int flags;                      // visible, focus, mouseover, cursor
 	Rectangle rectEffects;          // for various effects
 	Rectangle rectEffects2;         // for various effects
@@ -367,6 +368,7 @@ typedef struct {
 	qhandle_t ( *registerModel )( const char *p );
 	void ( *modelBounds )( qhandle_t model, vec3_t min, vec3_t max );
 	void ( *fillRect )( float x, float y, float w, float h, const vec4_t color );
+	void ( *fillRectRounded )( float x, float y, float w, float h, float radius, const vec4_t color );
 	void ( *drawRect )( float x, float y, float w, float h, float size, const vec4_t color );
 	void ( *drawSides )( float x, float y, float w, float h, float size );
 	void ( *drawTopBottom )( float x, float y, float w, float h, float size );

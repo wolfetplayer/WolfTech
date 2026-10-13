@@ -290,6 +290,25 @@ void UI_FillRect( float x, float y, float width, float height, const float *colo
 	trap_R_SetColor( NULL );
 }
 
+/*
+================
+UI_FillRectRounded
+
+Coordinates (and radius) are 640*480 virtual values
+=================
+*/
+void UI_FillRectRounded( float x, float y, float width, float height, float radius, const float *color ) {
+	float scale;
+
+	trap_R_SetColor( color );
+
+	scale = ( uiInfo.uiDC.xscale < uiInfo.uiDC.yscale ) ? uiInfo.uiDC.xscale : uiInfo.uiDC.yscale;
+	UI_AdjustFrom640( &x, &y, &width, &height );
+	trap_R_DrawStretchPicRounded( x, y, width, height, 0, 0, 0, 0, uiInfo.uiDC.whiteShader, radius * scale );
+
+	trap_R_SetColor( NULL );
+}
+
 void UI_DrawSides( float x, float y, float w, float h ) {
 	UI_AdjustFrom640( &x, &y, &w, &h );
 	trap_R_DrawStretchPic( x, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );

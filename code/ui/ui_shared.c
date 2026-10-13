@@ -948,6 +948,9 @@ void Window_Paint( Window *w, float fadeAmount, float fadeClamp, float fadeCycle
 	} else if ( w->style == WINDOW_STYLE_GRADIENT ) {
 		GradientBar_Paint( &fillRect, w->backColor );
 		// gradient bar
+	} else if ( w->style == WINDOW_STYLE_ROUNDED ) {
+		Fade( &w->flags, &w->backColor[3], fadeClamp, &w->nextTime, fadeCycle, qtrue, fadeAmount );
+		DC->fillRectRounded( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->cornerRadius, w->backColor );
 	} else if ( w->style == WINDOW_STYLE_SHADER ) {
 		if ( w->flags & WINDOW_FORECOLORSET ) {
 			DC->setColor( w->foreColor );
@@ -5692,6 +5695,13 @@ qboolean ItemParse_bordersize( itemDef_t *item, int handle ) {
 	return qtrue;
 }
 
+qboolean ItemParse_cornerradius( itemDef_t *item, int handle ) {
+	if ( !PC_Float_Parse( handle, &item->window.cornerRadius ) ) {
+		return qfalse;
+	}
+	return qtrue;
+}
+
 qboolean ItemParse_visible( itemDef_t *item, int handle ) {
 	int i;
 
@@ -6220,6 +6230,7 @@ keywordHash_t itemParseKeywords[] = {
 	{"columns", ItemParse_columns, NULL},
 	{"border", ItemParse_border, NULL},
 	{"bordersize", ItemParse_bordersize, NULL},
+	{"cornerradius", ItemParse_cornerradius, NULL},
 	{"visible", ItemParse_visible, NULL},
 	{"ownerdraw", ItemParse_ownerdraw, NULL},
 	{"align", ItemParse_align, NULL},
@@ -6527,6 +6538,14 @@ qboolean MenuParse_borderSize( itemDef_t *item, int handle ) {
 	return qtrue;
 }
 
+qboolean MenuParse_cornerradius( itemDef_t *item, int handle ) {
+	menuDef_t *menu = (menuDef_t*)item;
+	if ( !PC_Float_Parse( handle, &menu->window.cornerRadius ) ) {
+		return qfalse;
+	}
+	return qtrue;
+}
+
 qboolean MenuParse_backcolor( itemDef_t *item, int handle ) {
 	int i;
 	float f;
@@ -6768,6 +6787,7 @@ keywordHash_t menuParseKeywords[] = {
 	{"onROQDone", MenuParse_onROQDone, NULL},    //----(SA)	added
 	{"border", MenuParse_border, NULL},
 	{"borderSize", MenuParse_borderSize, NULL},
+	{"cornerradius", MenuParse_cornerradius, NULL},
 	{"backcolor", MenuParse_backcolor, NULL},
 	{"forecolor", MenuParse_forecolor, NULL},
 	{"bordercolor", MenuParse_bordercolor, NULL},

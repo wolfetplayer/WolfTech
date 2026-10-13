@@ -91,6 +91,8 @@ typedef struct {
 							  float s1, float t1, float s2, float t2, qhandle_t hShader, float angle );
 	void ( *DrawStretchPicGradient )( float x, float y, float w, float h,
 									  float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
+	void ( *DrawStretchPicRounded )( float x, float y, float w, float h,
+									  float s1, float t1, float s2, float t2, qhandle_t hShader, float radius );
 
 	// Draw images for cinematic rendering, pass as 32 bit rgba
 	void ( *DrawStretchRaw )( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );

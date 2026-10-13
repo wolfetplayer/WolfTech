@@ -939,6 +939,7 @@ extern float        UI_ClampCvar( float min, float max, float value );
 extern void         UI_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 extern void         UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader );
 extern void         UI_FillRect( float x, float y, float width, float height, const float *color );
+extern void         UI_FillRectRounded( float x, float y, float width, float height, float radius, const float *color );
 extern void         UI_DrawRect( float x, float y, float width, float height, const float *color );
 extern void     UI_DrawTopBottom( float x, float y, float w, float h );
 extern void     UI_DrawSides( float x, float y, float w, float h );
@@ -1030,6 +1031,7 @@ void            trap_R_AddCoronaToScene( const vec3_t org, float r, float g, flo
 void            trap_R_RenderScene( const refdef_t *fd );
 void            trap_R_SetColor( const float *rgba );
 void            trap_R_DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader );
+void            trap_R_DrawStretchPicRounded( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float radius );
 void            trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
 void            trap_UpdateScreen( void );
 int             trap_CM_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagName, int startIndex );

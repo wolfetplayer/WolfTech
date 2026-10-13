@@ -132,6 +132,25 @@ void CG_FillRectGradient( float x, float y, float width, float height, const flo
 	trap_R_SetColor( NULL );
 }
 
+/*
+==============
+CG_FillRectRounded
+
+Coordinates (and radius) are 640*480 virtual values
+==============
+*/
+void CG_FillRectRounded( float x, float y, float width, float height, float radius, const float *color ) {
+	float scale;
+
+	trap_R_SetColor( color );
+
+	scale = ( cgs.screenXScale < cgs.screenYScale ) ? cgs.screenXScale : cgs.screenYScale;
+	CG_AdjustFrom640( &x, &y, &width, &height );
+	trap_R_DrawStretchPicRounded( x, y, width, height, 0, 0, 0, 1, cgs.media.whiteShader, radius * scale );
+
+	trap_R_SetColor( NULL );
+}
+
 
 /*
 ==============

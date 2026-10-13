@@ -841,6 +841,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_DRAWSTRETCHPIC_GRADIENT:
 		re.DrawStretchPicGradient( VMF( 1 ), VMF( 2 ), VMF( 3 ), VMF( 4 ), VMF( 5 ), VMF( 6 ), VMF( 7 ), VMF( 8 ), args[9], VMA( 10 ), args[11] );
 		return 0;
+	case CG_R_DRAWSTRETCHPIC_ROUNDED:
+		re.DrawStretchPicRounded( VMF( 1 ), VMF( 2 ), VMF( 3 ), VMF( 4 ), VMF( 5 ), VMF( 6 ), VMF( 7 ), VMF( 8 ), args[9], VMF( 10 ) );
+		return 0;
 	case CG_R_MODELBOUNDS:
 		re.ModelBounds( args[1], VMA( 2 ), VMA( 3 ) );
 		return 0;
