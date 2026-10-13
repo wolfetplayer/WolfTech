@@ -579,8 +579,15 @@ void G_MoverTeam( gentity_t *ent ) {
 	pushed_p = pushed;
 	for ( part = ent ; part ; part = part->teamchain ) {
 		// get current position
-		BG_EvaluateTrajectory( &part->s.pos, level.time, origin );
-		BG_EvaluateTrajectory( &part->s.apos, level.time, angles );
+		if ( part->splinePath ) {
+			G_EvaluateSplinePosition( part, level.time, origin, angles );
+			// refresh the networked base every frame, TR_INTERPOLATE is a static read on the client
+			VectorCopy( origin, part->s.pos.trBase );
+			VectorCopy( angles, part->s.apos.trBase );
+		} else {
+			BG_EvaluateTrajectory( &part->s.pos, level.time, origin );
+			BG_EvaluateTrajectory( &part->s.apos, level.time, angles );
+		}
 		VectorSubtract( origin, part->r.currentOrigin, move );
 		VectorSubtract( angles, part->r.currentAngles, amove );
 
@@ -599,8 +606,14 @@ void G_MoverTeam( gentity_t *ent ) {
 		for ( part = ent ; part ; part = part->teamchain ) {
 			part->s.pos.trTime += level.time - level.previousTime;
 			part->s.apos.trTime += level.time - level.previousTime;
-			BG_EvaluateTrajectory( &part->s.pos, level.time, part->r.currentOrigin );
-			BG_EvaluateTrajectory( &part->s.apos, level.time, part->r.currentAngles );
+			if ( part->splinePath ) {
+				G_EvaluateSplinePosition( part, level.time, part->r.currentOrigin, part->r.currentAngles );
+				VectorCopy( part->r.currentOrigin, part->s.pos.trBase );
+				VectorCopy( part->r.currentAngles, part->s.apos.trBase );
+			} else {
+				BG_EvaluateTrajectory( &part->s.pos, level.time, part->r.currentOrigin );
+				BG_EvaluateTrajectory( &part->s.apos, level.time, part->r.currentAngles );
+			}
 			trap_LinkEntity( part );
 		}
 
@@ -3004,6 +3017,40 @@ void SP_path_corner( gentity_t *self ) {
 	if ( self->wait == -1 ) {
 		self->count = 1;
 	}
+}
+
+/*QUAKED info_train_spline_main (0 1 0) (-8 -8 -8) (8 8 8)
+Spline path node for the "followspline" script command. Defines one curved
+leg from this node to the node named by "target", optionally bowed through
+up to 4 control points.
+"targetname"	name scripts use to start a mover along this leg (see "followspline")
+"target"	the next info_train_spline_main node (the far end of this leg)
+"control"	optional path_corner name the curve bows toward (nearest to this node)
+"control2"	optional 2nd control point
+"control3"	optional 3rd control point
+"control4"	optional 4th control point
+*/
+void SP_info_train_spline_main( gentity_t *self ) {
+	splinePath_t *spline;
+	char *control;
+	int i;
+
+	if ( !self->targetname ) {
+		G_Printf( "info_train_spline_main with no targetname at %s\n", vtos( self->s.origin ) );
+		G_FreeEntity( self );
+		return;
+	}
+
+	spline = G_AddSplinePath( self->targetname, self->target, self->s.origin );
+
+	for ( i = 1; i <= MAX_SPLINE_CONTROLS; i++ ) {
+		if ( !G_SpawnString( i == 1 ? va( "control" ) : va( "control%i", i ), "", &control ) || !control[0] ) {
+			break;
+		}
+		G_AddSplineControl( spline, control );
+	}
+
+	// stays alive and unlinked, same as path_corner
 }
 
 

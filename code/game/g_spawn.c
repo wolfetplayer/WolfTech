@@ -277,6 +277,7 @@ void SP_info_notnull( gentity_t *self );
 void SP_info_notnull_big( gentity_t *ent );  //----(SA)	added
 void SP_info_camp( gentity_t *self );
 void SP_path_corner( gentity_t *self );
+void SP_info_train_spline_main( gentity_t *self );
 
 void SP_misc_teleporter_dest( gentity_t *self );
 void SP_misc_model( gentity_t *ent );
@@ -536,6 +537,7 @@ spawn_t spawns[] = {
 	{"lightJunior", SP_lightJunior},
 
 	{"path_corner", SP_path_corner},
+	{"info_train_spline_main", SP_info_train_spline_main},
 
 	{"misc_teleporter_dest", SP_misc_teleporter_dest},
 	{"misc_model", SP_misc_model},

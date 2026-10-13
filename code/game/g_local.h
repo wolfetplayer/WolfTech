@@ -172,6 +172,35 @@ typedef struct
 void G_Script_ScriptEvent( gentity_t *ent, char *eventStr, char *params );
 //====================================================================
 
+//====================================================================
+// spline-path movers (info_train_spline_main entity / "followspline" script command)
+// see g_spline.c
+#define MAX_SPLINE_CONTROLS 4
+#define MAX_SPLINE_SEGMENTS 16
+#define MAX_SPLINE_PATHS    64
+
+typedef struct {
+	vec3_t start;               // curve position at the start of this slice
+	vec3_t v_norm;              // normalized direction to the next slice
+	float length;               // chord length of this slice
+} splineSegment_t;
+
+typedef struct splinePath_s {
+	char name[MAX_QPATH];               // this node's targetname
+
+	vec3_t origin;
+	char targetName[MAX_QPATH];         // the far-end node's targetname
+	struct splinePath_s *next;          // resolved far-end node, once built
+
+	char controlNames[MAX_SPLINE_CONTROLS][MAX_QPATH];
+	vec3_t controls[MAX_SPLINE_CONTROLS];
+	int numControls;
+
+	splineSegment_t segments[MAX_SPLINE_SEGMENTS];
+	float length;                       // total curve length (sum of segment lengths)
+} splinePath_t;
+//====================================================================
+
 
 #define CFOFS( x ) ( (size_t)&( ( (gclient_t *)0 )->x ) )
 
@@ -239,6 +268,11 @@ struct gentity_s {
 	// JOSEPH 1-26-00
 	vec3_t pos1, pos2, pos3;
 	// END JOSEPH
+
+	// spline-path movers, see g_spline.c
+	splinePath_t *splinePath;           // NULL = not currently following a spline leg
+	qboolean splineBackward;
+	float splineRollStart, splineRollEnd;
 
 	char        *message;
 
@@ -1055,6 +1089,15 @@ void InitMoverRotate( gentity_t *ent );
 
 void InitMover( gentity_t *ent );
 void SetMoverState( gentity_t *ent, moverState_t moverState, int time );
+
+//
+// g_spline.c
+//
+splinePath_t *G_AddSplinePath( const char *name, const char *target, vec3_t origin );
+void G_AddSplineControl( splinePath_t *spline, const char *name );
+splinePath_t *G_FindSplinePath( const char *name );
+void G_BuildSplinePaths( void );
+void G_EvaluateSplinePosition( gentity_t *ent, int atTime, vec3_t origin, vec3_t angles );
 
 //
 // g_tramcar.c

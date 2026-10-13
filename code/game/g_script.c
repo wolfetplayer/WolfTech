@@ -50,6 +50,7 @@ vmCvar_t g_scriptDebug;
 //
 // action functions need to be declared here so they can be accessed in the scriptAction table
 qboolean G_ScriptAction_GotoMarker( gentity_t *ent, char *params );
+qboolean G_ScriptAction_FollowSpline( gentity_t *ent, char *params );
 qboolean G_ScriptAction_Wait( gentity_t *ent, char *params );
 qboolean G_ScriptAction_Trigger( gentity_t *ent, char *params );
 qboolean G_ScriptAction_PlaySound( gentity_t *ent, char *params );
@@ -111,6 +112,7 @@ qboolean G_ScriptAction_EnableSpeaker( gentity_t *ent, char *params );
 g_script_stack_action_t gScriptActions[] =
 {
 	{"gotomarker",               G_ScriptAction_GotoMarker},
+	{"followspline",             G_ScriptAction_FollowSpline},
 	{"playsound",                G_ScriptAction_PlaySound},
 	{"playanim",             G_ScriptAction_PlayAnim},
 	{"wait",                 G_ScriptAction_Wait},

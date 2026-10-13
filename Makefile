@@ -2657,6 +2657,7 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/g_script.o \
   $(B)/$(BASEGAME)/game/g_session.o \
   $(B)/$(BASEGAME)/game/g_spawn.o \
+  $(B)/$(BASEGAME)/game/g_spline.o \
   $(B)/$(BASEGAME)/game/g_svcmds.o \
   $(B)/$(BASEGAME)/game/g_survival_buy.o \
   $(B)/$(BASEGAME)/game/g_survival_score.o \

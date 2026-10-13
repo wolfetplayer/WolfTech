@@ -931,6 +931,20 @@ Target: next path corner and other targets to fire
 "wait" seconds to wait before behining move to next corner
 
 "count2" used only in conjunction with the truck_cam to control playing of gear changes
+
+Can also be used as a curve "control" point for an info_train_spline_main.
+*/
+
+/*QUAKED info_train_spline_main (0 1 0) (-8 -8 -8) (8 8 8)
+Spline path node for the "followspline" script command. Defines one curved
+leg from this node to the node named by "target", optionally bowed through
+up to 4 control points.
+"targetname"	name scripts use to start a mover along this leg (see "followspline")
+"target"	the next info_train_spline_main node (the far end of this leg)
+"control"	optional path_corner name the curve bows toward (nearest to this node)
+"control2"	optional 2nd control point
+"control3"	optional 3rd control point
+"control4"	optional 4th control point
 */
 
 /*QUAKED func_train_rotating (0 .5 .8) ? START_ON TOGGLE BLOCK_STOPS

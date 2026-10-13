@@ -245,6 +245,148 @@ qboolean G_ScriptAction_GotoMarker( gentity_t *ent, char *params ) {
 }
 
 /*
+===============
+G_ScriptAction_FollowSpline
+
+  syntax: followspline <backward 0|1> <spline targetname> <speed> [roll <start> <end>] [wait]
+
+  Moves an ET_MOVER entity at constant speed along one curved leg defined
+  by a pair of "info_train_spline_main" nodes (see g_spline.c).
+===============
+*/
+qboolean G_ScriptAction_FollowSpline( gentity_t *ent, char *params ) {
+	char *pString, *token;
+
+	if ( params && ( ent->scriptStatus.scriptFlags & SCFL_GOING_TO_MARKER ) ) {
+		// we can't process a new movement until the last one has finished
+		return qfalse;
+	}
+
+	if ( !params || ent->scriptStatus.scriptStackChangeTime < level.time ) {          // we are waiting for it to reach destination
+		if ( ent->s.pos.trTime + ent->s.pos.trDuration <= level.time ) {  // we made it
+			ent->scriptStatus.scriptFlags &= ~SCFL_GOING_TO_MARKER;
+
+			G_EvaluateSplinePosition( ent, ent->s.pos.trTime + ent->s.pos.trDuration, ent->r.currentOrigin, ent->r.currentAngles );
+
+			VectorCopy( ent->r.currentAngles, ent->s.angles );
+			VectorCopy( ent->r.currentAngles, ent->s.apos.trBase );
+			ent->s.apos.trTime = level.time;
+			ent->s.apos.trDuration = 0;
+			ent->s.apos.trType = TR_STATIONARY;
+			VectorClear( ent->s.apos.trDelta );
+
+			VectorCopy( ent->r.currentOrigin, ent->s.pos.trBase );
+			ent->s.pos.trTime = level.time;
+			ent->s.pos.trDuration = 0;
+			ent->s.pos.trType = TR_STATIONARY;
+			VectorClear( ent->s.pos.trDelta );
+
+			ent->splinePath = NULL;
+
+			script_linkentity( ent );
+
+			return qtrue;
+		}
+	} else {    // we have just started this command
+		splinePath_t *spline;
+		float speed;
+		qboolean backward;
+		qboolean wait = qfalse;
+		float rollStart = 0, rollEnd = 0;
+
+		if ( ent->s.eType != ET_MOVER ) {
+			G_Error( "G_Scripting: followspline can only be used on an ET_MOVER entity\n" );
+		}
+
+		pString = params;
+
+		token = COM_ParseExt( &pString, qfalse );
+		if ( !token[0] ) {
+			G_Error( "G_Scripting: followspline must have a direction\n" );
+		}
+		backward = (qboolean)( atoi( token ) != 0 );
+
+		token = COM_ParseExt( &pString, qfalse );
+		if ( !token[0] ) {
+			G_Error( "G_Scripting: followspline must have a spline targetname\n" );
+		}
+
+		spline = G_FindSplinePath( token );
+		if ( !spline ) {
+			G_Error( "G_Scripting: followspline can't find spline with \"targetname\" = \"%s\"\n", token );
+		}
+		if ( !spline->next ) {
+			G_Error( "G_Scripting: followspline spline \"%s\" has no resolved target\n", token );
+		}
+
+		token = COM_ParseExt( &pString, qfalse );
+		if ( !token[0] ) {
+			G_Error( "G_Scripting: followspline must have a speed\n" );
+		}
+		speed = atof( token );
+		if ( speed < 1 ) {
+			speed = 1;
+		}
+
+		while ( token[0] ) {
+			token = COM_ParseExt( &pString, qfalse );
+			if ( token[0] ) {
+				if ( !Q_stricmp( token, "wait" ) ) {
+					wait = qtrue;
+				} else if ( !Q_stricmp( token, "roll" ) )      {
+					token = COM_ParseExt( &pString, qfalse );
+					if ( !token[0] ) {
+						G_Error( "G_Scripting: followspline roll must have a start angle\n" );
+					}
+					rollStart = atof( token );
+
+					token = COM_ParseExt( &pString, qfalse );
+					if ( !token[0] ) {
+						G_Error( "G_Scripting: followspline roll must have an end angle\n" );
+					}
+					rollEnd = atof( token );
+				}
+			}
+		}
+
+		// zero-length leg and a real speed, just so InitMover has safe values to divide by
+		VectorCopy( ent->r.currentOrigin, ent->pos1 );
+		VectorCopy( ent->r.currentOrigin, ent->pos2 );
+		ent->speed = speed;
+		InitMover( ent );
+
+		ent->splinePath = spline;
+		ent->splineBackward = backward;
+		ent->splineRollStart = rollStart;
+		ent->splineRollEnd = rollEnd;
+		ent->reached = 0;
+
+		ent->s.pos.trType = TR_INTERPOLATE;
+		ent->s.apos.trType = TR_INTERPOLATE;
+		ent->s.pos.trTime = ent->s.apos.trTime = level.time;
+		ent->s.pos.trDuration = ent->s.apos.trDuration = (int)( 1000.0f * ( spline->length / speed ) );
+		if ( ent->s.pos.trDuration < 1 ) {
+			ent->s.pos.trDuration = ent->s.apos.trDuration = 1;
+		}
+		VectorClear( ent->s.pos.trDelta );
+		VectorClear( ent->s.apos.trDelta );
+
+		if ( !wait ) {
+			// set the goto flag, so we can keep processing the move until we reach the destination
+			ent->scriptStatus.scriptFlags |= SCFL_GOING_TO_MARKER;
+			return qtrue;   // continue to next command
+		}
+	}
+
+	G_EvaluateSplinePosition( ent, level.time, ent->r.currentOrigin, ent->r.currentAngles );
+	VectorCopy( ent->r.currentOrigin, ent->s.pos.trBase );
+	VectorCopy( ent->r.currentAngles, ent->s.apos.trBase );
+	script_linkentity( ent );
+
+	return qfalse;
+}
+
+/*
 =================
 G_ScriptAction_Wait
 
