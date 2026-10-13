@@ -7606,6 +7606,7 @@ void _UI_Init( qboolean inGameLoad ) {
 	uiInfo.uiDC.modelBounds = &trap_R_ModelBounds;
 	uiInfo.uiDC.fillRect = &UI_FillRect;
 	uiInfo.uiDC.fillRectRounded = &UI_FillRectRounded;
+	uiInfo.uiDC.fillRectSkewed = &UI_FillRectSkewed;
 	uiInfo.uiDC.drawRect = &_UI_DrawRect;
 	uiInfo.uiDC.drawTopBottom = &_UI_DrawTopBottom;
 	uiInfo.uiDC.clearScene = &trap_R_ClearScene;

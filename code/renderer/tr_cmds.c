@@ -378,6 +378,37 @@ void RE_StretchPicRounded( float x, float y, float w, float h,
 	cmd->radius = radius;
 }
 
+/*
+==============
+RE_StretchPicSkewed
+
+Draws a quad with its top-left/top-right corners independently shifted
+horizontally relative to the bottom edge. Equal skewLeft/skewRight gives
+a parallelogram; either one left at 0 gives a one-sided angled cut.
+==============
+*/
+void RE_StretchPicSkewed( float x, float y, float w, float h,
+							float s1, float t1, float s2, float t2, qhandle_t hShader, float skewLeft, float skewRight ) {
+	stretchPicCommand_t *cmd;
+
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+	cmd->commandId = RC_STRETCH_PIC_SKEWED;
+	cmd->shader = R_GetShaderByHandle( hShader );
+	cmd->x = x;
+	cmd->y = y;
+	cmd->w = w;
+	cmd->h = h;
+	cmd->s1 = s1;
+	cmd->t1 = t1;
+	cmd->s2 = s2;
+	cmd->t2 = t2;
+	cmd->skewLeft = skewLeft;
+	cmd->skewRight = skewRight;
+}
+
 
 /*
 ====================

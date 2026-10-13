@@ -309,6 +309,25 @@ void UI_FillRectRounded( float x, float y, float width, float height, float radi
 	trap_R_SetColor( NULL );
 }
 
+/*
+================
+UI_FillRectSkewed
+
+Coordinates (and skew) are 640*480 virtual values. Equal skewLeft/skewRight
+gives a parallelogram; leave one at 0 for a one-sided angled cut.
+=================
+*/
+void UI_FillRectSkewed( float x, float y, float width, float height, float skewLeft, float skewRight, const float *color ) {
+	trap_R_SetColor( color );
+
+	skewLeft *= uiInfo.uiDC.xscale;
+	skewRight *= uiInfo.uiDC.xscale;
+	UI_AdjustFrom640( &x, &y, &width, &height );
+	trap_R_DrawStretchPicSkewed( x, y, width, height, 0, 0, 0, 0, uiInfo.uiDC.whiteShader, skewLeft, skewRight );
+
+	trap_R_SetColor( NULL );
+}
+
 void UI_DrawSides( float x, float y, float w, float h ) {
 	UI_AdjustFrom640( &x, &y, &w, &h );
 	trap_R_DrawStretchPic( x, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );

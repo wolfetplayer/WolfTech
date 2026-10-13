@@ -151,6 +151,25 @@ void CG_FillRectRounded( float x, float y, float width, float height, float radi
 	trap_R_SetColor( NULL );
 }
 
+/*
+==============
+CG_FillRectSkewed
+
+Coordinates (and skew) are 640*480 virtual values. Equal skewLeft/skewRight
+gives a parallelogram; leave one at 0 for a one-sided angled cut.
+==============
+*/
+void CG_FillRectSkewed( float x, float y, float width, float height, float skewLeft, float skewRight, const float *color ) {
+	trap_R_SetColor( color );
+
+	skewLeft *= cgs.screenXScale;
+	skewRight *= cgs.screenXScale;
+	CG_AdjustFrom640( &x, &y, &width, &height );
+	trap_R_DrawStretchPicSkewed( x, y, width, height, 0, 0, 0, 1, cgs.media.whiteShader, skewLeft, skewRight );
+
+	trap_R_SetColor( NULL );
+}
+
 
 /*
 ==============

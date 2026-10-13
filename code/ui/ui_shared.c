@@ -951,6 +951,9 @@ void Window_Paint( Window *w, float fadeAmount, float fadeClamp, float fadeCycle
 	} else if ( w->style == WINDOW_STYLE_ROUNDED ) {
 		Fade( &w->flags, &w->backColor[3], fadeClamp, &w->nextTime, fadeCycle, qtrue, fadeAmount );
 		DC->fillRectRounded( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->cornerRadius, w->backColor );
+	} else if ( w->style == WINDOW_STYLE_SKEWED ) {
+		Fade( &w->flags, &w->backColor[3], fadeClamp, &w->nextTime, fadeCycle, qtrue, fadeAmount );
+		DC->fillRectSkewed( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->skewLeft, w->skewRight, w->backColor );
 	} else if ( w->style == WINDOW_STYLE_SHADER ) {
 		if ( w->flags & WINDOW_FORECOLORSET ) {
 			DC->setColor( w->foreColor );
@@ -1329,6 +1332,37 @@ void Script_SetItemColor( itemDef_t *item, char **args ) {
 			}
 		}
 	}
+}
+
+
+void Script_SetItemSkew( itemDef_t *item, char **args ) {
+	const char *itemname;
+	float skewLeft, skewRight;
+
+	// expecting an item/group name and 2 floats (skewleft, skewright)
+	if ( String_Parse( args, &itemname ) ) {
+		itemDef_t *item2;
+		int j;
+		int count = Menu_ItemsMatchingGroup( item->parent, itemname );
+
+		if ( !Float_Parse( args, &skewLeft ) || !Float_Parse( args, &skewRight ) ) {
+			return;
+		}
+
+		for ( j = 0; j < count; j++ ) {
+			item2 = Menu_GetMatchingItemByNumber( item->parent, j, itemname );
+			if ( item2 != NULL ) {
+				item2->window.skewLeft = skewLeft;
+				item2->window.skewRight = skewRight;
+			}
+		}
+	}
+}
+
+
+// clears focus (and the resulting focusColor text tint) from whatever item currently holds it in this menu
+void Script_ClearFocus( itemDef_t *item, char **args ) {
+	Menu_ClearFocus( item->parent );
 }
 
 
@@ -1766,6 +1800,8 @@ commandDef_t commandList[] =
 	{"setasset", &Script_SetAsset},              // works on this
 	{"setbackground", &Script_SetBackground},    // works on this
 	{"setitemcolor", &Script_SetItemColor},      // group/name
+	{"setitemskew", &Script_SetItemSkew},        // group/name, skewleft, skewright
+	{"clearfocus", &Script_ClearFocus},          // clears focus from whatever item in this menu currently has it
 	{"setteamcolor", &Script_SetTeamColor},      // sets this background color to team color
 	{"setfocus", &Script_SetFocus},              // sets this background color to team color
 	{"setplayermodel", &Script_SetPlayerModel},  // sets this background color to team color
@@ -5702,6 +5738,31 @@ qboolean ItemParse_cornerradius( itemDef_t *item, int handle ) {
 	return qtrue;
 }
 
+// sets skewLeft and skewRight to the same value (parallelogram lean); use skewleft/skewright for a one-sided cut
+qboolean ItemParse_skew( itemDef_t *item, int handle ) {
+	float f;
+	if ( !PC_Float_Parse( handle, &f ) ) {
+		return qfalse;
+	}
+	item->window.skewLeft = f;
+	item->window.skewRight = f;
+	return qtrue;
+}
+
+qboolean ItemParse_skewleft( itemDef_t *item, int handle ) {
+	if ( !PC_Float_Parse( handle, &item->window.skewLeft ) ) {
+		return qfalse;
+	}
+	return qtrue;
+}
+
+qboolean ItemParse_skewright( itemDef_t *item, int handle ) {
+	if ( !PC_Float_Parse( handle, &item->window.skewRight ) ) {
+		return qfalse;
+	}
+	return qtrue;
+}
+
 qboolean ItemParse_visible( itemDef_t *item, int handle ) {
 	int i;
 
@@ -6231,6 +6292,9 @@ keywordHash_t itemParseKeywords[] = {
 	{"border", ItemParse_border, NULL},
 	{"bordersize", ItemParse_bordersize, NULL},
 	{"cornerradius", ItemParse_cornerradius, NULL},
+	{"skew", ItemParse_skew, NULL},
+	{"skewleft", ItemParse_skewleft, NULL},
+	{"skewright", ItemParse_skewright, NULL},
 	{"visible", ItemParse_visible, NULL},
 	{"ownerdraw", ItemParse_ownerdraw, NULL},
 	{"align", ItemParse_align, NULL},
@@ -6546,6 +6610,34 @@ qboolean MenuParse_cornerradius( itemDef_t *item, int handle ) {
 	return qtrue;
 }
 
+// sets skewLeft and skewRight to the same value (parallelogram lean); use skewleft/skewright for a one-sided cut
+qboolean MenuParse_skew( itemDef_t *item, int handle ) {
+	menuDef_t *menu = (menuDef_t*)item;
+	float f;
+	if ( !PC_Float_Parse( handle, &f ) ) {
+		return qfalse;
+	}
+	menu->window.skewLeft = f;
+	menu->window.skewRight = f;
+	return qtrue;
+}
+
+qboolean MenuParse_skewleft( itemDef_t *item, int handle ) {
+	menuDef_t *menu = (menuDef_t*)item;
+	if ( !PC_Float_Parse( handle, &menu->window.skewLeft ) ) {
+		return qfalse;
+	}
+	return qtrue;
+}
+
+qboolean MenuParse_skewright( itemDef_t *item, int handle ) {
+	menuDef_t *menu = (menuDef_t*)item;
+	if ( !PC_Float_Parse( handle, &menu->window.skewRight ) ) {
+		return qfalse;
+	}
+	return qtrue;
+}
+
 qboolean MenuParse_backcolor( itemDef_t *item, int handle ) {
 	int i;
 	float f;
@@ -6788,6 +6880,9 @@ keywordHash_t menuParseKeywords[] = {
 	{"border", MenuParse_border, NULL},
 	{"borderSize", MenuParse_borderSize, NULL},
 	{"cornerradius", MenuParse_cornerradius, NULL},
+	{"skew", MenuParse_skew, NULL},
+	{"skewleft", MenuParse_skewleft, NULL},
+	{"skewright", MenuParse_skewright, NULL},
 	{"backcolor", MenuParse_backcolor, NULL},
 	{"forecolor", MenuParse_forecolor, NULL},
 	{"bordercolor", MenuParse_bordercolor, NULL},

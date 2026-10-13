@@ -1961,6 +1961,8 @@ typedef struct {
 	int gradientType;       //----(SA)	added
 	float angle;            // NERVE - SMF
 	float radius;           // corner radius, in the same pixel space as x/y/w/h
+	float skewLeft;          // horizontal shift of the top-left corner relative to the bottom-left, same pixel space as x/y/w/h
+	float skewRight;         // horizontal shift of the top-right corner relative to the bottom-right, same pixel space as x/y/w/h
 } stretchPicCommand_t;
 
 typedef struct {
@@ -2022,6 +2024,7 @@ typedef enum {
 	RC_ROTATED_PIC,
 	RC_STRETCH_PIC_GRADIENT,    // (SA) added
 	RC_STRETCH_PIC_ROUNDED,
+	RC_STRETCH_PIC_SKEWED,
 	RC_DRAW_SURFS,
 	RC_DRAW_BUFFER,
 	RC_RENDERTOTEXTURE,
@@ -2077,6 +2080,8 @@ void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
 void RE_StretchPicRounded( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, float radius );
+void RE_StretchPicSkewed( float x, float y, float w, float h,
+							float s1, float t1, float s2, float t2, qhandle_t hShader, float skewLeft, float skewRight );
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,

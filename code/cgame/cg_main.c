@@ -2538,6 +2538,7 @@ void CG_LoadHudMenu( void ) {
 	cgDC.modelBounds = &trap_R_ModelBounds;
 	cgDC.fillRect = &CG_FillRect;
 	cgDC.fillRectRounded = &CG_FillRectRounded;
+	cgDC.fillRectSkewed = &CG_FillRectSkewed;
 	cgDC.drawRect = &CG_DrawRect;
 	cgDC.drawSides = &CG_DrawSides;
 	cgDC.drawTopBottom = &CG_DrawTopBottom;

@@ -2147,6 +2147,7 @@ void CG_SetScreenPlacement(screenPlacement_e hpos, screenPlacement_e vpos);
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h );
 void CG_FillRect( float x, float y, float width, float height, const float *color );
 void CG_FillRectRounded( float x, float y, float width, float height, float radius, const float *color );
+void CG_FillRectSkewed( float x, float y, float width, float height, float skewLeft, float skewRight, const float *color );
 void CG_HorizontalPercentBar( float x, float y, float width, float height, float percent );
 void CG_DrawMotd( void );
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
@@ -2737,6 +2738,8 @@ void        trap_R_DrawStretchPicGradient( float x, float y, float w, float h,
 										   float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
 void        trap_R_DrawStretchPicRounded( float x, float y, float w, float h,
 										   float s1, float t1, float s2, float t2, qhandle_t hShader, float radius );
+void        trap_R_DrawStretchPicSkewed( float x, float y, float w, float h,
+										   float s1, float t1, float s2, float t2, qhandle_t hShader, float skewLeft, float skewRight );
 
 void        trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
 int         trap_R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagName, int startIndex );

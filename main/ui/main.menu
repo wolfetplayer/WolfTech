@@ -27,7 +27,7 @@ S#include "ui/menudef.h"
 	fullScreen MENU_TRUE				
 	rect -120 0 900 480			    // Size and position of the menu
 	visible MENU_TRUE				// Visible on open
-	focusColor .9 .85 1 .8			// Menu focus color for text and items
+	focusColor 0 0 0 1			// Menu focus color for text and items - black, so hovered button text reads over the white skewed highlight
 	
 	onOpen { 
 		setitemcolor fadebox backcolor 0 0 0 1 ;   
@@ -77,21 +77,25 @@ itemDef
 	    group mainmenus
 	    text "@MAIN_LOBBY_CREATE"
 	    type 1
-	    rect 10 200 178 26
-	    visible 1 
+	    rect 10 196 188 34
+	    visible 1
 	textalign 0
-	textaligny 20
+	textalignx 10
+	textaligny 24
 	textscale .60
 		textfont UI_FONT_BIG
-		
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+
     	action {
 			play "sound/misc/zap.wav" ;
 			close main ;
  			open create_menu;
 			uiScript loadArenas }
-		
-	    mouseEnter { show "realrtcw_main_create" } 
-	    mouseExit { hide "realrtcw_main_create" } 	
+
+	    mouseEnter { setitemskew createmenu 0 18 ; setitemcolor createmenu backcolor 1 1 1 .92 }
+	    mouseExit { setitemskew createmenu 0 0 ; setitemcolor createmenu backcolor 1 1 1 0 ; clearfocus }
 	}
 	
 	// JOIN GAME BUTTON
@@ -100,22 +104,26 @@ itemDef
 		text "@MAIN_LOBBY_JOIN"
 		group mainmenus
 		type 1
-	    rect 10 250 178 26
+	    rect 10 246 161 34
 		visible 1
 		textfont UI_FONT_BIG
 	textalign 0
-	textaligny 20
+	textalignx 10
+	textaligny 24
 	textscale .60
-		
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+
     	action {
 			play "sound/misc/zap.wav" ;
 			close main ;
  			open multi_menu;
 			uiScript RefreshServers ;
 			uiScript RefreshFilter }
-		
-	    mouseEnter { show "realrtcw_main_join" } 
-	    mouseExit { hide "realrtcw_main_join" } 	
+
+	    mouseEnter { setitemskew joinmenu 0 18 ; setitemcolor joinmenu backcolor 1 1 1 .92 }
+	    mouseExit { setitemskew joinmenu 0 0 ; setitemcolor joinmenu backcolor 1 1 1 0 ; clearfocus }
     }
 		
     // OPTIONS BUTTON
@@ -124,20 +132,24 @@ itemDef
 		text "@MAIN_OPTIONS"
 		group mainmenus
 		type 1
-	    rect 10 300 178 26
+	    rect 10 296 121 34
 		visible 1
 		textfont UI_FONT_BIG
 	textalign 0
-	textaligny 20
+	textalignx 10
+	textaligny 24
 	textscale .60
-		
-		action {play "sound/misc/zap.wav" ; 
-		close main ; 
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+
+		action {play "sound/misc/zap.wav" ;
+		close main ;
 		open setup_menu ;
 		open control_menu }
-		
-	    mouseEnter { show "realrtcw_main_options" } 
-	    mouseExit { hide "realrtcw_main_options" }  
+
+	    mouseEnter { setitemskew optionsmenu 0 18 ; setitemcolor optionsmenu backcolor 1 1 1 .92 }
+	    mouseExit { setitemskew optionsmenu 0 0 ; setitemcolor optionsmenu backcolor 1 1 1 0 ; clearfocus }
     }
 	
     // CREDITS BUTTON	
@@ -146,18 +158,22 @@ itemDef
         text "@MAIN_CREDITS"
 		group mainmenus
  	    type 1
-	    rect 10 350 178 26
+	    rect 10 346 121 34
 	textalign 0
-	textaligny 20
+	textalignx 10
+	textaligny 24
 	textscale .60
 		textfont UI_FONT_BIG
 	    visible 1
-		
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+
 		action {close main;
-		open credit } 
-		
-	    mouseEnter { show "realrtcw_main_credits" } 
-	    mouseExit { hide "realrtcw_main_credits" }  	
+		open credit }
+
+	    mouseEnter { setitemskew creditsmenu 0 18 ; setitemcolor creditsmenu backcolor 1 1 1 .92 }
+	    mouseExit { setitemskew creditsmenu 0 0 ; setitemcolor creditsmenu backcolor 1 1 1 0 ; clearfocus }
 	}
 	
 	// QUIT BUTTON
@@ -166,20 +182,24 @@ itemDef
         text "@MAIN_QUIT"
 		group mainmenus
  	    type 1
-	    rect 10 400 178 26
+	    rect 10 396 80 34
 		textfont UI_FONT_BIG
 	textalign 0
-	textaligny 20
+	textalignx 10
+	textaligny 24
 	textscale .60
 	    visible 1
-		
-		action 
-		{ 
-		uiScript "quit" 
-		}	
-		
-	    mouseEnter { show "realrtcw_main_quit" } 
-	    mouseExit { hide "realrtcw_main_quit" } 
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+
+		action
+		{
+		uiScript "quit"
+		}
+
+	    mouseEnter { setitemskew quit 0 18 ; setitemcolor quit backcolor 1 1 1 .92 }
+	    mouseExit { setitemskew quit 0 0 ; setitemcolor quit backcolor 1 1 1 0 ; clearfocus }
 	}
 	
 }

@@ -9,7 +9,7 @@ menuDef {
    	fullscreen 1
    	rect 186 0 454 480
 //	background "menuback_a"
-   	focusColor .9 .9 .9 1
+   	focusColor 0 0 0 1 // black, so hovered button text reads over the white skewed highlight
    	style 1
    	border 1
 	soundloop ""
@@ -79,20 +79,27 @@ itemDef
 	    name controlsmenu
 		group optionsmenugroup
  	    type 1
-	    rect 10 200 178 30
+	    rect 10 196 134 38
 	    visible 1
 	    text "@MAIN_CONTROLS"
 	textalign 0
-	textaligny 20
+	textalignx 10
+	textaligny 24
 	textscale .60
-		
-	action { play "sound/misc/kcaction.wav" ; 
-	close control_menu ; 
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+
+	action { play "sound/misc/kcaction.wav" ;
+	close control_menu ;
 	close system_menu ;
-	close options_menu ; 
+	close options_menu ;
 	close cdkey_menu ;
 	close default_menu ;
 	open control_menu }
+
+	mouseEnter { setitemskew controlsmenu 0 18 ; setitemcolor controlsmenu backcolor 1 1 1 .92 }
+	mouseExit { setitemskew controlsmenu 0 0 ; setitemcolor controlsmenu backcolor 1 1 1 0 ; clearfocus }
 	}
 	
 	// SYSTEM BUTTON
@@ -100,19 +107,26 @@ itemDef
         name systemmenu
 		group optionsmenugroup
  	    type 1
-	    rect 10 250 178 30
+	    rect 10 246 107 38
 	    visible 1
 	    text "@MAIN_SYSTEM"
 	textalign 0
-	textaligny 20
+	textalignx 10
+	textaligny 24
 	textscale .60
-	action { play "sound/misc/kcaction.wav" ; 
-	close control_menu ; 
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+	action { play "sound/misc/kcaction.wav" ;
+	close control_menu ;
 	close system_menu ;
-	close options_menu ; 
+	close options_menu ;
 	close cdkey_menu ;
 	close default_menu ;
-	open system_menu }	
+	open system_menu }
+
+	mouseEnter { setitemskew systemmenu 0 18 ; setitemcolor systemmenu backcolor 1 1 1 .92 }
+	mouseExit { setitemskew systemmenu 0 0 ; setitemcolor systemmenu backcolor 1 1 1 0 ; clearfocus }
 	}
 	
 	// GAME OPTIONS BUTTON
@@ -120,20 +134,27 @@ itemDef
         name gameoptionsmenu
 		group optionsmenugroup
  	    type 1
-	    rect 10 300 178 40
+	    rect 10 294 188 40
 	    visible 1
-	    text "@MAIN_GAME_OPTIONS"	
+	    text "@MAIN_GAME_OPTIONS"
 	textalign 0
+	textalignx 10
 	textaligny 20
-	textscale .60	
-		
-	action { play "sound/misc/kcaction.wav" ; 
-	close control_menu ; 
+	textscale .60
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+
+	action { play "sound/misc/kcaction.wav" ;
+	close control_menu ;
 	close system_menu ;
-	close options_menu ; 
+	close options_menu ;
 	close cdkey_menu ;
 	close default_menu ;
-	open options_menu }		
+	open options_menu }
+
+	mouseEnter { setitemskew gameoptionsmenu 0 18 ; setitemcolor gameoptionsmenu backcolor 1 1 1 .92 }
+	mouseExit { setitemskew gameoptionsmenu 0 0 ; setitemcolor gameoptionsmenu backcolor 1 1 1 0 ; clearfocus }
 	}
 	
 	// DEFAULTS BUTTON
@@ -142,19 +163,26 @@ itemDef
 		group optionsmenugroup
  	    type 1
 	    textstyle 6
-	    rect 10 350 178 40
-	    visible 0 
-	    text "@MAIN_DEFAULTS"	
+	    rect 10 344 242 40
+	    visible 0
+	    text "@MAIN_DEFAULTS"
 	textalign 0
+	textalignx 10
 	textaligny 20
 	textscale .60
-	action { play "sound/misc/kcaction.wav" ; 
-	close control_menu ; 
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+	action { play "sound/misc/kcaction.wav" ;
+	close control_menu ;
 	close system_menu ;
-	close options_menu ; 
+	close options_menu ;
 	close cdkey_menu ;
 	close default_menu ;
 	open default_menu }
+
+	mouseEnter { setitemskew defaultsmenu 0 18 ; setitemcolor defaultsmenu backcolor 1 1 1 .92 }
+	mouseExit { setitemskew defaultsmenu 0 0 ; setitemcolor defaultsmenu backcolor 1 1 1 0 ; clearfocus }
 	}
 	
 	// BACK BUTTON
@@ -162,19 +190,26 @@ itemDef
         name backmenu
 		group optionsmenugroup
  	    type 1
-        rect 10 400 178 40
-	    visible 1 
-	    text "@MAIN_BACK"	
+        rect 10 394 80 40
+	    visible 1
+	    text "@MAIN_BACK"
 	textalign 0
+	textalignx 10
 	textaligny 20
 	textscale .60
-     	action { close control_menu ; 
-	close setup_menu ; 
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+     	action { close control_menu ;
+	close setup_menu ;
 	close system_menu ;
-	close options_menu ; 
-	close default_menu ; 
+	close options_menu ;
+	close default_menu ;
 	close resetscore_menu ;
 	open main }
+
+	mouseEnter { setitemskew backmenu 0 18 ; setitemcolor backmenu backcolor 1 1 1 .92 }
+	mouseExit { setitemskew backmenu 0 0 ; setitemcolor backmenu backcolor 1 1 1 0 ; clearfocus }
     }
 
 //	MESSAGES	//

@@ -382,6 +382,11 @@ void    trap_R_DrawStretchPicRounded( float x, float y, float w, float h,
 	syscall( CG_R_DRAWSTRETCHPIC_ROUNDED, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader, PASSFLOAT( radius ) );
 }
 
+void    trap_R_DrawStretchPicSkewed( float x, float y, float w, float h,
+										float s1, float t1, float s2, float t2, qhandle_t hShader, float skewLeft, float skewRight ) {
+	syscall( CG_R_DRAWSTRETCHPIC_SKEWED, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader, PASSFLOAT( skewLeft ), PASSFLOAT( skewRight ) );
+}
+
 void    trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs ) {
 	syscall( CG_R_MODELBOUNDS, model, mins, maxs );
 }

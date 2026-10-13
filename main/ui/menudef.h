@@ -69,6 +69,7 @@ If you have questions concerning this license or the applicable additional terms
 #define WINDOW_STYLE_TEAMCOLOR      4       // team color
 #define WINDOW_STYLE_CINEMATIC      5       // cinematic
 #define WINDOW_STYLE_ROUNDED        6       // filled with background color, rounded corners (see "cornerradius")
+#define WINDOW_STYLE_SKEWED         7       // filled with background color, slanted edges (see "skew", or "skewleft"/"skewright" for a one-sided cut)
 
 #define MENU_TRUE           1       // uh.. true
 #define MENU_FALSE          0       // and false
