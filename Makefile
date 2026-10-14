@@ -168,8 +168,18 @@ ifndef COPYBINDIR
 COPYBINDIR=$(COPYDIR)
 endif
 
+ifndef STEAMAPPNAME
+STEAMAPPNAME=Tides of War
+endif
+
+# Auto-detected per machine by find-steam-game.sh: it searches every Steam
+# library it can find (via the registry on Windows, standard install
+# locations elsewhere) for an existing "steamapps/common/$(STEAMAPPNAME)",
+# falling back to a path under whichever Steam install it finds so the
+# folder can be created there. Override in Makefile.local or on the command
+# line (make deploysteam STEAMGAMEDIR=...) if it picks the wrong one.
 ifndef STEAMGAMEDIR
-STEAMGAMEDIR="G:/Steam/steamapps/common/Tides of War"
+STEAMGAMEDIR:=$(shell bash "$(CURDIR)/find-steam-game.sh" "$(STEAMAPPNAME)")
 endif
 
 ifndef MOUNT_DIR
@@ -3108,34 +3118,40 @@ endif
 # Builds the release target, then copies the exe/dlls straight into a Steam
 # install so there's no manual copy-paste after every compile.
 deploysteam: release
+	@if [ -z "$(strip $(STEAMGAMEDIR))" ]; then \
+		echo "Could not find a Steam install on this machine."; \
+		echo "Set STEAMGAMEDIR in Makefile.local, e.g.:"; \
+		echo '  STEAMGAMEDIR=D:/SteamLibrary/steamapps/common/$(STEAMAPPNAME)'; \
+		exit 1; \
+	fi
 	@echo "Deploying release build to $(STEAMGAMEDIR)"
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
-	-$(MKDIR) -m 0755 $(STEAMGAMEDIR)/$(BASEGAME)
+	-$(MKDIR) -m 0755 "$(STEAMGAMEDIR)/$(BASEGAME)"
   endif
 endif
 ifneq ($(BUILD_CLIENT),0)
-	$(INSTALL) -m 0755 $(BR)/$(CLIENTBIN)$(FULLBINEXT) $(STEAMGAMEDIR)/$(CLIENTBIN)$(FULLBINEXT)
+	$(INSTALL) -m 0755 $(BR)/$(CLIENTBIN)$(FULLBINEXT) "$(STEAMGAMEDIR)/$(CLIENTBIN)$(FULLBINEXT)"
   ifneq ($(USE_RENDERER_DLOPEN),0)
-	$(INSTALL) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(STEAMGAMEDIR)/renderer_opengl1_$(SHLIBNAME)
+	$(INSTALL) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) "$(STEAMGAMEDIR)/renderer_opengl1_$(SHLIBNAME)"
     ifneq ($(BUILD_RENDERER_REND2),0)
-	$(INSTALL) -m 0755 $(BR)/renderer_rend2_$(SHLIBNAME) $(STEAMGAMEDIR)/renderer_rend2_$(SHLIBNAME)
+	$(INSTALL) -m 0755 $(BR)/renderer_rend2_$(SHLIBNAME) "$(STEAMGAMEDIR)/renderer_rend2_$(SHLIBNAME)"
     endif
   endif
 endif
 ifneq ($(BUILD_SERVER),0)
 	@if [ -f $(BR)/$(SERVERBIN)$(FULLBINEXT) ]; then \
-		$(INSTALL) -m 0755 $(BR)/$(SERVERBIN)$(FULLBINEXT) $(STEAMGAMEDIR)/$(SERVERBIN)$(FULLBINEXT); \
+		$(INSTALL) -m 0755 $(BR)/$(SERVERBIN)$(FULLBINEXT) "$(STEAMGAMEDIR)/$(SERVERBIN)$(FULLBINEXT)"; \
 	fi
 endif
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
 	$(INSTALL) -m 0755 $(BR)/$(BASEGAME)/cgame_$(SHLIBNAME) \
-                                        $(STEAMGAMEDIR)/$(BASEGAME)/.
+                                        "$(STEAMGAMEDIR)/$(BASEGAME)/."
 	$(INSTALL) -m 0755 $(BR)/$(BASEGAME)/qagame_$(SHLIBNAME) \
-                                        $(STEAMGAMEDIR)/$(BASEGAME)/.
+                                        "$(STEAMGAMEDIR)/$(BASEGAME)/."
 	$(INSTALL) -m 0755 $(BR)/$(BASEGAME)/ui_$(SHLIBNAME) \
-                                        $(STEAMGAMEDIR)/$(BASEGAME)/.
+                                        "$(STEAMGAMEDIR)/$(BASEGAME)/."
   endif
 endif
 	@echo "Deploy to Steam complete."
