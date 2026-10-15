@@ -7,23 +7,16 @@ textures/wt_skies/sky_castle_night
 	surfaceparm nolightmap
 	surfaceparm sky
 	q3map_globaltexture
-	q3map_lightsubdivide 256 
-    q3map_sun 0.274632 0.274632 0.39 10 35 45
-    q3map_surfacelight 10
-	skyparms full 200 -
+	q3map_lightsubdivide 128 
+    q3map_sun 0.274632 0.274632 0.39 5 35 45
+    q3map_surfacelight 5
+	skyparms textures/wt_skies/sky_castle_night_box 2048 -
 	sunshader sun
-	
+
 	{
-		map textures/wt_skies/night_sky.jpg
-		tcMod scale 16.0 16.0
-		depthWrite
+		map textures/wt_skies/clouds_1.tga
+		blendFunc blend
+		rgbGen identityLighting
+		tcMod scroll 0.0015 0.0008
 	}
-
-	//{
-	//	map textures/wt_skies/clouds_1.tga
-		//blendfunc blend
-		//tcMod scroll 0.001 0.00
-		//tcMod scale 2 1
-	//}
-
 }

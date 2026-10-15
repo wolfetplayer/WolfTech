@@ -5,7 +5,7 @@ type		"coop_survival"
 }
 
 {
-map			"sv_escape2"
-longname		"Escape 2"
+map			"sv_castle"
+longname		"Castle"
 type		"coop_survival"
 }
