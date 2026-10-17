@@ -1064,8 +1064,8 @@ qboolean AICast_WeaponUsable( cast_state_t *cs, int weaponNum ) {
 			}
 			break;
 		case AICHAR_LOPER:  // loper leap attack
-		 case AICHAR_LOPER_SPECIAL: 
-			if ( cs->bs->areanum && VectorLength( cs->bs->velocity ) > 1 ) {    // if we are in a valid area, and are persuing, then leave a delay
+		 case AICHAR_LOPER_SPECIAL:
+			if ( VectorLength( cs->bs->velocity ) > 1 ) {    // if we are persuing, then leave a delay
 				// if there isn't a direct trace to our enemy, then fail
 				if ( cs->enemyNum >= 0 ) {
 					trace_t trace;

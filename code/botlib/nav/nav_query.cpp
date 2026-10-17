@@ -32,6 +32,8 @@ static const int NAV_CROWD_STUCK_TICKS = 5;
 static const float NAV_CROWD_DESYNC_DIST_SQ = 96.0f * 96.0f;
 static const float NAV_CROWD_DESYNC_HEIGHT = 96.0f;
 static const float NAV_CROWD_RETARGET_DIST_SQ = 64.0f * 64.0f;
+// npos may drift this far from the real origin before we snap it back.
+static const float NAV_CROWD_NPOS_DRIFT_TOLERANCE_SQ = 32.0f * 32.0f;
 // a walkability raycast only counts as clear if the surface it ended on is this close to the target's height.
 static const float NAV_RAYCAST_LEVEL_TOLERANCE = 64.0f;
 
@@ -335,8 +337,10 @@ int Nav_MoveToGoal( navMoveResult_t *result, const float *start, const float *go
 		int agentIdx = Nav_GetOrAddCrowdAgent( data, agentId, navStart );
 		if ( agentIdx >= 0 ) {
 			dtCrowdAgent *ag = data->crowd->getEditableAgent( agentIdx );
-			// resync every call so the crowd's own tracked position can't drift from the real one.
-			VectorCopy( navStart, ag->npos );
+			// only correct npos once it's actually drifted from the real origin.
+			if ( dtVdist2DSqr( ag->npos, navStart ) > NAV_CROWD_NPOS_DRIFT_TOLERANCE_SQ ) {
+				VectorCopy( navStart, ag->npos );
+			}
 			if ( !ag->targetRef || dtVdist2DSqr( ag->targetPos, navGoal ) > NAV_CROWD_RETARGET_DIST_SQ ) {
 				dtPolyRef endRef;
 				float endNearest[3];

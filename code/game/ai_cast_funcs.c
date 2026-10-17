@@ -72,6 +72,8 @@ static int lastGrenadeFlush = 0;
 
 char *AIFunc_BattleChase( cast_state_t *cs );
 char *AIFunc_Battle( cast_state_t *cs );
+char *AIFunc_BattleRollStart( cast_state_t *cs, vec3_t vec );
+char *AIFunc_BattleDiveStart( cast_state_t *cs, vec3_t vec );
 
 static bot_moveresult_t *moveresult;
 
@@ -2132,19 +2134,81 @@ char *AIFunc_Hunt( cast_state_t *cs ) {
 		if ( canAttack && dist < cs->followDist + 150 ) {
 			cs->speedScale = AICast_SpeedScaleForDistance( cs, dist, cs->followDist );
 		}
-	} else if ( AICast_CanMoveWhileFiringWeapon( cs->weaponNum ) ) {
-		switch ( ( ( level.time + cs->entityNum * 700 ) / 1500 ) % 3 ) {
-		case 0:
-			trap_EA_MoveLeft( cs->entityNum );
-			break;
-		case 2:
-			trap_EA_MoveRight( cs->entityNum );
-			break;
-		default:
-			if ( cs->attributes[ATTACK_CROUCH] > 0.1 ) {
-				cs->attackcrouch_time = level.time + 1000;
+	} else {
+		// special monster attacks are normally only ever chosen from AIFunc_BattleStart()
+		char *specialAttack = NULL;
+
+		if ( canAttack && ( cs->aifuncAttack1 || cs->aifuncAttack2 || cs->aifuncAttack3 ) ) {
+			AICast_AimAtEnemy( cs );
+
+			if ( fabs( AngleDifference( cs->ideal_viewangles[YAW], cs->viewangles[YAW] ) ) < 10 ) {
+				int lastweap;
+
+				AICast_ChooseWeapon( cs, qtrue );
+
+				if ( cs->weaponNum == WP_MONSTER_ATTACK1 && cs->aifuncAttack1 && AICast_CheckAttack( cs, cs->enemyNum, qfalse ) ) {
+					specialAttack = cs->aifuncAttack1( cs );
+				} else if ( cs->weaponNum == WP_MONSTER_ATTACK2 && cs->aifuncAttack2 && AICast_CheckAttack( cs, cs->enemyNum, qfalse ) ) {
+					specialAttack = cs->aifuncAttack2( cs );
+				} else if ( cs->weaponNum == WP_MONSTER_ATTACK3 && cs->aifuncAttack3 && AICast_CheckAttack( cs, cs->enemyNum, qfalse ) ) {
+					specialAttack = cs->aifuncAttack3( cs );
+				}
+
+				if ( specialAttack ) {
+					return specialAttack;
+				}
+
+				// only burn a cooldown if there's actually a different weapon to fall back to
+				lastweap = cs->weaponNum;
+				AICast_ChooseWeapon( cs, qfalse );
+				if ( cs->weaponNum != lastweap ) {
+					cs->weaponFireTimes[lastweap] = level.time;
+				}
 			}
-			break;
+		} else if ( ( cs->aiFlags & ( AIFL_ROLL_ANIM | AIFL_DIVE_ANIM ) ) &&
+					cs->attributes[AGGRESSION] < 1.0 &&
+					cs->attributes[TACTICAL] > 0.5 &&
+					ent->client->ps.weapon &&
+					ent->client->ps.groundEntityNum == ENTITYNUM_WORLD &&
+					( !cs->lastRollMove || cs->lastRollMove < level.time - 4000 ) &&
+					VectorLength( cs->bs->cur_ps.velocity ) < 1 ) {
+			// simplified version of AIFunc_Battle()'s "dodge enemy aim with a roll" trigger
+			vec3_t aim, enemyVec, right, dir;
+			gentity_t *enemy = &g_entities[cs->enemyNum];
+
+			AngleVectors( enemy->client->ps.viewangles, aim, right, NULL );
+			VectorSubtract( cs->bs->origin, enemy->r.currentOrigin, enemyVec );
+			VectorNormalize( enemyVec );
+
+			if ( DotProduct( aim, enemyVec ) > 0.97 ) {
+				if ( level.time % 200 < 100 ) {
+					VectorNegate( right, dir );
+				} else {
+					VectorCopy( right, dir );
+				}
+
+				cs->lastRollMove = level.time;
+				if ( cs->aiFlags & AIFL_ROLL_ANIM ) {
+					return AIFunc_BattleRollStart( cs, dir );
+				}
+				return AIFunc_BattleDiveStart( cs, dir );
+			}
+		}
+
+		if ( AICast_CanMoveWhileFiringWeapon( cs->weaponNum ) ) {
+			switch ( ( ( level.time + cs->entityNum * 700 ) / 1500 ) % 3 ) {
+			case 0:
+				trap_EA_MoveLeft( cs->entityNum );
+				break;
+			case 2:
+				trap_EA_MoveRight( cs->entityNum );
+				break;
+			default:
+				if ( cs->attributes[ATTACK_CROUCH] > 0.1 ) {
+					cs->attackcrouch_time = level.time + 1000;
+				}
+				break;
+			}
 		}
 	}
 
@@ -2388,6 +2452,10 @@ char *AIFunc_BattleDiveStart( cast_state_t *cs, vec3_t vec ) {
 	if ( duration < 0 ) { // it failed
 		return NULL;
 	}
+	// add some duration to make sure it fully plays out
+	duration += 100;
+	g_entities[cs->entityNum].client->ps.legsTimer = duration;
+	g_entities[cs->entityNum].client->ps.torsoTimer = duration;
 	//
 	cs->noAttackTime = level.time + duration - 200;
 	// set the duration
@@ -5321,9 +5389,7 @@ char *AIFunc_BattleStart( cast_state_t *cs ) {
 				break;
 			}
 
-			// Rejected monster attack: cooldown this weapon and try another non-special weapon
-			cs->weaponFireTimes[cs->weaponNum] = level.time;
-
+			// only cooldown and switch weapons if there's actually another one to try
 			lastweap = cs->weaponNum;
 			AICast_ChooseWeapon( cs, qfalse );
 
@@ -5331,6 +5397,7 @@ char *AIFunc_BattleStart( cast_state_t *cs ) {
 				return NULL;
 			}
 
+			cs->weaponFireTimes[lastweap] = level.time;
 			continue;
 		}
 
@@ -5382,8 +5449,10 @@ char *AIFunc_DefaultStart( cast_state_t *cs ) {
 		break;
 	}
 
-	// If we already have an enemy, enter combat unless we just came from battle
-	if ( cs->enemyNum >= 0 && cs->aifunc != AIFunc_Battle ) {
+	// huntAll casts resume hunting instead of dropping into the single-enemy battle state
+	if ( cs->huntAll && cs->aifunc != AIFunc_Hunt ) {
+		rval = AIFunc_HuntStart( cs, cs->followEntity, qtrue );
+	} else if ( cs->enemyNum >= 0 && cs->aifunc != AIFunc_Battle ) {
 		rval = AIFunc_BattleStart( cs );
 	}
 
