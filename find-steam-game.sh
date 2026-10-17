@@ -15,7 +15,7 @@ GAME_NAME="${1:?usage: find-steam-game.sh <game-name>}"
 
 to_unix_path() {
     # Backslashes -> forward slashes, drop a trailing slash.
-    printf '%s' "$1" | sed -e 's#\\\\#/#g' -e 's#\\#/#g' -e 's#/$##'
+    printf '%s\n' "$1" | sed -e 's#\\\\#/#g' -e 's#\\#/#g' -e 's#/$##'
 }
 
 registry_steam_roots() {
