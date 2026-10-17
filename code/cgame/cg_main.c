@@ -157,6 +157,7 @@ vmCvar_t cg_enemyHealthbarRange;
 vmCvar_t cg_enemyHealthbarAimRadius;
 vmCvar_t cg_drawDamageNumbers;
 vmCvar_t cg_showAINames;
+vmCvar_t cg_showAIStats;
 vmCvar_t cg_draw2D;
 vmCvar_t cg_drawFrags;
 vmCvar_t cg_teamChatsOnly;
@@ -422,6 +423,7 @@ cvarTable_t cvarTable[] = {
 	{&cg_enemyHealthbarAimRadius, "cg_enemyHealthbarAimRadius", "120", CVAR_ARCHIVE},
 	{&cg_drawDamageNumbers, "cg_drawDamageNumbers", "0", CVAR_ARCHIVE},
 	{&cg_showAINames, "cg_showAINames", "0", CVAR_CHEAT},
+	{&cg_showAIStats, "cg_showAIStats", "0", CVAR_CHEAT},
 	{&cg_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE},
 	{&cg_simpleItems, "cg_simpleItems", "0", CVAR_ARCHIVE},
 	{&cg_reticles, "cg_reticles", "1", CVAR_CHEAT},

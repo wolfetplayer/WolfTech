@@ -59,6 +59,7 @@ void AICast_StartServerFrame( int time );
 void AICast_RecordWeaponFire( gentity_t *ent );
 void AICast_AIDoor_Touch( gentity_t *ent, gentity_t *aidoor_trigger, gentity_t *door );
 float AICast_GetAccuracy( int entnum );
+void AICast_GetDebugStats( int entnum, float *aimAccuracy, float *reactionTime, float *attackSkill, float *startingHealth );
 void AICast_Activate( int activatorNum, int entNum );
 void AICast_CheckDangerousEntity( gentity_t *ent, int dangerFlags, float dangerDist, float tacticalLevel, float aggressionLevel, qboolean hurtFriendly );
 qboolean AICast_NoFlameDamage( int entNum );

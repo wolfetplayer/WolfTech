@@ -786,6 +786,7 @@ typedef struct {
 	int lastTeamLocationTime;               // last time of client team location update
 	int lastAICastHealthInfoTime;           // last time enemy health info was broadcast (for optional client-side health bars)
 	int lastAICastNameInfoTime;             // last time AI scripting names were broadcast (debug only)
+	int lastAICastStatsInfoTime;            // last time AI skill attributes were broadcast (debug only, cg_showAIStats)
 
 	qboolean newSession;                // don't use any old session data, because
 										// we changed gametype

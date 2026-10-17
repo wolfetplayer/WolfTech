@@ -9,6 +9,7 @@ void CoopInfoMessage( gentity_t *ent );
 void CheckCoopStatus( void );
 void AICastHealthInfoMessage( void );
 void AICastNameInfoMessage( void );
+void AICastStatsInfoMessage( void );
 gentity_t *SelectRandomCoopSpawnPoint( vec3_t origin, vec3_t angles );
 gentity_t *SelectRandomAntiCoopSpawnPoint( gentity_t *ent, vec3_t origin, vec3_t angles );
 void Coop_DeleteStats( int clientnum );

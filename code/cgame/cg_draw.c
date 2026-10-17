@@ -3286,6 +3286,90 @@ void CG_DrawAINameDebug( void ) {
 						scale, scale, color, text, 0, 0, ITEM_TEXTSTYLE_NORMAL, &cgDC.Assets.bigFont );
 }
 
+#define AI_STATSINFO_STALE_TIME 3000   // drop entries the server hasn't refreshed in a while
+#define AI_STATSINFO_MAX_DIST   2500   // don't bother drawing (or reading) stats on AI too far to matter
+
+typedef struct {
+	float aimAccuracy;
+	float reactionTime;
+	float attackSkill;
+	float startingHealth;
+	int updateTime;
+} aiStatsInfo_t;
+
+static aiStatsInfo_t cg_aiStatsInfo[MAX_CLIENTS];
+
+// debug only -- fed by the "aiStats" server command (CG_ParseAIStatsInfo), broadcast periodically by AICastStatsInfoMessage in g_coop.c
+void CG_SetAIStats( int entnum, float aimAccuracy, float reactionTime, float attackSkill, float startingHealth ) {
+	aiStatsInfo_t *si;
+
+	if ( entnum < 0 || entnum >= MAX_CLIENTS ) {
+		return;
+	}
+	si = &cg_aiStatsInfo[entnum];
+
+	si->aimAccuracy = aimAccuracy;
+	si->reactionTime = reactionTime;
+	si->attackSkill = attackSkill;
+	si->startingHealth = startingHealth;
+	si->updateTime = cg.time;
+}
+
+// debug only: prints aim_accuracy/reaction_time/attack_skill/starting_health above every visible AI's head, for testing skill tuning
+void CG_DrawAIStatsDebug( void ) {
+	int num;
+	fontInfoExtra_t *font = &cgDC.Assets.bigFont;
+	vec4_t color = { 1.0f, 1.0f, 0.4f, 1.0f };
+
+	if ( !cg_showAIStats.integer ) {
+		return;
+	}
+
+	for ( num = 0; num < cg.snap->numEntities; num++ ) {
+		centity_t *cent = &cg_entities[ cg.snap->entities[num].number ];
+		entityState_t *es = &cent->currentState;
+		aiStatsInfo_t *si;
+		vec3_t statsOrigin;
+		char text[4][48];
+		float x, y, scale;
+		int line;
+
+		if ( es->aiChar == AICHAR_NONE || es->number < 0 || es->number >= MAX_CLIENTS ) {
+			continue;
+		}
+
+		si = &cg_aiStatsInfo[ es->number ];
+		if ( si->updateTime == 0 || cg.time - si->updateTime > AI_STATSINFO_STALE_TIME ) {
+			continue;
+		}
+
+		if ( DistanceSquared( cent->lerpOrigin, cg.refdef.vieworg ) > AI_STATSINFO_MAX_DIST * AI_STATSINFO_MAX_DIST ) {
+			continue;
+		}
+
+		VectorCopy( cent->lerpOrigin, statsOrigin );
+		statsOrigin[2] += ENEMY_HEALTHBAR_HEIGHT + 30.0f;
+
+		if ( !CG_WorldToScreen( statsOrigin, &x, &y ) || !PointVisible( statsOrigin ) ) {
+			continue;
+		}
+
+		Com_sprintf( text[0], sizeof( text[0] ), "aim_accuracy: %.2f", si->aimAccuracy );
+		Com_sprintf( text[1], sizeof( text[1] ), "reaction_time: %.2f", si->reactionTime );
+		Com_sprintf( text[2], sizeof( text[2] ), "attack_skill: %.2f", si->attackSkill );
+		Com_sprintf( text[3], sizeof( text[3] ), "starting_health: %.0f", si->startingHealth );
+
+		scale = 0.16f;
+		for ( line = 0; line < 4; line++ ) {
+			float ly = y - ( 3 - line ) * 9.0f;
+			CG_Text_Paint_Ext( x - CG_Text_Width_Ext( text[line], scale, 0, font ) * 0.5f, ly,
+								scale, scale, color, text[line], 0, 0, ITEM_TEXTSTYLE_NORMAL, font );
+		}
+	}
+
+	trap_R_SetColor( NULL );
+}
+
 // draws a small health bar above the head of any AI that's close and near the crosshair, or directly aimed at regardless of range
 void CG_DrawEnemyHealthbars( void ) {
 	int num;
@@ -5090,6 +5174,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawEnemyHealthbars();
 			CG_DrawDamageNumbers();
 			CG_DrawAINameDebug();
+			CG_DrawAIStatsDebug();
 			CG_DrawWeaponSelect();
 			CG_DrawHoldableSelect();
 			CG_DrawPickupItem();

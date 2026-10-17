@@ -172,6 +172,54 @@ void AICastNameInfoMessage( void ) {
 	}
 }
 
+#define AI_STATSINFO_UPDATE_TIME  1000     // skill values only change on wave scaling / respawn, but keep it snappy for testing
+#define AI_STATSINFO_MAX_ENTRIES  32
+
+// broadcasts entnum/aim_accuracy/reaction_time/attack_skill/starting_health for active AI cast entities --
+// debug only, lets testers see a live AI's actual (post wave-scaling) skill attributes via cg_showAIStats
+void AICastStatsInfoMessage( void ) {
+	char entry[64];
+	char string[1400];
+	int stringlength;
+	int i, j, cnt;
+	gentity_t *ent;
+
+	if ( level.time - level.lastAICastStatsInfoTime < AI_STATSINFO_UPDATE_TIME ) {
+		return;
+	}
+	level.lastAICastStatsInfoTime = level.time;
+
+	string[0] = 0;
+	stringlength = 0;
+
+	for ( i = 0, cnt = 0; i < level.maxclients && cnt < AI_STATSINFO_MAX_ENTRIES; i++ ) {
+		float aimAccuracy, reactionTime, attackSkill, startingHealth;
+
+		ent = g_entities + i;
+		if ( !ent->inuse || !ent->client || !( ent->r.svFlags & SVF_CASTAI ) ) {
+			continue;
+		}
+
+		AICast_GetDebugStats( i, &aimAccuracy, &reactionTime, &attackSkill, &startingHealth );
+
+		Com_sprintf( entry, sizeof( entry ), " %i %.3f %.3f %.3f %.0f", i, aimAccuracy, reactionTime, attackSkill, startingHealth );
+		j = strlen( entry );
+		if ( stringlength + j > sizeof( string ) ) {
+			break;
+		}
+		strcpy( string + stringlength, entry );
+		stringlength += j;
+		cnt++;
+	}
+
+	// Per-client, not a -1 broadcast - see the same comment in AICastHealthInfoMessage above.
+	for ( i = 0; i < level.maxclients; i++ ) {
+		if ( level.clients[i].pers.connected == CON_CONNECTED ) {
+			trap_SendServerCommand( i, va( "aiStats %i%s", cnt, string ) );
+		}
+	}
+}
+
 void CoopInfoMessage( gentity_t *ent ) {
 	char entry[1024];
 	char string[1400];

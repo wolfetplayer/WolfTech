@@ -202,6 +202,24 @@ static void CG_ParseAINameInfo( void ) {
 	}
 }
 
+// periodic AICastStatsInfoMessage broadcast (g_coop.c), debug only, feeds CG_SetAIStats for cg_showAIStats
+#define AISTATSINFO_ITEMS 5
+static void CG_ParseAIStatsInfo( void ) {
+	int i, cnt;
+
+	cnt = atoi( CG_Argv( 1 ) );
+
+	for ( i = 0 ; i < cnt ; i++ ) {
+		int entnum = atoi( CG_Argv( i * AISTATSINFO_ITEMS + 2 ) );
+		float aimAccuracy = atof( CG_Argv( i * AISTATSINFO_ITEMS + 3 ) );
+		float reactionTime = atof( CG_Argv( i * AISTATSINFO_ITEMS + 4 ) );
+		float attackSkill = atof( CG_Argv( i * AISTATSINFO_ITEMS + 5 ) );
+		float startingHealth = atof( CG_Argv( i * AISTATSINFO_ITEMS + 6 ) );
+
+		CG_SetAIStats( entnum, aimAccuracy, reactionTime, attackSkill, startingHealth );
+	}
+}
+
 /*
 ================
 CG_ParseServerinfo
@@ -1732,6 +1750,11 @@ static void CG_ServerCommand( void ) {
 
 	if ( !strcmp( cmd, "aiNames" ) ) {
 		CG_ParseAINameInfo();
+		return;
+	}
+
+	if ( !strcmp( cmd, "aiStats" ) ) {
+		CG_ParseAIStatsInfo();
 		return;
 	}
 

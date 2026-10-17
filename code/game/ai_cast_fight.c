@@ -2012,6 +2012,24 @@ float AICast_GetAccuracy( int entnum ) {
 	return ( acc );
 }
 
+/*
+===============
+AICast_GetDebugStats
+
+  raw skill attributes currently assigned to this cast (post wave-scaling), for the
+  cg_showAIStats overhead debug display -- not the vislist-adjusted AICast_GetAccuracy()
+===============
+*/
+void AICast_GetDebugStats( int entnum, float *aimAccuracy, float *reactionTime, float *attackSkill, float *startingHealth ) {
+	cast_state_t *cs;
+
+	cs = AICast_GetCastState( entnum );
+	*aimAccuracy = cs->attributes[AIM_ACCURACY];
+	*reactionTime = cs->attributes[REACTION_TIME];
+	*attackSkill = cs->attributes[ATTACK_SKILL];
+	*startingHealth = cs->attributes[STARTING_HEALTH];
+}
+
 static qboolean AICast_WeaponPrefersHoldPosition( int weapon ) {
 	int wc = GetWeaponTableData( weapon )->weaponClass;
 

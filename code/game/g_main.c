@@ -3085,6 +3085,8 @@ void G_RunFrame( int levelTime ) {
 	AICastHealthInfoMessage();
 	// periodic aiName broadcast for AI scripting debug (cg_showAINames)
 	AICastNameInfoMessage();
+	// periodic AI skill attribute broadcast for testing debug (cg_showAIStats)
+	AICastStatsInfoMessage();
 
 	// cancel vote if timed out
 	CheckVote();
