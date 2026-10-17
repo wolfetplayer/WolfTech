@@ -788,6 +788,7 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 	case AICHAR_SOLDIER:
 	case AICHAR_ZOMBIE_SURV:
 	    waveAppeared = 1;
+		break;
 	default:
 		waveAppeared = 0;
 		break;
@@ -1069,6 +1070,12 @@ void AICast_ApplySurvivalAttributes(gentity_t *ent, cast_state_t *cs)
 	ent->client->ps.runSpeedScale    = runSpeedScale;
 	ent->client->ps.sprintSpeedScale = sprintSpeedScale;
 	ent->client->ps.crouchSpeedScale = crouchSpeedScale;
+
+	cs->attributes[AIM_SKILL]     = aiDefaults[cs->aiCharacter].attributes[AIM_SKILL];
+	cs->attributes[AIM_ACCURACY]  = aiDefaults[cs->aiCharacter].attributes[AIM_ACCURACY];
+	cs->attributes[ATTACK_SKILL]  = aiDefaults[cs->aiCharacter].attributes[ATTACK_SKILL];
+	cs->attributes[AGGRESSION]    = aiDefaults[cs->aiCharacter].attributes[AGGRESSION];
+	cs->attributes[REACTION_TIME] = aiDefaults[cs->aiCharacter].attributes[REACTION_TIME];
 }
 
 /*
