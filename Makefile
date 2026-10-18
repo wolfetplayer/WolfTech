@@ -134,9 +134,9 @@ endif
 
 ifndef CLIENTBIN
   ifdef MINGW
-    CLIENTBIN=WolfTech
+    CLIENTBIN=WULF
   else
-    CLIENTBIN=wolftech
+    CLIENTBIN=wulf
   endif
 endif
 
@@ -146,9 +146,9 @@ endif
 
 ifndef SERVERBIN
   ifdef MINGW
-    SERVERBIN=WolfTechDED
+    SERVERBIN=WULFDED
   else
-    SERVERBIN=wolftechded
+    SERVERBIN=wulfded
   endif
 endif
 
@@ -169,7 +169,7 @@ COPYBINDIR=$(COPYDIR)
 endif
 
 ifndef STEAMAPPNAME
-STEAMAPPNAME=Tides of War
+STEAMAPPNAME=WULF
 endif
 
 # Auto-detected per machine by find-steam-game.sh: it searches every Steam

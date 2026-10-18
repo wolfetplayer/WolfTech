@@ -1,7 +1,7 @@
 #ifdef WIN32
-#define GAME_LAUNCH_NAME "./WolfTech.x64.exe"
+#define GAME_LAUNCH_NAME "./WULF.x64.exe"
 #else
-#define GAME_LAUNCH_NAME "./WolfTech.x86_64"
+#define GAME_LAUNCH_NAME "./WULF.x86_64"
 #endif
 #ifndef GAME_LAUNCH_NAME
 #error Please define your game exe name.
@@ -904,8 +904,8 @@ SteamParentLog("PARENT: OnLobbyCreated called");
 	GCurrentLobby = CSteamID(pCallback->m_ulSteamIDLobby);
 
 	if (GSteamMatchmaking && GCurrentLobby.IsValid()) {
-		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "game", "wolftech");
-		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "name", "WolfTech Lobby");
+		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "game", "WULF");
+		GSteamMatchmaking->SetLobbyData(GCurrentLobby, "name", "WULF Lobby");
 
 		// Pre-game lobby: "0" until the host clicks "Start The Game" (see
 		// SHIMCMD_LOBBY_SETDATA); guests watch this via OnLobbyDataUpdate to know
@@ -953,7 +953,7 @@ void SteamBridge::OnLobbyMatchList(LobbyMatchList_t *pCallback, bool bIOFailure)
 		int maxMembers = GSteamMatchmaking->GetLobbyMemberLimit(lobby);
 
 		if (!name || !name[0]) {
-			name = "WolfTech Lobby";
+			name = "WULF Lobby";
 		}
 		if (!map) {
 			map = "";
@@ -1516,7 +1516,7 @@ static bool processCommand(const uint8 *buf, unsigned int buflen, PipeType fd)
                 break;
             }
 
-            GSteamMatchmaking->AddRequestLobbyListStringFilter("game", "wolftech", k_ELobbyComparisonEqual);
+            GSteamMatchmaking->AddRequestLobbyListStringFilter("game", "WULF", k_ELobbyComparisonEqual);
             GSteamMatchmaking->AddRequestLobbyListDistanceFilter(k_ELobbyDistanceFilterWorldwide);
 
             SteamAPICall_t call = GSteamMatchmaking->RequestLobbyList();

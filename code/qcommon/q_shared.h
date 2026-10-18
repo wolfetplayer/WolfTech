@@ -41,14 +41,14 @@ If you have questions concerning this license or the applicable additional terms
 // ver 1.3		- patch 2 (02/13/02)
 
 #ifdef STANDALONE
-  #define PRODUCT_NAME			"WolfTech"
+  #define PRODUCT_NAME			"WULF"
   #define BASEGAME			"main"
-  #define CLIENT_WINDOW_TITLE     	"WolfTech"
-  #define CLIENT_WINDOW_MIN_TITLE 	"WolfTech"
-  #define HOMEPATH_NAME_UNIX		".wolftech"
-  #define HOMEPATH_NAME_WIN		"WolfTech"
+  #define CLIENT_WINDOW_TITLE     	"WULF"
+  #define CLIENT_WINDOW_MIN_TITLE 	"WULF"
+  #define HOMEPATH_NAME_UNIX		".wulf"
+  #define HOMEPATH_NAME_WIN		"WULF"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-  #define GAMENAME_FOR_MASTER		"WolfTech"	// must NOT contain whitespace
+  #define GAMENAME_FOR_MASTER		"WULF"	// must NOT contain whitespace
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
 #else
   #define PRODUCT_NAME			"RTCWCoop"
