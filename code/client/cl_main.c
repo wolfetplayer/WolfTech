@@ -1392,9 +1392,11 @@ static void CL_UpdateGUID( const char *prefix, int prefix_len )
 	int len;
 
 	len = FS_SV_FOpenFileRead( QKEY_FILE, &f );
-	FS_FCloseFile( f );
+	if( f ) {
+		FS_FCloseFile( f );
+	}
 
-	if( len != QKEY_SIZE ) 
+	if( len != QKEY_SIZE )
 		Cvar_Set( "cl_guid", "" );
 	else
 		Cvar_Set( "cl_guid", Com_MD5File( QKEY_FILE, QKEY_SIZE,
@@ -4500,7 +4502,9 @@ static void CL_GenerateQKey(void)
 	fileHandle_t f;
 
 	len = FS_SV_FOpenFileRead( QKEY_FILE, &f );
-	FS_FCloseFile( f );
+	if( f ) {
+		FS_FCloseFile( f );
+	}
 	if( len == QKEY_SIZE ) {
 		Com_Printf( "RTCWKEY found.\n" );
 		return;
