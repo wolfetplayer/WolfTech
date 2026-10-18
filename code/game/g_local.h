@@ -1453,8 +1453,6 @@ extern vmCvar_t g_shove;
 extern vmCvar_t g_shoveAmount;
 extern vmCvar_t g_throwKnives;
 
-extern vmCvar_t g_ignorescriptedaccuracy;
-
 extern vmCvar_t g_showMOTD;
 extern vmCvar_t motdNum;
 extern vmCvar_t g_motdTime;

@@ -137,8 +137,6 @@ vmCvar_t g_smoothClients;
 vmCvar_t pmove_fixed;
 vmCvar_t pmove_msec;
 
-vmCvar_t g_ignorescriptedaccuracy;
-
 // Rafael
 vmCvar_t g_autoactivate;
 vmCvar_t g_testPain;
@@ -253,7 +251,6 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_reviveTimeMedic, "g_reviveTimeMedic", "2000", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
 	{ &g_reviveInvulnTime, "g_reviveInvulnTime", "3000", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
 	{ &g_reviveHealthPct, "g_reviveHealthPct", "50", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
-	{ &g_ignorescriptedaccuracy, "g_ignorescriptedaccuracy", "1", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
 
 	{ &g_maxclients, "sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qfalse  },
 	{ &g_maxGameClients, "g_maxGameClients", "0", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qfalse  },

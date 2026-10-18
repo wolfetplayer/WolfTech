@@ -1981,19 +1981,6 @@ float AICast_GetAccuracy( int entnum ) {
 	// the more they stay in our sights, the more accurate we get
 	acc = cs->attributes[AIM_ACCURACY];
 
-	if ( g_gametype.integer <= GT_COOP && g_ignorescriptedaccuracy.integer == qtrue ) {
-		if ( g_gameskill.integer == GSKILL_EASY ) {
-			acc = 0.5;
-		} else if ( g_gameskill.integer == GSKILL_MEDIUM ) {
-			acc = 0.75;
-		} else if ( g_gameskill.integer == GSKILL_HARD ) {
-			acc = 0.9;
-		} else if ( g_gameskill.integer == GSKILL_MAX ) {
-			acc = 1.0;
-		}
-
-	}
-
 	if ( AICAST_VARIABLE_ACC_ENABLED ) {
 		if ( cs->enemyNum >= 0 ) {
 			if ( cs->vislist[cs->enemyNum].real_notvisible_timestamp < level.time - AICAST_ACC_VISTIME ) {
