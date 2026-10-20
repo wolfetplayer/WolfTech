@@ -2346,7 +2346,6 @@ void G_RetrieveMoveSpeedsFromClient( int entnum, char *text ) {
 	Q_strcat( filename, sizeof( filename ), va( "%s.mvspd", token ) );
 
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
-	trap_FS_FCloseFile( f );
 
 	if ( len > 0 ) {   // if the movespeeds file exists, we don't do anything
 		trap_FS_FCloseFile( f );
