@@ -29,17 +29,20 @@ S#include "ui/menudef.h"
 	visible MENU_TRUE				// Visible on open
 	focusColor 0 0 0 1			// Menu focus color for text and items - black, so hovered button text reads over the white skewed highlight
 	
-	onOpen { 
-		setitemcolor fadebox backcolor 0 0 0 1 ;   
+	onOpen {
+		setitemcolor fadebox backcolor 0 0 0 1 ;
 		uiScript stopRefresh ;
-		
+
 		hide realrtcw_main_create;
 		hide realrtcw_main_join;
 		hide realrtcw_main_options;
 		hide realrtcw_main_credits;
 		hide realrtcw_main_quit;
-		
-		show realrtcw_main
+
+		show realrtcw_main ;
+
+		hide grpmaintip ;
+		hide tipbox
 	}
 
 itemDef
@@ -77,11 +80,11 @@ itemDef
 	    group mainmenus
 	    text "@MAIN_LOBBY_CREATE"
 	    type 1
-	    rect 10 196 188 34
+	    rect 10 150 188 30
 	    visible 1
 	textalign 0
 	textalignx 10
-	textaligny 24
+	textaligny 21
 	textscale .60
 		textfont UI_FONT_BIG
 		style WINDOW_STYLE_SKEWED
@@ -94,8 +97,8 @@ itemDef
  			open create_menu;
 			uiScript loadArenas }
 
-	    mouseEnter { setitemskew createmenu 0 18 ; setitemcolor createmenu backcolor 1 1 1 .92 }
-	    mouseExit { setitemskew createmenu 0 0 ; setitemcolor createmenu backcolor 1 1 1 0 ; clearfocus }
+	    mouseEnter { setitemskew createmenu 0 18 ; setitemcolor createmenu backcolor 1 1 1 .92 ; show tip_create ; show tipbox ; transition createmenu 10 150 188 30 18 148 196 34 10 12 }
+	    mouseExit { setitemskew createmenu 0 0 ; setitemcolor createmenu backcolor 1 1 1 0 ; clearfocus ; hide tip_create ; hide tipbox ; transition createmenu 18 148 196 34 10 150 188 30 10 12 }
 	}
 	
 	// JOIN GAME BUTTON
@@ -104,12 +107,12 @@ itemDef
 		text "@MAIN_LOBBY_JOIN"
 		group mainmenus
 		type 1
-	    rect 10 246 161 34
+	    rect 10 192 161 30
 		visible 1
 		textfont UI_FONT_BIG
 	textalign 0
 	textalignx 10
-	textaligny 24
+	textaligny 21
 	textscale .60
 		style WINDOW_STYLE_SKEWED
 		forecolor 1 1 1 1
@@ -122,8 +125,8 @@ itemDef
 			uiScript RefreshServers ;
 			uiScript RefreshFilter }
 
-	    mouseEnter { setitemskew joinmenu 0 18 ; setitemcolor joinmenu backcolor 1 1 1 .92 }
-	    mouseExit { setitemskew joinmenu 0 0 ; setitemcolor joinmenu backcolor 1 1 1 0 ; clearfocus }
+	    mouseEnter { setitemskew joinmenu 0 18 ; setitemcolor joinmenu backcolor 1 1 1 .92 ; show tip_join ; show tipbox ; transition joinmenu 10 192 161 30 18 190 169 34 10 12 }
+	    mouseExit { setitemskew joinmenu 0 0 ; setitemcolor joinmenu backcolor 1 1 1 0 ; clearfocus ; hide tip_join ; hide tipbox ; transition joinmenu 18 190 169 34 10 192 161 30 10 12 }
     }
 		
     // OPTIONS BUTTON
@@ -132,12 +135,12 @@ itemDef
 		text "@MAIN_OPTIONS"
 		group mainmenus
 		type 1
-	    rect 10 296 121 34
+	    rect 10 234 121 30
 		visible 1
 		textfont UI_FONT_BIG
 	textalign 0
 	textalignx 10
-	textaligny 24
+	textaligny 21
 	textscale .60
 		style WINDOW_STYLE_SKEWED
 		forecolor 1 1 1 1
@@ -146,10 +149,10 @@ itemDef
 		action {play "sound/misc/zap.wav" ;
 		close main ;
 		open setup_menu ;
-		open control_menu }
+		open gameplay_menu }
 
-	    mouseEnter { setitemskew optionsmenu 0 18 ; setitemcolor optionsmenu backcolor 1 1 1 .92 }
-	    mouseExit { setitemskew optionsmenu 0 0 ; setitemcolor optionsmenu backcolor 1 1 1 0 ; clearfocus }
+	    mouseEnter { setitemskew optionsmenu 0 18 ; setitemcolor optionsmenu backcolor 1 1 1 .92 ; show tip_options ; show tipbox ; transition optionsmenu 10 234 121 30 18 232 129 34 10 12 }
+	    mouseExit { setitemskew optionsmenu 0 0 ; setitemcolor optionsmenu backcolor 1 1 1 0 ; clearfocus ; hide tip_options ; hide tipbox ; transition optionsmenu 18 232 129 34 10 234 121 30 10 12 }
     }
 	
     // CREDITS BUTTON	
@@ -158,10 +161,10 @@ itemDef
         text "@MAIN_CREDITS"
 		group mainmenus
  	    type 1
-	    rect 10 346 121 34
+	    rect 10 276 121 30
 	textalign 0
 	textalignx 10
-	textaligny 24
+	textaligny 21
 	textscale .60
 		textfont UI_FONT_BIG
 	    visible 1
@@ -172,8 +175,8 @@ itemDef
 		action {close main;
 		open credit }
 
-	    mouseEnter { setitemskew creditsmenu 0 18 ; setitemcolor creditsmenu backcolor 1 1 1 .92 }
-	    mouseExit { setitemskew creditsmenu 0 0 ; setitemcolor creditsmenu backcolor 1 1 1 0 ; clearfocus }
+	    mouseEnter { setitemskew creditsmenu 0 18 ; setitemcolor creditsmenu backcolor 1 1 1 .92 ; show tip_credits ; show tipbox ; transition creditsmenu 10 276 121 30 18 274 129 34 10 12 }
+	    mouseExit { setitemskew creditsmenu 0 0 ; setitemcolor creditsmenu backcolor 1 1 1 0 ; clearfocus ; hide tip_credits ; hide tipbox ; transition creditsmenu 18 274 129 34 10 276 121 30 10 12 }
 	}
 	
 	// QUIT BUTTON
@@ -182,11 +185,11 @@ itemDef
         text "@MAIN_QUIT"
 		group mainmenus
  	    type 1
-	    rect 10 396 80 34
+	    rect 10 318 80 30
 		textfont UI_FONT_BIG
 	textalign 0
 	textalignx 10
-	textaligny 24
+	textaligny 21
 	textscale .60
 	    visible 1
 		style WINDOW_STYLE_SKEWED
@@ -198,8 +201,102 @@ itemDef
 		uiScript "quit"
 		}
 
-	    mouseEnter { setitemskew quit 0 18 ; setitemcolor quit backcolor 1 1 1 .92 }
-	    mouseExit { setitemskew quit 0 0 ; setitemcolor quit backcolor 1 1 1 0 ; clearfocus }
+	    mouseEnter { setitemskew quit 0 18 ; setitemcolor quit backcolor 1 1 1 .92 ; show tip_quit ; show tipbox ; transition quit 10 318 80 30 18 316 88 34 10 12 }
+	    mouseExit { setitemskew quit 0 0 ; setitemcolor quit backcolor 1 1 1 0 ; clearfocus ; hide tip_quit ; hide tipbox ; transition quit 18 316 88 34 10 318 80 30 10 12 }
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        HOVER TIP BOX        //////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef
+	{
+		name tipbox
+		style WINDOW_STYLE_FILLED
+		rect 10 410 460 40
+		backcolor 0 0 0 0.55
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_create
+		group grpmaintip
+		style WINDOW_STYLE_EMPTY
+		rect 20 410 440 40
+		text "@MAIN_TIP_CREATE"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign 0
+		textalignx 0
+		textaligny 26
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_join
+		group grpmaintip
+		style WINDOW_STYLE_EMPTY
+		rect 20 410 440 40
+		text "@MAIN_TIP_JOIN"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign 0
+		textalignx 0
+		textaligny 26
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_options
+		group grpmaintip
+		style WINDOW_STYLE_EMPTY
+		rect 20 410 440 40
+		text "@MAIN_TIP_OPTIONS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign 0
+		textalignx 0
+		textaligny 26
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_credits
+		group grpmaintip
+		style WINDOW_STYLE_EMPTY
+		rect 20 410 440 40
+		text "@MAIN_TIP_CREDITS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign 0
+		textalignx 0
+		textaligny 26
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_quit
+		group grpmaintip
+		style WINDOW_STYLE_EMPTY
+		rect 20 410 440 40
+		text "@MAIN_TIP_QUIT"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign 0
+		textalignx 0
+		textaligny 26
+		forecolor 1 1 1 1
+		visible 0
+		decoration
 	}
 	
 }

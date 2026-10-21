@@ -1,0 +1,214 @@
+﻿#include "ui/menudef.h"
+
+{
+\\ SOUND TAB \\
+
+menuDef {
+	name "sound_menu"
+	visible 0
+	fullscreen 0
+	rect 20 130 600 326
+	focusColor 1 .75 0 1
+	style 1
+	border 1
+	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; fadeout fadebox ; show grpSound ; hide tipbox }
+	onEsc { close sound_menu ; close setup_menu ; open main }
+
+	itemDef {
+		name snd_effectsvolume
+		group grpSound
+		type ITEM_TYPE_SLIDER
+		text "@SYSTEM_EFFECTSVOLUME_LABEL"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat "s_volume" 0.7 0 1
+		rect 0 0 600 22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_effectsvolume backcolor .3 0.5 0.2 .25 ; show tip_effectsvolume ; show tipbox }
+		mouseExit { setitemcolor snd_effectsvolume backcolor 1 1 1 .07 ; hide tip_effectsvolume ; hide tipbox }
+    		}
+
+	itemDef {
+		name snd_musicvolume
+		group grpSound
+		type ITEM_TYPE_SLIDER
+		text "@SYSTEM_MUSICVOLUME_LABEL"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat "s_musicvolume" 0.25 0 1
+		rect 0 24 600 22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_musicvolume backcolor .3 0.5 0.2 .25 ; show tip_musicvolume ; show tipbox }
+		mouseExit { setitemcolor snd_musicvolume backcolor 1 1 1 .07 ; hide tip_musicvolume ; hide tipbox }
+    		}
+
+	itemDef {
+		name snd_subtitles
+		group grpSound
+		rect 0 48 600 22
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_SUBTITLES"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "cg_drawSubtitles"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .32
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_subtitles backcolor .3 0.5 0.2 .25 ; show tip_subtitles ; show tipbox }
+		mouseExit { setitemcolor snd_subtitles backcolor 1 1 1 .07 ; hide tip_subtitles ; hide tipbox }
+		}
+
+	itemDef {
+		name snd_subtitlesize
+		group grpSound
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_SUBTITLESIZE"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat "cg_subtitleSize" 7 4 16
+		rect 0 72 600 22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_subtitlesize backcolor .3 0.5 0.2 .25 ; show tip_subtitlesize ; show tipbox }
+		mouseExit { setitemcolor snd_subtitlesize backcolor 1 1 1 .07 ; hide tip_subtitlesize ; hide tipbox }
+		}
+
+	itemDef {
+		name snd_subtitleshadow
+		group grpSound
+		rect 0 96 600 22
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_SUBTITLESHADOW"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "cg_subtitleShadow"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .32
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_subtitleshadow backcolor .3 0.5 0.2 .25 ; show tip_subtitleshadow ; show tipbox }
+		mouseExit { setitemcolor snd_subtitleshadow backcolor 1 1 1 .07 ; hide tip_subtitleshadow ; hide tipbox }
+		}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        HOVER TIP BOX (TEST)             //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name tipbox
+		style WINDOW_STYLE_FILLED
+		rect 0 264 600 30
+		backcolor 0 0 0 .55
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_effectsvolume
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_EFFECTSVOLUME"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_musicvolume
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_MUSICVOLUME"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_subtitles
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_SUBTITLES"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_subtitlesize
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_SUBTITLESIZE"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_subtitleshadow
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_SUBTITLESHADOW"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+}
+
+}

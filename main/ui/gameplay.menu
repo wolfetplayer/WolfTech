@@ -1,0 +1,956 @@
+﻿#include "ui/menudef.h"
+
+{
+\\ GAMEPLAY TAB (formerly options_menu) \\
+
+menuDef {
+	name "gameplay_menu"
+	visible 0
+	fullscreen 0
+	rect 20 130 600 326
+	focusColor 1 .75 0 1
+	style 1
+	border 1
+	onOpen { setitemcolor fadebox backcolor 0 0 0 1 ; fadeout fadebox ; hide performance ; hide hitfeedback ; hide crosshair ; show ctr_hud ; show ctr_hitfeedback ; show ctr_crosshair ; hide tipbox ; hide grpGameplayTip }
+	onEsc { close gameplay_menu ; close setup_menu ; open main }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        NAV ROWS                         //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name ctr_hud
+		group grpOptionsTab
+		text "@OPTIONS_HUDSETTINGS"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		type ITEM_TYPE_BUTTON
+		textalign ITEM_ALIGN_CENTER
+		textalignx 290
+		textaligny 16
+		textscale .32
+		rect 0 0 600 22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		action { play "sound/misc/kcaction.wav" ; hide ctr_hud ; hide ctr_hitfeedback ; hide ctr_crosshair ; hide tipbox ; hide grpGameplayTip ; show performance }
+		mouseEnter { setitemcolor ctr_hud backcolor .3 0.5 0.2 .25 ; show tip_ctr_hud ; show tipbox }
+		mouseExit { setitemcolor ctr_hud backcolor 1 1 1 .07 ; hide tip_ctr_hud ; hide tipbox }
+	}
+
+	itemDef {
+		name ctr_hitfeedback
+		group grpOptionsTab
+		text "@OPTIONS_HITFEEDBACK"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		type ITEM_TYPE_BUTTON
+		textalign ITEM_ALIGN_CENTER
+		textalignx 290
+		textaligny 16
+		textscale .32
+		rect 0 24 600 22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		action { play "sound/misc/kcaction.wav" ; hide ctr_hud ; hide ctr_hitfeedback ; hide ctr_crosshair ; hide tipbox ; hide grpGameplayTip ; show hitfeedback }
+		mouseEnter { setitemcolor ctr_hitfeedback backcolor .3 0.5 0.2 .25 ; show tip_ctr_hitfeedback ; show tipbox }
+		mouseExit { setitemcolor ctr_hitfeedback backcolor 1 1 1 .07 ; hide tip_ctr_hitfeedback ; hide tipbox }
+	}
+
+	itemDef {
+		name ctr_crosshair
+		group grpOptionsTab
+		text "@OPTIONS_CROSSHAIRSETTINGS"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		type ITEM_TYPE_BUTTON
+		textalign ITEM_ALIGN_CENTER
+		textalignx 290
+		textaligny 16
+		textscale .32
+		rect 0 48 600 22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		action { play "sound/misc/kcaction.wav" ; hide ctr_hud ; hide ctr_hitfeedback ; hide ctr_crosshair ; hide tipbox ; hide grpGameplayTip ; show crosshair }
+		mouseEnter { setitemcolor ctr_crosshair backcolor .3 0.5 0.2 .25 ; show tip_ctr_crosshair ; show tipbox }
+		mouseExit { setitemcolor ctr_crosshair backcolor 1 1 1 .07 ; hide tip_ctr_crosshair ; hide tipbox }
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        HUD SETTINGS                     //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name hud_alpha
+		group performance
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_HUDALPHA"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat "cg_hudAlpha" .6 0 1
+		rect 0 0 600 22
+      	textalign ITEM_ALIGN_RIGHT
+      	textalignx 280
+      	textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+      	forecolor 1 1 1 1
+      	visible 0
+		mouseEnter { setitemcolor hud_alpha backcolor .3 0.5 0.2 .25 ; show tip_hud_alpha ; show tipbox }
+		mouseExit { setitemcolor hud_alpha backcolor 1 1 1 .07 ; hide tip_hud_alpha ; hide tipbox }
+   	}
+
+	itemDef {
+		name hud_cursorhints
+		type ITEM_TYPE_MULTI
+		group performance
+		text "@OPTIONS_CURSORHINTS"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "cg_cursorHints"
+		cvarFloatList { "@OPTIONS_CURSORHINTS_STROBE" 2 "@OPTIONS_CURSORHINTS_ALPHA" 3 "@OPTIONS_CURSORHINTS_SOLID" 4 "@OPTIONS_CURSORHINTS_OFF" 0 "@OPTIONS_CURSORHINTS_SIZE" 1 }
+		rect 0 24 600 22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		mouseEnter { setitemcolor hud_cursorhints backcolor .3 0.5 0.2 .25 ; show tip_hud_cursorhints ; show tipbox }
+		mouseExit { setitemcolor hud_cursorhints backcolor 1 1 1 .07 ; hide tip_hud_cursorhints ; hide tipbox }
+	}
+
+    itemDef {
+    		name hud_bloodhit
+    		group performance
+    		type ITEM_TYPE_MULTI
+    		text "@OPTIONS_BLOODHIT"
+			textfont UI_FONT_BIG	// RealRTCWCoop
+    		cvar "cg_bloodBlend"
+    		cvarFloatList	{ "@GENERAL_ON" 0 "@GENERAL_OFF" 1}
+    		rect 0 48 600 22
+          	textalign ITEM_ALIGN_RIGHT
+          	textalignx 280
+          	textaligny 16
+    		textscale .32
+    		style WINDOW_STYLE_FILLED
+    		backcolor 1 1 1 .07
+          	forecolor 1 1 1 1
+          	visible 0
+			mouseEnter { setitemcolor hud_bloodhit backcolor .3 0.5 0.2 .25 ; show tip_hud_bloodhit ; show tipbox }
+			mouseExit { setitemcolor hud_bloodhit backcolor 1 1 1 .07 ; hide tip_hud_bloodhit ; hide tipbox }
+    }
+
+	itemDef {
+		name hud_chaticontime
+		group performance
+		type ITEM_TYPE_MULTI
+		text "@OPTIONS_CHATICONTIME"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		rect 0 72 600 22
+		cvar "cg_voicespritetime"
+		cvarFloatList { "@OPTIONS_TIME_3S" 3000 "@OPTIONS_TIME_6S" 6000 "@OPTIONS_TIME_12S" 12000 "@OPTIONS_TIME_24S" 24000 }
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		mouseEnter { setitemcolor hud_chaticontime backcolor .3 0.5 0.2 .25 ; show tip_hud_chaticontime ; show tipbox }
+		mouseExit { setitemcolor hud_chaticontime backcolor 1 1 1 .07 ; hide tip_hud_chaticontime ; hide tipbox }
+		}
+
+	itemDef {
+		name			hud_teamoverlay
+		group			performance
+		rect 0 96 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_TEAMOVERLAY"
+		textfont 		UI_FONT_BIG				// RealRTCWCoop
+		cvar			"cg_drawteamoverlay"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hud_teamoverlay backcolor .3 0.5 0.2 .25 ; show tip_hud_teamoverlay ; show tipbox }
+		mouseExit { setitemcolor hud_teamoverlay backcolor 1 1 1 .07 ; hide tip_hud_teamoverlay ; hide tipbox }
+	}
+
+	itemDef {
+		name			hud_compass
+		group			performance
+		rect 0 120 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_COMPASS"
+		textfont 		UI_FONT_BIG				// RealRTCWCoop
+		cvar			"cg_drawcompass"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hud_compass backcolor .3 0.5 0.2 .25 ; show tip_hud_compass ; show tipbox }
+		mouseExit { setitemcolor hud_compass backcolor 1 1 1 .07 ; hide tip_hud_compass ; hide tipbox }
+	}
+
+	itemDef {
+		name			hud_back
+		group			performance
+		rect 0 144 600 22
+		type			ITEM_TYPE_BUTTON
+		style			WINDOW_STYLE_FILLED
+		text			"@MAIN_BACK"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		textscale		.32
+		textalign		ITEM_ALIGN_CENTER
+		textalignx		290
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		action { play "sound/misc/kcaction.wav" ; hide performance ; hide tipbox ; hide grpGameplayTip ; show ctr_hud ; show ctr_hitfeedback ; show ctr_crosshair }
+		mouseEnter { setitemcolor hud_back backcolor .3 0.5 0.2 .25 ; show tip_hud_back ; show tipbox }
+		mouseExit { setitemcolor hud_back backcolor 1 1 1 .07 ; hide tip_hud_back ; hide tipbox }
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        CROSSHAIR SETTINGS               //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name crosshair_size
+		group crosshair
+		type ITEM_TYPE_MULTI
+		text "@OPTIONS_CROSSHAIRSIZE"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "cg_crosshairsize"
+		cvarFloatList { "@OPTIONS_SIZE_TINY" 12 "@OPTIONS_SIZE_SMALL" 18 "@OPTIONS_SIZE_MEDIUM" 24 "@OPTIONS_SIZE_LARGE" 30 }
+		rect 0 0 600 22
+      	textalign ITEM_ALIGN_RIGHT
+      	textalignx 280
+      	textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+      	forecolor 1 1 1 1
+      	visible 0
+		mouseEnter { setitemcolor crosshair_size backcolor .3 0.5 0.2 .25 ; show tip_crosshair_size ; show tipbox }
+		mouseExit { setitemcolor crosshair_size backcolor 1 1 1 .07 ; hide tip_crosshair_size ; hide tipbox }
+    }
+
+	itemDef {
+		name crosshair_alpha
+		group crosshair
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_CROSSHAIRALPHA"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat "cg_crosshairAlpha" .6 0 1
+		rect 0 24 600 22
+      	textalign ITEM_ALIGN_RIGHT
+      	textalignx 280
+      	textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+      	forecolor 1 1 1 1
+      	visible 0
+		mouseEnter { setitemcolor crosshair_alpha backcolor .3 0.5 0.2 .25 ; show tip_crosshair_alpha ; show tipbox }
+		mouseExit { setitemcolor crosshair_alpha backcolor 1 1 1 .07 ; hide tip_crosshair_alpha ; hide tipbox }
+    }
+
+    itemDef {
+    		name crosshair_solid
+    		group crosshair
+    		type ITEM_TYPE_MULTI
+    		text "@OPTIONS_SOLIDCROSSHAIR"
+			textfont UI_FONT_BIG	// RealRTCWCoop
+    		cvar "cg_solidCrosshair"
+    		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+    		rect 0 48 600 22
+          	textalign ITEM_ALIGN_RIGHT
+          	textalignx 280
+          	textaligny 16
+    		textscale .32
+    		style WINDOW_STYLE_FILLED
+    		backcolor 1 1 1 .07
+          	forecolor 1 1 1 1
+          	visible 0
+			mouseEnter { setitemcolor crosshair_solid backcolor .3 0.5 0.2 .25 ; show tip_crosshair_solid ; show tipbox }
+			mouseExit { setitemcolor crosshair_solid backcolor 1 1 1 .07 ; hide tip_crosshair_solid ; hide tipbox }
+    }
+
+	itemDef {
+		name crosshair_label
+		group crosshair
+		text "@OPTIONS_CROSSHAIR"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+ 		type 1
+		rect 260 72 60 12
+		textalign ITEM_ALIGN_CENTER
+		textscale .23
+		textalignx 30
+		textaligny 12
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name crosshair_preview
+		group crosshair
+		rect 265 86 50 50
+		ownerdraw UI_CROSSHAIR
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 0
+		textaligny 50
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+   	}
+
+	itemDef {
+		name			crosshair_names
+		group			crosshair
+		rect 0 138 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_CROSSHAIRNAMES"
+		textfont 		UI_FONT_BIG				// RealRTCWCoop
+		cvar			"cg_drawcrosshairnames"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor crosshair_names backcolor .3 0.5 0.2 .25 ; show tip_crosshair_names ; show tipbox }
+		mouseExit { setitemcolor crosshair_names backcolor 1 1 1 .07 ; hide tip_crosshair_names ; hide tipbox }
+	}
+
+	itemDef {
+		name			crosshair_back
+		group			crosshair
+		rect 0 162 600 22
+		type			ITEM_TYPE_BUTTON
+		style			WINDOW_STYLE_FILLED
+		text			"@MAIN_BACK"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		textscale		.32
+		textalign		ITEM_ALIGN_CENTER
+		textalignx		290
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		action { play "sound/misc/kcaction.wav" ; hide crosshair ; hide tipbox ; hide grpGameplayTip ; show ctr_hud ; show ctr_hitfeedback ; show ctr_crosshair }
+		mouseEnter { setitemcolor crosshair_back backcolor .3 0.5 0.2 .25 ; show tip_crosshair_back ; show tipbox }
+		mouseExit { setitemcolor crosshair_back backcolor 1 1 1 .07 ; hide tip_crosshair_back ; hide tipbox }
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        HIT FEEDBACK                     //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name			hf_hitsounds
+		group			hitfeedback
+		rect 0 0 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_HITSOUNDS"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_hitSounds"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hf_hitsounds backcolor .3 0.5 0.2 .25 ; show tip_hf_hitsounds ; show tipbox }
+		mouseExit { setitemcolor hf_hitsounds backcolor 1 1 1 .07 ; hide tip_hf_hitsounds ; hide tipbox }
+	}
+
+	itemDef {
+		name			hf_hitmarker
+		group			hitfeedback
+		rect 0 24 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_HITMARKER"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_drawHitMarker"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hf_hitmarker backcolor .3 0.5 0.2 .25 ; show tip_hf_hitmarker ; show tipbox }
+		mouseExit { setitemcolor hf_hitmarker backcolor 1 1 1 .07 ; hide tip_hf_hitmarker ; hide tipbox }
+	}
+
+	itemDef {
+		name			hf_hitmarkersize
+		group			hitfeedback
+		type			ITEM_TYPE_SLIDER
+		text			"@OPTIONS_HITMARKERSIZE"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat		"cg_hitMarkerSize" 24 8 64
+		rect 0 48 600 22
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		textscale		.32
+		style			WINDOW_STYLE_FILLED
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hf_hitmarkersize backcolor .3 0.5 0.2 .25 ; show tip_hf_hitmarkersize ; show tipbox }
+		mouseExit { setitemcolor hf_hitmarkersize backcolor 1 1 1 .07 ; hide tip_hf_hitmarkersize ; hide tipbox }
+	}
+
+	itemDef {
+		name			hf_hitmarkeralpha
+		group			hitfeedback
+		type			ITEM_TYPE_SLIDER
+		text			"@OPTIONS_HITMARKERALPHA"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat		"cg_hitMarkerAlpha" .75 0 1
+		rect 0 72 600 22
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		textscale		.32
+		style			WINDOW_STYLE_FILLED
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hf_hitmarkeralpha backcolor .3 0.5 0.2 .25 ; show tip_hf_hitmarkeralpha ; show tipbox }
+		mouseExit { setitemcolor hf_hitmarkeralpha backcolor 1 1 1 .07 ; hide tip_hf_hitmarkeralpha ; hide tipbox }
+	}
+
+	itemDef {
+		name			hf_solidhitmarker
+		group			hitfeedback
+		rect 0 96 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_SOLIDHITMARKER"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_solidHitMarker"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hf_solidhitmarker backcolor .3 0.5 0.2 .25 ; show tip_hf_solidhitmarker ; show tipbox }
+		mouseExit { setitemcolor hf_solidhitmarker backcolor 1 1 1 .07 ; hide tip_hf_solidhitmarker ; hide tipbox }
+	}
+
+	itemDef {
+		name			hf_scorepop
+		group			hitfeedback
+		rect 0 120 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_SCOREPOP"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_drawScorePop"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hf_scorepop backcolor .3 0.5 0.2 .25 ; show tip_hf_scorepop ; show tipbox }
+		mouseExit { setitemcolor hf_scorepop backcolor 1 1 1 .07 ; hide tip_hf_scorepop ; hide tipbox }
+	}
+
+	itemDef {
+		name			hf_enemyhealthbars
+		group			hitfeedback
+		rect 0 144 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_ENEMYHEALTHBARS"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_drawEnemyHealthbars"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hf_enemyhealthbars backcolor .3 0.5 0.2 .25 ; show tip_hf_enemyhealthbars ; show tipbox }
+		mouseExit { setitemcolor hf_enemyhealthbars backcolor 1 1 1 .07 ; hide tip_hf_enemyhealthbars ; hide tipbox }
+	}
+
+	itemDef {
+		name			hf_damagenumbers
+		group			hitfeedback
+		rect 0 168 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_DAMAGENUMBERS"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		cvar			"cg_drawDamageNumbers"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hf_damagenumbers backcolor .3 0.5 0.2 .25 ; show tip_hf_damagenumbers ; show tipbox }
+		mouseExit { setitemcolor hf_damagenumbers backcolor 1 1 1 .07 ; hide tip_hf_damagenumbers ; hide tipbox }
+	}
+
+	itemDef {
+		name			hf_back
+		group			hitfeedback
+		rect 0 192 600 22
+		type			ITEM_TYPE_BUTTON
+		style			WINDOW_STYLE_FILLED
+		text			"@MAIN_BACK"
+		textfont		UI_FONT_BIG	// RealRTCWCoop
+		textscale		.32
+		textalign		ITEM_ALIGN_CENTER
+		textalignx		290
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		action { play "sound/misc/kcaction.wav" ; hide hitfeedback ; hide tipbox ; hide grpGameplayTip ; show ctr_hud ; show ctr_hitfeedback ; show ctr_crosshair }
+		mouseEnter { setitemcolor hf_back backcolor .3 0.5 0.2 .25 ; show tip_hf_back ; show tipbox }
+		mouseExit { setitemcolor hf_back backcolor 1 1 1 .07 ; hide tip_hf_back ; hide tipbox }
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        HOVER TIP BOX                    //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name tipbox
+		style WINDOW_STYLE_FILLED
+		rect 0 280 600 28
+		backcolor 0 0 0 .55
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ctr_hud
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HUDSETTINGS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ctr_hitfeedback
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HITFEEDBACK"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ctr_crosshair
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_CROSSHAIRSETTINGS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_alpha
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HUDALPHA"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_cursorhints
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_CURSORHINTS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_bloodhit
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_BLOODHIT"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_chaticontime
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_CHATICONTIME"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_teamoverlay
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_TEAMOVERLAY"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_compass
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_COMPASS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_back
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HUD_BACK"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_crosshair_size
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_CROSSHAIRSIZE"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_crosshair_alpha
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_CROSSHAIRALPHA"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_crosshair_solid
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_SOLIDCROSSHAIR"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_crosshair_names
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_CROSSHAIRNAMES"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_crosshair_back
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_CROSSHAIR_BACK"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_hitsounds
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HITSOUNDS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_hitmarker
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HITMARKER"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_hitmarkersize
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HITMARKERSIZE"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_hitmarkeralpha
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HITMARKERALPHA"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_solidhitmarker
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_SOLIDHITMARKER"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_scorepop
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_SCOREPOP"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_enemyhealthbars
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_ENEMYHEALTHBARS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_damagenumbers
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_DAMAGENUMBERS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hf_back
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_HF_BACK"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+}
+
+}

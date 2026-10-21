@@ -2064,10 +2064,17 @@ float Item_Slider_ThumbPosition( itemDef_t *item ) {
 
 int Item_Slider_OverSlider( itemDef_t *item, float x, float y ) {
 	rectDef_t r;
+	float trackX;
 
-	r.x = Item_Slider_ThumbPosition( item ) - ( SLIDER_THUMB_WIDTH / 2 );
+	if ( item->text ) {
+		trackX = item->textRect.x + item->textRect.w + 8;
+	} else {
+		trackX = item->window.rect.x;
+	}
+
+	r.x = trackX;
 	r.y = item->window.rect.y - 2;
-	r.w = SLIDER_THUMB_WIDTH;
+	r.w = SLIDER_WIDTH;
 	r.h = SLIDER_THUMB_HEIGHT;
 
 	if ( Rect_ContainsPoint( &r, x, y ) ) {
@@ -3839,6 +3846,7 @@ void Item_Combo_Paint( itemDef_t *item ) {
 	float valueFloat = 0;
 	int i;
 	float borderOffset = 4.0;
+	float comboGap;
 
 	memcpy( &itemColor, &item->window.foreColor, sizeof( vec4_t ) );
 
@@ -3867,12 +3875,14 @@ void Item_Combo_Paint( itemDef_t *item ) {
 		}
 	}
 
-	selectorOffset = widestText + selectedTextOffset - 4 + borderOffset;
+	comboGap = 14.0;
+
+	selectorOffset = widestText + selectedTextOffset - 4 + borderOffset + comboGap;
 	selectorSize = DC->textWidth( COMBO_SELECTORCHAR, item->font, item->textscale, 0 );
 
 	rect.x = selectedTextOffset;
 	rect.y = item->textRect.y - item->textRect.h - borderOffset;
-	rect.w = widestText + 4 + selectorSize + borderOffset;
+	rect.w = widestText + 4 + selectorSize + borderOffset + comboGap;
 	rect.h = item->textRect.h + ( borderOffset * 2 );
 
 	selectorRect.x = rect.x + ( rect.w - selectorSize - 8 - ( borderOffset * 2 ) );
@@ -4234,7 +4244,10 @@ char* BindingFromName( const char *cvar ) {
 
 void Item_Slider_Paint( itemDef_t *item ) {
 	vec4_t newColor, lowLight;
-	float x, y;
+	vec4_t trackColor, fillColor, borderColor;
+	float x, y, fraction, fillWidth, chevronGap;
+	int chevronWidth;
+	editFieldDef_t *editDef = item->typeData;
 	menuDef_t *parent = (menuDef_t*)item->parent;
 
 	if ( item->window.flags & WINDOW_HASFOCUS ) {
@@ -4247,22 +4260,57 @@ void Item_Slider_Paint( itemDef_t *item ) {
 		memcpy( &newColor, &item->window.foreColor, sizeof( vec4_t ) );
 	}
 
-	y = item->window.rect.y;
+	// vertically center the bar within the row instead of hugging its top
+	y = item->window.rect.y + ( item->window.rect.h - SLIDER_HEIGHT ) / 2;
 	if ( item->text ) {
 		Item_Text_Paint( item );
 		x = item->textRect.x + item->textRect.w + 8;
 	} else {
 		x = item->window.rect.x;
 	}
-	DC->setColor( newColor );
-	DC->drawHandlePic( x, y, SLIDER_WIDTH, SLIDER_HEIGHT, DC->Assets.sliderBar );
 
-	if ( item->cvar ) {
-		DC->drawText( x + SLIDER_WIDTH + 8, item->textRect.y, item->font, item->textscale, newColor, va( "%.2f", DC->getCVarValue( item->cvar ) ), 0, 0, item->textStyle );
+	// fraction of the track that's "filled", 0..1
+	fraction = 0;
+	if ( editDef && item->cvar ) {
+		float value = DC->getCVarValue( item->cvar );
+		float range = editDef->maxVal - editDef->minVal;
+		if ( value < editDef->minVal ) {
+			value = editDef->minVal;
+		} else if ( value > editDef->maxVal ) {
+			value = editDef->maxVal;
+		}
+		if ( range > 0 ) {
+			fraction = ( value - editDef->minVal ) / range;
+		}
 	}
 
-	x = Item_Slider_ThumbPosition( item );
-	DC->drawHandlePic( x - ( SLIDER_THUMB_WIDTH / 2 ), y - 2, SLIDER_THUMB_WIDTH, SLIDER_THUMB_HEIGHT, DC->Assets.sliderThumb );
+	// TNO-style flat two-tone bar: dark track, light fill, flanked by text chevrons
+	chevronGap = 6;
+
+	DC->drawText( x, item->textRect.y, item->font, item->textscale, newColor, "<", 0, 0, item->textStyle );
+	chevronWidth = DC->textWidth( "<", item->font, item->textscale, 0 );
+	x += chevronWidth + chevronGap;
+
+	trackColor[0] = 0; trackColor[1] = 0; trackColor[2] = 0; trackColor[3] = 0.65;
+	DC->fillRect( x, y, SLIDER_WIDTH, SLIDER_HEIGHT, trackColor );
+
+	fillWidth = SLIDER_WIDTH * fraction;
+	if ( fillWidth > 1 ) {
+		fillColor[0] = 0.8; fillColor[1] = 0.8; fillColor[2] = 0.8; fillColor[3] = 1.0;
+		DC->fillRect( x, y, fillWidth, SLIDER_HEIGHT, fillColor );
+	}
+
+	borderColor[0] = .5; borderColor[1] = .5; borderColor[2] = .5; borderColor[3] = .5;
+	DC->drawRect( x, y, SLIDER_WIDTH, SLIDER_HEIGHT, 1, borderColor );
+
+	x += SLIDER_WIDTH + chevronGap;
+	DC->drawText( x, item->textRect.y, item->font, item->textscale, newColor, ">", 0, 0, item->textStyle );
+	chevronWidth = DC->textWidth( ">", item->font, item->textscale, 0 );
+	x += chevronWidth + chevronGap;
+
+	if ( item->cvar ) {
+		DC->drawText( x + 2, item->textRect.y, item->font, item->textscale, newColor, va( "%.2f", DC->getCVarValue( item->cvar ) ), 0, 0, item->textStyle );
+	}
 }
 
 void Item_Bind_Paint( itemDef_t *item ) {

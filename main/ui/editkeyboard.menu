@@ -1,0 +1,241 @@
+#include "ui/menudef.h"
+
+{
+\\ EDIT KEYBOARD (full bind list, 2 columns, category dividers) \\
+
+menuDef {
+	name "editkeyboard_menu"
+	visible 0
+	fullscreen 1
+	rect 0 0 640 480
+	focusColor 1 .75 0 1
+	style 1
+	border 1
+	onClose { uiScript saveControls }
+	onOpen {
+		setitemcolor fadebox backcolor 0 0 0 1;
+		fadeout fadebox;
+		show grpKeybinds
+		}
+	onEsc {
+		close editkeyboard_menu;
+		open control_menu
+		}
+
+// Start of Menu Background
+
+itemDef
+	{
+		name realrtcw_background
+		style WINDOW_STYLE_SHADER
+		rect -120 -9.25 917 500
+		background "realrtcw_background"
+		visible 1
+		decoration
+	}
+
+itemDef
+	{
+		name realrtcw_logo
+		style WINDOW_STYLE_SHADER
+		rect -107 0 480 480
+		background "ui/assets/realrtcw_logo.tga"
+		visible 1
+		decoration
+	}
+
+// End of Menu Background
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        PANEL                            //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef
+	{
+		name panelframe
+		rect 20 90 600 350
+		style WINDOW_STYLE_ROUNDED
+		cornerradius 10
+		forecolor 1 1 1 1
+		backcolor 0 0 0 .5
+		visible 1
+		decoration
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////        COLUMN A: SHOOTING & WEAPONS / VIEW & ZOOM        //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name header_shooting
+		group grpKeybinds
+		type ITEM_TYPE_TEXT
+		text "@CONTROLS_CAT_SHOOTING"
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 8
+		textscale .2
+		rect 30 98 280 10
+		style WINDOW_STYLE_FILLED
+		backcolor .3 0.5 0.2 .25
+		forecolor 1 1 1 1
+		visible 1
+		decoration
+	}
+
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ATTACK"        textfont UI_FONT_BIG  cvar "+attack"         rect 30 110 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_RELOAD"        textfont UI_FONT_BIG  cvar "+reload"         rect 30 121 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_NEXTWEAPON"    textfont UI_FONT_BIG  cvar "weapnext"        rect 30 132 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_PREVWEAPON"    textfont UI_FONT_BIG  cvar "weapprev"        rect 30 143 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SWITCHALT"     textfont UI_FONT_BIG  cvar "weapalt"         rect 30 154 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_KNIFE"         textfont UI_FONT_BIG  cvar "weaponbank 1"    rect 30 165 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_PISTOLS"       textfont UI_FONT_BIG  cvar "weaponbank 2"    rect 30 176 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_MACHINEGUNS"   textfont UI_FONT_BIG  cvar "weaponbank 3"    rect 30 187 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_RIFLES"        textfont UI_FONT_BIG  cvar "weaponbank 4"    rect 30 198 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ASSAULTRIFLES" textfont UI_FONT_BIG cvar "weaponbank 5"    rect 30 209 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_GRENADES"      textfont UI_FONT_BIG  cvar "weaponbank 6"    rect 30 220 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ROCKETS"       textfont UI_FONT_BIG  cvar "weaponbank 7"    rect 30 231 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_VENOM"         textfont UI_FONT_BIG  cvar "weaponbank 8"    rect 30 242 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SHOTGUN"       textfont UI_FONT_BIG  cvar "weaponbank 9"    rect 30 253 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_QUICKGREN"     textfont UI_FONT_BIG  cvar "+quickgren"      rect 30 264 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+
+	itemDef {
+		name header_viewzoom
+		group grpKeybinds
+		type ITEM_TYPE_TEXT
+		text "@CONTROLS_CAT_VIEWZOOM"
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 8
+		textscale .2
+		rect 30 279 280 10
+		style WINDOW_STYLE_FILLED
+		backcolor .3 0.5 0.2 .25
+		forecolor 1 1 1 1
+		visible 1
+		decoration
+	}
+
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_BINOCULARS"    textfont UI_FONT_BIG  cvar "+zoom"            rect 30 291 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_NOTEBOOK"      textfont UI_FONT_BIG  cvar "notebook"         rect 30 302 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ZOOMIN"        textfont UI_FONT_BIG  cvar "zoomin"           rect 30 313 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ZOOMOUT"       textfont UI_FONT_BIG  cvar "zoomout"          rect 30 324 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SCREENSHOT"    textfont UI_FONT_BIG  cvar "screenshotJPEG"  rect 30 335 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////        COLUMN B: MOVEMENT / COMMUNICATION & MISC         //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name header_movement
+		group grpKeybinds
+		type ITEM_TYPE_TEXT
+		text "@CONTROLS_CAT_MOVEMENT"
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 8
+		textscale .2
+		rect 330 98 280 10
+		style WINDOW_STYLE_FILLED
+		backcolor .3 0.5 0.2 .25
+		forecolor 1 1 1 1
+		visible 1
+		decoration
+	}
+
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_RUNWALK"       textfont UI_FONT_BIG  cvar "+speed"      rect 330 110 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SPRINT"        textfont UI_FONT_BIG  cvar "+sprint"     rect 330 121 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_MOVEFORWARD"   textfont UI_FONT_BIG  cvar "+forward"    rect 330 132 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_MOVEBACK"      textfont UI_FONT_BIG  cvar "+back"       rect 330 143 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_MOVELEFT"      textfont UI_FONT_BIG  cvar "+moveleft"   rect 330 154 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_MOVERIGHT"     textfont UI_FONT_BIG  cvar "+moveright"  rect 330 165 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_LEANLEFT"      textfont UI_FONT_BIG  cvar "+leanleft"   rect 330 176 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_LEANRIGHT"     textfont UI_FONT_BIG  cvar "+leanright"  rect 330 187 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_JUMP"          textfont UI_FONT_BIG  cvar "+moveup"     rect 330 198 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_CROUCH"        textfont UI_FONT_BIG  cvar "+movedown"   rect 330 209 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_TOGGLECROUCH"  textfont UI_FONT_BIG  cvar "=movedown"   rect 330 220 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_TOGGLESPRINT"  textfont UI_FONT_BIG  cvar "=sprint"     rect 330 231 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_STRAFE"        textfont UI_FONT_BIG  cvar "+strafe"     rect 330 242 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name move  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_TELEPORT"      textfont UI_FONT_BIG  cvar "teleport"    rect 330 253 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+
+	itemDef {
+		name header_misc
+		group grpKeybinds
+		type ITEM_TYPE_TEXT
+		text "@CONTROLS_CAT_MISC"
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 140
+		textaligny 8
+		textscale .2
+		rect 330 268 280 10
+		style WINDOW_STYLE_FILLED
+		backcolor .3 0.5 0.2 .25
+		forecolor 1 1 1 1
+		visible 1
+		decoration
+	}
+
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_KILLPLAYER"      textfont UI_FONT_BIG  cvar "kill"              rect 330 280 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_KICK"            textfont UI_FONT_BIG  cvar "+kick"             rect 330 291 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ACTIVATE"        textfont UI_FONT_BIG  cvar "+activate"         rect 330 302 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_USEITEM"         textfont UI_FONT_BIG  cvar "+useitem"          rect 330 313 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_NEXTITEM"        textfont UI_FONT_BIG  cvar "itemnext"          rect 330 324 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_PREVITEM"        textfont UI_FONT_BIG  cvar "itemprev"          rect 330 335 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_DROPWEAPON"      textfont UI_FONT_BIG  cvar "+dropweapon"       rect 330 346 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_DROPAMMO"        textfont UI_FONT_BIG  cvar "dropammo"          rect 330 357 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_CHAT"            textfont UI_FONT_BIG  cvar "messagemode"       rect 330 368 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_QUICKMESSAGE"    textfont UI_FONT_BIG  cvar "mp_quickmessage"   rect 330 379 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_MANUALSAVE"      textfont UI_FONT_BIG  cvar "spawnpoint"        rect 330 390 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_VOTEYES"         textfont UI_FONT_BIG  cvar "vote yes"          rect 330 401 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_VOTENO"          textfont UI_FONT_BIG  cvar "vote no"           rect 330 412 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name misc  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SHOWSCOREBOARD"  textfont UI_FONT_BIG  cvar "+scores"           rect 330 423 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        STATUS STRIP                     //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name keyBindStatus
+		rect 20 441 600 16
+		ownerdraw UI_KEYBINDSTATUS
+		text " "
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		forecolor 1 .75 0 1
+		textscale .2
+		textalignx 300
+		textalign 1
+		textaligny 12
+		visible 0
+		decoration
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        BACK                             //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name backmenu
+		text "@MAIN_BACK"
+		type 1
+		rect 20 458 150 20
+		textfont UI_FONT_BIG
+		textalign 0
+		textalignx 10
+		textaligny 15
+		textscale .35
+		style WINDOW_STYLE_SKEWED
+		forecolor 1 1 1 1
+		backcolor 1 1 1 0
+		visible 1
+		action { close editkeyboard_menu ; open control_menu }
+		mouseEnter { setitemskew backmenu 0 12 ; setitemcolor backmenu backcolor 1 1 1 .92 }
+		mouseExit { setitemskew backmenu 0 0 ; setitemcolor backmenu backcolor 1 1 1 0 ; clearfocus }
+	}
+
+}
+
+}

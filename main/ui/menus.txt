@@ -18,7 +18,9 @@
  	loadMenu { "ui/setup.menu" }
 	loadMenu { "ui/controls.menu" }
 	loadMenu { "ui/system.menu" }
-	loadMenu { "ui/options.menu" }
+	loadMenu { "ui/gameplay.menu" }
+	loadMenu { "ui/sound.menu" }
+	loadMenu { "ui/editkeyboard.menu" }
 	loadMenu { "ui/mods.menu" }
 	loadMenu { "ui/default.menu" }
 	loadMenu { "ui/credit.menu" }

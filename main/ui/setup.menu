@@ -1,49 +1,33 @@
 #include "ui/menudef.h"
 
 {
-\\ SETUP MENU \\
+\\ SETUP MENU SHELL (horizontal tab bar) \\
 
 menuDef {
    	name "setup_menu"
    	visible 0
    	fullscreen 1
-   	rect 186 0 454 480
-//	background "menuback_a"
-   	focusColor 0 0 0 1 // black, so hovered button text reads over the white skewed highlight
+   	rect 0 0 640 480
+   	focusColor 1 .75 0 1 // gold pulse, matches the hover/focus treatment used throughout the rest of the options menus
    	style 1
    	border 1
 	soundloop ""
-	onOpen { 
-		show realrtcw_options;
-		hide realrtcw_options_controls;
-		hide realrtcw_options_system;
-		hide realrtcw_options_game;
-		hide realrtcw_options_defaults;
-		hide realrtcw_options_back;
-		show optionsmenugroup;
-		
-		setitemcolor fadebox backcolor 0 0 0 1 ; 
-		fadeout fadebox ;
-		hide back_alt ;
-		show back ;
-		hide grpmessage }
-	onEsc { close setup_menu ; open main }
-
-
-
+	onOpen {
+		setitemcolor fadebox backcolor 0 0 0 1 ;
+		fadeout fadebox
+		}
+	onEsc { close gameplay_menu ; close control_menu ; close system_menu ; close sound_menu ; close setup_menu ; open main }
 
 	itemDef {
 		name solid_box
-		style 1 
+		style 1
 		rect 4 2 178 426
-		border 1 
+		border 1
 		bordersize 1
 		bordercolor .5 .5 .5 .5
 		backcolor 0 0 .75 .25
-		visible 1 
-		decoration 
-		mouseEnter { setcolor backcolor .75 0 0 .5 }
-		mouseExit { setcolor backcolor 0 0 .75 .25 }
+		visible 0
+		decoration
 	}
 
 // Start of Menu Background
@@ -67,377 +51,155 @@ itemDef
 		visible 1
 		decoration
 	}
-	
+
 // End of Menu Background
 
-	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        CONTENT PANEL FRAME              //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////
+	itemDef
+	{
+		name panelborder
+		rect 12 92 616 366
+		style WINDOW_STYLE_ROUNDED
+		cornerradius 12
+		backcolor 1 1 1 .4
+		visible 1
+		decoration
+	}
 
-	// CONTROLS BUTTON
+	itemDef
+	{
+		name panelframe
+		rect 14 94 612 362
+		style WINDOW_STYLE_ROUNDED
+		cornerradius 10
+		forecolor 1 1 1 1
+		backcolor 0 0 0 .88
+		visible 1
+		decoration
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        TAB BAR                          //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	itemDef {
-	    name controlsmenu
-		group optionsmenugroup
- 	    type 1
-	    rect 10 196 134 38
-	    visible 1
-	    text "@MAIN_CONTROLS"
-	textalign 0
-	textalignx 10
-	textaligny 24
-	textscale .60
+		name tab_gameplay
+		text "@MAIN_GAMEPLAY"
+		type ITEM_TYPE_BUTTON
+		rect 20 100 144 24
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 72
+		textaligny 17
+		textscale .26
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .05 .05 .05 .65
+		visible 1
+		action { play "sound/misc/kcaction.wav" ;
+			close control_menu ; close system_menu ; close sound_menu ;
+			open gameplay_menu }
+		mouseEnter { transition tab_gameplay 20 100 144 24 16 98 152 28 10 12 ; setitemcolor tab_gameplay backcolor .3 0.5 0.2 .5 }
+		mouseExit { transition tab_gameplay 16 98 152 28 20 100 144 24 10 12 ; setitemcolor tab_gameplay backcolor .05 .05 .05 .65 }
+	}
+
+	itemDef {
+		name tab_controls
+		text "@MAIN_CONTROLS"
+		type ITEM_TYPE_BUTTON
+		rect 172 100 144 24
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 72
+		textaligny 17
+		textscale .26
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .05 .05 .05 .65
+		visible 1
+		action { play "sound/misc/kcaction.wav" ;
+			close gameplay_menu ; close system_menu ; close sound_menu ;
+			open control_menu }
+		mouseEnter { transition tab_controls 172 100 144 24 168 98 152 28 10 12 ; setitemcolor tab_controls backcolor .3 0.5 0.2 .5 }
+		mouseExit { transition tab_controls 168 98 152 28 172 100 144 24 10 12 ; setitemcolor tab_controls backcolor .05 .05 .05 .65 }
+	}
+
+	itemDef {
+		name tab_graphics
+		text "@SYSTEM_GRAPHICS"
+		type ITEM_TYPE_BUTTON
+		rect 324 100 144 24
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 72
+		textaligny 17
+		textscale .26
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .05 .05 .05 .65
+		visible 1
+		action { play "sound/misc/kcaction.wav" ;
+			close gameplay_menu ; close control_menu ; close sound_menu ;
+			open system_menu }
+		mouseEnter { transition tab_graphics 324 100 144 24 320 98 152 28 10 12 ; setitemcolor tab_graphics backcolor .3 0.5 0.2 .5 }
+		mouseExit { transition tab_graphics 320 98 152 28 324 100 144 24 10 12 ; setitemcolor tab_graphics backcolor .05 .05 .05 .65 }
+	}
+
+	itemDef {
+		name tab_sound
+		text "@SYSTEM_SOUND"
+		type ITEM_TYPE_BUTTON
+		rect 476 100 144 24
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 72
+		textaligny 17
+		textscale .26
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor .05 .05 .05 .65
+		visible 1
+		action { play "sound/misc/kcaction.wav" ;
+			close gameplay_menu ; close control_menu ; close system_menu ;
+			open sound_menu }
+		mouseEnter { transition tab_sound 476 100 144 24 468 98 152 28 10 12 ; setitemcolor tab_sound backcolor .3 0.5 0.2 .5 }
+		mouseExit { transition tab_sound 468 98 152 28 476 100 144 24 10 12 ; setitemcolor tab_sound backcolor .05 .05 .05 .65 }
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        MAIN MENU                        //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name backmenu
+		text "@MAIN_TOMAINMENU"
+		type 1
+		rect 20 458 150 20
+		textfont UI_FONT_BIG
+		textalign 0
+		textalignx 10
+		textaligny 15
+		textscale .35
 		style WINDOW_STYLE_SKEWED
 		forecolor 1 1 1 1
 		backcolor 1 1 1 0
-
-	action { play "sound/misc/kcaction.wav" ;
-	close control_menu ;
-	close system_menu ;
-	close options_menu ;
-	close cdkey_menu ;
-	close default_menu ;
-	open control_menu }
-
-	mouseEnter { setitemskew controlsmenu 0 18 ; setitemcolor controlsmenu backcolor 1 1 1 .92 }
-	mouseExit { setitemskew controlsmenu 0 0 ; setitemcolor controlsmenu backcolor 1 1 1 0 ; clearfocus }
+		visible 1
+		action { play "sound/misc/kcaction.wav" ; close gameplay_menu ; close control_menu ; close system_menu ; close sound_menu ; close setup_menu ; open main }
+		mouseEnter { setitemskew backmenu 0 12 ; setitemcolor backmenu backcolor 1 1 1 .92 }
+		mouseExit { setitemskew backmenu 0 0 ; setitemcolor backmenu backcolor 1 1 1 0 ; clearfocus }
 	}
-	
-	// SYSTEM BUTTON
-	itemDef {
-        name systemmenu
-		group optionsmenugroup
- 	    type 1
-	    rect 10 246 107 38
-	    visible 1
-	    text "@MAIN_SYSTEM"
-	textalign 0
-	textalignx 10
-	textaligny 24
-	textscale .60
-		style WINDOW_STYLE_SKEWED
-		forecolor 1 1 1 1
-		backcolor 1 1 1 0
-	action { play "sound/misc/kcaction.wav" ;
-	close control_menu ;
-	close system_menu ;
-	close options_menu ;
-	close cdkey_menu ;
-	close default_menu ;
-	open system_menu }
-
-	mouseEnter { setitemskew systemmenu 0 18 ; setitemcolor systemmenu backcolor 1 1 1 .92 }
-	mouseExit { setitemskew systemmenu 0 0 ; setitemcolor systemmenu backcolor 1 1 1 0 ; clearfocus }
-	}
-	
-	// GAME OPTIONS BUTTON
-	itemDef {
-        name gameoptionsmenu
-		group optionsmenugroup
- 	    type 1
-	    rect 10 294 188 40
-	    visible 1
-	    text "@MAIN_GAME_OPTIONS"
-	textalign 0
-	textalignx 10
-	textaligny 20
-	textscale .60
-		style WINDOW_STYLE_SKEWED
-		forecolor 1 1 1 1
-		backcolor 1 1 1 0
-
-	action { play "sound/misc/kcaction.wav" ;
-	close control_menu ;
-	close system_menu ;
-	close options_menu ;
-	close cdkey_menu ;
-	close default_menu ;
-	open options_menu }
-
-	mouseEnter { setitemskew gameoptionsmenu 0 18 ; setitemcolor gameoptionsmenu backcolor 1 1 1 .92 }
-	mouseExit { setitemskew gameoptionsmenu 0 0 ; setitemcolor gameoptionsmenu backcolor 1 1 1 0 ; clearfocus }
-	}
-	
-	// DEFAULTS BUTTON
-	itemDef {
-      	name defaultsmenu
-		group optionsmenugroup
- 	    type 1
-	    textstyle 6
-	    rect 10 344 242 40
-	    visible 0
-	    text "@MAIN_DEFAULTS"
-	textalign 0
-	textalignx 10
-	textaligny 20
-	textscale .60
-		style WINDOW_STYLE_SKEWED
-		forecolor 1 1 1 1
-		backcolor 1 1 1 0
-	action { play "sound/misc/kcaction.wav" ;
-	close control_menu ;
-	close system_menu ;
-	close options_menu ;
-	close cdkey_menu ;
-	close default_menu ;
-	open default_menu }
-
-	mouseEnter { setitemskew defaultsmenu 0 18 ; setitemcolor defaultsmenu backcolor 1 1 1 .92 }
-	mouseExit { setitemskew defaultsmenu 0 0 ; setitemcolor defaultsmenu backcolor 1 1 1 0 ; clearfocus }
-	}
-	
-	// BACK BUTTON
-	itemDef {
-        name backmenu
-		group optionsmenugroup
- 	    type 1
-        rect 10 394 80 40
-	    visible 1
-	    text "@MAIN_BACK"
-	textalign 0
-	textalignx 10
-	textaligny 20
-	textscale .60
-		style WINDOW_STYLE_SKEWED
-		forecolor 1 1 1 1
-		backcolor 1 1 1 0
-     	action { close control_menu ;
-	close setup_menu ;
-	close system_menu ;
-	close options_menu ;
-	close default_menu ;
-	close resetscore_menu ;
-	open main }
-
-	mouseEnter { setitemskew backmenu 0 18 ; setitemcolor backmenu backcolor 1 1 1 .92 }
-	mouseExit { setitemskew backmenu 0 0 ; setitemcolor backmenu backcolor 1 1 1 0 ; clearfocus }
-    }
-
-//	MESSAGES	//
-
-itemDef {
-	name message_back
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textstyle 1
-	textalign 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@GENERAL_MSG_BACK"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-itemDef {
-	name message_accept
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_ACCEPT"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-itemDef {
-	name message_controls
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_CONTROLS"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-itemDef {
-	name message_nowork
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@GENERAL_MSG_NOWORK"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-itemDef {
-	name message_look
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_LOOK"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-itemDef {
-	name message_move
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_MOVE"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-itemDef {
-	name message_shoot
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_SHOOT"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-itemDef {
-	name message_misc
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_MISC"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-itemDef {
-	name message_system
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_SYSTEM"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-itemDef {
-	name message_gameoptions
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_GAMEOPTIONS"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-itemDef {
-	name message_default
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_DEFAULT"
-//	text "disabled for show build"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-itemDef {
-	name message_cine
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_CINE"
-//	text "disabled for show build"
-	textfont UI_FONT_BIG	// RealRTCWCoop
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
-
-itemDef {
-	name message_scores
-	group grpmessage
-	style 0 
-	rect 320 437 128 30
-	textalign 1
-	textstyle 1
-	textalignx 0
-	textaligny 25
-	textscale .23
-	text "@SETUP_MSG_SCORES"
-//	text "disabled for show build"
-	textfont UI_FONT_BIG	// RealRTCWCoop     
-	forecolor 1 1 1 1
-	decoration 
-	visible 0
-	}
-
 
 }
-
 
 }
