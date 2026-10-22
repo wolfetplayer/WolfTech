@@ -1,0 +1,207 @@
+#include "ui/menudef.h"
+
+{
+\\ INGAME SOUND TAB (moved out of ingame_system) \\
+
+menuDef {
+	name "ingame_sound"
+	visible 0
+	fullscreen 0
+	rect 220 110 443 366
+	focusColor 1 .75 0 1
+	style 1
+	border 1
+
+	itemDef {
+		name isnd_effectsvolume
+		type ITEM_TYPE_SLIDER
+		text "@SYSTEM_EFFECTSVOLUME_LABEL"
+		textfont		UI_FONT_BIG
+		cvarfloat "s_volume" 0.7 0 1
+		rect 0 0 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_effectsvolume backcolor .3 0.5 0.2 .25 ; show tip_isnd_effectsvolume ; show tipbox }
+		mouseExit { setitemcolor isnd_effectsvolume backcolor 1 1 1 .07 ; hide tip_isnd_effectsvolume ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_musicvolume
+		type ITEM_TYPE_SLIDER
+		text "@SYSTEM_MUSICVOLUME_LABEL"
+		textfont		UI_FONT_BIG
+		cvarfloat "s_musicvolume" 0.25 0 1
+		rect 0 19 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_musicvolume backcolor .3 0.5 0.2 .25 ; show tip_isnd_musicvolume ; show tipbox }
+		mouseExit { setitemcolor isnd_musicvolume backcolor 1 1 1 .07 ; hide tip_isnd_musicvolume ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_subtitles
+		rect 0 38 443 16
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_SUBTITLES"
+		textfont		UI_FONT_BIG
+		cvar "cg_drawSubtitles"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_subtitles backcolor .3 0.5 0.2 .25 ; show tip_isnd_subtitles ; show tipbox }
+		mouseExit { setitemcolor isnd_subtitles backcolor 1 1 1 .07 ; hide tip_isnd_subtitles ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_subtitlesize
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_SUBTITLESIZE"
+		textfont		UI_FONT_BIG
+		cvarfloat "cg_subtitleSize" 7 4 16
+		rect 0 57 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_subtitlesize backcolor .3 0.5 0.2 .25 ; show tip_isnd_subtitlesize ; show tipbox }
+		mouseExit { setitemcolor isnd_subtitlesize backcolor 1 1 1 .07 ; hide tip_isnd_subtitlesize ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_subtitleshadow
+		rect 0 76 443 16
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_SUBTITLESHADOW"
+		textfont		UI_FONT_BIG
+		cvar "cg_subtitleShadow"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_subtitleshadow backcolor .3 0.5 0.2 .25 ; show tip_isnd_subtitleshadow ; show tipbox }
+		mouseExit { setitemcolor isnd_subtitleshadow backcolor 1 1 1 .07 ; hide tip_isnd_subtitleshadow ; hide tipbox }
+		}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        HOVER TIP BOX                    //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name tipbox
+		style WINDOW_STYLE_FILLED
+		rect 0 330 443 30
+		backcolor 0 0 0 .55
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_effectsvolume
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_EFFECTSVOLUME"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_musicvolume
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_MUSICVOLUME"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_subtitles
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_SUBTITLES"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_subtitlesize
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_SUBTITLESIZE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_subtitleshadow
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_SUBTITLESHADOW"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+}
+
+}

@@ -7,93 +7,42 @@ menuDef {
     	name "ingame_system"
     	visible 0
     	fullscreen 0
-		outOfBoundsClick			// this closes the window if it gets a click out of the rectangle
-		rect 220 110 443 370
+		rect 220 110 443 366
     	focusColor 1 .75 0 1
     	style 1
     	border 1
 
-		onopen { close ingame_options ; close ingame_controls ; close ingame_callvote ; hide grpsystem ; hide grpapplysystem ; hide rend2page ; hide rend2apply ; hide performance ; show graphics ; show graphicsapply ; setitemcolor ctr_graphics backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 ; setitemcolor ctr_performance backcolor .1 .1 .1 .25 }
+		onopen { hide advanced ; hide performance ; hide rend2page ; hide rend2apply ; show graphics ; show graphicsapply ; show grpIngameGraphicsNav ; hide tipbox ; hide grpIngameSystemTip }
 
-
-itemDef {
-	name window
-	group ingamebox
-	rect 0 2 443 330
-	style WINDOW_STYLE_FILLED
-	border 1
-	bordercolor .5 .5 .5 .5
-	forecolor 1 1 1 1
-	backcolor 0 0 0 .5
-	visible 1
-	decoration
-}
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        GRAPHICS (NORMAL)                 //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	itemDef {
-		name ctr_graphics
-		text "@SYSTEM_GRAPHICS"
-		textfont		UI_FONT_BIG
-		type ITEM_TYPE_BUTTON
-		textscale .23
-		group grpControlbutton
-		style WINDOW_STYLE_FILLED
-		rect 2 4 108 20
-		textalign ITEM_ALIGN_CENTER
-		textalignx 54
-		textaligny 14
-		border 1
-		bordercolor .5 .5 .5 .5
-		forecolor 1 1 1 1
-		backcolor .3 0.5 0.2 .25
- 		visible 1
-		action { hide grpSystem ; hide rend2page ; hide rend2apply ; hide performance ; show graphics ; show graphicsapply ;
-		setitemcolor ctr_graphics backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 ; setitemcolor ctr_performance backcolor .1 .1 .1 .25 }
-		}
-
-//	itemDef {
-//		name graphics
-//		text "Set Recommended"
-//		type 1	
-//		textscale .25
-//		group grpsystem
-//		style WINDOW_STYLE_FILLED
-//		textalign ITEM_ALIGN_CENTER
-//		rect 82 25 290 12
-//		textalign 1
-//		textalignx 145
-//		textaligny 12
-//		forecolor 1 1 1 1
-//		backcolor 1 1 1 .07 
-//		visible 1
-//		action { play "sound/misc/kcaction.wav" ; 
-//			open in_rec_restart_popmenu ; hide graphics ; hide graphicsapply}
-//		}
-
-	itemDef {
-		name graphics
-		group grpSystem
+		name isys_renderer
+		group graphics
 		type ITEM_TYPE_MULTI
 		text "@SYSTEM_RENDERER"
 		textfont		UI_FONT_BIG
 		cvar "cl_renderer"
 		cvarStrList { "@SYSTEM_RENDERER_OPENGL1", "opengl1", "@SYSTEM_RENDERER_REND2", "rend2"  }
-		rect 82 27 290 12
+		rect 0 0 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22  
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07      
+		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
-		visible 0 
+		visible 0
 		action { uiScript glCustom }
+		mouseEnter { setitemcolor isys_renderer backcolor .3 0.5 0.2 .25 ; show tip_isys_renderer ; show tipbox }
+		mouseExit { setitemcolor isys_renderer backcolor 1 1 1 .07 ; hide tip_isys_renderer ; hide tipbox }
 		}
 
-
 	itemDef {
-		name graphics				
-		group grpSystem
+		name isys_quality
+		group graphics
 		type ITEM_TYPE_MULTI
 		text "@SYSTEM_QUALITY"
 		textfont		UI_FONT_BIG
@@ -101,444 +50,531 @@ itemDef {
 		cvarFloatList { "@SYSTEM_LEVEL_HIGHQUALITY" 0 "@SYSTEM_LEVEL_NORMAL" 1 "@SYSTEM_LEVEL_FAST" 2 "@SYSTEM_LEVEL_FASTEST" 3 "@SYSTEM_LEVEL_CUSTOM" 4 }
 
 		cvarTest		"ui_glCustom"
-		hideCvar		{ "999" }	// 999 is 'recommended'
+		hideCvar		{ "999" }	// 999 is recommended
 
- 		rect 82 42 290 12
-   		textalign ITEM_ALIGN_RIGHT
-   		textalignx 142 
-   		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07         
-   		forecolor 1 1 1 1
-   		visible 0 
-		action {
-			 uiScript update "ui_glCustom" }
-    		}
-
-
-	itemDef {
-		name graphics				
-		group grpSystem
-		text "@SYSTEM_QUALITY_RECOMMENDED"
-		textfont		UI_FONT_BIG
-		type ITEM_TYPE_BUTTON	
-
-		cvarTest		"ui_glCustom"
-		showCvar		{ "999" }	// 999 is 'recommended'
-
-		rect 82 42 290 12
-		textalign ITEM_ALIGN_CENTER
-		textalignx 162 
-		textaligny 10
+		rect 0 19 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
 		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
 		action {
-			setcvar ui_glCustom 0;	// 'recommended'
-			uiScript update "ui_glCustom" }
-		}
+			 uiScript update "ui_glCustom" }
+		mouseEnter { setitemcolor isys_quality backcolor .3 0.5 0.2 .25 ; show tip_isys_quality ; show tipbox }
+		mouseExit { setitemcolor isys_quality backcolor 1 1 1 .07 ; hide tip_isys_quality ; hide tipbox }
+    		}
 
 	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_GLEXTENSIONS"
+		name isys_quality_recommended
+		group graphics
+		text "@SYSTEM_QUALITY_RECOMMENDED"
 		textfont		UI_FONT_BIG
-		cvar "r_allowExtensions"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 57 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23  
+		type ITEM_TYPE_BUTTON
+
+		cvarTest		"ui_glCustom"
+		showCvar		{ "999" }	// 999 is recommended
+
+		rect 0 19 443 16
+		textalign ITEM_ALIGN_CENTER
+		textalignx 244
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07     
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
-    		}
-	
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		action {
+			setcvar ui_glCustom 0;	// recommended
+			uiScript update "ui_glCustom" }
+		mouseEnter { setitemcolor isys_quality_recommended backcolor .3 0.5 0.2 .25 ; show tip_isys_quality_recommended ; show tipbox }
+		mouseExit { setitemcolor isys_quality_recommended backcolor 1 1 1 .07 ; hide tip_isys_quality_recommended ; hide tipbox }
+		}
+
 		itemDef {
-		name graphics
-		group grpSystem
+		name isys_videomode
+		group graphics
 		type ITEM_TYPE_COMBO
 		text "@SYSTEM_VIDEOMODE_LABEL"
 		textfont		UI_FONT_BIG
 		cvar "r_mode"
 		cvarFloatList {  "@INGAME_SYSTEM_VM_640X480" 3 "@INGAME_SYSTEM_VM_800X600" 4 "@INGAME_SYSTEM_VM_960X720" 5 "@INGAME_SYSTEM_VM_1024X768" 6 "@INGAME_SYSTEM_VM_1152X864" 7 "@INGAME_SYSTEM_VM_1280X1024" 8 "@INGAME_SYSTEM_VM_1600X1200" 9 "@INGAME_SYSTEM_VM_2048X1536" 10 "@INGAME_SYSTEM_VM_WIDESCREEN" 11 }
-//		"320x240" 0 "400x300" 1 "512x384" 2
-		rect 82 72 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
-    		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_ASPECTRATIO_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "cg_fixedAspect"
-		cvarFloatList	{ "@GENERAL_OFF" 0 "@OPTIONS_ASPECT_43" 1 "@OPTIONS_ASPECT_WIDE" 2 }
-		rect 82 87 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
-    		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_COLORDEPTH_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_colorbits"
-		cvarFloatList { "@SYSTEM_LEVEL_DEFAULT" 0 "@SYSTEM_BITDEPTH_16" 16 "@SYSTEM_BITDEPTH_32" 32 }
-		rect 82 102 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom ; uiScript update "r_colorbits" }
-    		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_FULLSCREEN_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_fullscreen"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 117 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
-    		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_LIGHTING_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_vertexlight"
-		cvarFloatList { "@SYSTEM_LIGHTING_LIGHTMAP" 0 "@SYSTEM_LIGHTING_VERTEX" 1  }
-		rect 82 132 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
-    		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_GEODETAIL_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_lodbias"
-		cvarFloatList { "@SYSTEM_LEVEL_HIGH" 0 "@SYSTEM_LEVEL_MEDIUM" 1 "@SYSTEM_LEVEL_LOW" 2 }
-		rect 82 147 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom ; uiScript update "r_lodbias" }
-    		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_CHARTEXTURES_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_picmip2"
-		cvarFloatList { "@SYSTEM_LEVEL_LOW" 3 "@SYSTEM_LEVEL_NORMAL" 2 "@SYSTEM_LEVEL_HIGH" 1 "@SYSTEM_LEVEL_EXTRA" 0 }
-		rect 82 162 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
-   		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_GENTEXTURES_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_picmip"
-		cvarFloatList { "@SYSTEM_LEVEL_LOW" 2 "@SYSTEM_LEVEL_NORMAL" 1 "@SYSTEM_LEVEL_HIGH" 0 }
-		rect 82 177 290 12
-
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
- 		action { uiScript glCustom }
-   		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_TEXTUREFILTER_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_texturemode"
-		cvarStrList { "@SYSTEM_TEXFILTER_BILINEAR", "GL_LINEAR_MIPMAP_NEAREST", "@SYSTEM_TEXFILTER_TRILINEAR", "GL_LINEAR_MIPMAP_LINEAR"  }
-		rect 82 192 290 12
+		rect 0 38 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
 		action { uiScript glCustom }
-			}
-
-
-
-
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_COMPRESSTEX_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_ext_compressed_textures"
-		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 207 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
+		mouseEnter { setitemcolor isys_videomode backcolor .3 0.5 0.2 .25 ; show tip_isys_videomode ; show tipbox }
+		mouseExit { setitemcolor isys_videomode backcolor 1 1 1 .07 ; hide tip_isys_videomode ; hide tipbox }
     		}
 
 	itemDef {
-		name graphics
-		group grpSystem
+		name isys_aspectratio
+		group graphics
 		type ITEM_TYPE_MULTI
-		text "@SYSTEM_TEXQUALITY_LABEL"
+		text "@SYSTEM_ASPECTRATIO_LABEL"
 		textfont		UI_FONT_BIG
-		cvar "r_texturebits"
-		cvarFloatList { "@SYSTEM_LEVEL_DEFAULT" 0 "@SYSTEM_BITDEPTH_16" 16 "@SYSTEM_BITDEPTH_32" 32 }
-		rect 82 222 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
+		cvar "cg_fixedAspect"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@OPTIONS_ASPECT_43" 1 "@OPTIONS_ASPECT_WIDE" 2 }
+		rect 0 57 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
+		forecolor 1 1 1 1
+		visible 0
 		action { uiScript glCustom }
+		mouseEnter { setitemcolor isys_aspectratio backcolor .3 0.5 0.2 .25 ; show tip_isys_aspectratio ; show tipbox }
+		mouseExit { setitemcolor isys_aspectratio backcolor 1 1 1 .07 ; hide tip_isys_aspectratio ; hide tipbox }
+    		}
+
+	itemDef {
+		name isys_colordepth
+		group graphics
+		type ITEM_TYPE_MULTI
+		text "@SYSTEM_COLORDEPTH_LABEL"
+		textfont		UI_FONT_BIG
+		cvar "r_colorbits"
+		cvarFloatList { "@SYSTEM_LEVEL_DEFAULT" 0 "@SYSTEM_BITDEPTH_16" 16 "@SYSTEM_BITDEPTH_32" 32 }
+		rect 0 76 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		action { uiScript glCustom ; uiScript update "r_colorbits" }
+		mouseEnter { setitemcolor isys_colordepth backcolor .3 0.5 0.2 .25 ; show tip_isys_colordepth ; show tipbox }
+		mouseExit { setitemcolor isys_colordepth backcolor 1 1 1 .07 ; hide tip_isys_colordepth ; hide tipbox }
+    		}
+
+	itemDef {
+		name isys_fullscreen
+		group graphics
+		type ITEM_TYPE_MULTI
+		text "@SYSTEM_FULLSCREEN_LABEL"
+		textfont		UI_FONT_BIG
+		cvar "r_fullscreen"
+		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 0 95 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor isys_fullscreen backcolor .3 0.5 0.2 .25 ; show tip_isys_fullscreen ; show tipbox }
+		mouseExit { setitemcolor isys_fullscreen backcolor 1 1 1 .07 ; hide tip_isys_fullscreen ; hide tipbox }
     		}
 
 	itemDef {
 		cvarTest "r_ignorehwgamma"
-//		showcvar { "1" }
 
-		name graphics
-		group grpSystem
+		name isys_brightness
+		group graphics
 		type ITEM_TYPE_SLIDER
 		text "@SYSTEM_BRIGHTNESS_LABEL"
 		textfont		UI_FONT_BIG
 		cvarfloat "r_gamma" 1.3 .5 3
-		rect 82 237 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
+		rect 0 114 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
+		forecolor 1 1 1 1
+		visible 0
 		action { uiScript glCustom }
-		mouseenter { show brightness_apply_message }
-		mouseexit { hide brightness_apply_message }
+		mouseenter { setitemcolor isys_brightness backcolor .3 0.5 0.2 .25 ; show brightness_apply_message ; show tip_isys_brightness ; show tipbox }
+		mouseexit { setitemcolor isys_brightness backcolor 1 1 1 .07 ; hide brightness_apply_message ; hide tip_isys_brightness ; hide tipbox }
 		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_LIGHTBLOOMS_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_bloom"
-		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 252 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
-    		}
-
-//
-// Anti-aliasing
-//
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_MSAA_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_ext_multisample"
-		cvarFloatList		{ "@GENERAL_OFF" 0 "@SYSTEM_MSAA_2X" 2 "@SYSTEM_MSAA_4X" 4 "@SYSTEM_MSAA_8X" 8 "@SYSTEM_MSAA_16X" 16 }
-
-		rect 82 267 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom }
-    		}
-
-	itemDef {
-		name graphics
-		group grpSystem
-		type ITEM_TYPE_MULTI
-		text "@SYSTEM_ANISOTROPIC_LABEL"
-		textfont		UI_FONT_BIG
-		cvar "r_ext_max_anisotropy"
-		cvarFloatList		{ "@GENERAL_OFF" 0 "@SYSTEM_ANISO_2X" 2 "@SYSTEM_ANISO_4X" 4 "@SYSTEM_ANISO_8X" 8 "@SYSTEM_ANISO_16X" 16 }
-
-		rect 82 282 290 12
-      	textalign ITEM_ALIGN_RIGHT
-      	textalignx 142
-      	textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-      	forecolor 1 1 1 1
-      	visible 0
-		action { uiScript glCustom ; uiScript update "r_ext_max_anisotropy" }
-    		}
 
 itemDef {
 		name graphicsapply
 		text "@SYSTEM_APPLY"
 		textfont		UI_FONT_BIG
-		type 1	
+		type 1
 		textscale .25
 		style WINDOW_STYLE_FILLED
 		group grpsystem
-		rect 181 310 100 20
+		rect 171 140 100 20
 		textalign 1
 		textalignx 50
 		textaligny 15
 		forecolor 1 1 1 1
-		backcolor .1 .1 .1 .1 
+		backcolor .1 .1 .1 .1
 		visible 1
 		border 1
 		bordercolor .5 .5 .5 .5
-		action { play "sound/misc/kcaction.wav" ; 
-open in_vid_restart_popmenu ; hide graphics ; hide graphicsapply }
-		mouseEnter { setitemcolor graphicsapply backcolor .3 .5 .2 .25 }
-      	mouseExit { setitemcolor graphicsapply backcolor .1 .1 .1 .1 }
-
+		action { play "sound/misc/kcaction.wav" ;
+open in_vid_restart_popmenu ; hide graphics ; hide graphicsapply ; hide tipbox ; hide grpIngameSystemTip }
+		mouseEnter { setitemcolor graphicsapply backcolor .3 .5 .2 .25 ; show tip_graphicsapply ; show tipbox }
+      	mouseExit { setitemcolor graphicsapply backcolor .1 .1 .1 .1 ; hide tip_graphicsapply ; hide tipbox }
 		}
 
-    		
-//here
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        SUB-SECTION NAV ROWS             //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 itemDef {
-	name ctr_rend2
-	text "@SYSTEM_REND2"
-	textfont		UI_FONT_BIG
+	name tab_advanced
+	group grpIngameGraphicsNav
+	text "@SYSTEM_ADVANCED"
+	textfont UI_FONT_BIG
 	type ITEM_TYPE_BUTTON
-	textscale .23
-	group grpControlbutton
-	style WINDOW_STYLE_FILLED
-	rect 112 4 108 20
 	textalign ITEM_ALIGN_CENTER
-	textalignx 54
+	textalignx 221
 	textaligny 14
-	border 1
-	bordercolor .5 .5 .5 .5
+	textscale .24
+	rect 0 166 443 20
+	style WINDOW_STYLE_FILLED
+	backcolor 1 1 1 .07
 	forecolor 1 1 1 1
-	backcolor .1 .1 .1 .25
 	visible 1
-	action { hide grpSystem ; hide graphicsapply ; hide performance ;
-	show rend2page ; show rend2apply ;
-	setitemcolor ctr_rend2 backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 ; setitemcolor ctr_performance backcolor .1 .1 .1 .25 }
+	action { play "sound/misc/kcaction.wav" ;
+	hide graphics ; hide graphicsapply ; hide grpIngameGraphicsNav ; hide tipbox ; hide grpIngameSystemTip ;
+	show advanced }
+	mouseEnter { setitemcolor tab_advanced backcolor .3 0.5 0.2 .25 ; show tip_tab_advanced ; show tipbox }
+	mouseExit { setitemcolor tab_advanced backcolor 1 1 1 .07 ; hide tip_tab_advanced ; hide tipbox }
 	}
 
+itemDef {
+	name tab_performance
+	group grpIngameGraphicsNav
+	text "@SYSTEM_PERFORMANCE"
+	textfont UI_FONT_BIG
+	type ITEM_TYPE_BUTTON
+	textalign ITEM_ALIGN_CENTER
+	textalignx 221
+	textaligny 14
+	textscale .24
+	rect 0 188 443 20
+	style WINDOW_STYLE_FILLED
+	backcolor 1 1 1 .07
+	forecolor 1 1 1 1
+	visible 1
+	action { play "sound/misc/kcaction.wav" ;
+	hide graphics ; hide graphicsapply ; hide grpIngameGraphicsNav ; hide tipbox ; hide grpIngameSystemTip ;
+	show performance }
+	mouseEnter { setitemcolor tab_performance backcolor .3 0.5 0.2 .25 ; show tip_tab_performance ; show tipbox }
+	mouseExit { setitemcolor tab_performance backcolor 1 1 1 .07 ; hide tip_tab_performance ; hide tipbox }
+	}
+
+itemDef {
+	name tab_rend2
+	group grpIngameGraphicsNav
+	text "@SYSTEM_REND2"
+	textfont UI_FONT_BIG
+	type ITEM_TYPE_BUTTON
+	textalign ITEM_ALIGN_CENTER
+	textalignx 221
+	textaligny 14
+	textscale .24
+	rect 0 210 443 20
+	style WINDOW_STYLE_FILLED
+	backcolor 1 1 1 .07
+	forecolor 1 1 1 1
+	visible 1
+	action { play "sound/misc/kcaction.wav" ;
+	hide graphics ; hide graphicsapply ; hide grpIngameGraphicsNav ; hide tipbox ; hide grpIngameSystemTip ;
+	show rend2page ; show rend2apply }
+	mouseEnter { setitemcolor tab_rend2 backcolor .3 0.5 0.2 .25 ; show tip_tab_rend2 ; show tipbox }
+	mouseExit { setitemcolor tab_rend2 backcolor 1 1 1 .07 ; hide tip_tab_rend2 ; hide tipbox }
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        ADVANCED                         //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name iadv_glextensions
+		group advanced
+      		type ITEM_TYPE_MULTI
+		text "@SYSTEM_GLEXTENSIONS"
+		textfont UI_FONT_BIG
+		cvar "r_allowExtensions"
+		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 0 0 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_glextensions backcolor .3 0.5 0.2 .25 ; show tip_iadv_glextensions ; show tipbox }
+		mouseExit { setitemcolor iadv_glextensions backcolor 1 1 1 .07 ; hide tip_iadv_glextensions ; hide tipbox }
+	}
+
+	itemDef {
+      	name iadv_lighting
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_LIGHTING_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_vertexlight"
+		cvarFloatList { "@SYSTEM_LIGHTING_LIGHTMAP" 0 "@SYSTEM_LIGHTING_VERTEX" 1  }
+		rect 0 19 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_lighting backcolor .3 0.5 0.2 .25 ; show tip_iadv_lighting ; show tipbox }
+		mouseExit { setitemcolor iadv_lighting backcolor 1 1 1 .07 ; hide tip_iadv_lighting ; hide tipbox }
+	}
+
+	itemDef {
+   		name iadv_geodetail
+		group advanced
+    		type ITEM_TYPE_MULTI
+		text "@SYSTEM_GEODETAIL_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_lodbias"
+		cvarFloatList { "@SYSTEM_LEVEL_HIGH" 0 "@SYSTEM_LEVEL_MEDIUM" 1 "@SYSTEM_LEVEL_LOW" 2 }
+		rect 0 38 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom ; uiScript update "r_lodbias" }
+		mouseEnter { setitemcolor iadv_geodetail backcolor .3 0.5 0.2 .25 ; show tip_iadv_geodetail ; show tipbox }
+		mouseExit { setitemcolor iadv_geodetail backcolor 1 1 1 .07 ; hide tip_iadv_geodetail ; hide tipbox }
+	}
+
+	itemDef {
+		name iadv_chartextures
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_CHARTEXTURES_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_picmip2"
+		cvarFloatList { "@SYSTEM_LEVEL_LOW" 3 "@SYSTEM_LEVEL_NORMAL" 2 "@SYSTEM_LEVEL_HIGH" 1 "@SYSTEM_LEVEL_EXTRA" 0 }
+		rect 0 57 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_chartextures backcolor .3 0.5 0.2 .25 ; show tip_iadv_chartextures ; show tipbox }
+		mouseExit { setitemcolor iadv_chartextures backcolor 1 1 1 .07 ; hide tip_iadv_chartextures ; hide tipbox }
+	}
+
+	itemDef {
+		name iadv_worldtextures
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_GENTEXTURES_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_picmip"
+		cvarFloatList { "@SYSTEM_LEVEL_LOW" 2 "@SYSTEM_LEVEL_NORMAL" 1 "@SYSTEM_LEVEL_HIGH" 0 }
+		rect 0 76 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_worldtextures backcolor .3 0.5 0.2 .25 ; show tip_iadv_worldtextures ; show tipbox }
+		mouseExit { setitemcolor iadv_worldtextures backcolor 1 1 1 .07 ; hide tip_iadv_worldtextures ; hide tipbox }
+	}
+
+	itemDef {
+      	name iadv_texturefilter
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_TEXTUREFILTER_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_texturemode"
+		cvarStrList { "@SYSTEM_TEXFILTER_BILINEAR", "GL_LINEAR_MIPMAP_NEAREST", "@SYSTEM_TEXFILTER_TRILINEAR", "GL_LINEAR_MIPMAP_LINEAR"  }
+		rect 0 95 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_texturefilter backcolor .3 0.5 0.2 .25 ; show tip_iadv_texturefilter ; show tipbox }
+		mouseExit { setitemcolor iadv_texturefilter backcolor 1 1 1 .07 ; hide tip_iadv_texturefilter ; hide tipbox }
+	}
+
+	itemDef {
+      	name iadv_compresstex
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_COMPRESSTEX_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_ext_compressed_textures"
+		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 0 114 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_compresstex backcolor .3 0.5 0.2 .25 ; show tip_iadv_compresstex ; show tipbox }
+		mouseExit { setitemcolor iadv_compresstex backcolor 1 1 1 .07 ; hide tip_iadv_compresstex ; hide tipbox }
+	}
+
+	itemDef {
+		name iadv_texquality
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_TEXQUALITY_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_texturebits"
+		cvarFloatList { "@SYSTEM_LEVEL_DEFAULT" 0 "@SYSTEM_BITDEPTH_16" 16 "@SYSTEM_BITDEPTH_32" 32 }
+		rect 0 133 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_texquality backcolor .3 0.5 0.2 .25 ; show tip_iadv_texquality ; show tipbox }
+		mouseExit { setitemcolor iadv_texquality backcolor 1 1 1 .07 ; hide tip_iadv_texquality ; hide tipbox }
+	}
+
+	itemDef {
+		name iadv_lightblooms
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_LIGHTBLOOMS_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_bloom"
+		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
+		rect 0 152 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_lightblooms backcolor .3 0.5 0.2 .25 ; show tip_iadv_lightblooms ; show tipbox }
+		mouseExit { setitemcolor iadv_lightblooms backcolor 1 1 1 .07 ; hide tip_iadv_lightblooms ; hide tipbox }
+	}
+
+	itemDef {
+		name iadv_msaa
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_MSAA_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_ext_multisample"
+		cvarFloatList		{ "@GENERAL_OFF" 0 "@SYSTEM_MSAA_2X" 2 "@SYSTEM_MSAA_4X" 4 "@SYSTEM_MSAA_8X" 8 "@SYSTEM_MSAA_16X" 16 }
+		rect 0 171 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom }
+		mouseEnter { setitemcolor iadv_msaa backcolor .3 0.5 0.2 .25 ; show tip_iadv_msaa ; show tipbox }
+		mouseExit { setitemcolor iadv_msaa backcolor 1 1 1 .07 ; hide tip_iadv_msaa ; hide tipbox }
+	}
+
+	itemDef {
+		name iadv_anisotropic
+		group advanced
+      	type ITEM_TYPE_MULTI
+		text "@SYSTEM_ANISOTROPIC_LABEL"
+		textfont UI_FONT_BIG
+		cvar "r_ext_max_anisotropy"
+		cvarFloatList		{ "@GENERAL_OFF" 0 "@SYSTEM_ANISO_2X" 2 "@SYSTEM_ANISO_4X" 4 "@SYSTEM_ANISO_8X" 8 "@SYSTEM_ANISO_16X" 16 }
+		rect 0 190 443 16
+	  	textalign ITEM_ALIGN_RIGHT
+	  	textalignx 224
+	  	textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+	  	forecolor 1 1 1 1
+	  	visible 0
+		action { uiScript glCustom ; uiScript update "r_ext_max_anisotropy" }
+		mouseEnter { setitemcolor iadv_anisotropic backcolor .3 0.5 0.2 .25 ; show tip_iadv_anisotropic ; show tipbox }
+		mouseExit { setitemcolor iadv_anisotropic backcolor 1 1 1 .07 ; hide tip_iadv_anisotropic ; hide tipbox }
+	}
+
+	itemDef {
+		name iadv_back
+		group advanced
+		type ITEM_TYPE_BUTTON
+		text "@MAIN_BACK"
+		textfont UI_FONT_BIG
+		textscale .24
+		textalign ITEM_ALIGN_CENTER
+		textalignx 221
+		textaligny 14
+		rect 0 214 443 20
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		action { play "sound/misc/kcaction.wav" ; hide advanced ; hide tipbox ; hide grpIngameSystemTip ; show graphics ; show graphicsapply ; show grpIngameGraphicsNav }
+		mouseEnter { setitemcolor iadv_back backcolor .3 0.5 0.2 .25 ; show tip_iadv_back ; show tipbox }
+		mouseExit { setitemcolor iadv_back backcolor 1 1 1 .07 ; hide tip_iadv_back ; hide tipbox }
+	}
 
 //
 // Rend2
 //
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_header_materials
+        group rend2page
         style 1
         text "@SYSTEM_REND2_MATERIALS"
         textfont		UI_FONT_BIG
-        rect 82 35 290 12
+        rect 0 0 443 12
         textalign ITEM_ALIGN_CENTER
-        textalignx 145
+        textalignx 221
         textaligny 10
         textscale .18
         forecolor .75 .75 .75 1
@@ -547,54 +583,58 @@ itemDef {
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_normalmap
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_NORMALMAP_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_normalMapping"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 49 290 12
+        rect 0 14 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_normalmap backcolor .3 0.5 0.2 .25 ; show tip_ir2_normalmap ; show tipbox }
+        mouseExit { setitemcolor ir2_normalmap backcolor 1 1 1 .07 ; hide tip_ir2_normalmap ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_specularmap
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_SPECULARMAP_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_specularMapping"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 63 290 12
+        rect 0 32 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_specularmap backcolor .3 0.5 0.2 .25 ; show tip_ir2_specularmap ; show tipbox }
+        mouseExit { setitemcolor ir2_specularmap backcolor 1 1 1 .07 ; hide tip_ir2_specularmap ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_header_advanced
+        group rend2page
         style 1
         text "@SYSTEM_REND2_ADVANCED_LABEL"
         textfont		UI_FONT_BIG
-        rect 82 77 290 12
+        rect 0 52 443 12
         textalign ITEM_ALIGN_CENTER
-        textalignx 145
+        textalignx 221
         textaligny 10
         textscale .18
         forecolor .75 .75 .75 1
@@ -603,174 +643,190 @@ itemDef {
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_ssao
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_SSAO_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_ssao"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 91 290 12
+        rect 0 66 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom ; uiScript update "r_ssao" }
+        mouseEnter { setitemcolor ir2_ssao backcolor .3 0.5 0.2 .25 ; show tip_ir2_ssao ; show tipbox }
+        mouseExit { setitemcolor ir2_ssao backcolor 1 1 1 .07 ; hide tip_ir2_ssao ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_sunshadows
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_SUNSHADOWS_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_sunShadows"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 105 290 12
+        rect 0 84 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom ; uiScript update "r_sunShadows" }
+        mouseEnter { setitemcolor ir2_sunshadows backcolor .3 0.5 0.2 .25 ; show tip_ir2_sunshadows ; show tipbox }
+        mouseExit { setitemcolor ir2_sunshadows backcolor 1 1 1 .07 ; hide tip_ir2_sunshadows ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_shadowfilter
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_SHADOWFILTER_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_shadowFilter"
         cvarFloatList { "@SYSTEM_LEVEL_LOW" 0 "@SYSTEM_LEVEL_MEDIUM" 1 "@SYSTEM_LEVEL_HIGH" 2 }
-        rect 82 119 290 12
+        rect 0 102 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_shadowfilter backcolor .3 0.5 0.2 .25 ; show tip_ir2_shadowfilter ; show tipbox }
+        mouseExit { setitemcolor ir2_shadowfilter backcolor 1 1 1 .07 ; hide tip_ir2_shadowfilter ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_shadowmapsize
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_SHADOWMAPSIZE_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_shadowMapSize"
         cvarFloatList { "@SYSTEM_LEVEL_LOW" 512 "@SYSTEM_LEVEL_MEDIUM" 1024 "@SYSTEM_LEVEL_HIGH" 2048 }
-        rect 82 133 290 12
+        rect 0 120 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_shadowmapsize backcolor .3 0.5 0.2 .25 ; show tip_ir2_shadowmapsize ; show tipbox }
+        mouseExit { setitemcolor ir2_shadowmapsize backcolor 1 1 1 .07 ; hide tip_ir2_shadowmapsize ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_hdr
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_HDR_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_hdr"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 147 290 12
+        rect 0 138 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom ; uiScript update "r_hdr" }
+        mouseEnter { setitemcolor ir2_hdr backcolor .3 0.5 0.2 .25 ; show tip_ir2_hdr ; show tipbox }
+        mouseExit { setitemcolor ir2_hdr backcolor 1 1 1 .07 ; hide tip_ir2_hdr ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_lightblooms
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_LIGHTBLOOMS_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_bloom"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 161 290 12
+        rect 0 156 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom ; uiScript update "r_bloom" }
+        mouseEnter { setitemcolor ir2_lightblooms backcolor .3 0.5 0.2 .25 ; show tip_ir2_lightblooms ; show tipbox }
+        mouseExit { setitemcolor ir2_lightblooms backcolor 1 1 1 .07 ; hide tip_ir2_lightblooms ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_lightrays
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_LIGHTRAYS_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_drawSunRays"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 175 290 12
+        rect 0 174 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom ; uiScript update "r_drawSunRays" }
+        mouseEnter { setitemcolor ir2_lightrays backcolor .3 0.5 0.2 .25 ; show tip_ir2_lightrays ; show tipbox }
+        mouseExit { setitemcolor ir2_lightrays backcolor 1 1 1 .07 ; hide tip_ir2_lightrays ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_parallax
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_PARALLAX_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_parallaxMapping"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 189 290 12
+        rect 0 192 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_parallax backcolor .3 0.5 0.2 .25 ; show tip_ir2_parallax ; show tipbox }
+        mouseExit { setitemcolor ir2_parallax backcolor 1 1 1 .07 ; hide tip_ir2_parallax ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_header_screenfx
+        group rend2page
         style 1
         text "@SYSTEM_REND2_SCREENFX_LABEL"
         textfont		UI_FONT_BIG
-        rect 82 203 290 12
+        rect 0 212 443 12
         textalign ITEM_ALIGN_CENTER
-        textalignx 145
+        textalignx 221
         textaligny 10
         textscale .18
         forecolor .75 .75 .75 1
@@ -779,123 +835,135 @@ itemDef {
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_fxaa
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_FXAA_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_fxaa"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 217 290 12
+        rect 0 226 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_fxaa backcolor .3 0.5 0.2 .25 ; show tip_ir2_fxaa ; show tipbox }
+        mouseExit { setitemcolor ir2_fxaa backcolor 1 1 1 .07 ; hide tip_ir2_fxaa ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_vignette
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_VIGNETTE_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_vignette"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 231 290 12
+        rect 0 244 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_vignette backcolor .3 0.5 0.2 .25 ; show tip_ir2_vignette ; show tipbox }
+        mouseExit { setitemcolor ir2_vignette backcolor 1 1 1 .07 ; hide tip_ir2_vignette ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_filmgrain
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_FILMGRAIN_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_filmGrain"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 245 290 12
+        rect 0 262 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_filmgrain backcolor .3 0.5 0.2 .25 ; show tip_ir2_filmgrain ; show tipbox }
+        mouseExit { setitemcolor ir2_filmgrain backcolor 1 1 1 .07 ; hide tip_ir2_filmgrain ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_chromaticaberration
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_CHROMATICABERRATION_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_chromaticAberration"
         cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-        rect 82 259 290 12
+        rect 0 280 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_chromaticaberration backcolor .3 0.5 0.2 .25 ; show tip_ir2_chromaticaberration ; show tipbox }
+        mouseExit { setitemcolor ir2_chromaticaberration backcolor 1 1 1 .07 ; hide tip_ir2_chromaticaberration ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_colorgrade
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_COLORGRADE_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_colorGradeLUT"
         cvarStrList { "@SYSTEM_REND2_COLORGRADE_NEUTRAL", "gfx/luts/neutral", "@SYSTEM_REND2_COLORGRADE_BACTA", "gfx/luts/bacta", "@SYSTEM_REND2_COLORGRADE_HOTH", "gfx/luts/hoth", "@SYSTEM_REND2_COLORGRADE_DESERT", "gfx/luts/desert", "@SYSTEM_REND2_COLORGRADE_RAINYFOREST", "gfx/luts/rainyforest", "@SYSTEM_REND2_COLORGRADE_LOWHEALTH", "gfx/luts/lowhealth" }
-        rect 82 273 290 12
+        rect 0 298 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom ; uiScript update "r_colorGradeLUT" }
+        mouseEnter { setitemcolor ir2_colorgrade backcolor .3 0.5 0.2 .25 ; show tip_ir2_colorgrade ; show tipbox }
+        mouseExit { setitemcolor ir2_colorgrade backcolor 1 1 1 .07 ; hide tip_ir2_colorgrade ; hide tipbox }
         }
 
     itemDef {
-        name rend2page
-        group grpSystem
+        name ir2_greyscale
+        group rend2page
         type ITEM_TYPE_MULTI
         text "@SYSTEM_REND2_GREYSCALE_LABEL"
         textfont		UI_FONT_BIG
         cvar "r_greyscale"
         cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 "@SYSTEM_REND2_GREYSCALE_GOTHICSTEIN" 2 }
-        rect 82 287 290 12
+        rect 0 316 443 16
         textalign ITEM_ALIGN_RIGHT
-        textalignx 142
-        textaligny 10
-        textscale .23
+        textalignx 224
+        textaligny 12
+        textscale .22
         style WINDOW_STYLE_FILLED
         backcolor 1 1 1 .07
         forecolor 1 1 1 1
         visible 0
         action { uiScript glCustom }
+        mouseEnter { setitemcolor ir2_greyscale backcolor .3 0.5 0.2 .25 ; show tip_ir2_greyscale ; show tipbox }
+        mouseExit { setitemcolor ir2_greyscale backcolor 1 1 1 .07 ; hide tip_ir2_greyscale ; hide tipbox }
         }
 
 itemDef {
@@ -906,10 +974,10 @@ itemDef {
 	style WINDOW_STYLE_FILLED
 	group rend2apply
 	textscale .25
-	rect 181 310 100 20
+	rect 112 340 100 22
 	textalign 1
 	textalignx 50
-	textaligny 15
+	textaligny 16
 	forecolor 1 1 1 1
 	backcolor .1 .1 .1 .1
 	visible 0
@@ -917,66 +985,44 @@ itemDef {
 	bordercolor .5 .5 .5 .5
 	action { play "sound/misc/kcaction.wav" ;
 	open in_vid_restart_popmenu ; hide rend2page ; hide rend2apply }
-	mouseEnter { setitemcolor rend2apply backcolor .3 .5 .2 .25 }
-	mouseExit { setitemcolor rend2apply backcolor .1 .1 .1 .1 }
+	mouseEnter { setitemcolor rend2apply backcolor .3 .5 .2 .25 ; show tip_rend2apply ; show tipbox }
+	mouseExit { setitemcolor rend2apply backcolor .1 .1 .1 .1 ; hide tip_rend2apply ; hide tipbox }
 	}
 
-
-	itemDef {
-		name ctr_sound
-		text "@SYSTEM_SOUND"
-		textfont		UI_FONT_BIG
-		type ITEM_TYPE_BUTTON
-		textscale .23
-		group grpControlbutton
-		style WINDOW_STYLE_FILLED
-		rect 222 4 108 20
-		textalign ITEM_ALIGN_CENTER
-		textalignx 54
-		textaligny 14
-		border 1
-		bordercolor .5 .5 .5 .5
-		forecolor 1 1 1 1
-		backcolor .1 .1 .1 .25
-		visible 1
-		action { hide grpSystem ; hide graphicsapply ; hide rend2page ; hide rend2apply ; hide performance ; show sound ;
-		setitemcolor ctr_sound backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_performance backcolor .1 .1 .1 .25 }
+itemDef {
+	name r2_back
+	group rend2page
+	type ITEM_TYPE_BUTTON
+	text "@MAIN_BACK"
+	textfont UI_FONT_BIG
+	textscale .24
+	style WINDOW_STYLE_FILLED
+	rect 232 340 100 22
+	textalign 1
+	textalignx 50
+	textaligny 16
+	forecolor 1 1 1 1
+	backcolor 1 1 1 .07
+	visible 0
+	border 1
+	bordercolor .5 .5 .5 .5
+	action { play "sound/misc/kcaction.wav" ; hide rend2page ; hide rend2apply ; hide tipbox ; hide grpIngameSystemTip ; show graphics ; show graphicsapply ; show grpIngameGraphicsNav }
+	mouseEnter { setitemcolor r2_back backcolor .3 0.5 0.2 .25 ; show tip_r2_back ; show tipbox }
+	mouseExit { setitemcolor r2_back backcolor 1 1 1 .07 ; hide tip_r2_back ; hide tipbox }
 	}
-
-	itemDef {
-		name ctr_performance
-		text "@SYSTEM_PERFORMANCE"
-		textfont		UI_FONT_BIG
-		type ITEM_TYPE_BUTTON
-		textscale .23
-		group grpControlbutton
-		style WINDOW_STYLE_FILLED
-		rect 332 4 108 20
-		textalign ITEM_ALIGN_CENTER
-		textalignx 54
-		textaligny 14
-		border 1
-		bordercolor .5 .5 .5 .5
-		forecolor 1 1 1 1
-		backcolor .1 .1 .1 .25
-		visible 1
-		action { hide grpSystem ; hide graphicsapply ; hide rend2page ; hide rend2apply ; show performance ;
-		setitemcolor ctr_performance backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_graphics backcolor .1 .1 .1 .25 ; setitemcolor ctr_rend2 backcolor .1 .1 .1 .25 ; setitemcolor ctr_sound backcolor .1 .1 .1 .25 }
-	}
-
 
 //
 // Performance
 //
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_header
+		group performance
 		style 1
 		text "@PERF_MISC_LABEL"
 		textfont		UI_FONT_BIG
-		rect 82 27 290 12
+		rect 0 0 443 12
 		textalign ITEM_ALIGN_CENTER
-		textalignx 145
+		textalignx 221
 		textaligny 10
 		textscale .18
 		forecolor .75 .75 .75 1
@@ -985,179 +1031,197 @@ itemDef {
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_wallmark
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_WALLMARK"
 		textfont		UI_FONT_BIG
 		cvar "cg_markTime"
 		cvarFloatList { "@PERF_MARK_NORMAL" 20000 "@PERF_MARK_SHORT" 10000 "@GENERAL_OFF" 0 "@PERF_MARK_LONG" 30000 "@PERF_MARK_VERYLONG" 99999 "@PERF_MARK_PERMANENT" 3600000 }
-		rect 82 41 290 12
+		rect 0 19 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_wallmark backcolor .3 0.5 0.2 .25 ; show tip_iperf_wallmark ; show tipbox }
+		mouseExit { setitemcolor iperf_wallmark backcolor 1 1 1 .07 ; hide tip_iperf_wallmark ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_brass
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_BRASS"
 		textfont		UI_FONT_BIG
 		cvar "cg_brassTime"
 		cvarFloatList { "@PERF_BRASS_ULTRA" 10000 "@PERF_BRASS_HIGH" 2500 "@PERF_BRASS_MED" 1250 "@GENERAL_OFF" 0 }
-		rect 82 55 290 12
+		rect 0 38 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_brass backcolor .3 0.5 0.2 .25 ; show tip_iperf_brass ; show tipbox }
+		mouseExit { setitemcolor iperf_brass backcolor 1 1 1 .07 ; hide tip_iperf_brass ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_corona
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_CORONA"
 		textfont		UI_FONT_BIG
 		cvar "cg_coronafardist"
 		cvarFloatList { "@PERF_CORONA_NEAR" 800 "@PERF_CORONA_NORMAL" 1536 "@PERF_CORONA_FAR" 4096 "@PERF_CORONA_VERYFAR" 8000 "@PERF_CORONA_ULTRA" 16000 "@PERF_CORONA_EXTREME" 32000 "@GENERAL_OFF" 0 }
-		rect 82 69 290 12
+		rect 0 57 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_corona backcolor .3 0.5 0.2 .25 ; show tip_iperf_corona ; show tipbox }
+		mouseExit { setitemcolor iperf_corona backcolor 1 1 1 .07 ; hide tip_iperf_corona ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_foliage
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_FOLIAGE"
 		textfont		UI_FONT_BIG
 		cvar "r_drawfoliage"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 83 290 12
+		rect 0 76 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_foliage backcolor .3 0.5 0.2 .25 ; show tip_iperf_foliage ; show tipbox }
+		mouseExit { setitemcolor iperf_foliage backcolor 1 1 1 .07 ; hide tip_iperf_foliage ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_dynamiclights
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_DYNAMICLIGHTS"
 		textfont		UI_FONT_BIG
 		cvar "r_dynamiclight"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 97 290 12
+		rect 0 95 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_dynamiclights backcolor .3 0.5 0.2 .25 ; show tip_iperf_dynamiclights ; show tipbox }
+		mouseExit { setitemcolor iperf_dynamiclights backcolor 1 1 1 .07 ; hide tip_iperf_dynamiclights ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_lqsky
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_LQSKY"
 		textfont		UI_FONT_BIG
 		cvar "r_fastsky"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 111 290 12
+		rect 0 114 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_lqsky backcolor .3 0.5 0.2 .25 ; show tip_iperf_lqsky ; show tipbox }
+		mouseExit { setitemcolor iperf_lqsky backcolor 1 1 1 .07 ; hide tip_iperf_lqsky ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_portalskies
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_PORTALSKIES"
 		textfont		UI_FONT_BIG
 		cvar "cg_skybox"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 125 290 12
+		rect 0 133 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_portalskies backcolor .3 0.5 0.2 .25 ; show tip_iperf_portalskies ; show tipbox }
+		mouseExit { setitemcolor iperf_portalskies backcolor 1 1 1 .07 ; hide tip_iperf_portalskies ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_syncframe
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_SYNCFRAME"
 		textfont		UI_FONT_BIG
 		cvar "r_finish"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 139 290 12
+		rect 0 152 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_syncframe backcolor .3 0.5 0.2 .25 ; show tip_iperf_syncframe ; show tipbox }
+		mouseExit { setitemcolor iperf_syncframe backcolor 1 1 1 .07 ; hide tip_iperf_syncframe ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_particles
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_PARTICLES"
 		textfont		UI_FONT_BIG
 		cvar "cg_wolfparticles"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 153 290 12
+		rect 0 171 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		mouseEnter { setitemcolor iperf_particles backcolor .3 0.5 0.2 .25 ; show tip_iperf_particles ; show tipbox }
+		mouseExit { setitemcolor iperf_particles backcolor 1 1 1 .07 ; hide tip_iperf_particles ; hide tipbox }
 		}
 
 	itemDef {
-		name performance
-		group grpSystem
+		name iperf_fogtype
+		group performance
 		type ITEM_TYPE_MULTI
 		text "@PERF_FOGTYPE"
 		textfont		UI_FONT_BIG
@@ -1165,127 +1229,915 @@ itemDef {
 		showcvar { "1" }
 		cvar "r_nv_fogdist_mode"
 		cvarStrList { "@PERF_RADIAL", "GL_EYE_RADIAL_NV", "@PERF_PLANE", "GL_EYE_PLANE_ABSOLUTE_NV" }
-		rect 82 167 290 12
+		rect 0 190 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
-		}
-
-
-	itemDef {
-		name sound
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_EFFECTSVOLUME_LABEL"
-		textfont		UI_FONT_BIG
-		cvarfloat "s_volume" 0.7 0 1
-		rect 82 50 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23    
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07   
-		forecolor 1 1 1 1
-		visible 0 
-		}
-	
-	itemDef {
-		name sound
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@SYSTEM_MUSICVOLUME_LABEL"
-		textfont		UI_FONT_BIG
-		cvarfloat "s_musicvolume" 0.25 0 1
-		rect 82 80 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23  
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07     
-		forecolor 1 1 1 1
-		visible 0 
-		}
-
-// subtitles - moved from ingame_options Hit Feedback tab
-	itemDef {
-		name sound
-		group grpSystem
-		rect 82 110 290 12
-		type ITEM_TYPE_MULTI
-		style WINDOW_STYLE_FILLED
-		text "@OPTIONS_SUBTITLES"
-		textfont		UI_FONT_BIG
-		cvar "cg_drawSubtitles"
-		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
-		textscale .23
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
+		mouseEnter { setitemcolor iperf_fogtype backcolor .3 0.5 0.2 .25 ; show tip_iperf_fogtype ; show tipbox }
+		mouseExit { setitemcolor iperf_fogtype backcolor 1 1 1 .07 ; hide tip_iperf_fogtype ; hide tipbox }
 		}
 
 	itemDef {
-		name sound
-		group grpSystem
-		type ITEM_TYPE_SLIDER
-		text "@OPTIONS_SUBTITLESIZE"
-		textfont		UI_FONT_BIG
-		cvarfloat "cg_subtitleSize" 7 4 16
-		rect 82 140 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		name perf_back
+		group performance
+		type ITEM_TYPE_BUTTON
+		text "@MAIN_BACK"
+		textfont UI_FONT_BIG
+		textscale .24
+		textalign ITEM_ALIGN_CENTER
+		textalignx 221
+		textaligny 14
+		rect 0 214 443 20
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
+		action { play "sound/misc/kcaction.wav" ; hide performance ; hide tipbox ; hide grpIngameSystemTip ; show graphics ; show graphicsapply ; show grpIngameGraphicsNav }
+		mouseEnter { setitemcolor perf_back backcolor .3 0.5 0.2 .25 ; show tip_perf_back ; show tipbox }
+		mouseExit { setitemcolor perf_back backcolor 1 1 1 .07 ; hide tip_perf_back ; hide tipbox }
 		}
 
-	itemDef {
-		name sound
-		group grpSystem
-		rect 82 170 290 12
-		type ITEM_TYPE_MULTI
-		style WINDOW_STYLE_FILLED
-		text "@OPTIONS_SUBTITLESHADOW"
-		textfont		UI_FONT_BIG
-		cvar "cg_subtitleShadow"
-		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
-		textscale .23
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0
-		}
-// end subtitles
 
 	itemDef
 	{
 		name brightness_apply_message
-		rect 0 320 640 30
+		rect 0 340 443 20
 		text "@SYSTEM_BRIGHTNESS_APPLY_MSG"
 		textfont		UI_FONT_BIG
 		forecolor 1 .75 0 1
-		textscale .23
+		textscale .2
 		textalignx 221
 		textalign 1
-		textaligny 20
+		textaligny 14
 		visible 0
 		decoration
 		}
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        HOVER TIP BOX                    //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name tipbox
+		style WINDOW_STYLE_FILLED
+		rect 0 330 443 30
+		backcolor 0 0 0 .55
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isys_renderer
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_RENDERER"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isys_quality
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_QUALITY"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isys_quality_recommended
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_QUALITY_RECOMMENDED"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isys_videomode
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_VIDEOMODE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isys_aspectratio
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_ASPECTRATIO"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isys_colordepth
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_COLORDEPTH"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isys_fullscreen
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_FULLSCREEN"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isys_brightness
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_BRIGHTNESS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_graphicsapply
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_APPLY"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_tab_advanced
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_TAB_ADVANCED"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_tab_performance
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_TAB_PERFORMANCE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_tab_rend2
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_TAB_REND2"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_glextensions
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_GLEXTENSIONS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_lighting
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_LIGHTING"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_geodetail
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_GEODETAIL"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_chartextures
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_CHARTEXTURES"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_worldtextures
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_WORLDTEXTURES"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_texturefilter
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_TEXTUREFILTER"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_compresstex
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_COMPRESSTEX"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_texquality
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_TEXQUALITY"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_lightblooms
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_LIGHTBLOOMS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_msaa
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_MSAA"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_anisotropic
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_ANISOTROPIC"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iadv_back
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_ADV_BACK"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_wallmark
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_WALLMARK"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_brass
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_BRASS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_corona
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_CORONA"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_foliage
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_FOLIAGE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_dynamiclights
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_DYNAMICLIGHTS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_lqsky
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_LQSKY"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_portalskies
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_PORTALSKIES"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_syncframe
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_SYNCFRAME"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_particles
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_PARTICLES"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_fogtype
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_FOGTYPE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_perf_back
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_BACK"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_normalmap
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_NORMALMAP"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_specularmap
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_SPECULARMAP"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_ssao
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_SSAO"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_sunshadows
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_SUNSHADOWS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_shadowfilter
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_SHADOWFILTER"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_shadowmapsize
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_SHADOWMAPSIZE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_hdr
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_HDR"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_lightblooms
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_LIGHTBLOOMS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_lightrays
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_LIGHTRAYS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_parallax
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_PARALLAX"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_fxaa
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_FXAA"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_vignette
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_VIGNETTE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_filmgrain
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_FILMGRAIN"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_chromaticaberration
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_CHROMATICABERRATION"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_colorgrade
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_COLORGRADE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ir2_greyscale
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_GREYSCALE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_rend2apply
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_APPLY"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_r2_back
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SYSTEM_TIP_R2_BACK"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
 
 }
 

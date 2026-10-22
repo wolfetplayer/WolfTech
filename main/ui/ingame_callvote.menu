@@ -15,6 +15,9 @@ menuDef {
 		onOpen {	close ingame_options ;
 					close ingame_system ;
 					close ingame_controls ;
+					close ingame_gameplay ;
+					close ingame_editkeyboard ;
+					close ingame_sound ;
 					show grpMisc ;
 					hide grpType ;
 					hide grpKick ;

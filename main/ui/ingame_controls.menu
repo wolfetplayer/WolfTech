@@ -1,1410 +1,359 @@
 #include "ui/menudef.h"
 
 {
-\\ SETUP MENU \\
+\\ INGAME CONTROLS TAB (non-bind settings; key binds moved to ingame_editkeyboard) \\
 
 menuDef {
     	name "ingame_controls"
     	visible 0
     	fullscreen 0
-		outOfBoundsClick			// this closes the window if it gets a click out of the rectangle
-		rect 220 125 443 340
+		rect 220 110 443 366
     	focusColor 1 .75 0 1
     	style 1
     	border 1
-		onClose {
-	    uiScript saveControls
-	}
-	onopen { close ingame_options ; close ingame_system ; close ingame_callvote ; hide grpControls ; show look ; uiScript loadControls ;
-	setitemcolor ctr_look backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_move backcolor .1 .1 .1 .25 ; setitemcolor ctr_shoot backcolor .1 .1 .1 .25 ; setitemcolor ctr_miscellaneous backcolor .1 .1 .1 .25 }
-
-
-
 
 itemDef {
-	name window
-	group ingamebox	
-	rect 0 2 443 300
-	style WINDOW_STYLE_FILLED
-	border 1
-	bordercolor .5 .5 .5 .5
-	forecolor 1 1 1 1
-	backcolor 0 0 0 .5
-	visible 1
-	decoration
-	}
-
-
-itemDef {
-      name keyBindStatus
-      rect 0 400 320 15 
-	ownerdraw UI_KEYBINDSTATUS
-	text " "
-	textfont		UI_FONT_BIG      
-	forecolor 1 .75 0 1
-	textscale .230
-	textalignx 187
-	textalign 1
-	textaligny 10
-	visible 0
-      decoration 
-	}
-
-
-////////////////
-//
-//	look
-//
-////////////////
-
-
-itemDef {
-	name ctr_look
-	text "@CONTROLS_LOOK"
-	textfont		UI_FONT_BIG
-	type ITEM_TYPE_BUTTON
-	textscale .23
-	group grpControlbutton
-	style WINDOW_STYLE_FILLED
-	rect 2 4 107 20
-	textalign ITEM_ALIGN_CENTER
-	textalignx 53
-	textaligny 14
-	border 1
-	bordercolor .5 .5 .5 .5
-	forecolor 1 1 1 1
-	backcolor .3 0.5 0.2 .25
-	visible 1
-	action { play "sound/misc/kcaction.wav" ;
-	hide grpControls ; show look ;
-	setitemcolor ctr_look backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_move backcolor .1 .1 .1 .25 ; setitemcolor ctr_shoot backcolor .1 .1 .1 .25 ; setitemcolor ctr_miscellaneous backcolor .1 .1 .1 .25 }
-	}
-	
-
-	itemDef {
-		name look
-		group grpControls
-		type ITEM_TYPE_MULTI
-		text "@CONTROLS_PLAYERVIEW"
-		textfont		UI_FONT_BIG
-		cvar "cg_thirdperson"
-		cvarFloatList { "@CONTROLS_VIEW_FIRSTPERSON" 0 "@CONTROLS_VIEW_THIRDPERSON" 1 }
-		rect 82 30 290 12 
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10    
-		textscale .23 
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-     		forecolor 1 1 1 1
-		visible 0 
-//		mouseenter { show keyBindStatus }
-//		mouseexit { hide keyBindStatus }
-		}
-
-	itemDef {
-		name look
-		group grpControls
-		type ITEM_TYPE_SLIDER
-		text "@CONTROLS_3RDPERSON_OFFSET"
-		textfont		UI_FONT_BIG
-		cvarfloat "cg_thirdpersonrange" 40 1 100
-		rect 82 45 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07            
-		forecolor 1 1 1 1
-		visible 0
-		mouseenter { show slider_message }
-		mouseexit { hide slider_message }
-    	}
-			
-	itemDef {
-		name look
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_BINOCULARS"
-		textfont		UI_FONT_BIG
-		cvar "+zoom"
-		rect 82 60 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23           
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name look
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_NOTEBOOK"
-		textfont		UI_FONT_BIG
-		cvar "notebook"
-		rect 82 75 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23 
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07                   
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-	}
-	itemDef {
-		name look
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_ZOOMIN"
-		textfont		UI_FONT_BIG
-		cvar "zoomin"
-		rect 82 90 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23           
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name look
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_ZOOMOUT"
-		textfont		UI_FONT_BIG
-		cvar "zoomout"
-		rect 82 105 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23           
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name look
-		group grpControls
+		name icr_invertmouse
 		type ITEM_TYPE_MULTI
 		text "@CONTROLS_INVERTMOUSE"
 		textfont		UI_FONT_BIG
 		cvar "ui_mousePitch"
 		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 120 290 12
+		rect 0 0 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23 
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
+		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
-		visible 0 
+		visible 1
 		action { uiScript update ui_mousePitch }
-		mouseenter { show yesno_message }
-		mouseexit { hide yesno_message }
-    		}
+		mouseEnter { setitemcolor icr_invertmouse backcolor .3 0.5 0.2 .25 ; show tip_icr_invertmouse ; show tipbox }
+		mouseExit { setitemcolor icr_invertmouse backcolor 1 1 1 .07 ; hide tip_icr_invertmouse ; hide tipbox }
+		}
 
 	itemDef {
-		name look
-		group grpControls
+		name icr_smoothmouse
 		type ITEM_TYPE_MULTI
 		text "@CONTROLS_SMOOTHMOUSE"
 		textfont		UI_FONT_BIG
 		cvar "m_filter"
 		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 135 290 12
+		rect 0 19 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23 
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
+		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show yesno_message }
-		mouseexit { hide yesno_message }
-    		}
+		visible 1
+		mouseEnter { setitemcolor icr_smoothmouse backcolor .3 0.5 0.2 .25 ; show tip_icr_smoothmouse ; show tipbox }
+		mouseExit { setitemcolor icr_smoothmouse backcolor 1 1 1 .07 ; hide tip_icr_smoothmouse ; hide tipbox }
+		}
 
 	itemDef {
-		name look
-		group grpControls
+		name icr_mousesens
 		type ITEM_TYPE_SLIDER
 		text "@CONTROLS_MOUSESENSITIVITY"
 		textfont		UI_FONT_BIG
 		cvarfloat "sensitivity" 5 1 50
-		rect 82 150 290 12
+		rect 0 38 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07            
+		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show slider_message }
-		mouseexit { hide slider_message }
-    		}
-
-	itemDef {
-		name look
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_SCREENSHOT"
-		textfont		UI_FONT_BIG
-		cvar "screenshotJPEG"
-		rect 82 165 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23  
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07                  
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-  	}	
-				
-		itemDef {
-		name look
-		group grpControls
-		type ITEM_TYPE_TEXT
-		text "@CONTROLS_WEAPONCYCLE"
-		textfont		UI_FONT_BIG
-		rect 96 195 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 180
-		textaligny 10
-		textscale .23           
-		forecolor 1 1 1 1
-		decoration
-		visible 0 
+		visible 1
+		mouseEnter { setitemcolor icr_mousesens backcolor .3 0.5 0.2 .25 ; show tip_icr_mousesens ; show tipbox }
+		mouseExit { setitemcolor icr_mousesens backcolor 1 1 1 .07 ; hide tip_icr_mousesens ; hide tipbox }
 		}
 
-	 itemDef {
-		name look
-		group grpControls
+	itemDef {
+		name icr_zoomweap
 		type ITEM_TYPE_MULTI
 		text "@CONTROLS_FORZOOMING"
 		textfont		UI_FONT_BIG
 		cvar "cg_useWeapsForZoom"
 		cvarFloatList { "@GENERAL_OFF" 0 "@CONTROLS_ZOOM_ON_NORMAL" 1 "@CONTROLS_ZOOM_ON_REVERSE" 2 }
-		rect 82 210 290 12
+		rect 0 57 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23           
+		textalignx 224
+		textaligny 12
+		textscale .22
 		forecolor 1 1 1 1
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
-		visible 0 
+		visible 1
+		mouseEnter { setitemcolor icr_zoomweap backcolor .3 0.5 0.2 .25 ; show tip_icr_zoomweap ; show tipbox }
+		mouseExit { setitemcolor icr_zoomweap backcolor 1 1 1 .07 ; hide tip_icr_zoomweap ; hide tipbox }
 		}
-			
-//////////////// end look
 
-////////////////
-//
-//	Move
-//
-////////////////
-
-itemDef {
-	name ctr_move
-	text "@CONTROLS_MOVE"
-		textfont		UI_FONT_BIG
-	type ITEM_TYPE_BUTTON
-	textscale .23
-	group grpControlbutton
-	style WINDOW_STYLE_FILLED
-	rect 112 4 107 20
-	textalign ITEM_ALIGN_CENTER
-	textalignx 53
-	textaligny 14
-	border 1
-	bordercolor .5 .5 .5 .5
-	forecolor 1 1 1 1
-	backcolor .1 .1 .1 .25
-	visible 1
-	action { play "sound/misc/kcaction.wav" ;
-	hide grpControls ; show move ;
-	setitemcolor ctr_move backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_look backcolor .1 .1 .1 .25 ; setitemcolor ctr_shoot backcolor .1 .1 .1 .25 ; setitemcolor ctr_miscellaneous backcolor .1 .1 .1 .25 }
-	}
-
-
- 	itemDef {
-		name move
-		group grpControls
+	itemDef {
+		name icr_alwaysrun
 		type ITEM_TYPE_MULTI
 		text "@CONTROLS_ALWAYSRUN"
 		textfont		UI_FONT_BIG
 		cvar "cl_run"
 		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 30 290 12
+		rect 0 76 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23            
+		textalignx 224
+		textaligny 12
+		textscale .22
 		forecolor 1 1 1 1
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show yesno_message }
-		mouseexit { hide yesno_message }
-    		}
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_RUNWALK"
-		textfont		UI_FONT_BIG
-		cvar "+speed"
-		rect 82 45 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23            
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-    		}
+		visible 1
+		mouseEnter { setitemcolor icr_alwaysrun backcolor .3 0.5 0.2 .25 ; show tip_icr_alwaysrun ; show tipbox }
+		mouseExit { setitemcolor icr_alwaysrun backcolor 1 1 1 .07 ; hide tip_icr_alwaysrun ; hide tipbox }
+		}
 
 	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_SPRINT"
-		textfont		UI_FONT_BIG
-		cvar "+sprint"
-		rect 82 60 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23            
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-    		}
-
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_MOVEFORWARD"
-		textfont		UI_FONT_BIG
-		cvar "+forward"
-		rect 82 75 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23            
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_MOVEBACK"
-		textfont		UI_FONT_BIG
-		cvar "+back"
-		rect 82 90 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23                   
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-	
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_MOVELEFT"
-		textfont		UI_FONT_BIG
-		cvar "+moveleft"
-		rect 82 105 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23            
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_MOVERIGHT"
-		textfont		UI_FONT_BIG
-		cvar "+moveright"
-		rect 82 120 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23           
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-itemDef {
-	name move
-	group grpControls
-	type ITEM_TYPE_BIND
-	text "@CONTROLS_LEANLEFT"
-		textfont		UI_FONT_BIG
-	cvar "+leanleft"
-		rect 82 135 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23           
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-	mouseenter { show keyBindStatus }
-	mouseexit { hide keyBindStatus } 
-	}
-
-itemDef {
-	name move
-	group grpControls
-	type ITEM_TYPE_BIND
-	text "@CONTROLS_LEANRIGHT"
-		textfont		UI_FONT_BIG
-	cvar "+leanright"
-		rect 82 150 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23           
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-	mouseenter { show keyBindStatus }
-	mouseexit { hide keyBindStatus } 
-	}
-
-
-
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_JUMP"
-		textfont		UI_FONT_BIG
-		cvar "+moveup"
-		rect 82 165 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23           
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_CROUCH"
-		textfont		UI_FONT_BIG
-		cvar "+movedown"
-		rect 82 180 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_TOGGLECROUCH"
-		textfont		UI_FONT_BIG
-		cvar "=movedown"
-		rect 82 195 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_TOGGLESPRINT"
-		textfont		UI_FONT_BIG
-		cvar "=sprint"
-		rect 82 210 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_STRAFE"
-		textfont		UI_FONT_BIG
-		cvar "+strafe"
-		rect 82 225 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-	itemDef {
-		name move
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_TELEPORT"
-		textfont		UI_FONT_BIG
-		cvar "teleport"
-		rect 82 240 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-////////////////
-//
-//	shoot
-//
-////////////////
-
-itemDef {
-	name ctr_shoot
-	text "@CONTROLS_SHOOT"
-		textfont		UI_FONT_BIG
-	type ITEM_TYPE_BUTTON
-	textscale .23
-	group grpControlbutton
-	style WINDOW_STYLE_FILLED
-	rect 222 4 107 20
-	textalign ITEM_ALIGN_CENTER
-	textalignx 53
-	textaligny 14
-	border 1
-	bordercolor .5 .5 .5 .5
-	forecolor 1 1 1 1
-	backcolor .1 .1 .1 .25
-	visible 1
-	action { play "sound/misc/kcaction.wav" ;
-	hide grpControls ; show shoot ; show ctr_shoot_advanced ;
-	setitemcolor ctr_shoot backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_look backcolor .1 .1 .1 .25 ; setitemcolor ctr_move backcolor .1 .1 .1 .25 ; setitemcolor ctr_miscellaneous backcolor .1 .1 .1 .25 }
-	}
-	
-	itemDef {
-		name shoot				
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_ATTACK"
-		textfont		UI_FONT_BIG
-		cvar "+attack"
-		rect 82 30 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name shoot				
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_RELOAD"
-		textfont		UI_FONT_BIG
-		cvar "+reload"
-		rect 82 45 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_NEXTWEAPON"
-		textfont		UI_FONT_BIG
-		cvar "weapnext"
-		rect 82 60 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-	
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_PREVWEAPON"
-		textfont		UI_FONT_BIG
-		cvar "weapprev"
-		rect 82 75 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_SWITCHALT"
-		textfont		UI_FONT_BIG
-		cvar "weapalt"
-		rect 82 90 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name shoot
-		group grpControls
+		name icr_autoswitch
 		type ITEM_TYPE_MULTI
 		text "@CONTROLS_AUTOSWITCH"
 		textfont		UI_FONT_BIG
 		cvar "cg_autoswitch"
 		cvarFloatList { "@GENERAL_OFF" 0 "@CONTROLS_AUTOSWITCH_ALWAYS" 1 "@CONTROLS_AUTOSWITCH_IFNEW" 2 "@CONTROLS_AUTOSWITCH_IFBETTER" 3 "@CONTROLS_AUTOSWITCH_NEWORBETTER" 4 "@CONTROLS_AUTOSWITCH_NEWANDBETTER" 5 }
-		rect 82 105 290 12
+		rect 0 95 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
-		visible 0
-    		}
-
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_KNIFE"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 1"
-		rect 82 120 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
 		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
+		visible 1
+		mouseEnter { setitemcolor icr_autoswitch backcolor .3 0.5 0.2 .25 ; show tip_icr_autoswitch ; show tipbox }
+		mouseExit { setitemcolor icr_autoswitch backcolor 1 1 1 .07 ; hide tip_icr_autoswitch ; hide tipbox }
+		}
 
 	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_PISTOLS"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 2"
-		rect 82 135 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_MACHINEGUNS"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 3"
-		rect 82 150 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_RIFLES"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 4"
-		rect 82 165 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_ASSAULTRIFLES"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 5"
-		rect 82 180 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-	
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_GRENADES"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 6"
-		rect 82 195 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_ROCKETS"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 7"
-		rect 82 210 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_VENOM"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 8"
-		rect 82 225 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23        
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_SHOTGUN"
-		textfont		UI_FONT_BIG
-		cvar "weaponbank 9"
-		rect 82 240 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name shoot
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_QUICKGREN"
-		textfont		UI_FONT_BIG
-		cvar "+quickgren"
-		rect 82 255 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		forecolor 1 1 1 1
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-////////////////	end shoot
-
-
-////////////////
-//
-//	Misc
-//
-////////////////
-
-itemDef {
-	name ctr_miscellaneous
-	text "@CONTROLS_MISC"
-		textfont		UI_FONT_BIG
-	type ITEM_TYPE_BUTTON
-	textscale .23
-	group grpControlbutton
-	style WINDOW_STYLE_FILLED
-	rect 332 4 107 20
-	textalign ITEM_ALIGN_CENTER
-	textalignx 53
-	textaligny 14
-	border 1
-	bordercolor .5 .5 .5 .5
-	forecolor 1 1 1 1
-	backcolor .1 .1 .1 .25
-	visible 1
-	action { play "sound/misc/kcaction.wav" ;
-	hide grpControls ; show misc ;
-	setitemcolor ctr_miscellaneous backcolor .3 0.5 0.2 .25 ; setitemcolor ctr_look backcolor .1 .1 .1 .25 ; setitemcolor ctr_move backcolor .1 .1 .1 .25 ; setitemcolor ctr_shoot backcolor .1 .1 .1 .25 }
-	}
-
-
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_KILLPLAYER"
-		textfont		UI_FONT_BIG
-		cvar "kill"
-		rect 82 30 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23  
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07                  
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-  	}
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_KICK"
-		textfont		UI_FONT_BIG
-		cvar "+kick"
-		rect 82 45 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142 
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07                    
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-  	}
-
-	itemDef {
-		name misc
-		group grpControls
+		name icr_autopickup
 		type ITEM_TYPE_MULTI
 		text "@CONTROLS_AUTOPICKUP"
 		textfont		UI_FONT_BIG
 		cvar "cg_autoactivate"
 		cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 82 60 290 12
+		rect 0 114 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23  
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07          
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show yesno_message }
-		mouseexit { hide yesno_message }
-   		}
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_ACTIVATE"
-		textfont		UI_FONT_BIG
-		cvar "+activate"
-		rect 82 75 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23 
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_USEITEM"
-		textfont		UI_FONT_BIG
-		cvar "+useitem"
-		rect 82 90 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07            
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_NEXTITEM"
-		textfont		UI_FONT_BIG
-		cvar "itemnext"
-		rect 82 105 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23 
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_PREVITEM"
-		textfont		UI_FONT_BIG
-		cvar "itemprev"
-		rect 82 120 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23 
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-    		}
-	
-	itemDef {
-		name			misc
-		group			grpControls
-		type			ITEM_TYPE_TEXT
-		text			"@CONTROLS_COOPERATIVE"
-		textfont		UI_FONT_BIG
-		textalign		ITEM_ALIGN_CENTER
-		textalignx		145
-		textaligny		13
-		textscale		.25
-		rect			82 140 290 20
-		style			WINDOW_STYLE_FILLED
-		border			1
-		bordercolor		.5 .5 .5 .5
-		forecolor		1 1 1 1
-		backcolor		.3 0.5 0.2 .25
-		visible			0
-		decoration
-		}
-		
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_DROPWEAPON"
-		textfont		UI_FONT_BIG
-		cvar "+dropweapon"
-		rect 82 165 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
-		forecolor 1 1 1 1
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-		}
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_DROPAMMO"
-		textfont		UI_FONT_BIG
-		cvar "dropammo"
-		rect 82 180 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
-		forecolor 1 1 1 1
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-		}
-		
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_CHAT"
-		textfont		UI_FONT_BIG
-		cvar "messagemode"
-		rect 82 195 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
-		forecolor 1 1 1 1
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-		}
-
-	itemDef {
-		name misc 
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_QUICKMESSAGE"
-		textfont		UI_FONT_BIG
-		cvar "mp_quickmessage"
-		rect 82 210 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-	}  
+		visible 1
+		mouseEnter { setitemcolor icr_autopickup backcolor .3 0.5 0.2 .25 ; show tip_icr_autopickup ; show tipbox }
+		mouseExit { setitemcolor icr_autopickup backcolor 1 1 1 .07 ; hide tip_icr_autopickup ; hide tipbox }
+		}
 
 	itemDef {
-		name misc 
-		group grpControls
+		name icr_quickmsg
 		type ITEM_TYPE_MULTI
 		text "@CONTROLS_QUICKMESSAGEMODE"
 		textfont		UI_FONT_BIG
 		cvar "cg_quickMessageAlt"
 		cvarFloatList { "@CONTROLS_QUICKMSG_ALPHA" 0 "@CONTROLS_QUICKMSG_NUMERIC" 1 }
-		rect 82 225 290 12
+		rect 0 133 443 16
 		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		textalignx 224
+		textaligny 12
+		textscale .22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-		} 
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_MANUALSAVE"
-		textfont		UI_FONT_BIG
-		cvar "spawnpoint"
-		rect 82 240 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07           
-		forecolor 1 1 1 1
-		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
+		visible 1
+		mouseEnter { setitemcolor icr_quickmsg backcolor .3 0.5 0.2 .25 ; show tip_icr_quickmsg ; show tipbox }
+		mouseExit { setitemcolor icr_quickmsg backcolor 1 1 1 .07 ; hide tip_icr_quickmsg ; hide tipbox }
 		}
 
 	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_VOTEYES"
-		textfont		UI_FONT_BIG
-		cvar "vote yes"
-		rect 82 255 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
+		name icr_editkeyboard
+		text "@CONTROLS_EDITKEYBOARD"
+		type ITEM_TYPE_BUTTON
+		rect 136 165 170 24
+		textfont UI_FONT_BIG
+		textalign ITEM_ALIGN_CENTER
+		textalignx 85
+		textaligny 16
+		textscale .22
 		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
+		border 1
+		bordercolor .5 .5 .5 .5
 		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
+		backcolor .1 .1 .1 .3
+		visible 1
+		action { play "sound/misc/kcaction.wav" ;
+			close ingame_controls ;
+			close ingame_options ;
+			open ingame_editkeyboard ;
+			uiScript loadControls }
+		mouseEnter { setitemcolor icr_editkeyboard backcolor .3 0.5 0.2 .5 ; show tip_icr_editkeyboard ; show tipbox }
+		mouseExit { setitemcolor icr_editkeyboard backcolor .1 .1 .1 .3 ; hide tip_icr_editkeyboard ; hide tipbox }
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                        HOVER TIP BOX                    //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	itemDef {
+		name tipbox
+		style WINDOW_STYLE_FILLED
+		rect 0 330 443 30
+		backcolor 0 0 0 .55
+		visible 0
+		decoration
 	}
 
 	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_VOTENO"
-		textfont		UI_FONT_BIG
-		cvar "vote no"
-		rect 82 270 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0 
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-	}
-
-	itemDef {
-		name misc
-		group grpControls
-		type ITEM_TYPE_BIND
-		text "@CONTROLS_SHOWSCOREBOARD"
-		textfont		UI_FONT_BIG
-		cvar "+scores"
-		rect 82 285 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .23
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07                    
+		name tip_icr_invertmouse
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_INVERTMOUSE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
 		forecolor 1 1 1 1
 		visible 0
-		mouseenter { show keyBindStatus }
-		mouseexit { hide keyBindStatus }
-		}
-
-///////////////// end misc
-
-
-
-itemDef {
-      name yesno_message
-      rect 0 310 300 15 
-	text "@CONTROLS_MSG_TOGGLE"   
-		textfont		UI_FONT_BIG   
-	forecolor 1 .75 0 1
-	textscale .230
-	textalignx 221
-	textalign 1
-	textaligny 20
-	visible 0
-      	decoration 
+		decoration
 	}
 
-itemDef {
-      name slider_message
-      rect 0 310 300 15 
-	text "@CONTROLS_MSG_SLIDER" 
-		textfont		UI_FONT_BIG    
-	forecolor 1 .75 0 1
-	textscale .230
-	textalignx 221
-	textalign 1
-	textaligny 20
-	visible 0
-      	decoration 
+	itemDef {
+		name tip_icr_smoothmouse
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_SMOOTHMOUSE"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
 	}
 
+	itemDef {
+		name tip_icr_mousesens
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_MOUSESENS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
 
+	itemDef {
+		name tip_icr_zoomweap
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_ZOOMWEAP"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
 
+	itemDef {
+		name tip_icr_alwaysrun
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_ALWAYSRUN"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
 
+	itemDef {
+		name tip_icr_autoswitch
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_AUTOSWITCH"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_icr_autopickup
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_AUTOPICKUP"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_icr_quickmsg
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_QUICKMSG"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_icr_editkeyboard
+		group grpIngameControlsTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@CONTROLS_TIP_EDITKEYBOARD"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
 
 }
-
 
 }

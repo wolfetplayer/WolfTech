@@ -15,16 +15,25 @@ menuDef {
 
 
 	itemDef {
-		name quick
-		rect 0 0 270 290
-		style WINDOW_STYLE_FILLED
-		border 1
-		bordercolor .5 .5 .5 .5
-		forecolor 1 1 1 1
-		backcolor 0 0 0 .5
+		name panelborder
+		rect -2 -2 274 294
+		style WINDOW_STYLE_ROUNDED
+		cornerradius 10
+		backcolor 1 1 1 .4
 		visible 1
 		decoration
-		}	
+		}
+
+	itemDef {
+		name quick
+		rect 0 0 270 290
+		style WINDOW_STYLE_ROUNDED
+		cornerradius 8
+		forecolor 1 1 1 1
+		backcolor 0 0 0 .88
+		visible 1
+		decoration
+		}
 
 	itemDef {
 		name quick
@@ -37,7 +46,7 @@ menuDef {
 		rect 3 2 264 20
 		style WINDOW_STYLE_FILLED
 		border			1
-		bordercolor		.5 .5 .5 .5
+		bordercolor		  1 1 1 .3
 		forecolor		1 1 1 1
 		backcolor		.3 0.5 0.2 .25
 		visible			1
@@ -45,173 +54,191 @@ menuDef {
 		}
 
 		itemDef {
-			name			quick
+			name			iq_playername
 			visible			1
-			rect			-30 30 270 15		
+			rect			0 30 270 15		
 			forecolor		1 1 1 1
-			backcolor		0 0 0 0
+			backcolor		  1 1 1 .07
 			outlinecolor	1 1 0 .5
 			textfont		UI_FONT_NORMAL
 			type			ITEM_TYPE_EDITFIELD
-			style			0
+			style			WINDOW_STYLE_FILLED
 			maxChars		16
 			maxpaintchars	16
 			text			"@MULTI_NAME_LABEL"
 			cvar			"name"
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT
-			textalignx		126
+			textalignx		96
 			textaligny		11
 			cvarTest		"cl_steamActive"
 			disableCvar		{ "1" }
+			mouseEnter { setitemcolor iq_playername backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_playername backcolor 1 1 1 .07 }
 			}
 			
 		itemDef {
-			name quick
+			name iq_brightness
 			type ITEM_TYPE_SLIDER
 			text "@QUICK_BRIGHTNESS"
-			cvarfloat "r_gamma" 1 0.5 2
-			rect -30 65 270 12
+			cvarfloat "r_gamma" 1.3 .5 3
+			rect 0 65 270 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
-			textalignx 126
+			textalignx 96
 			textaligny 11
-			textscale .22 
-			style 0
-			backcolor 0 0 0 0
+			textscale .22
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07
 			forecolor 1 1 1 1
 			visible 1
 			action { uiScript glCustom }
+			mouseEnter { setitemcolor iq_brightness backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_brightness backcolor 1 1 1 .07 }
 			}
 
 		itemDef {
-			name quick
+			name iq_fov
 			type ITEM_TYPE_SLIDER
 			text "FOV (90-115):"
 			cvarfloat "cg_fov" 90 90 115
-			rect -30 80 270 12
+			rect 0 80 270 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
-			textalignx 126
+			textalignx 96
 			textaligny 11
-			textscale .22 
-			style 0
-			backcolor 0 0 0 0
+			textscale .22
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07
 			forecolor 1 1 1 1
 			visible 1
 			action { uiScript glCustom }
+			mouseEnter { setitemcolor iq_fov backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_fov backcolor 1 1 1 .07 }
 			}
-			
+
 		itemDef {
-			name quick
+			name iq_fullscreen
 			type ITEM_TYPE_MULTI
 			text "@QUICK_FULLSCREEN"
 			cvar "r_fullscreen"
 			cvarFloatList		{ "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-			rect -30 95 270 12
+			rect 0 95 270 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
-			textalignx 126
+			textalignx 96
 			textaligny 11
 			textscale .22
-			style 0
-			backcolor 0 0 0 0        
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07        
 			forecolor 1 1 1 1
-			visible 1 
+			visible 1
 			action { uiScript glCustom }
+			mouseEnter { setitemcolor iq_fullscreen backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_fullscreen backcolor 1 1 1 .07 }
 			}
-			
+
 		itemDef {
-			name quick
+			name iq_soundvolume
 			type ITEM_TYPE_SLIDER
 			text "@QUICK_SOUNDVOLUME"
 			cvarfloat "s_volume" 0.7 0 1
-			rect -30 115 270 12
+			rect 0 115 270 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
-			textalignx 126
+			textalignx 96
 			textaligny 12
-			textscale .22    
-			style 0
-			backcolor 0 0 0 0
+			textscale .22
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07
 			forecolor 1 1 1 1
-			visible 1 
+			visible 1
+			mouseEnter { setitemcolor iq_soundvolume backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_soundvolume backcolor 1 1 1 .07 }
 			}
 		
 		itemDef {
-			name quick
+			name iq_musicvolume
 			type ITEM_TYPE_SLIDER
 			text "@QUICK_MUSICVOLUME"
 			cvarfloat "s_musicvolume" 0.25 0 1
-			rect -30 130 270 12
+			rect 0 130 270 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
-			textalignx 126
+			textalignx 96
 			textaligny 11
-			textscale .22  
-			style 0
-			backcolor 0 0 0 0
+			textscale .22
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07
 			forecolor 1 1 1 1
-			visible 1 
+			visible 1
+			mouseEnter { setitemcolor iq_musicvolume backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_musicvolume backcolor 1 1 1 .07 }
 			}
 			
 		itemDef {
-			name quick
+			name iq_hudalpha
 			type ITEM_TYPE_SLIDER
 			text "@OPTIONS_HUDALPHA"
 			cvarfloat "cg_hudAlpha" .6 .1 1
-			rect -30 150 270 12
+			rect 0 150 270 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
-			textalignx 126
+			textalignx 96
 			textaligny 11
 			textscale .22
-			style 0
-			backcolor 0 0 0 0
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07
 			forecolor 1 1 1 1
 			visible 1
+			mouseEnter { setitemcolor iq_hudalpha backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_hudalpha backcolor 1 1 1 .07 }
 			}
 
 		itemDef {
-			name quick
+			name iq_crosshairalpha
 			type ITEM_TYPE_SLIDER
 			text "@OPTIONS_CROSSHAIRALPHA"
 			cvarfloat "cg_crosshairAlpha" .6 .1 1
-			rect -30 165 270 12
+			rect 0 165 270 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
-			textalignx 126
+			textalignx 96
 			textaligny 11
 			textscale .22
-			style 0
-			backcolor 0 0 0 0
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07
 			forecolor 1 1 1 1
 			visible 1
+			mouseEnter { setitemcolor iq_crosshairalpha backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_crosshairalpha backcolor 1 1 1 .07 }
 			}
 
 		itemDef {
-			name quick
+			name iq_sensitivity
 			group grpControls
 			type ITEM_TYPE_SLIDER
 			text "@QUICK_SENSITIVITY"
 			cvarfloat "sensitivity" 5 1 30
-			rect -30 180 270 12
+			rect 0 180 270 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_RIGHT
-			textalignx 126
+			textalignx 96
 			textaligny 11
 			textscale .22
-			style 0
-			backcolor 0 0 0 0           
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07           
 			forecolor 1 1 1 1
 			visible 1
+			mouseEnter { setitemcolor iq_sensitivity backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_sensitivity backcolor 1 1 1 .07 }
 			}
 						
 		itemDef {
 			name quick
 			text "@OPTIONS_CROSSHAIR"
-			type 1	
-			rect 40 195 60 12
+			type 1
+			rect 90 195 60 12
 			textfont UI_FONT_NORMAL
 			textalign ITEM_ALIGN_CENTER
 			textalignx 130
@@ -224,38 +251,40 @@ menuDef {
 
 		itemDef {
 			name quick
-			rect 145 210 50 50
+			rect 195 210 50 50
 			ownerdraw UI_CROSSHAIR
 			textalign ITEM_ALIGN_LEFT
-			textalignx 0 
-			textaligny 50  
-			style 0
-			backcolor 0 0 0 0
+			textalignx 0
+			textaligny 50
+			style WINDOW_STYLE_FILLED
+			backcolor   1 1 1 .07
 			forecolor 1 1 1 1
 			visible 1
 			}
 
 		itemDef {
-			name			quick
-			rect			-30 209 170 12
+			name			iq_crosshairnames
+			rect			0 209 170 12
 			textfont		UI_FONT_NORMAL
 			type			ITEM_TYPE_MULTI
-			style			0
+			style			WINDOW_STYLE_FILLED
 			text			"@OPTIONS_CROSSHAIRNAMES"
 			cvar			"cg_drawcrosshairnames"
 			cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT	
-			textalignx		126
+			textalignx		96
 			textaligny		11
-			backcolor		0 0 0 0 		  
+			backcolor		  1 1 1 .07 		  
 			forecolor		1 1 1 1
 			visible			1
+			mouseEnter { setitemcolor iq_crosshairnames backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_crosshairnames backcolor 1 1 1 .07 }
 			}
 		
 		itemDef {
-			name			quick
-			rect			-30 224 170 12
+			name			iq_teamoverlay
+			rect			0 224 170 12
 			textfont		UI_FONT_NORMAL
 			type			ITEM_TYPE_MULTI
 			style			WINDOW_STYLE_FILLED
@@ -264,16 +293,18 @@ menuDef {
 			cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT	
-			textalignx		126
+			textalignx		96
 			textaligny		11
-			backcolor		0 0 0 0 		  
+			backcolor		  1 1 1 .07 		  
 			forecolor		1 1 1 1
 			visible			1
+			mouseEnter { setitemcolor iq_teamoverlay backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_teamoverlay backcolor 1 1 1 .07 }
 			}
 
 		itemDef {
-			name			quick
-			rect			-30 239 170 12
+			name			iq_compass
+			rect			0 239 170 12
 			textfont		UI_FONT_NORMAL
 			type			ITEM_TYPE_MULTI
 			style			WINDOW_STYLE_FILLED
@@ -282,11 +313,13 @@ menuDef {
 			cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 			textscale		.22
 			textalign		ITEM_ALIGN_RIGHT	
-			textalignx		126
+			textalignx		96
 			textaligny		11
-			backcolor		0 0 0 0 		  
+			backcolor		  1 1 1 .07 		  
 			forecolor		1 1 1 1
 			visible			1
+			mouseEnter { setitemcolor iq_compass backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_compass backcolor 1 1 1 .07 }
 			}
 
 
@@ -297,16 +330,18 @@ menuDef {
 			textscale               .25 
 			style                   WINDOW_STYLE_FILLED    
 			border                  1   
-			bordercolor             .5 .5 .5 .5
+			bordercolor               1 1 1 .3
 			rect					3 267 130 20
 			textalign               ITEM_ALIGN_CENTER
 			textalignx              65              // center
 			textaligny              14
 			textfont                UI_FONT_NORMAL
-			backcolor               .3 .5 .2 .3
+			backcolor               .1 .1 .1 .3
 			forecolor               1 1 1 1
 			visible                 1
 			action                  { exec "cmd team free" ; uiScript closeingame }
+			mouseEnter              { setitemcolor joingame backcolor .3 0.5 0.2 .5 }
+			mouseExit               { setitemcolor joingame backcolor .1 .1 .1 .3 }
 			}
 
 		itemDef {
@@ -316,16 +351,18 @@ menuDef {
 			textscale               .25 
 			style                   WINDOW_STYLE_FILLED    
 			border                  1   
-			bordercolor             .5 .5 .5 .5
+			bordercolor               1 1 1 .3
 			rect					137 267 130 20
 			textalign               ITEM_ALIGN_CENTER
 			textalignx              65             // center
 			textaligny              14  
 			textfont                UI_FONT_NORMAL
-			backcolor               .3 .5 .2 .3
-			forecolor               1 1 1 1 
-			visible                 1   
-			action                  { exec "cmd team s" ; uiScript closeingame }    
+			backcolor               .1 .1 .1 .3
+			forecolor               1 1 1 1
+			visible                 1
+			action                  { exec "cmd team s" ; uiScript closeingame }
+			mouseEnter              { setitemcolor joinspec backcolor .3 0.5 0.2 .5 }
+			mouseExit               { setitemcolor joinspec backcolor .1 .1 .1 .3 }
 			}
 
 }

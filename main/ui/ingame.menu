@@ -76,6 +76,9 @@ itemDef
 			close ingame_controls;
 			close ingame_options;
 			close ingame_system;
+			close ingame_gameplay;
+			close ingame_editkeyboard;
+			close ingame_sound;
 			open ingame_join ;	close ingame_quick;
 			hide grpIngame ;
 			uiScript RefreshServers ;
@@ -91,7 +94,7 @@ itemDef
 		group grpIngame
 		text "@INGAME_VOTE"
 		type 1
-	    rect 10 192 160 30
+	    rect 10 220 160 30
 		visible 1
 		textfont UI_FONT_BIG
 	textalign 0
@@ -108,39 +111,13 @@ itemDef
 			close ingame_controls;
 			close ingame_options;
 			close ingame_system;
+			close ingame_gameplay;
+			close ingame_editkeyboard;
+			close ingame_sound;
 			open ingame_callvote ; close ingame_quick }
 
-	    mouseEnter { setitemskew vote 0 18 ; setitemcolor vote backcolor 1 1 1 .92 ; show tip_vote ; show tipbox ; transition vote 10 192 160 30 18 190 168 34 10 12 }
-	    mouseExit { setitemskew vote 0 0 ; setitemcolor vote backcolor 1 1 1 0 ; clearfocus ; hide tip_vote ; hide tipbox ; transition vote 18 190 168 34 10 192 160 30 10 12 }
-    }
-
-    // CONTROLS BUTTON
-	itemDef {
-		name controls
-		group grpIngame
-		text "@INGAME_CONTROLS"
-		type 1
-	    rect 10 234 134 30
-		visible 1
-		textfont UI_FONT_BIG
-	textalign 0
-	textalignx 10
-	textaligny 21
-	textscale .60
-		style WINDOW_STYLE_SKEWED
-		forecolor 1 1 1 1
-		backcolor 1 1 1 0
-
-		action {
-		close ingame_join;
-		close ingame_callvote;
-		close ingame_controls;
-		close ingame_options;
-		close ingame_system;
-		open ingame_controls ; close ingame_quick }
-
-	    mouseEnter { setitemskew controls 0 18 ; setitemcolor controls backcolor 1 1 1 .92 ; show tip_controls ; show tipbox ; transition controls 10 234 134 30 18 232 142 34 10 12 }
-	    mouseExit { setitemskew controls 0 0 ; setitemcolor controls backcolor 1 1 1 0 ; clearfocus ; hide tip_controls ; hide tipbox ; transition controls 18 232 142 34 10 234 134 30 10 12 }
+	    mouseEnter { setitemskew vote 0 18 ; setitemcolor vote backcolor 1 1 1 .92 ; show tip_vote ; show tipbox ; transition vote 10 220 160 30 18 218 168 34 10 12 }
+	    mouseExit { setitemskew vote 0 0 ; setitemcolor vote backcolor 1 1 1 0 ; clearfocus ; hide tip_vote ; hide tipbox ; transition vote 18 218 168 34 10 220 160 30 10 12 }
     }
 
     // OPTIONS BUTTON
@@ -149,7 +126,7 @@ itemDef
         text "@INGAME_OPTIONS"
 		group grpIngame
  	    type 1
-	    rect 10 276 121 30
+	    rect 10 290 121 30
 	textalign 0
 	textalignx 10
 	textaligny 21
@@ -166,39 +143,15 @@ itemDef
 		close ingame_controls;
 		close ingame_options;
 		close ingame_system;
-		open ingame_options ; close ingame_quick }
+		close ingame_gameplay;
+		close ingame_editkeyboard;
+		close ingame_sound;
+		open ingame_options ;
+		open ingame_gameplay ;
+		close ingame_quick }
 
-	    mouseEnter { setitemskew options 0 18 ; setitemcolor options backcolor 1 1 1 .92 ; show tip_options ; show tipbox ; transition options 10 276 121 30 18 274 129 34 10 12 }
-	    mouseExit { setitemskew options 0 0 ; setitemcolor options backcolor 1 1 1 0 ; clearfocus ; hide tip_options ; hide tipbox ; transition options 18 274 129 34 10 276 121 30 10 12 }
-	}
-
-	// SYSTEM BUTTON
-	itemDef {
-        name system
-        text "@INGAME_SYSTEM"
-		group grpIngame
- 	    type 1
-	    rect 10 318 107 30
-		textfont UI_FONT_BIG
-	textalign 0
-	textalignx 10
-	textaligny 21
-	textscale .60
-	    visible 1
-		style WINDOW_STYLE_SKEWED
-		forecolor 1 1 1 1
-		backcolor 1 1 1 0
-
-		action {
-		close ingame_join;
-		close ingame_callvote;
-		close ingame_controls;
-		close ingame_options;
-		close ingame_system;
-		open ingame_system ; close ingame_quick }
-
-	    mouseEnter { setitemskew system 0 18 ; setitemcolor system backcolor 1 1 1 .92 ; show tip_system ; show tipbox ; transition system 10 318 107 30 18 316 115 34 10 12 }
-	    mouseExit { setitemskew system 0 0 ; setitemcolor system backcolor 1 1 1 0 ; clearfocus ; hide tip_system ; hide tipbox ; transition system 18 316 115 34 10 318 107 30 10 12 }
+	    mouseEnter { setitemskew options 0 18 ; setitemcolor options backcolor 1 1 1 .92 ; show tip_options ; show tipbox ; transition options 10 290 121 30 18 288 129 34 10 12 }
+	    mouseExit { setitemskew options 0 0 ; setitemcolor options backcolor 1 1 1 0 ; clearfocus ; hide tip_options ; hide tipbox ; transition options 18 288 129 34 10 290 121 30 10 12 }
 	}
 
 	// LEAVE GAME BUTTON
@@ -271,43 +224,11 @@ itemDef
 	}
 
 	itemDef {
-		name tip_controls
-		group grpingametip
-		style WINDOW_STYLE_EMPTY
-		rect 20 410 440 40
-		text "@INGAME_TIP_CONTROLS"
-		textfont UI_FONT_BIG
-		textscale .23
-		textalign 0
-		textalignx 0
-		textaligny 26
-		forecolor 1 1 1 1
-		visible 0
-		decoration
-	}
-
-	itemDef {
 		name tip_options
 		group grpingametip
 		style WINDOW_STYLE_EMPTY
 		rect 20 410 440 40
 		text "@INGAME_TIP_OPTIONS"
-		textfont UI_FONT_BIG
-		textscale .23
-		textalign 0
-		textalignx 0
-		textaligny 26
-		forecolor 1 1 1 1
-		visible 0
-		decoration
-	}
-
-	itemDef {
-		name tip_system
-		group grpingametip
-		style WINDOW_STYLE_EMPTY
-		rect 20 410 440 40
-		text "@INGAME_TIP_SYSTEM"
 		textfont UI_FONT_BIG
 		textscale .23
 		textalign 0
