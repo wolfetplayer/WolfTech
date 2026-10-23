@@ -145,6 +145,12 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 		{
 			if (COM_BitCheck(other->client->ps.weapons, w))
 			{
+				if (w == WP_KNIFE)
+				{
+					other->client->ps.ammo[WP_KNIFE] = KNIFE_THROW_MAX_AMMO;
+					continue;
+				}
+
 				int ammo = BG_GetMaxAmmo(&other->client->ps, w, LT_AMMO_BONUS_MULTIPLIER);
 
 				Add_Ammo(other, w, ammo, qtrue);
@@ -629,11 +635,6 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	// add the weapon
 	COM_BitSet( other->client->ps.weapons, weapon );
 
-	// Throw knives
-	if ( g_throwKnives.integer ) {
-		other->client->ps.ammo[BG_FindAmmoForWeapon( WP_KNIFE )]++;
-	}
-
 //----(SA)	added
 	// snooper/snooperscope
 	if ( weapon == WP_SNOOPERSCOPE ) {
@@ -669,6 +670,18 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	}
 
 //----(SA)	end
+
+	if ( weapon == WP_KNIFE ) {
+		if ( other->client->ps.ammo[WP_KNIFE] < KNIFE_THROW_MAX_AMMO ) {
+			other->client->ps.ammo[WP_KNIFE]++;
+		}
+
+		if ( !( ent->spawnflags & FL_RESPAWN_SP ) ) {
+			return RESPAWN_SP;
+		}
+
+		return g_weaponRespawn.integer;
+	}
 
 	Add_Ammo( other, weapon, quantity, !alreadyHave );
 
@@ -889,11 +902,9 @@ int Pickup_Weapon_New_Inventory( gentity_t *ent, gentity_t *other ) {
 
 	if (weapon == WP_KNIFE)
 	{
-		int maxAmmo = BG_GetMaxAmmo(&other->client->ps, weapon, LT_AMMO_BONUS_MULTIPLIER);
-
-		if (other->client->ps.ammoclip[weapon] < maxAmmo)
+		if (other->client->ps.ammo[WP_KNIFE] < KNIFE_THROW_MAX_AMMO)
 		{
-			Add_Ammo(other, weapon, 1, qfalse);
+			other->client->ps.ammo[WP_KNIFE]++;
 		}
 
 		if (!(ent->spawnflags & 8))
@@ -951,6 +962,12 @@ void Touch_Item( gentity_t *entity, gentity_t *activator, trace_t *trace ) {
 	if ( G_IsClientDead( activator ) ) {
 		return;     // dead people can't pickup
 
+	}
+
+	// ported from RealRTCW - can't catch a thrown knife still in flight, only once it's come to rest
+	if ( entity->damage && entity->s.pos.trType != TR_STATIONARY &&
+		 entity->s.pos.trType != TR_GRAVITY_PAUSED && entity->s.pos.trType != TR_GRAVITY_FLOAT ) {
+		return;
 	}
 
 	// the same pickup rules are used for client side and server side
@@ -1658,6 +1675,37 @@ void G_RunItem( gentity_t *ent ) {
 			G_FreeEntity( ent );
 		}
 		return;
+	}
+
+	if ( ent->damage && tr.entityNum != ENTITYNUM_NONE ) {
+		gentity_t *traceEnt;
+		vec3_t delta, dir;
+		float speed;
+		int hitTime;
+
+		hitTime = level.previousTime + ( level.time - level.previousTime ) * tr.fraction;
+		BG_EvaluateTrajectoryDelta( &ent->s.pos, hitTime, delta );
+		VectorCopy( delta, dir );
+		VectorNormalize( dir );
+		speed = VectorLength( delta );
+
+		if ( speed > KNIFE_THROW_MIN_SPEED ) {
+			traceEnt = &g_entities[tr.entityNum];
+
+			if ( traceEnt->takedamage ) {
+				G_Damage( traceEnt, ent, ent->parent, dir, tr.endpos, ent->damage, 0, ent->methodOfDeath );
+			}
+
+			if ( traceEnt->client && traceEnt->takedamage ) {
+				gentity_t *temp = G_TempEntity( tr.endpos, EV_MISSILE_HIT );
+				temp->s.otherEntityNum = traceEnt->s.number;
+				temp->s.weapon = ent->s.weapon;
+				temp->s.clientNum = ent->r.ownerNum;
+			}
+
+			// a knife that already drew blood won't deal damage again on a later bounce
+			ent->damage = 0;
+		}
 	}
 
 	G_BounceItem( ent, &tr );

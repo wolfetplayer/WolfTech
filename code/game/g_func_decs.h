@@ -199,6 +199,7 @@ extern void SnapVectorTowards ( vec3_t v , vec3_t to ) ;
 extern trace_t * CheckMeleeAttack ( gentity_t * ent , float dist , qboolean isTest ) ;
 extern void weapon_callAirStrike ( gentity_t * ent ) ;
 extern void Weapon_Knife ( gentity_t * ent ) ;
+extern void ThrowKnife ( gentity_t * ent ) ;
 extern qboolean G_IsEntityAI ( gentity_t * entity ) ;
 extern qboolean G_IsEntityDead ( gentity_t * entity ) ;
 extern gentity_t * GetFirstValidAlliedPlayer ( qboolean checkHealth ) ;

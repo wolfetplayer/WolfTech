@@ -150,6 +150,83 @@ void Weapon_Knife( gentity_t *ent ) {
 	G_Damage( traceEnt, ent, ent, vec3_origin, tr.endpos, ( damage + rand() % 5 ) * s_quadFactor, 0, mod );
 }
 
+/*
+==============
+ThrowKnife
+
+ported from RealRTCW - WP_KNIFE secondary fire. Spawns the knife as a physics-driven
+dropped item (gravity arc + bounce) rather than a traditional missile; the in-flight
+damage check lives in G_RunItem, and it becomes a normal pickup once it comes to rest.
+==============
+*/
+void ThrowKnife( gentity_t *ent ) {
+	gentity_t *knife;
+	float speed;
+	vec3_t dir;
+	float r, u;
+
+	CalcMuzzlePoints( ent, ent->s.weapon );
+
+	r = crandom() * ( GetWeaponTableData( ent->s.weapon )->weaponSpread / 1000.0f );
+	u = crandom() * ( GetWeaponTableData( ent->s.weapon )->weaponSpread / 1000.0f );
+	VectorScale( forward, 16, dir );
+	VectorMA( dir, r, right, dir );
+	VectorMA( dir, u, up, dir );
+	VectorNormalize( dir );
+
+	knife             = G_Spawn();
+	knife->classname  = "knife";
+	knife->nextthink  = 0;
+	knife->think      = G_FreeEntity;
+
+	knife->s.clientNum = ent->client->ps.clientNum;
+	knife->s.eType      = ET_ITEM;
+	knife->s.weapon      = ent->s.weapon;
+	knife->parent      = ent;
+	knife->r.ownerNum  = ent->s.number;
+	knife->r.svFlags   = SVF_USE_CURRENT_ORIGIN | SVF_BROADCAST;
+
+	knife->touch = Touch_Item_Auto;
+	knife->use   = Use_Item;
+
+	knife->damage        = KNIFE_THROW_DAMAGE;
+	knife->splashDamage  = 0;
+	knife->splashRadius  = 0;
+	knife->methodOfDeath = MOD_THROWKNIFE;
+
+	knife->clipmask   = CONTENTS_SOLID | MASK_MISSILESHOT;
+	knife->r.contents = CONTENTS_TRIGGER | CONTENTS_ITEM;
+
+	G_SetAngle( knife, ent->client->ps.viewangles );
+	G_SetOrigin( knife, muzzleEffect );
+
+	knife->s.pos.trType = TR_GRAVITY_LOW;
+	knife->s.pos.trTime = level.time - 50; // move a bit on the very first frame
+
+	knife->physicsBounce = 0.08f; // low restitution - settles after a bounce or two instead of skittering around
+	knife->physicsObject = qtrue;
+
+	VectorSet( knife->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, 0 );
+	VectorSet( knife->r.maxs, ITEM_RADIUS, ITEM_RADIUS, 2 * ITEM_RADIUS );
+
+	speed = KNIFE_THROW_SPEED;
+	VectorScale( dir, speed, knife->s.pos.trDelta );
+	SnapVector( knife->s.pos.trDelta );
+
+	knife->s.apos.trTime = level.time - 50;
+	knife->s.apos.trType = TR_LINEAR_STOP;
+	knife->s.apos.trDuration = 1500;
+	VectorCopy( ent->client->ps.viewangles, knife->s.apos.trBase );
+	knife->s.apos.trDelta[0] = speed * 3;
+
+	knife->item          = BG_FindItemForWeapon( ent->s.weapon );
+	knife->s.modelindex  = knife->item - bg_itemlist;  // store item number in modelindex
+	knife->s.otherEntityNum2 = 1;                      // this is taking modelindex2's place for a dropped item
+	knife->flags |= FL_DROPPED_ITEM;                   // so it gets removed after being picked up
+
+	trap_LinkEntity( knife );
+}
+
 // JPW NERVE -- launch airstrike as line of bombs mostly-perpendicular to line of grenade travel
 // (close air support should *always* drop parallel to friendly lines, tho accidents do happen)
 void G_ExplodeMissile( gentity_t *ent );

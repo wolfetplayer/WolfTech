@@ -4433,6 +4433,11 @@ void CG_AltWeapon_f( void ) {
 		return;
 	}
 
+	if ( cg.snap->ps.weapon == WP_KNIFE ) {
+		trap_SendConsoleCommand( "+attack2\nwait\nwait\n-attack2\n" );
+		return;
+	}
+
 	if ( cg.time - cg.weaponSelectTime < cg_weaponCycleDelay.integer ) {
 		return; // force pause so holding it down won't go too fast
 

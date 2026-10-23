@@ -800,6 +800,32 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 
 	upgradeLevel = activator->client->ps.weaponUpgraded[weapon];
 
+	if (weapon == WP_KNIFE) {
+		if (activator->client->ps.ammo[WP_KNIFE] >= KNIFE_THROW_MAX_AMMO) {
+			G_AddEvent(activator, EV_GENERAL_SOUND, G_SoundIndex("sound/items/use_nothing.wav"));
+			return qfalse; // already full
+		}
+
+		if (upgradeLevel >= 1) {
+			price = survCfg.priceAmmoUpgraded * upgradeLevel;
+		} else {
+			price /= 2; // same discount as any other already-owned weapon's ammo refill
+		}
+
+		if (activator->client->ps.persistant[PERS_SCORE] < price) {
+			G_AddEvent(activator, EV_GENERAL_SOUND, G_SoundIndex("sound/items/use_nothing.wav"));
+			return qfalse;
+		}
+
+		Survival_AwardScore(activator, -price);
+		activator->client->ps.ammo[WP_KNIFE] = KNIFE_THROW_MAX_AMMO;
+
+		G_AddPredictableEvent(activator, EV_ITEM_PICKUP, item - bg_itemlist);
+		trap_SendServerCommand(-1, "mu_play sound/misc/buy.wav 0\n");
+
+		return qtrue;
+	}
+
 	// Special handling: grenades (no new weapon granted)
 	if (item->giType == IT_AMMO && (
 		weapon == WP_GRENADE_LAUNCHER ||

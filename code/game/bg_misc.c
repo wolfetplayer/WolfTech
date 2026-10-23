@@ -105,9 +105,9 @@ ammotable_t ammoTable[] = {
 		.weaponindex        = WP_KNIFE,
 		.weapAlts           = WP_NONE,
 		.weaponClass        = WEAPON_CLASS_MELEE,
-        .maxammo            = 999,
+        .maxammo            = KNIFE_THROW_MAX_AMMO, // ported from RealRTCW - ps.ammo[WP_KNIFE] is the live throwable count (see ThrowKnife); was 999
         .uses               = 0,
-        .maxclip            = 999,
+        .maxclip            = KNIFE_THROW_MAX_AMMO, // not actually used for the knife (no clip), kept in sync for data consistency
         .reloadTime         = 0,
         .fireDelayTime      = 0,
         .nextShotTime       = 300,
@@ -5333,6 +5333,7 @@ char *eventnames[] = {
 	"EV_FIRE_QUICKGREN2", 
 	"EV_NOFIRE_UNDERWATER",
 	"EV_FIRE_WEAPON_MG42",
+	"EV_THROWKNIFE",         // ported from RealRTCW
 	"EV_SUGGESTWEAP",        //----(SA)	added
 	"EV_GRENADE_SUICIDE",    //----(SA)	added
 	"EV_USE_ITEM0",

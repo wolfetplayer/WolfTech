@@ -55,6 +55,13 @@ If you have questions concerning this license or the applicable additional terms
 
 #define ITEM_RADIUS     10 // Rafael changed the radius so that the items would fit in the 3 new containers
 
+// ported from RealRTCW - WP_KNIFE secondary fire throws a knife instead of swinging it
+#define KNIFE_THROW_SPEED       1400    // RealRTCW KNIFESPEED was 2000, tuned down - felt too fast
+#define KNIFE_THROW_MIN_SPEED   250     // RealRTCW MIN_KNIFESPEED - below this, a flight-path hit no longer does damage
+#define KNIFE_THROW_DAMAGE      50
+#define KNIFE_THROW_COOLDOWN    750     // ms before the knife can be thrown (or swung) again
+#define KNIFE_THROW_MAX_AMMO    10      // cap on carried throwable knives (pickups/resupply/max-ammo powerup)
+
 #define MEDCRATE_HEAL_RADIUS    96.0f  // shared with cgame so the ground radius indicator (CG_Missile) matches the real heal range (G_MedCrateThink)
 
 // RF, zombie getup
@@ -902,6 +909,7 @@ typedef enum {
 	EV_FIRE_QUICKGREN2, 
 	EV_NOFIRE_UNDERWATER,
 	EV_FIRE_WEAPON_MG42,
+	EV_THROWKNIFE,      // ported from RealRTCW - WP_KNIFE secondary fire
 	EV_SUGGESTWEAP,     //----(SA)	added
 	EV_GRENADE_SUICIDE, //----(SA)	added
 	EV_USE_ITEM0,

@@ -469,7 +469,6 @@ struct gentity_s {
 	int lastBurnedFrameNumber;              // JPW - Nerve   : to fix FT instant-kill exploit
 
 	int lastPushTime;       // Shove
-	int thrownKnifeTime;    // Throwing Knives
 
 	int price;                 // item price, survival mode
     char  *buy_item;
@@ -958,6 +957,7 @@ int ArmorIndex( gentity_t *ent );
 void Fill_Clip( playerState_t *ps, int weapon );
 void    Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip );
 void Touch_Item( gentity_t *entity, gentity_t *toucher, trace_t *trace );
+void Use_Item( gentity_t *ent, gentity_t *other, gentity_t *activator );
 
 int G_FindWeaponSlot( gentity_t *other, weapon_t weapon );
 int G_GetFreeWeaponSlot( gentity_t *other );
@@ -1185,6 +1185,7 @@ void ClearMaxLivesGUID( void );
 //
 void G_BurnMeGood( gentity_t *self, gentity_t *body );
 void FireWeapon( gentity_t *ent );
+void ThrowKnife( gentity_t *ent );     // ported from RealRTCW - WP_KNIFE secondary fire
 
 //
 // g_cmds.c
@@ -1451,7 +1452,6 @@ extern vmCvar_t g_votesPerUser;
 extern vmCvar_t g_bannedMSG;
 extern vmCvar_t g_shove;
 extern vmCvar_t g_shoveAmount;
-extern vmCvar_t g_throwKnives;
 
 extern vmCvar_t g_showMOTD;
 extern vmCvar_t motdNum;
@@ -1647,7 +1647,6 @@ void G_Trace( gentity_t* ent, trace_t *results, const vec3_t start, const vec3_t
 void LerpPosition( vec3_t start, vec3_t end, float frac, vec3_t out );
 
 void Cmd_Push_f( gentity_t* ent );        // Shove
-void Cmd_ThrowKnives( gentity_t *ent ); // Knife throw
 
 typedef enum
 {

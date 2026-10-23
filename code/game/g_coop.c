@@ -66,11 +66,6 @@ void SetCoopSpawnWeapons( gclient_t *client ) {
 	// give all the players a binocular
 	client->ps.stats[STAT_KEYS] |= ( 1 << INV_BINOCS );
 
-	if ( g_throwKnives.integer > 0 ) {
-		client->ps.ammo[BG_FindAmmoForWeapon( WP_KNIFE )] = g_throwKnives.integer;
-	}
-
-
 	client->pers.initialSpawn = qtrue;
 }
 

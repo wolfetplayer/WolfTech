@@ -3554,6 +3554,26 @@ static void PM_Weapon( void ) {
 		}
 	}
 
+	if ( pm->ps->weapon == WP_KNIFE && ( pm->cmd.wbuttons & WBUTTON_ATTACK2 ) && !( pm->cmd.buttons & BUTTON_ATTACK ) ) {
+		if ( pm->ps->ammo[WP_KNIFE] <= 0 ) {
+			PM_AddEvent( EV_NOAMMO );
+			pm->ps->weaponTime += 500;
+			return;
+		}
+
+		PM_StartWeaponAnim( WEAP_ATTACK2 );
+		BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
+		PM_AddEvent( EV_THROWKNIFE );
+
+		pm->ps->ammo[WP_KNIFE]--;
+		pm->ps->weaponstate  = WEAPON_FIRINGALT;
+		pm->ps->releasedFire = qfalse;
+		pm->ps->lastFireTime = pm->cmd.serverTime;
+		pm->ps->weaponTime  += KNIFE_THROW_COOLDOWN;
+
+		return;
+	}
+
 	// check for fire
 	if ( !( pm->cmd.buttons & ( BUTTON_ATTACK | WBUTTON_ATTACK2 ) ) && !delayedFire ) { // if not on fire button and there's not a delayed shot this frame...
 

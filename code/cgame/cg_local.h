@@ -1496,6 +1496,7 @@ typedef struct {
 	sfxHandle_t sfx_dynamiteexpDist;    //----(SA)	added
 	sfxHandle_t sfx_spearhit;
 	sfxHandle_t sfx_knifehit[5];
+	sfxHandle_t sfx_knifethrow;     // ported from RealRTCW - WP_KNIFE secondary fire
 	sfxHandle_t sfx_bullet_metalhit[3];
 	sfxHandle_t sfx_bullet_woodhit[3];
 	sfxHandle_t sfx_bullet_roofhit[3];

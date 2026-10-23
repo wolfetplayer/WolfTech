@@ -1427,6 +1427,8 @@ static void CG_RegisterSounds( void ) {
 
 	cgs.media.sfx_knifehit[4] = trap_S_RegisterSound( "sound/weapons/knife/knife_hitwall1.wav" ); // hitting wall
 
+	cgs.media.sfx_knifethrow = trap_S_RegisterSound( "sound/weapons/knife/knife_throw.wav" ); // ported from RealRTCW
+
 	cgs.media.sfx_bullet_metalhit[0] = trap_S_RegisterSound( "sound/weapons/bullethit_metal1.wav" );
 	cgs.media.sfx_bullet_metalhit[1] = trap_S_RegisterSound( "sound/weapons/bullethit_metal2.wav" );
 	cgs.media.sfx_bullet_metalhit[2] = trap_S_RegisterSound( "sound/weapons/bullethit_metal3.wav" );

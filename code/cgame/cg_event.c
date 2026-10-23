@@ -2337,6 +2337,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME( "EV_FIRE_WEAPON_LASTSHOT" );
 		CG_FireWeapon( cent );
 		break;
+	case EV_THROWKNIFE: // ported from RealRTCW - WP_KNIFE secondary fire
+		DEBUGNAME( "EV_THROWKNIFE" );
+		trap_S_StartSound( NULL, cent->currentState.number, CHAN_WEAPON, cgs.media.sfx_knifethrow );
+		break;
 	case EV_GRENADE_SUICIDE:
 		DEBUGNAME( "EV_GRENADE_SUICIDE" );
 		CG_MissileHitWall( WP_GRENADE_LAUNCHER, 0, position, dir, 0 );  // (SA) modified to send missilehitwall surface parameters

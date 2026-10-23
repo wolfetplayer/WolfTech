@@ -199,6 +199,7 @@ If you have questions concerning this license or the applicable additional terms
 {"CheckMeleeAttack", (byte *)CheckMeleeAttack},
 {"weapon_callAirStrike", (byte *)weapon_callAirStrike},
 {"Weapon_Knife", (byte *)Weapon_Knife},
+{"ThrowKnife", (byte *)ThrowKnife},
 {"G_IsEntityAI", (byte *)G_IsEntityAI},
 {"G_IsEntityDead", (byte *)G_IsEntityDead},
 {"GetFirstValidAlliedPlayer", (byte *)GetFirstValidAlliedPlayer},

@@ -188,7 +188,6 @@ vmCvar_t g_votesPerUser;    // How many votes can user call each game
 vmCvar_t g_bannedMSG;       // Used to point banned users to desired forum..
 vmCvar_t g_shove;           // Enable - Disable shove
 vmCvar_t g_shoveAmount;     // How far one is pushed
-vmCvar_t g_throwKnives;     // 0 = disabled, anything else is the value of knives player gets, alt -1 = unlimited.
 
 // Motds
 vmCvar_t g_showMOTD;        // Enable MOTD's (message of the day)
@@ -364,7 +363,6 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_needpass, "g_needpass", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_shove, "g_shove", "1", CVAR_ARCHIVE, 0, qtrue},
 	{ &g_shoveAmount, "g_shoveAmount", "0.8", CVAR_ARCHIVE, 0, qtrue}, // Don't give to much...
-	{ &g_throwKnives, "g_throwKnives", "0", CVAR_ARCHIVE, 0, qtrue },
 
 	{ &g_showMOTD, "g_showMOTD", "0",CVAR_ARCHIVE, 0, qfalse },
 	{ &g_motd1, "g_motd1", "", 0, 0, qfalse},

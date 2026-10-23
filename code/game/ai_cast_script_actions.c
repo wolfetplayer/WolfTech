@@ -1780,12 +1780,14 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 //----(SA)	end
 
 		// monsters have full ammo for their attacks
-		// knife gets infinite ammo too
-		if ( !Q_strncasecmp( params, "monsterattack", 13 ) || weapon == WP_KNIFE ) {
-			if ( !g_throwKnives.integer ) {
-				g_entities[cs->entityNum].client->ps.ammo[BG_FindAmmoForWeapon( weapon )] = 999;
-			}
+		if ( !Q_strncasecmp( params, "monsterattack", 13 ) ) {
+			g_entities[cs->entityNum].client->ps.ammo[BG_FindAmmoForWeapon( weapon )] = 999;
 			Fill_Clip( &g_entities[cs->entityNum].client->ps, weapon );      //----(SA)	added
+		}
+
+
+		if ( weapon == WP_KNIFE && g_entities[cs->entityNum].client->ps.aiChar ) {
+			g_entities[cs->entityNum].client->ps.ammo[WP_KNIFE] = KNIFE_THROW_MAX_AMMO;
 		}
 		// conditional flags
 		// Ghost also carries WP_MONSTER_ATTACK1 (for its teleport strike), but isn't on fire, so it's excluded here
