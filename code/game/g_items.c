@@ -1524,38 +1524,92 @@ void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 
 /*
 ================
+G_ItemStick
+
+ported from RealRTCW - a thrown knife lodges in a soft surface it hits close to head-on
+================
+*/
+qboolean G_ItemStick( gentity_t *ent, trace_t *trace, vec3_t velocity ) {
+	float dot;
+
+	if ( !ent->damage || ent->s.weapon != WP_KNIFE ) {
+		return qfalse;
+	}
+
+	VectorNormalize( velocity );
+	dot = DotProduct( velocity, trace->plane.normal );
+
+	if ( dot > -0.75f ) {
+		return qfalse;
+	}
+
+	if ( trace->surfaceFlags & ( SURF_GRASS | SURF_SNOW | SURF_WOOD | SURF_GRAVEL ) ) {
+		vectoangles( velocity, ent->r.currentAngles );
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+================
 G_BounceItem
 
 ================
 */
 void G_BounceItem( gentity_t *ent, trace_t *trace ) {
 	vec3_t velocity;
+	vec3_t curAngle;
 	float dot;
+	float bounceScale;
 	int hitTime;
+	qboolean stuck;
 
 	// reflect the velocity on the trace plane
 	hitTime = level.previousTime + ( level.time - level.previousTime ) * trace->fraction;
 	BG_EvaluateTrajectoryDelta( &ent->s.pos, hitTime, velocity );
-	dot = DotProduct( velocity, trace->plane.normal );
-	VectorMA( velocity, -2 * dot, trace->plane.normal, ent->s.pos.trDelta );
 
-	// cut the velocity to keep from bouncing forever
-	VectorScale( ent->s.pos.trDelta, ent->physicsBounce, ent->s.pos.trDelta );
+	if ( ent->physicsSlide && trace->plane.normal[2] < 0.7f && VectorLength( velocity ) >= 16 ) {
+		PM_ClipVelocity( velocity, trace->plane.normal, ent->s.pos.trDelta, 1.001f );
+	} else {
+		dot = DotProduct( velocity, trace->plane.normal );
+		VectorMA( velocity, -2 * dot, trace->plane.normal, ent->s.pos.trDelta );
 
-	// play a weapon/ammo bounce sound if this item represents a weapon
-	if ( ent->item && ( ent->item->giType == IT_WEAPON || ent->item->giType == IT_AMMO ) &&
-		 ent->item->giTag > WP_NONE && ent->item->giTag < WP_NUM_WEAPONS ) {
-		G_AddEvent( ent, EV_BOUNCE_SOUND, ent->item->giType == IT_WEAPON ? 0 : 1 );
-		ent->s.weapon = ent->item->giTag;
-	}
+		bounceScale = ( trace->contents & CONTENTS_BODY ) ? ent->physicsBounce * 0.1f : ent->physicsBounce;
 
-	// check for stop
-	if ( trace->plane.normal[2] > 0 && ent->s.pos.trDelta[2] < 40 ) {
-		trace->endpos[2] += 1.0;    // make sure it is off ground
-		SnapVector( trace->endpos );
-		G_SetOrigin( ent, trace->endpos );
-		ent->s.groundEntityNum = trace->entityNum;
-		return;
+		// cut the velocity to keep from bouncing forever
+		VectorScale( ent->s.pos.trDelta, bounceScale, ent->s.pos.trDelta );
+
+		if ( ent->s.apos.trType != TR_STATIONARY ) {
+			VectorScale( ent->s.apos.trDelta, bounceScale, ent->s.apos.trDelta );
+			ent->s.apos.trTime = level.time;
+		}
+
+		// play a weapon/ammo bounce sound if this item represents a weapon
+		if ( ent->item && ( ent->item->giType == IT_WEAPON || ent->item->giType == IT_AMMO ) &&
+			 ent->item->giTag > WP_NONE && ent->item->giTag < WP_NUM_WEAPONS ) {
+			G_AddEvent( ent, EV_BOUNCE_SOUND, ent->item->giType == IT_WEAPON ? 0 : 1 );
+			ent->s.weapon = ent->item->giTag;
+		}
+
+		stuck = G_ItemStick( ent, trace, velocity );
+
+		// check for stop
+		if ( stuck || ( trace->plane.normal[2] > 0 && ent->s.pos.trDelta[2] < 40 ) ) {
+			trace->endpos[2] += 1.0;    // make sure it is off ground
+			SnapVector( trace->endpos );
+			G_SetOrigin( ent, trace->endpos );
+			ent->s.groundEntityNum = trace->entityNum;
+
+			if ( stuck ) {
+				G_SetAngle( ent, ent->r.currentAngles );   // lodged facing, set by G_ItemStick
+			} else if ( ent->s.apos.trType != TR_STATIONARY ) {
+				// freeze rotation instead of leaving it mid-spin forever
+				BG_EvaluateTrajectory( &ent->s.apos, level.time, curAngle );
+				G_SetAngle( ent, curAngle );
+			}
+			return;
+		}
 	}
 
 	VectorAdd( ent->r.currentOrigin, trace->plane.normal, ent->r.currentOrigin );

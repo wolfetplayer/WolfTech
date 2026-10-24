@@ -154,9 +154,7 @@ void Weapon_Knife( gentity_t *ent ) {
 ==============
 ThrowKnife
 
-ported from RealRTCW - WP_KNIFE secondary fire. Spawns the knife as a physics-driven
-dropped item (gravity arc + bounce) rather than a traditional missile; the in-flight
-damage check lives in G_RunItem, and it becomes a normal pickup once it comes to rest.
+ported from RealRTCW - WP_KNIFE secondary fire
 ==============
 */
 void ThrowKnife( gentity_t *ent ) {
@@ -200,11 +198,12 @@ void ThrowKnife( gentity_t *ent ) {
 	G_SetAngle( knife, ent->client->ps.viewangles );
 	G_SetOrigin( knife, muzzleEffect );
 
-	knife->s.pos.trType = TR_GRAVITY_LOW;
+	knife->s.pos.trType = TR_GRAVITY; // not RealRTCW's TR_GRAVITY_LOW - was sailing too far
 	knife->s.pos.trTime = level.time - 50; // move a bit on the very first frame
 
-	knife->physicsBounce = 0.08f; // low restitution - settles after a bounce or two instead of skittering around
+	knife->physicsBounce = 0.08f;
 	knife->physicsObject = qtrue;
+	knife->physicsSlide  = qtrue;
 
 	VectorSet( knife->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, 0 );
 	VectorSet( knife->r.maxs, ITEM_RADIUS, ITEM_RADIUS, 2 * ITEM_RADIUS );
@@ -214,10 +213,9 @@ void ThrowKnife( gentity_t *ent ) {
 	SnapVector( knife->s.pos.trDelta );
 
 	knife->s.apos.trTime = level.time - 50;
-	knife->s.apos.trType = TR_LINEAR_STOP;
-	knife->s.apos.trDuration = 1500;
+	knife->s.apos.trType = TR_LINEAR;
 	VectorCopy( ent->client->ps.viewangles, knife->s.apos.trBase );
-	knife->s.apos.trDelta[0] = speed * 3;
+	knife->s.apos.trDelta[0] = KNIFE_THROW_SPIN_RATE;
 
 	knife->item          = BG_FindItemForWeapon( ent->s.weapon );
 	knife->s.modelindex  = knife->item - bg_itemlist;  // store item number in modelindex
