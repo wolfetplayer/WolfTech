@@ -1147,8 +1147,25 @@
 		}
 	}
 
-	//	STABILITY	//	
-	
+	//	COMPASS	//
+
+	menuDef {
+    	name "Compass"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect 290 420 60 60		// CG_DrawCompass draws itself at a fixed position; rect is for reference only
+
+		itemDef {
+			name "compassicon"
+			visible MENU_TRUE
+			decoration
+			ownerdraw CG_PLAYER_COMPASS
+			rect 0 0 60 60
+		}
+	}
+
+	//	STABILITY	//
+
 	menuDef {
     	name "stability"
     	fullScreen MENU_FALSE
