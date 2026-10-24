@@ -22,6 +22,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_vbo.c
 #include "tr_local.h"
 
+// capacity of tess.vao2D, the small dynamic VAO used for 2D/UI draws
+#define UI_TESS_MAX_VERTEXES 2048
+#define UI_TESS_MAX_INDEXES (UI_TESS_MAX_VERTEXES * 6)
+
+// tess.vao and tess.vao2D both need the same buffer/attrib-state bookkeeping
+#define IS_TESS_VAO(v) ((v) == tess.vao || (v) == tess.vao2D)
 
 void R_VaoPackTangent(int16_t *out, vec4_t v)
 {
@@ -78,7 +84,7 @@ void Vao_SetVertexPointers(vao_t *vao)
 			if (glRefConfig.vertexArrayObject || !(glState.vertexAttribsEnabled & attribBit))
 				qglEnableVertexAttribArray(attribIndex);
 
-			if (!glRefConfig.vertexArrayObject || vao == tess.vao)
+			if (!glRefConfig.vertexArrayObject || IS_TESS_VAO(vao))
 				glState.vertexAttribsEnabled |= attribBit;
 		}
 		else
@@ -88,7 +94,7 @@ void Vao_SetVertexPointers(vao_t *vao)
 			if (!glRefConfig.vertexArrayObject && (glState.vertexAttribsEnabled & attribBit))
 				qglDisableVertexAttribArray(attribIndex);
 
-			if (!glRefConfig.vertexArrayObject || vao == tess.vao)
+			if (!glRefConfig.vertexArrayObject || IS_TESS_VAO(vao))
 				glState.vertexAttribsEnabled &= ~attribBit;
 		}
 	}
@@ -361,11 +367,11 @@ void R_BindVao(vao_t * vao)
 			qglBindVertexArray(vao->vao);
 
 			// Intel Graphics doesn't save GL_ELEMENT_ARRAY_BUFFER binding with VAO binding.
-			if (glRefConfig.intelGraphics || vao == tess.vao)
+			if (glRefConfig.intelGraphics || IS_TESS_VAO(vao))
 				qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao->indexesIBO);
 
 			// tess VAO always has buffers bound
-			if (vao == tess.vao)
+			if (IS_TESS_VAO(vao))
 				qglBindBuffer(GL_ARRAY_BUFFER, vao->vertexesVBO);
 		}
 		else
@@ -374,7 +380,7 @@ void R_BindVao(vao_t * vao)
 			qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao->indexesIBO);
 
 			// tess VAO doesn't have vertex pointers set until data is uploaded
-			if (vao != tess.vao)
+			if (!IS_TESS_VAO(vao))
 				Vao_SetVertexPointers(vao);
 		}
 	}
@@ -412,17 +418,19 @@ void R_BindNullVao(void)
 
 /*
 ============
-R_InitVaos
+CreateTessVao
+
+Builds a dynamic VAO with the same interleaved attribute layout as the
+default tess VAO, sized for maxVertexes/maxIndexes instead of
+SHADER_MAX_VERTEXES/SHADER_MAX_INDEXES. Used for tess.vao (the real cap)
+and tess.vao2D (a much smaller cap for 2D/UI draws - see RB_UpdateTessVao).
 ============
 */
-void R_InitVaos(void)
+static vao_t *CreateTessVao(const char *name, int maxVertexes, int maxIndexes)
 {
-	int             vertexesSize, indexesSize;
-	int             offset;
-
-	ri.Printf(PRINT_ALL, "------- R_InitVaos -------\n");
-
-	tr.numVaos = 0;
+	vao_t *vao;
+	int    vertexesSize, indexesSize;
+	int    offset;
 
 	vertexesSize  = sizeof(tess.xyz[0]);
 	vertexesSize += sizeof(tess.normal[0]);
@@ -431,61 +439,77 @@ void R_InitVaos(void)
 	vertexesSize += sizeof(tess.texCoords[0]);
 	vertexesSize += sizeof(tess.lightCoords[0]);
 	vertexesSize += sizeof(tess.lightdir[0]);
-	vertexesSize *= SHADER_MAX_VERTEXES;
+	vertexesSize *= maxVertexes;
 
-	indexesSize = sizeof(tess.indexes[0]) * SHADER_MAX_INDEXES;
+	indexesSize = sizeof(tess.indexes[0]) * maxIndexes;
 
-	tess.vao = R_CreateVao("tessVertexArray_VAO", NULL, vertexesSize, NULL, indexesSize, VAO_USAGE_DYNAMIC);
+	vao = R_CreateVao(name, NULL, vertexesSize, NULL, indexesSize, VAO_USAGE_DYNAMIC);
 
 	offset = 0;
 
-	tess.vao->attribs[ATTR_INDEX_POSITION      ].enabled = 1;
-	tess.vao->attribs[ATTR_INDEX_NORMAL        ].enabled = 1;
-	tess.vao->attribs[ATTR_INDEX_TANGENT       ].enabled = 1;
-	tess.vao->attribs[ATTR_INDEX_TEXCOORD      ].enabled = 1;
-	tess.vao->attribs[ATTR_INDEX_LIGHTCOORD    ].enabled = 1;
-	tess.vao->attribs[ATTR_INDEX_COLOR         ].enabled = 1;
-	tess.vao->attribs[ATTR_INDEX_LIGHTDIRECTION].enabled = 1;
+	vao->attribs[ATTR_INDEX_POSITION      ].enabled = 1;
+	vao->attribs[ATTR_INDEX_NORMAL        ].enabled = 1;
+	vao->attribs[ATTR_INDEX_TANGENT       ].enabled = 1;
+	vao->attribs[ATTR_INDEX_TEXCOORD      ].enabled = 1;
+	vao->attribs[ATTR_INDEX_LIGHTCOORD    ].enabled = 1;
+	vao->attribs[ATTR_INDEX_COLOR         ].enabled = 1;
+	vao->attribs[ATTR_INDEX_LIGHTDIRECTION].enabled = 1;
 
-	tess.vao->attribs[ATTR_INDEX_POSITION      ].count = 3;
-	tess.vao->attribs[ATTR_INDEX_NORMAL        ].count = 4;
-	tess.vao->attribs[ATTR_INDEX_TANGENT       ].count = 4;
-	tess.vao->attribs[ATTR_INDEX_TEXCOORD      ].count = 2;
-	tess.vao->attribs[ATTR_INDEX_LIGHTCOORD    ].count = 2;
-	tess.vao->attribs[ATTR_INDEX_COLOR         ].count = 4;
-	tess.vao->attribs[ATTR_INDEX_LIGHTDIRECTION].count = 4;
+	vao->attribs[ATTR_INDEX_POSITION      ].count = 3;
+	vao->attribs[ATTR_INDEX_NORMAL        ].count = 4;
+	vao->attribs[ATTR_INDEX_TANGENT       ].count = 4;
+	vao->attribs[ATTR_INDEX_TEXCOORD      ].count = 2;
+	vao->attribs[ATTR_INDEX_LIGHTCOORD    ].count = 2;
+	vao->attribs[ATTR_INDEX_COLOR         ].count = 4;
+	vao->attribs[ATTR_INDEX_LIGHTDIRECTION].count = 4;
 
-	tess.vao->attribs[ATTR_INDEX_POSITION      ].type = GL_FLOAT;
-	tess.vao->attribs[ATTR_INDEX_NORMAL        ].type = GL_SHORT;
-	tess.vao->attribs[ATTR_INDEX_TANGENT       ].type = GL_SHORT;
-	tess.vao->attribs[ATTR_INDEX_TEXCOORD      ].type = GL_FLOAT;
-	tess.vao->attribs[ATTR_INDEX_LIGHTCOORD    ].type = GL_FLOAT;
-	tess.vao->attribs[ATTR_INDEX_COLOR         ].type = GL_UNSIGNED_SHORT;
-	tess.vao->attribs[ATTR_INDEX_LIGHTDIRECTION].type = GL_SHORT;
+	vao->attribs[ATTR_INDEX_POSITION      ].type = GL_FLOAT;
+	vao->attribs[ATTR_INDEX_NORMAL        ].type = GL_SHORT;
+	vao->attribs[ATTR_INDEX_TANGENT       ].type = GL_SHORT;
+	vao->attribs[ATTR_INDEX_TEXCOORD      ].type = GL_FLOAT;
+	vao->attribs[ATTR_INDEX_LIGHTCOORD    ].type = GL_FLOAT;
+	vao->attribs[ATTR_INDEX_COLOR         ].type = GL_UNSIGNED_SHORT;
+	vao->attribs[ATTR_INDEX_LIGHTDIRECTION].type = GL_SHORT;
 
-	tess.vao->attribs[ATTR_INDEX_POSITION      ].normalized = GL_FALSE;
-	tess.vao->attribs[ATTR_INDEX_NORMAL        ].normalized = GL_TRUE;
-	tess.vao->attribs[ATTR_INDEX_TANGENT       ].normalized = GL_TRUE;
-	tess.vao->attribs[ATTR_INDEX_TEXCOORD      ].normalized = GL_FALSE;
-	tess.vao->attribs[ATTR_INDEX_LIGHTCOORD    ].normalized = GL_FALSE;
-	tess.vao->attribs[ATTR_INDEX_COLOR         ].normalized = GL_TRUE;
-	tess.vao->attribs[ATTR_INDEX_LIGHTDIRECTION].normalized = GL_TRUE;
+	vao->attribs[ATTR_INDEX_POSITION      ].normalized = GL_FALSE;
+	vao->attribs[ATTR_INDEX_NORMAL        ].normalized = GL_TRUE;
+	vao->attribs[ATTR_INDEX_TANGENT       ].normalized = GL_TRUE;
+	vao->attribs[ATTR_INDEX_TEXCOORD      ].normalized = GL_FALSE;
+	vao->attribs[ATTR_INDEX_LIGHTCOORD    ].normalized = GL_FALSE;
+	vao->attribs[ATTR_INDEX_COLOR         ].normalized = GL_TRUE;
+	vao->attribs[ATTR_INDEX_LIGHTDIRECTION].normalized = GL_TRUE;
 
-	tess.vao->attribs[ATTR_INDEX_POSITION      ].offset = offset; offset += sizeof(tess.xyz[0])         * SHADER_MAX_VERTEXES;
-	tess.vao->attribs[ATTR_INDEX_NORMAL        ].offset = offset; offset += sizeof(tess.normal[0])      * SHADER_MAX_VERTEXES;
-	tess.vao->attribs[ATTR_INDEX_TANGENT       ].offset = offset; offset += sizeof(tess.tangent[0])     * SHADER_MAX_VERTEXES;
-	tess.vao->attribs[ATTR_INDEX_TEXCOORD      ].offset = offset; offset += sizeof(tess.texCoords[0])   * SHADER_MAX_VERTEXES;
-	tess.vao->attribs[ATTR_INDEX_LIGHTCOORD    ].offset = offset; offset += sizeof(tess.lightCoords[0]) * SHADER_MAX_VERTEXES;
-	tess.vao->attribs[ATTR_INDEX_COLOR         ].offset = offset; offset += sizeof(tess.color[0])       * SHADER_MAX_VERTEXES;
-	tess.vao->attribs[ATTR_INDEX_LIGHTDIRECTION].offset = offset;
+	vao->attribs[ATTR_INDEX_POSITION      ].offset = offset; offset += sizeof(tess.xyz[0])         * maxVertexes;
+	vao->attribs[ATTR_INDEX_NORMAL        ].offset = offset; offset += sizeof(tess.normal[0])      * maxVertexes;
+	vao->attribs[ATTR_INDEX_TANGENT       ].offset = offset; offset += sizeof(tess.tangent[0])     * maxVertexes;
+	vao->attribs[ATTR_INDEX_TEXCOORD      ].offset = offset; offset += sizeof(tess.texCoords[0])   * maxVertexes;
+	vao->attribs[ATTR_INDEX_LIGHTCOORD    ].offset = offset; offset += sizeof(tess.lightCoords[0]) * maxVertexes;
+	vao->attribs[ATTR_INDEX_COLOR         ].offset = offset; offset += sizeof(tess.color[0])       * maxVertexes;
+	vao->attribs[ATTR_INDEX_LIGHTDIRECTION].offset = offset;
 
-	tess.vao->attribs[ATTR_INDEX_POSITION      ].stride = sizeof(tess.xyz[0]);
-	tess.vao->attribs[ATTR_INDEX_NORMAL        ].stride = sizeof(tess.normal[0]);
-	tess.vao->attribs[ATTR_INDEX_TANGENT       ].stride = sizeof(tess.tangent[0]);
-	tess.vao->attribs[ATTR_INDEX_TEXCOORD      ].stride = sizeof(tess.texCoords[0]);
-	tess.vao->attribs[ATTR_INDEX_LIGHTCOORD    ].stride = sizeof(tess.lightCoords[0]);
-	tess.vao->attribs[ATTR_INDEX_COLOR         ].stride = sizeof(tess.color[0]);
-	tess.vao->attribs[ATTR_INDEX_LIGHTDIRECTION].stride = sizeof(tess.lightdir[0]);
+	vao->attribs[ATTR_INDEX_POSITION      ].stride = sizeof(tess.xyz[0]);
+	vao->attribs[ATTR_INDEX_NORMAL        ].stride = sizeof(tess.normal[0]);
+	vao->attribs[ATTR_INDEX_TANGENT       ].stride = sizeof(tess.tangent[0]);
+	vao->attribs[ATTR_INDEX_TEXCOORD      ].stride = sizeof(tess.texCoords[0]);
+	vao->attribs[ATTR_INDEX_LIGHTCOORD    ].stride = sizeof(tess.lightCoords[0]);
+	vao->attribs[ATTR_INDEX_COLOR         ].stride = sizeof(tess.color[0]);
+	vao->attribs[ATTR_INDEX_LIGHTDIRECTION].stride = sizeof(tess.lightdir[0]);
+
+	return vao;
+}
+
+/*
+============
+R_InitVaos
+============
+*/
+void R_InitVaos(void)
+{
+	ri.Printf(PRINT_ALL, "------- R_InitVaos -------\n");
+
+	tr.numVaos = 0;
+
+	tess.vao = CreateTessVao("tessVertexArray_VAO", SHADER_MAX_VERTEXES, SHADER_MAX_INDEXES);
 
 	tess.attribPointers[ATTR_INDEX_POSITION]       = tess.xyz;
 	tess.attribPointers[ATTR_INDEX_NORMAL]         = tess.normal;
@@ -496,6 +520,9 @@ void R_InitVaos(void)
 	tess.attribPointers[ATTR_INDEX_LIGHTDIRECTION] = tess.lightdir;
 
 	Vao_SetVertexPointers(tess.vao);
+
+	tess.vao2D = CreateTessVao("tess2DVertexArray_VAO", UI_TESS_MAX_VERTEXES, UI_TESS_MAX_INDEXES);
+	Vao_SetVertexPointers(tess.vao2D);
 
 	R_BindNullVao();
 
@@ -593,9 +620,18 @@ Update the default VAO to replace the client side vertex arrays
 */
 void RB_UpdateTessVao(unsigned int attribBits)
 {
+	vao_t *vao;
+
 	GLimp_LogComment("--- RB_UpdateTessVao ---\n");
 
 	backEnd.pc.c_dynamicVaoDraws++;
+
+	// route tiny 2D/UI batches to the small vao2D instead of re-orphaning the full vao
+	if (backEnd.projection2D && tess.vao2D &&
+		tess.numVertexes <= UI_TESS_MAX_VERTEXES && tess.numIndexes <= UI_TESS_MAX_INDEXES)
+		vao = tess.vao2D;
+	else
+		vao = tess.vao;
 
 	// update the default VAO
 	if(tess.numVertexes > 0 && tess.numVertexes <= SHADER_MAX_VERTEXES && tess.numIndexes > 0 && tess.numIndexes <= SHADER_MAX_INDEXES)
@@ -603,10 +639,10 @@ void RB_UpdateTessVao(unsigned int attribBits)
 		int attribIndex;
 		int attribUpload;
 
-		R_BindVao(tess.vao);
+		R_BindVao(vao);
 
 		// orphan old vertex buffer so we don't stall on it
-		qglBufferData(GL_ARRAY_BUFFER, tess.vao->vertexesSize, NULL, GL_DYNAMIC_DRAW);
+		qglBufferData(GL_ARRAY_BUFFER, vao->vertexesSize, NULL, GL_DYNAMIC_DRAW);
 
 		// if nothing to set, set everything
 		if(!(attribBits & ATTR_BITS))
@@ -617,7 +653,7 @@ void RB_UpdateTessVao(unsigned int attribBits)
 		for (attribIndex = 0; attribIndex < ATTR_INDEX_COUNT; attribIndex++)
 		{
 			uint32_t attribBit = 1 << attribIndex;
-			vaoAttrib_t *vAtb = &tess.vao->attribs[attribIndex];
+			vaoAttrib_t *vAtb = &vao->attribs[attribIndex];
 
 			if (attribUpload & attribBit)
 			{
@@ -647,7 +683,7 @@ void RB_UpdateTessVao(unsigned int attribBits)
 		}
 
 		// orphan old index buffer so we don't stall on it
-		qglBufferData(GL_ELEMENT_ARRAY_BUFFER, tess.vao->indexesSize, NULL, GL_DYNAMIC_DRAW);
+		qglBufferData(GL_ELEMENT_ARRAY_BUFFER, vao->indexesSize, NULL, GL_DYNAMIC_DRAW);
 
 		qglBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, tess.numIndexes * sizeof(tess.indexes[0]), tess.indexes);
 	}

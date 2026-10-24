@@ -2425,6 +2425,7 @@ typedef struct shaderCommands_s
 
 	void *attribPointers[ATTR_INDEX_COUNT];
 	vao_t       *vao;
+	vao_t       *vao2D; // small dynamic VAO for 2D/UI draws, see RB_UpdateTessVao
 	qboolean    useInternalVao;
 	qboolean    useCacheVao;
 
