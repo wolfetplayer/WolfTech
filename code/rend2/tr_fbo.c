@@ -278,8 +278,7 @@ void FBO_Init(void)
 	if (multisample != r_ext_multisample->integer)
 		ri.Cvar_SetValue("r_ext_multisample", (float)multisample);
 	
-	// only create a render FBO if we need to resolve MSAA or do HDR
-	// otherwise just render straight to the screen (tr.renderFbo = NULL)
+	// only create a render FBO if we need to resolve MSAA, do HDR, or run the gamma pass - otherwise render straight to the screen (tr.renderFbo = NULL)
 	if (multisample && glRefConfig.framebufferMultisample)
 	{
 		tr.renderFbo = FBO_Create("_render", tr.renderDepthImage->width, tr.renderDepthImage->height);
@@ -292,7 +291,7 @@ void FBO_Init(void)
 		FBO_AttachImage(tr.msaaResolveFbo, tr.renderDepthImage, GL_DEPTH_ATTACHMENT, 0);
 		R_CheckFBO(tr.msaaResolveFbo);
 	}
-	else if (r_hdr->integer)
+	else if (r_hdr->integer || !glConfig.deviceSupportsGamma)
 	{
 		tr.renderFbo = FBO_Create("_render", tr.renderDepthImage->width, tr.renderDepthImage->height);
 		FBO_AttachImage(tr.renderFbo, tr.renderImage, GL_COLOR_ATTACHMENT0, 0);

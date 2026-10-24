@@ -2824,7 +2824,8 @@ void R_CreateBuiltinImages( void ) {
 
 		tr.renderImage = R_CreateImage("_render", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-		if (r_shadowBlur->integer || r_greyscale->value > 0.0f)
+		// also doubles as the pre-gamma composite target, see RB_PresentToScreen
+		if (r_shadowBlur->integer || r_greyscale->value > 0.0f || !glConfig.deviceSupportsGamma)
 			tr.screenScratchImage = R_CreateImage("screenScratch", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, rgbFormat);
 
 		if (r_fxaa->integer)

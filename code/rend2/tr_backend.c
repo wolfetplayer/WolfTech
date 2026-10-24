@@ -341,7 +341,7 @@ void RB_BeginDrawingView( void ) {
 	{
 		FBO_t *fbo = backEnd.viewParms.targetFbo;
 
-		// FIXME: HUGE HACK: render to the screen fbo if we've already postprocessed the frame and aren't drawing more world
+		// FIXME: HUGE HACK: render to the post-processed target (screenScratchFbo) if we've already postprocessed the frame and aren't drawing more world
 		// drawing more world check is in case of double renders, such as skyportals
 		if (fbo == NULL && !(backEnd.framePostProcessed && (backEnd.refdef.rdflags & RDF_NOWORLDMODEL)))
 			fbo = tr.renderFbo;
@@ -1077,16 +1077,16 @@ void    RB_SetGL2D( void ) {
 =============
 RB_PostProcessedTarget
 
-Where the tonemap/gamma pass and any subsequent 2D/HUD draws should land
-once the world scene for this frame has already been post-processed.
-Normally that's the real screen (NULL); redirected into screenScratchFbo
-when greyscale is active so RB_PresentToScreen can still desaturate the
-composited HUD along with the world.
+Where the world's mid-frame postprocess (tonemap/SSAO/bloom) and any
+subsequent 2D/HUD/weapon-view draws should land once the world scene for
+this frame has been through that pass. Gamma isn't baked in here - that
+happens once, at the very end, in RB_PresentToScreen - so this can't be
+the real screen; it's a holding buffer everything keeps compositing into.
 =============
 */
 static FBO_t *RB_PostProcessedTarget(void)
 {
-	return (backEnd.greyscale > 0.0f && tr.screenScratchFbo) ? tr.screenScratchFbo : NULL;
+	return tr.screenScratchFbo;
 }
 
 /*
@@ -2357,38 +2357,58 @@ RB_PresentToScreen
 */
 static void RB_PresentToScreen(void)
 {
+	FBO_t *srcFbo;
+
 	if (!glRefConfig.framebufferObject)
 		return;
 
+	// where the finished frame is sitting: screenScratchFbo if a 3D view ran this frame, otherwise renderFbo (menu/loading screen)
 	if (backEnd.framePostProcessed)
 	{
-		// world + HUD were already composited this frame.
-		if (backEnd.greyscale > 0.0f && tr.screenScratchFbo)
+		srcFbo = tr.screenScratchFbo;
+	}
+	else
+	{
+		srcFbo = tr.renderFbo;
+
+		if (tr.msaaResolveFbo && r_hdr->integer)
 		{
-			// ...into screenScratchFbo instead of straight to the screen, so it can be desaturated here.
-			RB_DrawGreyscale(tr.screenScratchFbo);
+			FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			srcFbo = tr.msaaResolveFbo;
 		}
-		// else: already blitted straight to the screen during RB_PostProcess.
-		return;
 	}
 
-	// post-process didn't touch the screen (r_postProcess 0) - blit the raw render target ourselves.
-	if (tr.msaaResolveFbo && r_hdr->integer)
+	// gamma applies once, here, regardless of what already ran mid-frame
+	if (r_postProcess->integer && srcFbo)
 	{
-		// Resolving an RGB16F MSAA FBO to the screen messes with the brightness, so resolve to an RGB16F FBO first
-		FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		// the unused buffer of the two is free as scratch space for the greyscale desaturate step below
+		FBO_t *scratch = (srcFbo == tr.screenScratchFbo) ? tr.renderFbo : tr.screenScratchFbo;
+		FBO_t *dst = (backEnd.greyscale > 0.0f && scratch) ? scratch : NULL;
+		vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-		if (backEnd.greyscale > 0.0f)
-			RB_DrawGreyscale(tr.msaaResolveFbo);
+		if (r_colorGrading->integer && tr.colorGradeLUTImage)
+			GL_BindToTMU(tr.colorGradeLUTImage, TB_COLORGRADELUT);
 		else
-			FBO_FastBlit(tr.msaaResolveFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			GL_BindToTMU(tr.identityLUTImage, TB_COLORGRADELUT);
+
+		GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_TIME, (float)backEnd.refdef.floatTime);
+		GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_VIGNETTEINTENSITY, 0.0f);
+		GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_FILMGRAININTENSITY, 0.0f);
+		GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_CHROMATICABERRATION, 0.0f);
+		GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_INVGAMMA, tr.invGamma);
+
+		FBO_Blit(srcFbo, NULL, NULL, dst, NULL, &tr.gammaShader, color, 0);
+
+		if (dst)
+			RB_DrawGreyscale(dst);
 	}
-	else if (tr.renderFbo)
+	else if (srcFbo)
 	{
+		// r_postProcess 0 - blit the raw render target ourselves, no gamma.
 		if (backEnd.greyscale > 0.0f)
-			RB_DrawGreyscale(tr.renderFbo);
+			RB_DrawGreyscale(srcFbo);
 		else
-			FBO_FastBlit(tr.renderFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			FBO_FastBlit(srcFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	}
 }
 
@@ -2571,8 +2591,7 @@ const void *RB_PostProcess(const void *data)
 	srcBox[2] = backEnd.viewParms.viewportWidth;
 	srcBox[3] = backEnd.viewParms.viewportHeight;
 
-	// normally the real screen (NULL); redirected into screenScratchFbo when
-	// greyscale is active so RB_PresentToScreen can desaturate the HUD too
+	// not the real screen - weapon view and HUD still composite in on top of this
 	postDst = RB_PostProcessedTarget();
 
 	if (srcFbo)
@@ -2604,7 +2623,8 @@ const void *RB_PostProcess(const void *data)
 			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_FILMGRAININTENSITY, r_filmGrain->integer ? r_filmGrainIntensity->value : 0.0f);
 			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_CHROMATICABERRATION, r_chromaticAberration->integer ? r_chromaticAberrationIntensity->value : 0.0f);
 
-			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_INVGAMMA, tr.invGamma);
+			// gamma itself applies once at the very end (RB_PresentToScreen), not here
+			GLSL_SetUniformFloat(&tr.gammaShader, UNIFORM_INVGAMMA, 1.0f);
 			FBO_Blit(srcFbo, srcBox, NULL, postDst, dstBox, &tr.gammaShader, color, 0);
 		}
 	}
