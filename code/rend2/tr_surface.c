@@ -483,7 +483,10 @@ static qboolean RB_SurfaceVaoCached(int numVerts, srfVert_t *verts, int numIndex
 RB_SurfaceVaoMesh
 
 Draws a static (and possibly leaf-merged) BSP surface directly from its
-own vao, bypassing the tess CPU-copy path entirely.
+own vao, bypassing the tess CPU-copy path entirely. If this surface's
+index range picks up exactly where the pending draw in the same vao left
+off (common for unmerged surfaces sharing an R_CreateWorldVaos chunk),
+it's folded into that draw instead of flushing one per surface.
 =============
 */
 static void RB_SurfaceVaoMesh( srfBspSurface_t *srf )
@@ -491,6 +494,16 @@ static void RB_SurfaceVaoMesh( srfBspSurface_t *srf )
 	if (!srf->vao)
 		return;
 
+	if (tess.numIndexes && glState.currentVao == srf->vao && tess.firstIndex + tess.numIndexes == srf->firstIndex)
+	{
+		tess.numIndexes += srf->numIndexes;
+		tess.numVertexes += srf->numVerts;
+		tess.dlightBits |= srf->dlightBits;
+		tess.pshadowBits |= srf->pshadowBits;
+		return;
+	}
+
+	// can't fold into the pending draw: flush it and start a new one
 	RB_EndSurface();
 	RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
 
@@ -505,8 +518,6 @@ static void RB_SurfaceVaoMesh( srfBspSurface_t *srf )
 
 	tess.dlightBits |= srf->dlightBits;
 	tess.pshadowBits |= srf->pshadowBits;
-
-	RB_EndSurface();
 }
 
 /*
