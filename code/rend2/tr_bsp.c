@@ -2348,14 +2348,52 @@ static qboolean R_SurfaceIsMergeEligible( world_t *worldData, int surfNum )
 	return qtrue;
 }
 
+// leaves sharing (cluster, area) always have identical PVS/areamask visibility, so merging across them is safe; cluster<0 gets a key unique to that leaf
+typedef struct
+{
+	int cluster;
+	int area;
+	int leafIndex;
+} mergeLeafKey_t;
+
+static int R_CompareMergeLeafKey( const void *a, const void *b )
+{
+	const mergeLeafKey_t *ka = (const mergeLeafKey_t *)a;
+	const mergeLeafKey_t *kb = (const mergeLeafKey_t *)b;
+
+	if ( ka->cluster != kb->cluster )
+		return ka->cluster - kb->cluster;
+	return ka->area - kb->area;
+}
+
+typedef struct
+{
+	int surfNum;
+	shader_t *shader;
+	int fogIndex;
+	int cubemapIndex;
+} mergeCandidate_t;
+
+static int R_CompareMergeCandidate( const void *a, const void *b )
+{
+	const mergeCandidate_t *ca = (const mergeCandidate_t *)a;
+	const mergeCandidate_t *cb = (const mergeCandidate_t *)b;
+
+	if ( ca->shader->sortedIndex != cb->shader->sortedIndex )
+		return ca->shader->sortedIndex - cb->shader->sortedIndex;
+	if ( ca->fogIndex != cb->fogIndex )
+		return ca->fogIndex - cb->fogIndex;
+	return ca->cubemapIndex - cb->cubemapIndex;
+}
+
 /*
 =================
 R_MergeLeafSurfaces
 
-Within each BSP leaf, merges world-model surfaces (never brush-entity
-submodels) sharing (shader, fogIndex, cubemapIndex) into groups of 2+,
-each becoming a single SF_VBO_MESH draw call with its own small static
-vao and combined cull bounds. Must run after R_CreateWorldVaos.
+Within each group of BSP leaves sharing (cluster, area), merges world-model
+surfaces (never brush-entity submodels) sharing (shader, fogIndex, cubemapIndex)
+into groups of 2+, each becoming a single SF_VBO_MESH draw call with its own
+small static vao and combined cull bounds. Must run after R_CreateWorldVaos.
 =================
 */
 static void R_MergeLeafSurfaces( world_t *worldData )
@@ -2367,6 +2405,12 @@ static void R_MergeLeafSurfaces( world_t *worldData )
 	int *mergedViewCount, *mergedDlightBits, *mergedPshadowBits;
 	int *viewSurfaces;
 	int *members;
+	int numLeaves;
+	mergeLeafKey_t *leafKeys;
+	mergeCandidate_t *candidates;
+	int *lastSeenRun;
+	int currentRun;
+	int runStart;
 
 	numWorldSurfaces = worldData->numWorldSurfaces;
 
@@ -2377,45 +2421,104 @@ static void R_MergeLeafSurfaces( world_t *worldData )
 	for ( i = 0; i < numWorldSurfaces; i++ )
 		worldData->surfacesViewCount[i] = -1;
 
-	for ( i = 0; i < worldData->numnodes - worldData->numDecisionNodes; i++ )
+	numLeaves = worldData->numnodes - worldData->numDecisionNodes;
+
+	leafKeys = ri.Hunk_AllocateTempMemory( numLeaves * sizeof( *leafKeys ) );
+	candidates = ri.Hunk_AllocateTempMemory( numWorldSurfaces * sizeof( *candidates ) );
+	lastSeenRun = ri.Hunk_AllocateTempMemory( numWorldSurfaces * sizeof( *lastSeenRun ) );
+	for ( i = 0; i < numWorldSurfaces; i++ )
+		lastSeenRun[i] = -1;
+
+	for ( i = 0; i < numLeaves; i++ )
 	{
 		mnode_t *leaf = worldData->nodes + worldData->numDecisionNodes + i;
-		int *marks = worldData->marksurfaces + leaf->firstmarksurface;
 
-		for ( j = 0; j < leaf->nummarksurfaces; j++ )
+		leafKeys[i].leafIndex = i;
+		if ( leaf->cluster < 0 )
 		{
-			int surfA = marks[j];
-			msurface_t *a;
-
-			if ( worldData->surfacesViewCount[surfA] != -1 )
-				continue;
-
-			if ( !R_SurfaceIsMergeEligible( worldData, surfA ) )
-				continue;
-
-			a = worldData->surfaces + surfA;
-			worldData->surfacesViewCount[surfA] = surfA;
-
-			for ( k = j + 1; k < leaf->nummarksurfaces; k++ )
-			{
-				int surfB = marks[k];
-				msurface_t *b;
-
-				if ( worldData->surfacesViewCount[surfB] != -1 )
-					continue;
-
-				if ( !R_SurfaceIsMergeEligible( worldData, surfB ) )
-					continue;
-
-				b = worldData->surfaces + surfB;
-
-				if ( a->shader != b->shader || a->fogIndex != b->fogIndex || a->cubemapIndex != b->cubemapIndex )
-					continue;
-
-				worldData->surfacesViewCount[surfB] = surfA;
-			}
+			leafKeys[i].cluster = -( i + 2 );
+			leafKeys[i].area = 0;
+		}
+		else
+		{
+			leafKeys[i].cluster = leaf->cluster;
+			leafKeys[i].area = leaf->area;
 		}
 	}
+
+	qsort( leafKeys, numLeaves, sizeof( *leafKeys ), R_CompareMergeLeafKey );
+
+	currentRun = 0;
+	runStart = 0;
+	while ( runStart < numLeaves )
+	{
+		int runEnd = runStart;
+		int numCandidates;
+
+		while ( runEnd < numLeaves &&
+			leafKeys[runEnd].cluster == leafKeys[runStart].cluster &&
+			leafKeys[runEnd].area == leafKeys[runStart].area )
+			runEnd++;
+
+		numCandidates = 0;
+		for ( j = runStart; j < runEnd; j++ )
+		{
+			mnode_t *leaf = worldData->nodes + worldData->numDecisionNodes + leafKeys[j].leafIndex;
+			int *marks = worldData->marksurfaces + leaf->firstmarksurface;
+			int m;
+
+			for ( m = 0; m < leaf->nummarksurfaces; m++ )
+			{
+				int surfNum = marks[m];
+				msurface_t *surf;
+
+				if ( surfNum >= numWorldSurfaces )
+					continue; // lastSeenRun/surfacesViewCount below are sized to numWorldSurfaces
+
+				if ( lastSeenRun[surfNum] == currentRun )
+					continue; // a boundary surface shared by two leaves of this same run
+
+				lastSeenRun[surfNum] = currentRun;
+
+				if ( worldData->surfacesViewCount[surfNum] != -1 )
+					continue; // already claimed by an earlier-processed run
+
+				if ( !R_SurfaceIsMergeEligible( worldData, surfNum ) )
+					continue;
+
+				surf = worldData->surfaces + surfNum;
+
+				candidates[numCandidates].surfNum = surfNum;
+				candidates[numCandidates].shader = surf->shader;
+				candidates[numCandidates].fogIndex = surf->fogIndex;
+				candidates[numCandidates].cubemapIndex = surf->cubemapIndex;
+				numCandidates++;
+			}
+		}
+
+		qsort( candidates, numCandidates, sizeof( *candidates ), R_CompareMergeCandidate );
+
+		j = 0;
+		while ( j < numCandidates )
+		{
+			int groupEnd = j;
+
+			while ( groupEnd < numCandidates && R_CompareMergeCandidate( &candidates[j], &candidates[groupEnd] ) == 0 )
+				groupEnd++;
+
+			for ( k = j; k < groupEnd; k++ )
+				worldData->surfacesViewCount[candidates[k].surfNum] = candidates[j].surfNum;
+
+			j = groupEnd;
+		}
+
+		runStart = runEnd;
+		currentRun++;
+	}
+
+	ri.Hunk_FreeTempMemory( lastSeenRun );
+	ri.Hunk_FreeTempMemory( candidates );
+	ri.Hunk_FreeTempMemory( leafKeys );
 
 	// drop groups with no followers (leader-only, nothing to merge)
 	numMergedSurfaces = 0;
