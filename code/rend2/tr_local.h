@@ -55,11 +55,12 @@ typedef unsigned int glIndex_t;
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-// 11 bits
-// can't be increased without changing bit packing for drawsurfs
-// see QSORT_SHADERNUM_SHIFT
+// 15 bits
+// see QSORT_SHADERNUM_SHIFT - bits 7-10 of the drawsurf sort key were unused
+// padding (fog index only ever used 5 of its reserved 9 bits), reclaimed here
+// to grow the shader index field
 
-#define SHADERNUM_BITS	11
+#define SHADERNUM_BITS	15
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
 #define	MAX_FBOS      64
@@ -1533,10 +1534,20 @@ SmileTheory - for pshadows
 #define QSORT_ENTITYNUM_SHIFT   11
 #define QSORT_FOGNUM_SHIFT      2
 
+current (this is what SmileTheory's comment above already described - bits
+7-10 were unused padding, since fog only ever used 5 of its reserved 9 bits -
+now actually wired up for a wider shader index, MAX_SHADERS = 32768):
+
+17 - 31	: sorted shader index (15 bits)
+7 - 16	: entity index
+2 - 6	: fog index
+1		: pshadow flag
+0		: dlight flag
+
 */
 
 #define	QSORT_FOGNUM_SHIFT	2
-#define	QSORT_REFENTITYNUM_SHIFT	11
+#define	QSORT_REFENTITYNUM_SHIFT	7
 #define	QSORT_SHADERNUM_SHIFT	(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
 #if (QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS) > 32
 	#error "Need to update sorting, too many bits."
@@ -1544,7 +1555,8 @@ SmileTheory - for pshadows
 
 #define QSORT_PSHADOW_SHIFT     1
 
-// GR - tessellation flag in bit 8
+// GR - tessellation flag in bit 8 - stale/unused: never applied to the sort
+// value in R_AddDrawSurf, and bit 8 is now part of the entity index field
 #define QSORT_ATI_TESS_SHIFT    8
 // GR - TruForm flags
 #define ATI_TESS_TRUFORM    1

@@ -63,11 +63,12 @@ typedef unsigned short glIndex_t;
 typedef unsigned int glIndex_t;
 #endif
 
-// 11 bits
-// can't be increased without changing bit packing for drawsurfs
-// see QSORT_SHADERNUM_SHIFT
+// 15 bits
+// see QSORT_SHADERNUM_SHIFT - bits 7-10 of the drawsurf sort key were unused
+// padding (fog index only ever used 5 of its reserved 9 bits), reclaimed here
+// to grow the shader index field
 
-#define SHADERNUM_BITS	11
+#define SHADERNUM_BITS	15
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
 // a trRefEntity_t has all the information passed in by
@@ -1035,10 +1036,17 @@ removed	: used to be clipped flag
 #define QSORT_ENTITYNUM_SHIFT   11
 #define QSORT_FOGNUM_SHIFT      2
 
+current (bits 7-10 reclaimed from unused padding for a wider shader index):
+
+17 - 31	: sorted shader index (15 bits, MAX_SHADERS = 32768)
+7 - 16	: entity index
+2 - 6	: fog index
+0 - 1	: dlightmap index
+
 */
 
 #define	QSORT_FOGNUM_SHIFT	2
-#define	QSORT_REFENTITYNUM_SHIFT	11
+#define	QSORT_REFENTITYNUM_SHIFT	7
 #define	QSORT_SHADERNUM_SHIFT	(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
 #if (QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS) > 32
 	#error "Need to update sorting, too many bits."
