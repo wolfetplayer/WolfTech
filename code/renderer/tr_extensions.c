@@ -43,6 +43,23 @@ void GLimp_InitExtraExtensions( void )
 
 	Com_Memset( &glRefConfig, 0, sizeof( glRefConfig ) );
 
+	// OpenGL 1.5 - GL_ARB_occlusion_query
+	extension = "GL_ARB_occlusion_query";
+	if ( QGL_VERSION_ATLEAST( 1, 5 ) || SDL_GL_ExtensionSupported( extension ) )
+	{
+		glExtFuncMissing = qfalse;
+#define GLE(ret, name, ...) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); if (!qgl##name) { ri.Printf(PRINT_WARNING, "WARNING: OpenGL function 'gl%s' not found\n", #name); glExtFuncMissing = qtrue; }
+		QGL_ARB_occlusion_query_PROCS;
+#undef GLE
+
+		glRefConfig.occlusionQuery = !glExtFuncMissing;
+		ri.Printf( PRINT_ALL, result[ glRefConfig.occlusionQuery ], extension );
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, result[2], extension );
+	}
+
 	// OpenGL 3.0 - GL_ARB_framebuffer_object
 	extension = "GL_ARB_framebuffer_object";
 	if ( q_gl_version_at_least_3_0 || SDL_GL_ExtensionSupported( extension ) )

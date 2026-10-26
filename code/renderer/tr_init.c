@@ -1543,6 +1543,8 @@ void R_Init( void ) {
 
 	R_InitFreeType();
 
+	R_InitFlareQueries();
+
 	RB_ZombieFXInit();
 
 	err = qglGetError();
@@ -1582,6 +1584,7 @@ void RE_Shutdown( qboolean destroyWindow ) {
 
 	if ( tr.registered ) {
 		R_IssuePendingRenderCommands();
+		R_ShutdownFlareQueries();
 		R_DeleteTextures();
 	}
 
