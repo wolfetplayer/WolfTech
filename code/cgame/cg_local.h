@@ -412,7 +412,6 @@ typedef enum {
 	ZOOM_NONE,
 	ZOOM_BINOC,
 	ZOOM_SNIPER,
-	ZOOM_SNOOPER,
 	ZOOM_FG42SCOPE,
 	ZOOM_MG42,
 	ZOOM_MAX_ZOOMS
@@ -1253,8 +1252,6 @@ typedef struct {
 	qhandle_t reticleShader;
 //	qhandle_t reticleShaderSimple;
 	qhandle_t reticleShaderSimpleQ;
-//	qhandle_t snooperShader;
-	qhandle_t snooperShaderSimple;
 //	qhandle_t binocShaderSimple;
 	qhandle_t binocShaderSimpleQ;   // same as above, but quartered.  (trying to save texture space)
 
@@ -1946,7 +1943,6 @@ extern vmCvar_t cg_zoomFov;
 extern vmCvar_t cg_zoomDefaultBinoc;
 extern vmCvar_t cg_zoomDefaultSniper;
 extern vmCvar_t cg_zoomDefaultFG;
-extern vmCvar_t cg_zoomDefaultSnooper;
 extern vmCvar_t cg_zoomStepBinoc;
 extern vmCvar_t cg_zoomStepSniper;
 extern vmCvar_t cg_zoomStepSnooper;

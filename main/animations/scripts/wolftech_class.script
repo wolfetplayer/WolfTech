@@ -48,7 +48,7 @@
 //                 gpg40a rifle-grenade-launcher attachment
 //   one_handed    WEAPON_CLASS_PISTOL (incl. akimbo pistols, for movement)
 //   medcrate      WEAPON_CLASS_MEDCRATE - ET's "medicheal"/"Ammo Pack" pose
-//   two_handed    bolt-action rifles (Mauser/De Lisle/Mosin) and shotguns -
+//   two_handed    bolt-action rifles (Mauser) and shotguns -
 //                 ET's roster has no bolt-action rifle, so this bucket (and
 //                 its "default" fallback) is a WolfTech-specific addition,
 //                 not a direct port
@@ -64,16 +64,16 @@
 
 DEFINES
 
-set weapons sniper = Sniper Scope AND Snooper Rifle AND M1941 Scope AND De Lisle Scope AND FG42 Scope
-set weapons self_loading = M1 Garand AND FG42 Paratroop Rifle AND Browning Automatic Rifle AND MP44 Sturmgewehr AND G43 rifle AND M1941
-set weapons smg = Thompson AND Sten AND MP40 AND MP34 AND PPSh-41 AND Flamethrower AND Venom AND Tesla Gun
-set weapons akimbo = Dual Colts AND Dual TT-33s
+set weapons sniper = Sniper Scope AND FG42 Scope
+set weapons self_loading = M1 Garand AND FG42 Paratroop Rifle AND Browning Automatic Rifle AND MP44 Sturmgewehr AND G43 rifle
+set weapons smg = Thompson AND Sten AND MP40 AND PPSh-41 AND Flamethrower AND Venom AND Tesla Gun
+set weapons akimbo = Dual Colts
 set weapons panzer = Panzerfaust
 set weapons mg = MG42 AND Browning M1919
 set weapons grenlauncher = M7 Grenade Launcher
-set weapons one_handed = Luger AND Colt AND sp5 pistol AND Revolver AND HDM AND TT-33 AND Dual Colts AND Dual TT-33s
+set weapons one_handed = Luger AND Colt AND sp5 pistol AND Revolver AND Dual Colts
 set weapons medcrate = Medical Crate
-set weapons two_handed = Mauser Rifle AND Ithaca 37 AND Auto-5 AND De Lisle Carbine AND Mosin-Nagant
+set weapons two_handed = Mauser Rifle AND Ithaca 37 AND Auto-5
 set weapons melee = Knife
 set weapons no_weapon = Grenade AND Pineapple AND Dynamite Weapon AND Landmine AND Airstrike Signal AND Artillery
 

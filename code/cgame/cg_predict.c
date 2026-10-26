@@ -400,22 +400,12 @@ static void CG_TouchItem( centity_t *cent ) {
 			}
 		}
 
-		if ( weapon == WP_TT33 ) {
-			if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_TT33 ) ) {
-				// you got the tt33, you gettin' another
-				weapon = WP_DUAL_TT33;
-			}
-		}
 //----(SA)	end
 
 		COM_BitSet( cg.predictedPlayerState.weapons, weapon );
 
 //----(SA)	added
-		if ( weapon == WP_SNOOPERSCOPE ) {
-			COM_BitSet( cg.predictedPlayerState.weapons, WP_SNOOPER );
-		} else if ( weapon == WP_SNOOPER ) {
-			COM_BitSet( cg.predictedPlayerState.weapons, WP_SNOOPERSCOPE );
-		} else if ( weapon == WP_FG42 ) {
+		if ( weapon == WP_FG42 ) {
 			COM_BitSet( cg.predictedPlayerState.weapons, WP_FG42SCOPE );
 		} else if ( weapon == WP_SNIPERRIFLE ) {
 			COM_BitSet( cg.predictedPlayerState.weapons, WP_MAUSER );
@@ -423,14 +413,6 @@ static void CG_TouchItem( centity_t *cent ) {
 			COM_BitSet( cg.predictedPlayerState.weapons, WP_M1GARAND );
 		} else if ( weapon == WP_M1GARAND ) {
 			COM_BitSet( cg.predictedPlayerState.weapons, WP_M7 );
-		} else if ( weapon == WP_M1941SCOPE ) {
-			COM_BitSet( cg.predictedPlayerState.weapons, WP_M1941 );
-		} else if ( weapon == WP_M1941 ) {
-			COM_BitSet( cg.predictedPlayerState.weapons, WP_M1941SCOPE );
-		} else if ( weapon == WP_DELISLESCOPE ) {
-			COM_BitSet( cg.predictedPlayerState.weapons, WP_DELISLE );
-		} else if ( weapon == WP_DELISLE ) {
-			COM_BitSet( cg.predictedPlayerState.weapons, WP_DELISLESCOPE );
 		}
 //----(SA)	end
 

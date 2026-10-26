@@ -58,9 +58,9 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{0,                     0,                      0           },  //	0 (empty)
 
 	{WP_KNIFE,              0,                      0           },  //	1
-	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_TT33,     WP_DUAL_TT33, WP_REVOLVER, WP_HDM },  //	2
-	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_MP34,     WP_PPSH },  //	3
-	{WP_MAUSER,             WP_SNOOPER,             WP_M1GARAND, WP_G43,     WP_MOSIN,    WP_M1941,    WP_DELISLE },  //	4
+	{WP_LUGER,              WP_SILENCER,            WP_COLT,     WP_AKIMBO,   WP_REVOLVER },  //	2
+	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_PPSH },  //	3
+	{WP_MAUSER,             WP_M1GARAND,            WP_G43 },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
 	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_LANDMINE, WP_MEDCRATE, WP_AIRSTRIKE },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
@@ -351,37 +351,6 @@ ammotable_t ammoTable[] = {
 		.gunOffset          = { -6.0f, -1.0f, -2.0f },
 		.weapFile           = "sten.weap",
     },
-    [WP_MP34] = {
-		.weaponindex        = WP_MP34,
-		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_SMG,
-        .maxammo            = 192,
-        .uses               = 1,
-        .maxclip            = 32,
-        .reloadTime         = 2620,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 105,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 6,
-		.weaponSpread       = 850,
-		.spreadScale        = 0.5f,
-		.spreadScaleAdd     = 15,			
-        .weapRecoilDuration = 30,
-        .weapRecoilPitch    = { 0.1f, 0.1f },
-        .weapRecoilYaw      = { 0.0f, 0.0f },
-		.soundRange         = 1000,
-		.aiRange            = AI_WEAPON_RANGE_NORMAL,
-        .moveSpeed          = 0.95f,
-        .mod                = MOD_MP34,
-		.rndTriggerRelease  = qtrue,
-	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qtrue,
-		.underwaterFire     = qfalse,
-		.gunOffset          = { -12.0f, -1.0f, 0.0f },
-		.weapFile           = "mp34.weap",
-    },
     [WP_MAUSER] = {
 		.weaponindex        = WP_MAUSER,
 		.weapAlts           = WP_SNIPERRIFLE,
@@ -442,67 +411,6 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qtrue,
 		.underwaterFire     = qfalse,
 		.weapFile           = "sniperrifle.weap",
-    },
-    [WP_SNOOPER] = {
-		.weaponindex        = WP_SNOOPER,
-		.weapAlts           = WP_SNOOPERSCOPE,
-		.weaponClass        = WEAPON_CLASS_RIFLE_AUTO | WEAPON_CLASS_SCOPABLE,
-        .maxammo            = 30,
-        .uses               = 1,
-        .maxclip            = 5,
-        .reloadTime         = 3000,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 360,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 35,
-		.weaponSpread       = 400,
-		.spreadScale        = 0.5f,
-		.spreadScaleAdd     = 50,			
-        .weapRecoilDuration = 0,
-        .weapRecoilPitch    = { 1.0f, 1.0f },
-        .weapRecoilYaw      = { 0.1f, 0.1f },
-		.soundRange         = 128,
-		.aiRange            = AI_WEAPON_RANGE_LONG,
-        .moveSpeed          = 0.95f,
-        .mod                = MOD_SNOOPER,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qfalse,
-		.underwaterFire     = qfalse,
-		.gunOffset          = { -5.0f, -1.0f, -2.0f },
-		.weapFile           = "snooper.weap",
-    },
-    [WP_SNOOPERSCOPE] = {
-		.weaponindex        = WP_SNOOPERSCOPE,
-		.weapAlts           = WP_SNOOPER,
-		.weaponClass        = WEAPON_CLASS_SCOPED,
-        .maxammo            = 30,
-        .uses               = 1,
-        .maxclip            = 5,
-        .reloadTime         = 3000,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 360,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 35,
-		.weaponSpread       = 50,
-		.spreadScale        = 8.0f,
-		.spreadScaleAdd     = 10,
-        .weapRecoilDuration = 300,
-        .weapRecoilPitch    = { 0.7f, 0.0f },
-        .weapRecoilYaw      = { 0.4f, 0.0f },
-		.soundRange         = 128,
-		.aiRange            = AI_WEAPON_RANGE_LONG,
-        .moveSpeed          = 0.55f,
-        .mod                = MOD_SNOOPERSCOPE,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qfalse,
-		.underwaterFire     = qfalse,
-		.weapFile           = "snooperscope.weap",
     },
     [WP_M1GARAND] = {
 		.weaponindex        = WP_M1GARAND,
@@ -766,101 +674,6 @@ ammotable_t ammoTable[] = {
 		.gunOffset          = { 0.0f, 0.0f, 0.0f },
 		.weapFile           = "revolver.weap",
     },
-    [WP_HDM] = {
-		.weaponindex        = WP_HDM,
-		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_PISTOL,
-        .maxammo            = 200,
-        .uses               = 1,
-        .maxclip            = 10,
-        .reloadTime         = 2300,
-        .reloadTimeFull     = 2300,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 300,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 8,
-		.weaponSpread       = 250,
-		.spreadScale        = 0.4f,
-		.spreadScaleAdd     = 35,
-        .weapRecoilDuration = 50,
-        .weapRecoilPitch    = { 0.2f, 0.1f },
-        .weapRecoilYaw      = { 0.0f, 0.0f },
-		.soundRange         = 64,
-		.aiRange            = AI_WEAPON_RANGE_NORMAL,
-        .moveSpeed          = 1.0f,
-        .mod                = MOD_HDM,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qfalse,
-		.underwaterFire     = qfalse,
-		.gunOffset          = { 0.0f, 0.0f, -1.0f },
-		.weapFile           = "hdm.weap",
-    },
-    [WP_DELISLE] = {
-		.weaponindex        = WP_DELISLE,
-		.weapAlts           = WP_DELISLESCOPE,
-		.weaponClass        = WEAPON_CLASS_RIFLE_BOLTACTION | WEAPON_CLASS_SCOPABLE,
-        .maxammo            = 150,
-        .uses               = 1,
-        .maxclip            = 7,
-        .reloadTime         = 2100,
-        .reloadTimeFull     = 3350,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 1200,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 30,
-		.weaponSpread       = 250,
-		.spreadScale        = 0.5f,
-		.spreadScaleAdd     = 50,
-        .weapRecoilDuration = 60,
-        .weapRecoilPitch    = { 1.0f, 1.0f },
-        .weapRecoilYaw      = { 0.1f, 0.1f },
-		.soundRange         = 32,
-		.aiRange            = AI_WEAPON_RANGE_LONG,
-        .moveSpeed          = 0.95f,
-        .mod                = MOD_DELISLE,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qfalse,
-		.underwaterFire     = qfalse,
-		.gunOffset          = { 1.0f, -1.0f, -2.0f },
-		.weapFile           = "delisle.weap",
-    },
-    [WP_DELISLESCOPE] = {
-		.weaponindex        = WP_DELISLESCOPE,
-		.weapAlts           = WP_DELISLE,
-		.weaponClass        = WEAPON_CLASS_SCOPED | WEAPON_CLASS_RIFLE_BOLTACTION,
-        .maxammo            = 150,
-        .uses               = 1,
-        .maxclip            = 7,
-        .reloadTime         = 2100,
-        .reloadTimeFull     = 3350,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 1200,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 30,
-		.weaponSpread       = 50,
-		.spreadScale        = 0.5f,
-		.spreadScaleAdd     = 50,
-        .weapRecoilDuration = 300,
-        .weapRecoilPitch    = { 0.7f, 0.0f },
-        .weapRecoilYaw      = { 0.5f, 0.0f },
-		.soundRange         = 64,
-		.aiRange            = AI_WEAPON_RANGE_LONG,
-        .moveSpeed          = 0.55f,
-        .mod                = MOD_DELISLESCOPE,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qfalse,
-		.underwaterFire     = qfalse,
-		.weapFile           = "delislescope.weap",
-    },
     [WP_G43] = {
 		.weaponindex        = WP_G43,
 		.weapAlts           = WP_NONE,
@@ -925,102 +738,6 @@ ammotable_t ammoTable[] = {
 		.gunOffset          = { 0.0f, 0.0f, 0.0f },
 		.weapFile           = "ppsh.weap",
     },
-    [WP_MOSIN] = {
-		.weaponindex        = WP_MOSIN,
-		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_RIFLE_BOLTACTION,
-        .maxammo            = 150,
-        .uses               = 1,
-        .maxclip            = 5,
-        .reloadTime         = 2250,
-        .reloadTimeFull     = 2250,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 1400,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 30,
-		.weaponSpread       = 300,
-		.spreadScale        = 0.5f,
-		.spreadScaleAdd     = 50,
-        .weapRecoilDuration = 60,
-        .weapRecoilPitch    = { 1.0f, 1.0f },
-        .weapRecoilYaw      = { 0.1f, 0.1f },
-		.soundRange         = 2000,
-		.aiRange            = AI_WEAPON_RANGE_LONG,
-        .moveSpeed          = 0.95f,
-        .mod                = MOD_MOSIN,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qtrue,
-		.underwaterFire     = qfalse,
-		.gunOffset          = { 0.0f, 0.0f, -1.0f },
-		.weapFile           = "mosin.weap",
-    },
-    [WP_TT33] = {
-		.weaponindex        = WP_TT33,
-		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_PISTOL,
-        .maxammo            = 400,
-        .uses               = 1,
-        .maxclip            = 8,
-        .reloadTime         = 1600,
-        .reloadTimeFull     = 1600,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 350,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 9,
-		.weaponSpread       = 450,
-		.spreadScale        = 0.3f,
-		.spreadScaleAdd     = 35,
-        .weapRecoilDuration = 50,
-        .weapRecoilPitch    = { 0.2f, 0.1f },
-        .weapRecoilYaw      = { 0.0f, 0.0f },
-		.soundRange         = 700,
-		.aiRange            = AI_WEAPON_RANGE_NORMAL,
-        .moveSpeed          = 1.0f,
-        .mod                = MOD_TT33,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qtrue,
-		.underwaterFire     = qfalse,
-		.gunOffset          = { 0.0f, 0.0f, -1.0f },
-		.weapFile           = "tt33.weap",
-    },
-    [WP_DUAL_TT33] = {
-		.weaponindex        = WP_DUAL_TT33,
-		.weapAlts           = WP_NONE,
-		.weaponClass        = WEAPON_CLASS_PISTOL | WEAPON_CLASS_AKIMBO,
-        .maxammo            = 300,
-        .uses               = 1,
-        .maxclip            = 16,
-        .reloadTime         = 2000,
-        .reloadTimeFull     = 2000,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 220,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 9,
-		.weaponSpread       = 500,
-		.spreadScale        = 0.5f,
-		.spreadScaleAdd     = 35,
-        .weapRecoilDuration = 50,
-        .weapRecoilPitch    = { 0.2f, 0.1f },
-        .weapRecoilYaw      = { 0.0f, 0.0f },
-		.soundRange         = 700,
-		.aiRange            = AI_WEAPON_RANGE_NORMAL,
-        .moveSpeed          = 1.0f,
-        .mod                = MOD_DUAL_TT33,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_NORMAL,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qtrue,
-		.underwaterFire     = qfalse,
-		.gunOffset          = { 0.0f, 0.0f, 0.0f },
-		.weapFile           = "dualtt33.weap",
-    },
     [WP_AUTO5] = {
 		.weaponindex        = WP_AUTO5,
 		.weapAlts           = WP_NONE,
@@ -1058,69 +775,6 @@ ammotable_t ammoTable[] = {
 		.shotgunPumpLoop    = 580,
 		.shotgunPumpEnd     = 1,
 		.weapFile           = "auto5.weap",
-    },
-    [WP_M1941] = {
-		.weaponindex        = WP_M1941,
-		.weapAlts           = WP_M1941SCOPE,
-		.weaponClass        = WEAPON_CLASS_RIFLE_AUTO | WEAPON_CLASS_SCOPABLE,
-        .maxammo            = 200,
-        .uses               = 1,
-        .maxclip            = 10,
-        .reloadTime         = 1600,
-        .reloadTimeFull     = 3750,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 300,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 20,
-		.weaponSpread       = 300,
-		.spreadScale        = 0.4f,
-		.spreadScaleAdd     = 40,
-        .weapRecoilDuration = 40,
-        .weapRecoilPitch    = { 0.2f, 0.2f },
-        .weapRecoilYaw      = { 0.1f, 0.1f },
-		.soundRange         = 2000,
-		.aiRange            = AI_WEAPON_RANGE_LONG,
-        .moveSpeed          = 0.95f,
-        .mod                = MOD_M1941,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE_OFFSET,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qtrue,
-		.underwaterFire     = qfalse,
-		.gunOffset          = { 0.0f, -2.0f, -3.0f },
-		.weapFile           = "m1941.weap",
-    },
-    [WP_M1941SCOPE] = {
-		.weaponindex        = WP_M1941SCOPE,
-		.weapAlts           = WP_M1941,
-		.weaponClass        = WEAPON_CLASS_SCOPED | WEAPON_CLASS_RIFLE_AUTO,
-        .maxammo            = 200,
-        .uses               = 1,
-        .maxclip            = 10,
-        .reloadTime         = 1600,
-        .reloadTimeFull     = 3750,
-        .fireDelayTime      = 0,
-        .nextShotTime       = 300,
-        .maxHeat            = 0,
-        .coolRate           = 0,
-		.weaponDamage       = 20,
-		.weaponSpread       = 50,
-		.spreadScale        = 0.4f,
-		.spreadScaleAdd     = 40,
-        .weapRecoilDuration = 40,
-        .weapRecoilPitch    = { 0.3f, 0.0f },
-        .weapRecoilYaw      = { 0.1f, 0.0f },
-		.soundRange         = 2000,
-		.aiRange            = AI_WEAPON_RANGE_LONG,
-        .moveSpeed          = 0.55f,
-        .mod                = MOD_M1941SCOPE,
-		.rndTriggerRelease  = qfalse,
-	    .iconDrawSize       = WEAPON_ICON_WIDE,
-		.bulletBased        = qtrue,
-		.hasMuzzle          = qtrue,
-		.underwaterFire     = qfalse,
-		.weapFile           = "m1941scope.weap",
     },
     [WP_GRENADE_LAUNCHER] = {
 		.weaponindex        = WP_GRENADE_LAUNCHER,
@@ -2442,76 +2096,6 @@ gitem_t bg_itemlist[] =
 	},
 
 	{
-		"weapon_tt33",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/pistols/tt33/tt33_3rd.md3",
-			"models/weapons/pistols/tt33/v_tt33.md3",
-			"models/weapons/pistols/tt33/tt33_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_tt33",      // icon
-		"icons/ammo2",           // ammo icon
-		"TT-33",                 // pickup
-		50,
-		IT_WEAPON,
-		WP_TT33,
-		WP_TT33,
-		WP_TT33,
-		WP_TT33,
-		WP_TT33,
-		"",                      // precache
-		"",                      // sounds
-		{0,0,0,0}
-	},
-
-	{
-		"weapon_dualtt33",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/pistols/tt33/tt33_3rd.md3",
-			"models/weapons/pistols/tt33_2/v_tt33_2.md3",
-			"models/weapons/pistols/tt33/tt33_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_dualtt33",  // icon
-		"icons/ammo2",           // ammo icon
-		"Dual TT-33s",           // pickup
-		50,
-		IT_WEAPON,
-		WP_DUAL_TT33,
-		WP_DUAL_TT33,
-		WP_TT33,
-		WP_DUAL_TT33,
-		WP_DUAL_TT33,
-		"",                      // precache
-		"",                      // sounds
-		{0,0,0,0}
-	},
-
-
-	{
-		"NOT_weapon_garandRifle",    //----(SA)	modified so it can no longer be given individually
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/rifles/snooper/snooper_3rd.md3",
-			"models/weapons/rifles/snooper/v_snooper.md3",
-			"models/weapons/rifles/snooper/snooper_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_garand_1",  // icon
-		"icons/ammo10",              // ammo icon
-		"Snooper Rifle",             // pickup		//----(SA)	modified
-		20,
-		IT_WEAPON,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		"",                          // precache
-		"",                          // sounds
-		{0,0,0,0}
-	},
-
-	{
 		"weapon_m1garand",
 		"sound/misc/w_pkup.wav",
 		{   "models/weapons/auto_rifles/m1_garand/m1_3rd.md3",
@@ -2576,30 +2160,6 @@ gitem_t bg_itemlist[] =
     WP_LUGER,   // ammo pool
     WP_MP40,    // clip pool
     WP_MP40,    // clip pool
-    "",
-    "",
-    {0,0,0,0}
-},
-
-{
-    "weapon_mp34",
-    "sound/misc/w_pkup.wav",
-    {
-        "models/weapons/smgs/mp34/mp34_3rd.md3",
-        "models/weapons/smgs/mp34/v_mp34.md3",
-        "models/weapons/smgs/mp34/mp34_3rd.md3",
-        0, 0
-    },
-    "icons/iconw_mp34_1",
-    "icons/ammo2",
-    "MP34",
-    30,
-    IT_WEAPON,
-	WP_MP34,
-    WP_MP34,
-    WP_LUGER,   // ammo pool
-    WP_MP34,    // clip pool
-    WP_MP34,    // clip pool
     "",
     "",
     {0,0,0,0}
@@ -2744,52 +2304,6 @@ gitem_t bg_itemlist[] =
 	},
 
 	{
-		"weapon_hdm",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/pistols/hdm/hdm_3rd.md3",
-			"models/weapons/pistols/hdm/v_hdm.md3",
-			"models/weapons/pistols/hdm/hdm_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_hdm_1",     // icon
-		"icons/ammo2",           // ammo icon
-		"HDM",                   // pickup
-		30,
-		IT_WEAPON,
-		WP_HDM,
-		WP_HDM,
-		WP_HDM,
-		WP_HDM,
-		WP_HDM,
-		"",                  // precache
-		"",                  // sounds
-		{0,0,0,0}
-	},
-
-	{
-		"weapon_delisle",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/rifles/delisle/delisle_3rd.md3",
-			"models/weapons/rifles/delisle/v_delisle.md3",
-			"models/weapons/rifles/delisle/delisle_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_delisle",   // icon
-		"icons/ammo3",           // ammo icon
-		"De Lisle Carbine",      // pickup
-		30,
-		IT_WEAPON,
-		WP_DELISLE,
-		WP_DELISLE,
-		WP_DELISLE,
-		WP_DELISLE,
-		WP_DELISLE,
-		"",                  // precache
-		"",                  // sounds
-		{0,0,0,0}
-	},
-
-	{
 		"weapon_g43",
 		"sound/misc/w_pkup.wav",
 		{   "models/weapons/auto_rifles/g43/g43_3rd.md3",
@@ -2830,52 +2344,6 @@ gitem_t bg_itemlist[] =
 		WP_PPSH,
 		WP_PPSH,
 		WP_PPSH,
-		"",                  // precache
-		"",                  // sounds
-		{0,0,0,0}
-	},
-
-	{
-		"weapon_mosin",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/rifles/mosin/mosin_3rd.md3",
-			"models/weapons/rifles/mosin/v_mosin.md3",
-			"models/weapons/rifles/mosin/mosin_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_mosin",     // icon
-		"icons/ammo3",           // ammo icon
-		"Mosin-Nagant",          // pickup
-		50,
-		IT_WEAPON,
-		WP_MOSIN,
-		WP_MOSIN,
-		WP_MOSIN,
-		WP_MOSIN,
-		WP_MOSIN,
-		"",                  // precache
-		"",                  // sounds
-		{0,0,0,0}
-	},
-
-	{
-		"weapon_m1941",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/auto_rifles/m1941/m1941_3rd.md3",
-			"models/weapons/auto_rifles/m1941/v_m1941.md3",
-			"models/weapons/auto_rifles/m1941/m1941_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_m1941",     // icon
-		"icons/ammo10",          // ammo icon
-		"M1941",                 // pickup
-		30,
-		IT_WEAPON,
-		WP_M1941,
-		WP_M1941,
-		WP_M1941,
-		WP_M1941,
-		WP_M1941,
 		"",                  // precache
 		"",                  // sounds
 		{0,0,0,0}
@@ -3226,29 +2694,6 @@ gitem_t bg_itemlist[] =
 	},
 
 	{
-		"weapon_snooperrifle",   //----(SA)	modified
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/rifles/snooper/snooper_3rd.md3",
-			"models/weapons/rifles/snooper/v_snooper.md3",
-			"models/weapons/rifles/snooper/snooper_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_garand_1",  // icon
-		"icons/ammo10",              // ammo icon
-		"Snooper Rifle",             // pickup		//----(SA)	modified
-		20,
-		IT_WEAPON,
-		WP_SNOOPERSCOPE,
-		WP_SNOOPERSCOPE,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		"",                          // precache
-		"",                          // sounds
-		{0,0,0,0}
-	},
-
-	{
 		"weapon_fg42scope",  //----(SA)	modified
 		"sound/misc/w_pkup.wav",
 		{   "models/weapons2/fg42/fg42.md3",
@@ -3270,53 +2715,6 @@ gitem_t bg_itemlist[] =
 		"",                          // sounds
 		{0,0,0,0}
 	},
-
-	{
-		"weapon_m1941scope",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/auto_rifles/m1941/m1941_scp_3rd.md3",
-			"models/weapons/auto_rifles/m1941/v_m1941.md3",
-			"models/weapons/auto_rifles/m1941/m1941_scp_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_m1941scope",    // icon
-		"icons/ammo10",              // ammo icon
-		"M1941 Scope",               // pickup
-		50,
-		IT_WEAPON,
-		WP_M1941SCOPE,  // this weap
-		WP_M1941SCOPE,
-		WP_M1941,       // shares ammo w/
-		WP_M1941,       // shares ammo w/ (survival)
-		WP_M1941,       // shares clip w/
-		"",                          // precache
-		"",                          // sounds
-		{0,0,0,0}
-	},
-
-	{
-		"weapon_delislescope",
-		"sound/misc/w_pkup.wav",
-		{   "models/weapons/rifles/delisle/delisle_3rd.md3",
-			"models/weapons/rifles/delisle/v_delisle.md3",
-			"models/weapons/rifles/delisle/delisle_3rd.md3",
-			0, 0 },
-
-		"icons/iconw_delislescope",  // icon
-		"icons/ammo3",               // ammo icon
-		"De Lisle Scope",            // pickup
-		50,
-		IT_WEAPON,
-		WP_DELISLESCOPE,  // this weap
-		WP_DELISLESCOPE,
-		WP_DELISLE,       // shares ammo w/
-		WP_DELISLE,       // shares ammo w/ (survival)
-		WP_DELISLE,       // shares clip w/
-		"",                          // precache
-		"",                          // sounds
-		{0,0,0,0}
-	},
-
 
 	{
 		"weapon_monster_attack1",
@@ -3592,67 +2990,6 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		"",                          // precache
 		"",                          // sounds
 		{48,32,24,24}
-	},
-
-
-	{
-		"ammo_30cal_small",
-		"sound/misc/am_pkup.wav",
-		{ "models/powerups/ammo/am30cal_s.md3",
-		  0, 0, 0,    0 },
-		"icons/icona_machinegun",    // icon
-		NULL,                       // ammo icon
-		".30cal Rounds",         // pickup
-		50,
-		IT_AMMO,
-		WP_NONE,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		"",                          // precache
-		"",                          // sounds
-		{5,2,2,2}
-	},
-
-	{
-		"ammo_30cal",
-		"sound/misc/am_pkup.wav",
-		{ "models/powerups/ammo/am30cal_m.md3",
-		  0, 0, 0,    0 },
-		"icons/icona_machinegun",    // icon
-		NULL,                       // ammo icon
-		".30cal",                // pickup			//----(SA)	changed
-		50,
-		IT_AMMO,
-		WP_NONE,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		"",                          // precache
-		"",                          // sounds
-		{5,5,5,5    }
-	},
-
-	{
-		"ammo_30cal_large",
-		"sound/misc/am_pkup.wav",
-		{ "models/powerups/ammo/am30cal_l.md3",
-		  0, 0, 0,    0 },
-		"icons/icona_machinegun",    // icon
-		NULL,                       // ammo icon
-		".30cal Box",                // pickup
-		50,
-		IT_AMMO,
-		WP_NONE,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		WP_SNOOPER,
-		"",                          // precache
-		"",                          // sounds
-		{10,10,10,5}
 	},
 
 	{

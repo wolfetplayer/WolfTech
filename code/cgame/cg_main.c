@@ -222,7 +222,6 @@ vmCvar_t cg_zoomStepSnooper;
 vmCvar_t cg_zoomStepFG;         //----(SA)	added
 vmCvar_t cg_zoomDefaultBinoc;
 vmCvar_t cg_zoomDefaultSniper;
-vmCvar_t cg_zoomDefaultSnooper;
 vmCvar_t cg_zoomDefaultFG;      //----(SA)	added
 vmCvar_t cg_reticles;
 vmCvar_t cg_reticleBrightness;      //----(SA)	added
@@ -364,7 +363,6 @@ cvarTable_t cvarTable[] = {
 	{&cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE},
 	{&cg_zoomDefaultBinoc, "cg_zoomDefaultBinoc", "22.5", CVAR_ARCHIVE},
 	{&cg_zoomDefaultSniper, "cg_zoomDefaultSniper", "15", CVAR_ARCHIVE},
-	{&cg_zoomDefaultSnooper, "cg_zoomDefaultSnooper", "40", CVAR_ARCHIVE},
 	{&cg_zoomDefaultFG, "cg_zoomDefaultFG", "55", CVAR_ARCHIVE}, //----(SA)	added
 	{&cg_zoomStepBinoc, "cg_zoomStepBinoc", "3", CVAR_ARCHIVE},
 	{&cg_zoomStepSniper, "cg_zoomStepSniper", "2", CVAR_ARCHIVE},
@@ -1583,7 +1581,6 @@ static void CG_RegisterGraphics( void ) {
 
 //	cgs.media.reticleShaderSimple = trap_R_RegisterShader( "gfx/misc/reticlesimple" );		// TODO: remove
 	cgs.media.reticleShaderSimpleQ = trap_R_RegisterShader( "gfx/misc/reticlesimple_quarter" );
-	cgs.media.snooperShaderSimple = trap_R_RegisterShader( "gfx/misc/snoopersimple" );
 
 //	cgs.media.binocShaderSimple = trap_R_RegisterShader( "gfx/misc/binocsimple" );			// TODO: remove
 	cgs.media.binocShaderSimpleQ = trap_R_RegisterShader( "gfx/misc/binocsimple_quarter" );  //----(SA)	added

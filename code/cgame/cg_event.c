@@ -233,10 +233,6 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s MP40";
 				break;
-			case MOD_MP34:
-				message = "was killed by";
-				message2 = "'s MP34";
-				break;
 			case MOD_THOMPSON:
 				message = "was killed by";
 				message2 = "'s Thompson";
@@ -253,21 +249,9 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s Mauser";
 				break;
-			case MOD_MOSIN:
-				message = "was killed by";
-				message2 = "'s Mosin-Nagant";
-				break;
 			case MOD_SNIPERRIFLE:
 				message = "was killed by";
 				message2 = "'s sniper rifle";
-				break;
-			case MOD_SNOOPER:
-				message = "was killed by";
-				message2 = "'s sniper rifle";
-				break;
-			case MOD_SNOOPERSCOPE:
-				message = "was killed by";
-				message2 = "'s snooper rifle";
 				break;
 			case MOD_M1GARAND:
 				message = "was killed by";
@@ -281,34 +265,9 @@ static void CG_Obituary( entityState_t *ent ) {
 				message = "was killed by";
 				message2 = "'s akimbo pistols";
 				break;
-			case MOD_TT33:
-				message = "was killed by";
-				message2 = "'s TT-33";
-				break;
-			case MOD_DUAL_TT33:
-				message = "was killed by";
-				message2 = "'s akimbo TT-33s";
-				break;
 			case MOD_REVOLVER:
 				message = "was killed by";
 				message2 = "'s revolver";
-				break;
-			case MOD_HDM:
-				message = "was killed by";
-				message2 = "'s HDM";
-				break;
-			case MOD_M1941:
-				message = "was killed by";
-				message2 = "'s M1941";
-				break;
-			case MOD_M1941SCOPE:
-				message = "was killed by";
-				message2 = "'s scoped M1941";
-				break;
-			case MOD_DELISLE:
-			case MOD_DELISLESCOPE:
-				message = "was killed by";
-				message2 = "'s De Lisle carbine";
 				break;
 			// JPW NERVE - per atvi req
 			case MOD_DYNAMITE:
@@ -584,12 +543,6 @@ static void CG_ItemPickup( int itemNum ) {
 		if ( weapon == WP_COLT ) {
 			if ( COM_BitCheck( cg.snap->ps.weapons, weapon ) ) {
 				weapon = WP_AKIMBO; // you have colt, now get akimbo (second)
-			}
-		}
-
-		if ( weapon == WP_TT33 ) {
-			if ( COM_BitCheck( cg.snap->ps.weapons, weapon ) ) {
-				weapon = WP_DUAL_TT33; // you have tt33, now get dual tt33 (second)
 			}
 		}
 
@@ -2267,20 +2220,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		// client will get this message if reloading while using an alternate weapon
 		// client should voluntarily switch back to primary at that point
 		switch ( es->weapon ) {
-		case WP_SNOOPERSCOPE:
-			newweap = WP_SNOOPER;
-			break;
 		case WP_SNIPERRIFLE:
 			newweap = WP_MAUSER;
 			break;
 		case WP_FG42SCOPE:
 			newweap = WP_FG42;
-			break;
-		case WP_M1941SCOPE:
-			newweap = WP_M1941;
-			break;
-		case WP_DELISLESCOPE:
-			newweap = WP_DELISLE;
 			break;
 		default:
 			break;

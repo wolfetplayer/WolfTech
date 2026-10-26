@@ -621,12 +621,6 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 		}
 	}
 
-	// check for special tt33->dual tt33 add (if you've got a tt33 already, add the second now)
-	if ( weapon == WP_TT33 ) {
-		if ( COM_BitCheck( other->client->ps.weapons, WP_TT33 ) ) {
-			weapon = WP_DUAL_TT33;
-		}
-	}
 //----(SA)	end
 
 	// check if player already had the weapon
@@ -636,14 +630,8 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	COM_BitSet( other->client->ps.weapons, weapon );
 
 //----(SA)	added
-	// snooper/snooperscope
-	if ( weapon == WP_SNOOPERSCOPE ) {
-		COM_BitSet( other->client->ps.weapons, WP_SNOOPER );
-	} else if ( weapon == WP_SNOOPER ) {
-		COM_BitSet( other->client->ps.weapons, WP_SNOOPERSCOPE );
-	}
 	// fg42/scope
-	else if ( weapon == WP_FG42SCOPE ) {
+	if ( weapon == WP_FG42SCOPE ) {
 		COM_BitSet( other->client->ps.weapons, WP_FG42 );
 	} else if ( weapon == WP_FG42 ) {
 		COM_BitSet( other->client->ps.weapons, WP_FG42SCOPE );
@@ -655,18 +643,6 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 		COM_BitSet( other->client->ps.weapons, WP_M1GARAND );
 	} else if ( weapon == WP_M1GARAND ) {
 		COM_BitSet( other->client->ps.weapons, WP_M7 );
-	}
-	// m1941/scope
-	else if ( weapon == WP_M1941SCOPE ) {
-		COM_BitSet( other->client->ps.weapons, WP_M1941 );
-	} else if ( weapon == WP_M1941 ) {
-		COM_BitSet( other->client->ps.weapons, WP_M1941SCOPE );
-	}
-	// delisle/scope
-	else if ( weapon == WP_DELISLESCOPE ) {
-		COM_BitSet( other->client->ps.weapons, WP_DELISLE );
-	} else if ( weapon == WP_DELISLE ) {
-		COM_BitSet( other->client->ps.weapons, WP_DELISLESCOPE );
 	}
 
 //----(SA)	end
@@ -890,13 +866,6 @@ int Pickup_Weapon_New_Inventory( gentity_t *ent, gentity_t *other ) {
 	if ( weapon == WP_COLT ) {
 		if ( COM_BitCheck( other->client->ps.weapons, WP_COLT ) ) {
 			weapon = WP_AKIMBO;
-		}
-	}
-
-	// check for special tt33->dual tt33 add (if you've got a tt33 already, add the second now)
-	if ( weapon == WP_TT33 ) {
-		if ( COM_BitCheck( other->client->ps.weapons, WP_TT33 ) ) {
-			weapon = WP_DUAL_TT33;
 		}
 	}
 
@@ -1813,13 +1782,10 @@ qboolean IsThereEmptySlot( gentity_t *other ) {
 weapon_t GetComplexWeapon( weapon_t weapon ) {
 	switch ( weapon )
 	{
-	case WP_SNOOPER:
 	case WP_FG42:
 	case WP_COLT:
 	case WP_MAUSER:
 	case WP_M1GARAND:
-	case WP_M1941:
-	case WP_DELISLE:
 		return GetWeaponTableData( weapon )->weapAlts;
 	default:
 		return weapon;
@@ -1829,12 +1795,9 @@ weapon_t GetComplexWeapon( weapon_t weapon ) {
 weapon_t GetSimpleWeapon( weapon_t weapon ) {
 	switch ( weapon )
 	{
-	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
 	case WP_SNIPERRIFLE:
 	case WP_M7:
-	case WP_M1941SCOPE:
-	case WP_DELISLESCOPE:
 		return GetWeaponTableData( weapon )->weapAlts;
 	default:
 		return weapon;
@@ -1845,17 +1808,11 @@ qboolean IsWeaponComplex( weapon_t weapon ) {
 	switch ( weapon )
 	{
 
-	case WP_SNOOPER:
 	case WP_FG42:
 	case WP_M1GARAND:
-	case WP_M1941:
-	case WP_DELISLE:
 
-	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
 	case WP_M7:
-	case WP_M1941SCOPE:
-	case WP_DELISLESCOPE:
 
 	// semi complex
 	case WP_SNIPERRIFLE:

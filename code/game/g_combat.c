@@ -131,10 +131,6 @@ void TossClientWeapons( gentity_t *self )
 	}
 
 	//----(SA)	added
-	if (weapon == WP_SNOOPERSCOPE)
-	{
-		weapon = WP_SNOOPER;
-	}
 	if (weapon == WP_FG42SCOPE)
 	{
 		weapon = WP_FG42;
@@ -273,22 +269,16 @@ char    *modNames[] = {
 	"MOD_LUGER",
 	"MOD_COLT",
 	"MOD_MP40",
-	"MOD_MP34",
 	"MOD_THOMPSON",
 	"MOD_STEN",
 	"MOD_PPSH",
-	"MOD_MOSIN",
 	"MOD_MAUSER",
 	"MOD_SNIPERRIFLE",
-	"MOD_SNOOPER",
-	"MOD_SNOOPERSCOPE",
 	"MOD_M1GARAND",
 	"MOD_G43",
 	"MOD_M7",
 	"MOD_SILENCER", //----(SA)
 	"MOD_AKIMBO",    //----(SA)
-	"MOD_TT33",
-	"MOD_DUAL_TT33",
 	"MOD_REVOLVER",
 	"MOD_BAR",   //----(SA)
 	"MOD_FG42",
@@ -348,13 +338,7 @@ char    *modNames[] = {
 	"MOD_BAT",
 
 	"MOD_MG42M",
-	"MOD_BROWNING",
-
-	"MOD_M1941",
-	"MOD_M1941SCOPE",
-	"MOD_HDM",
-	"MOD_DELISLE",
-	"MOD_DELISLESCOPE"
+	"MOD_BROWNING"
 };
 
 /*
@@ -1242,10 +1226,7 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 
 	if ( attacker->aiCharacter ) {
 		// ai's are always allowed headshots from these weapons
-		if ( mod == MOD_SNIPERRIFLE ||
-			 mod == MOD_SNOOPERSCOPE ||
-			 mod == MOD_M1941SCOPE ||
-			 mod == MOD_DELISLESCOPE ) {
+		if ( mod == MOD_SNIPERRIFLE ) {
 			return qtrue;
 		}
 
@@ -1260,11 +1241,8 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_LUGER:
 	case MOD_COLT:
 	case MOD_AKIMBO:
-	case MOD_TT33:
-	case MOD_DUAL_TT33:
 	case MOD_REVOLVER:
 	case MOD_MP40:
-	case MOD_MP34:
 	case MOD_THOMPSON:
 	case MOD_STEN:
 	case MOD_PPSH:
@@ -1272,19 +1250,11 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_FG42:
 	case MOD_MP44:
 	case MOD_MAUSER:
-	case MOD_MOSIN:
-	case MOD_SNOOPER:
 	case MOD_M1GARAND:
 	case MOD_G43:
 	case MOD_SILENCER:
 	case MOD_FG42SCOPE:
-	case MOD_SNOOPERSCOPE:
 	case MOD_SNIPERRIFLE:
-	case MOD_M1941:
-	case MOD_M1941SCOPE:
-	case MOD_HDM:
-	case MOD_DELISLE:
-	case MOD_DELISLESCOPE:
 		return qtrue;
 	}
 
@@ -1941,7 +1911,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 					// (SA) removed BG for DM.
 
-					if ( !( dflags & DAMAGE_PASSTHRU ) ) {     // ignore headshot 2x damage and snooper-instant-death if the bullet passed through something.  just do reg damage.
+					if ( !( dflags & DAMAGE_PASSTHRU ) ) {     // ignore headshot 2x damage if the bullet passed through something.  just do reg damage.
 						switch ( targ->aiCharacter ) {
 						case AICHAR_BLACKGUARD:
 							if ( !( targ->client->ps.eFlags & EF_HEADSHOT ) ) { // only obliterate him after he's lost his helmet
@@ -1971,26 +1941,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		// shared by both player and ai
 		targ->client->ps.eFlags |= EF_HEADSHOT;
 
-	} else {    // non headshot
-
-		if ( !( dflags & DAMAGE_PASSTHRU ) ) {     // ignore headshot 2x damage and snooper-instant-death if the bullet passed through something.  just do reg damage.
-			// snooper kills these types in one shot with any contact
-			if ( ( mod == MOD_SNOOPERSCOPE || mod == MOD_SNOOPER ) && !( attacker->aiCharacter ) ) {
-				switch ( targ->aiCharacter ) {
-				case AICHAR_SOLDIER:
-				case AICHAR_TRENCH:
-				case AICHAR_AMERICAN:
-				case AICHAR_ELITEGUARD:
-				case AICHAR_BLACKGUARD:
-				case AICHAR_PARTISAN:
-				case AICHAR_CIVILIAN:
-					take = 200;
-					break;
-				default:
-					break;
-				}
-			}
-		}
 	}
 
 	// classify the hit for feedback; dispatch happens later, gated on whether damage actually lands

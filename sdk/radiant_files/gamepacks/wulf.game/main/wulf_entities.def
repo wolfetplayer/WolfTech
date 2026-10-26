@@ -304,12 +304,6 @@ model="models/weapons2/tesla/pu_tesla.md3"
 model="models/weapons2/mauser/pu_mauser_scope.md3"
 */
 
-/*QUAKED weapon_snooperrifle (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/weapons2/garand/garand.md3"
-*/
-
-
 /*QUAKED ammo_9mm_small (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 used by: Luger pistol, MP40 machinegun
 
@@ -371,27 +365,6 @@ used by: Mauser rifle, FG42
 
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model="models/powerups/ammo/am792mm_l.md3"
-*/
-
-/*QUAKED ammo_30cal_small (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: Garand rifle
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/am30cal_s.md3"
-*/
-
-/*QUAKED ammo_30cal (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: Garand rifle
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/am30cal_m.md3"
-*/
-
-/*QUAKED ammo_30cal_large (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-used by: Garand rifle
-
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/powerups/ammo/am30cal_l.md3"
 */
 
 /*QUAKED ammo_127mm (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
@@ -2217,60 +2190,7 @@ GT_COOP_SURVIVAL purchase point. A player pressing USE on it (or on a trigger_ob
 model=""
 */
 
-/*QUAKED weapon_delisle (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_delislescope (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_m1941 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_m1941scope (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_mp34 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_tt33 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
 /*QUAKED weapon_ppsh (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_mosin (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 "stand" values:
 	no value:	laying in a default position on it's side (default)
 	2:			upright, barrel pointing up, slightly angled (rack mount)
@@ -2338,11 +2258,6 @@ model=""
 model=""
 */
 
-/*QUAKED weapon_hdm (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model="models/weapons/pistols/hdm/hdm_3rd.md3"
-*/
-
 /*QUAKED weapon_landmine (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 Engineer landmine weapon pickup. (For a pre-placed armed mine use misc_landmine instead.)
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
@@ -2351,12 +2266,6 @@ model="models/multiplayer/landmine/landmine.md3"
 
 /*QUAKED weapon_akimbo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 Akimbo Colts pickup.
--------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
-model=""
-*/
-
-/*QUAKED weapon_dualtt33 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
-Dual TT-33 pistols pickup.
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model=""
 */

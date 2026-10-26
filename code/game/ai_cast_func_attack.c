@@ -1261,7 +1261,7 @@ char *AIFunc_WarriorZombieDefense( cast_state_t *cs ) {
 		}
 
 		// if our enemy isn't using a dangerous weapon
-		if ( enemy->client->ps.weapon < WP_LUGER || enemy->client->ps.weapon > WP_MP34 ) {
+		if ( enemy->client->ps.weapon < WP_LUGER || enemy->client->ps.weapon > WP_AKIMBO ) {
 			ent->flags &= ~FL_DEFENSE_GUARD;
 			ent->client->ps.torsoTimer = 0;
 			ent->client->ps.legsTimer = 0;
@@ -1320,7 +1320,7 @@ char *AIFunc_WarriorZombieDefenseStart( cast_state_t *cs ) {
 	enemy = &g_entities[cs->enemyNum];
 
 	// if our enemy isn't using a dangerous weapon
-	if ( enemy->client->ps.weapon < WP_LUGER || enemy->client->ps.weapon > WP_MP34 ) {
+	if ( enemy->client->ps.weapon < WP_LUGER || enemy->client->ps.weapon > WP_AKIMBO ) {
 		return NULL;
 	}
 

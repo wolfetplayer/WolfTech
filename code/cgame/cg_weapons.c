@@ -2161,9 +2161,6 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles ) {
 		leanscale = 1.0f;
 
 		switch ( cg.predictedPlayerState.weapon ) {
-		case WP_SNOOPER:
-			leanscale = 3.0f;
-			break;
 		case WP_FLAMETHROWER:
 		case WP_TESLA:
 		case WP_MAUSER:
@@ -3202,19 +3199,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		}
 	}
 
-	// add the scope model to the M1941 if you've got it
-	if ( isPlayer && !cg.renderingThirdPerson ) {      // (SA) for now just do it on the first person weapons
-		if ( weaponNum == WP_M1941 ) {
-			if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1941SCOPE ) ) {
-				barrel.hModel = weapon->modModel[0];
-				if ( barrel.hModel ) {
-					CG_PositionEntityOnTag(&barrel, parent, "tag_scope", 0, NULL);
-					CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups, ps, cent );
-				}
-			}
-		}
-	}
-
 		if ( isPlayer && !cg.renderingThirdPerson ) {        // (SA) for now just do it on the first person weapons
 		if ( weaponNum == WP_M1GARAND || weaponNum == WP_M7 ) {
 			if ( (  cg.snap->ps.ammo[BG_FindAmmoForWeapon( WP_M7 )] || cg.snap->ps.ammoclip[BG_FindAmmoForWeapon( WP_M7 )]  ) ) {
@@ -3925,11 +3909,6 @@ static qboolean CG_WeaponSelectable( int i ) {
 	// allow switch out of scope for weapons where you fired the last shot while scoped
 	// and we left you in that view to see the result of the shot
 	switch ( cg.weaponSelect ) {
-	case WP_SNOOPERSCOPE:
-		if ( i == WP_SNOOPER ) {
-			return qtrue;
-		}
-		break;
 	case WP_SNIPERRIFLE:
 		if ( i == WP_MAUSER ) {
 			return qtrue;
@@ -4161,13 +4140,11 @@ int getEquivWeapon( int weapnum ) {
 	switch ( weapnum ) {
 		// going from german to american
 	case WP_LUGER:              num = WP_COLT;              break;
-	case WP_MAUSER:             num = WP_SNOOPER;            break;
 	case WP_MP40:               num = WP_THOMPSON;          break;
 	case WP_GRENADE_LAUNCHER:   num = WP_GRENADE_PINEAPPLE; break;
 
 		// going from american to german
 	case WP_COLT:               num = WP_LUGER;             break;
-	case WP_SNOOPER:             num = WP_MAUSER;            break;
 	case WP_THOMPSON:           num = WP_MP40;              break;
 	case WP_GRENADE_PINEAPPLE:  num = WP_GRENADE_LAUNCHER;  break;
 	}
@@ -4220,17 +4197,9 @@ void CG_SetSniperZoom( int lastweap, int newweap ) {
 //			cg.zoomedScope	= 500;	// TODO: add to zoomTable
 //			cg.zoomTime		= cg.time;
 		break;
-	case WP_SNOOPERSCOPE:
-//			cg.zoomedScope	= 500;	// TODO: add to zoomTable
-//			cg.zoomTime		= cg.time;
-		break;
 	case WP_FG42SCOPE:
 //			cg.zoomedScope	= 1;	// TODO: add to zoomTable
 //			cg.zoomTime		= cg.time;
-		break;
-	case WP_M1941SCOPE:
-		break;
-	case WP_DELISLESCOPE:
 		break;
 	}
 
@@ -4244,25 +4213,10 @@ void CG_SetSniperZoom( int lastweap, int newweap ) {
 		cg.zoomedScope  = 900;      // TODO: add to zoomTable
 		zoomindex = ZOOM_SNIPER;
 		break;
-	case WP_SNOOPERSCOPE:
-		cg.zoomval = cg_zoomDefaultSnooper.value;
-		cg.zoomedScope  = 800;      // TODO: add to zoomTable
-		zoomindex = ZOOM_SNOOPER;
-		break;
 	case WP_FG42SCOPE:
 		cg.zoomval = cg_zoomDefaultFG.value;
 		cg.zoomedScope  = 1;        // TODO: add to zoomTable
 		zoomindex = ZOOM_FG42SCOPE;
-		break;
-	case WP_M1941SCOPE:
-		cg.zoomval = cg_zoomDefaultSniper.value;
-		cg.zoomedScope  = 900;      // TODO: add to zoomTable
-		zoomindex = ZOOM_SNIPER;
-		break;
-	case WP_DELISLESCOPE:
-		cg.zoomval = cg_zoomDefaultSniper.value;
-		cg.zoomedScope  = 900;      // TODO: add to zoomTable
-		zoomindex = ZOOM_SNIPER;
 		break;
 	}
 
@@ -4343,10 +4297,7 @@ void CG_FinishWeaponChange( int lastweap, int newweap ) {
 		// don't set switchback for some weaps...
 		switch ( lastweap ) {
 		case WP_SNIPERRIFLE:
-		case WP_SNOOPERSCOPE:
 		case WP_FG42SCOPE:
-		case WP_M1941SCOPE:
-		case WP_DELISLESCOPE:
 			break;
 		default:
 			cg.switchbackWeapon = lastweap;
@@ -4369,10 +4320,7 @@ qboolean CG_WeaponSupportsSimpleZoom( int weap ) {
     switch ( weap ) {
         // Disallow: already-scoped / special zoom weapons
         case WP_SNIPERRIFLE:
-        case WP_SNOOPERSCOPE:
         case WP_FG42SCOPE:
-        case WP_M1941SCOPE:
-        case WP_DELISLESCOPE:
             return qfalse;
 
         // Disallow: binocs / mounted / explosives / melee etc (adjust to your mod)

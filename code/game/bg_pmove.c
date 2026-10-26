@@ -2326,8 +2326,6 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 
 //		case WP_MAUSER:
 //		case WP_SNIPERRIFLE:
-//		case WP_SNOOPER:
-//		case WP_SNOOPERSCOPE:
 //			if(altswitch)
 //				switchtime  = 100;
 //			break;
@@ -2374,11 +2372,8 @@ static void PM_FinishWeaponChange( void ) {
 	{
 		// don't really care about anim since these weapons don't show in view.
 		// However, need to set the animspreadscale so they are initally at worst accuracy
-	case WP_SNOOPERSCOPE:
 	case WP_SNIPERRIFLE:
 	case WP_FG42SCOPE:
-	case WP_M1941SCOPE:
-	case WP_DELISLESCOPE:
 		pm->ps->aimSpreadScale = 255;               // initially at lowest accuracy
 		pm->ps->aimSpreadScaleFloat = 255.0f;       // initially at lowest accuracy
 
@@ -2743,11 +2738,8 @@ void PM_CheckForReload( int weapon ) {
 	// last shot through scope without it auto-switching away for the reload)
 	if ( !pm->ps->aiChar ) {  // RF, added this check since this confuses the AI
 		switch ( weapon ) {
-		case WP_SNOOPERSCOPE:
 		case WP_SNIPERRIFLE:
 		case WP_FG42SCOPE:
-		case WP_M1941SCOPE:
-		case WP_DELISLESCOPE:
 			if ( reloadRequested ) {
 				doReload = qtrue;
 				if ( !( pm->ps->ammo[ammoWeap] ) ) { // no ammo left. when you switch out, don't try to reload
@@ -3771,10 +3763,6 @@ static void PM_Weapon( void ) {
 				reloadingW = qfalse;
 			}
 	
-			if ( pm->ps->weapon == WP_SNOOPERSCOPE ) {
-				reloadingW = qfalse;
-			}
-
 			switch ( pm->ps->weapon ) {
 				// Ridah, only play if using a triggered weapon
 			case WP_MONSTER_ATTACK1:
@@ -3787,11 +3775,8 @@ static void PM_Weapon( void ) {
 				break;
 	
 				// some weapons not allowed to reload.  must switch back to primary first
-			case WP_SNOOPERSCOPE:
 			case WP_SNIPERRIFLE:
 			case WP_FG42SCOPE:
-			case WP_M1941SCOPE:
-			case WP_DELISLESCOPE:
 				reloadingW = qfalse;
 				break;
 			}
@@ -4064,7 +4049,7 @@ static void PM_QuickGrenade( void ) {
 	}
 
 	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ||
-		pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE || pm->ps->weapon == WP_SNOOPERSCOPE || pm->ps->weapon == WP_M1941SCOPE || pm->ps->weapon == WP_DELISLESCOPE )
+		pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE )
 	{
 		return;
 	}

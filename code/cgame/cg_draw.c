@@ -2398,8 +2398,6 @@ CG_DrawWeapReticle
 static void CG_DrawWeapReticle( void ) {
 	int weap;
 	vec4_t color = {0, 0, 0, 1};
-	vec4_t snoopercolor = {0.7, .8, 0.7, 0};    // greenish
-	float snooperBrightness;
 	float x = 80, y, w = 240, h = 240;
 	float mask = 0, lb = 0;
 
@@ -2407,7 +2405,7 @@ static void CG_DrawWeapReticle( void ) {
 
 	weap = cg.weaponSelect;
 
-	if ( weap == WP_SNIPERRIFLE || weap == WP_M1941SCOPE || weap == WP_DELISLESCOPE ) {
+	if ( weap == WP_SNIPERRIFLE ) {
 		// sides
 		if ( cg_fixedAspect.integer ) {
 			if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
@@ -2472,78 +2470,6 @@ static void CG_DrawWeapReticle( void ) {
 		CG_FillRect( 319, 300, 2, 178, color );  // center bot
 		CG_FillRect( 380, 239, 177, 2, color );  // right
 
-	} else if ( weap == WP_SNOOPERSCOPE ) {
-		// sides
-		if ( cg_fixedAspect.integer ) {
-			if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
-				mask = 0.5 * ( ( cgs.glconfig.vidWidth - ( cgs.screenXScale * 480.0 ) ) / cgs.screenXScale );
-
-				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
-				CG_FillRect( 0, 0, mask, 480, color );
-				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
-				CG_FillRect( 640 - mask, 0, mask, 480, color );
-			} else if ( cgs.glconfig.vidWidth * 480.0 < cgs.glconfig.vidHeight * 640.0 ) {
-				// sides with letterbox
-				lb = 0.5 * ( ( cgs.glconfig.vidHeight - ( cgs.screenYScale * 480.0 ) ) / cgs.screenYScale );
-
-				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
-				CG_FillRect( 0, 0, 80, 480, color );
-				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
-				CG_FillRect( 560, 0, 80, 480, color );
-
-				CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
-				CG_FillRect( 0, 480 - lb, 640, lb, color );
-				CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
-				CG_FillRect( 0, 0, 640, lb, color );
-			} else {
-				// resolution is 4:3
-				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
-				CG_FillRect( 0, 0, 80, 480, color );
-				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
-				CG_FillRect( 560, 0, 80, 480, color );
-			}
-		} else {
-			CG_FillRect( 0, 0, 80, 480, color );
-			CG_FillRect( 560, 0, 80, 480, color );
-		}
-
-		// center
-		if ( cg_fixedAspect.integer ) {
-			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
-		}
-
-//----(SA)	added
-		// DM didn't like how bright it gets
-		snooperBrightness = Com_Clamp( 0.0f, 1.0f, cg_reticleBrightness.value );
-		snoopercolor[0] *= snooperBrightness;
-		snoopercolor[1] *= snooperBrightness;
-		snoopercolor[2] *= snooperBrightness;
-		trap_R_SetColor( snoopercolor );
-//----(SA)	end
-
-		if ( cgs.media.snooperShaderSimple ) {
-			CG_DrawPic( 80, 0, 480, 480, cgs.media.snooperShaderSimple );
-		}
-
-		// hairs
-
-		CG_FillRect( 310, 120, 20, 1, color );   //					-----
-		CG_FillRect( 300, 160, 40, 1, color );   //				-------------
-		CG_FillRect( 310, 200, 20, 1, color );   //					-----
-
-		CG_FillRect( 140, 239, 360, 1, color );  // horiz ---------------------------
-
-		CG_FillRect( 310, 280, 20, 1, color );   //					-----
-		CG_FillRect( 300, 320, 40, 1, color );   //				-------------
-		CG_FillRect( 310, 360, 20, 1, color );   //					-----
-
-
-
-		CG_FillRect( 400, 220, 1, 40, color );   // l
-
-		CG_FillRect( 319, 60, 1, 360, color );   // vert
-
-		CG_FillRect( 240, 220, 1, 40, color );   // r
 	} else if ( weap == WP_FG42SCOPE ) {
 		// sides
 		if ( cg_fixedAspect.integer ) {
@@ -2730,7 +2656,6 @@ static void CG_DrawCrosshair( void ) {
 
 		// weapons that get no reticle
 	case WP_NONE:       // no weapon, no crosshair
-	case WP_SNOOPER:
 		if (cg.zoomedBinoc)
 		{
 			CG_DrawBinocReticle();
@@ -2751,10 +2676,7 @@ static void CG_DrawCrosshair( void ) {
 			return;
 		break;
 	case WP_SNIPERRIFLE:
-	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
-	case WP_M1941SCOPE:
-	case WP_DELISLESCOPE:
 		if ( !( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) ) {
 			CG_DrawWeapReticle();
 			return;
@@ -2772,24 +2694,6 @@ static void CG_DrawCrosshair( void ) {
 
 	if ( cg.weaponSelect == WP_MAUSER ) {
 		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_SNIPERRIFLE ) ) {
-		if ( !cg_snipersCrosshair.integer )
-	    {
-		return;
-	    }
-		}
-	}
-
-	if ( cg.weaponSelect == WP_M1941 ) {
-		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1941SCOPE ) ) {
-		if ( !cg_snipersCrosshair.integer )
-	    {
-		return;
-	    }
-		}
-	}
-
-	if ( cg.weaponSelect == WP_DELISLE ) {
-		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_DELISLESCOPE ) ) {
 		if ( !cg_snipersCrosshair.integer )
 	    {
 		return;
@@ -3528,8 +3432,7 @@ static void CG_DrawCrosshair3D( void ) {
 
 		// weapons that get no reticle
 	case WP_NONE:       // no weapon, no crosshair
-	case WP_SNOOPER:
-		if ( cg.zoomedBinoc ) 
+		if ( cg.zoomedBinoc )
 		{
 			CG_DrawBinocReticle();
 		}
@@ -3549,10 +3452,7 @@ static void CG_DrawCrosshair3D( void ) {
 			return;
 		break;
 	case WP_SNIPERRIFLE:
-	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
-	case WP_M1941SCOPE:
-	case WP_DELISLESCOPE:
 		if ( !( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) ) {
 			CG_DrawWeapReticle();
 			return;
@@ -3571,24 +3471,6 @@ static void CG_DrawCrosshair3D( void ) {
 	// mauser only gets crosshair if you don't have the scope (I don't like this, but it's a test)
 	if ( cg.weaponSelect == WP_MAUSER ) {
 		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_SNIPERRIFLE ) ) {
-		if ( !cg_snipersCrosshair.integer )
-	    {
-		return;
-	    }
-		}
-	}
-
-	if ( cg.weaponSelect == WP_M1941 ) {
-		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1941SCOPE ) ) {
-		if ( !cg_snipersCrosshair.integer )
-	    {
-		return;
-	    }
-		}
-	}
-
-	if ( cg.weaponSelect == WP_DELISLE ) {
-		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_DELISLESCOPE ) ) {
 		if ( !cg_snipersCrosshair.integer )
 	    {
 		return;
@@ -4631,14 +4513,7 @@ static void CG_DrawFlashZoomTransition( void ) {
 	if ( frac < fadeTime ) {
 		frac = frac / (float)fadeTime;
 
-		if ( cg.weaponSelect == WP_SNOOPERSCOPE ) {
-//			Vector4Set( color, 0.7f, 0.3f, 0.7f, 1.0f - frac );
-//			Vector4Set( color, 1, 0.5, 1, 1.0f - frac );
-//			Vector4Set( color, 0.5f, 0.3f, 0.5f, 1.0f - frac );
-			Vector4Set( color, 0.7f, 0.6f, 0.7f, 1.0f - frac );
-		} else {
-			Vector4Set( color, 0, 0, 0, 1.0f - frac );
-		}
+		Vector4Set( color, 0, 0, 0, 1.0f - frac );
 
 		if ( cg_fixedAspect.integer ) {
 			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);

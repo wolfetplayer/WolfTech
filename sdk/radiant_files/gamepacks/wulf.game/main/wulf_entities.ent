@@ -346,12 +346,6 @@ defaults to 30 sec stamina boost
 <flag key="RESPAWN" name="RESPAWN" bit="3"/>
 </point>
 
-<point name="weapon_snooperrifle" color=".3 .3 1" box="-16 -16 -16 16 16 16" model="models/weapons2/garand/garand.md3">
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
 <point name="ammo_9mm_small" color=".3 .3 1" box="-16 -16 -16 16 16 16" model="models/powerups/ammo/am9mm_s.md3">
 used by: Luger pistol, MP40 machinegun
 <flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
@@ -410,27 +404,6 @@ used by: Mauser rifle, FG42
 
 <point name="ammo_792mm_large" color=".3 .3 1" box="-16 -16 -16 16 16 16" model="models/powerups/ammo/am792mm_l.md3">
 used by: Mauser rifle, FG42
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="ammo_30cal_small" color=".3 .3 1" box="-16 -16 -16 16 16 16" model="models/powerups/ammo/am30cal_s.md3">
-used by: Garand rifle
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="ammo_30cal" color=".3 .3 1" box="-16 -16 -16 16 16 16" model="models/powerups/ammo/am30cal_m.md3">
-used by: Garand rifle
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="ammo_30cal_large" color=".3 .3 1" box="-16 -16 -16 16 16 16" model="models/powerups/ammo/am30cal_l.md3">
-used by: Garand rifle
 <flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
 <flag key="SPIN" name="SPIN" bit="1"/>
 <flag key="RESPAWN" name="RESPAWN" bit="3"/>
@@ -2343,67 +2316,7 @@ GT_COOP_SURVIVAL purchase point. A player pressing USE on it (or on a trigger_ob
 <flag key="RESPAWN" name="RESPAWN" bit="3"/>
 </point>
 
-<point name="weapon_delisle" color=".3 .3 1" box="-16 -16 -16 16 16 16">
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="weapon_delislescope" color=".3 .3 1" box="-16 -16 -16 16 16 16">
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="weapon_m1941" color=".3 .3 1" box="-16 -16 -16 16 16 16">
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="weapon_m1941scope" color=".3 .3 1" box="-16 -16 -16 16 16 16">
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="weapon_mp34" color=".3 .3 1" box="-16 -16 -16 16 16 16">
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="weapon_tt33" color=".3 .3 1" box="-16 -16 -16 16 16 16">
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
 <point name="weapon_ppsh" color=".3 .3 1" box="-16 -16 -16 16 16 16">
-"stand" values:
-	no value:	laying in a default position on it's side (default)
-	2:			upright, barrel pointing up, slightly angled (rack mount)
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="weapon_mosin" color=".3 .3 1" box="-16 -16 -16 16 16 16">
 "stand" values:
 	no value:	laying in a default position on it's side (default)
 	2:			upright, barrel pointing up, slightly angled (rack mount)
@@ -2481,12 +2394,6 @@ GT_COOP_SURVIVAL purchase point. A player pressing USE on it (or on a trigger_ob
 <flag key="RESPAWN" name="RESPAWN" bit="3"/>
 </point>
 
-<point name="weapon_hdm" color=".3 .3 1" box="-16 -16 -16 16 16 16" model="models/weapons/pistols/hdm/hdm_3rd.md3">
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
 <point name="weapon_landmine" color=".3 .3 1" box="-16 -16 -16 16 16 16" model="models/multiplayer/landmine/landmine.md3">
 Engineer landmine weapon pickup. (For a pre-placed armed mine use misc_landmine instead.)
 <flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
@@ -2496,13 +2403,6 @@ Engineer landmine weapon pickup. (For a pre-placed armed mine use misc_landmine 
 
 <point name="weapon_akimbo" color=".3 .3 1" box="-16 -16 -16 16 16 16">
 Akimbo Colts pickup.
-<flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
-<flag key="SPIN" name="SPIN" bit="1"/>
-<flag key="RESPAWN" name="RESPAWN" bit="3"/>
-</point>
-
-<point name="weapon_dualtt33" color=".3 .3 1" box="-16 -16 -16 16 16 16">
-Dual TT-33 pistols pickup.
 <flag key="SUSPENDED" name="SUSPENDED" bit="0"/>
 <flag key="SPIN" name="SPIN" bit="1"/>
 <flag key="RESPAWN" name="RESPAWN" bit="3"/>
