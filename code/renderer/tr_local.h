@@ -44,7 +44,6 @@ QGL_1_1_FIXED_FUNCTION_PROCS;
 QGL_DESKTOP_1_1_PROCS;
 QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
 QGL_3_0_PROCS;
-QGL_ARB_occlusion_query_PROCS;
 QGL_ARB_framebuffer_object_PROCS;
 QGL_ARB_vertex_fragment_program_PROCS;
 #undef GLE
@@ -1243,8 +1242,6 @@ extern glstate_t glState;           // outside of TR since it shouldn't be clear
 
 // capability flags for extensions not covered by glconfig_t, detected by GLimp_InitExtraExtensions() (tr_extensions.c)
 typedef struct {
-	qboolean	occlusionQuery;         // GL_ARB_occlusion_query
-
 	qboolean	framebufferObject;      // GL_ARB_framebuffer_object
 	int			maxRenderbufferSize;
 	int			maxColorAttachments;
@@ -1719,8 +1716,6 @@ FLARES
 */
 
 void R_ClearFlares( void );
-void R_InitFlareQueries( void );
-void R_ShutdownFlareQueries( void );
 
 void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float scale, vec3_t normal, int id, int flags ); // TTimo updated prototype
 void RB_AddDlightFlares( void );
