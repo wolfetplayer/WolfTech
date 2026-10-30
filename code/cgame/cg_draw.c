@@ -990,8 +990,7 @@ static float CG_DrawCoopOverlay( float y ) {
 
 	plyrs = 0;
 
-	// max player name width, max score width, measured in actual rendered pixels
-	// since CG_CHAT_FONT is proportional (char-count * chW underestimates real width)
+	// measured in rendered pixels - CG_CHAT_FONT is proportional, so char-count*chW would underestimate
 	namePixW = 0;
 	scorePixW = 0;
 	for ( i = 0; i < numSortedTeamPlayers; i++ ) {
@@ -1150,7 +1149,11 @@ static void CG_DrawTeamInfo( void ) {
 	int chatHeight;
 	float alphapercent;
 
-#define CHATLOC_Y 385 // bottom end
+// own constants (not shared TINYCHAR_HEIGHT/CG_CHAT_TEXT_SCALE) - mirrored in cl_console.c as CHATLOC_X_V/CHATLOC_Y_V/CHAT_ROW_HEIGHT_V/CHAT_TEXT_PAD_X_V, keep in sync
+#define CHAT_ROW_HEIGHT 10
+#define CHAT_TEXT_PAD_X 8
+#define CHAT_TEXT_SCALE 0.23f
+#define CHATLOC_Y ( 385 - CHAT_ROW_HEIGHT ) // bottom edge clears the score/health HUD panel
 #define CHATLOC_X 0
 
 	if ( cg_teamChatHeight.integer < TEAMCHAT_HEIGHT ) {
@@ -1173,6 +1176,9 @@ static void CG_DrawTeamInfo( void ) {
 
 // JPW NERVE rewritten to support first pass at fading chat messages
 		for ( i = cgs.teamChatPos - 1; i >= cgs.teamLastChatPos; i-- ) {
+			float lineY = CHATLOC_Y - ( cgs.teamChatPos - i ) * CHAT_ROW_HEIGHT;
+			int msgW, barW;
+
 			alphapercent = 1.0f - ( cg.time - cgs.teamChatMsgTimes[i % chatHeight] ) / (float)( cg_teamChatTime.integer );
 			if ( alphapercent > 1.0f ) {
 				alphapercent = 1.0f;
@@ -1196,19 +1202,19 @@ static void CG_DrawTeamInfo( void ) {
 
 			hcolor[3] = 0.33f * alphapercent;
 
+			// size the background to the message instead of the full screen width
+			msgW = CG_Text_Width_Ext( cgs.teamChatMsgs[i % chatHeight], CHAT_TEXT_SCALE, 0, CG_CHAT_FONT_UNICODE );
+			barW = msgW + CHAT_TEXT_PAD_X * 2;
+
 			trap_R_SetColor( hcolor );
-			if ( cg_fixedAspect.integer == 2 ) {
-				CG_DrawPic( CHATLOC_X, CHATLOC_Y - ( cgs.teamChatPos - i ) * TINYCHAR_HEIGHT, cgs.glconfig.vidWidth, TINYCHAR_HEIGHT, cgs.media.teamStatusBar );
-			} else {
-				CG_DrawPic( CHATLOC_X, CHATLOC_Y - ( cgs.teamChatPos - i ) * TINYCHAR_HEIGHT, 640, TINYCHAR_HEIGHT, cgs.media.teamStatusBar );
-			}
+			CG_DrawPic( CHATLOC_X, lineY, barW, CHAT_ROW_HEIGHT, cgs.media.teamStatusBar );
 			hcolor[0] = hcolor[1] = hcolor[2] = 1.0;
 			hcolor[3] = alphapercent;
 			trap_R_SetColor( hcolor );
 
-			CG_ChatTextPaint( CHATLOC_X + TINYCHAR_WIDTH,
-							  CHATLOC_Y - ( cgs.teamChatPos - i ) * TINYCHAR_HEIGHT,
-							  CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
+			CG_ChatTextPaint( CHATLOC_X + CHAT_TEXT_PAD_X,
+							  lineY,
+							  CHAT_TEXT_SCALE, CHAT_TEXT_SCALE, hcolor,
 							  cgs.teamChatMsgs[i % chatHeight], 0, 0, 0, CG_CHAT_FONT_UNICODE );
 		}
 // jpw

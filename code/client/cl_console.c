@@ -637,7 +637,6 @@ void Con_DrawNotify( void ) {
 	short   *text;
 	int i;
 	int time;
-	int skip;
 	int currentColor;
 
 	currentColor = 7;
@@ -690,26 +689,71 @@ void Con_DrawNotify( void ) {
 
 	// draw the chat line
 	if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
-		// fixed lower-middle position instead of the top-left corner
-#define CHAT_PROMPT_X 160
-#define CHAT_PROMPT_Y 340
-		v = CHAT_PROMPT_Y;
+		const char *label;
+		int labelWidth, textWidth, boxWidth, gap;
+		int nx, ny, textX;
+		int savedSmallCharHeight;
+		float scaleX, scaleY;
+		vec4_t boxColor;
 
-		if ( chat_team ) {
-			SCR_DrawBigString ( CHAT_PROMPT_X, v, "say_team:", 1.0f, qfalse );
-			skip = 10;
-#ifdef USE_IRC
-		} else if ( chat_irc ) {
-			SCR_DrawBigString( CHAT_PROMPT_X, v, "say_irc:", 1.0f, qfalse );
-			skip = 10;
-#endif // USE_IRC
-		} else {
-			SCR_DrawBigString ( CHAT_PROMPT_X, v, "say:", 1.0f, qfalse );
-			skip = 5;
+		// Virtual anchor/sizing - keep in sync with CHATLOC_X/CHATLOC_Y/CHAT_ROW_HEIGHT/CHAT_TEXT_PAD_X in cg_draw.c's CG_DrawTeamInfo
+#define CHATLOC_X_V 0
+#define CHATLOC_Y_V 375
+#define CHAT_ROW_HEIGHT_V 10
+#define CHAT_TEXT_PAD_X_V 8
+
+		scaleX = cls.glconfig.vidWidth / (float)SCREEN_WIDTH;
+		scaleY = cls.glconfig.vidHeight / (float)SCREEN_HEIGHT;
+
+		// text draws in native pixels, not virtual 640x480 like SCR_FillRect/CG_DrawPic - convert once
+		nx = (int)( CHATLOC_X_V * scaleX );
+		ny = (int)( CHATLOC_Y_V * scaleY );
+		textX = nx + (int)( CHAT_TEXT_PAD_X_V * scaleX );
+
+		// no size param on these draw calls - bump the global for this draw, then restore it
+		savedSmallCharHeight = g_smallchar_height;
+		g_smallchar_height = (int)( CHAT_ROW_HEIGHT_V * scaleY );
+		if ( g_smallchar_height < 1 ) {
+			g_smallchar_height = 1;
 		}
 
-		Field_BigDraw( &chatField, CHAT_PROMPT_X + skip * BIGCHAR_WIDTH, v, SCREEN_WIDTH - CHAT_PROMPT_X - ( skip + 1 ) * BIGCHAR_WIDTH, qtrue, qtrue );
+		if ( chat_team ) {
+			label = "Team:";
+#ifdef USE_IRC
+		} else if ( chat_irc ) {
+			label = "IRC:";
+#endif // USE_IRC
+		} else {
+			label = "Say:";
+		}
 
+		gap = g_smallchar_height / 3;
+		if ( gap < 1 ) {
+			gap = 1;
+		}
+
+		if ( cls.fieldFontRegistered ) {
+			labelWidth = (int)SCR_UTF8StringWidth( &cls.fieldFont, (float)g_smallchar_height, label, strlen( label ) );
+			textWidth = (int)SCR_UTF8StringWidth( &cls.fieldFont, (float)g_smallchar_height, chatField.buffer, strlen( chatField.buffer ) );
+		} else {
+			labelWidth = strlen( label ) * g_smallchar_width;
+			textWidth = strlen( chatField.buffer ) * g_smallchar_width;
+		}
+
+		boxWidth = ( textX - nx ) + labelWidth + gap + textWidth + gap * 2; // padding, label, gap, text, trailing space
+
+		boxColor[0] = boxColor[1] = boxColor[2] = 0.0f;
+		boxColor[3] = 0.35f;
+		re.SetColor( boxColor );
+		re.DrawStretchPic( nx, ny, boxWidth, g_smallchar_height, 0, 0, 0, 0, cls.whiteShader );
+		re.SetColor( NULL );
+
+		// same draw Field_Draw uses internally, so label and typed text match
+		SCR_DrawSmallStringExtUTF8( textX, ny, label, colorWhite, qfalse, qfalse );
+
+		Field_Draw( &chatField, textX + labelWidth + gap, ny, SCREEN_WIDTH - textX - labelWidth - gap, qtrue, qtrue );
+
+		g_smallchar_height = savedSmallCharHeight;
 	}
 
 }

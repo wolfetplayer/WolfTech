@@ -2796,8 +2796,7 @@ qboolean Item_TextField_HandleKey( itemDef_t *item, int key ) {
 			}
 
 			if ( item->retainFocusOnEnter ) {
-				// onAccept (e.g. lobby_chat_send) typically clears the cvar on submit;
-				// reset the cursor/scroll state to match instead of losing focus entirely
+				// onAccept (e.g. lobby_chat_send) clears the cvar - reset cursor/scroll to match
 				item->cursorPos = 0;
 				editPtr->paintOffset = 0;
 				return qtrue;
