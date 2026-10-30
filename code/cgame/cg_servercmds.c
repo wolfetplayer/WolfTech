@@ -1197,8 +1197,9 @@ void CG_VoiceChatLocal( int mode, qboolean voiceOnly, int clientNum, int color, 
 					Com_sprintf( vchat.message, sizeof( vchat.message ), "(%s)%c%c: %c%c%s",
 								 ci->name, Q_COLOR_ESCAPE, COLOR_YELLOW, Q_COLOR_ESCAPE, color, chat );
 				} else {
-					Com_sprintf( vchat.message, sizeof( vchat.message ), "%s %c%c: %c%c%s",
-								 ci->name, Q_COLOR_ESCAPE, COLOR_YELLOW, Q_COLOR_ESCAPE, color, chat );
+					// matches G_Say's typed-chat "<name>^7: " format (no space before the colon, white colon)
+					Com_sprintf( vchat.message, sizeof( vchat.message ), "%s%c%c: %c%c%s",
+								 ci->name, Q_COLOR_ESCAPE, COLOR_WHITE, Q_COLOR_ESCAPE, color, chat );
 				}
 			} else {
 				// -NERVE - SMF
@@ -1209,8 +1210,8 @@ void CG_VoiceChatLocal( int mode, qboolean voiceOnly, int clientNum, int color, 
 					Com_sprintf( vchat.message, sizeof( vchat.message ), "(%s)%c%c(%s): %c%c%s",
 								 ci->name, Q_COLOR_ESCAPE, COLOR_YELLOW, loc, Q_COLOR_ESCAPE, color, chat );
 				} else {
-					Com_sprintf( vchat.message, sizeof( vchat.message ), "%s %c%c(%s): %c%c%s",
-								 ci->name, Q_COLOR_ESCAPE, COLOR_YELLOW, loc, Q_COLOR_ESCAPE, color, chat );
+					Com_sprintf( vchat.message, sizeof( vchat.message ), "%s%c%c(%s): %c%c%s",
+								 ci->name, Q_COLOR_ESCAPE, COLOR_WHITE, loc, Q_COLOR_ESCAPE, color, chat );
 				}
 			}
 			CG_AddBufferedVoiceChat( &vchat );

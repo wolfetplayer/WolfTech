@@ -1313,10 +1313,8 @@ static void G_VoiceTo( gentity_t *ent, gentity_t *other, int mode, const char *i
 		return;
 	}
 
-	if ( mode == SAY_TEAM ) {
-		color = COLOR_CYAN;
-		cmd = "vtchat";
-	} else if ( mode == SAY_TELL ) {
+	// WolfTech is coop-only (no opposing teams), so team voice chat is just global voice chat
+	if ( mode == SAY_TELL ) {
 		color = COLOR_MAGENTA;
 		cmd = "vtell";
 	} else {
