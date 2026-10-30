@@ -960,20 +960,14 @@ static void CG_ChatTextPaint( float x, float y, float scalex, float scaley, vec4
 static float CG_DrawCoopOverlay( float y ) {
 	int x, w, h, xx;
 	int i, len;
-	const char *p;
 	vec4_t hcolor, bgcolor;
-	int pwidth, lwidth;
+	int namePixW, scorePixW;
 	int plyrs;
 	char st[16];
 	char nameClean[MAX_QPATH];
 	clientInfo_t *ci;
-	// NERVE - SMF
-	char classType[2] = { 0, 0 };
-	int val;
-	vec4_t deathcolor, damagecolor;          // JPW NERVE
 	float       *pcolor;
 	int chW, chH;
-	// -NERVE - SMF
 
 	if ( !cg_drawTeamOverlay.integer ) {
 		return y;
@@ -983,14 +977,11 @@ static float CG_DrawCoopOverlay( float y ) {
 		return y;
 	}
 
-	deathcolor[0] = 1;
-	deathcolor[1] = 0;
-	deathcolor[2] = 0;
-	deathcolor[3] = cg_hudAlpha.value;
-	damagecolor[0] = 1;
-	damagecolor[1] = 1;
-	damagecolor[2] = 0;
-	damagecolor[3] = cg_hudAlpha.value;
+	if ( cg.scoresRequestTime + 2000 < cg.time ) {
+		cg.scoresRequestTime = cg.time;
+		trap_SendClientCommand( "score" );
+	}
+
 	maxCharsBeforeOverlay = 80;
 
 	// TTF cell size replacing the fixed TINYCHAR grid; chH measured separately, not assumed square
@@ -999,15 +990,26 @@ static float CG_DrawCoopOverlay( float y ) {
 
 	plyrs = 0;
 
-	// max player name width
-	pwidth = 0;
+	// max player name width, max score width, measured in actual rendered pixels
+	// since CG_CHAT_FONT is proportional (char-count * chW underestimates real width)
+	namePixW = 0;
+	scorePixW = 0;
 	for ( i = 0; i < numSortedTeamPlayers; i++ ) {
 		ci = cgs.clientinfo + sortedTeamPlayers[i];
 		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM] ) {
 			plyrs++;
-			len = CG_DrawStrlen( ci->name );
-			if ( len > pwidth ) {
-				pwidth = len;
+
+			Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
+			Q_StripColorCodes( nameClean );
+			len = CG_Text_Width_Ext( nameClean, CG_CHAT_TEXT_SCALE, TEAM_OVERLAY_MAXNAME_WIDTH, CG_CHAT_FONT );
+			if ( len > namePixW ) {
+				namePixW = len;
+			}
+
+			Com_sprintf( st, sizeof( st ), "%i", ci->score );
+			len = CG_Text_Width_Ext( st, CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
+			if ( len > scorePixW ) {
+				scorePixW = len;
 			}
 		}
 	}
@@ -1016,41 +1018,8 @@ static float CG_DrawCoopOverlay( float y ) {
 		return y;
 	}
 
-	if ( pwidth > TEAM_OVERLAY_MAXNAME_WIDTH ) {
-		pwidth = TEAM_OVERLAY_MAXNAME_WIDTH;
-	}
-
-#if 1
-	// max location name width
-	lwidth = 0;
-	for ( i = 0; i < numSortedTeamPlayers; i++ ) {
-		ci = cgs.clientinfo + sortedTeamPlayers[i];
-		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM] && CG_ConfigString( CS_LOCATIONS + ci->location ) ) {
-			len = CG_DrawStrlen( CG_ConfigString( CS_LOCATIONS + ci->location ) );
-			if ( len > lwidth ) {
-				lwidth = len;
-			}
-		}
-	}
-#else
-	// max location name width
-	lwidth = 0;
-	for ( i = 1; i < MAX_LOCATIONS; i++ ) {
-		p = CG_ConfigString( CS_LOCATIONS + i );
-		if ( p && *p ) {
-			len = CG_DrawStrlen( p );
-			if ( len > lwidth ) {
-				lwidth = len;
-			}
-		}
-	}
-#endif
-
-	if ( lwidth > TEAM_OVERLAY_MAXLOCATION_WIDTH ) {
-		lwidth = TEAM_OVERLAY_MAXLOCATION_WIDTH;
-	}
-
-	w = ( pwidth + lwidth + 7 + 7 ) * chW;         // JPW NERVE was +4+7
+	// left margin + name + gap + score + right margin
+	w = chW * 3 + namePixW + scorePixW;
 
 	x = 640 - w - 1;     // JPW was -32
 	h = plyrs * chH;
@@ -1078,83 +1047,18 @@ static float CG_DrawCoopOverlay( float y ) {
 		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM] ) {
 			// CG_Text_Paint_Ext's y is a baseline (draws upward); shift down by chH so text top lands at the row's y, matching CG_FillRect's rect below
 			float ty = y + chH;
-
-			// NERVE - SMF
-			// determine class type
-			//val = cg_entities[ ci->clientNum ].currentState.teamNum;
-			val = ci->curWeapon;
-
-			if (val > WP_NONE && val < WP_NUM_WEAPONS)
-			{
-				const ammotable_t *wt = GetWeaponTableData(val);
-				weaponClass_t wc = wt->weaponClass;
-
-				if (wc & WEAPON_CLASS_MELEE)
-				{
-					classType[0] = 'K'; // knife / melee
-				}
-				else if (wc & (WEAPON_CLASS_PISTOL | WEAPON_CLASS_AKIMBO))
-				{
-					classType[0] = 'P'; // pistol
-				}
-				else if (wc & WEAPON_CLASS_SMG)
-				{
-					classType[0] = 'S'; // smg
-				}
-				else if (wc & (WEAPON_CLASS_GRENADE | WEAPON_CLASS_DYNAMITE | WEAPON_CLASS_RIFLENADE))
-				{
-					classType[0] = 'E'; // explosive
-				}
-				else if (wc & (WEAPON_CLASS_RIFLE_BOLTACTION |
-							   WEAPON_CLASS_RIFLE_AUTO |
-							   WEAPON_CLASS_ASSAULT_RIFLE ))
-				{
-					classType[0] = 'R'; // rifle
-				}
-				else if (wc & (WEAPON_CLASS_MG |
-							   WEAPON_CLASS_LAUNCHER |
-							   WEAPON_CLASS_FLAMER |
-							   WEAPON_CLASS_MINIGUN |
-							   WEAPON_CLASS_ENERGY))
-				{
-					classType[0] = 'H'; // heavy weapon
-				}
-				else
-				{
-					classType[0] = 'X';
-				}
-			}
-			else
-			{
-				classType[0] = 'X';
-			}
-
-			Com_sprintf( st, sizeof( st ), "%s", classType );
-
-			xx = x + chW;
-
-
-			hcolor[0] = hcolor[1] = 1.0;
-			hcolor[2] = 0.0;
-			hcolor[3] = cg_hudAlpha.value;
-
-			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
-							  st, 0, 1, 0, CG_CHAT_FONT );
+			int rowNameW;
 
 			hcolor[0] = hcolor[1] = hcolor[2] = 1.0;
 			hcolor[3] = cg_hudAlpha.value;
+			pcolor = hcolor;
 
-			xx = x + 3 * chW;
+			xx = x + chW;
 
-			// JPW NERVE
-			if ( ci->health > 80 ) {
-				pcolor = hcolor;
-			} else if ( ci->health > 0 ) {
-				pcolor = damagecolor;
-			} else {
-				pcolor = deathcolor;
-			}
-			// jpw
+			// strip ^N color codes from a copy so the player's name can't override the fixed color
+			Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
+			Q_StripColorCodes( nameClean );
+			rowNameW = CG_Text_Width_Ext( nameClean, CG_CHAT_TEXT_SCALE, TEAM_OVERLAY_MAXNAME_WIDTH, CG_CHAT_FONT );
 
 			// if that guy killed someone flash his name green
 			if ( ci->lastteamkilltime + 5000 >= cg.time ) {
@@ -1162,42 +1066,22 @@ static float CG_DrawCoopOverlay( float y ) {
 				bgcolor[1] = 0.0;
 				bgcolor[2] = 0.0;
 				bgcolor[3] = cg_hudAlpha.value;
-				CG_FillRect( xx, y + 1, CG_DrawStrlen( ci->name ) * chW, chH - 1, bgcolor );
+				CG_FillRect( xx, y + 1, rowNameW, chH - 1, bgcolor );
 			} else if ( ci->lastkilltime + 1000 >= cg.time ) {
 				pcolor[0] = 0.0;
 				pcolor[1] = 1.0;
 				pcolor[2] = 0.0;
 			}
 
-			// strip ^N color codes from a copy so the player's name can't override the fixed color
-			Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
-			Q_StripColorCodes( nameClean );
 			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
 							  nameClean, 0, TEAM_OVERLAY_MAXNAME_WIDTH, 0, CG_CHAT_FONT );
 
-			if ( lwidth ) {
-				p = CG_ConfigString( CS_LOCATIONS + ci->location );
-				if ( !p || !*p ) {
-					p = "unknown";
-				}
-				//p = CG_TranslateString( p );
-				len = CG_DrawStrlen( p );
-				if ( len > lwidth ) {
-					len = lwidth;
-				}
+			Com_sprintf( st, sizeof( st ), "%i", ci->score );
 
-				xx = x + chW * 5 + chW * pwidth +
-					 ( ( lwidth / 2 - len / 2 ) * chW );
-				CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, hcolor,
-								  p, 0, TEAM_OVERLAY_MAXLOCATION_WIDTH, 0, CG_CHAT_FONT );
-			}
-
-			Com_sprintf( st, sizeof( st ), "%3i/%i", ci->health, ci->armor );             // JPW NERVE pulled class stuff since it's at top now
-
-			xx = x + chW * 6 + chW * pwidth + chW * lwidth;
+			xx = x + chW * 2 + namePixW;
 
 			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
-							  st, 0, 7, 0, CG_CHAT_FONT );
+							  st, 0, 0, 0, CG_CHAT_FONT );
 
 			y += chH;
 		}
