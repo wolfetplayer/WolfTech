@@ -688,6 +688,7 @@ itemDef {
 		forecolor 1 1 1 1
 		backcolor .1 .1 .1 .6
 		visible 1
+		retainFocusOnEnter
 		accept {
 			exec "lobby_chat_send"
 			}

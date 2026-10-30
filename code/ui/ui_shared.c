@@ -2794,6 +2794,14 @@ qboolean Item_TextField_HandleKey( itemDef_t *item, int key ) {
 			if ( item->onAccept ) {
 				Item_RunScript( item, item->onAccept );
 			}
+
+			if ( item->retainFocusOnEnter ) {
+				// onAccept (e.g. lobby_chat_send) typically clears the cvar on submit;
+				// reset the cursor/scroll state to match instead of losing focus entirely
+				item->cursorPos = 0;
+				editPtr->paintOffset = 0;
+				return qtrue;
+			}
 		}
 		// -NERVE - SMF
 
@@ -6020,6 +6028,11 @@ qboolean ItemParse_accept( itemDef_t *item, int handle ) {
 }
 // -NERVE - SMF
 
+qboolean ItemParse_retainFocusOnEnter( itemDef_t *item, int handle ) {
+	item->retainFocusOnEnter = qtrue;
+	return qtrue;
+}
+
 qboolean ItemParse_special( itemDef_t *item, int handle ) {
 	if ( !PC_Float_Parse( handle, &item->special ) ) {
 		return qfalse;
@@ -6365,6 +6378,7 @@ keywordHash_t itemParseKeywords[] = {
 	{"mouseExitText", ItemParse_mouseExitText, NULL},
 	{"action", ItemParse_action, NULL},
 	{"accept", ItemParse_accept, NULL},              // NERVE - SMF
+	{"retainFocusOnEnter", ItemParse_retainFocusOnEnter, NULL},
 	{"special", ItemParse_special, NULL},
 	{"cvar", ItemParse_cvar, NULL},
 	{"maxChars", ItemParse_maxChars, NULL},

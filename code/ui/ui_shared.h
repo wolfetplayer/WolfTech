@@ -274,6 +274,7 @@ typedef struct itemDef_s {
 	const char *mouseExit;          // mouse exit script
 	const char *action;             // select script
 	const char *onAccept;           // NERVE - SMF - run when the users presses the enter key
+	qboolean retainFocusOnEnter;    // edit fields only: stay focused/editable after Enter runs onAccept, instead of losing keyboard focus
 	const char *onFocus;            // select script
 	const char *leaveFocus;         // select script
 	const char *cvar;               // associated cvar
