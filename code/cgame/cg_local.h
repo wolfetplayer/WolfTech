@@ -955,7 +955,6 @@ typedef struct {
 	int buyPrintCharWidth;
 	int buyPrintY;
 	char buyPrint[1024];
-	int buyPrintLines;
 
 	int subtitlePrintTime;
 	int subtitlePrintCharWidth;
@@ -2217,6 +2216,9 @@ void CG_AddLagometerSnapshotInfo( snapshot_t *snap );
 void CG_CenterPrint( const char *str, int y, int charWidth );
 void CG_PriorityCenterPrint( const char *str, int y, int charWidth, int priority );     // NERVE - SMF
 void CG_BuyPrint( const char *str, int y, int charWidth );
+void CG_BuyPrintItem( const char *name, int price, int y, int charWidth );
+void CG_BuyPrintAmmo( int price, int y, int charWidth );
+void CG_BuyPrintPerkChoice( const char *name, int y, int charWidth );
 void CG_SubtitlePrint( const char *str, int y, int charWidth );
 void CG_ObjectivePrint( const char *str, int charWidth, int team );     // NERVE - SMF
 void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t headAngles );
@@ -2797,6 +2799,7 @@ qboolean    trap_Key_IsDown( int keynum );
 int         trap_Key_GetCatcher( void );
 void        trap_Key_SetCatcher( int catcher );
 int         trap_Key_GetKey( const char *binding );
+void        trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
 
 void CG_S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx, int volume );
 void CG_S_AddRangedLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx, int range );

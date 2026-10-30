@@ -478,6 +478,10 @@ int trap_Key_GetKey( const char *binding ) {
 	return syscall( CG_KEY_GETKEY, binding );
 }
 
+void trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen ) {
+	syscall( CG_KEY_KEYNUMTOSTRINGBUF, keynum, buf, buflen );
+}
+
 
 int trap_PC_AddGlobalDefine( char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );

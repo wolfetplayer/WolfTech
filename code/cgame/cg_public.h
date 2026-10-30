@@ -230,7 +230,10 @@ typedef enum {
 	CG_R_REGISTERFONTEXTENDED, // Unicode-capable font registration (fontInfoExtra_t)
 
 	// New in IORTCW
-	CG_ALLOC = 900
+	CG_ALLOC = 900,
+
+	// keynum -> display string (e.g. "F", "MOUSE2"), for HUD prompts that need to show a live keybind
+	CG_KEY_KEYNUMTOSTRINGBUF = 901
 
 } cgameImport_t;
 

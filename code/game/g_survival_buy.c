@@ -1245,7 +1245,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// Reinforcement callers show live squad-status text instead of a price prompt when nobody's down
 	if (funcUser && (funcUser->spawnflags & 32) && !AICast_ReinforceAvailable())
 	{
-		trap_SendServerCommand(other - g_entities, "cpbuy \"Squad At Full Strength\"");
+		trap_SendServerCommand(other - g_entities, "cpbuy text \"Squad At Full Strength\"");
 		return;
 	}
 
@@ -1272,8 +1272,8 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 
 			if (weaponName && price > 0) {
 				trap_SendServerCommand(other - g_entities, va(
-					"cpbuy \"%s\nprice: %d\"",
-					weaponName, price));
+					"cpbuy ammo %d",
+					price));
 				return;
 			}
 		} else if (!Q_stricmp(techName, "random_weapon")) {
@@ -1282,7 +1282,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 					bg_itemlist[buyEnt->rwbChosenItemIndex].pickup_name : "Weapon";
 
 				trap_SendServerCommand(other - g_entities, va(
-					"cpbuy \"Press USE to pickup\n%s\"",
+					"cpbuy text \"Press USE to pickup\n%s\"",
 					pickupName));
 				return;
 			}
@@ -1294,7 +1294,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 			price = (price > 0) ? price : survCfg.priceRandomWeapon;
 			if (weaponName && price > 0) {
 				trap_SendServerCommand(other - g_entities, va(
-					"cpbuy \"%s\nprice: %d\"",
+					"cpbuy item \"%s\" %d",
 					weaponName, price));
 				return;
 			}
@@ -1314,7 +1314,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 			if (weaponName && price > 0)
 			{
 				trap_SendServerCommand(other - g_entities, va(
-															   "cpbuy \"%s\nprice: %d\"",
+															   "cpbuy item \"%s\" %d",
 															   weaponName, price));
 				return;
 			}
@@ -1325,7 +1325,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 			if (weaponName && price > 0)
 			{
 				trap_SendServerCommand(other - g_entities, va(
-															   "cpbuy \"%s\nprice: %d\"",
+															   "cpbuy item \"%s\" %d",
 															   weaponName, price));
 				return;
 			}
@@ -1338,7 +1338,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 			}
 
 			trap_SendServerCommand(other - g_entities, va(
-				"cpbuy \"%s\nUSE to choose a perk\"",
+				"cpbuy perkchoice \"%s\"",
 				weaponName ? weaponName : "Perk Machine"));
 			return;
 		}
@@ -1384,14 +1384,14 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 		if (perkLevel <= 0) {
 			if (price > 0) {
 				trap_SendServerCommand(other - g_entities, va(
-					"cpbuy \"%s\nprice: %d\"",
+					"cpbuy item \"%s\" %d",
 					weaponName, price));
 				return;
 			}
 		} else if (perkLevel == 1) {
 			if (price > 0) {
 				trap_SendServerCommand(other - g_entities, va(
-					"cpbuy \"%s ^PRO\nprice: %d\"",
+					"cpbuy item \"%s ^PRO\" %d",
 					weaponName, price * 2));
 				return;
 			}
@@ -1402,13 +1402,14 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 
 	// Display custom tip if price and name are known
 	if (price > 0 && weaponName) {
-		if (isWeapon) {
+		if (isWeapon && item && COM_BitCheck(other->client->ps.weapons, item->giTag)) {
+			// already own this weapon - only an ammo refill is on offer
 			trap_SendServerCommand(other - g_entities, va(
-				"cpbuy \"%s\nprice: %d\nammo_price: %d\"",
-				weaponName, price, ammoPrice));
+				"cpbuy ammo %d",
+				ammoPrice));
 		} else {
 			trap_SendServerCommand(other - g_entities, va(
-				"cpbuy \"%s\nprice: %d\"",
+				"cpbuy item \"%s\" %d",
 				weaponName, price));
 		}
 		return;

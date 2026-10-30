@@ -136,3 +136,6 @@ equ calloc				-132
 ; New in iortcw
 equ trap_Alloc					-901
 
+; keynum -> display string, for HUD keybind prompts
+equ trap_Key_KeynumToStringBuf	-902
+

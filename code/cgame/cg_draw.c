@@ -1818,6 +1818,45 @@ void CG_PriorityCenterPrint( const char *str, int y, int charWidth, int priority
 
 /*
 ==============
+CG_BindAction_t / CG_KeyNameForAction
+
+Logical, bindable actions the HUD can show a live keybind for (e.g. a buy
+prompt's "Press F for ..."), resolved to whatever key the player currently
+has bound rather than a hardcoded letter. Add a new action by adding one
+enum entry and one case in CG_BindCommandForAction - everything else (key
+lookup, display-string formatting, future gamepad glyphs once the engine's
+Key_KeynumToString learns about controller keynums) is handled generically.
+==============
+*/
+typedef enum {
+	CG_BIND_ACTIVATE    // interact/buy - bound to "+activate"
+} cgBindAction_t;
+
+static const char *CG_BindCommandForAction( cgBindAction_t action ) {
+	switch ( action ) {
+	case CG_BIND_ACTIVATE:
+		return "+activate";
+	default:
+		return "";
+	}
+}
+
+// Writes the display name of the key bound to `action` into buf (e.g. "F"); "???" if unbound.
+static void CG_KeyNameForAction( cgBindAction_t action, char *buf, int bufSize ) {
+	const char *command = CG_BindCommandForAction( action );
+	int keynum = command[0] ? trap_Key_GetKey( command ) : -1;
+
+	if ( keynum == -1 ) {
+		Q_strncpyz( buf, "???", bufSize );
+		return;
+	}
+
+	trap_Key_KeynumToStringBuf( keynum, buf, bufSize );
+	Q_strupr( buf );
+}
+
+/*
+==============
 CG_BuyPrint
 
 Called for buy-tooltip messages that should stay in the center of the screen
@@ -1872,20 +1911,74 @@ void CG_BuyPrint( const char *str, int y, int charWidth ) {
 	cg.buyPrintTime = cg.time;
 	cg.buyPrintY = y;
 	cg.buyPrintCharWidth = charWidth;
+}
 
-	// count the number of lines for centering
-	cg.buyPrintLines = 1;
-	s = cg.buyPrint;
-	while ( *s ) {
-		if ( *s == '\n' ) {
-			cg.buyPrintLines++;
-		}
-		if ( !Q_strncmp( s, "\\n", 1 ) ) {
-			cg.buyPrintLines++;
-			s++;
-		}
-		s++;
-	}
+/*
+==============
+CG_BuyPrintRaw
+
+Stores an already-composed string straight into cg.buyPrint, bypassing
+CG_BuyPrint's per-word translation pass (not needed since the caller already
+built the final sentence). Used by CG_BuyPrintItem/CG_BuyPrintAmmo below.
+==============
+*/
+static void CG_BuyPrintRaw( const char *str, int y, int charWidth ) {
+	Q_strncpyz( cg.buyPrint, str, sizeof( cg.buyPrint ) );
+
+	cg.buyPrintTime = cg.time;
+	cg.buyPrintY = y;
+	cg.buyPrintCharWidth = charWidth;
+}
+
+/*
+==============
+CG_BuyPrintItem / CG_BuyPrintAmmo
+
+Structured buy-tooltip variants: "Press <KEY> for <name> (Price: <price>)"
+and "Press <KEY> for Ammo (Price: <price>)", with <KEY> resolved live from
+the player's own keybinds via CG_KeyNameForAction. Called from the "item"/
+"ammo" cpbuy kinds in CG_ServerCommand (see g_survival_buy.c for the kind
+the server picks based on whether the player already owns the weapon).
+==============
+*/
+void CG_BuyPrintItem( const char *name, int price, int y, int charWidth ) {
+	char keyName[32];
+	char text[256];
+
+	CG_KeyNameForAction( CG_BIND_ACTIVATE, keyName, sizeof( keyName ) );
+	Com_sprintf( text, sizeof( text ), CG_translateTextString( "Press %s for %s (Price: %d)" ),
+				 keyName, CG_translateTextString( name ), price );
+
+	CG_BuyPrintRaw( text, y, charWidth );
+}
+
+void CG_BuyPrintAmmo( int price, int y, int charWidth ) {
+	char keyName[32];
+	char text[256];
+
+	CG_KeyNameForAction( CG_BIND_ACTIVATE, keyName, sizeof( keyName ) );
+	Com_sprintf( text, sizeof( text ), CG_translateTextString( "Press %s for Ammo (Price: %d)" ), keyName, price );
+
+	CG_BuyPrintRaw( text, y, charWidth );
+}
+
+/*
+==============
+CG_BuyPrintPerkChoice
+
+"<name>\nPress <KEY> to choose a perk" for the perk_choice machine's proximity
+prompt (see Survival_HandlePerkChoiceOpen in g_survival_buy.c).
+==============
+*/
+void CG_BuyPrintPerkChoice( const char *name, int y, int charWidth ) {
+	char keyName[32];
+	char text[256];
+
+	CG_KeyNameForAction( CG_BIND_ACTIVATE, keyName, sizeof( keyName ) );
+	Com_sprintf( text, sizeof( text ), CG_translateTextString( "%s\nPress %s to choose a perk" ),
+				 CG_translateTextString( name ), keyName );
+
+	CG_BuyPrintRaw( text, y, charWidth );
 }
 
 /*
@@ -2008,12 +2101,24 @@ static void CG_DrawCenterString( void ) {
 CG_DrawBuyString
 ===================
 */
+#define BUYSTRING_MAX_LINES 8
+// generous enough for "Press <KEYNAME> for <weapon name> (Price: <price>)" - the old 40-char cap
+// came from the previous format splitting name/price across separate shorter lines
+#define BUYSTRING_MAX_LINE_CHARS 128
+
 static void CG_DrawBuyString( void ) {
 	char    *start;
-	int l;
-	int x, y, w;
+	int l, i;
+	int x, y;
 	float   *color;
 	float subScale;
+	int lineHeight;
+	char lines[BUYSTRING_MAX_LINES][BUYSTRING_MAX_LINE_CHARS + 1];
+	int lineWidths[BUYSTRING_MAX_LINES];
+	int numLines;
+	int maxWidth;
+	int boxX, boxY, boxW, boxH;
+	vec4_t bgColor;
 
 	if ( !cg.buyPrintTime ) {
 		return;
@@ -2029,33 +2134,29 @@ static void CG_DrawBuyString( void ) {
 		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 	}
 
-	trap_R_SetColor( color );
-
 	start = (char *)cg.buyPrint;
 
 	// scale the TTF font relative to the requested charWidth so it still controls buy-prompt size
 	subScale = CG_CHAT_TEXT_SCALE * ( (float)cg.buyPrintCharWidth / SMALLCHAR_WIDTH );
+	lineHeight = cg.buyPrintCharWidth * 2;
 
-	y = cg.buyPrintY - cg.buyPrintLines * BIGCHAR_HEIGHT / 2;
-
-	while ( 1 ) {
-		char linebuffer[1024];
-
-		for ( l = 0; l < 40; l++ ) {
+	// split into lines and measure them up front, so the background box below can be sized to fit
+	numLines = 0;
+	maxWidth = 0;
+	while ( numLines < BUYSTRING_MAX_LINES ) {
+		for ( l = 0; l < BUYSTRING_MAX_LINE_CHARS; l++ ) {
 			if ( !start[l] || start[l] == '\n' || !Q_strncmp( &start[l], "\\n", 1 ) ) {
 				break;
 			}
-			linebuffer[l] = start[l];
+			lines[numLines][l] = start[l];
 		}
-		linebuffer[l] = 0;
+		lines[numLines][l] = 0;
 
-		w = CG_Text_Width_Ext( linebuffer, subScale, 0, &cgDC.Assets.textFont );
-
-		x = ( SCREEN_WIDTH - w ) / 2;
-
-		CG_ChatTextPaint( x, y, subScale, subScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgDC.Assets.textFont );
-
-		y += cg.buyPrintCharWidth * 2;
+		lineWidths[numLines] = CG_Text_Width_Ext( lines[numLines], subScale, 0, &cgDC.Assets.textFont );
+		if ( lineWidths[numLines] > maxWidth ) {
+			maxWidth = lineWidths[numLines];
+		}
+		numLines++;
 
 		while ( *start && ( *start != '\n' ) ) {
 			if ( !Q_strncmp( start, "\\n", 1 ) ) {
@@ -2068,6 +2169,26 @@ static void CG_DrawBuyString( void ) {
 			break;
 		}
 		start++;
+	}
+
+	y = cg.buyPrintY - numLines * BIGCHAR_HEIGHT / 2;
+
+	// semi-transparent background box behind the whole block, sized to the widest line
+	boxW = maxWidth + cg.buyPrintCharWidth * 4;
+	boxH = numLines * lineHeight + cg.buyPrintCharWidth;
+	boxX = ( SCREEN_WIDTH - boxW ) / 2;
+	boxY = y - cg.buyPrintCharWidth / 2;
+
+	bgColor[0] = bgColor[1] = bgColor[2] = 0.0f;
+	bgColor[3] = 0.6f * color[3];
+	CG_FillRectRounded( boxX, boxY, boxW, boxH, 4, bgColor );
+
+	trap_R_SetColor( color );
+
+	for ( i = 0; i < numLines; i++ ) {
+		x = ( SCREEN_WIDTH - lineWidths[i] ) / 2;
+		CG_ChatTextPaint( x, y, subScale, subScale, color, lines[i], 0, 0, ITEM_TEXTSTYLE_SHADOWED, &cgDC.Assets.textFont );
+		y += lineHeight;
 	}
 
 	trap_R_SetColor( NULL );
@@ -2188,9 +2309,15 @@ static void CG_DrawPerkChooser( void ) {
 	}
 
 	{
-		const char *hint = "Scroll to browse - USE to confirm";
+		char keyName[32];
+		char hint[64];
 		vec4_t hintColor;
-		int w = CG_Text_Width( hint, UI_FONT_DEFAULT, 0.18f, 0 );
+		int w;
+
+		CG_KeyNameForAction( CG_BIND_ACTIVATE, keyName, sizeof( keyName ) );
+		Com_sprintf( hint, sizeof( hint ), CG_translateTextString( "Scroll to browse - %s to confirm" ), keyName );
+
+		w = CG_Text_Width( hint, UI_FONT_DEFAULT, 0.18f, 0 );
 		Vector4Copy( colorMdGrey, hintColor );
 		CG_Text_Paint( boxX + ( boxW - w ) / 2, boxY + boxH - 8, UI_FONT_DEFAULT, 0.18f, hintColor, hint, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
 	}

@@ -1609,8 +1609,25 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	// Kinds:
+	//   cpbuy item "<name>" <price>  - "Press <KEY> for <name> (Price: <price>)"
+	//   cpbuy ammo <price>           - "Press <KEY> for Ammo (Price: <price>)"
+	//   cpbuy perkchoice "<name>"    - "<name>\nPress <KEY> to choose a perk"
+	//   cpbuy text "<message>"       - legacy freeform/translated passthrough (may contain \n)
+	// see Touch_objective_info in g_survival_buy.c for which kind the server picks
 	if ( !strcmp( cmd, "cpbuy" ) ) {
-		CG_BuyPrint( CG_Argv( 1 ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
+		const char *kind = CG_Argv( 1 );
+		int y = SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 );
+
+		if ( !strcmp( kind, "item" ) ) {
+			CG_BuyPrintItem( CG_Argv( 2 ), atoi( CG_Argv( 3 ) ), y, SMALLCHAR_WIDTH );
+		} else if ( !strcmp( kind, "ammo" ) ) {
+			CG_BuyPrintAmmo( atoi( CG_Argv( 2 ) ), y, SMALLCHAR_WIDTH );
+		} else if ( !strcmp( kind, "perkchoice" ) ) {
+			CG_BuyPrintPerkChoice( CG_Argv( 2 ), y, SMALLCHAR_WIDTH );
+		} else {
+			CG_BuyPrint( CG_Argv( 2 ), y, SMALLCHAR_WIDTH );
+		}
 		return;
 	}
 
