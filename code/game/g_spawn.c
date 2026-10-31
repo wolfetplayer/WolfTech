@@ -855,6 +855,37 @@ void G_ParseField( const char *key, const char *value, gentity_t *ent ) {
 
 /*
 ===================
+G_GetRandomSpawnGroupChoice
+
+Rolls (and caches) which "randomGroup" wins for a given "randomSet" name.
+===================
+*/
+int G_GetRandomSpawnGroupChoice( const char *setName, int groupCount ) {
+	int i;
+
+	if ( groupCount < 1 ) {
+		groupCount = 1;
+	}
+
+	for ( i = 0 ; i < level.numRandomSpawnSets ; i++ ) {
+		if ( !Q_stricmp( level.randomSpawnSetNames[i], setName ) ) {
+			return level.randomSpawnSetChoice[i];
+		}
+	}
+
+	if ( level.numRandomSpawnSets == MAX_RANDOM_SPAWN_SETS ) {
+		G_Error( "G_GetRandomSpawnGroupChoice: MAX_RANDOM_SPAWN_SETS" );
+	}
+
+	i = level.numRandomSpawnSets++;
+	Q_strncpyz( level.randomSpawnSetNames[i], setName, sizeof( level.randomSpawnSetNames[i] ) );
+	level.randomSpawnSetChoice[i] = ( rand() % groupCount ) + 1;
+
+	return level.randomSpawnSetChoice[i];
+}
+
+/*
+===================
 G_SpawnGEntityFromSpawnVars
 
 Spawn an entity and fill in all of the level fields from
@@ -886,6 +917,25 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 			ADJUST_AREAPORTAL();
 			G_FreeEntity( ent );
 			return;
+		}
+	}
+
+	// random spawn-group filtering
+	{
+		char *randomSet;
+
+		G_SpawnString( "randomSet", "", &randomSet );
+		if ( randomSet[0] ) {
+			int randomGroup, randomGroupCount, chosenGroup;
+
+			G_SpawnInt( "randomGroup", "1", &randomGroup );
+			G_SpawnInt( "randomGroupCount", "1", &randomGroupCount );
+			chosenGroup = G_GetRandomSpawnGroupChoice( randomSet, randomGroupCount );
+			if ( randomGroup != chosenGroup ) {
+				ADJUST_AREAPORTAL();
+				G_FreeEntity( ent );
+				return;
+			}
 		}
 	}
 

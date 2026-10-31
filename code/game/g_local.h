@@ -762,6 +762,8 @@ struct gclient_s {
 #define MAX_SPAWN_VARS          64
 #define MAX_SPAWN_VARS_CHARS    2048
 
+#define MAX_RANDOM_SPAWN_SETS   16
+
 typedef struct {
 	struct gclient_s    *clients;       // [maxclients]
 
@@ -910,6 +912,11 @@ typedef struct {
 
 	// fretn - maybe not the best place to add this
 	char *maplist[MAX_MAPS];
+
+	// per-set winning group for "randomSet"/"randomGroup" entity keys
+	char randomSpawnSetNames[MAX_RANDOM_SPAWN_SETS][64];
+	int randomSpawnSetChoice[MAX_RANDOM_SPAWN_SETS];
+	int numRandomSpawnSets;
 } level_locals_t;
 
 //extern    qboolean	reloading;				// loading up a savegame
