@@ -120,7 +120,7 @@ price_random_perk     250
 
 // ---- Mystery box (random weapon box) ----
 // Pool a box draws from if it has no "weaponpool" entity key of its own
-random_weapon_pool   "luger silencer colt akimbo revolver sten mp40 thompson ppsh mauser sniperrifle fg42 m1garand g43 mp44 bar m97 auto5 panzerfaust flamethrower venom tesla mg42m browning"
+random_weapon_pool   "luger silencer colt akimbo revolver sten mp40 thompson ppsh mauser sniperrifle fg42 m1garand g43 mp44 bar m97 auto5 panzerfaust flamethrower venom tesla mg42m browning poisongas"
 
 rwb_spin_duration      5000   // ms of cycling before landing
 rwb_spin_interval_min    70   // ms between model swaps, fastest
@@ -318,6 +318,7 @@ weapon_price.mg42m                250
 weapon_price.browning             250
 weapon_price.grenade_launcher     100
 weapon_price.grenade_pineapple    100
+weapon_price.poisongas            100
 
 // ---- Per-perk prices ----
 // Key shape: perk_price.<name> value

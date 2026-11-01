@@ -2134,6 +2134,7 @@ static void PM_BeginWeaponReload( int weapon ) {
 	case WP_DYNAMITE:
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
+	case WP_POISONGAS:
 		break;
 
 		// no reloading
@@ -2796,6 +2797,7 @@ static void PM_SwitchIfEmpty( void ) {
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
 	case WP_PANZERFAUST:
+	case WP_POISONGAS:
 		break;
 	default:
 		return;
@@ -2817,6 +2819,7 @@ static void PM_SwitchIfEmpty( void ) {
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
+	case WP_POISONGAS:
 		// take the 'weapon' away from the player
 		COM_BitClear( pm->ps->weapons, pm->ps->weapon );
 		break;
@@ -3630,7 +3633,7 @@ static void PM_Weapon( void ) {
 	}
 
 	// player is leaning - no fire
-	if ( pm->ps->leanf != 0 && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_LANDMINE && pm->ps->weapon != WP_MEDCRATE ) {
+	if ( pm->ps->leanf != 0 && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_LANDMINE && pm->ps->weapon != WP_MEDCRATE && pm->ps->weapon != WP_POISONGAS ) {
 		return;
 	}
 
@@ -3674,6 +3677,23 @@ static void PM_Weapon( void ) {
 	if ( wc & WEAPON_CLASS_MELEE ) {
 		if ( !delayedFire ) {
 			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
+		}
+	}
+	else if ( pm->ps->weapon == WP_POISONGAS ) {
+		// plain ammo-limited throw, not cookable: must NOT fall into the WEAPON_CLASS_GRENADE branch below, which
+		// sets grenadeTimeLeft to start a "hold to cook" fuse - that field's decrement/throw-on-release handling
+		// elsewhere in this file only knows about WP_GRENADE_LAUNCHER/PINEAPPLE/DYNAMITE, so for any other weapon
+		// it gets set and then never cleared, which is what caused the runaway-refire bug. Single-shot cadence
+		// like a normal weapon instead, gated by weaponTime/nextShotTime once it actually fires (see below).
+		if ( !weaponstateFiring ) {
+			if ( pm->ps->aiChar ) {
+				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
+			} else {
+				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
+			}
+			pm->ps->weaponDelay = wt->fireDelayTime;
+		} else {
+			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
 		}
 	}
 	else if ( wc & ( WEAPON_CLASS_GRENADE | WEAPON_CLASS_DYNAMITE ) ) {
@@ -3771,6 +3791,7 @@ static void PM_Weapon( void ) {
 			case WP_MEDCRATE:
 			case WP_GRENADE_LAUNCHER:
 			case WP_GRENADE_PINEAPPLE:
+			case WP_POISONGAS:
 				playswitchsound = qfalse;
 				break;
 	

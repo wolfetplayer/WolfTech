@@ -2171,6 +2171,7 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles ) {
 		case WP_KNIFE:
 		case WP_GRENADE_LAUNCHER:
 		case WP_GRENADE_PINEAPPLE:
+		case WP_POISONGAS:
 			break;
 
 			// adjust when leaning right (in case of reload)
@@ -4328,6 +4329,7 @@ qboolean CG_WeaponSupportsSimpleZoom( int weap ) {
         case WP_GRENADE_PINEAPPLE:
         case WP_DYNAMITE:
         case WP_KNIFE:
+        case WP_POISONGAS:
             return qfalse;
 
         default:
@@ -5289,6 +5291,7 @@ void CG_FireWeapon( centity_t *cent ) {
 	} else if (   ent->weapon == WP_GRENADE_LAUNCHER ||
 				  ent->weapon == WP_GRENADE_PINEAPPLE ||
 				  ent->weapon == WP_DYNAMITE ||
+				  ent->weapon == WP_POISONGAS ||
 				  ent->weapon == WP_GRENADE_SMOKE ) { // JPW NERVE
 		if ( ent->weapon == WP_GRENADE_SMOKE ) {
 			CG_Printf( "smoke grenade!\n" );

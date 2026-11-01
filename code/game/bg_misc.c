@@ -62,7 +62,7 @@ int weapBanks[MAX_WEAP_BANKS][MAX_WEAPS_IN_BANK] = {
 	{WP_MP40,               WP_THOMPSON,            WP_STEN,     WP_PPSH },  //	3
 	{WP_MAUSER,             WP_M1GARAND,            WP_G43 },  //	4
 	{WP_FG42,               WP_BAR,                 WP_MP44     },  //	5
-	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_LANDMINE, WP_MEDCRATE, WP_AIRSTRIKE },  //	6
+	{WP_GRENADE_LAUNCHER,   WP_GRENADE_PINEAPPLE,   WP_DYNAMITE, WP_LANDMINE, WP_MEDCRATE, WP_AIRSTRIKE, WP_POISONGAS },  //	6
 	{WP_PANZERFAUST,        WP_FLAMETHROWER,        0           },  //	7
 	{WP_TESLA,              WP_VENOM,               0           },  //	8
 	{WP_M97,                WP_AUTO5,               0           },  //	9
@@ -1268,6 +1268,38 @@ ammotable_t ammoTable[] = {
 		.hasMuzzle          = qfalse,
 		.underwaterFire     = qfalse,
 		.weapFile           = "arty.weap", // fired purely via binoculars, never carried; weapFile only provides the falling-shell missileModel
+    },
+    // Ported from RealRTCW: there it's a class-locked, cooldown-gated Medic ability (g_medicChargeTime);
+    // here it's a plain ammo-limited throw like WP_GRENADE_PINEAPPLE, open to any class. See G_PoisonGasThink (g_missile.c).
+    [WP_POISONGAS] = {
+		.weaponindex        = WP_POISONGAS,
+		.weapAlts           = WP_NONE,
+		.weaponClass        = WEAPON_CLASS_GRENADE,
+        .maxammo            = 5,
+        .uses               = 1,
+        .maxclip            = 5,
+        .reloadTime         = 1000,
+        .fireDelayTime      = DELAY_THROW,
+        .nextShotTime       = 1600,
+        .maxHeat            = 0,
+        .coolRate           = 0,
+		.weaponDamage       = 50,  // per damage-tick while the cloud is active, not an impact/splash hit - see G_PoisonGasThink
+		.weaponSpread       = 0,
+		.spreadScale        = 0.0f,
+		.spreadScaleAdd     = 0,
+        .weapRecoilDuration = 0,
+        .weapRecoilPitch    = { 0.0f, 0.0f },
+        .weapRecoilYaw      = { 0.0f, 0.0f },
+		.soundRange         = 1500,
+		.aiRange            = AI_WEAPON_RANGE_GRENADE,
+        .moveSpeed          = 1.0f,
+        .mod                = MOD_POISONGAS,
+		.rndTriggerRelease  = qfalse,
+	    .iconDrawSize       = WEAPON_ICON_NORMAL,
+		.bulletBased        = qfalse,
+		.hasMuzzle          = qfalse,
+		.underwaterFire     = qtrue,
+		.weapFile           = "poisongas.weap",
     },
     [WP_SMOKETRAIL] = {
 		.weaponindex        = WP_SMOKETRAIL,
@@ -2488,6 +2520,29 @@ gitem_t bg_itemlist[] =
 	},
 
 	{
+		"weapon_poisongas",
+		"sound/misc/w_pkup.wav",
+		{   "models/weapons/explosives/gasgrenade/gasgrenade.md3",
+			"models/weapons/explosives/gasgrenade/v_gasgrenade.md3",
+			"models/weapons/explosives/gasgrenade/gasgrenade.md3",
+			0, 0 },
+
+		"icons/iconw_gasgrenade_1",    // icon
+		"icons/ammo9",           // ammo icon
+		"Poison Gas Grenade",    // pickup
+		1,
+		IT_WEAPON,
+		WP_POISONGAS,
+		WP_POISONGAS,
+		WP_POISONGAS,
+		WP_POISONGAS,
+		WP_POISONGAS,
+		"",                      // precache
+		"",                      // sounds
+		{0,0,0,0}
+	},
+
+	{
 		"weapon_medcrate",
 		"sound/misc/w_pkup.wav",
 		{   "models/powerups/health/health_l.md3",  // placeholder, stock large health pack model
@@ -3087,6 +3142,27 @@ weapon_monster_attack2 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 		WP_LANDMINE,
 		WP_LANDMINE,
 		WP_LANDMINE,
+		"",                      // precache
+		"",                      // sounds
+		{1,1,1,1}
+	},
+
+
+	{
+		"ammo_poisongas",
+		"sound/misc/am_pkup.wav",
+		{ "models/weapons/explosives/gasgrenade/gasgrenade.md3",
+		  0, 0, 0,    0 },
+		"icons/iconw_gasgrenade_1",  // icon
+		NULL,                   // ammo icon
+		"Poison Gas",            // pickup
+		1,
+		IT_AMMO,
+		WP_NONE,
+		WP_POISONGAS,
+		WP_POISONGAS,
+		WP_POISONGAS,
+		WP_POISONGAS,
 		"",                      // precache
 		"",                      // sounds
 		{1,1,1,1}

@@ -1,0 +1,30 @@
+weaponDef
+{
+	client {
+		weaponConfig		"models/weapons/explosives/gasgrenade/weapon.cfg"
+		handsModel			"models/weapons/explosives/gasgrenade/v_gasgrenade_hand.md3"
+
+		flashDlightColor	1 0.7 0.5
+		overheatSound		"sound/weapons/gasgrenade/gren_gas.wav"
+
+		weaponIcon			"icons/iconw_gasgrenade_1"
+		weaponSelectedIcon	"icons/iconw_gasgrenade_1_select"
+
+		missileModel		"models/weapons/explosives/gasgrenade/gasgrenade.md3"
+		missileTrailFunc	"GrenadeTrail"		// GrenadeTrail | RocketTrail | PyroSmokeTrail
+
+		//ejectBrassFunc	""		// PistolEjectBrass | RifleEjectBrass | PanzerFaustEjectBrass
+
+		firstPerson {
+			model			"models/weapons/explosives/gasgrenade/v_gasgrenade.md3"
+
+			weaponLink
+			{
+			}
+		}
+
+		thirdPerson {
+			model			"models/weapons/explosives/gasgrenade/gasgrenade.md3"
+		}
+	}
+}

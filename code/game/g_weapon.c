@@ -1185,7 +1185,7 @@ gentity_t *weapon_grenadelauncher_fire_coop( gentity_t *ent, int grenType ) {
 		upangle *= 1100;
 	} else if ( grenType == WP_GRENADE_PINEAPPLE ) {
 		upangle *= 1100;
-	} else if ( grenType == WP_GRENADE_SMOKE || grenType == WP_AIRSTRIKE ) {
+	} else if ( grenType == WP_GRENADE_SMOKE || grenType == WP_AIRSTRIKE || grenType == WP_POISONGAS ) {
 		upangle *= 1100;
 	} else if ( grenType == WP_MEDCRATE ) {
 		upangle = 150; 
@@ -1915,6 +1915,7 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 	case WP_DYNAMITE:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_GRENADE_LAUNCHER:
+	case WP_POISONGAS:
 		VectorMA( muzzlePoint, 20, right, muzzlePoint );
 		break;
 	case WP_AKIMBO:     // left side rather than right

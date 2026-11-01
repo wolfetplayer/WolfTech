@@ -1936,6 +1936,8 @@ static void CG_RegisterGraphics( void ) {
 	CG_LoadingString( " - particles" );
 	CG_ClearParticles();
 
+	InitSmokeSprites(); // ported from RealRTCW - WP_POISONGAS gas cloud sprite pool
+
 	for ( i = 1; i < MAX_PARTICLES_AREAS; i++ )
 	{
 		{

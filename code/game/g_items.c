@@ -505,6 +505,7 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
 	case WP_LANDMINE:
+	case WP_POISONGAS:
 		COM_BitSet( ent->client->ps.weapons, ammoweap );
 
 	case WP_TESLA:

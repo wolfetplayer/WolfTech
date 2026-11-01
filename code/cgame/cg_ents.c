@@ -1305,6 +1305,11 @@ static void CG_Missile( centity_t *cent ) {
 	// calculate the axis
 	VectorCopy( s1->angles, cent->lerpAngles );
 
+	if ( s1->weapon == WP_POISONGAS ) {
+		// ported from RealRTCW: the gas cloud, driven by s.effect1Time (see g_missile.c's G_PoisonGasThink)
+		CG_RenderSmokeGrenadeSmoke( cent, weapon, (weapon_t)s1->weapon );
+	}
+
 	// add trails
 	if ( cent->currentState.eType == ET_FP_PARTS
 		 || cent->currentState.eType == ET_FIRE_COLUMN

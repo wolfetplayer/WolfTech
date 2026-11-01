@@ -429,6 +429,9 @@ struct gentity_s {
 	int grenadeExplodeTime;         // we've caught a grenade, which was due to explode at this time
 	int grenadeFired;               // the grenade entity we last fired
 
+	int poisonGasAlarm;             // ported from RealRTCW - next level.time a landed WP_POISONGAS cloud is due to tick damage (see G_PoisonGasThink)
+	int poisonGasRadius;            // ported from RealRTCW - WP_POISONGAS damage-tick radius, set once in fire_grenade (kept off splashRadius, which g_missile.c overwrites with damage for MP/coop blast scaling)
+
 	int mg42ClampTime;              // time to wait before an AI decides to ditch the mg42
 
 	// static mg42 overheat/fire-rate control (see mg42Config in g_misc.c)

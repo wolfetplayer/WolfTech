@@ -873,6 +873,84 @@ void G_TryPlaceMedCrate( gentity_t *ent, trace_t *trace ) {
 
 /*
 ================
+G_PoisonGas - ported from RealRTCW
+
+Lands/bounces like a normal grenade (fire_grenade's usual ~2.5s cook timer),
+then G_PoisonGasThink takes over: grows a damage cloud instead of exploding
+on impact, same effect1Time growth/dissipate curve cgame expects (see
+CG_RenderSmokeGrenadeSmoke) to size and fade the smoke sprites.
+================
+*/
+#define POISONGAS_GROWTIME       1000   // ms to grow from POISONGAS_MINRADIUS to POISONGAS_VISUALRADIUS
+#define POISONGAS_SMOKETIME      15000  // ms spent at full size, ticking damage
+#define POISONGAS_POSTSMOKETIME  2000   // ms fading out (visual only, no more damage) before the entity frees itself
+#define POISONGAS_TICKINTERVAL   1500   // ms between damage ticks while fully grown
+#define POISONGAS_MINRADIUS      16.f   // s.effect1Time starting value cgame expects
+#define POISONGAS_VISUALRADIUS   640.f  // s.effect1Time once fully grown; independent of poisonGasRadius (the actual damage range)
+
+// Damages every living hostile AI character within self->poisonGasRadius; never touches players or friendly AI (partisans/reinforcements)
+static void G_PoisonGasDamageTick( gentity_t *self ) {
+	int entityList[MAX_GENTITIES];
+	int i, cnt;
+	vec3_t mins, maxs, range;
+	int damage = G_GetWeaponDamage( WP_POISONGAS, self->parent );
+
+	VectorSet( range, self->poisonGasRadius, self->poisonGasRadius, self->poisonGasRadius );
+	VectorSubtract( self->r.currentOrigin, range, mins );
+	VectorAdd( self->r.currentOrigin, range, maxs );
+
+	cnt = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
+
+	for ( i = 0; i < cnt; i++ ) {
+		gentity_t *ent = &g_entities[entityList[i]];
+		vec3_t dist;
+
+		if ( !ent->aiCharacter || ent->health <= 0 ) {
+			continue;
+		}
+		if ( ent->aiTeam != AITEAM_NAZI && ent->aiTeam != AITEAM_MONSTER && ent->aiTeam != AITEAM_ENDMAPBOSS ) {
+			continue;   // friendly reinforcement AI - gas only hurts the enemy
+		}
+
+		VectorSubtract( self->r.currentOrigin, ent->r.currentOrigin, dist );
+		if ( VectorLengthSquared( dist ) > Square( self->poisonGasRadius ) ) {
+			continue;
+		}
+
+		G_Damage( ent, self, self->parent, vec3_origin, self->r.currentOrigin, damage, DAMAGE_RADIUS, MOD_POISONGAS );
+	}
+}
+
+void G_PoisonGasThink( gentity_t *ent ) {
+	int lived;
+
+	if ( !ent->grenadeExplodeTime ) {
+		ent->grenadeExplodeTime = level.time;
+	}
+	lived = level.time - ent->grenadeExplodeTime;
+	ent->nextthink = level.time + FRAMETIME;
+
+	if ( lived < POISONGAS_GROWTIME ) {
+		// still growing
+		ent->s.effect1Time = (int)( POISONGAS_MINRADIUS + lived * ( ( POISONGAS_VISUALRADIUS - POISONGAS_MINRADIUS ) / (float)POISONGAS_GROWTIME ) );
+	} else if ( lived < POISONGAS_GROWTIME + POISONGAS_SMOKETIME ) {
+		// fully grown, ticking damage
+		ent->s.effect1Time = (int)POISONGAS_VISUALRADIUS;
+
+		if ( level.time >= ent->poisonGasAlarm ) {
+			ent->poisonGasAlarm = level.time + POISONGAS_TICKINTERVAL;
+			G_PoisonGasDamageTick( ent );
+		}
+	} else if ( lived < POISONGAS_GROWTIME + POISONGAS_SMOKETIME + POISONGAS_POSTSMOKETIME ) {
+		// dying out - cgame unlinks its smoke sprites from this entity once effect1Time goes negative
+		ent->s.effect1Time = -1;
+	} else {
+		G_FreeEntity( ent );
+	}
+}
+
+/*
+================
 G_MissileImpact
 	impactDamage is how much damage the impact will do to func_explosives
 ================
@@ -2215,6 +2293,18 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
 		bolt->timestamp             = level.time;    // spawn order, for oldest-first eviction (G_CountAndCapPlayerMedCrates)
 		break;
+	case WP_POISONGAS:
+		// no impact/splash damage - G_PoisonGasThink takes over once it lands, see below
+		bolt->classname             = "poisongas_grenade";
+		bolt->damage                = 0;
+		bolt->methodOfDeath         = MOD_POISONGAS;
+		bolt->splashMethodOfDeath   = MOD_POISONGAS;
+		if ( g_gametype.integer >= GT_COOP ) {
+			bolt->s.eFlags              = EF_BOUNCE_HALF;
+		} else {
+			bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
+		}
+		break;
 	}
 
 // JPW NERVE -- blast radius proportional to damage
@@ -2222,6 +2312,12 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->splashRadius = G_GetWeaponDamage(grenadeWPID, self);
 	}
 // jpw
+
+	if ( grenadeWPID == WP_POISONGAS ) {
+		bolt->think          = G_PoisonGasThink;
+		bolt->s.effect1Time  = (int)POISONGAS_MINRADIUS;
+		bolt->poisonGasRadius = 300;
+	}
 
 	bolt->clipmask = MASK_MISSILESHOT;
 
