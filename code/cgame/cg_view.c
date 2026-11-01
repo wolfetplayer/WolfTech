@@ -1661,7 +1661,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 		CG_AddScriptSpeakers();
 
-		CG_AddSmokeSprites(); // ported from RealRTCW - WP_POISONGAS gas cloud
+		CG_AddSmokeSprites(); // ported from RealRTCW - shared gas/smoke cloud (WP_POISONGAS, WP_SMOKEBOMB)
 
 		if ( cgs.localServer ) {
 			OmnibotRenderDebugLines();

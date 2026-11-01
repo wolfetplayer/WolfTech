@@ -156,6 +156,7 @@ static const survNamedInt_t survWeaponNames[] = {
 	{ "grenade_launcher",  WP_GRENADE_LAUNCHER },
 	{ "grenade_pineapple", WP_GRENADE_PINEAPPLE },
 	{ "poisongas",         WP_POISONGAS },
+	{ "smokebomb",         WP_SMOKEBOMB },
 };
 #define NUM_SURV_WEAPON_NAMES ( sizeof( survWeaponNames ) / sizeof( survWeaponNames[0] ) )
 

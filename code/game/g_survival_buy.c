@@ -79,6 +79,7 @@ static int Survival_GetCompiledInWeaponPrice(int weapon) {
 		case WP_GRENADE_LAUNCHER:   return 100;
 		case WP_GRENADE_PINEAPPLE:  return 100;
 		case WP_POISONGAS:          return 100;
+		case WP_SMOKEBOMB:          return 100;
 
 		default: return 100;
 	}
@@ -126,7 +127,7 @@ static const weapon_t rwb_weapon_pool_default[] = {
 	WP_MAUSER, WP_SNIPERRIFLE, WP_FG42,
 	WP_M1GARAND, WP_G43, WP_MP44, WP_BAR, WP_M97, WP_AUTO5,
 	WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA,
-	WP_MG42M, WP_BROWNING, WP_POISONGAS
+	WP_MG42M, WP_BROWNING, WP_POISONGAS, WP_SMOKEBOMB
 };
 static const int rwb_weapon_pool_default_count = sizeof( rwb_weapon_pool_default ) / sizeof( rwb_weapon_pool_default[0] );
 
@@ -745,7 +746,7 @@ qboolean Survival_HandleWeaponUpgrade(gentity_t *ent, gentity_t *activator, int 
 		return qfalse;
 
 	// Weapons that cannot be upgraded
-	if ( weap == WP_KNIFE || weap == WP_SNIPERRIFLE || weap == WP_FG42SCOPE || weap == WP_DYNAMITE  || weap == WP_GRENADE_LAUNCHER || weap == WP_GRENADE_PINEAPPLE || weap == WP_POISONGAS )
+	if ( weap == WP_KNIFE || weap == WP_SNIPERRIFLE || weap == WP_FG42SCOPE || weap == WP_DYNAMITE  || weap == WP_GRENADE_LAUNCHER || weap == WP_GRENADE_PINEAPPLE || weap == WP_POISONGAS || weap == WP_SMOKEBOMB )
 	{
 		G_AddEvent(activator, EV_GENERAL_SOUND, G_SoundIndex("sound/items/use_nothing.wav"));
 		return qfalse;
@@ -850,7 +851,8 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 	if (item->giType == IT_AMMO && (
 		weapon == WP_GRENADE_LAUNCHER ||
 		weapon == WP_GRENADE_PINEAPPLE ||
-		weapon == WP_POISONGAS
+		weapon == WP_POISONGAS ||
+		weapon == WP_SMOKEBOMB
 	)) {
 		maxAmmo = BG_GetMaxAmmo(&activator->client->ps, weapon, LT_AMMO_BONUS_MULTIPLIER);
 

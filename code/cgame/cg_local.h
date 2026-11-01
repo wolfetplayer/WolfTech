@@ -363,8 +363,8 @@ typedef struct centity_s {
 	int dl_sound;
 	int dl_atten;
 
-	vec3_t origin2;             // ported from RealRTCW - WP_POISONGAS smoke: ground-trace point used to detect when the emitter is stuck in a solid
-	vec3_t lastLerpOrigin;      // ported from RealRTCW - WP_POISONGAS smoke: detects a stationary emitter's origin changing between frames (e.g. a moving platform)
+	vec3_t origin2;             // ported from RealRTCW - gas/smoke cloud (WP_POISONGAS, WP_SMOKEBOMB): ground-trace point used to detect when the emitter is stuck in a solid
+	vec3_t lastLerpOrigin;      // ported from RealRTCW - gas/smoke cloud (WP_POISONGAS, WP_SMOKEBOMB): detects a stationary emitter's origin changing between frames (e.g. a moving platform)
 
 	lerpFrame_t lerpFrame;      //----(SA)	added
 	vec3_t highlightOrigin;             // center of the geometry.  for things like corona placement on treasure
@@ -2514,7 +2514,7 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float size, float spacing );
 void CG_SpawnEffect( vec3_t org );
 void CG_GibPlayer( centity_t *cent, vec3_t playerOrigin, vec3_t gdir );
 
-// Ported from RealRTCW: growing/dissipating smoke-sprite cloud, currently only used by WP_POISONGAS (see CG_Missile in cg_ents.c)
+// Ported from RealRTCW: growing/dissipating smoke-sprite cloud, used by WP_POISONGAS and WP_SMOKEBOMB (see CG_Missile in cg_ents.c)
 void InitSmokeSprites( void );
 void CG_AddSmokeSprites( void );
 void CG_RenderSmokeGrenadeSmoke( centity_t *cent, const weaponInfo_t *weapon, weapon_t wtype );

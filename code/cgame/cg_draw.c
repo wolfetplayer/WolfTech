@@ -3989,7 +3989,7 @@ static void CG_DrawCoopCrosshairNames( void ) {
 	//s = va( "[%s] %s", playerClass, name );
 	if ( val == WP_KNIFE ) {
 		s = va( "%s", name );
-	} else if ( val == WP_GRENADE_LAUNCHER || val == WP_GRENADE_PINEAPPLE || val == WP_POISONGAS || val == WP_DYNAMITE || val == WP_FLAMETHROWER || val == WP_TESLA ) {
+	} else if ( val == WP_GRENADE_LAUNCHER || val == WP_GRENADE_PINEAPPLE || val == WP_POISONGAS || val == WP_SMOKEBOMB || val == WP_DYNAMITE || val == WP_FLAMETHROWER || val == WP_TESLA ) {
 		s = va( "[%d] %s", cgs.clientinfo[ cg.crosshairClientNum ].ammoClip, name );
 	} else {
 		s = va( "[%d/%d] %s", cgs.clientinfo[ cg.crosshairClientNum ].ammoClip, cgs.clientinfo[ cg.crosshairClientNum ].ammo, name );

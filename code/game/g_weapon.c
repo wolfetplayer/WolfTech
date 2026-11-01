@@ -1185,6 +1185,7 @@ gentity_t *weapon_grenadelauncher_fire( gentity_t *ent, int grenType ) {
 		basePower = AIRSTRIKE_THROW_POWER;
 		break;
 	case WP_POISONGAS:
+	case WP_SMOKEBOMB:
 		basePower = POISONGAS_THROW_POWER;
 		break;
 	case WP_MEDCRATE:

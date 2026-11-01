@@ -953,6 +953,47 @@ void G_PoisonGasThink( gentity_t *ent ) {
 
 /*
 ================
+G_SmokeBomb - ported from RealRTCW
+
+Lands/bounces like a normal grenade. It's cookable just like WP_POISONGAS (bg_pmove.c) -
+holding the fire button shortens the fuse left when thrown. Once the fuse runs out,
+G_SmokeBombThink takes over: grows a vision-blocking smoke cloud instead of exploding on
+impact, same effect1Time growth/dissipate curve cgame expects (see CG_RenderSmokeGrenadeSmoke)
+to size and fade the smoke sprites. Purely visual - unlike G_PoisonGasThink, there is no
+damage tick.
+================
+*/
+#define SMOKEBOMB_GROWTIME       1000   // ms to grow from SMOKEBOMB_MINRADIUS to SMOKEBOMB_VISUALRADIUS
+#define SMOKEBOMB_SMOKETIME      15000  // ms spent at full size
+#define SMOKEBOMB_POSTSMOKETIME  2000   // ms fading out before the entity frees itself
+#define SMOKEBOMB_MINRADIUS      16.f   // s.effect1Time starting value cgame expects
+#define SMOKEBOMB_VISUALRADIUS   1024.f // s.effect1Time once fully grown
+
+void G_SmokeBombThink( gentity_t *ent ) {
+	int lived;
+
+	if ( !ent->grenadeExplodeTime ) {
+		ent->grenadeExplodeTime = level.time;
+	}
+	lived = level.time - ent->grenadeExplodeTime;
+	ent->nextthink = level.time + FRAMETIME;
+
+	if ( lived < SMOKEBOMB_GROWTIME ) {
+		// still growing
+		ent->s.effect1Time = (int)( SMOKEBOMB_MINRADIUS + lived * ( ( SMOKEBOMB_VISUALRADIUS - SMOKEBOMB_MINRADIUS ) / (float)SMOKEBOMB_GROWTIME ) );
+	} else if ( lived < SMOKEBOMB_GROWTIME + SMOKEBOMB_SMOKETIME ) {
+		// fully grown
+		ent->s.effect1Time = (int)SMOKEBOMB_VISUALRADIUS;
+	} else if ( lived < SMOKEBOMB_GROWTIME + SMOKEBOMB_SMOKETIME + SMOKEBOMB_POSTSMOKETIME ) {
+		// dying out - cgame unlinks its smoke sprites from this entity once effect1Time goes negative
+		ent->s.effect1Time = -1;
+	} else {
+		G_FreeEntity( ent );
+	}
+}
+
+/*
+================
 G_MissileImpact
 	impactDamage is how much damage the impact will do to func_explosives
 ================
@@ -2295,6 +2336,14 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->splashMethodOfDeath   = MOD_POISONGAS;
 		bolt->s.eFlags              = EF_BOUNCE_HALF;    // same bounce as the other hand grenades, for a consistent feel
 		break;
+	case WP_SMOKEBOMB:
+		// purely visual - no impact/splash damage. G_SmokeBombThink takes over once it lands, see below
+		bolt->classname             = "smokebomb_grenade";
+		bolt->damage                = 0;
+		bolt->methodOfDeath         = MOD_SMOKEBOMB;
+		bolt->splashMethodOfDeath   = MOD_SMOKEBOMB;
+		bolt->s.eFlags              = EF_BOUNCE_HALF;    // same bounce as the other hand grenades, for a consistent feel
+		break;
 	}
 
 // JPW NERVE -- blast radius proportional to damage
@@ -2307,6 +2356,11 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->think          = G_PoisonGasThink;
 		bolt->s.effect1Time  = (int)POISONGAS_MINRADIUS;
 		bolt->poisonGasRadius = 300;
+	}
+
+	if ( grenadeWPID == WP_SMOKEBOMB ) {
+		bolt->think          = G_SmokeBombThink;
+		bolt->s.effect1Time  = (int)SMOKEBOMB_MINRADIUS;
 	}
 
 	bolt->clipmask = MASK_MISSILESHOT;

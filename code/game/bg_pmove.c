@@ -2135,6 +2135,7 @@ static void PM_BeginWeaponReload( int weapon ) {
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_POISONGAS:
+	case WP_SMOKEBOMB:
 		break;
 
 		// no reloading
@@ -2798,6 +2799,7 @@ static void PM_SwitchIfEmpty( void ) {
 	case WP_DYNAMITE:
 	case WP_PANZERFAUST:
 	case WP_POISONGAS:
+	case WP_SMOKEBOMB:
 		break;
 	default:
 		return;
@@ -2820,6 +2822,7 @@ static void PM_SwitchIfEmpty( void ) {
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
 	case WP_POISONGAS:
+	case WP_SMOKEBOMB:
 		// take the 'weapon' away from the player
 		COM_BitClear( pm->ps->weapons, pm->ps->weapon );
 		break;
@@ -3282,7 +3285,7 @@ static void PM_Weapon( void ) {
 	// busy cooking a quick grenade - holster the weapon (drop/raise), gated on weaponTime (networked, same field the ladder-holster
 	// below uses) instead of weapAnimTimer (not networked) so client and server can't desync on when the transition can happen.
 	if ( pm->ps->grenadeTimeLeft > 0 &&
-		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_POISONGAS ) {
+		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_POISONGAS && pm->ps->weapon != WP_SMOKEBOMB ) {
 		if ( pm->ps->weaponTime > 0 ) {
 			pm->ps->weaponTime -= pml.msec;
 			if ( pm->ps->weaponTime < 0 ) {
@@ -3320,7 +3323,7 @@ static void PM_Weapon( void ) {
 
 	delayedFire = qfalse;
 
-	if ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE || pm->ps->weapon == WP_POISONGAS ) {
+	if ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE || pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SMOKEBOMB ) {
 		// (SA) AI's don't set grenadeTimeLeft on +attack, so I don't check for (pm->ps->aiChar) here
 		if ( pm->ps->grenadeTimeLeft > 0 ) {
 			if ( pm->ps->weapon == WP_DYNAMITE ) {
@@ -3333,7 +3336,9 @@ static void PM_Weapon( void ) {
 			} else {
 				pm->ps->grenadeTimeLeft -= pml.msec;
 				if ( pm->ps->grenadeTimeLeft <= 0 ) {
-					if ( pm->ps->weapon == WP_POISONGAS ) {
+					if ( pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SMOKEBOMB ) {
+						// overcooked - force it out of your hand instead of detonating in it; keep a sliver
+						// of fuse so it still applies once thrown, letting the cloud start almost immediately.
 						pm->ps->grenadeTimeLeft = 1;
 					} else {
 						// give two frames advance notice so there's time to launch and detonate
@@ -3345,9 +3350,9 @@ static void PM_Weapon( void ) {
 				}
 			}
 
-			if ( !( pm->cmd.buttons & BUTTON_ATTACK ) || ( pm->ps->weapon == WP_POISONGAS && pm->ps->grenadeTimeLeft <= 1 ) ) { //----(SA)	modified
-				if ( pm->ps->weaponDelay == ammoTable[pm->ps->weapon].fireDelayTime || ( pm->ps->weapon == WP_POISONGAS && pm->ps->grenadeTimeLeft <= 1 ) ) {
-					// released fire button (or poison gas forced out of an overcooked hand).  Fire!!!
+			if ( !( pm->cmd.buttons & BUTTON_ATTACK ) || ( ( pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SMOKEBOMB ) && pm->ps->grenadeTimeLeft <= 1 ) ) { //----(SA)	modified
+				if ( pm->ps->weaponDelay == ammoTable[pm->ps->weapon].fireDelayTime || ( ( pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SMOKEBOMB ) && pm->ps->grenadeTimeLeft <= 1 ) ) {
+					// released fire button (or gas/smoke forced out of an overcooked hand).  Fire!!!
 					BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qtrue );
 				}
 			} else {
@@ -3638,7 +3643,7 @@ static void PM_Weapon( void ) {
 	}
 
 	// player is leaning - no fire
-	if ( pm->ps->leanf != 0 && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_LANDMINE && pm->ps->weapon != WP_MEDCRATE && pm->ps->weapon != WP_POISONGAS ) {
+	if ( pm->ps->leanf != 0 && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_LANDMINE && pm->ps->weapon != WP_MEDCRATE && pm->ps->weapon != WP_POISONGAS && pm->ps->weapon != WP_SMOKEBOMB ) {
 		return;
 	}
 
@@ -3779,6 +3784,7 @@ static void PM_Weapon( void ) {
 			case WP_GRENADE_LAUNCHER:
 			case WP_GRENADE_PINEAPPLE:
 			case WP_POISONGAS:
+			case WP_SMOKEBOMB:
 				playswitchsound = qfalse;
 				break;
 	
@@ -4017,7 +4023,7 @@ static void PM_QuickGrenade( void ) {
 
 	if ( pm->ps->grenadeTimeLeft > 0 &&
 		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE &&
-		 pm->ps->weapon != WP_AIRSTRIKE && pm->ps->weapon != WP_POISONGAS )
+		 pm->ps->weapon != WP_AIRSTRIKE && pm->ps->weapon != WP_POISONGAS && pm->ps->weapon != WP_SMOKEBOMB )
 	{
 		pm->ps->grenadeTimeLeft -= pml.msec;
 
@@ -4056,7 +4062,7 @@ static void PM_QuickGrenade( void ) {
 	}
 
 	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ||
-		pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE )
+		pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SMOKEBOMB || pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE )
 	{
 		return;
 	}
@@ -4717,7 +4723,7 @@ void PmoveSingle( pmove_t *pmove ) {
 			}
 
 			// don't allow binocs if in the middle of throwing grenade
-			if ( ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE || pm->ps->weapon == WP_POISONGAS ) && pm->ps->grenadeTimeLeft > 0 ) {
+			if ( ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE || pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SMOKEBOMB ) && pm->ps->grenadeTimeLeft > 0 ) {
 				pm->ps->eFlags &= ~EF_ZOOMING;
 			}
 		}

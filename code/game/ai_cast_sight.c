@@ -225,6 +225,57 @@ qboolean AICast_VisibleFromPos( vec3_t srcpos, int srcnum,
 
 /*
 ==============
+AICast_BotEntInvisibleBySmokeBomb - ported from RealRTCW
+
+True if a grown WP_SMOKEBOMB cloud sits on the line between start and end, blinding line of
+sight through it. The blind radius grows far slower (MAX_SMOKE_RADIUS_TIME, 10s) and caps much
+smaller (MAX_SMOKE_RADIUS) than the visual cloud (SMOKEBOMB_VISUALRADIUS in g_missile.c, ~1s to
+full size) - that's RealRTCW's own balance, not a bug: the cloud looks fully grown almost
+immediately but doesn't fully block sight for several seconds.
+==============
+*/
+#define MAX_SMOKE_RADIUS            320.0
+#define MAX_SMOKE_RADIUS_TIME       10000.0
+#define UNAFFECTED_BY_SMOKE_DIST    SQR( 100 )
+
+qboolean AICast_BotEntInvisibleBySmokeBomb( vec3_t start, vec3_t end ) {
+	int i;
+	gentity_t *ent;
+	vec3_t smokeCenter;
+	float smokeRadius;
+
+	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
+		// outside survival, don't bother blinding short-range sight checks (e.g. melee range)
+		if ( DistanceSquared( start, end ) < UNAFFECTED_BY_SMOKE_DIST ) {
+			return qfalse;
+		}
+	}
+
+	for ( i = 0, ent = g_entities; i < level.num_entities; i++, ent++ ) {
+		if ( ent->s.eType != ET_MISSILE || ent->s.weapon != WP_SMOKEBOMB ) {
+			continue;
+		}
+		if ( ent->s.effect1Time == 16 ) {
+			continue;   // not grown yet
+		}
+
+		VectorCopy( ent->s.pos.trBase, smokeCenter );
+		smokeCenter[2] += 32;
+		smokeRadius = MAX_SMOKE_RADIUS * ( ( level.time - ent->grenadeExplodeTime ) / MAX_SMOKE_RADIUS_TIME );
+		if ( smokeRadius > MAX_SMOKE_RADIUS ) {
+			smokeRadius = MAX_SMOKE_RADIUS;
+		}
+
+		if ( DistanceFromLineSquared( smokeCenter, start, end ) < smokeRadius * smokeRadius ) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+==============
 AICast_CheckVisibility
 ==============
 */
@@ -237,6 +288,11 @@ qboolean AICast_CheckVisibility( gentity_t *srcent, gentity_t *destent ) {
 	orientation_t       or;
 
 	if ( destent->flags & FL_NOTARGET ) {
+		return qfalse;
+	}
+	// for smoke bomb
+	if ( srcent && destent && srcent->client && destent->client && srcent->health > 0 &&
+		 AICast_BotEntInvisibleBySmokeBomb( srcent->client->ps.origin, destent->client->ps.origin ) ) {
 		return qfalse;
 	}
 	//
@@ -338,6 +394,11 @@ void AICast_UpdateVisibility( gentity_t *srcent, gentity_t *destent, qboolean sh
 	int cnt, i;
 
 	if ( destent->flags & FL_NOTARGET ) {
+		return;
+	}
+	// for smoke bomb
+	if ( srcent && destent && srcent->client && destent->client && srcent->health > 0 &&
+		 AICast_BotEntInvisibleBySmokeBomb( srcent->client->ps.origin, destent->client->ps.origin ) ) {
 		return;
 	}
 

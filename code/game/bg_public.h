@@ -689,8 +689,9 @@ typedef enum {
 	WP_MEDCRATE,
 	WP_AIRSTRIKE,
 	WP_ARTY,
-	WP_POISONGAS,       // ported from RealRTCW - plain ammo-limited throw here, not the class-locked/chargeable medic ability it was there
-	WP_SMOKETRAIL,      // cosmetic-only "weapon" tag for artillery spotter-round smoke debris, never carried/fired directly
+	WP_POISONGAS,       
+	WP_SMOKEBOMB,
+	WP_SMOKETRAIL,
 
 	WP_MONSTER_ATTACK1,
 	WP_MONSTER_ATTACK2,
@@ -1407,6 +1408,7 @@ typedef enum {
 	MOD_GRAPPLE,
 	MOD_EXPLOSIVE,
 	MOD_POISONGAS,
+	MOD_SMOKEBOMB,
 	MOD_ZOMBIESPIT,
 	MOD_ZOMBIESPIT_SPLASH,
 	MOD_ZOMBIESPIRIT,
