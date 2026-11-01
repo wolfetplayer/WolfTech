@@ -1941,7 +1941,7 @@ void Com_ExecuteCfg(void)
 {
 // DHM - Nerve
 #ifndef UPDATE_SERVER
-	Cbuf_ExecuteText(EXEC_NOW, "exec default.cfg\n");
+	Cbuf_ExecuteText(EXEC_NOW, "exec wulf_default.cfg\n");
 	if ( FS_ReadFile( "language.cfg", NULL ) > 0 ) {
 		Cbuf_ExecuteText(EXEC_APPEND, "exec language.cfg\n");
 	} else if ( FS_ReadFile( "Language.cfg", NULL ) > 0 ) {

@@ -4209,7 +4209,7 @@ void PM_UpdateLean( playerState_t *ps, usercmd_t *cmd, pmove_t *tpm ) {
 		return;
 	}
 
-	if ( ( cmd->wbuttons & ( WBUTTON_LEANLEFT | WBUTTON_LEANRIGHT ) )  && !cmd->forwardmove && cmd->upmove <= 0 ) {
+	if ( FEATURE_LEAN_ENABLED && ( cmd->wbuttons & ( WBUTTON_LEANLEFT | WBUTTON_LEANRIGHT ) )  && !cmd->forwardmove && cmd->upmove <= 0 ) {
 		// if both are pressed, result is no lean
 		if ( cmd->wbuttons & WBUTTON_LEANLEFT ) {
 			leaning -= 1;

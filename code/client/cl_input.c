@@ -438,7 +438,7 @@ void CL_KeyMove( usercmd_t *cmd ) {
 	side -= movespeed * CL_KeyState( &kb[KB_MOVELEFT] );
 
 //----(SA)	added
-	if ( cmd->buttons & BUTTON_ACTIVATE ) {
+	if ( FEATURE_LEAN_ENABLED && ( cmd->buttons & BUTTON_ACTIVATE ) ) {
 		if ( side > 0 ) {
 			cmd->wbuttons |= WBUTTON_LEANRIGHT;
 		} else if ( side < 0 ) {

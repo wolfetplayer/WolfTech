@@ -1629,6 +1629,9 @@ typedef struct playerState_s {
 
 
 
+// feature toggle: lean is softly disabled (input ignored) but left intact so it can be re-enabled later
+#define FEATURE_LEAN_ENABLED    0
+
 //----(SA) wolf buttons
 #define WBUTTON_ATTACK2     1
 #define WBUTTON_ZOOM        2
