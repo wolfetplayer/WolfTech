@@ -1549,7 +1549,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	int take;
 	int asave;
 	int knockback;
-	qboolean attackerpain = qfalse;
 	hitEvent_t hitEventType = HIT_NONE;
 	qboolean tookHeadshot = qfalse;
 	int oldHealth;
@@ -2020,23 +2019,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 				// or
 				// from allies team to an allies or a neutral (=teamdamage))
 				// AND friendly fire is on
-				if ( g_friendlyFire.integer ) { 
+				if ( g_friendlyFire.integer ) {
 					if ( ( attacker->client->sess.sessionTeam == TEAM_BLUE && ( targ->aiTeam == AITEAM_NAZI || targ->aiTeam == AITEAM_MONSTER || targ->aiTeam == AITEAM_ENDMAPBOSS ) ) ||
 						( attacker->client->sess.sessionTeam == TEAM_RED && ( targ->aiTeam == AITEAM_ALLIES || targ->aiTeam == AITEAM_NEUTRAL ) ) ) {
-						if ( g_friendlyFire.integer == 1 ) {
-							targ->health = targ->health - take;
-						} else if ( g_friendlyFire.integer >= 2 ) { // hurt the attacker if he hits a teammate
-							if ( targ->aiTeam == AITEAM_ENDMAPBOSS ) {
-								targ->health = targ->health - take;
-							} else {
-								attacker->health = attacker->health - take;
-								attackerpain = qtrue;
-								// show some pain !
-								if ( attacker->pain ) {
-									attacker->pain( attacker, targ, take, point );
-								}
-							}
-						}
+						targ->health = targ->health - take;
 					}
 				} else {
 					// from axis team to a an allies or a neutral
@@ -2084,26 +2070,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 				} else if ( !attacker->client && targ->client && !( attacker->r.svFlags & SVF_CASTAI ) ) { // explosive barrels
 					targ->health = targ->health - take;
 				}
-			} else if ( g_friendlyFire.integer == 1 ) {
+			} else {
 				targ->health = targ->health - take;
-			} else if ( g_friendlyFire.integer >= 2 ) { // hurt the attacker if he hits a teammate
-				if ( attacker->client && targ->client ) {
-					if ( !( attacker->r.svFlags & SVF_CASTAI ) ) { // human is the attacker
-						if ( attacker->client->sess.sessionTeam == targ->client->sess.sessionTeam ) {
-
-							attacker->health = attacker->health - take;
-							// show some pain !
-							if ( attacker->pain ) {
-								attacker->pain( attacker, targ, take, point );
-							}
-							attackerpain = qtrue;
-						} else if ( attacker->client->sess.sessionTeam != targ->client->sess.sessionTeam ) {
-							targ->health = targ->health - take;
-						}
-					} else {
-						targ->health = targ->health - take;
-					}
-				}
 			}
 		}
 
@@ -2182,30 +2150,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		} else {
 			Coop_AddStats( targ, attacker, take, mod );
 			targ->lastPainMOD = 0; // optional: reset after use
-		}
-
-		if ( attacker->health <= 0 && attackerpain ) {
-			Coop_AddStats( attacker, attacker, take, mod );
-			if ( client ) {
-				attacker->flags |= FL_NO_KNOCKBACK;
-			}
-
-			if ( attacker->health < -999 ) {
-				attacker->health = -999;
-			}
-
-			attacker->enemy = attacker;
-			G_KillOrEnterBleedout( attacker, inflictor, attacker, take, mod );
-
-			// if we freed ourselves in death function
-			if ( !attacker->inuse ) {
-				return;
-			}
-
-			// RF, entity scripting
-			if ( attacker->s.number >= MAX_CLIENTS && attacker->health <= 0 ) { // might have revived itself in death function
-				G_Script_ScriptEvent( attacker, "death", "" );
-			}
 		}
 
 		G_ArmorDamage( targ );    //----(SA)	moved out to separate routine

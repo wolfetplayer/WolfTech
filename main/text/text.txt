@@ -25,7 +25,6 @@
 
 GENERAL_OFF                        "Off"
 GENERAL_ON                         "On"
-GENERAL_ONANDHEALTH                "On + Health Penalty"
 GENERAL_NO                         "No"
 GENERAL_YES                        "Yes"
 GENERAL_MAIN_MENU                  "MAIN MENU"

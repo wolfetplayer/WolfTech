@@ -2343,11 +2343,11 @@ their own UI selection state.
 ===============
 */
 static void UI_DrawLobbyFriendlyFire( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
-	static const char *keys[] = { "GENERAL_OFF", "GENERAL_ON", "GENERAL_ONANDHEALTH" };
+	static const char *keys[] = { "GENERAL_OFF", "GENERAL_ON" };
 	int val = (int)trap_Cvar_VariableValue( "cl_lobbyFriendlyFire" );
 	char line[128];
 
-	if ( val < 0 || val > 2 ) {
+	if ( val < 0 || val > 1 ) {
 		val = 0;
 	}
 

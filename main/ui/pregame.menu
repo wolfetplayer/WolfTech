@@ -312,7 +312,7 @@ itemDef {
 		type ITEM_TYPE_MULTI
 		text "@CREATE_FRIENDLYFIRE"
 		cvar "g_friendlyFire"
-		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 "@GENERAL_ONANDHEALTH" 2 }
+		cvarFloatList { "@GENERAL_OFF" 0 "@GENERAL_ON" 1 }
 		textfont UI_FONT_NORMAL
 		rect 28 334 230 14
 		style WINDOW_STYLE_FILLED
