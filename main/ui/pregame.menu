@@ -870,7 +870,7 @@ itemDef {
 	itemDef {
 		name classselect
 		visible 1
-		rect 494 285 118 16
+		rect 494 270 118 16
 		forecolor 1 1 1 1
 		backcolor 0 0 0 0
 		outlinecolor 1 1 0 .5
@@ -886,6 +886,79 @@ itemDef {
 		textaligny 12
 		}
 
+	// Short blurb for whichever class is currently selected - same wording as create.menu's panel (CREATE_CLASSDESC_*)
+	itemDef {
+		name classdesc_soldier
+		group grpClassDesc
+		rect 494 290 118 72
+		forecolor .8 .8 .8 1
+		textfont UI_FONT_NORMAL
+		text "@CREATE_CLASSDESC_SOLDIER"
+		textscale .15
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 11
+		visible 1
+		cvarTest "cl_survivalClass"
+		showcvar { "0" }
+		autowrapped
+		decoration
+		}
+
+	itemDef {
+		name classdesc_medic
+		group grpClassDesc
+		rect 494 290 118 72
+		forecolor .8 .8 .8 1
+		textfont UI_FONT_NORMAL
+		text "@CREATE_CLASSDESC_MEDIC"
+		textscale .15
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 11
+		visible 1
+		cvarTest "cl_survivalClass"
+		showcvar { "1" }
+		autowrapped
+		decoration
+		}
+
+	itemDef {
+		name classdesc_engineer
+		group grpClassDesc
+		rect 494 290 118 72
+		forecolor .8 .8 .8 1
+		textfont UI_FONT_NORMAL
+		text "@CREATE_CLASSDESC_ENGINEER"
+		textscale .15
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 11
+		visible 1
+		cvarTest "cl_survivalClass"
+		showcvar { "2" }
+		autowrapped
+		decoration
+		}
+
+	itemDef {
+		name classdesc_lieutenant
+		group grpClassDesc
+		rect 494 290 118 72
+		forecolor .8 .8 .8 1
+		textfont UI_FONT_NORMAL
+		text "@CREATE_CLASSDESC_LIEUTENANT"
+		textscale .15
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 11
+		visible 1
+		cvarTest "cl_survivalClass"
+		showcvar { "3" }
+		autowrapped
+		decoration
+		}
+
 	itemDef {
 		name invite
 		text "@LOBBY_INVITEFRIENDS"
@@ -894,7 +967,7 @@ itemDef {
 		textscale .2
 		style WINDOW_STYLE_ROUNDED
 		cornerradius 5
-		rect 494 305 118 24
+		rect 494 366 118 24
 		textalign ITEM_ALIGN_CENTER
 		textalignx 59
 		textaligny 16

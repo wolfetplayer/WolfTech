@@ -658,6 +658,10 @@ CREATE_MSG_REALISM                 "Enables realistic gameplay tweaks (movement,
 CREATE_MSG_SURVIVALDIFFICULTY      "Increases AI aim, accuracy and attack skill in Survival"
 CREATE_MSG_SURVIVALAIHEALTHCAP     "Caps AI health growth during long Survival matches"
 CREATE_MSG_PLAYERCLASS             "Choose which player class you start as."
+CREATE_CLASSDESC_SOLDIER           "Frontline tank. Highest health, and can carry an extra heavy weapon."
+CREATE_CLASSDESC_MEDIC             "Support class. Revives are faster and full-health, and you can drop healing crates."
+CREATE_CLASSDESC_ENGINEER          "Demolitions and construction. Extra perk slot, faster building, carries dynamite and landmines."
+CREATE_CLASSDESC_LIEUTENANT        "Fire support. Extra ammo capacity, calls in artillery and airstrikes."
 
 //=============================================================
 // PRE-GAME LOBBY (pregame.menu)
