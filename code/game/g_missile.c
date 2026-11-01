@@ -875,9 +875,11 @@ void G_TryPlaceMedCrate( gentity_t *ent, trace_t *trace ) {
 ================
 G_PoisonGas - ported from RealRTCW
 
-Lands/bounces like a normal grenade (fire_grenade's usual ~2.5s cook timer),
-then G_PoisonGasThink takes over: grows a damage cloud instead of exploding
-on impact, same effect1Time growth/dissipate curve cgame expects (see
+Lands/bounces like a normal grenade. It's cookable like a frag grenade (bg_pmove.c) -
+holding the fire button shortens the fuse left when thrown, so a fully cooked throw can
+start emitting almost as soon as it leaves your hand; an uncooked tap gets the full ~4s.
+Once the fuse runs out, G_PoisonGasThink takes over: grows a damage cloud instead of
+exploding on impact, same effect1Time growth/dissipate curve cgame expects (see
 CG_RenderSmokeGrenadeSmoke) to size and fade the smoke sprites.
 ================
 */

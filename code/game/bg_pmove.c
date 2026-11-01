@@ -3282,7 +3282,7 @@ static void PM_Weapon( void ) {
 	// busy cooking a quick grenade - holster the weapon (drop/raise), gated on weaponTime (networked, same field the ladder-holster
 	// below uses) instead of weapAnimTimer (not networked) so client and server can't desync on when the transition can happen.
 	if ( pm->ps->grenadeTimeLeft > 0 &&
-		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE ) {
+		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_POISONGAS ) {
 		if ( pm->ps->weaponTime > 0 ) {
 			pm->ps->weaponTime -= pml.msec;
 			if ( pm->ps->weaponTime < 0 ) {
@@ -3320,7 +3320,7 @@ static void PM_Weapon( void ) {
 
 	delayedFire = qfalse;
 
-	if ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ) {
+	if ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE || pm->ps->weapon == WP_POISONGAS ) {
 		// (SA) AI's don't set grenadeTimeLeft on +attack, so I don't check for (pm->ps->aiChar) here
 		if ( pm->ps->grenadeTimeLeft > 0 ) {
 			if ( pm->ps->weapon == WP_DYNAMITE ) {
@@ -3332,17 +3332,22 @@ static void PM_Weapon( void ) {
 				}
 			} else {
 				pm->ps->grenadeTimeLeft -= pml.msec;
-				if ( pm->ps->grenadeTimeLeft <= 0 ) { // give two frames advance notice so there's time to launch and detonate
-					PM_WeaponUseAmmo( pm->ps->weapon, 1 );  //----(SA)	take ammo
-					PM_AddEvent( EV_GRENADE_SUICIDE );  //----(SA)	die, dumbass
+				if ( pm->ps->grenadeTimeLeft <= 0 ) {
+					if ( pm->ps->weapon == WP_POISONGAS ) {
+						pm->ps->grenadeTimeLeft = 1;
+					} else {
+						// give two frames advance notice so there's time to launch and detonate
+						PM_WeaponUseAmmo( pm->ps->weapon, 1 );  //----(SA)	take ammo
+						PM_AddEvent( EV_GRENADE_SUICIDE );  //----(SA)	die, dumbass
 
-					return;
+						return;
+					}
 				}
 			}
 
-			if ( !( pm->cmd.buttons & BUTTON_ATTACK ) ) { //----(SA)	modified
-				if ( pm->ps->weaponDelay == ammoTable[pm->ps->weapon].fireDelayTime ) {
-					// released fire button.  Fire!!!
+			if ( !( pm->cmd.buttons & BUTTON_ATTACK ) || ( pm->ps->weapon == WP_POISONGAS && pm->ps->grenadeTimeLeft <= 1 ) ) { //----(SA)	modified
+				if ( pm->ps->weaponDelay == ammoTable[pm->ps->weapon].fireDelayTime || ( pm->ps->weapon == WP_POISONGAS && pm->ps->grenadeTimeLeft <= 1 ) ) {
+					// released fire button (or poison gas forced out of an overcooked hand).  Fire!!!
 					BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qtrue );
 				}
 			} else {
@@ -3679,23 +3684,6 @@ static void PM_Weapon( void ) {
 			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
 		}
 	}
-	else if ( pm->ps->weapon == WP_POISONGAS ) {
-		// plain ammo-limited throw, not cookable: must NOT fall into the WEAPON_CLASS_GRENADE branch below, which
-		// sets grenadeTimeLeft to start a "hold to cook" fuse - that field's decrement/throw-on-release handling
-		// elsewhere in this file only knows about WP_GRENADE_LAUNCHER/PINEAPPLE/DYNAMITE, so for any other weapon
-		// it gets set and then never cleared, which is what caused the runaway-refire bug. Single-shot cadence
-		// like a normal weapon instead, gated by weaponTime/nextShotTime once it actually fires (see below).
-		if ( !weaponstateFiring ) {
-			if ( pm->ps->aiChar ) {
-				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
-			} else {
-				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
-			}
-			pm->ps->weaponDelay = wt->fireDelayTime;
-		} else {
-			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
-		}
-	}
 	else if ( wc & ( WEAPON_CLASS_GRENADE | WEAPON_CLASS_DYNAMITE ) ) {
 		if ( !delayedFire ) {
 			if ( pm->ps->aiChar ) {
@@ -3705,7 +3693,6 @@ static void PM_Weapon( void ) {
 				// LT call-in signal: not cookable, no fuse to hold - press fire and it's thrown, gated only by classWeaponTime cooldown.
 				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
 			} else {
-				// Player pulls the fuse and holds the hot potato
 				if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) ) {
 					if ( wc & WEAPON_CLASS_DYNAMITE ) {
 						pm->ps->grenadeTimeLeft = 50;
@@ -4028,10 +4015,9 @@ static void PM_QuickGrenade( void ) {
 		pm->ps->quickGrenTime = 0;
 	}
 
-	// already cooking - keep ticking regardless of the gates below, same as a held grenade weapon.
 	if ( pm->ps->grenadeTimeLeft > 0 &&
 		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE &&
-		 pm->ps->weapon != WP_AIRSTRIKE )
+		 pm->ps->weapon != WP_AIRSTRIKE && pm->ps->weapon != WP_POISONGAS )
 	{
 		pm->ps->grenadeTimeLeft -= pml.msec;
 
@@ -4070,7 +4056,7 @@ static void PM_QuickGrenade( void ) {
 	}
 
 	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ||
-		pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE )
+		pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE )
 	{
 		return;
 	}
@@ -4731,7 +4717,7 @@ void PmoveSingle( pmove_t *pmove ) {
 			}
 
 			// don't allow binocs if in the middle of throwing grenade
-			if ( ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ) && pm->ps->grenadeTimeLeft > 0 ) {
+			if ( ( pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE || pm->ps->weapon == WP_POISONGAS ) && pm->ps->grenadeTimeLeft > 0 ) {
 				pm->ps->eFlags &= ~EF_ZOOMING;
 			}
 		}
