@@ -118,7 +118,10 @@ price_ammo_upgraded   500   // multiplied by upgrade level
 price_random_weapon   150   
 price_random_perk     250
 
-// ---- Mystery box (random weapon box) timing ----
+// ---- Mystery box (random weapon box) ----
+// Pool a box draws from if it has no "weaponpool" entity key of its own
+random_weapon_pool   "luger silencer colt akimbo revolver sten mp40 thompson ppsh mauser sniperrifle fg42 m1garand g43 mp44 bar m97 auto5 panzerfaust flamethrower venom tesla mg42m browning"
+
 rwb_spin_duration      5000   // ms of cycling before landing
 rwb_spin_interval_min    70   // ms between model swaps, fastest
 rwb_spin_interval_max   380   // ms between model swaps, right before landing

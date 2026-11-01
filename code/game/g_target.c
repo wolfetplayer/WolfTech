@@ -74,6 +74,9 @@ void SP_target_give( gentity_t *ent ) {
 void SP_target_buy( gentity_t *ent ) {
 	ent->use = Use_Target_buy;
 	ent->pcActivator = -1;
+
+	// Optional per-box weapon pool override, see Survival_RandomBox_GetPool in g_survival_buy.c
+	ent->rwbPoolCount = Survival_ParseWeaponPool( ent->rwbPoolStr, ent->rwbPool, MAX_RANDOM_WEAPON_POOL, "target_buy weaponpool" );
 }
 
 

@@ -204,6 +204,9 @@ typedef struct splinePath_s {
 
 #define CFOFS( x ) ( (size_t)&( ( (gclient_t *)0 )->x ) )
 
+// Cap for a mapper-configured random-weapon-box pool (per-box or map-wide, see g_survival.h)
+#define MAX_RANDOM_WEAPON_POOL 32
+
 struct gentity_s {
 	entityState_t s;                // communicated by server to clients
 	entityShared_t r;               // shared by both the server system and game
@@ -488,6 +491,11 @@ struct gentity_s {
 	int rwbChosenItemIndex;
 	qboolean rwbBlinking;
 	gentity_t *rwbDisplay;
+
+	// Per-box weapon pool override, set via the "weaponpool" entity key; rwbPoolCount 0 = none (see g_survival_buy.c)
+	char *rwbPoolStr;
+	weapon_t rwbPool[MAX_RANDOM_WEAPON_POOL];
+	int rwbPoolCount;
 
 	// Perk choice machine (buy_item "perk_choice"), survival mode - see g_survival_buy.c
 	int pcActivator;     // entity number currently browsing/confirming, -1 = idle

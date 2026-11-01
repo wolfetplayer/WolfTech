@@ -158,6 +158,60 @@ static const survNamedInt_t survWeaponNames[] = {
 };
 #define NUM_SURV_WEAPON_NAMES ( sizeof( survWeaponNames ) / sizeof( survWeaponNames[0] ) )
 
+/*
+============
+Survival_WeaponNameToId
+  Looks up a short .surv-style weapon name in survWeaponNames[] above.
+============
+*/
+qboolean Survival_WeaponNameToId( const char *name, weapon_t *out ) {
+	int i;
+
+	for ( i = 0; i < NUM_SURV_WEAPON_NAMES; i++ ) {
+		if ( !Q_stricmp( name, survWeaponNames[i].name ) ) {
+			*out = (weapon_t)survWeaponNames[i].id;
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
+/*
+============
+Survival_ParseWeaponPool
+  Parses a space-separated weapon-name list into outPool[], skipping unknown
+  names. Returns the count written; 0 means no usable override.
+============
+*/
+int Survival_ParseWeaponPool( const char *str, weapon_t *outPool, int maxCount, const char *sourceForLog ) {
+	char buf[1024];
+	char *p, *token;
+	int count = 0;
+	weapon_t weaponId;
+
+	if ( !str || !str[0] ) {
+		return 0;
+	}
+
+	Q_strncpyz( buf, str, sizeof( buf ) );
+	p = buf;
+
+	while ( count < maxCount ) {
+		token = COM_ParseExt( &p, qfalse );
+		if ( !token[0] ) {
+			break;
+		}
+
+		if ( Survival_WeaponNameToId( token, &weaponId ) ) {
+			outPool[count++] = weaponId;
+		} else {
+			G_Printf( "Survival: %s: unknown weapon name '%s' in weapon pool, ignoring\n", sourceForLog, token );
+		}
+	}
+
+	return count;
+}
+
 static const survNamedInt_t survPerkNames[] = {
 	{ "secondchance",   PERK_SECONDCHANCE },
 	{ "runner",         PERK_RUNNER },
@@ -502,6 +556,8 @@ static void Surv_SetDefaults( void ) {
 			survCfg.perkPrice[i] = -1;
 		}
 	}
+
+	survCfg.numRandomWeaponPool = 0;
 }
 
 /*
@@ -533,13 +589,13 @@ static qboolean Surv_ApplyDottedKey( const char *keybuf, const char *dot, const 
 	prefix[prefixLen] = 0;
 
 	if ( !Q_stricmp( prefix, "weapon_price" ) ) {
-		for ( i = 0; i < NUM_SURV_WEAPON_NAMES; i++ ) {
-			if ( !Q_stricmp( suffix, survWeaponNames[i].name ) ) {
-				survCfg.weaponPrice[survWeaponNames[i].id] = atoi( valueStr );
-				return qtrue;
-			}
+		weapon_t weaponId;
+
+		if ( Survival_WeaponNameToId( suffix, &weaponId ) ) {
+			survCfg.weaponPrice[weaponId] = atoi( valueStr );
+		} else {
+			G_Printf( "Survival: %s: unknown weapon_price name '%s', ignoring\n", sourceForLog, suffix );
 		}
-		G_Printf( "Survival: %s: unknown weapon_price name '%s', ignoring\n", sourceForLog, suffix );
 		return qtrue;
 	}
 
@@ -612,7 +668,8 @@ Surv_ParseBuffer
   // full-line comment
 
   Two key shapes:
-    flat_key value                    -> survConfigKeys[] table
+    flat_key value                    -> survConfigKeys[] table (also handles
+                                           gameover_music/exfil_music/random_weapon_pool)
     prefix.suffix value                -> Surv_ApplyDottedKey (per-character
                                            curves, per-weapon/per-perk prices)
 
@@ -655,6 +712,11 @@ static void Surv_ParseBuffer( char *data, const char *sourceForLog ) {
 
 		if ( !Q_stricmp( keybuf, "exfil_music" ) ) {
 			Q_strncpyz( survCfg.exfilMusic, tok, sizeof( survCfg.exfilMusic ) );
+			continue;
+		}
+
+		if ( !Q_stricmp( keybuf, "random_weapon_pool" ) ) {
+			survCfg.numRandomWeaponPool = Survival_ParseWeaponPool( tok, survCfg.randomWeaponPool, MAX_RANDOM_WEAPON_POOL, sourceForLog );
 			continue;
 		}
 

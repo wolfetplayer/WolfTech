@@ -96,6 +96,11 @@ void AICast_CallReinforcements( void );
 void Survival_ParseSpecialWaveTypes( const char *str );
 qboolean AICast_IsSpecialWaveChar( int aiChar );
 
+// Weapon-name lookup (survWeaponNames[] in g_survival_config.c) and a parser that turns a
+// space-separated name list into a weapon_t[] pool; shared by .surv and per-box pool overrides.
+qboolean Survival_WeaponNameToId( const char *name, weapon_t *out );
+int Survival_ParseWeaponPool( const char *str, weapon_t *outPool, int maxCount, const char *sourceForLog );
+
 // Per-character health/speed-scaling curve used by AICast_ApplySurvivalAttributes(); leave runSpeedCap at 0 to skip speed scaling for a character.
 typedef struct survCharCurve_s
 {
@@ -226,6 +231,10 @@ typedef struct survConfig_s
 	// -1 = no override; set via "weapon_price.<name> <price>" / "perk_price.<name> <price>".
 	int weaponPrice[WP_NUM_WEAPONS];
 	int perkPrice[NUM_PERKS];
+
+	// Map-wide pool override; set via "random_weapon_pool". numRandomWeaponPool 0 = no override (see Survival_RandomBox_GetPool).
+	weapon_t randomWeaponPool[MAX_RANDOM_WEAPON_POOL];
+	int numRandomWeaponPool;
 
 	// Game-over sequence (all players fallen), see gameOverPhase_t below.
 	int gameoverLingerTime;        // ms, death-fall/GAME OVER text linger before cams start

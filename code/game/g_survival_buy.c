@@ -118,7 +118,8 @@ above the target_buy's origin and despawned on pickup/reset.
 
 // Timing below comes from survCfg.rwb* (ms/units, see g_survival_config.c)
 
-static const weapon_t rwb_weapon_pool[] = {
+// Compiled-in fallback pool, used when no "weaponpool" or "random_weapon_pool" override applies
+static const weapon_t rwb_weapon_pool_default[] = {
 	WP_LUGER, WP_SILENCER, WP_COLT,
 	WP_AKIMBO, WP_REVOLVER, WP_MP40, WP_THOMPSON, WP_STEN, WP_PPSH,
 	WP_MAUSER, WP_SNIPERRIFLE, WP_FG42,
@@ -126,9 +127,28 @@ static const weapon_t rwb_weapon_pool[] = {
 	WP_PANZERFAUST, WP_FLAMETHROWER, WP_VENOM, WP_TESLA,
 	WP_MG42M, WP_BROWNING
 };
-static const int rwb_weapon_pool_count = sizeof( rwb_weapon_pool ) / sizeof( rwb_weapon_pool[0] );
+static const int rwb_weapon_pool_default_count = sizeof( rwb_weapon_pool_default ) / sizeof( rwb_weapon_pool_default[0] );
 
 void Survival_RandomBox_Think( gentity_t *ent );
+
+/*
+============
+Survival_RandomBox_GetPool
+  Resolves this box's weapon pool: per-box key -> .surv override -> compiled-in default.
+============
+*/
+static void Survival_RandomBox_GetPool( gentity_t *ent, const weapon_t **pool, int *count ) {
+	if ( ent->rwbPoolCount > 0 ) {
+		*pool = ent->rwbPool;
+		*count = ent->rwbPoolCount;
+	} else if ( survCfg.numRandomWeaponPool > 0 ) {
+		*pool = survCfg.randomWeaponPool;
+		*count = survCfg.numRandomWeaponPool;
+	} else {
+		*pool = rwb_weapon_pool_default;
+		*count = rwb_weapon_pool_default_count;
+	}
+}
 
 static int Survival_RandomBox_ItemIndexForWeapon( weapon_t weapon ) {
 	for ( int i = 1; bg_itemlist[i].classname; i++ ) {
@@ -139,13 +159,17 @@ static int Survival_RandomBox_ItemIndexForWeapon( weapon_t weapon ) {
 	return 0;
 }
 
-// Picks a weapon the activator doesn't already have
-static weapon_t Survival_RandomBox_PickFinalWeapon( gentity_t *activator ) {
+// Picks a weapon the activator doesn't already have, from this box's resolved pool
+static weapon_t Survival_RandomBox_PickFinalWeapon( gentity_t *ent, gentity_t *activator ) {
+	const weapon_t *pool;
+	int count;
 	weapon_t chosen;
 	int tries = 20;
 
+	Survival_RandomBox_GetPool( ent, &pool, &count );
+
 	do {
-		chosen = rwb_weapon_pool[rand() % rwb_weapon_pool_count];
+		chosen = pool[rand() % count];
 		tries--;
 	} while ( G_FindWeaponSlot( activator, chosen ) >= 0 && tries > 0 );
 
@@ -264,10 +288,15 @@ static void Survival_RandomBox_ThinkSpin( gentity_t *ent ) {
 	frac = elapsed / (float)survCfg.rwbSpinDuration;
 
 	// cosmetic swap: any pool weapon, just avoid an immediate repeat
+	const weapon_t *pool;
+	int poolCount;
 	int guard = 6;
 	int cosmeticIndex = 0;
+
+	Survival_RandomBox_GetPool( ent, &pool, &poolCount );
+
 	do {
-		weapon_t cosmetic = rwb_weapon_pool[rand() % rwb_weapon_pool_count];
+		weapon_t cosmetic = pool[rand() % poolCount];
 		cosmeticIndex = Survival_RandomBox_ItemIndexForWeapon( cosmetic );
 		guard--;
 	} while ( cosmeticIndex > 0 && cosmeticIndex == ent->rwbDisplay->s.modelindex && guard > 0 );
@@ -343,7 +372,7 @@ qboolean Survival_RandomBox_Start( gentity_t *ent, gentity_t *activator ) {
 		return qfalse;
 	}
 
-	chosen = Survival_RandomBox_PickFinalWeapon( activator );
+	chosen = Survival_RandomBox_PickFinalWeapon( ent, activator );
 	if ( chosen == WP_NONE ) {
 		trap_SendServerCommand( -1, "mu_play sound/items/use_nothing.wav 0\n" );
 		return qfalse;
@@ -363,7 +392,13 @@ qboolean Survival_RandomBox_Start( gentity_t *ent, gentity_t *activator ) {
 	ent->rwbChosenItemIndex = itemIndex;
 	ent->rwbBlinking = qfalse;
 
-	startIndex = Survival_RandomBox_ItemIndexForWeapon( rwb_weapon_pool[rand() % rwb_weapon_pool_count] );
+	{
+		const weapon_t *pool;
+		int poolCount;
+
+		Survival_RandomBox_GetPool( ent, &pool, &poolCount );
+		startIndex = Survival_RandomBox_ItemIndexForWeapon( pool[rand() % poolCount] );
+	}
 	if ( startIndex <= 0 ) {
 		startIndex = itemIndex;
 	}

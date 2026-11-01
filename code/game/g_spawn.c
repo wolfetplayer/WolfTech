@@ -186,6 +186,7 @@ field_t fields[] = {
 
 	{"price",            FOFS( price ),                F_INT},
 	{"buy_item",         FOFS( buy_item ),           F_STRING},
+	{"weaponpool",       FOFS( rwbPoolStr ),          F_STRING},
 	{"isWeapon",         FOFS( isWeapon ),             F_INT},
 	{"oneshot",          FOFS( oneshot ),                F_INT},
 	{"wave",             FOFS( wave ),                F_INT},
