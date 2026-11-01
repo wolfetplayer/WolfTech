@@ -1141,67 +1141,67 @@ gentity_t *weapon_crowbar_throw( gentity_t *ent ) {
 	return m;
 }
 
-gentity_t *weapon_grenadelauncher_fire_coop( gentity_t *ent, int grenType ) {
-	gentity_t   *m, *te;     // JPW NERVE
+// Base throw power per grenade type, scaled by GRENADE_PITCH_SWING below based on view pitch.
+#define GRENADE_THROW_POWER        1300.0f // launcher / pineapple / smoke
+#define AIRSTRIKE_THROW_POWER        800.0f // call-in marker - a short, precise toss, not a long lob
+#define POISONGAS_THROW_POWER        600.0f // thrown weaker than the other hand grenades, on purpose
+#define SHORT_TOSS_THROW_POWER      400.0f // dynamite / landmine - placed close, not thrown far
+#define MEDCRATE_DROP_POWER         150.0f // flat drop at your feet, no angle influence
+#define GRENADE_PITCH_SWING            0.4f // +/-40% power swing between full-up and full-down aim
+
+gentity_t *weapon_grenadelauncher_fire( gentity_t *ent, int grenType ) {
+	gentity_t   *m, *te;
 	trace_t tr;
 	vec3_t viewpos;
-	float upangle = 0, pitch;                   //      start with level throwing and adjust based on angle
 	vec3_t tosspos;
-	qboolean underhand = qtrue;
+	float upangle, basePower, pitchDeg, upFrac;
 
-	pitch = ent->s.apos.trBase[0];
+	pitchDeg = ent->s.apos.trBase[0];      // raw view pitch: positive = looking down, negative = looking up
 
-	// JPW NERVE -- smoke grenades always overhand
-	if ( pitch >= 0 ) {
+	// shape the arc: force an upward component even when aiming level/down so the throw still arcs,
+	// tapering it off the further the player looks up (their own aim already supplies the lift by then)
+	if ( pitchDeg >= 0 ) {
 		forward[2] += 0.5f;
-		// Used later in underhand boost
-		pitch = 1.15f;
 	} else {
-		pitch = -pitch;
-		pitch = min( pitch, 30 );
-		pitch /= 30.f;
-		pitch = 1 - pitch;
-		forward[2] += ( pitch * 0.5f );
-
-		// Used later in underhand boost
-		pitch *= 0.15f;
-		pitch += 1.f;
+		upFrac = min( -pitchDeg, 30.f ) / 30.f;        // 0 at level .. 1 by 30 deg up
+		forward[2] += ( 1.f - upFrac ) * 0.5f;
 	}
-
 	VectorNormalizeFast( forward );             //      make sure forward is normalized
 
-	upangle = -( ent->s.apos.trBase[0] );     //        this will give between  -90 / 90
-	upangle = min( upangle, 50 );
-	upangle = max( upangle, -50 );            //        now clamped to  -50 / 50        (don't allow firing straight up/down)
-	upangle = upangle / 500.0f;               //                                   -0.1 / 0.1  (flattened angle influence further so aim pitch barely dents range)
-	upangle += 0.85f;                       //                              0.75 / 0.95
+	// power: monotonic with aim pitch, so looking up reliably throws farther and looking down throws
+	// shorter, with level aim landing squarely on the type's base power (no need to look up for a decent throw)
+	upangle = -pitchDeg;
+	upangle = min( upangle, 50.f );
+	upangle = max( upangle, -50.f );            //        clamped to  -50 / 50        (don't allow firing straight up/down)
+	upangle = 1.f + ( upangle / 50.f ) * GRENADE_PITCH_SWING;      // (1-SWING) .. (1+SWING), 1.0 at level
 
-	if ( upangle < .7 ) {
-		upangle = .7;
+	switch ( grenType ) {
+	case WP_GRENADE_LAUNCHER:
+	case WP_GRENADE_PINEAPPLE:
+	case WP_GRENADE_SMOKE:
+		basePower = GRENADE_THROW_POWER;
+		break;
+	case WP_AIRSTRIKE:
+		basePower = AIRSTRIKE_THROW_POWER;
+		break;
+	case WP_POISONGAS:
+		basePower = POISONGAS_THROW_POWER;
+		break;
+	case WP_MEDCRATE:
+		basePower = MEDCRATE_DROP_POWER;
+		upangle = 1.f;      // crates just drop in front of you, no angle influence
+		break;
+	default:   // WP_DYNAMITE, WP_LANDMINE
+		basePower = SHORT_TOSS_THROW_POWER;
+		break;
 	}
 
-	// pineapples are not thrown as far as mashers
-	if ( grenType == WP_GRENADE_LAUNCHER ) {
-		upangle *= 1100;
-	} else if ( grenType == WP_GRENADE_PINEAPPLE ) {
-		upangle *= 1100;
-	} else if ( grenType == WP_GRENADE_SMOKE || grenType == WP_AIRSTRIKE || grenType == WP_POISONGAS ) {
-		upangle *= 1100;
-	} else if ( grenType == WP_MEDCRATE ) {
-		upangle = 150; 
-	} else {     // WP_DYNAMITE
-		upangle *= 400;
-	}
+	upangle *= basePower;
 
-	VectorCopy( muzzleEffect, tosspos );
-
-	if ( underhand ) {
-		// move a little bit more away from the player (so underhand tosses don't get caught on nearby lips)
-		VectorMA( muzzleEffect, 8, forward, tosspos );
-		tosspos[2] -= 8;            // lower origin for the underhand throw
-		upangle *= pitch;
-		SnapVector( tosspos );
-	}
+	// move the release point out and down a bit, like an underhand toss, so it doesn't catch on nearby lips/ledges
+	VectorMA( muzzleEffect, 8, forward, tosspos );
+	tosspos[2] -= 8;            // lower origin for the underhand throw
+	SnapVector( tosspos );
 
 	VectorScale( forward, upangle, forward );
 	// check for valid start spot (so you don't throw through or get stuck in a wall)
@@ -1223,6 +1223,11 @@ gentity_t *weapon_grenadelauncher_fire_coop( gentity_t *ent, int grenType ) {
 
 	m->damage = 0;      // Ridah, grenade's don't explode on contact
 	m->splashDamage *= s_quadFactor;
+
+	if ( ent->aiCharacter == AICHAR_VENOM ) { // poison gas grenade
+		m->think = G_ExplodeMissilePoisonGas;
+		m->s.density = 1;
+	}
 
 	// JPW NERVE
 	if ( grenType == WP_GRENADE_SMOKE ) {
@@ -1247,127 +1252,6 @@ gentity_t *weapon_grenadelauncher_fire_coop( gentity_t *ent, int grenType ) {
 		te->r.svFlags |= SVF_BROADCAST | SVF_USE_CURRENT_ORIGIN;
 	}
 	// jpw
-
-	//----(SA)      adjust for movement of character.  TODO: Probably comment in later, but only for forward/back not strafing
-	//VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );    // "real" physics
-
-	// let the AI know which grenade it has fired
-	ent->grenadeFired = m->s.number;
-
-	// Ridah, return the grenade so we can do some prediction before deciding if we really want to throw it or not
-	return m;
-}
-
-gentity_t *weapon_grenadelauncher_fire( gentity_t *ent, int grenType ) {
-	gentity_t   *m, *te; // JPW NERVE
-	float upangle = 0;                  //	start with level throwing and adjust based on angle
-	vec3_t tosspos;
-	qboolean underhand = 0;
-
-	if ( ( ent->s.apos.trBase[0] > 0 ) && ( grenType != WP_GRENADE_SMOKE ) && ( grenType != WP_AIRSTRIKE ) ) { // JPW NERVE -- smoke grenades and airstrike markers always overhand
-		underhand = qtrue;
-	}
-
-	if ( underhand ) {
-		forward[2] = 0;                 //	start the toss level for underhand
-	} else {
-		forward[2] += 0.2;              //	extra vertical velocity for overhand
-
-	}
-	VectorNormalize( forward );         //	make sure forward is normalized
-
-	upangle = -( ent->s.apos.trBase[0] ); //	this will give between	-90 / 90
-	upangle = min( upangle, 50 );
-	upangle = max( upangle, -50 );        //	now clamped to			-50 / 50	(don't allow firing straight up/down)
-	upangle = upangle / 100.0f;           //						   -0.5 / 0.5
-	upangle += 0.5f;                    //						    0.0 / 1.0
-
-	if ( upangle < .1 ) {
-		upangle = .1;
-	}
-
-	// pineapples are not thrown as far as mashers
-	if ( grenType == WP_GRENADE_LAUNCHER ) {
-		upangle *= 800;     //									    0.0 / 800.0
-	} else if ( grenType == WP_GRENADE_PINEAPPLE )                                {
-		if ( g_gametype.integer != GT_SINGLE_PLAYER ) {
-			upangle *= 800;
-		} else {
-			upangle *= 600;     //									    0.0 / 600.0
-		}
-	} else if ( grenType == WP_GRENADE_SMOKE || grenType == WP_AIRSTRIKE )   { // smoke grenades and airstrike markers *really* get chucked
-		upangle *= 800;
-	} else if ( grenType == WP_MEDCRATE ) {
-		upangle = 150; 
-	} else {      // WP_DYNAMITE
-		upangle *= 400;     //										0.0 / 100.0
-
-	}
-
-	{
-		VectorCopy( muzzleEffect, tosspos );
-		if ( underhand ) {
-			VectorMA( muzzleEffect, 15, forward, tosspos );   // move a little bit more away from the player (so underhand tosses don't get caught on nearby lips)
-			tosspos[2] -= 24;   // lower origin for the underhand throw
-			upangle *= 1.3;     // a little more force to counter the lower position / lack of additional lift
-		}
-
-		VectorScale( forward, upangle, forward );
-
-
-		{
-			// check for valid start spot (so you don't throw through or get stuck in a wall)
-			trace_t tr;
-			vec3_t viewpos;
-
-			VectorCopy( ent->s.pos.trBase, viewpos );
-			viewpos[2] += ent->client->ps.viewheight;
-
-			trap_Trace( &tr, viewpos, NULL, NULL, tosspos, ent->s.number, MASK_SHOT );
-			if ( tr.fraction < 1 ) {   // oops, bad launch spot
-				VectorCopy( tr.endpos, tosspos );
-			}
-		}
-
-
-		m = fire_grenade( ent, tosspos, forward, grenType );
-	}
-
-
-	//m->damage *= s_quadFactor;
-	m->damage = 0;  // Ridah, grenade's don't explode on contact
-	m->splashDamage *= s_quadFactor;
-
-	if ( ent->aiCharacter == AICHAR_VENOM ) { // poison gas grenade
-		m->think = G_ExplodeMissilePoisonGas;
-		m->s.density = 1;
-	}
-
-// JPW NERVE
-	if ( grenType == WP_GRENADE_SMOKE ) {
-		if ( ent->client->sess.sessionTeam == TEAM_RED ) { // store team so we can generate red or blue smoke
-			m->s.otherEntityNum2 = 1;
-		} else {
-			m->s.otherEntityNum2 = 0;
-		}
-		m->nextthink = level.time + 4000;
-		m->think = weapon_callAirStrike;
-
-		te = G_TempEntity( m->s.pos.trBase, EV_GLOBAL_SOUND );
-		te->s.eventParm = G_SoundIndex( "sound/scenaric/forest/me109_flight.wav" );
-//		te->r.svFlags |= SVF_BROADCAST | SVF_USE_CURRENT_ORIGIN;
-	} else if ( grenType == WP_AIRSTRIKE ) {
-		m->nextthink = level.time + 4000;
-		m->think = weapon_callAirStrike;
-
-		te = G_TempEntity( m->s.pos.trBase, EV_GLOBAL_SOUND );
-		te->s.eventParm = G_SoundIndex( "sound/weapons/airstrike/throw.wav" );
-		te->r.svFlags |= SVF_BROADCAST | SVF_USE_CURRENT_ORIGIN;
-	}
-// jpw
-
-	//----(SA)	adjust for movement of character.  TODO: Probably comment in later, but only for forward/back not strafing
-//	VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );	// "real" physics
 
 	// let the AI know which grenade it has fired
 	ent->grenadeFired = m->s.number;
@@ -2140,14 +2024,7 @@ void FireWeapon( gentity_t *ent ) {
 
 		ent->client->ps.classWeaponTime = level.time;
 
-		if (g_gametype.integer <= GT_COOP)
-		{
-			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
-		}
-		else
-		{
-			weapon_grenadelauncher_fire(ent, ent->s.weapon);
-		}
+		weapon_grenadelauncher_fire(ent, ent->s.weapon);
 	}
 	else if (wc & WEAPON_CLASS_LANDMINE)
 	{
@@ -2175,15 +2052,8 @@ void FireWeapon( gentity_t *ent ) {
 			ent->client->ps.classWeaponTime = level.time;
 		}
 
-		// reuses dynamite's short-toss arc: these helpers only special-case WP_DYNAMITE, everything else falls through the same way.
-		if (g_gametype.integer <= GT_COOP)
-		{
-			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
-		}
-		else
-		{
-			weapon_grenadelauncher_fire(ent, ent->s.weapon);
-		}
+		// reuses dynamite's short-toss arc: weapon_grenadelauncher_fire only special-cases WP_DYNAMITE, everything else falls through the same way.
+		weapon_grenadelauncher_fire(ent, ent->s.weapon);
 	}
 	else if (wc & WEAPON_CLASS_MEDCRATE)
 	{
@@ -2195,15 +2065,8 @@ void FireWeapon( gentity_t *ent ) {
 
 		ent->client->ps.classWeaponTime = level.time;
 
-		// these helpers special-case WP_MEDCRATE with zero launch velocity so it just drops -- see weapon_grenadelauncher_fire_coop/_fire.
-		if (g_gametype.integer <= GT_COOP)
-		{
-			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
-		}
-		else
-		{
-			weapon_grenadelauncher_fire(ent, ent->s.weapon);
-		}
+		// weapon_grenadelauncher_fire special-cases WP_MEDCRATE with zero launch velocity so it just drops.
+		weapon_grenadelauncher_fire(ent, ent->s.weapon);
 	}
 	else if (wc & WEAPON_CLASS_GRENADE)
 	{
@@ -2213,14 +2076,7 @@ void FireWeapon( gentity_t *ent ) {
 			return;
 		}
 
-		if (g_gametype.integer <= GT_COOP)
-		{
-			weapon_grenadelauncher_fire_coop(ent, ent->s.weapon);
-		}
-		else
-		{
-			weapon_grenadelauncher_fire(ent, ent->s.weapon);
-		}
+		weapon_grenadelauncher_fire(ent, ent->s.weapon);
 
 		if (ent->s.weapon == WP_AIRSTRIKE)
 		{

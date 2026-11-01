@@ -2171,11 +2171,7 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		}
 		bolt->methodOfDeath         = MOD_GRENADE;
 		bolt->splashMethodOfDeath   = MOD_GRENADE_SPLASH;
-		if ( g_gametype.integer >= GT_COOP ) {
-			bolt->s.eFlags              = EF_BOUNCE_HALF;
-		} else {
-			bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
-		}
+		bolt->s.eFlags              = EF_BOUNCE_HALF;    // same bounce as smoke/airstrike/poison gas, for a consistent feel
 		break;
 	case WP_GRENADE_PINEAPPLE:
 		bolt->classname             = "grenade";
@@ -2184,11 +2180,7 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->splashRadius          = 450;
 		bolt->methodOfDeath         = MOD_GRENADE;
 		bolt->splashMethodOfDeath   = MOD_GRENADE_SPLASH;
-		if ( g_gametype.integer >= GT_COOP ) {
-			bolt->s.eFlags              = EF_BOUNCE_HALF;
-		} else {
-			bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
-		}
+		bolt->s.eFlags              = EF_BOUNCE_HALF;    // same bounce as smoke/airstrike/poison gas, for a consistent feel
 		break;
 	case WP_M7:
 		bolt->classname             = "m7_grenade";
@@ -2299,11 +2291,7 @@ gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t dir, int grenadeW
 		bolt->damage                = 0;
 		bolt->methodOfDeath         = MOD_POISONGAS;
 		bolt->splashMethodOfDeath   = MOD_POISONGAS;
-		if ( g_gametype.integer >= GT_COOP ) {
-			bolt->s.eFlags              = EF_BOUNCE_HALF;
-		} else {
-			bolt->s.eFlags              = EF_BOUNCE_HALF | EF_BOUNCE;
-		}
+		bolt->s.eFlags              = EF_BOUNCE_HALF;    // same bounce as the other hand grenades, for a consistent feel
 		break;
 	}
 
