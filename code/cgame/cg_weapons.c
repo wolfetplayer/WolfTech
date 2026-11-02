@@ -3893,7 +3893,7 @@ CG_WeaponSelectable
 static qboolean CG_WeaponSelectable( int i ) {
 
 	// grenades are only thrown via quickgrenade now - never selectable as the active weapon
-	if ( i == WP_GRENADE_LAUNCHER || i == WP_GRENADE_PINEAPPLE ) {
+	if ( i == WP_GRENADE_LAUNCHER || i == WP_GRENADE_PINEAPPLE || i == WP_POISONGAS || i == WP_SMOKEBOMB ) {
 		return qfalse;
 	}
 

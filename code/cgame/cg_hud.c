@@ -279,6 +279,27 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 		}
 
 		cg.grenLastTime = cg.predictedPlayerState.grenadeTimeLeft;
+	} else if ( cg.predictedPlayerState.specialGrenadeTimeLeft ) {
+		// special quickgrenade cooking - same tick cadence, but never grows this icon
+		if ( ( ( cg.specialGrenLastTime ) % 1000 ) < ( ( cg.predictedPlayerState.specialGrenadeTimeLeft ) % 1000 ) ) {
+			switch ( cg.predictedPlayerState.specialGrenadeTimeLeft / 1000 ) {
+			case 3:
+				trap_S_StartLocalSound( cgs.media.grenadePulseSound4, CHAN_LOCAL_SOUND );
+				break;
+			case 2:
+				trap_S_StartLocalSound( cgs.media.grenadePulseSound3, CHAN_LOCAL_SOUND );
+				break;
+			case 1:
+				trap_S_StartLocalSound( cgs.media.grenadePulseSound2, CHAN_LOCAL_SOUND );
+				break;
+			case 0:
+				trap_S_StartLocalSound( cgs.media.grenadePulseSound1, CHAN_LOCAL_SOUND );
+				break;
+			}
+		}
+
+		cg.specialGrenLastTime = cg.predictedPlayerState.specialGrenadeTimeLeft;
+		scale = halfScale = 0;
 	} else {
 		scale = halfScale = 0;
 	}
@@ -615,11 +636,13 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 	}
 }
 
+#define GRENADE_ICON_MAXCOUNT   5   // matches ammoTable maxclip
+
 /*
 ==============
 CG_DrawGrenadeCount
 
-Always-visible grenade ammo readout, regardless of equipped weapon.
+Always-visible grenade ammo readout: one icon per grenade held, instead of a number.
 ==============
 */
 static void CG_DrawGrenadeCount( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
@@ -627,7 +650,6 @@ static void CG_DrawGrenadeCount( rectDef_t *rect, int font, float scale, vec4_t 
 	int wp;
 	int value;
 	qhandle_t icon;
-	char num[16];
 	float pulse, grow;
 
 	ps = &cg.snap->ps;
@@ -667,15 +689,71 @@ static void CG_DrawGrenadeCount( rectDef_t *rect, int font, float scale, vec4_t 
 	if ( cg.predictedPlayerState.grenadeTimeLeft > 0 ) {
 		pulse = 1.0f - ( (float)( cg.predictedPlayerState.grenadeTimeLeft % 1000 ) / 1000.0f );
 	}
-	grow = 0.3f * pulse * rect->h;
+	{
+		// shrink icons so GRENADE_ICON_MAXCOUNT of them fit in the readout's width
+		float iconH = rect->h * 0.65f;
+		grow = 0.3f * pulse * iconH;
 
-	if ( icon ) {
-		trap_R_SetColor( NULL );
-		CG_DrawPic( rect->x - 0.5f * grow, rect->y - 0.5f * grow, rect->h + grow, rect->h + grow, icon );
+		CG_DrawGrenadeIconRow( rect->x, rect->y + ( rect->h - iconH ) * 0.5f - 0.5f * grow, iconH + grow, icon, value, GRENADE_ICON_MAXCOUNT );
+	}
+}
+
+/*
+==============
+CG_DrawSpecialGrenadeCount
+
+Same as CG_DrawGrenadeCount, for the held special grenade (smoke or gas).
+==============
+*/
+static void CG_DrawSpecialGrenadeCount( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	playerState_t *ps;
+	int wp;
+	int value;
+	qhandle_t icon;
+	float pulse, grow;
+
+	ps = &cg.snap->ps;
+
+	if ( ps->stats[STAT_HEALTH] <= 0 ) {
+		return;
 	}
 
-	Com_sprintf( num, sizeof( num ), "%d", value );
-	CG_Text_Paint( rect->x + rect->h + 6, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
+	if ( COM_BitCheck( ps->weapons, WP_POISONGAS ) ) {
+		wp = WP_POISONGAS;
+	} else if ( COM_BitCheck( ps->weapons, WP_SMOKEBOMB ) ) {
+		wp = WP_SMOKEBOMB;
+	} else {
+		return;
+	}
+
+	if ( cgs.dmflags & DF_NO_WEAPRELOAD ) {
+		value = ps->ammo[ BG_FindAmmoForWeapon( wp ) ];
+	} else {
+		value = ps->ammoclip[ BG_FindClipForWeapon( wp ) ];
+	}
+
+	if ( value <= 0 ) {
+		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement( PLACE_RIGHT, PLACE_BOTTOM );
+	}
+
+	CG_RegisterWeapon( wp );
+	icon = cg_weapons[ wp ].weaponIcon[0];
+
+	// pulse while cooking
+	pulse = 0.0f;
+	if ( cg.predictedPlayerState.specialGrenadeTimeLeft > 0 ) {
+		pulse = 1.0f - ( (float)( cg.predictedPlayerState.specialGrenadeTimeLeft % 1000 ) / 1000.0f );
+	}
+	{
+		float iconH = rect->h * 0.65f;
+		grow = 0.3f * pulse * iconH;
+
+		CG_DrawGrenadeIconRow( rect->x, rect->y + ( rect->h - iconH ) * 0.5f - 0.5f * grow, iconH + grow, icon, value, GRENADE_ICON_MAXCOUNT );
+	}
 }
 
 static void CG_DrawPlayerHead( rectDef_t *rect, qboolean draw2D ) {
@@ -1738,6 +1816,9 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_GRENADE_COUNT:
 		CG_DrawGrenadeCount( &rect, font, scale, color, textStyle );
+		break;
+	case CG_PLAYER_SPECIAL_GRENADE_COUNT:
+		CG_DrawSpecialGrenadeCount( &rect, font, scale, color, textStyle );
 		break;
 	case CG_PLAYER_WEAPON_HEAT:
 		CG_DrawWeapHeat( &rect, align );

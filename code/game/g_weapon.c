@@ -1801,6 +1801,7 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 	case WP_GRENADE_PINEAPPLE:
 	case WP_GRENADE_LAUNCHER:
 	case WP_POISONGAS:
+	case WP_SMOKEBOMB:
 		VectorMA( muzzlePoint, 20, right, muzzlePoint );
 		break;
 	case WP_AKIMBO:     // left side rather than right

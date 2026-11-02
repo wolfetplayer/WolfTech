@@ -693,6 +693,27 @@ static void CG_DrawStatusBar( void ) {
 				}
 
 				cg.grenLastTime = ps->grenadeTimeLeft;
+			} else if ( ps->specialGrenadeTimeLeft ) {
+				// special quickgrenade cooking - same tick cadence, but never grows this icon
+				if ( ( ( cg.specialGrenLastTime ) % 1000 ) < ( ( ps->specialGrenadeTimeLeft ) % 1000 ) ) {
+					switch ( ps->specialGrenadeTimeLeft / 1000 ) {
+					case 3:
+						trap_S_StartLocalSound( cgs.media.grenadePulseSound4, CHAN_LOCAL_SOUND );
+						break;
+					case 2:
+						trap_S_StartLocalSound( cgs.media.grenadePulseSound3, CHAN_LOCAL_SOUND );
+						break;
+					case 1:
+						trap_S_StartLocalSound( cgs.media.grenadePulseSound2, CHAN_LOCAL_SOUND );
+						break;
+					case 0:
+						trap_S_StartLocalSound( cgs.media.grenadePulseSound1, CHAN_LOCAL_SOUND );
+						break;
+					}
+				}
+
+				cg.specialGrenLastTime = ps->specialGrenadeTimeLeft;
+				scale = halfScale = 0;
 			} else {
 				scale = halfScale = 0;
 			}
@@ -3617,11 +3638,13 @@ static void CG_ScanForCrosshairEntity( void ) {
 
 
 
+#define OLDUI_GRENADE_ICON_MAXCOUNT   5   // matches ammoTable maxclip
+
 /*
 ==============
 CG_DrawGrenadeCount
 
-Always-visible grenade ammo readout, regardless of equipped weapon.
+Always-visible grenade ammo readout: one icon per grenade held, instead of a number.
 ==============
 */
 static void CG_DrawGrenadeCount( void ) {
@@ -3674,14 +3697,69 @@ static void CG_DrawGrenadeCount( void ) {
 	if ( cg.predictedPlayerState.grenadeTimeLeft > 0 ) {
 		pulse = 1.0f - ( (float)( cg.predictedPlayerState.grenadeTimeLeft % 1000 ) / 1000.0f );
 	}
-	grow = 0.3f * pulse * 24;
+	grow = 0.3f * pulse * 16;
 
-	if ( icon ) {
-		trap_R_SetColor( NULL );
-		CG_DrawPic( 555 - 0.5f * grow, 436 - 0.5f * grow, 24 + grow, 24 + grow, icon );
+	CG_DrawGrenadeIconRow( 555, 436 - 0.5f * grow, 16 + grow, icon, value, OLDUI_GRENADE_ICON_MAXCOUNT );
+}
+
+/*
+==============
+CG_DrawSpecialGrenadeCount
+
+Same as CG_DrawGrenadeCount, but for the held special grenade (smoke or gas).
+==============
+*/
+static void CG_DrawSpecialGrenadeCount( void ) {
+	playerState_t *ps;
+	int wp;
+	int value;
+	qhandle_t icon;
+	float grow, pulse;
+
+	// modern HUD draws its own copy via the CG_PLAYER_SPECIAL_GRENADE_COUNT ownerdraw in cg_hud.c
+	if ( !cg_oldWolfUI.integer ) {
+		return;
 	}
 
-	CG_DrawBigString2( 555 + 28, 436, va( "%d", value ), cg_hudAlpha.value );
+	if ( cg.snap->ps.stats[STAT_HEALTH] <= 0 ) {
+		return;
+	}
+
+	ps = &cg.snap->ps;
+
+	if ( COM_BitCheck( ps->weapons, WP_POISONGAS ) ) {
+		wp = WP_POISONGAS;
+	} else if ( COM_BitCheck( ps->weapons, WP_SMOKEBOMB ) ) {
+		wp = WP_SMOKEBOMB;
+	} else {
+		return;
+	}
+
+	if ( cgs.dmflags & DF_NO_WEAPRELOAD ) {
+		value = ps->ammo[ BG_FindAmmoForWeapon( wp ) ];
+	} else {
+		value = ps->ammoclip[ BG_FindClipForWeapon( wp ) ];
+	}
+
+	if ( value <= 0 ) {
+		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement( PLACE_RIGHT, PLACE_BOTTOM );
+	}
+
+	CG_RegisterWeapon( wp );
+
+	icon = cg_weapons[ wp ].weaponIcon[0];
+
+	pulse = 0.0f;
+	if ( cg.predictedPlayerState.specialGrenadeTimeLeft > 0 ) {
+		pulse = 1.0f - ( (float)( cg.predictedPlayerState.specialGrenadeTimeLeft % 1000 ) / 1000.0f );
+	}
+	grow = 0.3f * pulse * 16;
+
+	CG_DrawGrenadeIconRow( 555, 406 - 0.5f * grow, 16 + grow, icon, value, OLDUI_GRENADE_ICON_MAXCOUNT );
 }
 
 /*
@@ -5060,6 +5138,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawAmmoWarning();
 			CG_DrawDynamiteStatus();
 			CG_DrawGrenadeCount();
+			CG_DrawSpecialGrenadeCount();
 			CG_DrawReviveProgress();
 			CG_DrawConstructProgress();
 			CG_DrawCoopCrosshairNames();

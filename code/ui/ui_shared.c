@@ -4090,6 +4090,7 @@ static bind_t g_bindings[] =
 	{"vote no",          -1,             -1, -1, -1},
 	{ "+vstr", -1, -1, -1, -1 },
 	{"+quickgren",       'e',            -1, -1, -1},
+	{"+specialgren",     'q',            -1, -1, -1},
 	{"+firemode",        'n',            -1, -1, -1},
 };
 

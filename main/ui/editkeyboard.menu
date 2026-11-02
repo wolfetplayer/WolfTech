@@ -99,7 +99,8 @@ itemDef
 	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_VENOM"         textfont UI_FONT_BIG  cvar "weaponbank 8"    rect 30 242 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
 	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SHOTGUN"       textfont UI_FONT_BIG  cvar "weaponbank 9"    rect 30 253 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
 	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_QUICKGREN"     textfont UI_FONT_BIG  cvar "+quickgren"      rect 30 264 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
-	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_FIREMODE"      textfont UI_FONT_BIG  cvar "+firemode"       rect 30 275 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SPECIALGREN"   textfont UI_FONT_BIG  cvar "+specialgren"    rect 30 275 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name shoot  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_FIREMODE"      textfont UI_FONT_BIG  cvar "+firemode"       rect 30 286 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
 
 	itemDef {
 		name header_viewzoom
@@ -111,7 +112,7 @@ itemDef
 		textalignx 140
 		textaligny 8
 		textscale .2
-		rect 30 290 280 10
+		rect 30 301 280 10
 		style WINDOW_STYLE_FILLED
 		backcolor .3 0.5 0.2 .25
 		forecolor 1 1 1 1
@@ -119,11 +120,11 @@ itemDef
 		decoration
 	}
 
-	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_BINOCULARS"    textfont UI_FONT_BIG  cvar "+zoom"            rect 30 302 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
-	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_NOTEBOOK"      textfont UI_FONT_BIG  cvar "notebook"         rect 30 313 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
-	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ZOOMIN"        textfont UI_FONT_BIG  cvar "zoomin"           rect 30 324 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
-	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ZOOMOUT"       textfont UI_FONT_BIG  cvar "zoomout"          rect 30 335 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
-	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SCREENSHOT"    textfont UI_FONT_BIG  cvar "screenshotJPEG"  rect 30 346 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_BINOCULARS"    textfont UI_FONT_BIG  cvar "+zoom"            rect 30 313 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_NOTEBOOK"      textfont UI_FONT_BIG  cvar "notebook"         rect 30 324 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ZOOMIN"        textfont UI_FONT_BIG  cvar "zoomin"           rect 30 335 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_ZOOMOUT"       textfont UI_FONT_BIG  cvar "zoomout"          rect 30 346 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
+	itemDef { name look  group grpKeybinds  type ITEM_TYPE_BIND  text "@CONTROLS_SCREENSHOT"    textfont UI_FONT_BIG  cvar "screenshotJPEG"  rect 30 357 280 11  textalign ITEM_ALIGN_RIGHT  textalignx 135  textaligny 9  textscale .21  forecolor 1 1 1 1  style WINDOW_STYLE_FILLED  backcolor 1 1 1 .07  visible 1  mouseenter { show keyBindStatus }  mouseexit { hide keyBindStatus } }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////        COLUMN B: MOVEMENT / COMMUNICATION & MISC         //////////////////////////////////////////////

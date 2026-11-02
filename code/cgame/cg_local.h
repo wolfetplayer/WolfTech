@@ -1073,6 +1073,7 @@ typedef struct {
 	float viewFade;
 
 	int grenLastTime;
+	int specialGrenLastTime;
 
 	int switchbackWeapon;
 	int lastFiredWeapon;
@@ -2153,6 +2154,7 @@ void CG_FillRectSkewed( float x, float y, float width, float height, float skewL
 void CG_HorizontalPercentBar( float x, float y, float width, float height, float percent );
 void CG_DrawMotd( void );
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
+void CG_DrawGrenadeIconRow( float x, float y, float h, qhandle_t icon, int count, int maxCount );
 void CG_FilledBar( float x, float y, float w, float h, const float *startColorIn, float *endColor, const float *bgColor, float frac, int flags );
 
 // flags for CG_FilledBar

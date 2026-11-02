@@ -31,6 +31,9 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "ai_cast_fight.h"   // need these for avoidance
 
+// minimum gap between two real special-quickgrenade throws
+#define SPECIALGREN_MIN_THROW_INTERVAL 300
+
 
 extern void G_CheckForCursorHints( gentity_t *ent );
 
@@ -753,6 +756,54 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 				}
 				CalcMuzzlePoints( ent, WP_GRENADE_PINEAPPLE );
 				quickgren_fire( ent, WP_GRENADE_PINEAPPLE );
+
+			break;
+
+		case EV_FIRE_SPECIALGREN:
+			// don't fire if on mounted weapon
+			if ( ent->client->ps.persistant[PERS_HWEAPON_USE] && ent->active ) {
+					break;
+			}
+
+				// debounce: refuse a second real throw within the window
+				if ( level.time - ent->client->lastSpecialGrenThrowTime < SPECIALGREN_MIN_THROW_INTERVAL ) {
+					break;
+				}
+				ent->client->lastSpecialGrenThrowTime = level.time;
+
+				// fire_grenade() reads the fuse from ps.grenadeTimeLeft, not ps.specialGrenadeTimeLeft
+				if ( eventParm > 0 ) {
+					ent->client->ps.grenadeTimeLeft = eventParm;
+				}
+				CalcMuzzlePoints( ent, WP_POISONGAS );
+				// bypass skips the normal fire-event sound dispatch - replicate the throw sound here
+				{
+					gentity_t *tent = G_TempEntity( ent->r.currentOrigin, EV_QUICKGRENS );
+					tent->s.eventParm = ent->s.number;
+				}
+				weapon_grenadelauncher_fire( ent, WP_POISONGAS );
+
+			break;
+		case EV_FIRE_SPECIALGREN2:
+			// don't fire if on mounted weapon
+			if ( ent->client->ps.persistant[PERS_HWEAPON_USE] && ent->active ) {
+					break;
+			}
+
+				if ( level.time - ent->client->lastSpecialGrenThrowTime < SPECIALGREN_MIN_THROW_INTERVAL ) {
+					break;
+				}
+				ent->client->lastSpecialGrenThrowTime = level.time;
+
+				if ( eventParm > 0 ) {
+					ent->client->ps.grenadeTimeLeft = eventParm;
+				}
+				CalcMuzzlePoints( ent, WP_SMOKEBOMB );
+				{
+					gentity_t *tent = G_TempEntity( ent->r.currentOrigin, EV_QUICKGRENS );
+					tent->s.eventParm = ent->s.number;
+				}
+				weapon_grenadelauncher_fire( ent, WP_SMOKEBOMB );
 
 			break;
 

@@ -1437,6 +1437,8 @@ typedef struct playerState_s {
 									// this is the amount of time left before the grenade goes off (or if it
 									// gets to 0 while in players hand, it explodes)
 
+	int specialGrenadeTimeLeft;     // same as grenadeTimeLeft, but for the special (smoke/gas) quick-throw
+	int specialGrenWeapon;          // WP_POISONGAS or WP_SMOKEBOMB - which one is being cooked
 
 	int gravity;
 	float leanf;                // amount of 'lean' when player is looking around corner //----(SA)	added
@@ -1573,6 +1575,7 @@ typedef struct playerState_s {
 	int lastTeleportTime;
 
 	int quickGrenTime;
+	int specialQuickGrenTime;       // same as quickGrenTime, for the special-grenade quick-throw
 
 	int leanStopDebounceTime;
 
@@ -1641,9 +1644,7 @@ typedef struct playerState_s {
 #define WBUTTON_LEANRIGHT   32
 #define WBUTTON_DROP        64 // JPW NERVE
 #define WBUTTON_FIREMODE    128 // toggle semi/full-auto on weapons that support it
-
-// unused
-#define WBUTTON_EXTRA6      64
+#define WBUTTON_SPECIALGREN 256 // quick-throw for the held special (smoke/gas) grenade
 //----(SA) end
 
 #define MOVE_RUN            120         // if forwardmove or rightmove are >= MOVE_RUN,
@@ -1654,7 +1655,7 @@ typedef struct playerState_s {
 typedef struct usercmd_s {
 	int serverTime;
 	byte buttons;
-	byte wbuttons;
+	unsigned short wbuttons;    // widened from byte for WBUTTON_SPECIALGREN's 9th bit
 	byte weapon;
 	byte holdable;          //----(SA)	added
 	int angles[3];

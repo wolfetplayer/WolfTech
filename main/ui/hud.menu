@@ -1094,12 +1094,12 @@
 			
 	}
 	
-	//	GRENADE COUNT	//	always visible, regardless of equipped weapon
+	//	GRENADE COUNT	//	always visible, height-aligned to the weapon ammo count
 	menuDef {
     	name "GrenadeCount"
     	fullScreen MENU_FALSE
     	visible MENU_TRUE
-    	rect 452 425 54 28
+    	rect 452 435 54 28
 
 		itemDef {
 			name "grencount"
@@ -1112,7 +1112,26 @@
 			forecolor .63 .59 .57 1	// grey
 		}
 }
-	
+
+	//	SPECIAL GRENADE COUNT	//	always visible, height-aligned to the weapon charge bar
+	menuDef {
+    	name "SpecialGrenadeCount"
+    	fullScreen MENU_FALSE
+    	visible MENU_TRUE
+    	rect 452 408 54 28
+
+		itemDef {
+			name "specialgrencount"
+			ownerdraw CG_PLAYER_SPECIAL_GRENADE_COUNT
+			rect -50 0 54 28
+			visible MENU_TRUE
+			decoration
+			textstyle ITEM_TEXTSTYLE_SHADOWEDMORE
+			textscale .42
+			forecolor .63 .59 .57 1	// grey
+		}
+}
+
 	//	HOLDABLE	//
 	
 	menuDef {

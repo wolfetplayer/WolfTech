@@ -665,7 +665,7 @@ void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *
 	MSG_WriteDeltaKey( msg, key, from->rightmove, to->rightmove, 8 );
 	MSG_WriteDeltaKey( msg, key, from->upmove, to->upmove, 8 );
 	MSG_WriteDeltaKey( msg, key, from->buttons, to->buttons, 8 );
-	MSG_WriteDeltaKey( msg, key, from->wbuttons, to->wbuttons, 8 );
+	MSG_WriteDeltaKey( msg, key, from->wbuttons, to->wbuttons, 16 );
 	MSG_WriteDeltaKey( msg, key, from->weapon, to->weapon, 8 );
 	MSG_WriteDeltaKey( msg, key, from->holdable, to->holdable, 8 );
 	MSG_WriteDeltaKey( msg, key, from->wolfkick, to->wolfkick, 8 );
@@ -700,7 +700,7 @@ void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *t
 		if( to->upmove == -128 )
 			to->upmove = -127;
 		to->buttons = MSG_ReadDeltaKey( msg, key, from->buttons, 8 );
-		to->wbuttons = MSG_ReadDeltaKey( msg, key, from->wbuttons, 8 );
+		to->wbuttons = MSG_ReadDeltaKey( msg, key, from->wbuttons, 16 );
 		to->weapon = MSG_ReadDeltaKey( msg, key, from->weapon, 8 );
 		to->holdable = MSG_ReadDeltaKey( msg, key, from->holdable, 8 );
 		to->wolfkick = MSG_ReadDeltaKey( msg, key, from->wolfkick, 8 );
@@ -1334,6 +1334,9 @@ netField_t playerStateFields[] =
 	{ PSF( weaponDelay ), -16 },
 	{ PSF( grenadeTimeLeft ), -16 },
 	{ PSF( quickGrenTime ), -16 },
+	{ PSF( specialGrenadeTimeLeft ), -16 },
+	{ PSF( specialGrenWeapon ), 8 },
+	{ PSF( specialQuickGrenTime ), -16 },
 	{ PSF( gravity ), 16 },
 	{ PSF( leanf ), 0 },
 	{ PSF( speed ), 16 },

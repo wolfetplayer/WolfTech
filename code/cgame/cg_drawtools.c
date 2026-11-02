@@ -378,6 +378,34 @@ void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader 
 }
 
 /*
+=================
+CG_DrawGrenadeIconRow
+
+Draws 'count' copies of 'icon' left-to-right, overlapping, instead of a plain number.
+Clamped to 'maxCount'.
+=================
+*/
+void CG_DrawGrenadeIconRow( float x, float y, float h, qhandle_t icon, int count, int maxCount ) {
+	int i;
+	float step;
+
+	if ( !icon || count <= 0 ) {
+		return;
+	}
+
+	if ( count > maxCount ) {
+		count = maxCount;
+	}
+
+	step = h * 0.55f;
+
+	trap_R_SetColor( NULL );
+	for ( i = 0; i < count; i++ ) {
+		CG_DrawPic( x + i * step, y, h, h, icon );
+	}
+}
+
+/*
 ================
 CG_DrawRotatedPic
 

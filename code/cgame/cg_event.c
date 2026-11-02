@@ -2206,6 +2206,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_NOQUICKGRENAMMO:
 		CG_CenterPrint( "noquickgrenammo", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
 	    break;
+	case EV_NOSPECIALGRENAMMO:
+		CG_CenterPrint( "nospecialgrenammo", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
+	    break;
 	case EV_CHANGE_WEAPON:
 	{
 
@@ -2780,6 +2783,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 	case EV_FIRE_QUICKGREN:
 	case EV_FIRE_QUICKGREN2:
+	case EV_FIRE_SPECIALGREN:
+	case EV_FIRE_SPECIALGREN2:
 	    break;
 	case EV_RUMBLE_EFX:
 	{

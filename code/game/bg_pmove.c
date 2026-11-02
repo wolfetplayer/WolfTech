@@ -2218,7 +2218,8 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 	}
 
 	// grenades are quickgrenade-only now - block players from selecting them (AI still can, for their own attacks).
-	if ( !pm->ps->aiChar && ( newweapon == WP_GRENADE_LAUNCHER || newweapon == WP_GRENADE_PINEAPPLE ) ) {
+	if ( !pm->ps->aiChar && ( newweapon == WP_GRENADE_LAUNCHER || newweapon == WP_GRENADE_PINEAPPLE ||
+							   newweapon == WP_POISONGAS || newweapon == WP_SMOKEBOMB ) ) {
 		return;
 	}
 
@@ -2233,7 +2234,7 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 		return;
 	}
 
-	if ( pm->ps->grenadeTimeLeft > 0 ) {   // don't allow switch if you're holding a hot potato or dynamite
+	if ( pm->ps->grenadeTimeLeft > 0 || pm->ps->specialGrenadeTimeLeft > 0 ) {   // don't allow switch if you're holding a hot potato or dynamite
 		return;
 	}
 
@@ -3282,9 +3283,8 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-	// busy cooking a quick grenade - holster the weapon (drop/raise), gated on weaponTime (networked, same field the ladder-holster
-	// below uses) instead of weapAnimTimer (not networked) so client and server can't desync on when the transition can happen.
-	if ( pm->ps->grenadeTimeLeft > 0 &&
+	// busy cooking a quick grenade (normal or special) - holster the weapon, gated on weaponTime (networked) not weapAnimTimer
+	if ( ( pm->ps->grenadeTimeLeft > 0 || pm->ps->specialGrenadeTimeLeft > 0 ) &&
 		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE && pm->ps->weapon != WP_POISONGAS && pm->ps->weapon != WP_SMOKEBOMB ) {
 		if ( pm->ps->weaponTime > 0 ) {
 			pm->ps->weaponTime -= pml.msec;
@@ -4092,6 +4092,12 @@ static void PM_QuickGrenade( void ) {
 	    return;
 	}
 
+	// already cooking the other grenade type
+	if ( pm->ps->specialGrenadeTimeLeft > 0 )
+	{
+		return;
+	}
+
 	// previous throw's holster/raise cycle hasn't finished yet - don't let a new cook stomp on it.
 	if ( pm->ps->weaponstate != WEAPON_READY )
 	{
@@ -4117,6 +4123,142 @@ static void PM_QuickGrenade( void ) {
 		 pm->ps->weaponDelay = grenType;
 		 pm->ps->grenadeTimeLeft = QUICKGREN_FUSE_TIME;
 		 pm->ps->weaponTime = 0;    // force the holster-in transition to fire on the very next frame, no leftover fire-delay to wait out
+	}
+}
+
+/*
+==============
+PM_QuickSpecialGrenade
+
+Same cook/throw mechanic as PM_QuickGrenade, but for the held special grenade (smoke or gas),
+bound to its own key (+specialgren / Q).
+==============
+*/
+static void PM_QuickSpecialGrenade( void ) {
+
+	if ( pm->ps->specialQuickGrenTime > 0 )
+	{
+		pm->ps->specialQuickGrenTime -= pml.msec;
+	}
+
+	if ( pm->ps->specialQuickGrenTime < 0 )
+	{
+		pm->ps->specialQuickGrenTime = 0;
+	}
+
+	if ( pm->ps->specialGrenadeTimeLeft > 0 &&
+		 pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_DYNAMITE &&
+		 pm->ps->weapon != WP_AIRSTRIKE && pm->ps->weapon != WP_POISONGAS && pm->ps->weapon != WP_SMOKEBOMB )
+	{
+		pm->ps->specialGrenadeTimeLeft -= pml.msec;
+
+		if ( pm->ps->specialGrenadeTimeLeft <= 0 )
+		{
+			// overcooked - gas/smoke don't explode in hand, force it out with a sliver of fuse instead
+			int fuseLeft = 1;
+
+			if ( pm->ps->specialGrenWeapon == WP_SMOKEBOMB ) {
+				BG_AddPredictableEventToPlayerstate( EV_FIRE_SPECIALGREN2, fuseLeft, pm->ps );
+			} else {
+				BG_AddPredictableEventToPlayerstate( EV_FIRE_SPECIALGREN, fuseLeft, pm->ps );
+			}
+
+			BG_UpdateConditionValue( pm->ps->clientNum, ANIM_COND_WEAPON, pm->ps->specialGrenWeapon, qtrue );
+			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qtrue );
+			BG_UpdateConditionValue( pm->ps->clientNum, ANIM_COND_WEAPON, pm->ps->weapon, qtrue );
+
+			pm->ps->specialGrenadeTimeLeft = 0;
+			pm->ps->specialGrenWeapon = 0;
+			pm->ps->specialQuickGrenTime = 2500;
+			return;
+		}
+
+		if ( !( pm->cmd.wbuttons & WBUTTON_SPECIALGREN ) )
+		{
+			// released - throw with whatever fuse is left
+			int fuseLeft = pm->ps->specialGrenadeTimeLeft;
+
+			if ( pm->ps->specialGrenWeapon == WP_SMOKEBOMB ) {
+				BG_AddPredictableEventToPlayerstate( EV_FIRE_SPECIALGREN2, fuseLeft, pm->ps );
+			} else {
+				BG_AddPredictableEventToPlayerstate( EV_FIRE_SPECIALGREN, fuseLeft, pm->ps );
+			}
+
+			// use the thrown-weapon anim, not the equipped gun's
+			BG_UpdateConditionValue( pm->ps->clientNum, ANIM_COND_WEAPON, pm->ps->specialGrenWeapon, qtrue );
+			BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qtrue );
+			BG_UpdateConditionValue( pm->ps->clientNum, ANIM_COND_WEAPON, pm->ps->weapon, qtrue );
+
+			pm->ps->specialGrenadeTimeLeft = 0;
+			pm->ps->specialGrenWeapon = 0;
+			pm->ps->specialQuickGrenTime = 2500;
+		}
+
+		return;
+	}
+
+	if (pm->ps->weapon == WP_GRENADE_LAUNCHER || pm->ps->weapon == WP_GRENADE_PINEAPPLE || pm->ps->weapon == WP_DYNAMITE || pm->ps->weapon == WP_AIRSTRIKE ||
+		pm->ps->weapon == WP_POISONGAS || pm->ps->weapon == WP_SMOKEBOMB || pm->ps->weapon == WP_SNIPERRIFLE || pm->ps->weapon == WP_FG42SCOPE )
+	{
+		return;
+	}
+
+	if ( pm->ps->pm_flags & PMF_RESPAWNED )
+	{
+		return;
+	}
+
+	if ( pm->ps->stats[STAT_HEALTH] <= 0 )
+	{
+		return;
+	}
+
+	if (pm->ps->eFlags & EF_ZOOMING)
+	{
+		return;
+	}
+
+	if (pm->ps->leanf != 0)
+	{
+	    return;
+	}
+
+	if ( pm->ps->specialQuickGrenTime > 0 )
+	{
+	    return;
+	}
+
+	// already cooking the other grenade type
+	if ( pm->ps->grenadeTimeLeft > 0 )
+	{
+		return;
+	}
+
+	// previous throw's holster/raise cycle hasn't finished yet
+	if ( pm->ps->weaponstate != WEAPON_READY )
+	{
+		return;
+	}
+
+    if ( pm->cmd.wbuttons & WBUTTON_SPECIALGREN )
+    {
+		 int grenType;
+
+		 if ( PM_WeaponAmmoAvailable( WP_POISONGAS ) ) {
+			 grenType = WP_POISONGAS;
+		 } else if ( PM_WeaponAmmoAvailable( WP_SMOKEBOMB ) ) {
+			 grenType = WP_SMOKEBOMB;
+		 } else {
+			 PM_AddEvent( EV_NOSPECIALGRENAMMO ); // no ammo
+			 pm->ps->specialQuickGrenTime = 2500;  // throttle repeat attempts
+			 return;
+		 }
+
+		 // pull the pin - lock in type/ammo now
+		 PM_WeaponUseAmmo( grenType, 1 );
+		 pm->ps->specialGrenWeapon = grenType;
+		 pm->ps->specialGrenadeTimeLeft = QUICKGREN_FUSE_TIME;
+		 pm->ps->weaponTime = 0;    // start the holster-in next frame
 	}
 }
 
@@ -4910,6 +5052,8 @@ void PmoveSingle( pmove_t *pmove ) {
 		PM_Weapon();
 
 		PM_QuickGrenade();
+
+		PM_QuickSpecialGrenade();
 
 		// footstep events / legs animations
 		PM_Footsteps();

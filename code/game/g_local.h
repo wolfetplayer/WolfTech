@@ -722,6 +722,7 @@ struct gclient_s {
 
 	int dropWeaponTime;         // JPW NERVE last time a weapon was dropped
 	int limboDropWeapon;         // JPW NERVE weapon to drop in limbo
+	int lastSpecialGrenThrowTime; // last real special-quickgrenade throw, for debouncing
 	int deployQueueNumber;         // JPW NERVE player order in reinforcement FIFO queue
 	int sniperRifleFiredTime;         // JPW NERVE last time a sniper rifle was fired (for muzzle flip effects)
 	float sniperRifleMuzzleYaw;       // JPW NERVE for time-dependent muzzle flip in multiplayer

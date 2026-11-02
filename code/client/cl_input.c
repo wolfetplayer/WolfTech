@@ -319,6 +319,8 @@ void IN_ZoomDown( void )      { IN_KeyDown( &kb[KB_WBUTTONS1] );    }   //----(S
 void IN_ZoomUp( void )        { IN_KeyUp( &kb[KB_WBUTTONS1] );  }
 void IN_QuickGrenDown( void ) { IN_KeyDown( &kb[KB_WBUTTONS2] );    }   //----(SA)	"Quickgrenade"
 void IN_QuickGrenUp( void )   { IN_KeyUp( &kb[KB_WBUTTONS2] );  }
+void IN_SpecialGrenDown( void ) { IN_KeyDown( &kb[KB_WBUTTONS8] );  }   // special grenade quick-throw
+void IN_SpecialGrenUp( void )   { IN_KeyUp( &kb[KB_WBUTTONS8] );  }
 void IN_ReloadDown( void )    { IN_KeyDown( &kb[KB_WBUTTONS3] );    }   //----(SA)	manual weapon re-load
 void IN_ReloadUp( void )      { IN_KeyUp( &kb[KB_WBUTTONS3] );  }
 void IN_LeanLeftDown( void )  { IN_KeyDown( &kb[KB_WBUTTONS4] );    }   //----(SA)	lean left
@@ -662,7 +664,7 @@ void CL_CmdButtons( usercmd_t *cmd ) {
 		kb[KB_BUTTONS0 + i].wasPressed = qfalse;
 	}
 
-	for ( i = 0 ; i < 8 ; i++ ) {
+	for ( i = 0 ; i < 9 ; i++ ) {
 		if ( kb[KB_WBUTTONS0 + i].active || kb[KB_WBUTTONS0 + i].wasPressed ) {
 			cmd->wbuttons |= 1 << i;
 		}
@@ -1147,6 +1149,8 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand( "-zoom",     IN_ZoomUp );
 	Cmd_AddCommand( "+quickgren",    IN_QuickGrenDown );  //
 	Cmd_AddCommand( "-quickgren",    IN_QuickGrenUp );
+	Cmd_AddCommand( "+specialgren",  IN_SpecialGrenDown ); //
+	Cmd_AddCommand( "-specialgren",  IN_SpecialGrenUp );
 	Cmd_AddCommand( "+reload",       IN_ReloadDown );     //
 	Cmd_AddCommand( "-reload",       IN_ReloadUp );
 	Cmd_AddCommand( "+leanleft", IN_LeanLeftDown );
@@ -1242,6 +1246,8 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-zoom");
 	Cmd_RemoveCommand("+quickgren");
 	Cmd_RemoveCommand("-quickgren");
+	Cmd_RemoveCommand("+specialgren");
+	Cmd_RemoveCommand("-specialgren");
 	Cmd_RemoveCommand("+reload");
 	Cmd_RemoveCommand("-reload");
 	Cmd_RemoveCommand("+leanleft");

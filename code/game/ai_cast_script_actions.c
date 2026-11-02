@@ -1682,7 +1682,8 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 	int weapon;
 	int i;
 	gentity_t   *ent = &g_entities[cs->entityNum];
-	int slotId = G_GetFreeWeaponSlot( ent );
+	int slotId;
+	qboolean needsSlot;
 
 	weapon = WP_NONE;
 
@@ -1706,20 +1707,23 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		}
 	}
 
+	// grenades and class-ability items never occupy a weapon slot or need one free to be granted
+	needsSlot = (qboolean)( weapon != WP_KNIFE && weapon != WP_GRENADE_LAUNCHER && weapon != WP_GRENADE_PINEAPPLE &&
+							 weapon != WP_POISONGAS && weapon != WP_SMOKEBOMB && weapon != WP_DYNAMITE &&
+							 weapon != WP_AIRSTRIKE && weapon != WP_ARTY && weapon != WP_MEDCRATE && weapon != WP_LANDMINE );
+
+	slotId = needsSlot ? G_GetFreeWeaponSlot( ent ) : 0;
+
 	if (!ent->aiCharacter)
 	{
 		if (g_gametype.integer == GT_COOP_SURVIVAL)
 		{
-			if (weapon != WP_KNIFE)
+			if (needsSlot)
 			{
 				if (slotId < 0)
 				{
 					return qfalse;
 				}
-			}
-			else
-			{
-				slotId = 0;
 			}
 		}
 	}
@@ -1731,7 +1735,7 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		{
 			if (g_gametype.integer == GT_COOP_SURVIVAL)
 			{
-				if (weapon != WP_GRENADE_LAUNCHER && weapon != WP_GRENADE_PINEAPPLE && weapon != WP_DYNAMITE && weapon != WP_AIRSTRIKE && weapon != WP_ARTY && weapon != WP_MEDCRATE && weapon != WP_LANDMINE) // Skip WP_AIRSTRIKE and WP_ARTY
+				if (needsSlot)
 				{
 					if (ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_SOLDIER)
 					{

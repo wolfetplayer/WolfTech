@@ -452,23 +452,28 @@ qboolean Survival_RandomBox_Pickup( gentity_t *ent, gentity_t *activator ) {
 		Add_Ammo( activator, WP_M7, m7MaxAmmo, qfalse );
 	}
 
-	// never auto-select into the scoped alt mode - land on the base weapon instead
-	selectWeapon = chosen;
-	if ( GetWeaponTableData( chosen )->weaponClass & WEAPON_CLASS_SCOPED ) {
-		selectWeapon = GetWeaponTableData( chosen )->weapAlts;
+	// grenades are never selectable as the active weapon - grant them, don't force-equip them
+	if ( chosen != WP_GRENADE_LAUNCHER && chosen != WP_GRENADE_PINEAPPLE &&
+		 chosen != WP_POISONGAS && chosen != WP_SMOKEBOMB ) {
+
+		// never auto-select into the scoped alt mode - land on the base weapon instead
+		selectWeapon = chosen;
+		if ( GetWeaponTableData( chosen )->weaponClass & WEAPON_CLASS_SCOPED ) {
+			selectWeapon = GetWeaponTableData( chosen )->weapAlts;
+		}
+
+		// force-switch to the new weapon, replicating PM_FinishWeaponChange's bookkeeping by hand
+		activator->client->ps.weapon = selectWeapon;
+		activator->client->ps.weaponstate = WEAPON_RAISING;
+		activator->client->ps.weaponTime = 250;
+		activator->client->ps.weapAnimTimer = 0;
+		activator->client->ps.weapAnim = ( ( activator->client->ps.weapAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | WEAP_RAISE;
+		BG_UpdateConditionValue( activator->client->ps.clientNum, ANIM_COND_WEAPON, selectWeapon, qtrue );
+		BG_AnimScriptEvent( &activator->client->ps, ANIM_ET_RAISEWEAPON, qfalse, qfalse );
+
+		// sync cgame's weapon selection or the next usercmd re-requests the old weapon
+		trap_SendServerCommand( activator - g_entities, va( "selectweap %d\n", selectWeapon ) );
 	}
-
-	// force-switch to the new weapon, replicating PM_FinishWeaponChange's bookkeeping by hand
-	activator->client->ps.weapon = selectWeapon;
-	activator->client->ps.weaponstate = WEAPON_RAISING;
-	activator->client->ps.weaponTime = 250;
-	activator->client->ps.weapAnimTimer = 0;
-	activator->client->ps.weapAnim = ( ( activator->client->ps.weapAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | WEAP_RAISE;
-	BG_UpdateConditionValue( activator->client->ps.clientNum, ANIM_COND_WEAPON, selectWeapon, qtrue );
-	BG_AnimScriptEvent( &activator->client->ps, ANIM_ET_RAISEWEAPON, qfalse, qfalse );
-
-	// sync cgame's weapon selection or the next usercmd re-requests the old weapon
-	trap_SendServerCommand( activator - g_entities, va( "selectweap %d\n", selectWeapon ) );
 
 	G_AddPredictableEvent( activator, EV_ITEM_PICKUP, item - bg_itemlist );
 	trap_SendServerCommand( -1, "mu_play sound/misc/buy.wav 0\n" );

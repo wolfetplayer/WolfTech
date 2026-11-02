@@ -496,6 +496,17 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 	int ammoweap = BG_FindAmmoForWeapon( weapon );
 	qboolean noPack = qfalse;       // no extra ammo in your 'pack'
 
+	// special grenades (gas/smoke) are mutually exclusive - picking up one replaces the other
+	if ( ammoweap == WP_POISONGAS || ammoweap == WP_SMOKEBOMB ) {
+		int otherSpecial = ( ammoweap == WP_POISONGAS ) ? WP_SMOKEBOMB : WP_POISONGAS;
+
+		if ( COM_BitCheck( ent->client->ps.weapons, otherSpecial ) ) {
+			COM_BitClear( ent->client->ps.weapons, otherSpecial );
+			ent->client->ps.ammo[otherSpecial] = 0;
+			ent->client->ps.ammoclip[otherSpecial] = 0;
+		}
+	}
+
 	ent->client->ps.ammo[ammoweap] += count;
 
 	switch ( ammoweap ) {
@@ -809,6 +820,13 @@ void Touch_Item_Auto( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 
 qboolean NeedAmmo(gentity_t *other, weapon_t weapon) {
 	int ammoweap;
+
+	// grenades never occupy a weapon slot, so check their ammo pool directly instead
+	if ( weapon == WP_GRENADE_LAUNCHER || weapon == WP_GRENADE_PINEAPPLE ||
+		 weapon == WP_POISONGAS || weapon == WP_SMOKEBOMB ) {
+		ammoweap = BG_FindAmmoForWeapon( weapon );
+		return (qboolean)( other->client->ps.ammoclip[ammoweap] < BG_GetMaxClip( &other->client->ps, weapon ) );
+	}
 
 	if (G_FindWeaponSlot(other, weapon) < 0) {
 		weapon_t altWeapon = GetWeaponTableData(weapon)->weapAlts;
@@ -1960,6 +1978,13 @@ void G_DropWeapon( gentity_t *ent, weapon_t weapon ) {
 
 qboolean Give_Weapon_New_Inventory( gentity_t *other, weapon_t weapon, qboolean needThrowItem ) {
 
+	// grenades never occupy one of the limited weapon slots - just grant the weapon bit
+	if ( weapon == WP_GRENADE_LAUNCHER || weapon == WP_GRENADE_PINEAPPLE ||
+		 weapon == WP_POISONGAS || weapon == WP_SMOKEBOMB ) {
+		qboolean alreadyHave = COM_BitCheck( other->client->ps.weapons, weapon );
+		COM_BitSet( other->client->ps.weapons, weapon );
+		return (qboolean)( !alreadyHave );
+	}
 
 	if ( !COM_BitCheck( other->client->ps.weapons, weapon ) ) {
 		if ( IsThereEmptySlot( other ) || IsUpgradingWeapon( other, weapon ) || other->client->latched_buttons & BUTTON_ACTIVATE ) {
