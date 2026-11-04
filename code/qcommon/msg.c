@@ -1400,12 +1400,23 @@ netField_t playerStateFields[] =
 	{ PSF( serverCursorHint ), 8}, //----(SA)	added
 	{ PSF( serverCursorHintVal ), 8}, //----(SA)	added
 	{ PSF( classWeaponTime ), 32}, // JPW NERVE
+	{ PSF( airstrikeWeaponTime ), 32},
+	{ PSF( artyWeaponTime ), 32},
+	{ PSF( medcrateWeaponTime ), 32},
+	{ PSF( dynamiteWeaponTime ), 32},
 	{ PSF( footstepCount ), 0},
 	{ PSF( fireModeSwitchTime ), -16 },
 	{ PSF( fireModeSwitchRaising ), 1 },
 	{ PSF( fireModeWbuttonDown ), 1 },
 	{ PSF( semiAutoTriggerHeld ), 1 },
 	{ PSF( simpleZoomed ), 1 },
+	{ PSF( weaponSlots[0] ), 8 },
+	{ PSF( weaponSlots[1] ), 8 },
+	{ PSF( weaponSlots[2] ), 8 },
+	{ PSF( weaponSlotsSoldier[0] ), 8 },
+	{ PSF( weaponSlotsSoldier[1] ), 8 },
+	{ PSF( weaponSlotsSoldier[2] ), 8 },
+	{ PSF( weaponSlotsSoldier[3] ), 8 },
 };
 
 /*

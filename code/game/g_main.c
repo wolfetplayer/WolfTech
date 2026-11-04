@@ -87,7 +87,8 @@ vmCvar_t g_dmflags;
 vmCvar_t g_fraglimit;
 vmCvar_t g_timelimit;
 vmCvar_t g_friendlyFire;
-vmCvar_t g_LTChargeTime; // JPW NERVE -- Lieutenant airstrike/artillery call-in cooldown, ms
+vmCvar_t g_airstrikeChargeTime; // JPW NERVE -- Lieutenant airstrike signal cooldown, ms
+vmCvar_t g_artyChargeTime;      // Lieutenant binocular artillery call-in cooldown, ms - independent of g_airstrikeChargeTime
 vmCvar_t g_medicChargeTime;
 vmCvar_t g_engineerChargeTime;
 vmCvar_t g_engineerBuildRate;
@@ -264,7 +265,8 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO, 0, qfalse  },
 
 	{ &g_friendlyFire, "g_friendlyFire", "1", CVAR_ARCHIVE, 0, qtrue  },
-	{ &g_LTChargeTime, "g_LTChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
+	{ &g_airstrikeChargeTime, "g_airstrikeChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
+	{ &g_artyChargeTime, "g_artyChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
 	{ &g_medicChargeTime, "g_medicChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
 	{ &g_engineerChargeTime, "g_engineerChargeTime", "30000", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },
 	{ &g_engineerBuildRate, "g_engineerBuildRate", "2.0", CVAR_ARCHIVE | CVAR_SYSTEMINFO, 0, qtrue  },

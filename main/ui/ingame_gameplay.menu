@@ -207,9 +207,51 @@ menuDef {
 	}
 
 	itemDef {
+		name			ihud_killcount
+		group			performance
+		rect 0 114 443 16
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_KILLCOUNT"
+		textfont		UI_FONT_BIG
+		cvar			"cg_drawKillCount"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.22
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		224
+		textaligny		12
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor ihud_killcount backcolor .3 0.5 0.2 .25 ; show tip_ihud_killcount ; show tipbox }
+		mouseExit { setitemcolor ihud_killcount backcolor 1 1 1 .07 ; hide tip_ihud_killcount ; hide tipbox }
+	}
+
+	itemDef {
+		name			ihud_weaponicon
+		group			performance
+		rect 0 133 443 16
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_WEAPONICON"
+		textfont		UI_FONT_BIG
+		cvar			"cg_drawWeaponIcon"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.22
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		224
+		textaligny		12
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor ihud_weaponicon backcolor .3 0.5 0.2 .25 ; show tip_ihud_weaponicon ; show tipbox }
+		mouseExit { setitemcolor ihud_weaponicon backcolor 1 1 1 .07 ; hide tip_ihud_weaponicon ; hide tipbox }
+	}
+
+	itemDef {
 		name			ihud_back
 		group			performance
-		rect 0 114 443 20
+		rect 0 152 443 20
 		type			ITEM_TYPE_BUTTON
 		style			WINDOW_STYLE_FILLED
 		text			"@MAIN_BACK"
@@ -700,6 +742,38 @@ menuDef {
 		style WINDOW_STYLE_EMPTY
 		rect 10 330 423 30
 		text "@OPTIONS_TIP_COMPASS"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ihud_killcount
+		group grpIngameGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@OPTIONS_TIP_KILLCOUNT"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_ihud_weaponicon
+		group grpIngameGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@OPTIONS_TIP_WEAPONICON"
 		textfont UI_FONT_BIG
 		textscale .2
 		textalign ITEM_ALIGN_LEFT

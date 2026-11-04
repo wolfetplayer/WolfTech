@@ -1260,7 +1260,7 @@ void ClientThink_real( gentity_t *ent ) {
 	pm.pmove_msec = pmove_msec.integer;
 	pm.pmext = &client->pmext;
 
-	pm.ltChargeTime = g_LTChargeTime.integer;
+	pm.airstrikeChargeTime = g_airstrikeChargeTime.integer;
 	pm.medicChargeTime = g_medicChargeTime.integer;
 	pm.engineerChargeTime = g_engineerChargeTime.integer;
 	pm.soldierChargeTime = g_soldierChargeTime.integer;

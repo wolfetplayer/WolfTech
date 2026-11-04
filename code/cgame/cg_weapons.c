@@ -3695,181 +3695,6 @@ void CG_RenderViewWeapon( void ) {
 }
 
 /*
-==============================================================================
-
-WEAPON SELECTION
-
-==============================================================================
-*/
-
-#define WP_ICON_X       38  // new sizes per MK
-#define WP_ICON_X_WIDE  72  // new sizes per MK
-#define WP_ICON_Y       38
-#define WP_ICON_SPACE_Y 10
-#define WP_DRAW_X       640 - WP_ICON_X - 4 // 4 is 'selected' border width
-#define WP_DRAW_X_WIDE  640 - WP_ICON_X_WIDE - 4
-#define WP_DRAW_Y       4
-
-// secondary fire icons
-#define WP_ICON_SEC_X   18  // new sizes per MK
-#define WP_ICON_SEC_Y   18
-
-
-/*
-===================
-CG_DrawWeaponSelect
-===================
-*/
-void CG_DrawWeaponSelect( void ) {
-	int i;
-	int x, y;
-	int curweap, curweapbank = 0, curweapcycle = 0, drawweap;
-	int realweap;               // DHM - Nerve
-	int bits[MAX_WEAPONS / ( sizeof( int ) * 8 )];
-	float       *color;
-
-	// don't display if dead
-	if ( cg.predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
-		return;
-	}
-
-	if ( !cg.weaponSelect ) {
-		return;
-	}
-
-	color = CG_FadeColor( cg.weaponSelectTime, WEAPON_SELECT_TIME );
-	if ( !color ) {
-		return;
-	}
-	trap_R_SetColor( color );
-
-	if ( cg_fixedAspect.integer == 2 ) {
-		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_TOP);
-	}
-
-//----(SA)	neither of these overlap the weapon selection area anymore, so let them stay
-	// showing weapon select clears pickup item display, but not the blend blob
-//	cg.itemPickupTime = 0;
-
-	// also clear holdable list
-//	cg.holdableSelectTime = 0;
-//----(SA)	end
-
-	// count the number of weapons owned
-	memcpy( bits, cg.snap->ps.weapons, sizeof( bits ) );
-
-	curweap = cg.weaponSelect;
-
-	// get bank/cycle of current weapon
-	if ( !CG_WeaponIndex( curweap, &curweapbank, &curweapcycle ) ) {
-
-		// weapon selected isn't a primary weapon, so draw the alternates bank
-		CG_WeaponIndex( getAltWeapon( curweap ), &curweapbank, &curweapcycle );
-
-	}
-
-	y = WP_DRAW_Y;
-
-	for ( i = 0; i < maxWeapsInBank; i++ ) {
-
-		qboolean wideweap;
-		int iconDrawSize;
-
-		// primary fire
-		drawweap = weapBanks[curweapbank][i];
-		realweap = drawweap;     
-
-		iconDrawSize = GetWeaponTableData( drawweap )->iconDrawSize;
-
-		if (iconDrawSize == WEAPON_ICON_HIDE)
-		{
-			continue;
-		}
-
-		wideweap = (iconDrawSize == WEAPON_ICON_WIDE || iconDrawSize == WEAPON_ICON_WIDE_OFFSET );
-
-		if ( wideweap ) {
-			x = WP_DRAW_X_WIDE;
-		} else {
-			x = WP_DRAW_X;
-		}
-
-		if(drawweap && COM_BitCheck( bits, drawweap )) {
-
-			CG_RegisterWeapon( drawweap );
-
-			if ( wideweap ) {
-				// weapon icon
-				if ( realweap == curweap ) {
-					CG_DrawPic( x, y, WP_ICON_X_WIDE, WP_ICON_Y, cg_weapons[drawweap].weaponIcon[1] );
-				} else {
-					CG_DrawPic( x, y, WP_ICON_X_WIDE, WP_ICON_Y, cg_weapons[drawweap].weaponIcon[0] );
-				}
-
-				// no ammo cross
-				if ( !CG_WeaponHasAmmo( realweap ) ) {   // DHM - Nerve
-					CG_DrawPic( x, y, WP_ICON_X_WIDE, WP_ICON_Y, cgs.media.noammoShader );
-				}
-			} else {
-				// weapon icon
-				if ( realweap == curweap ) {
-					CG_DrawPic( x, y, WP_ICON_X, WP_ICON_Y, cg_weapons[drawweap].weaponIcon[1] );
-				} else {
-					CG_DrawPic( x, y, WP_ICON_X, WP_ICON_Y, cg_weapons[drawweap].weaponIcon[0] );
-				}
-
-				// no ammo cross
-				if ( !CG_WeaponHasAmmo( realweap ) ) {   // DHM - Nerve
-					CG_DrawPic( x, y, WP_ICON_X, WP_ICON_Y, cgs.media.noammoShader );
-				}
-			}
-
-		} else {
-			continue;
-		}
-
-		// secondary fire
-		if ( wideweap ) {
-			x = WP_DRAW_X_WIDE - WP_ICON_SEC_X - 4;
-		} else {
-			x = WP_DRAW_X - WP_ICON_SEC_X - 4;
-		}
-
-		drawweap = getAltWeapon( weapBanks[curweapbank][i] );
-
-		// clear drawweap if getaltweap() returns the same weap as passed in. (no secondary available)
-		if ( drawweap == weapBanks[curweapbank][i] ) {
-			drawweap = 0;
-		}
-
-		realweap = drawweap;        // DHM - Nerve
-
-		if(drawweap && COM_BitCheck( bits, drawweap )) {
-
-			CG_RegisterWeapon( drawweap );
-
-			// weapon icon
-			if ( realweap == cg.weaponSelect ) {
-				CG_DrawPic( x, y, WP_ICON_SEC_X, WP_ICON_SEC_Y, cg_weapons[drawweap].weaponIcon[1] );
-			} else {
-				CG_DrawPic( x, y, WP_ICON_SEC_X, WP_ICON_SEC_Y, cg_weapons[drawweap].weaponIcon[0] );
-			}
-
-			// no ammo cross
-			if ( !CG_WeaponHasAmmo( realweap ) ) {
-				CG_DrawPic( x, y, WP_ICON_SEC_X, WP_ICON_SEC_Y, cgs.media.noammoShader );
-			}
-		}
-
-
-		y += ( WP_ICON_Y + WP_ICON_SPACE_Y );
-	}
-}
-
-
-
-
-/*
 ==============
 CG_WeaponHasAmmo
 	check for ammo
@@ -3894,6 +3719,11 @@ static qboolean CG_WeaponSelectable( int i ) {
 
 	// grenades are only thrown via quickgrenade now - never selectable as the active weapon
 	if ( i == WP_GRENADE_LAUNCHER || i == WP_GRENADE_PINEAPPLE || i == WP_POISONGAS || i == WP_SMOKEBOMB ) {
+		return qfalse;
+	}
+
+	// special equipment is only reachable via the "specialequip" binds now, never normal cycling
+	if ( i == WP_DYNAMITE || i == WP_LANDMINE || i == WP_MEDCRATE || i == WP_AIRSTRIKE ) {
 		return qfalse;
 	}
 
@@ -4959,6 +4789,117 @@ void CG_Weapon_f( void ) {
 	}
 
 	CG_FinishWeaponChange( curweap, num );
+}
+
+/*
+==============
+CG_GetEquipSlotWeapon
+
+	Which special-equipment weapon (slot 1: dynamite/medcrate/airstrike,
+	slot 2: landmine) the player owns. Shared by CG_SpecialEquip_f and the
+	equipment HUD icons.
+==============
+*/
+int CG_GetEquipSlotWeapon( int slot ) {
+	if ( slot == 1 ) {
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_DYNAMITE ) ) {
+			return WP_DYNAMITE;
+		}
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_MEDCRATE ) ) {
+			return WP_MEDCRATE;
+		}
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_AIRSTRIKE ) ) {
+			return WP_AIRSTRIKE;
+		}
+	} else if ( slot == 2 ) {
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_LANDMINE ) ) {
+			return WP_LANDMINE;
+		}
+	}
+
+	return WP_NONE;
+}
+
+/*
+==============
+CG_WeaponSlot_f
+
+	Handler for "weaponslot <n>" (binds 2/3/4) - switches directly to whatever
+	weapon occupies that primary/secondary/tertiary slot. No bank cycling.
+==============
+*/
+void CG_WeaponSlot_f( void ) {
+	int slot;
+	int slotWeapon;
+	int curweap;
+
+	if ( !cg.snap ) {
+		return;
+	}
+
+	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
+		return;
+	}
+
+	slot = atoi( CG_Argv( 1 ) );
+	if ( slot < 1 ) {
+		return;
+	}
+
+	if ( cg.predictedPlayerState.stats[STAT_PLAYER_CLASS] == PC_SOLDIER ) {
+		if ( slot >= MAX_WEAPON_SLOTS_SOLDIER ) {
+			return;
+		}
+		slotWeapon = cg.predictedPlayerState.weaponSlotsSoldier[slot];
+	} else {
+		if ( slot >= MAX_WEAPON_SLOTS ) {
+			return;
+		}
+		slotWeapon = cg.predictedPlayerState.weaponSlots[slot];
+	}
+
+	if ( slotWeapon <= WP_NONE || !COM_BitCheck( cg.predictedPlayerState.weapons, slotWeapon ) ) {
+		return;
+	}
+
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
+	curweap = cg.weaponSelect;
+	CG_FinishWeaponChange( curweap, slotWeapon );
+}
+
+/*
+==============
+CG_SpecialEquip_f
+
+	Handler for "specialequip <n>" (binds 5/6) - switches directly to the
+	slot's equipment weapon, bypassing CG_WeaponSelectable.
+==============
+*/
+void CG_SpecialEquip_f( void ) {
+	int slot;
+	int equipWeapon;
+	int curweap;
+
+	if ( !cg.snap ) {
+		return;
+	}
+
+	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
+		return;
+	}
+
+	slot = atoi( CG_Argv( 1 ) );
+
+	equipWeapon = CG_GetEquipSlotWeapon( slot );
+	if ( equipWeapon == WP_NONE ) {
+		return;
+	}
+
+	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
+
+	curweap = cg.weaponSelect;
+	CG_FinishWeaponChange( curweap, equipWeapon );
 }
 
 /*

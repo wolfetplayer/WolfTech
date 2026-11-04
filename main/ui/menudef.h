@@ -269,6 +269,12 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_PLAYER_WEAPON_RECHARGE   91
 #define CG_PLAYER_GRENADE_COUNT     92
 #define CG_PLAYER_SPECIAL_GRENADE_COUNT 93
+#define CG_PLAYER_EQUIP1_ICON       94
+#define CG_PLAYER_EQUIP1_VALUE      95
+#define CG_PLAYER_EQUIP2_ICON       96
+#define CG_PLAYER_EQUIP2_VALUE      97
+#define CG_PLAYER_EQUIP1_KEY        98
+#define CG_PLAYER_EQUIP2_KEY        99
 
 #define UI_OWNERDRAW_BASE           200
 #define UI_HANDICAP                 200

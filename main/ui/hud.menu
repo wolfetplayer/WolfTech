@@ -744,7 +744,7 @@
 
 			decoration
 			visible MENU_TRUE
-			style WINDOW_STYLE_SHADER
+			ownerDraw CG_PLAYER_KILLS
 			background "gfx/2d/back_box.tga"
 
 			forecolor 1 1 1 1
@@ -758,7 +758,7 @@
 				showCvar { "0" }
 
 				rect 68 -39 12 12 // X+5 Y+5
-				style WINDOW_STYLE_SHADER
+				ownerDraw CG_PLAYER_KILLS
 				background "gfx/hud/pm_death"
 				visible	1
 				decoration
@@ -830,29 +830,12 @@
 		}
 
 
-		//	WEAPON ICON		
-		
+		//	WEAPON ICON
+
 		// ammo icon
 		itemDef {
 			name "a"
 			rect 458 -40 80 40
-
-			cvarTest "g_gameType"
-			hideCvar { "0" }
-
-			visible MENU_TRUE
-			decoration
-			align ITEM_ALIGN_CENTER
-			ownerdraw CG_PLAYER_WEAPON_ICON2D
-		}
-
-		// same icon, raised to leave room for the class weapon-charge bar below it (GT_COOP_SURVIVAL, GT_SINGLE_PLAYER)
-		itemDef {
-			name "a"
-			rect 458 -62 80 40
-
-			cvarTest "g_gameType"
-			showCvar { "0" }
 
 			visible MENU_TRUE
 			decoration
@@ -1026,74 +1009,9 @@
 			
 			forecolor 1 1 1 1
 		}
-		
-		itemDef {
-			name "weapcharbar_box"
-			rect 443 -22 110 22
 
-			cvarTest "g_gameType"
-			showCvar { "0" }
-
-			decoration
-			visible MENU_TRUE
-			style WINDOW_STYLE_SHADER
-			background "gfx/2d/back_box_2x.tga"
-			forecolor 1 1 1 1
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-		}
-
-			itemDef
-			{
-				name "weapcharbar_icon"
-				rect 451 -17 6 12 // X+5 Y+5
-
-				cvarTest "g_gameType"
-				showCvar { "0" }
-
-				background "gfx/hud/et/ic_power.tga"
-				decoration
-				style WINDOW_STYLE_SHADER
-				visible	1
-				ownerdrawflag CG_SHOW_NOT_V_BINOC
-			}
-
-		// weapon charge bar backcolor
-		itemDef {
-			name ""
-			rect 463 -16 83.25 10 // X+20 Y+6
-
-			cvarTest "g_gameType"
-			showCvar { "0" }
-
-			decoration
-			visible MENU_TRUE
-			style WINDOW_STYLE_SHADER
-			background "gfx/hud/backcolor.tga"
-
-			forecolor 0 0 0 .5
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-		}
-
-			itemDef {
-				name "weapcharbar"
-
-				cvarTest "g_gameType"
-				showCvar { "0" }
-
-				decoration
-				visible MENU_TRUE
-				align HUD_HORIZONTAL
-				rect 463.5 -21.5 82 11 // horizontal version // Y-5.5
-				ownerdraw CG_PLAYER_WEAPON_RECHARGE
-				addColorRangerel 0.00 0.25  1 0.1 0.1 0.5   // 0-25%
-				addColorRangerel 0.25 0.50  .63 .47 .25 0.5 // 25%-50%
-				addColorRangerel 0.50 1.00  0.1 1 0.1 0.5   // 25-100%
-			}
-			
-			
-			
 	}
-	
+
 	//	GRENADE COUNT	//	always visible, height-aligned to the weapon ammo count
 	menuDef {
     	name "GrenadeCount"
@@ -1180,6 +1098,110 @@
 			decoration
 			ownerdraw CG_PLAYER_COMPASS
 			rect 0 0 60 60
+		}
+	}
+
+	//	EQUIPMENT (flanking the compass)	//
+
+	menuDef {
+		name "EquipmentLeft"
+		fullScreen MENU_FALSE
+		visible MENU_TRUE
+		rect 220 428 56 44
+
+		itemDef {
+			name "equip1icon"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			ownerdraw CG_PLAYER_EQUIP1_ICON
+			rect 12 0 32 32
+		}
+
+		itemDef {
+			name "equip1value"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			textfont UI_FONT_NORMAL
+			textscale .22
+			textstyle ITEM_TEXTSTYLE_SHADOWED
+			forecolor 1 1 1 1
+			ownerdraw CG_PLAYER_EQUIP1_VALUE
+			rect 12 32 32 14
+		}
+
+		itemDef {
+			name "equip1keyhint"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			textfont UI_FONT_NORMAL
+			textscale .17
+			textstyle ITEM_TEXTSTYLE_SHADOWED
+			forecolor 1 1 1 1
+			ownerdraw CG_PLAYER_EQUIP1_KEY
+			rect 0 -6 22 11
+		}
+	}
+
+	menuDef {
+		name "EquipmentRight"
+		fullScreen MENU_FALSE
+		visible MENU_TRUE
+		rect 364 428 56 44
+
+		itemDef {
+			name "equip2icon"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			ownerdraw CG_PLAYER_EQUIP2_ICON
+			rect 12 0 32 32
+		}
+
+		itemDef {
+			name "equip2value"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			textfont UI_FONT_NORMAL
+			textscale .22
+			textstyle ITEM_TEXTSTYLE_SHADOWED
+			forecolor 1 1 1 1
+			ownerdraw CG_PLAYER_EQUIP2_VALUE
+			rect 12 32 32 14
+		}
+
+		itemDef {
+			name "equip2keyhint"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			textfont UI_FONT_NORMAL
+			textscale .17
+			textstyle ITEM_TEXTSTYLE_SHADOWED
+			forecolor 1 1 1 1
+			ownerdraw CG_PLAYER_EQUIP2_KEY
+			rect 0 -6 22 11
 		}
 	}
 

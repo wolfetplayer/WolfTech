@@ -836,7 +836,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qtrue,
 		.weapFile           = "pineapple.weap",
     },
-    // Engineer dynamite: cooldown-gated (classWeaponTime/g_engineerChargeTime) like WP_AIRSTRIKE, not ammo-limited.
+    // Engineer dynamite: cooldown-gated (classWeaponTime/g_engineerChargeTime), not ammo-limited.
     [WP_DYNAMITE] = {
 		.weaponindex        = WP_DYNAMITE,
 		.weapAlts           = WP_NONE,
@@ -1207,7 +1207,8 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
 
-	// JPW NERVE -- Lieutenant call-in weapons, cooldown-gated (classWeaponTime/g_LTChargeTime) so ammo/clip are unlimited.
+	// JPW NERVE -- Lieutenant call-in weapons, each cooldown-gated independently (airstrikeWeaponTime/g_airstrikeChargeTime
+	// and artyWeaponTime/g_artyChargeTime, see q_shared.h/g_local.h) so ammo/clip are unlimited.
     [WP_AIRSTRIKE] = {
 		.weaponindex        = WP_AIRSTRIKE,
 		.weapAlts           = WP_NONE,

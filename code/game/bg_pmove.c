@@ -3655,28 +3655,23 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-	// JPW NERVE -- airstrike marker on LT cooldown: no fire (predicted-side mirror of the server gate in g_weapon.c FireWeapon).
+	// JPW NERVE -- airstrike marker on cooldown: no fire (predicted mirror of the server gate in g_weapon.c).
 	if ( pm->ps->weapon == WP_AIRSTRIKE && pm->ps->grenadeTimeLeft <= 0 &&
-		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->ltChargeTime ) {
+		 pm->cmd.serverTime - pm->ps->airstrikeWeaponTime < pm->airstrikeChargeTime ) {
 		return;
 	}
 
-	// engineer dynamite on cooldown: no fire (predicted-side mirror of the server gate in g_weapon.c FireWeapon).
-	// AI characters (e.g. scripted enemies) still throw it on their own ammo/script-governed cadence.
+	// engineer dynamite on cooldown: no fire (predicted mirror of the server gate in g_weapon.c).
 	if ( pm->ps->weapon == WP_DYNAMITE && !pm->ps->aiChar && pm->ps->grenadeTimeLeft <= 0 &&
-		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->engineerChargeTime ) {
+		 pm->cmd.serverTime - pm->ps->dynamiteWeaponTime < pm->engineerChargeTime ) {
 		return;
 	}
 
-	// landmine only needs 1/3 of the charge bar banked, not the full bar dynamite requires (predicted-side mirror of g_weapon.c FireWeapon).
-	if ( pm->ps->weapon == WP_LANDMINE && !pm->ps->aiChar &&
-		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->engineerChargeTime / 3 ) {
-		return;
-	}
+	// landmine has no charge cost - ammo-limited only, see g_missile.c
 
-	// medic crate on cooldown: no fire (predicted-side mirror of the server gate in g_weapon.c FireWeapon).
+	// medic crate on cooldown: no fire (predicted mirror of the server gate in g_weapon.c).
 	if ( pm->ps->weapon == WP_MEDCRATE && !pm->ps->aiChar &&
-		 pm->cmd.serverTime - pm->ps->classWeaponTime < pm->medicChargeTime ) {
+		 pm->cmd.serverTime - pm->ps->medcrateWeaponTime < pm->medicChargeTime ) {
 		return;
 	}
 
@@ -3695,7 +3690,7 @@ static void PM_Weapon( void ) {
 				// AI characters go into their regular animation setup
 				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
 			} else if ( pm->ps->weapon == WP_AIRSTRIKE ) {
-				// LT call-in signal: not cookable, no fuse to hold - press fire and it's thrown, gated only by classWeaponTime cooldown.
+				// LT call-in signal: not cookable, no fuse to hold - press fire and it's thrown, gated only by its own airstrikeWeaponTime cooldown.
 				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
 			} else {
 				if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) ) {

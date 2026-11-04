@@ -156,6 +156,8 @@ vmCvar_t cg_drawEnemyHealthbars;
 vmCvar_t cg_enemyHealthbarRange;
 vmCvar_t cg_enemyHealthbarAimRadius;
 vmCvar_t cg_drawDamageNumbers;
+vmCvar_t cg_drawKillCount;
+vmCvar_t cg_drawWeaponIcon;
 vmCvar_t cg_showAINames;
 vmCvar_t cg_showAIStats;
 vmCvar_t cg_draw2D;
@@ -285,7 +287,8 @@ vmCvar_t cg_survivalAiHealthCap;
 // JPW NERVE
 vmCvar_t cg_medicChargeTime;
 vmCvar_t cg_engineerChargeTime;
-vmCvar_t cg_LTChargeTime;
+vmCvar_t cg_airstrikeChargeTime;
+vmCvar_t cg_artyChargeTime;
 vmCvar_t cg_soldierChargeTime;
 
 vmCvar_t cg_hunkUsed;
@@ -420,6 +423,8 @@ cvarTable_t cvarTable[] = {
 	{&cg_enemyHealthbarRange, "cg_enemyHealthbarRange", "800", CVAR_ARCHIVE},
 	{&cg_enemyHealthbarAimRadius, "cg_enemyHealthbarAimRadius", "120", CVAR_ARCHIVE},
 	{&cg_drawDamageNumbers, "cg_drawDamageNumbers", "0", CVAR_ARCHIVE},
+	{&cg_drawKillCount, "cg_drawKillCount", "0", CVAR_ARCHIVE},
+	{&cg_drawWeaponIcon, "cg_drawWeaponIcon", "1", CVAR_ARCHIVE},
 	{&cg_showAINames, "cg_showAINames", "0", CVAR_CHEAT},
 	{&cg_showAIStats, "cg_showAIStats", "0", CVAR_CHEAT},
 	{&cg_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE},
@@ -560,7 +565,8 @@ cvarTable_t cvarTable[] = {
 
 		// JPW NERVE
 	{&cg_medicChargeTime, "g_medicChargeTime", "30000", CVAR_SYSTEMINFO},		  // communicated by systeminfo
-	{&cg_LTChargeTime, "g_LTChargeTime", "30000", CVAR_SYSTEMINFO},			  // communicated by systeminfo
+	{&cg_airstrikeChargeTime, "g_airstrikeChargeTime", "30000", CVAR_SYSTEMINFO}, // communicated by systeminfo
+	{&cg_artyChargeTime, "g_artyChargeTime", "30000", CVAR_SYSTEMINFO},			  // communicated by systeminfo
 	{&cg_engineerChargeTime, "g_engineerChargeTime", "30000", CVAR_SYSTEMINFO}, // communicated by systeminfo
 	{&cg_soldierChargeTime, "g_soldierChargeTime", "30000", CVAR_SYSTEMINFO},	  // communicated by systeminfo
 
@@ -1584,6 +1590,7 @@ static void CG_RegisterGraphics( void ) {
 
 //	cgs.media.binocShaderSimple = trap_R_RegisterShader( "gfx/misc/binocsimple" );			// TODO: remove
 	cgs.media.binocShaderSimpleQ = trap_R_RegisterShader( "gfx/misc/binocsimple_quarter" );  //----(SA)	added
+	cgs.media.binocularsIcon = trap_R_RegisterShaderNoMip( "icons/iconw_binocular_1.tga" );  // equipment HUD icon
 
 	// Rafael
 	// cgs.media.snowShader = trap_R_RegisterShader ( "snowPuff" );

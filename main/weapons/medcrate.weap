@@ -11,8 +11,8 @@ weaponDef
 		landSound			"sound/weapons/medcrate/land.wav"
 		healSound			"sound/weapons/medcrate/heal.wav"
 
-		weaponIcon			"icons/iconh_large"
-		weaponSelectedIcon	"icons/iconh_large"
+		weaponIcon			"icons/iconw_medcrate_1"
+//		weaponSelectedIcon	"icons/iconh_large"	// unused - HUD uses a gold tint instead
 		ammoIcon			"icons/iconh_large"
 
 		// NOTE: bounceSound doesn't apply to thrown missiles (dropped items only); landing thud uses landSound above via EV_GRENADE_BOUNCE.

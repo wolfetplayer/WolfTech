@@ -759,7 +759,7 @@ void CG_PredictPlayerState( void ) {
 			}
 		}
 
-		cg_pmove.ltChargeTime = (int)cg_LTChargeTime.value;
+		cg_pmove.airstrikeChargeTime = (int)cg_airstrikeChargeTime.value;
 		cg_pmove.medicChargeTime = (int)cg_medicChargeTime.value;
 		cg_pmove.engineerChargeTime = (int)cg_engineerChargeTime.value;
 		cg_pmove.soldierChargeTime = (int)cg_soldierChargeTime.value;

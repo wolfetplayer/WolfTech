@@ -369,11 +369,8 @@ void G_TryArmLandmine( gentity_t *ent, trace_t *trace ) {
 	if ( denyReason ) {
 		if ( owner && owner->inuse && owner->client ) {
 			trap_SendServerCommand( owner - g_entities, va( "cp \"%s\" 1", denyReason ) );
+			// landmine has no charge-time cost to refund - just give the ammo back
 			Add_Ammo( owner, WP_LANDMINE, 1, qfalse );
-
-			if ( !owner->aiCharacter ) {
-				owner->client->ps.classWeaponTime -= ( g_engineerChargeTime.integer / 3 );
-			}
 		}
 
 		G_FreeEntity( ent );

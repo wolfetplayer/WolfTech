@@ -2056,8 +2056,12 @@ void ClientSpawn( gentity_t *ent ) {
 
 	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH];
 
-	// class weapon charge (LT arty/airstrike, engineer dynamite, etc.) starts full, not filling up from zero
+	// class weapon charges start full, not filling up from zero
 	client->ps.classWeaponTime = level.time - 999999;
+	client->ps.airstrikeWeaponTime = level.time - 999999;
+	client->ps.artyWeaponTime = level.time - 999999;
+	client->ps.medcrateWeaponTime = level.time - 999999;
+	client->ps.dynamiteWeaponTime = level.time - 999999;
 
 	G_SetOrigin( ent, spawn_origin );
 	VectorCopy( spawn_origin, client->ps.origin );

@@ -208,9 +208,51 @@ menuDef {
 	}
 
 	itemDef {
-		name			hud_back
+		name			hud_killcount
 		group			performance
 		rect 0 144 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_KILLCOUNT"
+		textfont 		UI_FONT_BIG				// RealRTCWCoop
+		cvar			"cg_drawKillCount"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hud_killcount backcolor .3 0.5 0.2 .25 ; show tip_hud_killcount ; show tipbox }
+		mouseExit { setitemcolor hud_killcount backcolor 1 1 1 .07 ; hide tip_hud_killcount ; hide tipbox }
+	}
+
+	itemDef {
+		name			hud_weaponicon
+		group			performance
+		rect 0 168 600 22
+		type			ITEM_TYPE_MULTI
+		style			WINDOW_STYLE_FILLED
+		text			"@OPTIONS_WEAPONICON"
+		textfont 		UI_FONT_BIG				// RealRTCWCoop
+		cvar			"cg_drawWeaponIcon"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale		.32
+		textalign		ITEM_ALIGN_RIGHT
+		textalignx		280
+		textaligny		16
+		backcolor		1 1 1 .07
+		forecolor		1 1 1 1
+		visible			0
+		mouseEnter { setitemcolor hud_weaponicon backcolor .3 0.5 0.2 .25 ; show tip_hud_weaponicon ; show tipbox }
+		mouseExit { setitemcolor hud_weaponicon backcolor 1 1 1 .07 ; hide tip_hud_weaponicon ; hide tipbox }
+	}
+
+	itemDef {
+		name			hud_back
+		group			performance
+		rect 0 192 600 22
 		type			ITEM_TYPE_BUTTON
 		style			WINDOW_STYLE_FILLED
 		text			"@MAIN_BACK"
@@ -701,6 +743,38 @@ menuDef {
 		style WINDOW_STYLE_EMPTY
 		rect 15 280 570 28
 		text "@OPTIONS_TIP_COMPASS"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_killcount
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_KILLCOUNT"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_hud_weaponicon
+		group grpGameplayTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 280 570 28
+		text "@OPTIONS_TIP_WEAPONICON"
 		textfont UI_FONT_BIG
 		textscale .23
 		textalign ITEM_ALIGN_LEFT

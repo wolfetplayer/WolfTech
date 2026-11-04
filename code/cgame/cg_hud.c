@@ -218,6 +218,21 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 		return;
 	}
 
+	if ( !cg_drawWeaponIcon.integer ) {
+		return;
+	}
+
+	// special equipment already has its own icon next to the compass - don't duplicate it here
+	switch ( cg.predictedPlayerState.weapon ) {
+	case WP_DYNAMITE:
+	case WP_LANDMINE:
+	case WP_MEDCRATE:
+	case WP_AIRSTRIKE:
+		return;
+	default:
+		break;
+	}
+
 	if ( cg_fixedAspect.integer == 2 ) {
 		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 	}
@@ -594,6 +609,7 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 	case WP_DYNAMITE:      // charge-based (cooldown-gated), no meaningful clip/reserve count
 	case WP_AIRSTRIKE:
 	case WP_MEDCRATE:
+	case WP_LANDMINE:      // real clip count, but already shown by the equipment HUD icon next to the compass
 		return;
 
 	case WP_GRENADE_LAUNCHER:
@@ -819,6 +835,10 @@ static void CG_DrawPlayerLocation( rectDef_t *rect, int font, float scale, vec4_
 static void CG_DrawPlayerKills( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
 	char num[16];
 	int value = cg.snap->ps.persistant[PERS_KILLS];
+
+	if ( !cg_drawKillCount.integer ) {
+		return;
+	}
 
 	if ( shader ) {
 		trap_R_SetColor( color );
@@ -1730,7 +1750,7 @@ static void CG_DrawWeapRecharge( rectDef_t *rect, vec4_t color, int align ) {
 			chargeTime = cg_engineerChargeTime.value;
 			break;
 		case PC_LT:
-			chargeTime = cg_LTChargeTime.value;
+			chargeTime = cg_airstrikeChargeTime.value;
 			break;
 		default:
 		    chargeTime = 30000;
@@ -1758,6 +1778,204 @@ static void CG_DrawWeapRecharge( rectDef_t *rect, vec4_t color, int align ) {
 		color[3] = cg_hudAlpha.value;
 		trap_R_SetColor( color );
 
+}
+
+/*
+==============
+CG_EquipRemainingMs
+
+	Milliseconds until the given equipment weapon is ready again (0 if ready).
+	Landmine has no charge cost, so it falls to the default case.
+==============
+*/
+static int CG_EquipRemainingMs( int equipWeapon ) {
+	float chargeTime;
+	int lastUseTime;
+	float remaining;
+
+	switch ( equipWeapon ) {
+	case WP_DYNAMITE:
+		chargeTime = cg_engineerChargeTime.value;
+		lastUseTime = cg.snap->ps.dynamiteWeaponTime;
+		break;
+	case WP_MEDCRATE:
+		chargeTime = cg_medicChargeTime.value;
+		lastUseTime = cg.snap->ps.medcrateWeaponTime;
+		break;
+	case WP_AIRSTRIKE:
+		chargeTime = cg_airstrikeChargeTime.value;
+		lastUseTime = cg.snap->ps.airstrikeWeaponTime;
+		break;
+	default:
+		return 0;
+	}
+
+	remaining = chargeTime - (float)( cg.time - lastUseTime );
+
+	if ( remaining <= 0 ) {
+		return 0;
+	}
+
+	return (int)remaining;
+}
+
+/*
+==============
+CG_ArtyRemainingMs
+
+	Milliseconds until the LT's binocular arty call-in is ready again (0 if
+	ready). Own clock/cvar, independent of the airstrike signal.
+==============
+*/
+static int CG_ArtyRemainingMs( void ) {
+	float remaining = cg_artyChargeTime.value - (float)( cg.time - cg.snap->ps.artyWeaponTime );
+
+	if ( remaining <= 0 ) {
+		return 0;
+	}
+
+	return (int)remaining;
+}
+
+/*
+==============
+CG_DrawEquipIcon
+
+	Draws the equipment icon for the given slot (1 or 2), dimmed on cooldown
+	and highlighted (gold tint, or weaponIcon[1] for dynamite) while selected.
+==============
+*/
+static void CG_DrawEquipIcon( rectDef_t *rect, int slot ) {
+	int equipWeapon = CG_GetEquipSlotWeapon( slot );
+	qhandle_t icon;
+	vec4_t color = {1.0f, 1.0f, 1.0f, 1.0f};
+	qboolean ready = qtrue;
+
+	if ( equipWeapon == WP_NONE ) {
+		// LT has no landmine for slot 2 - show binoculars there instead, if owned
+		if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_LT &&
+			 ( cg.snap->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) ) {
+			icon = cgs.media.binocularsIcon;
+			ready = ( CG_ArtyRemainingMs() == 0 );
+
+			// binoculars aren't a selectable weapon - "selected" means actively zoomed in with them
+			if ( cg.zoomedBinoc ) {
+				color[0] = 1.0f; color[1] = 0.8f; color[2] = 0.2f;
+			}
+		} else {
+			return;
+		}
+	} else {
+		CG_RegisterWeapon( equipWeapon );
+		ready = ( CG_EquipRemainingMs( equipWeapon ) == 0 );
+
+		switch ( equipWeapon ) {
+		case WP_AIRSTRIKE:
+		case WP_MEDCRATE:
+		case WP_LANDMINE:
+			// gold tint when selected, like binoculars above
+			icon = cg_weapons[equipWeapon].weaponIcon[0];
+			if ( cg.weaponSelect == equipWeapon ) {
+				color[0] = 1.0f; color[1] = 0.8f; color[2] = 0.2f;
+			}
+			break;
+		default:
+			icon = cg_weapons[equipWeapon].weaponIcon[ cg.weaponSelect == equipWeapon ? 1 : 0 ];
+			break;
+		}
+	}
+
+	if ( !icon ) {
+		return;
+	}
+
+	color[3] = ready ? cg_hudAlpha.value : cg_hudAlpha.value * 0.4f;
+	trap_R_SetColor( color );
+	CG_DrawPic( rect->x, rect->y, rect->w, rect->h, icon );
+	trap_R_SetColor( NULL );
+}
+
+/*
+==============
+CG_DrawEquipValue
+
+	Draws the equipment slot's number: ammo count for landmine, a countdown
+	to ready for cooldown-only items, nothing once ready or for an empty slot.
+==============
+*/
+static void CG_DrawEquipValue( rectDef_t *rect, int slot, int font, float scale, vec4_t color, int textStyle ) {
+	int equipWeapon = CG_GetEquipSlotWeapon( slot );
+	char num[16];
+	int value;
+	int w;
+
+	if ( equipWeapon == WP_LANDMINE ) {
+		// landmine is clip-only - real stock is in ammoclip, not the ammo reserve pool
+		value = cg.snap->ps.ammoclip[BG_FindClipForWeapon( WP_LANDMINE )];
+	} else {
+		int remainingMs;
+
+		if ( equipWeapon != WP_NONE ) {
+			remainingMs = CG_EquipRemainingMs( equipWeapon );
+		} else if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_LT &&
+					( cg.snap->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) ) {
+			remainingMs = CG_ArtyRemainingMs();
+		} else {
+			return; // empty slot
+		}
+
+		if ( remainingMs == 0 ) {
+			return; // ready - no number needed
+		}
+		value = ( remainingMs + 999 ) / 1000; // round up to whole seconds
+	}
+
+	Com_sprintf( num, sizeof( num ), "%i", value );
+	w = CG_Text_Width( num, font, scale, 0 );
+	CG_Text_Paint( rect->x + ( rect->w - w ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
+}
+
+/*
+==============
+CG_DrawEquipKeyHint
+
+	Draws "[key]" over the equipment icon for whatever key is currently bound
+	to select it. Glyphs drawn separately to compensate for "["'s uneven
+	built-in bearing vs "]".
+==============
+*/
+static void CG_DrawEquipKeyHint( rectDef_t *rect, int slot, int font, float scale, vec4_t color, int textStyle ) {
+	int equipWeapon = CG_GetEquipSlotWeapon( slot );
+	cgBindAction_t action;
+	char keyName[32];
+	float openW, keyW, closeW, totalW, kern;
+	float x;
+
+	if ( equipWeapon == WP_NONE ) {
+		if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_LT &&
+			 ( cg.snap->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) ) {
+			action = CG_BIND_ZOOM;
+		} else {
+			return;
+		}
+	} else {
+		action = ( slot == 1 ) ? CG_BIND_SPECIALEQUIP1 : CG_BIND_SPECIALEQUIP2;
+	}
+
+	CG_KeyNameForAction( action, keyName, sizeof( keyName ) );
+
+	openW = CG_Text_Width( "[", font, scale, 0 );
+	keyW = CG_Text_Width( keyName, font, scale, 0 );
+	closeW = CG_Text_Width( "]", font, scale, 0 );
+	kern = openW * 0.4f;
+	totalW = openW + keyW + closeW - kern;
+
+	x = rect->x + ( rect->w - totalW ) / 2;
+	CG_Text_Paint( x, rect->y + rect->h, font, scale, color, "[", 0, 0, textStyle );
+	x += openW - kern;
+	CG_Text_Paint( x, rect->y + rect->h, font, scale, color, keyName, 0, 0, textStyle );
+	x += keyW;
+	CG_Text_Paint( x, rect->y + rect->h, font, scale, color, "]", 0, 0, textStyle );
 }
 
 /*
@@ -1849,6 +2067,24 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_WAVES:
 		CG_DrawPlayerWaves( &rect, font, scale, color, shader, textStyle );
+		break;
+	case CG_PLAYER_EQUIP1_ICON:
+		CG_DrawEquipIcon( &rect, 1 );
+		break;
+	case CG_PLAYER_EQUIP1_VALUE:
+		CG_DrawEquipValue( &rect, 1, font, scale, color, textStyle );
+		break;
+	case CG_PLAYER_EQUIP2_ICON:
+		CG_DrawEquipIcon( &rect, 2 );
+		break;
+	case CG_PLAYER_EQUIP2_VALUE:
+		CG_DrawEquipValue( &rect, 2, font, scale, color, textStyle );
+		break;
+	case CG_PLAYER_EQUIP1_KEY:
+		CG_DrawEquipKeyHint( &rect, 1, font, scale, color, textStyle );
+		break;
+	case CG_PLAYER_EQUIP2_KEY:
+		CG_DrawEquipKeyHint( &rect, 2, font, scale, color, textStyle );
 		break;
 	case CG_PLAYER_LIVES:
 		CG_DrawPlayerLives( &rect, font, scale, color, shader, textStyle );

@@ -9,7 +9,7 @@ weaponDef
 		missileTrailFunc	"PyroSmokeTrail"	// gated to only trail while triggered (effect1Time == 2) -- see CG_PyroSmokeTrail's WP_LANDMINE branch
 
 		weaponIcon			"icons/iconw_landmine"
-		weaponSelectedIcon	"icons/iconw_landmine_1_select"
+		//weaponSelectedIcon	"icons/iconw_landmine_1_select"
 		ammoIcon			"icons/icona_landmine"
 
 		// NOTE: bounceSound doesn't apply to thrown missiles (dropped items only); landing thud is EV_GRENADE_BOUNCE from G_TryArmLandmine instead.

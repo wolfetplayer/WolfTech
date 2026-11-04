@@ -411,7 +411,7 @@ void Weapon_Artillery( gentity_t *ent ) {
 	if ( ent->client->ps.stats[STAT_PLAYER_CLASS] != PC_LT ) {
 		return;
 	}
-	if ( level.time - ent->client->ps.classWeaponTime < g_LTChargeTime.integer ) {
+	if ( level.time - ent->client->ps.artyWeaponTime < g_artyChargeTime.integer ) {
 		te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_SOUND );
 		te->s.eventParm = G_SoundIndex( "sound/misc/a-negative.wav" );
 		te->s.teamNum = ent->s.clientNum;
@@ -526,7 +526,7 @@ void Weapon_Artillery( gentity_t *ent ) {
 		VectorCopy( bomb->s.pos.trDelta,bomb2->s.pos.trDelta );
 		VectorCopy( bomb->s.pos.trBase,bomb2->r.currentOrigin );
 	}
-	ent->client->ps.classWeaponTime = level.time;
+	ent->client->ps.artyWeaponTime = level.time;
 }
 
 /*
@@ -2017,63 +2017,38 @@ void FireWeapon( gentity_t *ent ) {
 	}
 	else if (wc & WEAPON_CLASS_DYNAMITE)
 	{
-		// engineer dynamite is a Lieutenant-airstrike-style cooldown ability, not an ammo-limited throw.
-		// AI characters (e.g. scripted enemies) still throw it on their own ammo/script-governed cadence.
-		if (!ent->aiCharacter && level.time - ent->client->ps.classWeaponTime < g_engineerChargeTime.integer)
+		// cooldown ability (own clock), not ammo-limited; AI throw on their own cadence
+		if (!ent->aiCharacter && level.time - ent->client->ps.dynamiteWeaponTime < g_engineerChargeTime.integer)
 		{
 			return;
 		}
 
-		ent->client->ps.classWeaponTime = level.time;
+		ent->client->ps.dynamiteWeaponTime = level.time;
 
 		weapon_grenadelauncher_fire(ent, ent->s.weapon);
 	}
 	else if (wc & WEAPON_CLASS_LANDMINE)
 	{
-		// same charge bar as dynamite but only needs/costs 1/3, deducted from the currently banked charge; AI ignore the gate.
-		if (!ent->aiCharacter)
-		{
-			int chargeTime = g_engineerChargeTime.integer;
-			int cost = chargeTime / 3;
-			int banked = level.time - ent->client->ps.classWeaponTime;
-
-			if (banked < cost)
-			{
-				return;
-			}
-
-			if (banked > chargeTime)
-			{
-				banked = chargeTime;
-			}
-
-			ent->client->ps.classWeaponTime = level.time - (banked - cost);
-		}
-		else
-		{
-			ent->client->ps.classWeaponTime = level.time;
-		}
-
-		// reuses dynamite's short-toss arc: weapon_grenadelauncher_fire only special-cases WP_DYNAMITE, everything else falls through the same way.
+		// ammo-limited only, no charge cost (10-cap enforced in g_missile.c)
 		weapon_grenadelauncher_fire(ent, ent->s.weapon);
 	}
 	else if (wc & WEAPON_CLASS_MEDCRATE)
 	{
-		// full charge drain like dynamite, not landmine's partial 1/3-banked cost; AI ignore the gate.
-		if (!ent->aiCharacter && level.time - ent->client->ps.classWeaponTime < g_medicChargeTime.integer)
+		// own clock, full charge drain; AI ignore the gate
+		if (!ent->aiCharacter && level.time - ent->client->ps.medcrateWeaponTime < g_medicChargeTime.integer)
 		{
 			return;
 		}
 
-		ent->client->ps.classWeaponTime = level.time;
+		ent->client->ps.medcrateWeaponTime = level.time;
 
 		// weapon_grenadelauncher_fire special-cases WP_MEDCRATE with zero launch velocity so it just drops.
 		weapon_grenadelauncher_fire(ent, ent->s.weapon);
 	}
 	else if (wc & WEAPON_CLASS_GRENADE)
 	{
-		// JPW NERVE -- airstrike marker is a Lieutenant cooldown ability, not an ammo-limited throw like its siblings here.
-		if (ent->s.weapon == WP_AIRSTRIKE && level.time - ent->client->ps.classWeaponTime < g_LTChargeTime.integer)
+		// JPW NERVE -- airstrike marker is a cooldown ability on its own clock, not ammo-limited like its siblings here.
+		if (ent->s.weapon == WP_AIRSTRIKE && level.time - ent->client->ps.airstrikeWeaponTime < g_airstrikeChargeTime.integer)
 		{
 			return;
 		}
@@ -2082,7 +2057,7 @@ void FireWeapon( gentity_t *ent ) {
 
 		if (ent->s.weapon == WP_AIRSTRIKE)
 		{
-			ent->client->ps.classWeaponTime = level.time;
+			ent->client->ps.airstrikeWeaponTime = level.time;
 		}
 	}
 	else if (wc & WEAPON_CLASS_RIFLENADE)

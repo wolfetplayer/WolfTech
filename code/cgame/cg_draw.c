@@ -1849,21 +1849,23 @@ lookup, display-string formatting, future gamepad glyphs once the engine's
 Key_KeynumToString learns about controller keynums) is handled generically.
 ==============
 */
-typedef enum {
-	CG_BIND_ACTIVATE    // interact/buy - bound to "+activate"
-} cgBindAction_t;
-
 static const char *CG_BindCommandForAction( cgBindAction_t action ) {
 	switch ( action ) {
 	case CG_BIND_ACTIVATE:
 		return "+activate";
+	case CG_BIND_SPECIALEQUIP1:
+		return "specialequip 1";
+	case CG_BIND_SPECIALEQUIP2:
+		return "specialequip 2";
+	case CG_BIND_ZOOM:
+		return "+zoom";
 	default:
 		return "";
 	}
 }
 
 // Writes the display name of the key bound to `action` into buf (e.g. "F"); "???" if unbound.
-static void CG_KeyNameForAction( cgBindAction_t action, char *buf, int bufSize ) {
+void CG_KeyNameForAction( cgBindAction_t action, char *buf, int bufSize ) {
 	const char *command = CG_BindCommandForAction( action );
 	int keynum = command[0] ? trap_Key_GetKey( command ) : -1;
 
@@ -5146,7 +5148,6 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawDamageNumbers();
 			CG_DrawAINameDebug();
 			CG_DrawAIStatsDebug();
-			CG_DrawWeaponSelect();
 			CG_DrawHoldableSelect();
 			CG_DrawPickupItem();
 			CG_DrawReward();

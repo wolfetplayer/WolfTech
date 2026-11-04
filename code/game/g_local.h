@@ -1382,7 +1382,8 @@ extern vmCvar_t g_dmflags;
 extern vmCvar_t g_fraglimit;
 extern vmCvar_t g_timelimit;
 extern vmCvar_t g_friendlyFire;
-extern vmCvar_t g_LTChargeTime; // JPW NERVE -- Lieutenant airstrike/artillery call-in cooldown, ms
+extern vmCvar_t g_airstrikeChargeTime; // JPW NERVE -- Lieutenant airstrike signal cooldown, ms
+extern vmCvar_t g_artyChargeTime;      // Lieutenant binocular artillery call-in cooldown, ms - independent of g_airstrikeChargeTime
 extern vmCvar_t g_medicChargeTime;
 extern vmCvar_t g_engineerChargeTime;
 extern vmCvar_t g_engineerBuildRate;   // func_constructible: speed multiplier for PC_ENGINEER

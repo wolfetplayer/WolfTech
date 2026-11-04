@@ -24,7 +24,7 @@ weaponDef
         //bounceSound       ""
 
 		weaponIcon			"icons/iconw_airstrike_1"
-		weaponSelectedIcon	"icons/iconw_airstrike_1_select"
+		//weaponSelectedIcon	"icons/iconw_airstrike_1_select"	// unused - HUD uses a gold tint instead
 
 		missileModel		"models/weapons/explosives/airstrike/signal.md3"
 		shellModel			"models/mapobjects/etl_plane/bomb.md3"

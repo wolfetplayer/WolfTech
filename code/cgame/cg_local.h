@@ -1257,6 +1257,7 @@ typedef struct {
 	qhandle_t reticleShaderSimpleQ;
 //	qhandle_t binocShaderSimple;
 	qhandle_t binocShaderSimpleQ;   // same as above, but quartered.  (trying to save texture space)
+	qhandle_t binocularsIcon;       // HUD equipment-slot icon (equipment HUD, cg_hud.c)
 
 	qhandle_t smokePuffShader;
 	qhandle_t smokePuffRageProShader;
@@ -1883,6 +1884,8 @@ extern vmCvar_t cg_drawEnemyHealthbars;
 extern vmCvar_t cg_enemyHealthbarRange;
 extern vmCvar_t cg_enemyHealthbarAimRadius;
 extern vmCvar_t cg_drawDamageNumbers;
+extern vmCvar_t cg_drawKillCount;
+extern vmCvar_t cg_drawWeaponIcon;
 extern vmCvar_t cg_showAINames;
 extern vmCvar_t cg_showAIStats;
 extern vmCvar_t cg_drawStatus;
@@ -2021,7 +2024,8 @@ extern vmCvar_t cg_survivalAiHealthCap;
 // JPW NERVE
 extern vmCvar_t cg_medicChargeTime;
 extern vmCvar_t cg_engineerChargeTime;
-extern vmCvar_t cg_LTChargeTime;
+extern vmCvar_t cg_airstrikeChargeTime;
+extern vmCvar_t cg_artyChargeTime;
 extern vmCvar_t cg_soldierChargeTime;
 
 extern vmCvar_t cg_hunkUsed;
@@ -2333,7 +2337,20 @@ void CG_NextWeapon_f( void );
 void CG_PrevWeapon_f( void );
 void CG_Weapon_f( void );
 void CG_WeaponBank_f( void );
+void CG_WeaponSlot_f( void );
+void CG_SpecialEquip_f( void );
+int CG_GetEquipSlotWeapon( int slot );
 void CG_WeaponSuggest( int weap );
+
+// Bindable actions the HUD can show a live keybind for (see CG_KeyNameForAction in cg_draw.c)
+typedef enum {
+	CG_BIND_ACTIVATE,       // interact/buy - bound to "+activate"
+	CG_BIND_SPECIALEQUIP1,  // 1st special equipment slot - bound to "specialequip 1"
+	CG_BIND_SPECIALEQUIP2,  // 2nd special equipment slot - bound to "specialequip 2"
+	CG_BIND_ZOOM            // binoculars - bound to "+zoom"
+} cgBindAction_t;
+
+void CG_KeyNameForAction( cgBindAction_t action, char *buf, int bufSize );
 void CG_ResetSimpleZoom(void);
 
 void CG_FinishWeaponChange( int lastweap, int newweap );
@@ -2385,7 +2402,6 @@ void CG_ActionView_Register( void );
 void CG_ActionView_Update( playerState_t *ps );
 qboolean CG_ActionView_Active( void );
 qhandle_t CG_ActionView_EntityTpModel( centity_t *cent );
-void CG_DrawWeaponSelect( void );
 void CG_DrawHoldableSelect( void );
 
 void CG_OutOfAmmoChange( void );

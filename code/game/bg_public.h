@@ -343,7 +343,7 @@ typedef struct {
 	qboolean noFootsteps;           // if the game is setup for no footsteps by the server
 	qboolean noWeapClips;               // if the game is setup for no weapon clips by the server
 	qboolean gauntletHit;           // true if a gauntlet attack would actually hit something
-	int ltChargeTime;                // JPW NERVE -- g_LTChargeTime/cg_LTChargeTime mirror, so pmove can gate WP_AIRSTRIKE without a bg-side cvar
+	int airstrikeChargeTime;         // JPW NERVE -- g_airstrikeChargeTime/cg_airstrikeChargeTime mirror, so pmove can gate WP_AIRSTRIKE without a bg-side cvar
 	int medicChargeTime;             // g_medicChargeTime/cg_medicChargeTime mirror, for a future medic charge-gated ability
 	int engineerChargeTime;          // g_engineerChargeTime/cg_engineerChargeTime mirror, for a future engineer charge-gated ability
 	int soldierChargeTime;           // g_soldierChargeTime/cg_soldierChargeTime mirror, for a future soldier charge-gated ability
