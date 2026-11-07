@@ -600,8 +600,8 @@ cvarTable_t cvarTable[] = {
 
 	{&cg_snipersCrosshair, "cg_snipersCrosshair", "1", CVAR_ARCHIVE},
 
-	{&cg_atm_effects, "cg_atm_effects", "1", CVAR_ARCHIVE,},																			
-	{&cg_atm_effects_low, "cg_atm_effects_low", "0", CVAR_ARCHIVE},	  
+	{&cg_atm_effects, "cg_atm_effects", "1", CVAR_ARCHIVE,},
+	{&cg_atm_effects_low, "cg_atm_effects_low", "1", CVAR_ARCHIVE},
 	{&cg_atm_effects_force, "cg_atm_effects_force", "0", CVAR_LATCH},
 
 	{&cg_showAIState, "cg_showAIState", "0", CVAR_CHEAT},

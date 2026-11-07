@@ -1135,6 +1135,27 @@ itemDef {
 		}
 
 	itemDef {
+		name iperf_atmeffects
+		group performance
+		type ITEM_TYPE_MULTI
+		text "@PERF_ATM_EFFECTS"
+		textfont		UI_FONT_BIG
+		cvar "cg_atm_effects_low"
+		cvarFloatList { "@PERF_ATM_FULL" 0 "@PERF_ATM_LOW" 1 "@GENERAL_OFF" 2 }
+		rect 0 114 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		mouseEnter { setitemcolor iperf_atmeffects backcolor .3 0.5 0.2 .25 ; show tip_iperf_atmeffects ; show tipbox }
+		mouseExit { setitemcolor iperf_atmeffects backcolor 1 1 1 .07 ; hide tip_iperf_atmeffects ; hide tipbox }
+		}
+
+	itemDef {
 		name iperf_dynamiclights
 		group performance
 		type ITEM_TYPE_MULTI
@@ -1142,7 +1163,7 @@ itemDef {
 		textfont		UI_FONT_BIG
 		cvar "r_dynamiclight"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 114 443 16
+		rect 0 133 443 16
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 224
 		textaligny 12
@@ -1163,7 +1184,7 @@ itemDef {
 		textfont		UI_FONT_BIG
 		cvar "r_fastsky"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 133 443 16
+		rect 0 152 443 16
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 224
 		textaligny 12
@@ -1184,7 +1205,7 @@ itemDef {
 		textfont		UI_FONT_BIG
 		cvar "cg_skybox"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 152 443 16
+		rect 0 171 443 16
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 224
 		textaligny 12
@@ -1205,7 +1226,7 @@ itemDef {
 		textfont		UI_FONT_BIG
 		cvar "r_finish"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 171 443 16
+		rect 0 190 443 16
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 224
 		textaligny 12
@@ -1226,7 +1247,7 @@ itemDef {
 		textfont		UI_FONT_BIG
 		cvar "cg_wolfparticles"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 190 443 16
+		rect 0 209 443 16
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 224
 		textaligny 12
@@ -1249,7 +1270,7 @@ itemDef {
 		showcvar { "1" }
 		cvar "r_nv_fogdist_mode"
 		cvarStrList { "@PERF_RADIAL", "GL_EYE_RADIAL_NV", "@PERF_PLANE", "GL_EYE_PLANE_ABSOLUTE_NV" }
-		rect 0 209 443 16
+		rect 0 228 443 16
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 224
 		textaligny 12
@@ -1272,7 +1293,7 @@ itemDef {
 		textalign ITEM_ALIGN_CENTER
 		textalignx 221
 		textaligny 14
-		rect 0 233 443 20
+		rect 0 252 443 20
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
@@ -1765,6 +1786,22 @@ itemDef {
 		style WINDOW_STYLE_EMPTY
 		rect 10 330 423 30
 		text "@PERF_TIP_FOLIAGE_DIST"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_iperf_atmeffects
+		group grpIngameSystemTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@PERF_TIP_ATM_EFFECTS"
 		textfont UI_FONT_BIG
 		textscale .2
 		textalign ITEM_ALIGN_LEFT

@@ -599,10 +599,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "cg_markTime"
 		cvarFloatList { "@PERF_MARK_NORMAL" 20000 "@PERF_MARK_SHORT" 10000 "@GENERAL_OFF" 0 "@PERF_MARK_LONG" 30000 "@PERF_MARK_VERYLONG" 99999 "@PERF_MARK_PERMANENT" 3600000 }
-		rect 0 20 600 22
+		rect 0 20 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -620,10 +620,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "cg_brassTime"
 		cvarFloatList { "@PERF_BRASS_ULTRA" 10000 "@PERF_BRASS_HIGH" 2500 "@PERF_BRASS_MED" 1250 "@GENERAL_OFF" 0 }
-		rect 0 44 600 22
+		rect 0 40 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -641,10 +641,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "cg_coronafardist"
 		cvarFloatList { "@PERF_CORONA_NEAR" 800 "@PERF_CORONA_NORMAL" 1536 "@PERF_CORONA_FAR" 4096 "@PERF_CORONA_VERYFAR" 8000 "@PERF_CORONA_ULTRA" 16000 "@PERF_CORONA_EXTREME" 32000 "@GENERAL_OFF" 0 }
-		rect 0 68 600 22
+		rect 0 60 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -662,10 +662,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_drawfoliage"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 92 600 22
+		rect 0 80 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -682,10 +682,10 @@ itemDef {
 		text "@PERF_FOLIAGE_DIST"
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvarfloat "r_foliageCullDistance" 30 1 400
-		rect 0 116 600 22
+		rect 0 100 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -696,6 +696,27 @@ itemDef {
 		}
 
 	itemDef {
+		name perf_atmeffects
+		group performance
+		type ITEM_TYPE_MULTI
+		text "@PERF_ATM_EFFECTS"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvar "cg_atm_effects_low"
+		cvarFloatList { "@PERF_ATM_FULL" 0 "@PERF_ATM_LOW" 1 "@GENERAL_OFF" 2 }
+		rect 0 120 600 20
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 14
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		mouseEnter { setitemcolor perf_atmeffects backcolor .3 0.5 0.2 .25 ; show tip_perf_atmeffects ; show tipbox }
+		mouseExit { setitemcolor perf_atmeffects backcolor 1 1 1 .07 ; hide tip_perf_atmeffects ; hide tipbox }
+		}
+
+	itemDef {
 		name perf_dynamiclights
 		group performance
 		type ITEM_TYPE_MULTI
@@ -703,10 +724,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_dynamiclight"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 140 600 22
+		rect 0 140 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -724,10 +745,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_fastsky"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 164 600 22
+		rect 0 160 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -745,10 +766,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "cg_skybox"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 188 600 22
+		rect 0 180 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -766,10 +787,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_finish"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 212 600 22
+		rect 0 200 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -787,10 +808,10 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "cg_wolfparticles"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 236 600 22
+		rect 0 220 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -810,10 +831,10 @@ itemDef {
 		showcvar { "1" }
 		cvar "r_nv_fogdist_mode"
 		cvarStrList { "@PERF_RADIAL", "GL_EYE_RADIAL_NV", "@PERF_PLANE", "GL_EYE_PLANE_ABSOLUTE_NV" }
-		rect 0 260 600 22
+		rect 0 240 600 20
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
-		textaligny 16
+		textaligny 14
 		textscale .32
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
@@ -832,8 +853,8 @@ itemDef {
 		textscale .32
 		textalign ITEM_ALIGN_CENTER
 		textalignx 290
-		textaligny 16
-		rect 0 286 600 22
+		textaligny 14
+		rect 0 264 600 20
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
@@ -1771,6 +1792,22 @@ itemDef {
 		style WINDOW_STYLE_EMPTY
 		rect 15 292 570 28
 		text "@PERF_TIP_FOLIAGE_DIST"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_perf_atmeffects
+		group grpGraphicsTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 292 570 28
+		text "@PERF_TIP_ATM_EFFECTS"
 		textfont UI_FONT_BIG
 		textscale .23
 		textalign ITEM_ALIGN_LEFT
