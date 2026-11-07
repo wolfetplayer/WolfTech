@@ -30236,6 +30236,19 @@ metal_misc/metal_m04dg
 ( -1174 1406 -106 ) ( -1174 1390 -106 ) ( -1174 1398 86 ) castle_wall/castle_c46_on_grid 224 48 0 0.5 0.5 0 0 0
 ( -1182 1376 48 ) ( -1286 1376 48 ) ( -1234 1392 48 ) castle_wall/castle_c46_on_grid 44 32 0 0.5 0.5 0 0 0
 }
+// brush 3263
+{
+( 1948 708 388 ) ( 1948 692 388 ) ( 1896 708 388 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1950 706 388 ) ( 1898 706 388 ) ( 1950 706 338 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1948 708 388 ) ( 1948 708 338 ) ( 1948 692 388 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1896 692 338 ) ( 1948 692 338 ) ( 1896 708 338 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1896 692 338 ) ( 1896 692 388 ) ( 1948 692 338 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1896 692 338 ) ( 1896 708 338 ) ( 1896 692 388 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1896 706 356 ) ( 1896 681.9168109894 356 ) ( 1912 706 338 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1948 706 358 ) ( 1928 706 338 ) ( 1948 677.7157287598 358 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1934 706 388 ) ( 1948 706 370 ) ( 1934 683.1964912415 388 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+( 1910 706 388 ) ( 1910 686.2010097504 388 ) ( 1896 706 374 ) common/clipweap 0 0 0 0.5 0.5 134217728 0 0
+}
 }
 // entity 1
 {
@@ -49309,99 +49322,17 @@ castle_wall/castle_c46_on_grid
 }
 // entity 949
 {
-"classname" "func_explosive"
-"spawnflags" "20"
-"type" "metal"
-"health" "10"
-"mass" "50"
-"dmg" "20"
-// brush 0
-{
-( 1922 691.5 364 ) ( 1922 691.5 340 ) ( 1922 700.5 340 ) chat/office_c04 84.0004882812 10.6655883789 180 0.375 -0.375 134217728 0 0
-( 1946 700.5 364 ) ( 1946 700.5 363.3745 ) ( 1946 691.5 363.3745 ) wood/wood_m12 59.9499511719 61.5795898438 89.9999923706 0.1312499046 0.1312501878 134217728 0 0
-( 1922.62475 691.5 340 ) ( 1922 691.5 340 ) ( 1922 691.5 364 ) common/caulk 53.333984375 21.3332519531 -0 0.1875 0.1875 134217728 0 0
-( 1946 700.5 364 ) ( 1922 700.5 364 ) ( 1922 700.5 340 ) chat/office_c04 69.3330078125 10.6694335938 -180 0.375 -0.375 134217728 0 0
-( 1922 700.5 340 ) ( 1922 691.5 340 ) ( 1922.62475 691.5 340 ) wood/wood_m12 61.576171875 93.46484375 89.9999923706 0.1312501729 0.1312498897 134217728 0 0
-( 1946 700.5 364 ) ( 1946 691.5 364 ) ( 1922 691.5 364 ) chat/office_c04 69.3334960938 83.9968261719 180 0.375 -0.375 134217728 0 0
-( 2413.74125 1219.5 1528.1035 ) ( 2342.43425 1219.5 1349.836 ) ( 2413.74125 1027.5 1528.1035 ) wood/wood_m12 24 38.7788085938 0 0.1875 0.043522343 134217728 0 0
-( 2096.97725 1219.5 1143.424 ) ( 2060.49275 1219.5 954.922 ) ( 2096.97725 1027.5 1143.424 ) wood/wood_m12 24 13.8056640625 0 0.1875 0.0460209213 134217728 0 0
-( 4538.70875 1219.5 846.3385 ) ( 4350.20675 1219.5 809.85475 ) ( 4538.70875 1027.5 846.3385 ) wood/wood_m12 24.0002441406 62.68359375 -89.9999923706 -0.1874999106 0.0460209325 134217728 0 0
-( 4320.65525 1219.5 1297.36225 ) ( 4142.38775 1219.5 1226.05525 ) ( 4320.65525 1027.5 1297.36225 ) wood/wood_m12 24.0002441406 202.4296875 -89.9999923706 -0.1874999106 0.0435223244 134217728 0 0
-( 3909.96125 1219.5 1660.05775 ) ( 3750.20825 1219.5 1553.5555 ) ( 3909.96125 1027.5 1660.05775 ) wood/wood_m12 61.5776367188 93.45703125 89.9999923706 0.1312501878 0.1312498152 134217728 0 0
-( 3415.25 1219.5 1822.75 ) ( 3279.48575 1219.5 1686.98575 ) ( 3415.25 1027.5 1822.75 ) wood/wood_m12 61.576171875 93.28125 89.9999923706 0.131250158 0.1312482804 134217728 0 0
-( 2896.71125 1219.5 1782.19225 ) ( 2790.209 1219.5 1622.4385 ) ( 2896.71125 1027.5 1782.19225 ) wood/wood_m12 59.9736328125 61.58203125 89.9999923706 0.1312500089 0.1312502176 134217728 0 0
-}
-}
-// entity 950
-{
-"classname" "func_explosive"
-"spawnflags" "20"
-"type" "wood"
-"mass" "40"
-"health" "10"
-"dmg" "20"
-// brush 0
-{
-( 1898 691.5 364.62475 ) ( 1898 691.5 363.37525 ) ( 1898 700.5 363.37525 ) wood/wood_m12 59.9499511719 61.5795898438 89.9999923706 0.1312499046 0.1312501878 134217728 0 0
-( 1922 700.5 388 ) ( 1922 700.5 340 ) ( 1922 691.5 340 ) chat/office_c04 84.0007324219 10.6655883789 180 0.375 -0.375 134217728 0 0
-( 1922 691.5 340 ) ( 1921.37525 691.5 340 ) ( 1912.41425 691.5 341.734 ) common/caulk 53.3330078125 21.3333740234 -0 0.1875 0.1875 134217728 0 0
-( 1922 700.5 388 ) ( 1921.37525 700.5 388 ) ( 1912.41425 700.5 386.26525 ) chat/office_c04 69.3334960938 10.6692504883 -180 0.375 -0.375 134217728 0 0
-( 1921.37525 691.5 340 ) ( 1922 691.5 340 ) ( 1922 700.5 340 ) wood/wood_m12 61.576171875 93.46484375 89.9999923706 0.1312501729 0.1312498897 134217728 0 0
-( 1922 700.5 388 ) ( 1922 691.5 388 ) ( 1921.37525 691.5 388 ) wood/wood_m12 61.576171875 93.462890625 89.9999923706 0.1312501729 0.1312498897 134217728 0 0
-( 2050.47725 1219.5 1152.424 ) ( 2086.961 1219.5 1340.92525 ) ( 2050.47725 1027.5 1152.424 ) wood/wood_m12 40 209.1850585938 0 -0.1875 0.0460209474 134217728 0 0
-( 1921.37525 691.5 388 ) ( 1912.41425 691.5 386.26525 ) ( 1912.41425 700.5 386.26525 ) wood/wood_m12 40 123.28515625 -89.9999923706 0.1874999106 0.04602056 134217728 0 0
-( 1898 691.5 363.37525 ) ( 1899.734 691.5 354.4135 ) ( 1899.734 700.5 354.4135 ) wood/wood_m12 40 19.564453125 0 -0.1875 0.0460214391 134217728 0 0
-( 2161.84475 1219.5 -300.86225 ) ( 2090.53775 1219.5 -122.59475 ) ( 2161.84475 1027.5 -300.86225 ) wood/wood_m12 40 255.1806640625 0 -0.1875 0.043522343 134217728 0 0
-( 2579.28875 1219.5 -665.80775 ) ( 2472.78575 1219.5 -506.054 ) ( 2579.28875 1027.5 -665.80775 ) wood/wood_m12 59.9907226562 61.5795898438 89.9999923706 0.1312497109 0.1312501878 134217728 0 0
-( 3080.75 1219.5 -829.25 ) ( 2944.98575 1219.5 -693.48575 ) ( 3080.75 1027.5 -829.25 ) wood/wood_m12 61.576171875 93.2822265625 89.9999923706 0.131250158 0.1312482804 134217728 0 0
-( 3606.03875 1219.5 -787.94225 ) ( 3446.285 1219.5 -681.44 ) ( 3606.03875 1027.5 -787.94225 ) wood/wood_m12 61.5766601562 93.474609375 89.9999923706 0.1312501729 0.1312500089 134217728 0 0
-( 4095.75875 1219.5 -531.6035 ) ( 3917.49125 1219.5 -460.2965 ) ( 4095.75875 1027.5 -531.6035 ) wood/wood_m12 40.0029296875 100.953125 89.9999923706 -0.1874999106 0.0435223244 134217728 0 0
-( 4417.77275 1219.5 -143.174 ) ( 4229.27075 1219.5 -106.6895 ) ( 4417.77275 1027.5 -143.174 ) wood/wood_m12 40.0029296875 5.1171875 89.9999923706 -0.1874999106 0.046020899 134217728 0 0
-( 2856.21125 1219.5 1809.19225 ) ( 2962.7135 1219.5 1968.946 ) ( 2856.21125 1027.5 1809.19225 ) wood/wood_m12 59.9729003906 61.58203125 89.9999923706 0.1312500089 0.1312502176 134217728 0 0
-( 2368.74125 1219.5 1546.1035 ) ( 2440.04825 1219.5 1724.371 ) ( 2368.74125 1027.5 1546.1035 ) wood/wood_m12 40 196.361328125 0 -0.1875 0.043522343 134217728 0 0
-( 3882.96125 1219.5 1700.55775 ) ( 4042.715 1219.5 1807.06 ) ( 3882.96125 1027.5 1700.55775 ) wood/wood_m12 61.5766601562 93.4794921875 89.9999923706 0.1312501729 0.1312500089 134217728 0 0
-( 3380.75 1219.5 1857.25 ) ( 3516.51425 1219.5 1993.01425 ) ( 3380.75 1027.5 1857.25 ) wood/wood_m12 61.576171875 93.2822265625 89.9999923706 0.131250158 0.1312482804 134217728 0 0
-( 4302.65525 1219.5 1342.36225 ) ( 4480.92275 1219.5 1413.66925 ) ( 4302.65525 1027.5 1342.36225 ) wood/wood_m12 40 44.84765625 -89.9999923706 0.1874999106 0.0435223244 134217728 0 0
-}
-}
-// entity 951
-{
-"classname" "func_explosive"
-"type" "glass"
-"mass" "125"
-"dmg" "20"
-"health" "10"
-"spawnflags" "16"
-// brush 0
-{
-( 1922 691.5 388 ) ( 1922 691.5 364 ) ( 1922 700.5 364 ) chat/office_c04 84.0007324219 10.6655883789 180 0.375 -0.375 134217728 0 0
-( 1946 700.5 364.65325 ) ( 1946 700.5 364 ) ( 1946 691.5 364 ) wood/wood_m12 59.9501953125 61.5795898438 89.9999923706 0.1312499046 0.1312501878 134217728 0 0
-( 1946 691.5 364 ) ( 1922 691.5 364 ) ( 1922 691.5 388 ) common/caulk 53.3330078125 21.3333740234 -0 0.1875 0.1875 134217728 0 0
-( 1922.62475 700.5 388 ) ( 1922 700.5 388 ) ( 1922 700.5 364 ) chat/office_c04 69.3334960938 10.6694946289 -180 0.375 -0.375 134217728 0 0
-( 1922 700.5 364 ) ( 1922 691.5 364 ) ( 1946 691.5 364 ) chat/office_c04 69.3334960938 83.9968261719 180 0.375 -0.375 134217728 0 0
-( 1922.62475 691.5 388 ) ( 1922 691.5 388 ) ( 1922 700.5 388 ) wood/wood_m12 61.576171875 93.46484375 89.9999923706 0.1312501729 0.1312498897 134217728 0 0
-( 4113.75875 1219.5 -486.6035 ) ( 4292.02625 1219.5 -557.9105 ) ( 4113.75875 1027.5 -486.6035 ) wood/wood_m12 23.9968261719 199.3671875 89.9999923706 0.1874999106 0.0435223244 134217728 0 0
-( 1931.58575 691.5 386.266 ) ( 1922.62475 691.5 388 ) ( 1922.62475 700.5 388 ) wood/wood_m12 23.9968261719 65.20703125 89.9999923706 0.1874999106 0.0460212789 134217728 0 0
-( 3633.03875 1219.5 -747.44225 ) ( 3792.7925 1219.5 -853.9445 ) ( 3633.03875 1027.5 -747.44225 ) wood/wood_m12 61.5766601562 93.474609375 89.9999923706 0.1312501729 0.1312500089 134217728 0 0
-( 2206.84475 1219.5 -282.86225 ) ( 2278.15175 1219.5 -461.12975 ) ( 2206.84475 1027.5 -282.86225 ) wood/wood_m12 24 156.7626953125 0 0.1875 0.043522343 134217728 0 0
-( 2619.78875 1219.5 -638.80775 ) ( 2726.291 1219.5 -798.5615 ) ( 2619.78875 1027.5 -638.80775 ) wood/wood_m12 59.9287109375 61.5810546875 89.9999923706 0.1312500089 0.1312502176 134217728 0 0
-( 1944.27575 700.5 373.5595 ) ( 1946 700.5 364.65325 ) ( 1946 691.5 364.65325 ) wood/wood_m12 24 209.2387695312 0 0.1875 0.0460204855 134217728 0 0
-( 3115.25 1219.5 -794.75 ) ( 3251.01425 1219.5 -930.51425 ) ( 3115.25 1027.5 -794.75 ) wood/wood_m12 61.576171875 93.2822265625 89.9999923706 0.131250158 0.1312482804 134217728 0 0
-}
-}
-// entity 952
-{
 "classname" "misc_model"
 "origin" "1920 832 266"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 953
+// entity 950
 {
 "classname" "corona"
 "origin" "1920 832 354"
 "scale" ".5"
 }
-// entity 954
+// entity 951
 {
 "classname" "light"
 "fade" "3"
@@ -49410,25 +49341,25 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 955
+// entity 952
 {
 "classname" "misc_model"
 "origin" "1920 832 266"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 956
+// entity 953
 {
 "classname" "misc_model"
 "origin" "1918 1152 264"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 957
+// entity 954
 {
 "classname" "corona"
 "origin" "1918 1152 352"
 "scale" ".5"
 }
-// entity 958
+// entity 955
 {
 "classname" "light"
 "fade" "3"
@@ -49437,13 +49368,13 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 959
+// entity 956
 {
 "classname" "misc_model"
 "origin" "1918 1152 264"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 960
+// entity 957
 {
 "classname" "lightJunior"
 "_color" "1.000000 0.909804 0.819608"
@@ -49451,7 +49382,7 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "0"
 "origin" "2192 1151 346"
 }
-// entity 961
+// entity 958
 {
 "classname" "light"
 "_color" "1.000000 0.850980 0.701961"
@@ -49460,7 +49391,7 @@ castle_wall/castle_c46_on_grid
 "origin" "2192 1151 258"
 "fade" ".4"
 }
-// entity 962
+// entity 959
 {
 "classname" "light"
 "origin" "2192 1151 282"
@@ -49468,19 +49399,19 @@ castle_wall/castle_c46_on_grid
 "light" "25"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 963
+// entity 960
 {
 "classname" "misc_model"
 "origin" "2190 1152 264"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 964
+// entity 961
 {
 "classname" "corona"
 "origin" "2190 1152 352"
 "scale" ".5"
 }
-// entity 965
+// entity 962
 {
 "classname" "light"
 "fade" "3"
@@ -49489,13 +49420,13 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 966
+// entity 963
 {
 "classname" "misc_model"
 "origin" "2190 1152 264"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 967
+// entity 964
 {
 "classname" "lightJunior"
 "_color" "1.000000 0.909804 0.819608"
@@ -49503,7 +49434,7 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "0"
 "origin" "1636 1151 346"
 }
-// entity 968
+// entity 965
 {
 "classname" "light"
 "_color" "1.000000 0.850980 0.701961"
@@ -49512,7 +49443,7 @@ castle_wall/castle_c46_on_grid
 "origin" "1636 1151 258"
 "fade" ".4"
 }
-// entity 969
+// entity 966
 {
 "classname" "light"
 "origin" "1636 1151 282"
@@ -49520,19 +49451,19 @@ castle_wall/castle_c46_on_grid
 "light" "25"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 970
+// entity 967
 {
 "classname" "misc_model"
 "origin" "1634 1152 264"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 971
+// entity 968
 {
 "classname" "corona"
 "origin" "1634 1152 352"
 "scale" ".5"
 }
-// entity 972
+// entity 969
 {
 "classname" "light"
 "fade" "3"
@@ -49541,13 +49472,13 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 973
+// entity 970
 {
 "classname" "misc_model"
 "origin" "1634 1152 264"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 974
+// entity 971
 {
 "classname" "func_group"
 // brush 0
@@ -50918,7 +50849,7 @@ castle_wall/castle_c46_on_grid
 ( 915.9329 333.9995 -260 ) ( 925.9105 327.3326 -260 ) ( 915.9329 333.9995 -228 ) castle_wall/castle_c19 40 208 -0 0.25 0.25 134217728 0 0
 }
 }
-// entity 975
+// entity 972
 {
 "classname" "misc_model"
 "origin" "826.34 817.53 -272"
@@ -50926,7 +50857,7 @@ castle_wall/castle_c46_on_grid
 "angle" "28.7374"
 "modelscale" "1.3"
 }
-// entity 976
+// entity 973
 {
 "classname" "func_door_rotating"
 "type" "4"
@@ -50949,7 +50880,7 @@ castle_wall/castle_c46_on_grid
 ( -219 379 128 ) ( -167 379 128 ) ( -219 379 240 ) castle_door/door_c17 152 73.1428833008 -0 0.25 0.2187499851 0 0 0
 }
 }
-// entity 977
+// entity 974
 {
 "classname" "func_group"
 // brush 0
@@ -51062,28 +50993,28 @@ castle_wall/castle_c46_on_grid
 ( 1594.6000022888 945.999982357 206.200003624 ) ( 1594.6000022888 907.5999808311 206.200003624 ) ( 1613.8000030518 945.999982357 187.000002861 ) cathedrale_wall/cathedrale_c24 88.6669921875 209.3332519531 0 0.3000000119 0.3000000119 0 0 0
 }
 }
-// entity 978
+// entity 975
 {
 "classname" "misc_model"
 "origin" "815 414 -264"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 979
+// entity 976
 {
 "classname" "misc_model"
 "origin" "815 380 -266"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 980
+// entity 977
 {
 "classname" "misc_model"
 "origin" "797 348 -268"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 981
+// entity 978
 {
 "classname" "light"
 "_color" "1.000000 0.850980 0.701961"
@@ -51092,7 +51023,7 @@ castle_wall/castle_c46_on_grid
 "origin" "1188 386 -208"
 "fade" ".4"
 }
-// entity 982
+// entity 979
 {
 "classname" "light"
 "origin" "1188 386 -184"
@@ -51100,19 +51031,19 @@ castle_wall/castle_c46_on_grid
 "light" "25"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 983
+// entity 980
 {
 "classname" "misc_model"
 "origin" "1188 386 -200"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 984
+// entity 981
 {
 "classname" "corona"
 "origin" "1188 386 -112"
 "scale" ".5"
 }
-// entity 985
+// entity 982
 {
 "classname" "light"
 "fade" "3"
@@ -51121,26 +51052,26 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 986
+// entity 983
 {
 "classname" "misc_model"
 "origin" "1188 386 -200"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 987
+// entity 984
 {
 "classname" "corona"
 "_color" "1.000000 0.901961 0.800000"
 "origin" "-531 1203 223"
 }
-// entity 988
+// entity 985
 {
 "classname" "misc_model"
 "origin" "-531 1203 233"
 "angle" "270"
 "model" "models/mapobjects/light/cagelighta.md3"
 }
-// entity 989
+// entity 986
 {
 "classname" "light"
 "_color" "1.000000 0.921569 0.843137"
@@ -51148,14 +51079,14 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "19"
 "origin" "-531 1117 210"
 }
-// entity 990
+// entity 987
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "angle" "270"
 "origin" "-531 1117 233"
 }
-// entity 991
+// entity 988
 {
 "classname" "light"
 "origin" "-531 1203 210"
@@ -51163,13 +51094,13 @@ castle_wall/castle_c46_on_grid
 "light" "40"
 "_color" "1.000000 0.921569 0.843137"
 }
-// entity 992
+// entity 989
 {
 "classname" "corona"
 "_color" "1.000000 0.901961 0.800000"
 "origin" "-531 1117 223"
 }
-// entity 993
+// entity 990
 {
 "classname" "props_decoration"
 "angle" "270"
@@ -51179,7 +51110,7 @@ castle_wall/castle_c46_on_grid
 "frames" "190"
 "loop" "1"
 }
-// entity 994
+// entity 991
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_armor"
@@ -51194,7 +51125,7 @@ castle_wall/castle_c46_on_grid
 ( 2468 2456 -157 ) ( 2568 2456 -157 ) ( 2468 2456 -141 ) common/trigger 48 1.9898986816 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 995
+// entity 992
 {
 "classname" "target_buy"
 "origin" "2555 2378 -52"
@@ -51202,7 +51133,7 @@ castle_wall/castle_c46_on_grid
 "buy_item" "item_armor_body_hang"
 "angle" "90"
 }
-// entity 996
+// entity 993
 {
 "classname" "func_invisible_user"
 "target" "buy_armor1"
@@ -51218,13 +51149,13 @@ castle_wall/castle_c46_on_grid
 ( 2578 2370 -135 ) ( 2430 2370 -135 ) ( 2578 2370 -133 ) common/trigger 16 53.9931640625 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 997
+// entity 994
 {
 "classname" "misc_model"
 "origin" "2531 2387 -160"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 }
-// entity 998
+// entity 995
 {
 "classname" "misc_model"
 "origin" "2552.5 2380 -191.5"
@@ -51232,7 +51163,7 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2.4 2 2.5"
 "angle" "90"
 }
-// entity 999
+// entity 996
 {
 "classname" "misc_model"
 "origin" "2558.15 2397.49 -161"
@@ -51240,10 +51171,34 @@ castle_wall/castle_c46_on_grid
 "modelscale" "1.3"
 "angles" "0 -166.251 -90"
 }
-// entity 1000
+// entity 997
 {
 "classname" "misc_model"
 "origin" "2255.5 2388.5 -194"
+"model" "models/mapobjects/wt_crates/ammo_box.md3"
+"modelscale" "2"
+"angle" "180"
+}
+// entity 998
+{
+"classname" "misc_model"
+"origin" "2255.5 2388.5 -175.5"
+"model" "models/mapobjects/wt_crates/ammo_box.md3"
+"modelscale" "2"
+"angle" "180"
+}
+// entity 999
+{
+"classname" "misc_model"
+"origin" "2255.5 2388.5 -194"
+"model" "models/mapobjects/wt_crates/ammo_box.md3"
+"modelscale" "2"
+"angle" "180"
+}
+// entity 1000
+{
+"classname" "misc_model"
+"origin" "2255.5 2388.5 -175.5"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
 "angle" "180"
@@ -51251,60 +51206,36 @@ castle_wall/castle_c46_on_grid
 // entity 1001
 {
 "classname" "misc_model"
-"origin" "2255.5 2388.5 -175.5"
+"origin" "2210 2388.5 -194"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
-"angle" "180"
+"angle" "-171.123"
 }
 // entity 1002
 {
 "classname" "misc_model"
-"origin" "2255.5 2388.5 -194"
+"origin" "2210 2388.5 -175.5"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
-"angle" "180"
+"angle" "-171.123"
 }
 // entity 1003
 {
 "classname" "misc_model"
-"origin" "2255.5 2388.5 -175.5"
+"origin" "2210 2388.5 -194"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
-"angle" "180"
+"angle" "-171.123"
 }
 // entity 1004
 {
 "classname" "misc_model"
-"origin" "2210 2388.5 -194"
+"origin" "2210 2388.5 -175.5"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
 "angle" "-171.123"
 }
 // entity 1005
-{
-"classname" "misc_model"
-"origin" "2210 2388.5 -175.5"
-"model" "models/mapobjects/wt_crates/ammo_box.md3"
-"modelscale" "2"
-"angle" "-171.123"
-}
-// entity 1006
-{
-"classname" "misc_model"
-"origin" "2210 2388.5 -194"
-"model" "models/mapobjects/wt_crates/ammo_box.md3"
-"modelscale" "2"
-"angle" "-171.123"
-}
-// entity 1007
-{
-"classname" "misc_model"
-"origin" "2210 2388.5 -175.5"
-"model" "models/mapobjects/wt_crates/ammo_box.md3"
-"modelscale" "2"
-"angle" "-171.123"
-}
-// entity 1008
 {
 "classname" "func_invisible_user"
 "target" "buy_thompson"
@@ -51320,7 +51251,7 @@ castle_wall/castle_c46_on_grid
 ( -576 1134 184 ) ( -576 1282 184 ) ( -576 1134 186 ) common/trigger 16 55.9997558594 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1009
+// entity 1006
 {
 "classname" "misc_gamemodel"
 "origin" "-558.54 1161.83 159.525"
@@ -51328,7 +51259,7 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 -106.944 88.8022"
 "modelscale" "1.2"
 }
-// entity 1010
+// entity 1007
 {
 "classname" "target_buy"
 "origin" "-516 1158 255"
@@ -51336,14 +51267,14 @@ castle_wall/castle_c46_on_grid
 "buy_item" "weapon_thompson"
 "stringname" "buy_thompson"
 }
-// entity 1011
+// entity 1008
 {
 "classname" "misc_model"
 "origin" "-565.5 1180.53 160"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 "angle" "92.994"
 }
-// entity 1012
+// entity 1009
 {
 "classname" "trigger_objective_info"
 "target" "buy_thompson"
@@ -51359,35 +51290,35 @@ castle_wall/castle_c46_on_grid
 ( -544 1134 184 ) ( -544 1282 184 ) ( -544 1134 186 ) common/trigger 16 55.9997558594 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1013
+// entity 1010
 {
 "classname" "misc_model"
 "origin" "-564 1158 128.5"
 "model" "models/mapobjects/wt_crates/cargo_crate.md3"
 "modelscale_vec" "2.4 2 2.5"
 }
-// entity 1014
+// entity 1011
 {
 "classname" "misc_model"
 "origin" "-330 1290 129"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 1015
+// entity 1012
 {
 "classname" "misc_model"
 "origin" "-337 1258 129"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 1016
+// entity 1013
 {
 "classname" "misc_model"
 "origin" "-363 1282 129"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 1017
+// entity 1014
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -51404,7 +51335,7 @@ castle_wall/castle_c46_on_grid
 ( 2143 2166 -26 ) ( 2141 2166 -26 ) ( 2141 2166 -218 ) props/board_c01 132 216 -0 0.25 0.25 0 0 0
 }
 }
-// entity 1018
+// entity 1015
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -51421,7 +51352,7 @@ castle_wall/castle_c46_on_grid
 ( 2143 2103 -26 ) ( 2141 2103 -26 ) ( 2141 2103 -218 ) props/board_c03 132 216 -0 0.25 0.25 0 0 0
 }
 }
-// entity 1019
+// entity 1016
 {
 "classname" "func_invisible_user"
 "target" "buy_ammo3"
@@ -51437,7 +51368,7 @@ castle_wall/castle_c46_on_grid
 ( 2111.2212581021 934.4344691139 259.5411771117 ) ( 2110.2011636746 786.4640861143 262.3206975378 ) ( 2111.2085670057 934.4721177955 261.5407824097 ) common/trigger 60.7581787109 50.2918395996 178.9238891602 0.4999875426 -0.4999895394 134217728 0 0
 }
 }
-// entity 1020
+// entity 1017
 {
 "classname" "target_buy"
 "origin" "2099.79 917.15 314.06"
@@ -51445,14 +51376,14 @@ castle_wall/castle_c46_on_grid
 "buy_item" "ammo"
 "angles" "0.370937 179.612 1.07613"
 }
-// entity 1021
+// entity 1018
 {
 "classname" "misc_model"
 "origin" "2102 915 193"
 "model" "models/mapobjects/wt_props/stand_ammo.md3"
 "angle" "180"
 }
-// entity 1022
+// entity 1019
 {
 "classname" "trigger_objective_info"
 "target" "buy_ammo3"
@@ -51467,70 +51398,70 @@ castle_wall/castle_c46_on_grid
 ( 2079.2212581021 934.4344691139 259.5411771117 ) ( 2078.2011636746 786.4640861143 262.3206975378 ) ( 2079.2085670057 934.4721177955 261.5407824097 ) common/trigger 60.7581787109 50.2918395996 178.9238891602 0.4999875426 -0.4999895394 134217728 0 0
 }
 }
-// entity 1023
+// entity 1020
 {
 "classname" "misc_model"
 "origin" "2102 925 231.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1024
+// entity 1021
 {
 "classname" "misc_model"
 "origin" "2102 904 213.25"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1025
+// entity 1022
 {
 "classname" "misc_model"
 "origin" "2102 904 231.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1026
+// entity 1023
 {
 "classname" "misc_model"
 "origin" "2102 915 231.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1027
+// entity 1024
 {
 "classname" "misc_model"
 "origin" "2102 925 195.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1028
+// entity 1025
 {
 "classname" "misc_model"
 "origin" "2102 915 213.25"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1029
+// entity 1026
 {
 "classname" "misc_model"
 "origin" "2102 915 195.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1030
+// entity 1027
 {
 "classname" "misc_model"
 "origin" "2102 904 195.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1031
+// entity 1028
 {
 "classname" "misc_model"
 "origin" "2102 925 213.25"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1032
+// entity 1029
 {
 "classname" "func_explosive"
 "type" "metal"
@@ -51544,7 +51475,7 @@ castle_wall/castle_c46_on_grid
 ( -1091 1643 -139 ) ( -1091 1643 69 ) ( -1091 1451 69 ) wt_metal/metal_m02 88 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 1033
+// entity 1030
 {
 "classname" "func_explosive"
 "type" "metal"
@@ -51558,7 +51489,7 @@ castle_wall/castle_c46_on_grid
 ( -1091 1633 -139 ) ( -1091 1633 69 ) ( -1091 1441 69 ) wt_metal/metal_m02 108 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 1034
+// entity 1031
 {
 "classname" "func_explosive"
 "type" "metal"
@@ -51572,7 +51503,7 @@ castle_wall/castle_c46_on_grid
 ( -1091 1621 -139 ) ( -1091 1621 69 ) ( -1091 1429 69 ) wt_metal/metal_m02 132 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 1035
+// entity 1032
 {
 "classname" "func_explosive"
 "type" "metal"
@@ -51586,7 +51517,7 @@ castle_wall/castle_c46_on_grid
 ( -1091 1611 -139 ) ( -1091 1611 69 ) ( -1091 1419 69 ) wt_metal/metal_m02 152 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 1036
+// entity 1033
 {
 "classname" "func_static"
 "randomSet" "wbox1"
@@ -51611,7 +51542,7 @@ castle_wall/castle_c46_on_grid
 ( -1016 387 154 ) ( -948 387 154 ) ( -1016 387 204 ) common/clipweap 40 47.9984436035 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1037
+// entity 1034
 {
 "classname" "func_invisible_user"
 "target" "buy_random_weapon1"
@@ -51631,7 +51562,7 @@ castle_wall/castle_c46_on_grid
 ( 2210 1005 291 ) ( 2062 1005 291 ) ( 2210 1005 293 ) common/trigger 48 9.9955444336 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 1038
+// entity 1035
 {
 "classname" "target_buy"
 "origin" "2192 985 228"
@@ -51641,7 +51572,7 @@ castle_wall/castle_c46_on_grid
 "randomGroupCount" "3"
 "randomGroup" "2"
 }
-// entity 1039
+// entity 1036
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_random_box"
@@ -51659,7 +51590,7 @@ castle_wall/castle_c46_on_grid
 ( 2082 1057 233 ) ( 2182 1057 233 ) ( 2082 1057 249 ) common/trigger 48.0004882812 5.9991760254 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1040
+// entity 1037
 {
 "classname" "func_static"
 "randomSet" "wbox1"
@@ -51684,7 +51615,7 @@ castle_wall/castle_c46_on_grid
 ( 2147 950 218 ) ( 2147 1018 218 ) ( 2147 950 268 ) common/clipweap 12 47.9978637695 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1041
+// entity 1038
 {
 "classname" "func_invisible_user"
 "target" "buy_random_weapon2"
@@ -51704,7 +51635,7 @@ castle_wall/castle_c46_on_grid
 ( -1681 1436 -61 ) ( -1533 1436 -61 ) ( -1681 1436 -59 ) common/trigger 14 9.9972991943 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1042
+// entity 1039
 {
 "classname" "target_buy"
 "origin" "-1663 1456 -124"
@@ -51715,7 +51646,7 @@ castle_wall/castle_c46_on_grid
 "randomGroup" "3"
 "angle" "180"
 }
-// entity 1043
+// entity 1040
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_random_box"
@@ -51733,7 +51664,7 @@ castle_wall/castle_c46_on_grid
 ( -1553 1384 -119 ) ( -1653 1384 -119 ) ( -1553 1384 -103 ) common/trigger 18.0004882812 6.0010986328 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 1044
+// entity 1041
 {
 "classname" "func_static"
 "randomSet" "wbox1"
@@ -51758,7 +51689,7 @@ castle_wall/castle_c46_on_grid
 ( -1618 1491 -134 ) ( -1618 1423 -134 ) ( -1618 1491 -84 ) common/clipweap 30 47.9974212646 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 1045
+// entity 1042
 {
 "classname" "misc_gamemodel"
 "origin" "-1662 1455 -160"
@@ -51768,7 +51699,7 @@ castle_wall/castle_c46_on_grid
 "randomGroupCount" "3"
 "randomGroup" "3"
 }
-// entity 1046
+// entity 1043
 {
 "classname" "misc_gamemodel"
 "origin" "-980 343 128"
@@ -51779,7 +51710,7 @@ castle_wall/castle_c46_on_grid
 "randomGroup" "1"
 "angle" "90"
 }
-// entity 1047
+// entity 1044
 {
 "classname" "misc_gamemodel"
 "origin" "2191 986 192"
@@ -51790,7 +51721,7 @@ castle_wall/castle_c46_on_grid
 "randomGroup" "2"
 "angle" "180"
 }
-// entity 1048
+// entity 1045
 {
 "classname" "func_static"
 // brush 0
@@ -51803,7 +51734,7 @@ castle_wall/castle_c46_on_grid
 ( -763 -137 -93 ) ( -737 -137 -93 ) ( -763 -137 -49 ) common/clipweap 40 58.0026245117 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1049
+// entity 1046
 {
 "classname" "ai_soldier"
 "head" "escape2"
@@ -51814,7 +51745,7 @@ castle_wall/castle_c46_on_grid
 "angle" "-29.2904"
 "oneshot" "1"
 }
-// entity 1050
+// entity 1047
 {
 "classname" "func_group"
 // brush 0
@@ -52135,7 +52066,7 @@ castle_wall/castle_c46_on_grid
 ( -1426.2173 1431 -70.0816 ) ( -1423.0816 1431 -68.7827 ) ( -1423.0816 1431 -73.2173 ) metal_misc/metal_m03 8 0.0025177002 180 0.25 -0.25 0 0 0
 }
 }
-// entity 1051
+// entity 1048
 {
 "classname" "func_group"
 // brush 0
@@ -52456,77 +52387,77 @@ castle_wall/castle_c46_on_grid
 ( -1417.7827 1353 -70.0816 ) ( -1420.9184 1353 -68.7827 ) ( -1420.9184 1353 -73.2173 ) metal_misc/metal_m03 120 0.0034790039 -0 0.25 0.25 0 0 0
 }
 }
-// entity 1052
+// entity 1049
 {
 "classname" "misc_model"
 "origin" "2004 1300 206"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "-90 0 -180"
 }
-// entity 1053
+// entity 1050
 {
 "classname" "misc_model"
 "origin" "1992.09 1300 206.981"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "-76.6786 0 -180"
 }
-// entity 1054
+// entity 1051
 {
 "classname" "misc_model"
 "origin" "2006.16 1255.97 198"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "0 39.618 180"
 }
-// entity 1055
+// entity 1052
 {
 "classname" "misc_model"
 "origin" "1670 1002 224"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "0 -90 180"
 }
-// entity 1056
+// entity 1053
 {
 "classname" "misc_model"
 "origin" "1667 1002 233"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "0 -90 180"
 }
-// entity 1057
+// entity 1054
 {
 "classname" "misc_model"
 "origin" "1732 1298 193"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "-90"
 }
-// entity 1058
+// entity 1055
 {
 "classname" "misc_model"
 "origin" "1732 1298 202"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "-90"
 }
-// entity 1059
+// entity 1056
 {
 "classname" "misc_model"
 "origin" "1731.97 1298.04 211"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "-76.8804"
 }
-// entity 1060
+// entity 1057
 {
 "classname" "misc_model"
 "origin" "1732.02 1262.8 193"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "-139.948"
 }
-// entity 1061
+// entity 1058
 {
 "classname" "misc_model"
 "origin" "1731.56 1028.84 193"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "66.9835"
 }
-// entity 1062
+// entity 1059
 {
 "classname" "func_static"
 "randomSet" "key1"
@@ -52760,7 +52691,7 @@ castle_wall/castle_c46_on_grid
 ( 1709.2020536231 1985.7347437127 -176 ) ( 1709.5478296965 1984.7963997544 -176 ) ( 1709.2020536231 1985.7347437127 -175 ) wt_metal/mdoor_m01 236.0249023438 0 0 0.2538813055 0.25 134217728 0 0
 }
 }
-// entity 1063
+// entity 1060
 {
 "classname" "func_invisible_user"
 "spawnflags" "24"
@@ -52778,7 +52709,7 @@ castle_wall/castle_c46_on_grid
 ( 1712.7235835791 1980.0199685097 -186 ) ( 1704.6559621096 1987.497500062 -186 ) ( 1712.7235835791 1980.0199685097 -185 ) common/trigger 22.330078125 48.0003051758 -180 0.3667100668 -0.5 0 0 0
 }
 }
-// entity 1064
+// entity 1061
 {
 "classname" "func_static"
 "randomSet" "key1"
@@ -53012,7 +52943,7 @@ castle_wall/castle_c46_on_grid
 ( -680.4607792814 158.4501745735 -96 ) ( -680.7751852306 159.399489874 -96 ) ( -680.4607792814 158.4501745735 -95 ) wt_metal/mdoor_m01 0 0 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1065
+// entity 1062
 {
 "classname" "func_invisible_user"
 "spawnflags" "24"
@@ -53030,7 +52961,7 @@ castle_wall/castle_c46_on_grid
 ( -683.7904748629 164.2788076517 -106 ) ( -675.9757704673 156.5373343228 -106 ) ( -683.7904748629 164.2788076517 -105 ) common/trigger 28.8325195312 15.9998168945 -0 0.3552132547 0.5 0 0 0
 }
 }
-// entity 1066
+// entity 1063
 {
 "classname" "func_static"
 "randomSet" "key1"
@@ -53264,7 +53195,7 @@ castle_wall/castle_c46_on_grid
 ( 841.2020536231 667.7347437127 -211 ) ( 841.5478296965 666.7963997544 -211 ) ( 841.2020536231 667.7347437127 -210 ) wt_metal/mdoor_m01 307.4272460938 372 0 0.2538813055 0.25 134217728 0 0
 }
 }
-// entity 1067
+// entity 1064
 {
 "classname" "func_invisible_user"
 "spawnflags" "24"
@@ -53282,7 +53213,7 @@ castle_wall/castle_c46_on_grid
 ( 844.7235835791 662.0199685097 -221 ) ( 836.6559621096 669.497500062 -221 ) ( 844.7235835791 662.0199685097 -220 ) common/trigger 23.3374023438 42.0006103516 -180 0.3667100668 -0.5 0 0 0
 }
 }
-// entity 1068
+// entity 1065
 {
 "classname" "func_static"
 "randomSet" "key1"
@@ -53516,7 +53447,7 @@ castle_wall/castle_c46_on_grid
 ( -203.7979463769 859.7347437127 152 ) ( -203.4521703035 858.7963997544 152 ) ( -203.7979463769 859.7347437127 153 ) wt_metal/mdoor_m01 63.1684570312 288 0 0.2538813055 0.25 134217728 0 0
 }
 }
-// entity 1069
+// entity 1066
 {
 "classname" "func_invisible_user"
 "spawnflags" "24"
@@ -53533,4 +53464,12 @@ castle_wall/castle_c46_on_grid
 ( -225.7233288288 834.4305602312 129 ) ( -225.7233288288 834.4305602312 130 ) ( -193.7738758326 868.90130651 129 ) common/trigger 50.7302246094 0 0 0.3667100668 0.5 0 0 0
 ( -200.2764164209 854.0199685097 142 ) ( -208.3440378904 861.497500062 142 ) ( -200.2764164209 854.0199685097 143 ) common/trigger 53.6746826172 0.0001831055 -180 0.3667100668 -0.5 0 0 0
 }
+}
+// entity 1067
+{
+"classname" "misc_model"
+"origin" "1934 704 334"
+"model" "models/mapobjects/wt_props/clock.md3"
+"angle" "90"
+"modelscale" "6"
 }
