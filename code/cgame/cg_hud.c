@@ -1835,6 +1835,11 @@ static void CG_DrawCompass( void ) {
 			continue;
 		}
 
+		// don't show AI-controlled characters (e.g. friendly AI sharing our aiTeam/teamNum) on the compass, only real players
+		if ( cent->currentState.aiChar ) {
+			continue;
+		}
+
 
 		CG_DrawCompassIcon( basex, basey, basew, baseh, cg.snap->ps.origin, cent->lerpOrigin, trap_R_RegisterShader( "sprites/destroy.tga" ) );
 	}
