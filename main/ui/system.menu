@@ -676,6 +676,26 @@ itemDef {
 		}
 
 	itemDef {
+		name perf_foliagedist
+		group performance
+		type ITEM_TYPE_SLIDER
+		text "@PERF_FOLIAGE_DIST"
+		textfont UI_FONT_BIG	// RealRTCWCoop
+		cvarfloat "r_foliageCullDistance" 30 1 400
+		rect 0 116 600 22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+		mouseEnter { setitemcolor perf_foliagedist backcolor .3 0.5 0.2 .25 ; show tip_perf_foliagedist ; show tipbox }
+		mouseExit { setitemcolor perf_foliagedist backcolor 1 1 1 .07 ; hide tip_perf_foliagedist ; hide tipbox }
+		}
+
+	itemDef {
 		name perf_dynamiclights
 		group performance
 		type ITEM_TYPE_MULTI
@@ -683,7 +703,7 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_dynamiclight"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 116 600 22
+		rect 0 140 600 22
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
 		textaligny 16
@@ -704,7 +724,7 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_fastsky"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 140 600 22
+		rect 0 164 600 22
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
 		textaligny 16
@@ -725,7 +745,7 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "cg_skybox"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 164 600 22
+		rect 0 188 600 22
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
 		textaligny 16
@@ -746,7 +766,7 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "r_finish"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 188 600 22
+		rect 0 212 600 22
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
 		textaligny 16
@@ -767,7 +787,7 @@ itemDef {
 		textfont UI_FONT_BIG	// RealRTCWCoop
 		cvar "cg_wolfparticles"
 		cvarFloatList { "@GENERAL_NO" 0 "@GENERAL_YES" 1 }
-		rect 0 212 600 22
+		rect 0 236 600 22
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
 		textaligny 16
@@ -790,7 +810,7 @@ itemDef {
 		showcvar { "1" }
 		cvar "r_nv_fogdist_mode"
 		cvarStrList { "@PERF_RADIAL", "GL_EYE_RADIAL_NV", "@PERF_PLANE", "GL_EYE_PLANE_ABSOLUTE_NV" }
-		rect 0 236 600 22
+		rect 0 260 600 22
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 280
 		textaligny 16
@@ -813,7 +833,7 @@ itemDef {
 		textalign ITEM_ALIGN_CENTER
 		textalignx 290
 		textaligny 16
-		rect 0 262 600 22
+		rect 0 286 600 22
 		style WINDOW_STYLE_FILLED
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
@@ -1735,6 +1755,22 @@ itemDef {
 		style WINDOW_STYLE_EMPTY
 		rect 15 292 570 28
 		text "@PERF_TIP_FOLIAGE"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 18
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_perf_foliagedist
+		group grpGraphicsTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 292 570 28
+		text "@PERF_TIP_FOLIAGE_DIST"
 		textfont UI_FONT_BIG
 		textscale .23
 		textalign ITEM_ALIGN_LEFT

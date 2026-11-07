@@ -96,6 +96,7 @@ cvar_t  *r_norefresh;
 cvar_t  *r_drawentities;
 cvar_t  *r_drawworld;
 cvar_t  *r_drawfoliage;     // ydnar
+cvar_t  *r_foliageCullDistance;     // player-adjustable foliage draw distance scale
 cvar_t  *r_speeds;
 cvar_t  *r_fullbright;
 cvar_t  *r_novis;
@@ -1383,6 +1384,8 @@ void R_Register( void ) {
 	r_nocurves = ri.Cvar_Get( "r_nocurves", "0", CVAR_CHEAT );
 	r_drawworld = ri.Cvar_Get( "r_drawworld", "1", CVAR_CHEAT );
 	r_drawfoliage = ri.Cvar_Get( "r_drawfoliage", "1", CVAR_ARCHIVE );  // ydnar
+	r_foliageCullDistance = ri.Cvar_Get( "r_foliageCullDistance", "30", CVAR_ARCHIVE );
+	ri.Cvar_CheckRange( r_foliageCullDistance, 1, 400, qfalse );
 	r_lightmap = ri.Cvar_Get( "r_lightmap", "0", CVAR_CHEAT );
 	r_portalOnly = ri.Cvar_Get( "r_portalOnly", "0", CVAR_CHEAT );
 

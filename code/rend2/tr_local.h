@@ -1997,6 +1997,7 @@ extern cvar_t  *r_facePlaneCull;        // enables culling of planar surfaces wi
 extern cvar_t  *r_nocurves;
 extern cvar_t  *r_drawfoliage;
 extern cvar_t  *r_foliageMinLight;
+extern cvar_t  *r_foliageCullDistance;  // player-adjustable foliage draw distance scale, as a percent of the map's own cull distance
 extern cvar_t  *r_showcluster;
 
 extern cvar_t   *r_mode;                // video mode

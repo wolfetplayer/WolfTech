@@ -118,6 +118,10 @@ static qboolean R_CullSurface( surfaceType_t *surface, shader_t *shader ) {
 		return qfalse;
 	}
 
+	if ( *surface == SF_FOLIAGE && !r_drawfoliage->value ) {    // ydnar
+		return qtrue;
+	}
+
 	if ( *surface == SF_GRID ) {
 		return R_CullGrid( (srfGridMesh_t *)surface );
 	}
@@ -132,14 +136,6 @@ static qboolean R_CullSurface( surfaceType_t *surface, shader_t *shader ) {
 
 	if ( shader->cullType == CT_TWO_SIDED ) {
 		return qfalse;
-	}
-
-	if (*surface == SF_FOLIAGE)
-	{
-		if (!r_drawfoliage->value)
-		{
-			return qtrue;
-		}
 	}
 
 	// face culling

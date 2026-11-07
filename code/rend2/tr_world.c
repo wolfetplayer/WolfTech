@@ -43,6 +43,10 @@ static qboolean	R_CullSurface( msurface_t *surf ) {
 		return qfalse;
 	}
 
+	if ( *surf->data == SF_FOLIAGE && !r_drawfoliage->value ) {    // ydnar
+		return qtrue;
+	}
+
 	if ( r_nocurves->integer && *surf->data == SF_GRID ) {
 		return qtrue;
 	}

@@ -335,6 +335,19 @@ void RB_SurfaceFoliage(srfFoliage_t *srf)
 	// attempt distance cull
 	Vector4Copy(tess.shader->distanceCull, distanceCull);
 
+	// scale the map-defined cull distance by the player's foliage draw distance setting
+	if (distanceCull[1] > 0.0f)
+	{
+		float cullScale = r_foliageCullDistance->value * 0.01f;
+		if (cullScale < 0.01f)
+		{
+			cullScale = 0.01f;   // keep a sliver of range so foliage still fades out near the player instead of collapsing to a point
+		}
+		distanceCull[0] *= cullScale;
+		distanceCull[1] *= cullScale;
+		distanceCull[3] = (distanceCull[1] - distanceCull[0] > 0.0f) ? 1.0f / (distanceCull[1] - distanceCull[0]) : 0.0f;
+	}
+
 	if (distanceCull[1] > 0)
 	{
 		z     = fovScale * (DotProduct(srf->origin, distanceVector) + distanceVector[3] - srf->radius);
