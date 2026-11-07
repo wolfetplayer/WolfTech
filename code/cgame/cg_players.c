@@ -3077,6 +3077,13 @@ static void CG_PlayerSprites( centity_t *cent ) {
 		return;
 	}
 
+	// show a talk balloon while this player is transmitting live VoIP
+	if ( cgs.gametype <= GT_COOP && cent->voipTalking
+		 && cg.snap->ps.persistant[PERS_TEAM] == team ) {
+		CG_PlayerFloatSprite( cent, cgs.media.speakingShader, 56 );
+		return;
+	}
+
 	// DHM - Nerve :: only show talk icon to team-mates
 	if ( cent->currentState.eFlags & EF_TALK && cg.snap->ps.persistant[PERS_TEAM] == team ) {
 		CG_PlayerFloatSprite( cent, cgs.media.balloonShader, 48 );

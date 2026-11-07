@@ -59,6 +59,7 @@ cvar_t	*cl_voipCaptureMult;
 cvar_t	*cl_voipShowMeter;
 cvar_t	*cl_voipProtocol;
 cvar_t	*cl_voip;
+cvar_t	*cl_voipTest;
 #endif
 
 #ifdef USE_RENDERER_DLOPEN
@@ -610,6 +611,53 @@ void CL_CaptureVoip(void)
 		S_StopCapture();
 		S_MasterGain(1.0f);
 		clc.voipPower = 0.0f;  // force this value so it doesn't linger.
+	}
+}
+
+/*
+===============
+CL_VoipTestFrame
+
+Mic self-test: captures and plays the mic straight back through the
+speakers, no Opus and no server connection needed.
+===============
+*/
+static
+void CL_VoipTestFrame(void)
+{
+	static qboolean capturing = qfalse;
+
+	if (cl_voipTest->modified) {
+		cl_voipTest->modified = qfalse;
+		if (cl_voipTest->integer && !capturing) {
+			S_StartCapture();
+			capturing = qtrue;
+		} else if (!cl_voipTest->integer && capturing) {
+			S_StopCapture();
+			capturing = qfalse;
+		}
+	}
+
+	if (capturing) {
+		int samples = S_AvailableCaptureSamples();
+		if (samples >= VOIP_MAX_PACKET_SAMPLES) {
+			static int16_t sampbuffer[VOIP_MAX_PACKET_SAMPLES];
+			const float audioMult = cl_voipCaptureMult->value;
+			int i;
+
+			if (samples > VOIP_MAX_PACKET_SAMPLES)
+				samples = VOIP_MAX_PACKET_SAMPLES;
+			samples -= samples % VOIP_MAX_FRAME_SAMPLES;
+
+			S_Capture(samples, (byte *) sampbuffer);  // grab from audio card.
+
+			for (i = 0; i < samples; i++)
+				sampbuffer[i] = (int16_t) (((float) sampbuffer[i]) * audioMult);
+
+			// reuse the VOIP_DIRECT slot for our own client number; real VoIP playback never writes to it
+			S_RawSamples(clc.clientNum + 1, samples, 48000, 2, 1,
+			             (const byte *) sampbuffer, 1.0f, -1);
+		}
 	}
 }
 #endif
@@ -3562,7 +3610,10 @@ void CL_Frame( int msec ) {
 			if ( steamLobbyMembersDirty() ) {
 				int i;
 				int count = steamLobbyMemberCount();
-				static const char *classLabels[4] = { "Soldier", "Medic", "Engineer", "Lieutenant" };
+				static const char *classIcons[4] = {
+					"gfx/hud/class_soldier.tga", "gfx/hud/class_medic.tga",
+					"gfx/hud/class_engineer.tga", "gfx/hud/class_lt.tga"
+				};
 
 				for ( i = 0; i < MAX_COOP_PLAYERS; i++ ) {
 					if ( i < count ) {
@@ -3571,7 +3622,7 @@ void CL_Frame( int msec ) {
 						Com_sprintf( coloredName, sizeof( coloredName ), "%s%s", steamPlayerColorForSlot( i ), steamLobbyMemberName( i ) );
 						Cvar_Set( va( "cl_lobbySlot%d", i ), coloredName );
 						Cvar_Set( va( "cl_lobbySlotClass%d", i ),
-							( classValue >= 0 && classValue < 4 ) ? classLabels[classValue] : "" );
+							( classValue >= 0 && classValue < 4 ) ? classIcons[classValue] : "" );
 					} else {
 						Cvar_Set( va( "cl_lobbySlot%d", i ), "" );
 						Cvar_Set( va( "cl_lobbySlotClass%d", i ), "" );
@@ -3849,6 +3900,7 @@ void CL_Frame( int msec ) {
 
 #ifdef USE_VOIP
 	CL_CaptureVoip();
+	CL_VoipTestFrame();
 #endif
 
 #ifdef USE_MUMBLE
@@ -4682,7 +4734,6 @@ void CL_Init( void ) {
 	Cvar_Get( "cg_quickMessageAlt", "1", CVAR_ARCHIVE );
 	Cvar_Get( "cg_popupLimboMenu", "1", CVAR_ARCHIVE );
 	Cvar_Get( "cg_descriptiveText", "1", CVAR_ARCHIVE );
-	Cvar_Get( "cg_drawTeamOverlay", "2", CVAR_ARCHIVE );
 	Cvar_Get( "cg_uselessNostalgia", "0", CVAR_ARCHIVE ); // JPW NERVE
 	Cvar_Get( "cg_drawGun", "1", CVAR_ARCHIVE );
 	Cvar_Get( "cg_cursorHints", "1", CVAR_ARCHIVE );
@@ -4783,6 +4834,7 @@ void CL_Init( void ) {
 	cl_voip = Cvar_Get ("cl_voip", "1", CVAR_ARCHIVE);
 	Cvar_CheckRange( cl_voip, 0, 1, qtrue );
 	cl_voipProtocol = Cvar_Get ("cl_voipProtocol", cl_voip->integer ? "opus" : "", CVAR_USERINFO | CVAR_ROM);
+	cl_voipTest = Cvar_Get ("cl_voipTest", "0", 0);
 #endif
 
 //----(SA) added

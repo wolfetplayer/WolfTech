@@ -375,6 +375,7 @@ typedef struct centity_s {
 
 	int voiceChatSprite;                        // DHM - Nerve
 	int voiceChatSpriteTime;                    // DHM - Nerve
+	qboolean voipTalking;                       // currently transmitting live VoIP
 
 	// client-side lightning
 	int boltTimes[MAX_TESLA_BOLTS];
@@ -604,11 +605,14 @@ typedef struct {
 	int score;                      // updated by score servercmds
 	int location;                   // location index for team mode
 	int health;                     // you only get this info about your teammates
+	int maxHealth;                  // ditto - from coopinfo, 0 for clients coopinfo hasn't covered yet
 	int curWeapon;
 	int powerups;
 	int armor;
 	int ammoClip;
 	int ammo;
+	int perkBits;                   // ditto - 2 bits per perk (level 0-2), from coopinfo
+	int playerClass;                // ditto - PC_SOLDIER/PC_MEDIC/PC_ENGINEER/PC_LT, from coopinfo
 
 	int handicap;
 	int wins, losses;               // in tourney mode
@@ -1234,6 +1238,9 @@ typedef struct {
 	qhandle_t frozenShader;
 	qhandle_t balloonShader;
 	qhandle_t connectionShader;
+	qhandle_t scoreIconShader;
+	qhandle_t speakingShader;
+	qhandle_t classIcons[4];        // indexed by PC_SOLDIER/PC_MEDIC/PC_ENGINEER/PC_LT
 	qhandle_t reviveNeededShader;
 	sfxHandle_t reviveLoopSound;        // looped locally for the reviver's own client -- s.loopSound never reaches your own predicted entity
 	sfxHandle_t reviveLoopMedicSound;
@@ -1868,7 +1875,6 @@ extern vmCvar_t cg_weaponBounceSound;
 extern vmCvar_t cg_cycleAllWeaps;
 extern vmCvar_t cg_drawAllWeaps;
 extern vmCvar_t cg_drawRewards;
-extern vmCvar_t cg_drawTeamOverlay;
 extern vmCvar_t cg_crosshairX;
 extern vmCvar_t cg_crosshairY;
 extern vmCvar_t cg_crosshairSize;
@@ -1884,7 +1890,6 @@ extern vmCvar_t cg_drawEnemyHealthbars;
 extern vmCvar_t cg_enemyHealthbarRange;
 extern vmCvar_t cg_enemyHealthbarAimRadius;
 extern vmCvar_t cg_drawDamageNumbers;
-extern vmCvar_t cg_drawKillCount;
 extern vmCvar_t cg_drawWeaponIcon;
 extern vmCvar_t cg_showAINames;
 extern vmCvar_t cg_showAIStats;
@@ -2199,6 +2204,8 @@ float   *CG_FadeColor( int startMsec, int totalMsec );
 float *CG_TeamColor( int team );
 void CG_TileClear( void );
 void CG_ColorForHealth( vec4_t hcolor );
+void CG_ColorForHealthbar( float frac, vec4_t color );
+void CG_DrawPlayerInfo( void );
 void CG_GetColorForHealth( int health, int armor, vec4_t hcolor );
 
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );

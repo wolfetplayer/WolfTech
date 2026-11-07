@@ -72,6 +72,10 @@ menuDef {
 	itemDef { name ishoot group grpIngameKeybinds type ITEM_TYPE_BIND text "@CONTROLS_SPECIALGREN"   textfont UI_FONT_BIG cvar "+specialgren"   rect 10 223 205 11 textalign ITEM_ALIGN_RIGHT textalignx 100 textaligny 9 textscale .18 forecolor 1 1 1 1 style WINDOW_STYLE_FILLED backcolor 1 1 1 .07 visible 1 mouseenter { show ikeyBindStatus } mouseexit { hide ikeyBindStatus } }
 	itemDef { name ishoot group grpIngameKeybinds type ITEM_TYPE_BIND text "@CONTROLS_FIREMODE"      textfont UI_FONT_BIG cvar "+firemode"     rect 10 234 205 11 textalign ITEM_ALIGN_RIGHT textalignx 100 textaligny 9 textscale .18 forecolor 1 1 1 1 style WINDOW_STYLE_FILLED backcolor 1 1 1 .07 visible 1 mouseenter { show ikeyBindStatus } mouseexit { hide ikeyBindStatus } }
 
+	itemDef { name header_voicechat group grpIngameKeybinds type ITEM_TYPE_TEXT text "@CONTROLS_CAT_VOICECHAT" textfont UI_FONT_BIG textalign ITEM_ALIGN_CENTER textalignx 102 textaligny 8 textscale .18 rect 10 252 205 10 style WINDOW_STYLE_FILLED backcolor .3 0.5 0.2 .25 forecolor 1 1 1 1 visible 1 decoration }
+
+	itemDef { name ivoice group grpIngameKeybinds type ITEM_TYPE_BIND text "@CONTROLS_VOICECHAT"     textfont UI_FONT_BIG cvar "+voiprecord"    rect 10 264 205 11 textalign ITEM_ALIGN_RIGHT textalignx 100 textaligny 9 textscale .18 forecolor 1 1 1 1 style WINDOW_STYLE_FILLED backcolor 1 1 1 .07 visible 1 mouseenter { show ikeyBindStatus } mouseexit { hide ikeyBindStatus } }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////        COLUMN B: MOVEMENT / COMMUNICATION & MISC         //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

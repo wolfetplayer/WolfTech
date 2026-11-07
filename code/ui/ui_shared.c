@@ -3968,6 +3968,7 @@ typedef struct
 static bind_t g_bindings[] =
 {
 	{"+scores",      -1,             -1, -1, -1},
+	{"+voiprecord",      'k',            -1, -1, -1},
 	{"+speed",           K_SHIFT,        -1, -1, -1},
 	{"+forward",     K_UPARROW,      -1, -1, -1},
 	{"+back",            K_DOWNARROW,    -1, -1, -1},

@@ -221,10 +221,11 @@ void CoopInfoMessage( gentity_t *ent ) {
 	char entry[1024];
 	char string[1400];
 	int stringlength;
-	int i, j;
+	int i, j, p;
 	gentity_t   *player;
 	int cnt;
 	int h, a;
+	int perkBits;
 
 	// send the latest information on all clients
 	string[0] = 0;
@@ -244,11 +245,19 @@ void CoopInfoMessage( gentity_t *ent ) {
 			if ( a < 0 ) {
 				a = 0;
 			}
+
+			// pack each perk's level (0-2) into 2 bits apiece (indices start at 1, PERK_NONE unused)
+			perkBits = 0;
+			for ( p = PERK_RESILIENCE; p < NUM_PERKS; p++ ) {
+				perkBits |= ( player->client->ps.perks[p] & 3 ) << ( ( p - 1 ) * 2 );
+			}
+
 			// what do we want: clientnum, health, weapon, current amount of ammo
 			Com_sprintf( entry, sizeof( entry ),
-						 " %i %i %i %i %i %i %i %i",
+						 " %i %i %i %i %i %i %i %i %i %i %i",
 						 level.sortedClients[i], player->client->pers.teamState.location, h, a,
-						 player->client->ps.weapon, player->client->ps.ammoclip[BG_FindClipForWeapon( player->client->ps.weapon )], player->client->ps.ammo[BG_FindAmmoForWeapon( player->client->ps.weapon )], player->client->sess.sessionTeam );
+						 player->client->ps.weapon, player->client->ps.ammoclip[BG_FindClipForWeapon( player->client->ps.weapon )], player->client->ps.ammo[BG_FindAmmoForWeapon( player->client->ps.weapon )], player->client->sess.sessionTeam,
+						 player->client->ps.stats[STAT_MAX_HEALTH], perkBits, player->client->sess.playerType );
 			j = strlen( entry );
 			if ( stringlength + j > sizeof( string ) ) {
 				break;

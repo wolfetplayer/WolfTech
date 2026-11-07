@@ -728,13 +728,7 @@ itemDef {
 	itemDef {
 		name slot1class
 		ownerdraw UI_LOBBYSLOTCLASS1
-		textfont UI_FONT_NORMAL
-		textscale .13
-		textstyle 6
-		rect 582 159 30 22
-		textalign ITEM_ALIGN_LEFT
-		textaligny 14
-		forecolor .7 .7 .7 1
+		rect 584 160 18 18
 		visible 1
 		}
 
@@ -770,13 +764,7 @@ itemDef {
 	itemDef {
 		name slot2class
 		ownerdraw UI_LOBBYSLOTCLASS2
-		textfont UI_FONT_NORMAL
-		textscale .13
-		textstyle 6
-		rect 582 185 30 22
-		textalign ITEM_ALIGN_LEFT
-		textaligny 14
-		forecolor .7 .7 .7 1
+		rect 584 186 18 18
 		visible 1
 		}
 
@@ -812,13 +800,7 @@ itemDef {
 	itemDef {
 		name slot3class
 		ownerdraw UI_LOBBYSLOTCLASS3
-		textfont UI_FONT_NORMAL
-		textscale .13
-		textstyle 6
-		rect 582 211 30 22
-		textalign ITEM_ALIGN_LEFT
-		textaligny 14
-		forecolor .7 .7 .7 1
+		rect 584 212 18 18
 		visible 1
 		}
 
@@ -854,19 +836,11 @@ itemDef {
 	itemDef {
 		name slot4class
 		ownerdraw UI_LOBBYSLOTCLASS4
-		textfont UI_FONT_NORMAL
-		textscale .13
-		textstyle 6
-		rect 582 237 30 22
-		textalign ITEM_ALIGN_LEFT
-		textaligny 14
-		forecolor .7 .7 .7 1
+		rect 584 238 18 18
 		visible 1
 		}
 
-	// Survival class select - own pick, not host-gated. Also drives the player's
-	// model now (see SetClassModel in g_client.c) - class replaced the old
-	// cosmetic characterselect/skin picker entirely.
+	// Survival class select - own pick, not host-gated; also drives the player's model (SetClassModel in g_client.c)
 	itemDef {
 		name classselect
 		visible 1

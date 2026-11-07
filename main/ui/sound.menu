@@ -116,6 +116,130 @@ menuDef {
 		mouseExit { setitemcolor snd_subtitleshadow backcolor 1 1 1 .07 ; hide tip_subtitleshadow ; hide tipbox }
 		}
 
+	itemDef {
+		name snd_voicechat
+		group grpSound
+		rect 0 120 600 22
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_VOICECHAT"
+		textfont UI_FONT_BIG
+		cvar "cl_voip"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .32
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_voicechat backcolor .3 0.5 0.2 .25 ; show tip_voicechat ; show tipbox }
+		mouseExit { setitemcolor snd_voicechat backcolor 1 1 1 .07 ; hide tip_voicechat ; hide tipbox }
+		}
+
+	itemDef {
+		name snd_voiceactivation
+		group grpSound
+		rect 0 144 600 22
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_VOICEACTIVATION"
+		textfont UI_FONT_BIG
+		cvar "cl_voipUseVAD"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .32
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_voiceactivation backcolor .3 0.5 0.2 .25 ; show tip_voiceactivation ; show tipbox }
+		mouseExit { setitemcolor snd_voiceactivation backcolor 1 1 1 .07 ; hide tip_voiceactivation ; hide tipbox }
+		}
+
+	itemDef {
+		name snd_voicesensitivity
+		group grpSound
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_VOICESENSITIVITY"
+		textfont UI_FONT_BIG
+		cvarfloat "cl_voipVADThreshold" 0.25 0 1
+		rect 0 168 600 22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_voicesensitivity backcolor .3 0.5 0.2 .25 ; show tip_voicesensitivity ; show tipbox }
+		mouseExit { setitemcolor snd_voicesensitivity backcolor 1 1 1 .07 ; hide tip_voicesensitivity ; hide tipbox }
+		}
+
+	itemDef {
+		name snd_voiceboost
+		group grpSound
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_VOICEBOOST"
+		textfont UI_FONT_BIG
+		cvarfloat "cl_voipCaptureMult" 2.0 1 4
+		rect 0 192 600 22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		textscale .32
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_voiceboost backcolor .3 0.5 0.2 .25 ; show tip_voiceboost ; show tipbox }
+		mouseExit { setitemcolor snd_voiceboost backcolor 1 1 1 .07 ; hide tip_voiceboost ; hide tipbox }
+		}
+
+	itemDef {
+		name snd_voicemeter
+		group grpSound
+		rect 0 216 600 22
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_VOICEMETER"
+		textfont UI_FONT_BIG
+		cvar "cl_voipShowMeter"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .32
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_voicemeter backcolor .3 0.5 0.2 .25 ; show tip_voicemeter ; show tipbox }
+		mouseExit { setitemcolor snd_voicemeter backcolor 1 1 1 .07 ; hide tip_voicemeter ; hide tipbox }
+		}
+
+	itemDef {
+		name snd_voicetest
+		group grpSound
+		rect 0 240 600 22
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_VOICETEST"
+		textfont UI_FONT_BIG
+		cvar "cl_voipTest"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .32
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 280
+		textaligny 16
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor snd_voicetest backcolor .3 0.5 0.2 .25 ; show tip_voicetest ; show tipbox }
+		mouseExit { setitemcolor snd_voicetest backcolor 1 1 1 .07 ; hide tip_voicetest ; hide tipbox }
+		}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////                        HOVER TIP BOX (TEST)             //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +323,102 @@ menuDef {
 		style WINDOW_STYLE_EMPTY
 		rect 15 264 570 30
 		text "@SOUND_TIP_SUBTITLESHADOW"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_voicechat
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_VOICECHAT"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_voiceactivation
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_VOICEACTIVATION"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_voicesensitivity
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_VOICESENSITIVITY"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_voiceboost
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_VOICEBOOST"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_voicemeter
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_VOICEMETER"
+		textfont UI_FONT_BIG
+		textscale .23
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_voicetest
+		group grpSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 15 264 570 30
+		text "@SOUND_TIP_VOICETEST"
 		textfont UI_FONT_BIG
 		textscale .23
 		textalign ITEM_ALIGN_LEFT

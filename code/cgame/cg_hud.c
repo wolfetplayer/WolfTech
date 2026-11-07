@@ -832,22 +832,286 @@ static void CG_DrawPlayerLocation( rectDef_t *rect, int font, float scale, vec4_
 	}
 }
 
-static void CG_DrawPlayerKills( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
-	char num[16];
-	int value = cg.snap->ps.persistant[PERS_KILLS];
+/*
+===============
+CG_PlayerInfoPerkLevel
 
-	if ( !cg_drawKillCount.integer ) {
+Returns a player's perk level (0/1/2); self reads playerState_t directly,
+others decode it from coopinfo's perkBits.
+===============
+*/
+static int CG_PlayerInfoPerkLevel( clientInfo_t *ci, int perk ) {
+	if ( ci->clientNum == cg.snap->ps.clientNum ) {
+		return cg.snap->ps.perks[perk];
+	}
+	return ( ci->perkBits >> ( ( perk - 1 ) * 2 ) ) & 3;
+}
+
+/*
+===============
+CG_PlayerInfoClass
+
+Returns a player's class; self reads playerState_t directly, others come
+from coopinfo.
+===============
+*/
+static int CG_PlayerInfoClass( clientInfo_t *ci ) {
+	if ( ci->clientNum == cg.snap->ps.clientNum ) {
+		return cg.snap->ps.stats[STAT_PLAYER_CLASS];
+	}
+	return ci->playerClass;
+}
+
+/*
+===============
+CG_PlayerInfoHealthColor
+
+White-yellow-red ramp, kept separate from CG_ColorForHealthbar so enemy
+health bars (which still use that one) aren't affected.
+===============
+*/
+static void CG_PlayerInfoHealthColor( float frac, vec4_t color ) {
+	if ( frac < 0.0f ) {
+		frac = 0.0f;
+	} else if ( frac > 1.0f ) {
+		frac = 1.0f;
+	}
+
+	if ( frac < 0.5f ) {
+		color[0] = 1.0f;
+		color[1] = frac / 0.5f;
+		color[2] = 0.0f;
+	} else {
+		color[0] = 1.0f;
+		color[1] = 1.0f;
+		color[2] = ( frac - 0.5f ) / 0.5f;
+	}
+	color[3] = 1.0f;
+}
+
+/*
+===============
+CG_DrawPlayerInfoRow
+
+Draws one entry of the player-info stack: points on top (Survival only),
+health bar in the middle, nickname + talk icon on the bottom line.
+===============
+*/
+#define PLAYERINFO_ROW_W     150
+#define PLAYERINFO_ROW_H     42
+#define PLAYERINFO_ROW_GAP   8
+#define PLAYERINFO_PANEL_RAD 6
+
+#define PLAYERINFO_ICON_W    10
+#define PLAYERINFO_ICON_H    20
+
+#define PLAYERINFO_PERK_START 45
+#define PLAYERINFO_PERK_Y_OFS -4
+#define PLAYERINFO_PERK_ICON  14
+#define PLAYERINFO_PERK_GAP   3
+
+#define PLAYERINFO_BAR_W     100
+#define PLAYERINFO_BAR_H     7
+
+#define PLAYERINFO_CLASS_ICON 10
+#define PLAYERINFO_CLASS_GAP  3
+
+static void CG_DrawPlayerInfoRow( float x, float y, clientInfo_t *ci, int score, int health, int maxHealth, int armor ) {
+	char nameClean[MAX_QPATH];
+	char num[16];
+	vec4_t bgcolor, nameColor, barColor, armorColor, textColor;
+	float frac, armorFrac, panelY, pointsY, barY, nameY, nameX, nameW;
+
+	if ( !ci->infoValid ) {
 		return;
 	}
 
-	if ( shader ) {
-		trap_R_SetColor( color );
-		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
+	// fixed to y so adjusting pointsY alone can't move the rest
+	panelY = y + 20;
+	pointsY = y + 25;
+	barY = y + 38;
+
+	// larger, darker rect behind gives a cheap 1px border effect
+	bgcolor[0] = bgcolor[1] = bgcolor[2] = 0.0f;
+	bgcolor[3] = 0.6f * cg_hudAlpha.value;
+	CG_FillRectRounded( x - 7, panelY - 1, PLAYERINFO_ROW_W + 2, PLAYERINFO_ROW_H + 2, PLAYERINFO_PANEL_RAD + 1, bgcolor );
+
+	bgcolor[3] = 0.35f * cg_hudAlpha.value;
+	CG_FillRectRounded( x - 6, panelY, PLAYERINFO_ROW_W, PLAYERINFO_ROW_H, PLAYERINFO_PANEL_RAD, bgcolor );
+
+	textColor[0] = textColor[1] = textColor[2] = 1.0f;
+	textColor[3] = cg_hudAlpha.value;
+
+	// top line: points (Survival only)
+	if ( cgs.gametype == GT_COOP_SURVIVAL ) {
+		rectDef_t pointsRect;
+
+		trap_R_SetColor( textColor );
+		CG_DrawPic( x, pointsY, PLAYERINFO_ICON_W, PLAYERINFO_ICON_H, cgs.media.scoreIconShader );
 		trap_R_SetColor( NULL );
-	} else {
-		Com_sprintf( num, sizeof( num ), "%i", value );
-		value = CG_Text_Width( num, font, scale, 0 );
-		CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
+
+		Com_sprintf( num, sizeof( num ), "%i", score );
+		CG_Text_Paint( x + PLAYERINFO_ICON_W + 4, pointsY + 9, UI_FONT_NORMAL, 0.22f, textColor, num, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
+
+		pointsRect.x = x;
+		pointsRect.y = pointsY;
+		pointsRect.w = 60;
+		pointsRect.h = PLAYERINFO_ICON_H;
+		CG_DrawScorePops( &pointsRect, UI_FONT_NORMAL, 0.22f );
+
+		// perk icons; teammates' levels come from coopinfo's perkBits
+		{
+			float perkX = x + PLAYERINFO_PERK_START;
+			int p;
+
+			for ( p = PERK_RESILIENCE; p < NUM_PERKS; p++ ) {
+				int level = CG_PlayerInfoPerkLevel( ci, p );
+
+				if ( level > 0 ) {
+					gitem_t *item = BG_FindItemForPerk( p );
+					qhandle_t icon;
+
+					if ( !item ) {
+						continue;
+					}
+
+					CG_RegisterItemVisuals( item - bg_itemlist );
+					icon = cg_items[item - bg_itemlist].icons[0];
+					if ( level >= 2 && cgs.media.perkProIcons[p] ) {
+						icon = cgs.media.perkProIcons[p];
+					}
+
+					trap_R_SetColor( textColor );
+					CG_DrawPic( perkX, pointsY + PLAYERINFO_PERK_Y_OFS, PLAYERINFO_PERK_ICON, PLAYERINFO_PERK_ICON, icon );
+					trap_R_SetColor( NULL );
+
+					perkX += PLAYERINFO_PERK_ICON + PLAYERINFO_PERK_GAP;
+				}
+			}
+		}
+	}
+
+	// middle line: health bar (+ gray armor overlay), value to its right
+	frac = ( maxHealth > 0 ) ? ( (float)health / (float)maxHealth ) : 0.0f;
+	if ( frac < 0.0f ) {
+		frac = 0.0f;
+	} else if ( frac > 1.0f ) {
+		frac = 1.0f;
+	}
+
+	// 1px dark frame behind both bars, so the fill reads as inset rather than floating
+	{
+		vec4_t barFrame;
+		barFrame[0] = barFrame[1] = barFrame[2] = 0.0f;
+		barFrame[3] = 0.5f * cg_hudAlpha.value;
+		CG_FillRect( x - 1, barY - 1, PLAYERINFO_BAR_W + 2, PLAYERINFO_BAR_H + 2, barFrame );
+	}
+
+	CG_PlayerInfoHealthColor( frac, barColor );
+	CG_FilledBar( x, barY, PLAYERINFO_BAR_W, PLAYERINFO_BAR_H, barColor, NULL, NULL, frac, 0 );
+
+	if ( armor > 0 ) {
+		armorFrac = ( maxHealth > 0 ) ? ( (float)armor / (float)maxHealth ) : 0.0f;
+		if ( armorFrac > 1.0f ) {
+			armorFrac = 1.0f;
+		}
+		armorColor[0] = 0.45f;
+		armorColor[1] = 0.45f;
+		armorColor[2] = 0.5f;
+		armorColor[3] = 0.8f * cg_hudAlpha.value;
+		CG_FilledBar( x, barY, PLAYERINFO_BAR_W, PLAYERINFO_BAR_H, armorColor, NULL, NULL, armorFrac, 0 );
+	}
+
+	Com_sprintf( num, sizeof( num ), "%i", ( health > 0 ) ? health : 0 );
+	CG_Text_Paint( x + PLAYERINFO_BAR_W + 5, barY + PLAYERINFO_BAR_H, UI_FONT_NORMAL, 0.22f, textColor, num, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
+
+	// bottom line: class icon, nickname, then talk icon
+	nameY = barY + PLAYERINFO_BAR_H + 12;
+	nameX = x;
+
+	{
+		int pc = CG_PlayerInfoClass( ci );
+
+		if ( pc >= 0 && pc < 4 && cgs.media.classIcons[pc] ) {
+			trap_R_SetColor( textColor );
+			CG_DrawPic( x, nameY - 9, PLAYERINFO_CLASS_ICON, PLAYERINFO_CLASS_ICON, cgs.media.classIcons[pc] );
+			trap_R_SetColor( NULL );
+			nameX = x + PLAYERINFO_CLASS_ICON + PLAYERINFO_CLASS_GAP;
+		}
+	}
+
+	nameColor[0] = ci->c1RGBA[0] / 255.0f;
+	nameColor[1] = ci->c1RGBA[1] / 255.0f;
+	nameColor[2] = ci->c1RGBA[2] / 255.0f;
+	nameColor[3] = cg_hudAlpha.value;
+	Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
+	Q_StripColorCodes( nameClean );
+	CG_Text_Paint( nameX, nameY, UI_FONT_NORMAL, 0.18f, nameColor, nameClean, 0, 14, ITEM_TEXTSTYLE_SHADOWED );
+
+	if ( cg_entities[ci->clientNum].voipTalking ) {
+		nameW = CG_Text_Width( nameClean, UI_FONT_NORMAL, 0.18f, 14 );
+		trap_R_SetColor( textColor );
+		CG_DrawPic( nameX + nameW + 4, nameY - 6, 8, 8, cgs.media.speakingShader );
+		trap_R_SetColor( NULL );
+	}
+}
+
+/*
+===============
+CG_DrawPlayerInfo
+
+Bottom-left stack of player-info entries; local player anchors at the
+bottom, others stack upward above it.
+===============
+*/
+#define PLAYERINFO_BASE_X  20
+#define PLAYERINFO_BASE_Y  408
+
+void CG_DrawPlayerInfo( void ) {
+	clientInfo_t *ci;
+	int i, row;
+
+	if ( cgs.gametype > GT_COOP ) {
+		return;
+	}
+
+	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
+		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement( PLACE_LEFT, PLACE_BOTTOM );
+	}
+
+	// score only updates when the server is asked (normally the scoreboard); keep it fresh ourselves
+	if ( cgs.gametype == GT_COOP_SURVIVAL && cg.scoresRequestTime + 2000 < cg.time ) {
+		cg.scoresRequestTime = cg.time;
+		trap_SendClientCommand( "score" );
+	}
+
+	row = 0;
+	for ( i = 0; i < numSortedTeamPlayers; i++ ) {
+		if ( sortedTeamPlayers[i] == cg.snap->ps.clientNum ) {
+			continue;
+		}
+		ci = cgs.clientinfo + sortedTeamPlayers[i];
+		if ( !ci->infoValid || ci->team != cg.snap->ps.persistant[PERS_TEAM] ) {
+			continue;
+		}
+		row++;
+		CG_DrawPlayerInfoRow( PLAYERINFO_BASE_X, PLAYERINFO_BASE_Y - row * ( PLAYERINFO_ROW_H + PLAYERINFO_ROW_GAP ),
+							   ci, ci->score, ci->health, ci->maxHealth, ci->armor );
+	}
+
+	// local player's own score is always fresh via playerState_t
+	ci = &cgs.clientinfo[cg.snap->ps.clientNum];
+	CG_DrawPlayerInfoRow( PLAYERINFO_BASE_X, PLAYERINFO_BASE_Y, ci,
+						   cg.snap->ps.persistant[PERS_SCORE],
+						   cg.snap->ps.stats[STAT_HEALTH], cg.snap->ps.stats[STAT_MAX_HEALTH],
+						   cg.snap->ps.stats[STAT_ARMOR] );
+
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
 	}
 }
 
@@ -864,30 +1128,6 @@ static void CG_DrawPlayerWaves( rectDef_t *rect, int font, float scale, vec4_t c
 		value = CG_Text_Width( num, font, scale, 0 );
 		CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
 	}
-}
-
-
-static void CG_DrawPlayerScore( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
-	char num[16];
-	int value = cg.snap->ps.persistant[PERS_SCORE];
-
-	if ( shader ) {
-		trap_R_SetColor( color );
-		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
-		trap_R_SetColor( NULL );
-	} else {
-		if ( value > 999999 ) {
-			value = 999999;
-		} else if ( value < -99999 ) {
-			value = -99999;
-		}
-
-		Com_sprintf( num, sizeof( num ), "%i", value );
-		value = CG_Text_Width( num, font, scale, 0 );
-		CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
-	}
-
-	CG_DrawScorePops( rect, font, scale );
 }
 
 
@@ -919,53 +1159,6 @@ static void CG_DrawHoldableItem( rectDef_t *rect, int font, float scale, qboolea
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_items[item - bg_itemlist].icons[0] );
 		}
 	}
-}
-
-static void CG_DrawPerks( rectDef_t *rect, int font, float scale, qboolean draw2D ) {
-    int i, numPerks = 0;
-    gitem_t *item;
-    float x, y = 20; // Top part of the screen
-    qhandle_t icon;
-
-	if (cg_gameType.integer != GT_COOP_SURVIVAL)
-	{
-		return;
-	}
-
-	// Count the number of active perks
-    for ( i = 0; i < MAX_PERKS; i++ ) {
-        if ( cg.snap->ps.perks[i] > 0 || (cg.snap->ps.stats[STAT_PERK] & (1 << i)) ) {
-            numPerks++;
-        }
-    }
-
-    // Calculate the starting x position to center the perks
-    x = 220 - (numPerks * (rect->w + 5) - 5) / 2;
-
-    if ( cg_fixedAspect.integer == 2 ) {
-        CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
-    }
-
-    for ( i = 0; i < MAX_PERKS; i++ ) {
-        if ( cg.snap->ps.perks[i] > 0 || (cg.snap->ps.stats[STAT_PERK] & (1 << i)) ) {
-            item = BG_FindItemForPerk( i );
-
-            if ( item ) {
-                CG_RegisterItemVisuals( item - bg_itemlist );
-
-                icon = cg_items[item - bg_itemlist].icons[0];
-
-				// PRO icon replacement
-				if ( cg.snap->ps.perks[i] >= 2 && cgs.media.perkProIcons[i] ) {
-					icon = cgs.media.perkProIcons[i];
-				}
-
-                CG_DrawPic( x, y, rect->w, rect->h, icon );
-
-				x += rect->w + 5; // 5 is the space between icons
-            }
-        }
-    }
 }
 
 static void CG_DrawPlayerItem( rectDef_t *rect, int font, float scale, qboolean draw2D ) {
@@ -1057,37 +1250,6 @@ static void CG_DrawPlayerHealth( rectDef_t *rect, int font, float scale, vec4_t 
 	}
 }
 
-static void CG_DrawPlayerHealthBar( rectDef_t *rect, vec4_t color, int align ) {
-	float frac; 
-	int flags = 0;
-
-    frac = cg.snap->ps.stats[STAT_HEALTH] / (float) cg.snap->ps.stats[STAT_MAX_HEALTH];
-
-	if ( frac > 1.0 ) 
-	{
-	frac = 1.0;
-	}
-
-	CG_ColorForHealth( color );
-	//color[3] = 0.5f;
-
-	if ( cg_fixedAspect.integer == 2 ) {
-		CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
-	}
-
-	if ( align != HUD_HORIZONTAL ) {
-		flags |= 4;   // BAR_VERT
-		flags |= 1;   // BAR_LEFT (left, when vertical means grow 'up')
-	}
-	CG_FilledBar( rect->x,  rect->y, rect->w, rect->h, color, NULL, NULL, frac, flags );
-
-	
-
-	trap_R_SetColor( NULL );
-// jpw
-}
-
-
 static void CG_DrawRedScore( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
 	int value;
 	char num[16];
@@ -1151,9 +1313,6 @@ float CG_GetValue( int ownerDraw, int type ) {
 	case CG_PLAYER_SCORE:
 		return cg.snap->ps.persistant[PERS_SCORE];
 		break;
-	case CG_PLAYER_KILLS:
-		return cg.snap->ps.persistant[PERS_KILLS];
-		break;
 	case CG_PLAYER_LIVES:
 		return ps->persistant[PERS_RESPAWNS_LEFT];
 		break;
@@ -1171,17 +1330,6 @@ float CG_GetValue( int ownerDraw, int type ) {
 		break;
 	case CG_PLAYER_WEAPON_STABILITY:    //----(SA)	added
 		return ps->aimSpreadScale;
-		break;
-
-#define BONUSTIME 60000.0f
-#define SPRINTTIME 20000.0f
-
-	case CG_STAMINA:    //----(SA)	added
-		if ( type == RANGETYPE_RELATIVE ) {
-			return (float)cg.snap->ps.sprintTime / SPRINTTIME;
-		} else {
-			return cg.snap->ps.sprintTime;
-		}
 		break;
 	default:
 		break;
@@ -1596,34 +1744,6 @@ static void CG_DrawWeapHeat( rectDef_t *rect, int align ) {
 	CG_FilledBar( rect->x, rect->y, rect->w, rect->h, color, color2, NULL, (float)cg.snap->ps.curWeapHeat / 255.0f, flags );
 }
 
-
-/*
-==============
-CG_DrawFatigue
-==============
-*/
-
-static void CG_DrawFatigue( rectDef_t *rect, vec4_t color, int align ) {
-	//	vec4_t	color = {0, 1, 0, 1}, color2 = {1, 0, 0, 1};
-	vec4_t colorBonus = {1, 1, 0, 0.45f};   // yellow (a little more solid for the 'bonus' stamina)
-	int flags = 0;
-
-	if ( cg_fixedAspect.integer == 2 ) {
-		CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
-	}
-
-	if ( align != HUD_HORIZONTAL ) {
-		flags |= 4;   // BAR_VERT
-		flags |= 1;   // BAR_LEFT (left, when vertical means grow 'up')
-	}
-
-	CG_FilledBar( rect->x, rect->y, rect->w, rect->h, color, NULL, NULL, (float)cg.snap->ps.sprintTime / SPRINTTIME, flags );
-
-	// fill in the left side of the bar with the counter for the nofatigue powerup
-	if ( cg.snap->ps.powerups[PW_NOFATIGUE] ) {
-		CG_FilledBar( rect->x, rect->y, rect->w / 2, rect->h, colorBonus, NULL, NULL, cg.snap->ps.powerups[PW_NOFATIGUE] / BONUSTIME, flags );
-	}
-}
 
 /*
 =================
@@ -2044,26 +2164,14 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 	case CG_PLAYER_WEAPON_STABILITY:
 		CG_DrawWeapStability( &rect, color, align );
 		break;
-	case CG_STAMINA:
-		CG_DrawFatigue( &rect, color, align );
-		break;
 	case CG_PLAYER_HEAD:
 		CG_DrawPlayerHead( &rect, ownerDrawFlags & CG_SHOW_2DONLY );
 		break;
 	case CG_PLAYER_HOLDABLE:
 		CG_DrawHoldableItem( &rect, font, scale, ownerDrawFlags & CG_SHOW_2DONLY );
 		break;
-	case CG_PLAYER_PERKS:
-		CG_DrawPerks( &rect, font, scale, ownerDrawFlags & CG_SHOW_2DONLY );
-		break;
 	case CG_PLAYER_ITEM:
 		CG_DrawPlayerItem( &rect, font, scale, ownerDrawFlags & CG_SHOW_2DONLY );
-		break;
-	case CG_PLAYER_SCORE:
-		CG_DrawPlayerScore( &rect, font, scale, color, shader, textStyle );
-		break;
-	case CG_PLAYER_KILLS:
-		CG_DrawPlayerKills( &rect, font, scale, color, shader, textStyle );
 		break;
 	case CG_PLAYER_WAVES:
 		CG_DrawPlayerWaves( &rect, font, scale, color, shader, textStyle );
@@ -2094,9 +2202,6 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_HEALTH:
 		CG_DrawPlayerHealth( &rect, font, scale, color, shader, textStyle );
-		break;
-	case CG_PLAYER_HEALTH_BAR:
-		CG_DrawPlayerHealthBar( &rect, color, align );
 		break;
 	case CG_PLAYER_WEAPON_RECHARGE:
 		CG_DrawWeapRecharge( &rect, color, align );

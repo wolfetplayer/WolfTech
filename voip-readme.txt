@@ -1,34 +1,43 @@
-ioquake3 VoIP support documentation.
-Last updated 6/25/2008 by Ryan C. Gordon.
+WolfTech VoIP support documentation.
+Originally based on ioquake3 VoIP support documentation (Ryan C. Gordon,
+6/25/2008), updated for WolfTech's Opus-based implementation.
 
-There are two ways to use VoIP in ioquake3. You can either use Mumble as an
- external program, for which ioq3 now supplies some basic hooks, or you can
- use the new built-in VoIP support.
+There are two ways to use VoIP in WolfTech. You can either use Mumble as an
+ external program, for which the engine supplies some basic hooks, or you can
+ use the built-in VoIP support.
 
-Mumble is here: http://mumble.sourceforge.net/  ... ioquake3 can supply it
+Mumble is here: http://mumble.sourceforge.net/  ... WolfTech can supply it
  with your in-game position, but everything else is whatever features Mumble
- offers outside of the game. To use it, start Mumble before you start ioq3,
- and run the game with +set cl_useMumble 1. This should work on at least
- Linux, Mac OS X, and Windows, and probably other platforms Mumble supports
- in the future.
+ offers outside of the game. To use it, start Mumble before you start the
+ game, and run with +set cl_useMumble 1. This should work on at least Linux,
+ Mac OS X, and Windows, and probably other platforms Mumble supports.
 
-The built-in stuff offers tighter in-game integration, works on any platform
- that ioquake3 supports, and doesn't require anything more than a recent build
- of the game. The rest of this document is concerned with the built-in VoIP
- support.
+The built-in stuff offers tighter in-game integration and doesn't require
+ anything more than the game itself. The rest of this document is concerned
+ with the built-in VoIP support.
+
+Voice chat only applies to networked Coop/Survival games with other human
+ players; it does nothing in single-player, since there's no one else to
+ talk to.
 
 
 Quick start for servers:
-    - run a recent build of ioquake3.
     - Make sure your network settings are set to broadband.
 
-Quick start for clients:
-    - run a recent build of ioquake3.
-    - Make sure your network settings are set to broadband.
-    - +set s_useOpenAL 1
-    - \bind q "+voiprecord"
+Quick start for clients, using the in-game menu:
+    - Options > Sound has toggles for Voice Chat, Voice Activation, Voice
+      Sensitivity, Mic Boost and the mic meter.
+    - Options > Controls > Keyboard Binds has a "Push to Talk" entry under
+      the Voice Chat category; it's bound to 'k' by default.
+    - Hook up a microphone, connect to a VoIP-supporting server, hold the
+      Push to Talk key and talk. Players currently transmitting show a talk
+      balloon over their head.
+
+Quick start for clients, using the console:
+    - +set s_useOpenAL 1 (or s_sdlCapture 1 if using the SDL3 sound backend)
+    - \bind k "+voiprecord"
     - Hook up a microphone, connect to a VoIP-supporting server.
-    - hold down 'q' key and talk.
+    - hold down 'k' key and talk.
 
 
 Cvars you can set:
@@ -152,13 +161,14 @@ More detailed/technical info:
 By default, all of this is enabled. You can build with or without VoIP
  support explicitly with USE_VOIP=[1|0] on the make command line.
 
-You currently must use OpenAL to speak, as we have ALC_EXT_capture support
- in place to pull data from the microphone. If you are using the SDL backend,
- you can still hear people, but not speak.
+You can capture microphone input through either the OpenAL backend
+ (ALC_EXT_capture, s_alCapture) or the SDL3 backend (s_sdlCapture) - both can
+ speak, not just listen.
 
-There is no in-game UI to speak of: we encourage mods to add some. Largely
- they will just need to set cvars and run console commands for choosing
- voice targets and ignoring people, etc.
+The Options > Sound and Options > Controls menus cover the common settings
+ (enable/disable, voice activation vs. push-to-talk, sensitivity, mic boost,
+ mic meter, and the push-to-talk bind). Per-player mute/gain is still
+ console/command only (voip ignore/unignore/muteall/gain), see below.
 
 This requires patched builds to be useful, but remains network compatible with
  legacy quake3 clients and servers. Clients and servers both report in their
@@ -172,14 +182,16 @@ VoIP packets are saved in demo files! You will be able to playback what you
  track. For VoIP-supported builds, it's nice to have a record of the
  trash-talk.
 
-Data is processed using the Speex narrowband codec, and is cross-platform.
- Bigendian and littleendian systems can speak to each other, as can 32 and
- 64-bit platforms.
+Data is processed using the Opus codec at 48000Hz mono, and is
+ cross-platform. Bigendian and littleendian systems can speak to each other,
+ as can 32 and 64-bit platforms. (Older WolfTech/ioquake3 builds used the
+ Speex narrowband codec at 8000Hz; that protocol is still recognized and
+ silently ignored so old data doesn't confuse new clients, but is no longer
+ produced.)
 
-Bandwidth: VoIP data is broken up into 20 millisecond frames (this is a Speex
- requirement), and we try to push up to 12 Speex frames in one UDP packet
- (about a quarter of a second of audio)...we're using the narrowband codec:
- 8000Hz sample rate. In practice, a client should send about 2 kilobytes per
+Bandwidth: VoIP data is broken up into 20 millisecond frames, and we try to
+ push up to 12 frames in one UDP packet (about a quarter of a second of
+ audio). In practice, a client should send about 2 kilobytes per
  second more when speaking, spread over about four bursts per second, plus a
  few bytes of state information. For comparison, this is less than the server
  sends when downloading files to the client without an http redirect. The

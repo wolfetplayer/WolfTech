@@ -698,7 +698,7 @@ void Con_DrawNotify( void ) {
 
 		// Virtual anchor/sizing - keep in sync with CHATLOC_X/CHATLOC_Y/CHAT_ROW_HEIGHT/CHAT_TEXT_PAD_X in cg_draw.c's CG_DrawTeamInfo
 #define CHATLOC_X_V 0
-#define CHATLOC_Y_V 375
+#define CHATLOC_Y_V 260
 #define CHAT_ROW_HEIGHT_V 10
 #define CHAT_TEXT_PAD_X_V 8
 

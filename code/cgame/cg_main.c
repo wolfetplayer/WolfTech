@@ -156,7 +156,6 @@ vmCvar_t cg_drawEnemyHealthbars;
 vmCvar_t cg_enemyHealthbarRange;
 vmCvar_t cg_enemyHealthbarAimRadius;
 vmCvar_t cg_drawDamageNumbers;
-vmCvar_t cg_drawKillCount;
 vmCvar_t cg_drawWeaponIcon;
 vmCvar_t cg_showAINames;
 vmCvar_t cg_showAIStats;
@@ -244,7 +243,6 @@ vmCvar_t cg_paused;
 vmCvar_t cg_blood;
 vmCvar_t cg_predictItems;
 vmCvar_t cg_deferPlayers;
-vmCvar_t cg_drawTeamOverlay;
 vmCvar_t cg_enableBreath;
 vmCvar_t cg_autoactivate;
 vmCvar_t cg_useSuggestedWeapons;    //----(SA)	added
@@ -423,7 +421,6 @@ cvarTable_t cvarTable[] = {
 	{&cg_enemyHealthbarRange, "cg_enemyHealthbarRange", "800", CVAR_ARCHIVE},
 	{&cg_enemyHealthbarAimRadius, "cg_enemyHealthbarAimRadius", "120", CVAR_ARCHIVE},
 	{&cg_drawDamageNumbers, "cg_drawDamageNumbers", "0", CVAR_ARCHIVE},
-	{&cg_drawKillCount, "cg_drawKillCount", "0", CVAR_ARCHIVE},
 	{&cg_drawWeaponIcon, "cg_drawWeaponIcon", "1", CVAR_ARCHIVE},
 	{&cg_showAINames, "cg_showAINames", "0", CVAR_CHEAT},
 	{&cg_showAIStats, "cg_showAIStats", "0", CVAR_CHEAT},
@@ -509,7 +506,6 @@ cvarTable_t cvarTable[] = {
 	{&cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE},
 	{&cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE},
 	{&cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE},
-	{&cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE},
 	{&cg_stats, "cg_stats", "0", 0},
 	{&cg_blinktime, "cg_blinktime", "100", CVAR_ARCHIVE}, //----(SA)	added
 
@@ -1720,6 +1716,12 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.media.frozenShader = trap_R_RegisterShader( "sprites/voiceMedic" );
 	cgs.media.balloonShader = trap_R_RegisterShader( "sprites/balloon3" );
+	cgs.media.scoreIconShader = trap_R_RegisterShaderNoMip( "gfx/limbo/skill_roll.tga" );
+	cgs.media.speakingShader = trap_R_RegisterShader( "gfx/hud/player_speaking.tga" );
+	cgs.media.classIcons[PC_SOLDIER] = trap_R_RegisterShaderNoMip( "gfx/hud/class_soldier.tga" );
+	cgs.media.classIcons[PC_MEDIC] = trap_R_RegisterShaderNoMip( "gfx/hud/class_medic.tga" );
+	cgs.media.classIcons[PC_ENGINEER] = trap_R_RegisterShaderNoMip( "gfx/hud/class_engineer.tga" );
+	cgs.media.classIcons[PC_LT] = trap_R_RegisterShaderNoMip( "gfx/hud/class_lt.tga" );
 	cgs.media.voiceChatShader = trap_R_RegisterShader( "sprites/voiceChat" );
 	cgs.media.reviveNeededShader = trap_R_RegisterShader( "sprites/voiceMedic" );
 	cgs.media.reviveLoopSound = trap_S_RegisterSound( "sound/misc/revive_loop.wav" );

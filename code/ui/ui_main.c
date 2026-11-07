@@ -2107,18 +2107,17 @@ static void UI_DrawLobbyAvatar( rectDef_t *rect, float scale, vec4_t color, int 
 ===============
 UI_DrawLobbySlotClass
 
-Pre-game lobby: draws slotIndex's chosen survival class from cl_lobbySlotClassN
-(mirrored live from the Steam lobby's per-member data), blank if nobody's in that
-slot or they haven't picked yet.
+Pre-game lobby: draws slotIndex's chosen class icon from cl_lobbySlotClassN,
+mirrored live from the Steam lobby by cl_main.c.
 ===============
 */
-static void UI_DrawLobbySlotClass( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle, int slotIndex ) {
-	char className[32];
+static void UI_DrawLobbySlotClass( rectDef_t *rect, int slotIndex ) {
+	char classIcon[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( va( "cl_lobbySlotClass%d", slotIndex ), className, sizeof( className ) );
+	trap_Cvar_VariableStringBuffer( va( "cl_lobbySlotClass%d", slotIndex ), classIcon, sizeof( classIcon ) );
 
-	if ( className[0] ) {
-		Text_Paint( rect->x, rect->y, font, scale, color, className, 0, 0, textStyle );
+	if ( classIcon[0] ) {
+		UI_DrawHandlePic( rect->x, rect->y, rect->w, rect->h, trap_R_RegisterShaderNoMip( classIcon ) );
 	}
 }
 
@@ -3205,7 +3204,7 @@ static void UI_OwnerDraw( float x, float y, float w, float h, float text_x, floa
 	case UI_LOBBYSLOTCLASS2:
 	case UI_LOBBYSLOTCLASS3:
 	case UI_LOBBYSLOTCLASS4:
-		UI_DrawLobbySlotClass( &rect, font, scale, color, textStyle, ownerDraw - UI_LOBBYSLOTCLASS1 );
+		UI_DrawLobbySlotClass( &rect, ownerDraw - UI_LOBBYSLOTCLASS1 );
 		break;
 	case UI_LOBBYCHAT1:
 	case UI_LOBBYCHAT2:

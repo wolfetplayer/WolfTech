@@ -228,6 +228,8 @@ typedef struct client_s {
 	voipServerPacket_t *voipPacket[VOIP_QUEUE_LENGTH];
 	int queuedVoipPackets;
 	int queuedVoipIndex;
+	qboolean voipTalking;
+	int voipLastPacketTime;
 #endif
 
 	int				oldServerTime;

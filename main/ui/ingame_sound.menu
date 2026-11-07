@@ -109,6 +109,124 @@ menuDef {
 		mouseExit { setitemcolor isnd_subtitleshadow backcolor 1 1 1 .07 ; hide tip_isnd_subtitleshadow ; hide tipbox }
 		}
 
+	itemDef {
+		name isnd_voicechat
+		rect 0 95 443 16
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_VOICECHAT"
+		textfont		UI_FONT_BIG
+		cvar "cl_voip"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_voicechat backcolor .3 0.5 0.2 .25 ; show tip_isnd_voicechat ; show tipbox }
+		mouseExit { setitemcolor isnd_voicechat backcolor 1 1 1 .07 ; hide tip_isnd_voicechat ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_voiceactivation
+		rect 0 114 443 16
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_VOICEACTIVATION"
+		textfont		UI_FONT_BIG
+		cvar "cl_voipUseVAD"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_voiceactivation backcolor .3 0.5 0.2 .25 ; show tip_isnd_voiceactivation ; show tipbox }
+		mouseExit { setitemcolor isnd_voiceactivation backcolor 1 1 1 .07 ; hide tip_isnd_voiceactivation ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_voicesensitivity
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_VOICESENSITIVITY"
+		textfont		UI_FONT_BIG
+		cvarfloat "cl_voipVADThreshold" 0.25 0 1
+		rect 0 133 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_voicesensitivity backcolor .3 0.5 0.2 .25 ; show tip_isnd_voicesensitivity ; show tipbox }
+		mouseExit { setitemcolor isnd_voicesensitivity backcolor 1 1 1 .07 ; hide tip_isnd_voicesensitivity ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_voiceboost
+		type ITEM_TYPE_SLIDER
+		text "@OPTIONS_VOICEBOOST"
+		textfont		UI_FONT_BIG
+		cvarfloat "cl_voipCaptureMult" 2.0 1 4
+		rect 0 152 443 16
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_voiceboost backcolor .3 0.5 0.2 .25 ; show tip_isnd_voiceboost ; show tipbox }
+		mouseExit { setitemcolor isnd_voiceboost backcolor 1 1 1 .07 ; hide tip_isnd_voiceboost ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_voicemeter
+		rect 0 171 443 16
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_VOICEMETER"
+		textfont		UI_FONT_BIG
+		cvar "cl_voipShowMeter"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_voicemeter backcolor .3 0.5 0.2 .25 ; show tip_isnd_voicemeter ; show tipbox }
+		mouseExit { setitemcolor isnd_voicemeter backcolor 1 1 1 .07 ; hide tip_isnd_voicemeter ; hide tipbox }
+		}
+
+	itemDef {
+		name isnd_voicetest
+		rect 0 190 443 16
+		type ITEM_TYPE_MULTI
+		style WINDOW_STYLE_FILLED
+		text "@OPTIONS_VOICETEST"
+		textfont		UI_FONT_BIG
+		cvar "cl_voipTest"
+		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		textscale .22
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 224
+		textaligny 12
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 1
+		mouseEnter { setitemcolor isnd_voicetest backcolor .3 0.5 0.2 .25 ; show tip_isnd_voicetest ; show tipbox }
+		mouseExit { setitemcolor isnd_voicetest backcolor 1 1 1 .07 ; hide tip_isnd_voicetest ; hide tipbox }
+		}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////                        HOVER TIP BOX                    //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -192,6 +310,102 @@ menuDef {
 		style WINDOW_STYLE_EMPTY
 		rect 10 330 423 30
 		text "@SOUND_TIP_SUBTITLESHADOW"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_voicechat
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_VOICECHAT"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_voiceactivation
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_VOICEACTIVATION"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_voicesensitivity
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_VOICESENSITIVITY"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_voiceboost
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_VOICEBOOST"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_voicemeter
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_VOICEMETER"
+		textfont UI_FONT_BIG
+		textscale .2
+		textalign ITEM_ALIGN_LEFT
+		textalignx 0
+		textaligny 20
+		forecolor 1 1 1 1
+		visible 0
+		decoration
+	}
+
+	itemDef {
+		name tip_isnd_voicetest
+		group grpIngameSoundTip
+		style WINDOW_STYLE_EMPTY
+		rect 10 330 423 30
+		text "@SOUND_TIP_VOICETEST"
 		textfont UI_FONT_BIG
 		textscale .2
 		textalign ITEM_ALIGN_LEFT

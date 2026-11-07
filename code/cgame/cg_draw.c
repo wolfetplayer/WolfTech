@@ -962,12 +962,6 @@ static float CG_DrawTimer( float y ) {
 	return y + BIGCHAR_HEIGHT + 4;
 }
 
-/*
-=================
-CG_DrawCoopOverlay
-=================
-*/
-
 int maxCharsBeforeOverlay;
 
 #define TEAM_OVERLAY_MAXNAME_WIDTH  16
@@ -976,138 +970,6 @@ int maxCharsBeforeOverlay;
 // CG_Text_Paint_Ext's y is a baseline (draws upward); this file's y positions were written for the old top-anchored CG_DrawStringExt, so shift down by the measured text height
 static void CG_ChatTextPaint( float x, float y, float scalex, float scaley, vec4_t color, const char *text, float adjust, int limit, int style, fontInfoExtra_t *font ) {
 	CG_Text_Paint_Ext( x, y + CG_Text_Height_Ext( text, scaley, limit, font ), scalex, scaley, color, text, adjust, limit, style, font );
-}
-
-static float CG_DrawCoopOverlay( float y ) {
-	int x, w, h, xx;
-	int i, len;
-	vec4_t hcolor, bgcolor;
-	int namePixW, scorePixW;
-	int plyrs;
-	char st[16];
-	char nameClean[MAX_QPATH];
-	clientInfo_t *ci;
-	float       *pcolor;
-	int chW, chH;
-
-	if ( !cg_drawTeamOverlay.integer ) {
-		return y;
-	}
-
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
-		return y;
-	}
-
-	if ( cg.scoresRequestTime + 2000 < cg.time ) {
-		cg.scoresRequestTime = cg.time;
-		trap_SendClientCommand( "score" );
-	}
-
-	maxCharsBeforeOverlay = 80;
-
-	// TTF cell size replacing the fixed TINYCHAR grid; chH measured separately, not assumed square
-	chW = CG_Text_Width_Ext( "0", CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
-	chH = CG_Text_Height_Ext( "Mg", CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
-
-	plyrs = 0;
-
-	// measured in rendered pixels - CG_CHAT_FONT is proportional, so char-count*chW would underestimate
-	namePixW = 0;
-	scorePixW = 0;
-	for ( i = 0; i < numSortedTeamPlayers; i++ ) {
-		ci = cgs.clientinfo + sortedTeamPlayers[i];
-		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM] ) {
-			plyrs++;
-
-			Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
-			Q_StripColorCodes( nameClean );
-			len = CG_Text_Width_Ext( nameClean, CG_CHAT_TEXT_SCALE, TEAM_OVERLAY_MAXNAME_WIDTH, CG_CHAT_FONT );
-			if ( len > namePixW ) {
-				namePixW = len;
-			}
-
-			Com_sprintf( st, sizeof( st ), "%i", ci->score );
-			len = CG_Text_Width_Ext( st, CG_CHAT_TEXT_SCALE, 0, CG_CHAT_FONT );
-			if ( len > scorePixW ) {
-				scorePixW = len;
-			}
-		}
-	}
-
-	if ( !plyrs ) {
-		return y;
-	}
-
-	// left margin + name + gap + score + right margin
-	w = chW * 3 + namePixW + scorePixW;
-
-	x = 640 - w - 1;     // JPW was -32
-	h = plyrs * chH;
-
-	// DHM - Nerve :: Set the max characters that can be printed before the left edge
-	if ( cg_fixedAspect.integer == 2 && ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) ) {
-		maxCharsBeforeOverlay = ( ( ( cgs.glconfig.vidWidth / cgs.screenXScale ) - w - 1 ) / chW ) - 1;
-	} else {
-		maxCharsBeforeOverlay = ( x / chW ) - 1;
-	}
-
-	hcolor[0] = 0.25f;
-	hcolor[1] = 0.25f;
-	hcolor[2] = 0.5f;
-	hcolor[3] = 0.25f * cg_hudAlpha.value;
-
-	CG_FillRect( x,y,w,h,hcolor );
-	VectorSet( hcolor, 0.4f, 0.4f, 0.4f );
-	hcolor[3] = cg_hudAlpha.value;
-	CG_DrawRect( x - 1, y, w + 2, h + 2, 1, hcolor );
-
-
-	for ( i = 0; i < numSortedTeamPlayers; i++ ) {
-		ci = cgs.clientinfo + sortedTeamPlayers[i];
-		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM] ) {
-			// CG_Text_Paint_Ext's y is a baseline (draws upward); shift down by chH so text top lands at the row's y, matching CG_FillRect's rect below
-			float ty = y + chH;
-			int rowNameW;
-
-			hcolor[0] = hcolor[1] = hcolor[2] = 1.0;
-			hcolor[3] = cg_hudAlpha.value;
-			pcolor = hcolor;
-
-			xx = x + chW;
-
-			// strip ^N color codes from a copy so the player's name can't override the fixed color
-			Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
-			Q_StripColorCodes( nameClean );
-			rowNameW = CG_Text_Width_Ext( nameClean, CG_CHAT_TEXT_SCALE, TEAM_OVERLAY_MAXNAME_WIDTH, CG_CHAT_FONT );
-
-			// if that guy killed someone flash his name green
-			if ( ci->lastteamkilltime + 5000 >= cg.time ) {
-				bgcolor[0] = 1.0;
-				bgcolor[1] = 0.0;
-				bgcolor[2] = 0.0;
-				bgcolor[3] = cg_hudAlpha.value;
-				CG_FillRect( xx, y + 1, rowNameW, chH - 1, bgcolor );
-			} else if ( ci->lastkilltime + 1000 >= cg.time ) {
-				pcolor[0] = 0.0;
-				pcolor[1] = 1.0;
-				pcolor[2] = 0.0;
-			}
-
-			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
-							  nameClean, 0, TEAM_OVERLAY_MAXNAME_WIDTH, 0, CG_CHAT_FONT );
-
-			Com_sprintf( st, sizeof( st ), "%i", ci->score );
-
-			xx = x + chW * 2 + namePixW;
-
-			CG_Text_Paint_Ext( xx, ty, CG_CHAT_TEXT_SCALE, CG_CHAT_TEXT_SCALE, pcolor,
-							  st, 0, 0, 0, CG_CHAT_FONT );
-
-			y += chH;
-		}
-	}
-
-	return y;
 }
 
 /*
@@ -1127,9 +989,6 @@ static void CG_DrawUpperRight(stereoFrame_t stereoFrame) {
 		CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
 	}
 
-	if ( cgs.gametype <= GT_COOP ) {
-		y = CG_DrawCoopOverlay( y );
-	}
 	if ( cg_drawSnapshot.integer ) {
 		y = CG_DrawSnapshot( y );
 	}
@@ -1174,7 +1033,8 @@ static void CG_DrawTeamInfo( void ) {
 #define CHAT_ROW_HEIGHT 10
 #define CHAT_TEXT_PAD_X 8
 #define CHAT_TEXT_SCALE 0.23f
-#define CHATLOC_Y ( 385 - CHAT_ROW_HEIGHT ) // bottom edge clears the score/health HUD panel
+// bottom edge clears the player-info stack (cg_hud.c, CG_DrawPlayerInfo)
+#define CHATLOC_Y 260
 #define CHATLOC_X 0
 
 	if ( cg_teamChatHeight.integer < TEAMCHAT_HEIGHT ) {
@@ -3105,7 +2965,7 @@ void CG_DrawDamageNumbers( void ) {
 }
 
 // red-yellow-green ramp based on the fraction of health remaining
-static void CG_ColorForHealthbar( float frac, vec4_t color ) {
+void CG_ColorForHealthbar( float frac, vec4_t color ) {
 	const float dim = 0.75f;    // pull the saturated primaries down a notch
 	const float desat = 0.2f;   // blend a little toward neutral gray so it isn't neon
 	float gray;
@@ -5127,6 +4987,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 					Menu_PaintAll();
 					CG_DrawTimedMenus();
 				}
+
+				CG_DrawPlayerInfo();
 			}
 
 			if ( cgs.gametype != GT_SINGLE_PLAYER ) {

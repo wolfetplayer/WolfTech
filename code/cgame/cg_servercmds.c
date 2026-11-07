@@ -149,7 +149,7 @@ CG_ParseCoopInfo
 
 =================
 */
-#define COOPINFO_ITEMS 8
+#define COOPINFO_ITEMS 11
 static void CG_ParseCoopInfo( void ) {
 	int i;
 	int client;
@@ -168,6 +168,9 @@ static void CG_ParseCoopInfo( void ) {
 		cgs.clientinfo[ client ].ammoClip = atoi( CG_Argv( i * COOPINFO_ITEMS + 7 ) );
 		cgs.clientinfo[ client ].ammo = atoi( CG_Argv( i * COOPINFO_ITEMS + 8 ) );
 		cgs.clientinfo[ client ].team = atoi( CG_Argv( i * COOPINFO_ITEMS + 9 ) );
+		cgs.clientinfo[ client ].maxHealth = atoi( CG_Argv( i * COOPINFO_ITEMS + 10 ) );
+		cgs.clientinfo[ client ].perkBits = atoi( CG_Argv( i * COOPINFO_ITEMS + 11 ) );
+		cgs.clientinfo[ client ].playerClass = atoi( CG_Argv( i * COOPINFO_ITEMS + 12 ) );
 	}
 }
 
@@ -1745,6 +1748,14 @@ static void CG_ServerCommand( void ) {
 
 	if ( !strcmp( cmd, "vtell" ) ) {
 		CG_VoiceChat( SAY_TELL );
+		return;
+	}
+
+	if ( !strcmp( cmd, "voiptalk" ) ) {
+		int clientNum = atoi( CG_Argv( 1 ) );
+		if ( clientNum >= 0 && clientNum < MAX_CLIENTS ) {
+			cg_entities[clientNum].voipTalking = atoi( CG_Argv( 2 ) ) ? qtrue : qfalse;
+		}
 		return;
 	}
 

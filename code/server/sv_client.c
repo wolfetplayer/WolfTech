@@ -1954,6 +1954,12 @@ void SV_UserVoip(client_t *cl, msg_t *msg, qboolean ignoreData)
 	if (ignoreData || SV_ShouldIgnoreVoipSender(cl))
 		return;   // Blacklisted, disabled, etc.
 
+	cl->voipLastPacketTime = svs.time;
+	if (!cl->voipTalking) {
+		cl->voipTalking = qtrue;
+		SV_SendServerCommand( NULL, "voiptalk %d 1", sender );
+	}
+
 	// !!! FIXME: see if we read past end of msg...
 
 	// !!! FIXME: reject if not opus data.

@@ -1158,6 +1158,14 @@ static void SV_CheckTimeouts( void ) {
 			cl->lastPacketTime = svs.time;
 		}
 
+#ifdef USE_VOIP
+		// no VoIP packet in a while means they stopped talking; tell everyone.
+		if ( cl->voipTalking && svs.time - cl->voipLastPacketTime > 400 ) {
+			cl->voipTalking = qfalse;
+			SV_SendServerCommand( NULL, "voiptalk %d 0", i );
+		}
+#endif
+
 		if ( cl->state == CS_ZOMBIE
 			 && cl->lastPacketTime < zombiepoint ) {
 			// using the client id cause the cl->name is empty at this point
