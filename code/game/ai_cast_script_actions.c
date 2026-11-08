@@ -1632,7 +1632,7 @@ qboolean AICast_ScriptAction_GiveArmor( cast_state_t *cs, char *params ) {
 qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 	gentity_t *player;
 	// Every survival player has a class, so the loadout is always "<loadout>_<class>" (see loadouts_survival.loadout).
-	static const char *classSuffixes[4] = { "soldier", "medic", "engineer", "lt" };
+	static const char *classSuffixes[4] = { "soldier", "medic", "engineer", "fieldops" };
 
 	if ( !params || !params[0] ) {
 		G_Error( "AI Scripting: applyloadout requires loadout name\n" );
@@ -1655,7 +1655,7 @@ qboolean AICast_ScriptAction_ApplyLoadout( cast_state_t *cs, char *params ) {
 		}
 
 		classNum = player->client->ps.stats[STAT_PLAYER_CLASS];
-		if ( classNum < PC_SOLDIER || classNum > PC_LT ) {
+		if ( classNum < PC_SOLDIER || classNum > PC_FIELDOPS ) {
 			classNum = PC_SOLDIER;
 		}
 		Com_sprintf( classLoadoutName, sizeof( classLoadoutName ), "%s_%s", params, classSuffixes[classNum] );

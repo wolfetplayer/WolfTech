@@ -4508,7 +4508,7 @@ static playerType_t playerTypes[] = {
 	{ "player_window_soldier",       PT_KNIFE | PT_PISTOL | PT_RIFLE | PT_GRENADES },
 	{ "player_window_medic",     PT_KNIFE | PT_PISTOL | PT_MEDKIT },
 	{ "player_window_engineer",      PT_KNIFE | PT_PISTOL | PT_LIGHTONLY | PT_EXPLOSIVES | PT_GRENADES },
-	{ "player_window_lieutenant",    PT_KNIFE | PT_PISTOL | PT_RIFLE | PT_EXPLOSIVES }
+	{ "player_window_fieldops",    PT_KNIFE | PT_PISTOL | PT_RIFLE | PT_EXPLOSIVES }
 };
 
 typedef struct {
@@ -4721,7 +4721,7 @@ void WM_PickItem( int selectionType, int itemIndex ) {
 			trap_Cvar_Set( "mp_playerType", "2" );
 			trap_Cvar_Set( "mp_weapon", "0" );
 			break;
-		case WM_LIEUTENANT:
+		case WM_FIELDOPS:
 			trap_Cvar_Set( "mp_playerType", "3" );
 			trap_Cvar_Set( "mp_weapon", "0" );
 			break;
@@ -5869,7 +5869,7 @@ static void UI_RunMenuScript( char **args ) {
 			} else if ( playerType == 2 ) {
 				classStr = "engineer";
 			} else {
-				classStr = "lieutenant";
+				classStr = "fieldops";
 			}
 
 			weapStr = "";

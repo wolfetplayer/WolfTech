@@ -612,7 +612,7 @@ typedef struct {
 	int ammoClip;
 	int ammo;
 	int perkBits;                   // ditto - 2 bits per perk (level 0-2), from coopinfo
-	int playerClass;                // ditto - PC_SOLDIER/PC_MEDIC/PC_ENGINEER/PC_LT, from coopinfo
+	int playerClass;                // ditto - PC_SOLDIER/PC_MEDIC/PC_ENGINEER/PC_FIELDOPS, from coopinfo
 
 	int handicap;
 	int wins, losses;               // in tourney mode
@@ -1240,7 +1240,7 @@ typedef struct {
 	qhandle_t connectionShader;
 	qhandle_t scoreIconShader;
 	qhandle_t speakingShader;
-	qhandle_t classIcons[4];        // indexed by PC_SOLDIER/PC_MEDIC/PC_ENGINEER/PC_LT
+	qhandle_t classIcons[4];        // indexed by PC_SOLDIER/PC_MEDIC/PC_ENGINEER/PC_FIELDOPS
 	qhandle_t reviveNeededShader;
 	sfxHandle_t reviveLoopSound;        // looped locally for the reviver's own client -- s.loopSound never reaches your own predicted entity
 	sfxHandle_t reviveLoopMedicSound;

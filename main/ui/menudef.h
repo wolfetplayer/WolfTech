@@ -460,7 +460,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #define WM_SOLDIER              1
 #define WM_MEDIC                2
-#define WM_LIEUTENANT           3
+#define WM_FIELDOPS             3
 #define WM_ENGINEER             4
 
 #define WM_PISTOL_1911          1

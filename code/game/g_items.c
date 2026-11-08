@@ -98,7 +98,7 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 
 			COM_BitSet( other->client->ps.weapons, WP_VENOM );
 			other->client->ps.weapHeat[WP_VENOM] = 0;
-			Add_Ammo( other, WP_VENOM, BG_GetMaxAmmo( &other->client->ps, WP_VENOM, LT_AMMO_BONUS_MULTIPLIER ), qtrue );
+			Add_Ammo( other, WP_VENOM, BG_GetMaxAmmo( &other->client->ps, WP_VENOM, FIELDOPS_AMMO_BONUS_MULTIPLIER ), qtrue );
 
 			other->client->ps.weapon = WP_VENOM;
 			other->client->ps.weaponstate = WEAPON_RAISING;
@@ -151,7 +151,7 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 					continue;
 				}
 
-				int ammo = BG_GetMaxAmmo(&other->client->ps, w, LT_AMMO_BONUS_MULTIPLIER);
+				int ammo = BG_GetMaxAmmo(&other->client->ps, w, FIELDOPS_AMMO_BONUS_MULTIPLIER);
 
 				Add_Ammo(other, w, ammo, qtrue);
 			}
@@ -540,7 +540,7 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 	if ( noPack ) {
 		ent->client->ps.ammo[ammoweap] = 0;
 	} else {
-		int maxammo = BG_GetMaxAmmo( &ent->client->ps, ammoweap, LT_AMMO_BONUS_MULTIPLIER );
+		int maxammo = BG_GetMaxAmmo( &ent->client->ps, ammoweap, FIELDOPS_AMMO_BONUS_MULTIPLIER );
 
 		if ( ent->client->ps.ammo[ammoweap] > maxammo ) {
 			ent->client->ps.ammo[ammoweap] = maxammo;
@@ -844,7 +844,7 @@ qboolean NeedAmmo(gentity_t *other, weapon_t weapon) {
 		ammoweap = BG_FindAmmoForWeapon(weapon);
 	}
 
-	int maxAmmo = BG_GetMaxAmmo(&other->client->ps, ammoweap, LT_AMMO_BONUS_MULTIPLIER);
+	int maxAmmo = BG_GetMaxAmmo(&other->client->ps, ammoweap, FIELDOPS_AMMO_BONUS_MULTIPLIER);
 	return other->client->ps.ammo[ammoweap] < maxAmmo;
 }
 

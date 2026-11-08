@@ -854,7 +854,7 @@ itemDef {
 		textstyle 6
 		text "@LOBBY_CLASS"
 		cvar "cl_survivalClass"
-		cvarFloatList { "@CREATE_CLASS_SOLDIER" 0 "@CREATE_CLASS_MEDIC" 1 "@CREATE_CLASS_ENGINEER" 2 "@CREATE_CLASS_LIEUTENANT" 3 }
+		cvarFloatList { "@CREATE_CLASS_SOLDIER" 0 "@CREATE_CLASS_MEDIC" 1 "@CREATE_CLASS_ENGINEER" 2 "@CREATE_CLASS_FIELDOPS" 3 }
 		textscale .16
 		textalign ITEM_ALIGN_LEFT
 		textaligny 12
@@ -916,12 +916,12 @@ itemDef {
 		}
 
 	itemDef {
-		name classdesc_lieutenant
+		name classdesc_fieldops
 		group grpClassDesc
 		rect 494 290 118 72
 		forecolor .8 .8 .8 1
 		textfont UI_FONT_NORMAL
-		text "@CREATE_CLASSDESC_LIEUTENANT"
+		text "@CREATE_CLASSDESC_FIELDOPS"
 		textscale .15
 		textalign ITEM_ALIGN_LEFT
 		textalignx 0

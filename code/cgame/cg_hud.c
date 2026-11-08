@@ -1295,7 +1295,7 @@ float CG_GetValue( int ownerDraw, int type ) {
 		if ( cent->currentState.weapon ) {
 			if ( type == RANGETYPE_RELATIVE ) {
 				int weap = BG_FindAmmoForWeapon( cent->currentState.weapon );
-				return (float)ps->ammo[weap] / (float)BG_GetMaxAmmo( ps, weap, LT_AMMO_BONUS_MULTIPLIER );
+				return (float)ps->ammo[weap] / (float)BG_GetMaxAmmo( ps, weap, FIELDOPS_AMMO_BONUS_MULTIPLIER );
 			} else {
 				return ps->ammo[BG_FindAmmoForWeapon( cent->currentState.weapon )];
 			}
@@ -1874,7 +1874,7 @@ static void CG_DrawWeapRecharge( rectDef_t *rect, vec4_t color, int align ) {
 		case PC_ENGINEER:
 			chargeTime = cg_engineerChargeTime.value;
 			break;
-		case PC_LT:
+		case PC_FIELDOPS:
 			chargeTime = cg_airstrikeChargeTime.value;
 			break;
 		default:
@@ -1948,7 +1948,7 @@ static int CG_EquipRemainingMs( int equipWeapon ) {
 ==============
 CG_ArtyRemainingMs
 
-	Milliseconds until the LT's binocular arty call-in is ready again (0 if
+	Milliseconds until the Field Ops' binocular arty call-in is ready again (0 if
 	ready). Own clock/cvar, independent of the airstrike signal.
 ==============
 */
@@ -1977,8 +1977,8 @@ static void CG_DrawEquipIcon( rectDef_t *rect, int slot ) {
 	qboolean ready = qtrue;
 
 	if ( equipWeapon == WP_NONE ) {
-		// LT has no landmine for slot 2 - show binoculars there instead, if owned
-		if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_LT &&
+		// Field Ops has no landmine for slot 2 - show binoculars there instead, if owned
+		if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_FIELDOPS &&
 			 ( cg.snap->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) ) {
 			icon = cgs.media.binocularsIcon;
 			ready = ( CG_ArtyRemainingMs() == 0 );
@@ -2042,7 +2042,7 @@ static void CG_DrawEquipValue( rectDef_t *rect, int slot, int font, float scale,
 
 		if ( equipWeapon != WP_NONE ) {
 			remainingMs = CG_EquipRemainingMs( equipWeapon );
-		} else if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_LT &&
+		} else if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_FIELDOPS &&
 					( cg.snap->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) ) {
 			remainingMs = CG_ArtyRemainingMs();
 		} else {
@@ -2077,7 +2077,7 @@ static void CG_DrawEquipKeyHint( rectDef_t *rect, int slot, int font, float scal
 	float x;
 
 	if ( equipWeapon == WP_NONE ) {
-		if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_LT &&
+		if ( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_FIELDOPS &&
 			 ( cg.snap->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) ) {
 			action = CG_BIND_ZOOM;
 		} else {

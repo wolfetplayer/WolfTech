@@ -63,7 +63,7 @@ void CG_DrawCoopScoreboard( void ) {
 #endif
 	const char *s;
 	const char *className;
-	static const char *classNames[4] = { "Soldier", "Medic", "Engineer", "Lieutenant" };
+	static const char *classNames[4] = { "Soldier", "Medic", "Engineer", "Field Ops" };
 	int msec, mins, seconds, tens;     // JPW NERVE
 	qboolean maxlives = qfalse;
 

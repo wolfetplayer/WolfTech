@@ -1555,8 +1555,8 @@ typedef struct playerState_s {
 
 	// JPW NERVE -- generic catch-all timer, also used as a plain last-fired timestamp by a couple of unrelated weapons (e.g. rocket launcher)
 	int classWeaponTime;
-	int airstrikeWeaponTime;  // LT airstrike signal cooldown
-	int artyWeaponTime;       // LT binocular arty call-in cooldown
+	int airstrikeWeaponTime;  // Field Ops airstrike signal cooldown
+	int artyWeaponTime;       // Field Ops binocular arty call-in cooldown
 	int medcrateWeaponTime;   // medic supply crate cooldown
 	int dynamiteWeaponTime;   // engineer dynamite cooldown (landmine has none - ammo-limited only)
 	int jumpTime;         // used in SP/MP to prevent jump accel

@@ -442,13 +442,13 @@ qboolean Survival_RandomBox_Pickup( gentity_t *ent, gentity_t *activator ) {
 
 	Give_Weapon_New_Inventory( activator, chosen, qfalse );
 
-	maxAmmo = BG_GetMaxAmmo( &activator->client->ps, chosen, LT_AMMO_BONUS_MULTIPLIER );
+	maxAmmo = BG_GetMaxAmmo( &activator->client->ps, chosen, FIELDOPS_AMMO_BONUS_MULTIPLIER );
 	Add_Ammo( activator, chosen, maxAmmo, qtrue );  // fill clip
 	Add_Ammo( activator, chosen, maxAmmo, qfalse ); // top off reserve
 
 	if ( chosen == WP_M1GARAND ) {
 		Give_Weapon_New_Inventory( activator, WP_M7, qfalse );
-		int m7MaxAmmo = BG_GetMaxAmmo( &activator->client->ps, WP_M7, LT_AMMO_BONUS_MULTIPLIER );
+		int m7MaxAmmo = BG_GetMaxAmmo( &activator->client->ps, WP_M7, FIELDOPS_AMMO_BONUS_MULTIPLIER );
 		Add_Ammo( activator, WP_M7, m7MaxAmmo, qfalse );
 	}
 
@@ -683,7 +683,7 @@ qboolean Survival_HandleAmmoPurchase(gentity_t *ent, gentity_t *activator, int p
 	if (heldWeap <= WP_NONE || heldWeap >= WP_NUM_WEAPONS)
 		return qfalse;
 
-	// Skip Lieutenant call-in weapons: cooldown-gated class abilities, not ammo-limited buys
+	// Skip Field Ops call-in weapons: cooldown-gated class abilities, not ammo-limited buys
 	if (heldWeap == WP_AIRSTRIKE || heldWeap == WP_ARTY)
 		return qfalse;
 
@@ -692,7 +692,7 @@ qboolean Survival_HandleAmmoPurchase(gentity_t *ent, gentity_t *activator, int p
 		return qfalse;
 
 	// Use upgrade-aware max ammo
-	int maxAmmo = BG_GetMaxAmmo(&activator->client->ps, heldWeap, LT_AMMO_BONUS_MULTIPLIER);
+	int maxAmmo = BG_GetMaxAmmo(&activator->client->ps, heldWeap, FIELDOPS_AMMO_BONUS_MULTIPLIER);
 
 	// Check if already full
 	if (activator->client->ps.ammo[ammoIndex] >= maxAmmo)
@@ -797,8 +797,8 @@ qboolean Survival_HandleWeaponUpgrade(gentity_t *ent, gentity_t *activator, int 
 	Survival_AwardScore(activator, -upgradePrice);
 
 	// Refill ammo
-	Add_Ammo(activator, weap, BG_GetMaxAmmo(&activator->client->ps, weap, LT_AMMO_BONUS_MULTIPLIER), qtrue);
-	Add_Ammo(activator, weap, BG_GetMaxAmmo(&activator->client->ps, weap, LT_AMMO_BONUS_MULTIPLIER), qfalse);
+	Add_Ammo(activator, weap, BG_GetMaxAmmo(&activator->client->ps, weap, FIELDOPS_AMMO_BONUS_MULTIPLIER), qtrue);
+	Add_Ammo(activator, weap, BG_GetMaxAmmo(&activator->client->ps, weap, FIELDOPS_AMMO_BONUS_MULTIPLIER), qfalse);
 
 	trap_SendServerCommand(-1, "mu_play sound/misc/wpn_upgrade.wav 0\n");
 	return qtrue;
@@ -859,7 +859,7 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 		weapon == WP_POISONGAS ||
 		weapon == WP_SMOKEBOMB
 	)) {
-		maxAmmo = BG_GetMaxAmmo(&activator->client->ps, weapon, LT_AMMO_BONUS_MULTIPLIER);
+		maxAmmo = BG_GetMaxAmmo(&activator->client->ps, weapon, FIELDOPS_AMMO_BONUS_MULTIPLIER);
 
 		if (activator->client->ps.ammoclip[weapon] >= maxAmmo) {
 			return qfalse; // Already full
@@ -902,7 +902,7 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 			return qfalse;
 		}
 
-		maxAmmo = BG_GetMaxAmmo(&activator->client->ps, weapon, LT_AMMO_BONUS_MULTIPLIER);
+		maxAmmo = BG_GetMaxAmmo(&activator->client->ps, weapon, FIELDOPS_AMMO_BONUS_MULTIPLIER);
 		if (activator->client->ps.ammo[weapon] >= maxAmmo) {
 			G_AddEvent(activator, EV_GENERAL_SOUND, G_SoundIndex("sound/items/use_nothing.wav"));
 			return qfalse; // Already full
@@ -929,7 +929,7 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 
 	Give_Weapon_New_Inventory(activator, weapon, qfalse);
 
-	maxAmmo = BG_GetMaxAmmo(&activator->client->ps, weapon, LT_AMMO_BONUS_MULTIPLIER);
+	maxAmmo = BG_GetMaxAmmo(&activator->client->ps, weapon, FIELDOPS_AMMO_BONUS_MULTIPLIER);
 	Add_Ammo(activator, weapon, maxAmmo, qtrue);
 	Add_Ammo(activator, weapon, maxAmmo, qfalse);
 
@@ -1302,7 +1302,7 @@ void Touch_objective_info(gentity_t *ent, gentity_t *other, trace_t *trace) {
 	if (techName) {
 		if (!Q_stricmp(techName, "ammo")) {
 
-		// Do not show a price for Lieutenant call-in weapons: not purchasable
+		// Do not show a price for Field Ops call-in weapons: not purchasable
 		if (other->client->ps.weapon == WP_AIRSTRIKE || other->client->ps.weapon == WP_ARTY) {
 			return;
 		}

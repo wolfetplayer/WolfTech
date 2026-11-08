@@ -375,7 +375,7 @@ void weapon_callAirStrike( gentity_t *ent ) {
 	}
 }
 
-// JPW NERVE -- WP_ARTY: Lieutenant binocular call-in, fired via the EF_ZOOMING + INV_BINOCS hook in FireWeapon(), not the normal dispatch.
+// JPW NERVE -- WP_ARTY: Field Ops binocular call-in, fired via the EF_ZOOMING + INV_BINOCS hook in FireWeapon(), not the normal dispatch.
 
 // plays a random falling-shell sound just ahead of a real bomb's impact
 void artilleryThink_real( gentity_t *ent ) {
@@ -403,7 +403,7 @@ void artilleryThink( gentity_t *ent ) {
 ==================
 Weapon_Artillery
 
-Lieutenant-only: zoom binoculars and fire to call in a barrage on the point you're looking at. Spawns a 5-second-delayed "spotter" round (reduced damage, has a smoke trail) then 9 staggered real bombs, all falling/exploding the same way (see G_ArtilleryBombReveal).
+Field Ops-only: zoom binoculars and fire to call in a barrage on the point you're looking at. Spawns a 5-second-delayed "spotter" round (reduced damage, has a smoke trail) then 9 staggered real bombs, all falling/exploding the same way (see G_ArtilleryBombReveal).
 ==================
 */
 void Weapon_Artillery( gentity_t *ent ) {
@@ -414,7 +414,7 @@ void Weapon_Artillery( gentity_t *ent ) {
 	gentity_t *bomb,*bomb2,*te;
 	const ammotable_t *wt = GetWeaponTableData( WP_ARTY );
 
-	if ( ent->client->ps.stats[STAT_PLAYER_CLASS] != PC_LT ) {
+	if ( ent->client->ps.stats[STAT_PLAYER_CLASS] != PC_FIELDOPS ) {
 		return;
 	}
 	if ( level.time - ent->client->ps.artyWeaponTime < g_artyChargeTime.integer ) {
@@ -1953,7 +1953,7 @@ void FireWeapon( gentity_t *ent ) {
 		aimSpreadScale = 1.0f;
 	}
 
-	// JPW NERVE -- Lieutenant binocular call-in: bypasses normal weapon-fire dispatch; excludes scoped weapons (they also set EF_ZOOMING).
+	// JPW NERVE -- Field Ops binocular call-in: bypasses normal weapon-fire dispatch; excludes scoped weapons (they also set EF_ZOOMING).
 	if ( g_gametype.integer == GT_COOP_SURVIVAL && !ent->aiCharacter ) {
 		if ( ( ent->client->ps.eFlags & EF_ZOOMING ) &&
 			 ( ent->client->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) &&

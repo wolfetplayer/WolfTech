@@ -536,7 +536,7 @@ void CG_SpearTrail( centity_t *ent, const weaponInfo_t *wi ) {
 }
 
 
-// JPW NERVE -- LT pyro for marking air strikes
+// JPW NERVE -- Field Ops pyro for marking air strikes
 /*
 ==========================
 CG_PyroSmokeTrail
@@ -5184,7 +5184,7 @@ void CG_FireWeapon( centity_t *cent ) {
 
 	ent = &cent->currentState;
 
-	// LT's binocular arty call-in reuses EV_FIRE_WEAPON to reach g_weapon.c's hook - skip fire fx here, it isn't really firing
+	// Field Ops' binocular arty call-in reuses EV_FIRE_WEAPON to reach g_weapon.c's hook - skip fire fx here, it isn't really firing
 	if ( cent->currentState.eFlags & EF_ZOOMING ) {
 		return;
 	}

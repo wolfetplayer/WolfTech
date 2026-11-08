@@ -530,7 +530,7 @@ itemDef
 					textfont		UI_FONT_NORMAL
 					text			"@CREATE_PLAYERCLASS"
 					cvar			"cl_survivalClass"
-					cvarFloatList	{ "@CREATE_CLASS_SOLDIER" 0 "@CREATE_CLASS_MEDIC" 1 "@CREATE_CLASS_ENGINEER" 2 "@CREATE_CLASS_LIEUTENANT" 3 }
+					cvarFloatList	{ "@CREATE_CLASS_SOLDIER" 0 "@CREATE_CLASS_MEDIC" 1 "@CREATE_CLASS_ENGINEER" 2 "@CREATE_CLASS_FIELDOPS" 3 }
 					rect			294 146 290 16
 					style			WINDOW_STYLE_FILLED
 					textalign		ITEM_ALIGN_RIGHT
@@ -599,10 +599,10 @@ itemDef
 					}
 
 				itemDef {
-					name			cr_classdesc_lieutenant
+					name			cr_classdesc_fieldops
 					group			grpPlayerOptionsPanel
 					textfont		UI_FONT_NORMAL
-					text			"@CREATE_CLASSDESC_LIEUTENANT"
+					text			"@CREATE_CLASSDESC_FIELDOPS"
 					rect			294 172 290 70
 					textalign		ITEM_ALIGN_LEFT
 					textalignx		0

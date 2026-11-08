@@ -87,8 +87,8 @@ vmCvar_t g_dmflags;
 vmCvar_t g_fraglimit;
 vmCvar_t g_timelimit;
 vmCvar_t g_friendlyFire;
-vmCvar_t g_airstrikeChargeTime; // JPW NERVE -- Lieutenant airstrike signal cooldown, ms
-vmCvar_t g_artyChargeTime;      // Lieutenant binocular artillery call-in cooldown, ms - independent of g_airstrikeChargeTime
+vmCvar_t g_airstrikeChargeTime; // JPW NERVE -- Field Ops airstrike signal cooldown, ms
+vmCvar_t g_artyChargeTime;      // Field Ops binocular artillery call-in cooldown, ms - independent of g_airstrikeChargeTime
 vmCvar_t g_medicChargeTime;
 vmCvar_t g_engineerChargeTime;
 vmCvar_t g_engineerBuildRate;

@@ -3626,7 +3626,7 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-	// player is zooming - no fire, except LT's binocular arty call-in, which needs an EV_FIRE_WEAPON to reach FireWeapon()'s hook (skips ammo/anim, isn't really firing)
+	// player is zooming - no fire, except Field Ops' binocular arty call-in, which needs an EV_FIRE_WEAPON to reach FireWeapon()'s hook (skips ammo/anim, isn't really firing)
 	if ( pm->ps->eFlags & EF_ZOOMING ) {
 #if defined ( CGAMEDLL )
 		if ( cg_gameType.integer == GT_COOP_SURVIVAL && !pm->ps->aiChar &&
@@ -3690,7 +3690,7 @@ static void PM_Weapon( void ) {
 				// AI characters go into their regular animation setup
 				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
 			} else if ( pm->ps->weapon == WP_AIRSTRIKE ) {
-				// LT call-in signal: not cookable, no fuse to hold - press fire and it's thrown, gated only by its own airstrikeWeaponTime cooldown.
+				// Field Ops call-in signal: not cookable, no fuse to hold - press fire and it's thrown, gated only by its own airstrikeWeaponTime cooldown.
 				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qfalse, qfalse );
 			} else {
 				if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) ) {

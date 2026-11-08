@@ -50,7 +50,7 @@ If you have questions concerning this license or the applicable additional terms
 #define DEFAULT_SHOTGUN_COUNT   11
 
 // Survival
-#define LT_AMMO_BONUS_MULTIPLIER 1.5
+#define FIELDOPS_AMMO_BONUS_MULTIPLIER 1.5
 
 
 #define ITEM_RADIUS     10 // Rafael changed the radius so that the items would fit in the 3 new containers
@@ -379,7 +379,7 @@ int Pmove( pmove_t *pmove );
 #define PC_SOLDIER              0   //	shoot stuff
 #define PC_MEDIC                1   //	heal stuff
 #define PC_ENGINEER             2   //	build stuff
-#define PC_LT                   3   //	bomb stuff
+#define PC_FIELDOPS             3   //	bomb stuff
 // jpw
 
 // player_state->stats[] indexes

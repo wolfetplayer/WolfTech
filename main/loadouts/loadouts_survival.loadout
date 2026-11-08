@@ -1,5 +1,5 @@
 // Every survival player has a class - AICast_ScriptAction_ApplyLoadout looks up
-// "<loadout>_<class>" (soldier/medic/engineer/lt), there is no classless loadout.
+// "<loadout>_<class>" (soldier/medic/engineer/fieldops), there is no classless loadout.
 
 loadout survival_default_soldier
 {
@@ -51,7 +51,7 @@ loadout survival_default_engineer
 		setammo weapon_landmine full
 }
 
-loadout survival_default_lt
+loadout survival_default_fieldops
 {
 		givescore 150
 		
@@ -112,7 +112,7 @@ loadout survival_hardcore_engineer
 		setammo weapon_landmine full
 }
 
-loadout survival_hardcore_lt
+loadout survival_hardcore_fieldops
 {
 		givescore 100
 		giveweapon weapon_knife

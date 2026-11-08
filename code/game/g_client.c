@@ -902,7 +902,7 @@ void SetWolfSkin( gclient_t *client, char *model ) {
 	case PC_ENGINEER:
 		Q_strcat( model, MAX_QPATH, "engineer" );
 		break;
-	case PC_LT:
+	case PC_FIELDOPS:
 		Q_strcat( model, MAX_QPATH, "lieutenant" );
 		break;
 	default:
@@ -947,7 +947,7 @@ void SetClassModel( gclient_t *client, char *model ) {
 	case PC_ENGINEER:
 		Q_strcat( model, MAX_QPATH, "engineer" );
 		break;
-	case PC_LT:
+	case PC_FIELDOPS:
 		Q_strcat( model, MAX_QPATH, "fieldops" );
 		break;
 	case PC_SOLDIER:
@@ -1301,7 +1301,7 @@ void ClientUserinfoChanged( int clientNum ) {
 	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
 		// Per-player class pick from the lobby (cl_survivalClass) - client-supplied, so clamp to the valid PC_* range.
 		int wantClass = atoi( Info_ValueForKey( userinfo, "cl_survivalClass" ) );
-		if ( wantClass >= PC_SOLDIER && wantClass <= PC_LT ) {
+		if ( wantClass >= PC_SOLDIER && wantClass <= PC_FIELDOPS ) {
 			client->sess.playerType = wantClass;
 		}
 

@@ -63,8 +63,8 @@ void SetCoopSpawnWeapons( gclient_t *client ) {
 
 	client->ps.weaponstate = WEAPON_READY;
 
-	// only the Lieutenant/Field Ops class gets binoculars
-	if ( pc == PC_LT ) {
+	// only the Field Ops class gets binoculars
+	if ( pc == PC_FIELDOPS ) {
 		client->ps.stats[STAT_KEYS] |= ( 1 << INV_BINOCS );
 	}
 

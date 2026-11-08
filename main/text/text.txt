@@ -651,7 +651,7 @@ CREATE_PLAYERCLASS                 "Player Class:"
 CREATE_CLASS_SOLDIER               "Soldier"
 CREATE_CLASS_MEDIC                 "Medic"
 CREATE_CLASS_ENGINEER              "Engineer"
-CREATE_CLASS_LIEUTENANT            "Lieutenant"
+CREATE_CLASS_FIELDOPS               "Field Ops"
 CREATE_STARTGAME                   "Start Game"
 CREATE_STARTLOBBY                  "Start Lobby"
 CREATE_MSG_GAMETYPE                "Set GameType"
@@ -687,7 +687,7 @@ CREATE_MSG_PLAYERCLASS             "Choose which player class you start as."
 CREATE_CLASSDESC_SOLDIER           "Frontline tank. Highest health, and can carry an extra heavy weapon."
 CREATE_CLASSDESC_MEDIC             "Support class. Revives are faster and full-health, and you can drop healing crates."
 CREATE_CLASSDESC_ENGINEER          "Demolitions and construction. Extra perk slot, faster building, carries dynamite and landmines."
-CREATE_CLASSDESC_LIEUTENANT        "Fire support. Extra ammo capacity, calls in artillery and airstrikes."
+CREATE_CLASSDESC_FIELDOPS           "Fire support. Extra ammo capacity, calls in artillery and airstrikes."
 
 //=============================================================
 // PRE-GAME LOBBY (pregame.menu)

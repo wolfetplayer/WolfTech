@@ -4804,7 +4804,7 @@ void CL_Init( void ) {
 	Cvar_Get( "ui_lobbyChatInput", "", 0 );   // not ROM - the pregame menu's "Say:" editfield writes this directly
 	cl_rate = Cvar_Get( "rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );     // NERVE - SMF - changed from 3000
 	Cvar_Get( "skin", "0", CVAR_USERINFO | CVAR_ARCHIVE );
-	// Survival class pick (PC_SOLDIER..PC_LT): reaches the server via userinfo, see ClientUserinfoChanged.
+	// Survival class pick (PC_SOLDIER..PC_FIELDOPS): reaches the server via userinfo, see ClientUserinfoChanged.
 	Cvar_Get( "cl_survivalClass", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "snaps", "20", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "model", "bj2", CVAR_USERINFO | CVAR_ARCHIVE );

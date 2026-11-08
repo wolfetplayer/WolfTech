@@ -302,7 +302,7 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 			case PC_MEDIC:
 				realweap = WP_MEDIC_HEAL;
 				break;
-			case PC_LT:
+			case PC_FIELDOPS:
 				realweap = WP_GRENADE_SMOKE;
 				break;
 			default:
@@ -2238,8 +2238,8 @@ static void CG_DrawFatigue( rectDef_t *rect, vec4_t color, int align ) {
 			chargeTime = cg_engineerChargeTime.value;
 		} else if ( cg.snap->ps.stats[ STAT_PLAYER_CLASS ] == PC_MEDIC ) {
 			chargeTime = cg_medicChargeTime.value;
-		} else if ( cg.snap->ps.stats[ STAT_PLAYER_CLASS ] == PC_LT ) {
-			chargeTime = cg_LTChargeTime.value;
+		} else if ( cg.snap->ps.stats[ STAT_PLAYER_CLASS ] == PC_FIELDOPS ) {
+			chargeTime = cg_fieldOpsChargeTime.value;
 		} else {
 			chargeTime = cg_soldierChargeTime.value;
 		}

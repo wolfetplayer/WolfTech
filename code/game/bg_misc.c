@@ -1207,7 +1207,7 @@ ammotable_t ammoTable[] = {
 		.underwaterFire     = qfalse,
     },
 
-	// JPW NERVE -- Lieutenant call-in weapons, each cooldown-gated independently (airstrikeWeaponTime/g_airstrikeChargeTime
+	// JPW NERVE -- Field Ops call-in weapons, each cooldown-gated independently (airstrikeWeaponTime/g_airstrikeChargeTime
 	// and artyWeaponTime/g_artyChargeTime, see q_shared.h/g_local.h) so ammo/clip are unlimited.
     [WP_AIRSTRIKE] = {
 		.weaponindex        = WP_AIRSTRIKE,
@@ -2638,7 +2638,7 @@ gitem_t bg_itemlist[] =
 	},
 
 	{
-		// JPW NERVE -- never spawned/picked up; fired via the LT binocular hook, exists only so item lookups resolve WP_ARTY.
+		// JPW NERVE -- never spawned/picked up; fired via the Field Ops binocular hook, exists only so item lookups resolve WP_ARTY.
 		"weapon_arty",
 		"sound/misc/w_pkup.wav",
 		{ "", "", "", 0, 0 },
@@ -5221,8 +5221,8 @@ int BG_GetMaxAmmo(const playerState_t *ps, int weapon, float ltAmmoBonus) {
 		maxAmmo = wt->maxammo;
 	}
 
-	if (ps->stats[STAT_PLAYER_CLASS] == PC_LT) {
-		maxAmmo = (int)(maxAmmo * LT_AMMO_BONUS_MULTIPLIER);
+	if (ps->stats[STAT_PLAYER_CLASS] == PC_FIELDOPS) {
+		maxAmmo = (int)(maxAmmo * FIELDOPS_AMMO_BONUS_MULTIPLIER);
 	}
 
 	return maxAmmo;

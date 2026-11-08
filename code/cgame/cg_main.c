@@ -1721,7 +1721,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.classIcons[PC_SOLDIER] = trap_R_RegisterShaderNoMip( "gfx/hud/class_soldier.tga" );
 	cgs.media.classIcons[PC_MEDIC] = trap_R_RegisterShaderNoMip( "gfx/hud/class_medic.tga" );
 	cgs.media.classIcons[PC_ENGINEER] = trap_R_RegisterShaderNoMip( "gfx/hud/class_engineer.tga" );
-	cgs.media.classIcons[PC_LT] = trap_R_RegisterShaderNoMip( "gfx/hud/class_lt.tga" );
+	cgs.media.classIcons[PC_FIELDOPS] = trap_R_RegisterShaderNoMip( "gfx/hud/class_fieldops.tga" );
 	cgs.media.voiceChatShader = trap_R_RegisterShader( "sprites/voiceChat" );
 	cgs.media.reviveNeededShader = trap_R_RegisterShader( "sprites/voiceMedic" );
 	cgs.media.reviveLoopSound = trap_S_RegisterSound( "sound/misc/revive_loop.wav" );
