@@ -236,6 +236,12 @@ extern void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, cons
 
 // final-approach think shared by airstrike/arty bombs: makes sure they're visible and hands off to the actual explosion.
 void G_AirStrikeExplode( gentity_t *self ) {
+	vec3_t origin;
+
+	BG_EvaluateTrajectory( &self->s.pos, level.time, origin );
+	SnapVector( origin );
+	G_SetOrigin( self, origin );
+
 	self->r.svFlags &= ~SVF_NOCLIENT;
 	self->r.svFlags |= SVF_BROADCAST;
 
