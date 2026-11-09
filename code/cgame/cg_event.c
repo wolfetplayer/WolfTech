@@ -540,6 +540,11 @@ static void CG_ItemPickup( int itemNum ) {
 
 		weapon = itemid;
 
+		// don't let the Garand's own pickup event autoswitch away from an already-attached launcher
+		if ( weapon == WP_M1GARAND && cg.weaponSelect == WP_M7 ) {
+			weapon = WP_M7;
+		}
+
 		if ( weapon == WP_COLT ) {
 			if ( COM_BitCheck( cg.snap->ps.weapons, weapon ) ) {
 				weapon = WP_AKIMBO; // you have colt, now get akimbo (second)

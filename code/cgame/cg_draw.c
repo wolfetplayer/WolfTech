@@ -1717,6 +1717,8 @@ static const char *CG_BindCommandForAction( cgBindAction_t action ) {
 		return "specialequip 1";
 	case CG_BIND_SPECIALEQUIP2:
 		return "specialequip 2";
+	case CG_BIND_SPECIALEQUIP3:
+		return "specialequip 3";
 	case CG_BIND_ZOOM:
 		return "+zoom";
 	default:

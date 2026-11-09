@@ -2354,6 +2354,7 @@ typedef enum {
 	CG_BIND_ACTIVATE,       // interact/buy - bound to "+activate"
 	CG_BIND_SPECIALEQUIP1,  // 1st special equipment slot - bound to "specialequip 1"
 	CG_BIND_SPECIALEQUIP2,  // 2nd special equipment slot - bound to "specialequip 2"
+	CG_BIND_SPECIALEQUIP3,  // 3rd special equipment slot (M1 Garand's M7 grenade launcher) - bound to "specialequip 3"
 	CG_BIND_ZOOM            // binoculars - bound to "+zoom"
 } cgBindAction_t;
 

@@ -933,6 +933,12 @@ qboolean Survival_HandleWeaponOrGrenade(gentity_t *ent, gentity_t *activator, gi
 	Add_Ammo(activator, weapon, maxAmmo, qtrue);
 	Add_Ammo(activator, weapon, maxAmmo, qfalse);
 
+	if (weapon == WP_M1GARAND) {
+		// M7 is bundled with the Garand - grant its reserve ammo too
+		int m7MaxAmmo = BG_GetMaxAmmo(&activator->client->ps, WP_M7, FIELDOPS_AMMO_BONUS_MULTIPLIER);
+		Add_Ammo(activator, WP_M7, m7MaxAmmo, qfalse);
+	}
+
 	G_AddPredictableEvent(activator, EV_ITEM_PICKUP, item - bg_itemlist);
 	trap_SendServerCommand(-1, "mu_play sound/misc/buy.wav 0\n");
 

@@ -275,6 +275,9 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_PLAYER_EQUIP2_VALUE      97
 #define CG_PLAYER_EQUIP1_KEY        98
 #define CG_PLAYER_EQUIP2_KEY        99
+#define CG_PLAYER_EQUIP3_ICON       100
+#define CG_PLAYER_EQUIP3_VALUE      101
+#define CG_PLAYER_EQUIP3_KEY        102
 
 #define UI_OWNERDRAW_BASE           200
 #define UI_HANDICAP                 200

@@ -228,6 +228,7 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 	case WP_LANDMINE:
 	case WP_MEDCRATE:
 	case WP_AIRSTRIKE:
+	case WP_M7:
 		return;
 	default:
 		break;
@@ -610,6 +611,7 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 	case WP_AIRSTRIKE:
 	case WP_MEDCRATE:
 	case WP_LANDMINE:      // real clip count, but already shown by the equipment HUD icon next to the compass
+	case WP_M7:            // reserve grenade count, already shown by the equipment HUD icon next to the compass
 		return;
 
 	case WP_GRENADE_LAUNCHER:
@@ -1966,8 +1968,8 @@ static int CG_ArtyRemainingMs( void ) {
 ==============
 CG_DrawEquipIcon
 
-	Draws the equipment icon for the given slot (1 or 2), dimmed on cooldown
-	and highlighted (gold tint, or weaponIcon[1] for dynamite) while selected.
+	Draws the equipment icon for the given slot (1, 2 or 3), dimmed on cooldown
+	and highlighted (gold tint, or weaponIcon[1] for dynamite/M7) while selected.
 ==============
 */
 static void CG_DrawEquipIcon( rectDef_t *rect, int slot ) {
@@ -2037,6 +2039,9 @@ static void CG_DrawEquipValue( rectDef_t *rect, int slot, int font, float scale,
 	if ( equipWeapon == WP_LANDMINE ) {
 		// landmine is clip-only - real stock is in ammoclip, not the ammo reserve pool
 		value = cg.snap->ps.ammoclip[BG_FindClipForWeapon( WP_LANDMINE )];
+	} else if ( equipWeapon == WP_M7 ) {
+		// total rifle grenades carried - the launcher's clip only ever holds the one that's chambered
+		value = cg.snap->ps.ammo[BG_FindAmmoForWeapon( WP_M7 )];
 	} else {
 		int remainingMs;
 
@@ -2083,8 +2088,12 @@ static void CG_DrawEquipKeyHint( rectDef_t *rect, int slot, int font, float scal
 		} else {
 			return;
 		}
+	} else if ( slot == 1 ) {
+		action = CG_BIND_SPECIALEQUIP1;
+	} else if ( slot == 3 ) {
+		action = CG_BIND_SPECIALEQUIP3;
 	} else {
-		action = ( slot == 1 ) ? CG_BIND_SPECIALEQUIP1 : CG_BIND_SPECIALEQUIP2;
+		action = CG_BIND_SPECIALEQUIP2;
 	}
 
 	CG_KeyNameForAction( action, keyName, sizeof( keyName ) );
@@ -2198,6 +2207,15 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_EQUIP2_KEY:
 		CG_DrawEquipKeyHint( &rect, 2, font, scale, color, textStyle );
+		break;
+	case CG_PLAYER_EQUIP3_ICON:
+		CG_DrawEquipIcon( &rect, 3 );
+		break;
+	case CG_PLAYER_EQUIP3_VALUE:
+		CG_DrawEquipValue( &rect, 3, font, scale, color, textStyle );
+		break;
+	case CG_PLAYER_EQUIP3_KEY:
+		CG_DrawEquipKeyHint( &rect, 3, font, scale, color, textStyle );
 		break;
 	case CG_PLAYER_LIVES:
 		CG_DrawPlayerLives( &rect, font, scale, color, shader, textStyle );

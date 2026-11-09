@@ -4227,6 +4227,15 @@ void CG_AltWeapon_f( void ) {
 
 	original = cg.weaponSelect;
 
+	// M7 attach/detach moved to its own equipment bind, so weapalt just zooms here too
+	if ( original == WP_M1GARAND || original == WP_M7 ) {
+		if ( cg.snap->ps.weaponstate == WEAPON_RELOADING || cg.snap->ps.weaponstate == WEAPON_DROPPING || cg.snap->ps.weaponstate == WEAPON_RAISING ) {
+			return;
+		}
+		CG_ToggleSimpleZoom();
+		return;
+	}
+
 	num = getAltWeapon( original );
 
 		if (num == WP_NONE || num == original || !CG_WeaponSelectable(num))
@@ -4796,8 +4805,8 @@ void CG_Weapon_f( void ) {
 CG_GetEquipSlotWeapon
 
 	Which special-equipment weapon (slot 1: dynamite/medcrate/airstrike,
-	slot 2: landmine) the player owns. Shared by CG_SpecialEquip_f and the
-	equipment HUD icons.
+	slot 2: landmine, slot 3: M1 Garand's M7 rifle grenade launcher) the
+	player owns. Shared by CG_SpecialEquip_f and the equipment HUD icons.
 ==============
 */
 int CG_GetEquipSlotWeapon( int slot ) {
@@ -4814,6 +4823,11 @@ int CG_GetEquipSlotWeapon( int slot ) {
 	} else if ( slot == 2 ) {
 		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_LANDMINE ) ) {
 			return WP_LANDMINE;
+		}
+	} else if ( slot == 3 ) {
+		// M7 is always granted alongside the Garand (see Give_Weapon_New_Inventory)
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1GARAND ) ) {
+			return WP_M7;
 		}
 	}
 
@@ -4872,8 +4886,10 @@ void CG_WeaponSlot_f( void ) {
 ==============
 CG_SpecialEquip_f
 
-	Handler for "specialequip <n>" (binds 5/6) - switches directly to the
-	slot's equipment weapon, bypassing CG_WeaponSelectable.
+	Handler for "specialequip <n>" (binds 5/6/7) - switches directly to the
+	slot's equipment weapon, bypassing CG_WeaponSelectable. Slot 3 (the
+	Garand's M7 launcher) is a toggle: pressing it again while attached
+	detaches back to the plain rifle.
 ==============
 */
 void CG_SpecialEquip_f( void ) {
@@ -4896,6 +4912,11 @@ void CG_SpecialEquip_f( void ) {
 		return;
 	}
 
+	// slot 3: detach only if the launcher is the weapon actually in hand right now
+	if ( slot == 3 && ( cg.weaponSelect == equipWeapon || cg.predictedPlayerState.weapon == equipWeapon ) ) {
+		equipWeapon = GetWeaponTableData( equipWeapon )->weapAlts;
+	}
+
 	trap_S_StartSoundEx( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, cgs.media.nullSound, SND_CUTOFF );
 
 	curweap = cg.weaponSelect;
@@ -4913,6 +4934,11 @@ void CG_OutOfAmmoChange( void ) {
 	int i;
 	int bank = 0, cycle = 0;
 	int equiv = WP_NONE;
+
+	// M7 detach is explicit now (see CG_SpecialEquip_f), not automatic on empty
+	if ( cg.weaponSelect == WP_M7 ) {
+		return;
+	}
 
 	//
 	// trivial switching

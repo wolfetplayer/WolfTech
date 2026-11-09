@@ -1577,6 +1577,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		}
 	}
 
+	// M7 has no reload of its own - once fired, drop back to the rifle automatically
 	if ( cg.snap->ps.weapon == WP_M7 && !cg.snap->ps.ammoclip[BG_FindClipForWeapon( WP_M7 )] ) {
 		CG_FinishWeaponChange( cg.weaponSelect, WP_M1GARAND );
 	}

@@ -516,6 +516,59 @@
 		}
 	}
 
+	//	EQUIPMENT (M1 Garand grenade launcher attachment, right of equipment 2)	//
+
+	menuDef {
+		name "EquipmentGL"
+		fullScreen MENU_FALSE
+		visible MENU_TRUE
+		rect 434 428 56 44
+
+		itemDef {
+			name "equip3icon"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			ownerdraw CG_PLAYER_EQUIP3_ICON
+			rect 12 0 32 32
+		}
+
+		itemDef {
+			name "equip3value"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			textfont UI_FONT_NORMAL
+			textscale .22
+			textstyle ITEM_TEXTSTYLE_SHADOWED
+			forecolor 1 1 1 1
+			ownerdraw CG_PLAYER_EQUIP3_VALUE
+			rect 12 32 32 14
+		}
+
+		itemDef {
+			name "equip3keyhint"
+
+			cvarTest "g_gameType"
+			showCvar { "0" }
+
+			visible MENU_TRUE
+			decoration
+			textfont UI_FONT_NORMAL
+			textscale .17
+			textstyle ITEM_TEXTSTYLE_SHADOWED
+			forecolor 1 1 1 1
+			ownerdraw CG_PLAYER_EQUIP3_KEY
+			rect 0 -6 22 11
+		}
+	}
+
 	//	STABILITY	//
 
 	menuDef {

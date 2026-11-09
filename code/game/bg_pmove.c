@@ -2315,10 +2315,6 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 	case WP_M1GARAND:
 		if ( altswitch ) {
 			switchtime = 0;
-			// auto-chamber a grenade into the M7 if you've got one
-			if ( !pm->ps->ammoclip[BG_FindClipForWeapon( newweapon )] && pm->ps->ammo[BG_FindAmmoForWeapon( newweapon )] ) {
-				PM_ReloadClip( newweapon );
-			}
 		}
 		break;
 	case WP_M7:
@@ -2332,6 +2328,11 @@ static void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload 
 //			if(altswitch)
 //				switchtime  = 100;
 //			break;
+	}
+
+	// auto-chamber a grenade into the M7 if you've got one, however we got here
+	if ( newweapon == WP_M7 && !pm->ps->ammoclip[BG_FindClipForWeapon( newweapon )] && pm->ps->ammo[BG_FindAmmoForWeapon( newweapon )] ) {
+		PM_ReloadClip( newweapon );
 	}
 
 	// PERK_WEAPONHANDLING pro: faster weapon switch
@@ -2421,9 +2422,7 @@ static void PM_FinishWeaponChange( void ) {
 		}
 		break;
 	case WP_M7:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
-			switchtime = 2350;
-		}
+		switchtime = 2350; // same attach duration regardless of where we switched from
 		break;
 	}
 
@@ -2437,7 +2436,7 @@ static void PM_FinishWeaponChange( void ) {
 
 	if ( doSwitchAnim ) {
 		// alt weapon switch was played when switching away, just go into idle
-		if ( ammoTable[oldweapon].weapAlts == newweapon ) {
+		if ( ammoTable[oldweapon].weapAlts == newweapon || newweapon == WP_M7 ) {
 			PM_StartWeaponAnim( PM_AltSwitchToForWeapon( newweapon ) );
 		} else {
 			PM_StartWeaponAnim( PM_RaiseAnimForWeapon( newweapon ) );
