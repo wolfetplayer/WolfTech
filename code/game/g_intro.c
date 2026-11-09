@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 typedef struct {
 	qboolean configured;     // an "introtitle" call is waiting to run this level
 	qboolean active;         // clock running (startTime is valid)
+	qboolean played;         // ran to completion - distinct from !active, which is also true before it ever starts
 	int startTime;
 	int fadeIn;               // ms per line fade-in, also its share of the end fade-out
 	int hold, fadeOut, stagger;
@@ -140,8 +141,9 @@ void G_Intro_Start( char lines[][MAX_INTRO_LINE_LEN], int numLines, const char *
 ============
 G_Intro_ClientBegin
 
-  Called from ClientBegin for every real (non-AI) client. Starts the clock on
-  the first player to begin, or catches a later joiner up to the sequence.
+  Called from ClientBegin for every real (non-AI) client, including team
+  changes (e.g. "Join Game"). Starts the clock, catches a late joiner up to
+  a running sequence, but never re-arms one that already finished.
 ============
 */
 void G_Intro_ClientBegin( int clientNum ) {
@@ -149,13 +151,11 @@ void G_Intro_ClientBegin( int clientNum ) {
 
 	introAnyClientBegun = qtrue;
 
-	if ( !intro.configured ) {
+	if ( !intro.configured || intro.played ) {
 		return;
 	}
 	if ( !intro.active ) {
 		G_Intro_Activate();
-	} else if ( level.time >= intro.endTime ) {
-		return; // already finished, don't replay it for a later joiner
 	}
 
 	G_Intro_BuildCommand( cmd, sizeof( cmd ) );
@@ -175,6 +175,7 @@ void G_Intro_Tick( void ) {
 	}
 	if ( level.time >= intro.endTime ) {
 		intro.active = qfalse;
+		intro.played = qtrue;
 	}
 }
 
