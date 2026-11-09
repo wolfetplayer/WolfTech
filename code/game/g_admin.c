@@ -1237,7 +1237,7 @@ void cmd_nextmap( gentity_t *ent ) {
 	    }
 	*/
 	trap_SendServerCommand( -1, va( "chat \"console: %s ^7has set nextmap.\n\"", tag ) );
-	trap_SendConsoleCommand( EXEC_APPEND, va( "coopmap %s\n", level.nextMap ) );
+	trap_SendConsoleCommand( EXEC_APPEND, va( "%s %s\n", G_MapCommandForGametype(), level.nextMap ) );
 
 	// Log it
 	log = va( "Player %s (IP:%i.%i.%i.%i) has set nextmap.",
@@ -1261,7 +1261,7 @@ void cmd_map( gentity_t *ent ) {
 	tag = sortTag( ent );
 
 	trap_SendServerCommand( -1, va( "chat \"console: %s ^7has loaded ^2%s ^7map.\n\"", tag, ent->client->pers.cmd2 ) );
-	trap_SendConsoleCommand( EXEC_APPEND, va( "coopmap %s", ent->client->pers.cmd2 ) );
+	trap_SendConsoleCommand( EXEC_APPEND, va( "%s %s", G_MapCommandForGametype(), ent->client->pers.cmd2 ) );
 
 	// Log it
 	log = va( "Player %s (IP:%i.%i.%i.%i) has loaded %s map.",

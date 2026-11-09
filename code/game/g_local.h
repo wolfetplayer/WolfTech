@@ -1212,6 +1212,7 @@ void ThrowKnife( gentity_t *ent );     // ported from RealRTCW - WP_KNIFE second
 //
 void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message ); // JPW NERVE removed static declaration so it would link
 void DeathmatchScoreboardMessage( gentity_t *ent );
+const char *G_MapCommandForGametype( void );
 
 
 //

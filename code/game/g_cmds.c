@@ -1484,6 +1484,26 @@ int is_numeric( const char *p ) {
 
 /*
 ==================
+G_MapCommandForGametype
+
+  Returns the map-load server command matching the gametype the server is
+  currently running, so a map change preserves GT_COOP vs GT_COOP_SURVIVAL
+  instead of forcing GT_COOP. Mirrors CheckReloadStatus() in g_main.c, which
+  the normal (non-vote) end-of-level transition already uses for this.
+==================
+*/
+const char *G_MapCommandForGametype( void ) {
+	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		return g_cheats.integer ? "svdevmap" : "svmap";
+	} else if ( g_gametype.integer == GT_COOP ) {
+		return g_cheats.integer ? "coopdevmap" : "coopmap";
+	} else {
+		return g_cheats.integer ? "spdevmap" : "spmap";
+	}
+}
+
+/*
+==================
 Cmd_CallVote_f
 ==================
 */
@@ -1604,10 +1624,10 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 			trap_SendServerCommand( ent - g_entities, "print \"nextmap not set.\n\"" );
 			return;
 		}
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "coopmap %s", s );
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %s", G_MapCommandForGametype(), s );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
 	} else if ( !Q_stricmp( arg1, "map" ) ) {
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "coopmap %s", arg2 );
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %s", G_MapCommandForGametype(), arg2 );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
 	// Callvotes enhancements
 		// Poll option
