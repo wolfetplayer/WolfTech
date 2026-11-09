@@ -203,6 +203,7 @@ vmCvar_t g_motd6;           // MESSAGE 6
 
 vmCvar_t g_survivalAiHealthCap;
 vmCvar_t g_survivalDifficulty;
+vmCvar_t g_survivalDebug;
 vmCvar_t g_specialWaves;
 
 vmCvar_t g_introTitles;
@@ -382,6 +383,8 @@ cvarTable_t gameCvarTable[] = {
 	{&g_specialWaves, "g_specialwaves", "1", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qfalse},
 	{&g_survivalAiHealthCap, "g_survivalAiHealthCap", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qfalse},
 	{&g_survivalDifficulty, "g_survivalDifficulty", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_SERVERINFO, 0, qfalse},
+	// verbose survival wave/watchdog logging, toggle live
+	{&g_survivalDebug, "g_survivalDebug", "0", 0, 0, qfalse},
 
 	// intro titles - see g_intro.c
 	{&g_introTitles, "g_introTitles", "1", CVAR_ARCHIVE, 0, qfalse},        // 0 disables all intros

@@ -69,6 +69,9 @@ void AICast_InitSurvival(void) {
 	svParams.waveChangeTime = level.time + survCfg.prepareTime * 1000;
 	svParams.waveGameOver = qfalse;
 
+	svParams.lastProgressTime = level.time;
+	svParams.nextStallDumpTime = 0;
+
 	// reset explicitly - the DLL can stay loaded across map changes, so BSS zero-init alone isn't enough
 	svParams.gameOverPhase = GAMEOVER_PHASE_NONE;
 	svParams.gameOverPhaseTime = 0;
@@ -160,12 +163,20 @@ void AIChar_AIScript_AlertEntity_Survival( gentity_t *ent ) {
 
 	if (svParams.specialWaveActive && ent->aiTeam != 1 && ent->aiCharacter != svParams.currentSpecialWaveType)
 	{
+		if ( g_survivalDebug.integer && !( cs->aiFlags & AIFL_WAITINGTOSPAWN ) ) {
+			G_Printf( "^5[AI_SURVIVE][DEBUG] %s (char=%d ent=%d) waiting: special wave active for a different type\n",
+				ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number );
+		}
 		cs->aiFlags |= AIFL_WAITINGTOSPAWN;
 		return;
 	}
 
 	if (!svParams.specialWaveActive && ent->aiTeam != 1 && AICast_IsSpecialWaveChar(ent->aiCharacter))
 	{
+		if ( g_survivalDebug.integer && !( cs->aiFlags & AIFL_WAITINGTOSPAWN ) ) {
+			G_Printf( "^5[AI_SURVIVE][DEBUG] %s (char=%d ent=%d) waiting: special-wave-only type, no special wave active\n",
+				ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number );
+		}
 		cs->aiFlags |= AIFL_WAITINGTOSPAWN;
 		return;
 	}
@@ -193,21 +204,40 @@ void AIChar_AIScript_AlertEntity_Survival( gentity_t *ent ) {
 
 	if ( numTouch ) {
 		// invalid location
+		if ( g_survivalDebug.integer && !( cs->aiFlags & AIFL_WAITINGTOSPAWN ) ) {
+			G_Printf( "^5[AI_SURVIVE][DEBUG] %s (char=%d ent=%d) waiting: spawn point occupied\n",
+				ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number );
+		}
 		cs->aiFlags |= AIFL_WAITINGTOSPAWN;
 		return;
 	}
 
-    
+
 	   if ( svParams.activeAI[ent->aiCharacter] >= (int)( svParams.maxActiveAI[ent->aiCharacter] * svParams.playerCountScale ) || !svParams.waveInProgress)  {
+		if ( g_survivalDebug.integer && !( cs->aiFlags & AIFL_WAITINGTOSPAWN ) ) {
+			G_Printf( "^5[AI_SURVIVE][DEBUG] %s (char=%d ent=%d) waiting: activeAI=%d maxActiveAI=%d(scaled=%d) waveInProgress=%d\n",
+				ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number,
+				svParams.activeAI[ent->aiCharacter], svParams.maxActiveAI[ent->aiCharacter],
+				(int)( svParams.maxActiveAI[ent->aiCharacter] * svParams.playerCountScale ), svParams.waveInProgress );
+		}
 		cs->aiFlags |= AIFL_WAITINGTOSPAWN;
 		return;
 	   }
 
 	    // Prevent friendly AI from spawning if respawnsleft is 0
 		if (ent->aiTeam == 1 && cs->respawnsleft == 0) {
+			if ( g_survivalDebug.integer && !( cs->aiFlags & AIFL_WAITINGTOSPAWN ) ) {
+				G_Printf( "^5[AI_SURVIVE][DEBUG] %s (char=%d ent=%d) waiting: friendly, no respawns left\n",
+					ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number );
+			}
 			cs->aiFlags |= AIFL_WAITINGTOSPAWN; // Mark as waiting to spawn
 			return;
 		}
+
+	if ( g_survivalDebug.integer && ( cs->aiFlags & AIFL_WAITINGTOSPAWN ) ) {
+		G_Printf( "^5[AI_SURVIVE][DEBUG] %s (char=%d ent=%d) now spawning in (was waiting)\n",
+			ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number );
+	}
 
 	// Selecting the spawn point for the AI
 				SelectSpawnPoint_AI( player, ent, spawn_origin, spawn_angles );
@@ -291,6 +321,8 @@ if (!attacker) {
         Com_Printf("^1[AI_SURVIVE] WARNING: AI %s died with no attacker (meansOfDeath=%d)\n",
         self->aiName ? self->aiName : "UNKNOWN", meansOfDeath);
 		svParams.waveKillCount++;
+		svParams.lastProgressTime = level.time;
+		svParams.nextStallDumpTime = 0;
         AICast_CheckSurvivalProgression(&g_entities[0]);
         return;
 }
@@ -305,15 +337,25 @@ if (!killerPlayer && !killerFriendly) {
     );*/
 
 	svParams.waveKillCount++;
+	svParams.lastProgressTime = level.time;
+	svParams.nextStallDumpTime = 0;
 	AICast_CheckSurvivalProgression(&g_entities[0]);
 	return;
 }
 
 	svParams.survivalKillCount++;
 	svParams.waveKillCount++;
+	svParams.lastProgressTime = level.time;
+	svParams.nextStallDumpTime = 0;
 
 	if (killerPlayer) {
 		Survival_AddKillScore(attacker, self, meansOfDeath);
+	}
+
+	if (g_survivalDebug.integer) {
+		G_Printf("^5[AI_SURVIVE][DEBUG] kill registered: %s (char=%d ent=%d) by %s -> waveKillCount=%d/%d\n",
+			self->aiName ? self->aiName : "?", self->aiCharacter, self->s.number,
+			killerPlayer ? "player" : "friendlyAI", svParams.waveKillCount, svParams.killCountRequirement);
 	}
 
 	// Always use attacker to trigger progression check
@@ -1850,13 +1892,30 @@ void AICast_CheckSurvivalProgression( gentity_t *attacker ) {
 				continue;
 			}
 
-			if ( ent->client->ps.eFlags & EF_DEAD ) {
+			// health can go negative before EF_DEAD is actually set (same-frame death race)
+			if ( ( ent->client->ps.eFlags & EF_DEAD ) || ent->health <= 0 ) {
+				continue;
+			}
+
+			// oneshot AI (e.g. sv_castle's "officer1") never respawns for survival - not a wave enemy
+			if ( ent->oneshot ) {
+				continue;
+			}
+
+			// still waiting to spawn in - has no in-world presence
+			if ( ent->aiInactive ) {
 				continue;
 			}
 
 			// Optional, but safer if some non-survival AI exists on map
 			if ( !( ent->r.svFlags & SVF_CASTAI ) ) {
 				continue;
+			}
+
+			if ( g_survivalDebug.integer ) {
+				G_Printf( "^5[AI_SURVIVE][DEBUG]   enemiesAlive++ -> ent=%d '%s' char=%d health=%d origin=(%.0f %.0f %.0f)\n",
+					i, ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->health,
+					ent->r.currentOrigin[0], ent->r.currentOrigin[1], ent->r.currentOrigin[2] );
 			}
 
 			enemiesAlive++;
@@ -1868,6 +1927,9 @@ void AICast_CheckSurvivalProgression( gentity_t *attacker ) {
 				svParams.killCountRequirement );
 
 			svParams.waveKillCount = svParams.killCountRequirement;
+		} else if ( g_survivalDebug.integer ) {
+			G_Printf( "^5[AI_SURVIVE][DEBUG] progression check: %d/%d kills, %d enemy(ies) still alive (not rescuing)\n",
+				svParams.waveKillCount, svParams.killCountRequirement, enemiesAlive );
 		}
 	}
 
@@ -1904,10 +1966,122 @@ void AICast_CheckSurvivalProgression( gentity_t *attacker ) {
 	}
 }
 
+/*
+============
+AICast_SurvCharDebugName
+
+Readable AICharacters_t name for debug dumps - see AICast_SurvivalWatchdog().
+============
+*/
+static const char *AICast_SurvCharDebugName( int aiCharacter ) {
+	switch ( aiCharacter ) {
+		case AICHAR_SOLDIER:        return "soldier";
+		case AICHAR_AMERICAN:       return "american";
+		case AICHAR_ZOMBIE:         return "zombie";
+		case AICHAR_ZOMBIE_SURV:    return "zombie_surv";
+		case AICHAR_ZOMBIE_FLAME:   return "zombie_flame";
+		case AICHAR_ZOMBIE_GHOST:   return "zombie_ghost";
+		case AICHAR_WARZOMBIE:      return "warzombie";
+		case AICHAR_VENOM:          return "venom";
+		case AICHAR_LOPER:          return "loper";
+		case AICHAR_LOPER_SPECIAL:  return "loper_special";
+		case AICHAR_ELITEGUARD:     return "eliteguard";
+		case AICHAR_SUPERSOLDIER:   return "supersoldier";
+		case AICHAR_BLACKGUARD:     return "blackguard";
+		case AICHAR_PROTOSOLDIER:   return "protosoldier";
+		case AICHAR_HELGA:          return "helga";
+		case AICHAR_HEINRICH:       return "heinrich";
+		case AICHAR_PARTISAN:       return "partisan";
+		case AICHAR_CIVILIAN:       return "civilian";
+		case AICHAR_TRENCH:         return "trench";
+		case AICHAR_PRIEST:         return "priest";
+		case AICHAR_XSHEPHERD:      return "xshepherd";
+		default:                    return "?";
+	}
+}
+
+/*
+============
+AICast_SurvivalWatchdog
+
+g_survivalDebug-gated: dumps full wave/enemy state if a wave stalls.
+============
+*/
+#define SURV_STALL_FIRST_DUMP_MS   8000
+#define SURV_STALL_REDUMP_MS      15000
+
+void AICast_SurvivalWatchdog( void ) {
+	int i;
+
+	if ( !g_survivalDebug.integer ) {
+		return;
+	}
+
+	if ( !svParams.waveInProgress || svParams.wavePending ) {
+		return;
+	}
+
+	if ( level.time - svParams.lastProgressTime < SURV_STALL_FIRST_DUMP_MS ) {
+		return;
+	}
+
+	if ( svParams.nextStallDumpTime && level.time < svParams.nextStallDumpTime ) {
+		return;
+	}
+
+	svParams.nextStallDumpTime = level.time + SURV_STALL_REDUMP_MS;
+
+	G_Printf( "^1[AI_SURVIVE][DEBUG] ===== STALL WATCHDOG: wave %d stuck, no kill for %dms =====\n",
+		svParams.waveCount, level.time - svParams.lastProgressTime );
+	G_Printf( "^1[AI_SURVIVE][DEBUG] waveKillCount=%d/%d spawnedThisWave=%d spawnedThisWaveFriendly=%d specialWaveActive=%d (type=%s) playerCountScale=%.2f\n",
+		svParams.waveKillCount, svParams.killCountRequirement,
+		svParams.spawnedThisWave, svParams.spawnedThisWaveFriendly,
+		svParams.specialWaveActive, AICast_SurvCharDebugName( svParams.currentSpecialWaveType ),
+		svParams.playerCountScale );
+
+	for ( i = 0; i < NUM_CHARACTERS; i++ ) {
+		if ( svParams.maxActiveAI[i] || svParams.activeAI[i] ) {
+			G_Printf( "^1[AI_SURVIVE][DEBUG]   cap %-14s activeAI=%d maxActiveAI=%d (scaled=%d)\n",
+				AICast_SurvCharDebugName( i ), svParams.activeAI[i], svParams.maxActiveAI[i],
+				(int)( svParams.maxActiveAI[i] * svParams.playerCountScale ) );
+		}
+	}
+
+	for ( i = 0; i < level.num_entities; i++ ) {
+		gentity_t *ent = &g_entities[i];
+		cast_state_t *cs;
+
+		if ( !ent->inuse || !ent->client || !( ent->r.svFlags & SVF_CASTAI ) ) {
+			continue;
+		}
+		if ( ent->aiTeam == AITEAM_ALLIES ) {
+			continue;
+		}
+
+		cs = AICast_GetCastState( ent->s.number );
+
+		G_Printf( "^1[AI_SURVIVE][DEBUG]   ent %3d '%-10s' char=%-12s inactive=%d dead=%d waiting=%d health=%4d enemyNum=%4d rebirthIn=%6d origin=(%.0f %.0f %.0f)\n",
+			i,
+			ent->aiName ? ent->aiName : "?",
+			AICast_SurvCharDebugName( ent->aiCharacter ),
+			ent->aiInactive ? 1 : 0,
+			( ent->client->ps.eFlags & EF_DEAD ) ? 1 : 0,
+			( cs->aiFlags & AIFL_WAITINGTOSPAWN ) ? 1 : 0,
+			ent->health,
+			cs->enemyNum,
+			cs->rebirthTime ? ( cs->rebirthTime - level.time ) : 0,
+			ent->r.currentOrigin[0], ent->r.currentOrigin[1], ent->r.currentOrigin[2] );
+	}
+
+	G_Printf( "^1[AI_SURVIVE][DEBUG] ===== END STALL DUMP =====\n" );
+}
+
 void AICast_TickSurvivalWave( void ) {
 	int i;
 	int wave;
 	int killReq;
+
+	AICast_SurvivalWatchdog();
 
 	if ( !svParams.wavePending ) {
 		return;
@@ -1924,6 +2098,8 @@ void AICast_TickSurvivalWave( void ) {
 	svParams.waveCount++;
 	svParams.waveKillCount = 0;
 	svParams.spawnedThisWave = 0;
+	svParams.lastProgressTime = level.time;
+	svParams.nextStallDumpTime = 0;
 
 	// Some map-placed AI never go through AIChar_AIScript_AlertEntity_Survival
 	for ( i = 0; i < level.num_entities; i++ ) {
@@ -2093,6 +2269,15 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 
    if (ent->aiTeam != 1 && (svParams.spawnedThisWave >= svParams.killCountRequirement || !svParams.waveInProgress))
    {
+	   if ( g_survivalDebug.integer ) {
+		   static int s_lastBlockLogTime = 0;
+		   if ( level.time - s_lastBlockLogTime > 3000 ) {
+			   s_lastBlockLogTime = level.time;
+			   G_Printf( "^5[AI_SURVIVE][DEBUG] respawn blocked for %s (char=%d ent=%d): spawnedThisWave=%d killCountRequirement=%d waveInProgress=%d\n",
+				   ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number,
+				   svParams.spawnedThisWave, svParams.killCountRequirement, svParams.waveInProgress );
+		   }
+	   }
 	   return;
    }
 
@@ -2231,10 +2416,26 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 
 					svParams.spawnedThisWave++;
 				}
+
+				if ( g_survivalDebug.integer ) {
+					G_Printf( "^5[AI_SURVIVE][DEBUG] respawned %s (char=%d ent=%d) at (%.0f %.0f %.0f) -> spawnedThisWave=%d/%d\n",
+						ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number,
+						spawn_origin[0], spawn_origin[1], spawn_origin[2],
+						svParams.spawnedThisWave, svParams.killCountRequirement );
+				}
 			} else {
 				// can't spawn yet, so set bbox back, and wait
 				ent->r.maxs[2] = oldmaxZ;
 				ent->client->ps.maxs[2] = ent->r.maxs[2];
+
+				if ( g_survivalDebug.integer ) {
+					static int s_lastOccupiedLogTime = 0;
+					if ( level.time - s_lastOccupiedLogTime > 3000 ) {
+						s_lastOccupiedLogTime = level.time;
+						G_Printf( "^5[AI_SURVIVE][DEBUG] respawn stalled for %s (char=%d ent=%d): spawn point occupied\n",
+							ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number );
+					}
+				}
 			}
 			trap_LinkEntity( ent );
 

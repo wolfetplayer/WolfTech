@@ -272,6 +272,10 @@ typedef struct svParams_s
     int waveChangeTime;
 	qboolean waveInProgress;
 
+	// Stall watchdog (g_survivalDebug) - see AICast_SurvivalWatchdog() in ai_cast_survival.c.
+	int lastProgressTime;     // level.time a wave kill was last registered; reset on wave start and on every kill
+	int nextStallDumpTime;    // level.time the watchdog may next dump state, 0 = ready now
+
 	qboolean specialWaveActive;
 	int lastSpecialWave;
 	qboolean forceSpecialWaveNext;       // dev/test override, set by "forcespecialwave" client command
