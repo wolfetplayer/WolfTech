@@ -278,6 +278,8 @@ If you have questions concerning this license or the applicable additional terms
 #define CG_PLAYER_EQUIP3_ICON       100
 #define CG_PLAYER_EQUIP3_VALUE      101
 #define CG_PLAYER_EQUIP3_KEY        102
+#define CG_PLAYER_WEAPON_NAME       103
+#define CG_PLAYER_AMMO_COMBINED     104
 
 #define UI_OWNERDRAW_BASE           200
 #define UI_HANDICAP                 200

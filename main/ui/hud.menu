@@ -130,16 +130,16 @@
 		
 		//	HEAT INDICATOR	
 
-		// heat indicator	
+		// heat indicator - slim bar above the ammo readout
 		itemDef {
 			name "heat"
-			
+
 			cvarTest "g_gameType"
 			hideCvar { "2" }
-			
+
 			decoration
 			visible MENU_TRUE
-			rect 456 -44 83 43		// horizontal version
+			rect 450 -18 110 14		// horizontal version
 			align HUD_HORIZONTAL
 			ownerdraw CG_PLAYER_WEAPON_HEAT
 		}
@@ -158,222 +158,76 @@
 		}
 
 
-		//	WEAPON ICON
+		//	AMMO	//	plain clip | reserve readout, weapon name below
 
-		// ammo icon
+		// clip | reserve, e.g. "9 | 83"
 		itemDef {
-			name "a"
-			rect 458 -40 80 40
-
+ 			name "ammocombined"
+			rect 450 0 140 22
 			visible MENU_TRUE
 			decoration
-			align ITEM_ALIGN_CENTER
-			ownerdraw CG_PLAYER_WEAPON_ICON2D
-		}
-
-		
-		//	CLIP
-		
-		itemDef {
-			name ""
-			rect 443 0 55 22
-			decoration
-			visible MENU_TRUE
-			style WINDOW_STYLE_SHADER
-			background "gfx/2d/back_box.tga"
-			
-			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-			
-			addColorRangerel	0 999		1 1 1 1
-			
-			forecolor 1 1 1 0
-		}
-	
-		// clip icon
-		itemDef {
-			name ""
-			rect 448 5 12 12
-			
-			cvarTest "cg_hudAmmoClip"
-			showCvar { "1" }
-			
-			decoration
-			visible MENU_TRUE
-			style WINDOW_STYLE_SHADER
-			background "gfx/hud/et/ic_clip.tga"
-			
-			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-			
-			addColorRangerel	0 999		1 1 1 1
-			
-			forecolor 1 1 1 0
-		}
-		
-		// clip count value
-		itemDef {
- 			name "cliptex"
-			rect 456 -5.5 55 22
-			visible MENU_TRUE
-			decoration
-			
-			cvarTest "cg_hudAmmoClip"
-			showCvar { "0" }
 
 			textfont UI_FONT_NORMAL
-			textscale .18		// shrunk from .32 - 3-digit clip counts were overflowing back_box.tga
+			textscale .42
 
-			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
+			ownerdraw CG_PLAYER_AMMO_COMBINED
 			ownerdrawflag CG_SHOW_NOT_V_BINOC
-
-			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
-			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
 
 			forecolor 1 1 1 1
 		}
 
-		// clip count value
+		// weapon name, under the clip|reserve readout
 		itemDef {
- 			name "cliptex"
-			rect 469 -5.5 38 22
+			name "weaponname"
+			rect 450 24 140 9
 			visible MENU_TRUE
 			decoration
-
-			cvarTest "cg_hudAmmoClip"
-			showCvar { "1" }
 
 			textfont UI_FONT_NORMAL
-			textscale .18		// shrunk from .32 - 3-digit clip counts were overflowing back_box.tga
-			
-			ownerdraw CG_PLAYER_AMMOCLIP_VALUE
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-			
-			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
-			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
-			
-			forecolor 1 1 1 1
-		}
+			textscale .19
+			textstyle ITEM_TEXTSTYLE_SHADOWED
 
-		
-//	AMMO
-		itemDef {
-			name ""
-			rect 498 0 55 22
-			decoration
-			visible MENU_TRUE
-			style WINDOW_STYLE_SHADER
-			background "gfx/2d/back_box.tga"
-			
-			ownerdraw CG_PLAYER_AMMO_VALUE
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-			
-			addColorRangerel	0 999		1 1 1 1
-			
-			forecolor 1 1 1 0
-		}
-	
-		// ammo icon
-		itemDef {
-			name ""
-			rect 503 5 12 12
-			
-			cvarTest "cg_hudAmmoClip"
-			showCvar { "1" }
-			
-			decoration
-			visible MENU_TRUE
-			style WINDOW_STYLE_SHADER
-			background "gfx/hud/et/ic_ammo.tga"
-			
-			ownerdraw CG_PLAYER_AMMO_VALUE
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-			
-			addColorRangerel	0 999		1 1 1 1
-			
-			forecolor 1 1 1 0
-		}
-		
-		// ammo value
-		itemDef {
- 			name "amtex"
-			rect 511 9.5 55 22
-			visible MENU_TRUE
-			decoration
-			
-			cvarTest "cg_hudAmmoClip"
-			showCvar { "0" }
+			ownerdraw CG_PLAYER_WEAPON_NAME
 
-			textfont UI_FONT_NORMAL
-			textscale .18		// shrunk from .32 - 3-digit reserve ammo counts were overflowing back_box.tga
-
-			ownerdraw CG_PLAYER_AMMO_VALUE
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-
-			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
-			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
-
-			forecolor 1 1 1 1
-		}
-
-		// ammo value
-		itemDef {
- 			name "amtex"
-			rect 516 9.5 55 22
-			visible MENU_TRUE
-			decoration
-
-			cvarTest "cg_hudAmmoClip"
-			showCvar { "1" }
-
-			textfont UI_FONT_NORMAL
-			textscale .18		// shrunk from .32 - 3-digit reserve ammo counts were overflowing back_box.tga
-			
-			ownerdraw CG_PLAYER_AMMO_VALUE
-			ownerdrawflag CG_SHOW_NOT_V_BINOC
-			
-			addColorRangerel 0.0	0.1		1 0 0 1		// alert!
-			addColorRangerel 0.1	0.33	1 1 0 1		// warning!
-			
-			forecolor 1 1 1 1
+			forecolor .63 .59 .57 1	// grey, matches the grenade count readout above
 		}
 
 	}
 
-	//	GRENADE COUNT	//	always visible, height-aligned to the weapon ammo count
+	//	GRENADE COUNT	//	count+icon+label, centered to match the ammo readout below
 	menuDef {
     	name "GrenadeCount"
     	fullScreen MENU_FALSE
     	visible MENU_TRUE
-    	rect 452 435 54 28
+    	rect 540 392 140 24
 
 		itemDef {
 			name "grencount"
 			ownerdraw CG_PLAYER_GRENADE_COUNT
-			rect -50 0 54 28
+			rect -50 0 140 24
 			visible MENU_TRUE
 			decoration
 			textstyle ITEM_TEXTSTYLE_SHADOWEDMORE
-			textscale .42
+			textscale .32
 			forecolor .63 .59 .57 1	// grey
 		}
 }
 
-	//	SPECIAL GRENADE COUNT	//	always visible, height-aligned to the weapon charge bar
+	//	SPECIAL GRENADE COUNT	//	always visible, stacked above GrenadeCount - see its comment above
 	menuDef {
     	name "SpecialGrenadeCount"
     	fullScreen MENU_FALSE
     	visible MENU_TRUE
-    	rect 452 408 54 28
+    	rect 540 360 140 24
 
 		itemDef {
 			name "specialgrencount"
 			ownerdraw CG_PLAYER_SPECIAL_GRENADE_COUNT
-			rect -50 0 54 28
+			rect -50 0 140 24
 			visible MENU_TRUE
 			decoration
 			textstyle ITEM_TEXTSTYLE_SHADOWEDMORE
-			textscale .42
+			textscale .32
 			forecolor .63 .59 .57 1	// grey
 		}
 }

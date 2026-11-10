@@ -380,6 +380,75 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 
 /*
 ==============
+CG_DrawPlayerWeaponName
+
+Weapon name text, with upgrade level appended (e.g. "Thompson II").
+==============
+*/
+static void CG_DrawPlayerWeaponName( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	int realweap;
+	const char *baseName;
+	char name[64];
+	float w;
+
+	if ( !cg_drawIcons.integer ) {
+		return;
+	}
+
+	// equip HUD icon already shows these
+	switch ( cg.predictedPlayerState.weapon ) {
+	case WP_DYNAMITE:
+	case WP_LANDMINE:
+	case WP_MEDCRATE:
+	case WP_AIRSTRIKE:
+	case WP_M7:
+		return;
+	default:
+		break;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement( PLACE_RIGHT, PLACE_BOTTOM );
+	}
+
+	realweap = cg.predictedPlayerState.weapon;
+
+	if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
+		baseName = "MG 42";
+	} else {
+		if ( !weapIconDrawSize( realweap ) || !cg_weapons[realweap].item ) {
+			return;
+		}
+		baseName = cg_weapons[realweap].item->pickup_name;
+	}
+
+	if ( !baseName || !baseName[0] ) {
+		return;
+	}
+
+	Q_strncpyz( name, baseName, sizeof( name ) );
+
+	if ( !cg.snap->ps.persistant[PERS_HWEAPON_USE] && CG_WeaponIsUpgraded( realweap ) ) {
+		static const char *upgradeNumerals[4] = { "", "I", "II", "III" };
+		int upgradeLevel = cg.snap->ps.weaponUpgraded[ realweap ];
+
+		if ( upgradeLevel < 0 ) {
+			upgradeLevel = 0;
+		} else if ( upgradeLevel > 3 ) {
+			upgradeLevel = 3;
+		}
+
+		if ( upgradeLevel > 0 ) {
+			Com_sprintf( name, sizeof( name ), "%s %s", baseName, upgradeNumerals[upgradeLevel] );
+		}
+	}
+
+	w = CG_Text_Width( name, font, scale, 0 );
+	CG_Text_Paint( rect->x + ( rect->w - w ) / 2, rect->y + rect->h, font, scale, color, name, 0, 0, textStyle );
+}
+
+/*
+==============
 CG_DrawPlayerAmmoIcon
 ==============
 */
@@ -644,31 +713,162 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 		} else {
 			Com_sprintf( num, sizeof( num ), "%i", value );
 			value = CG_Text_Width( num, font, scale, 0 );
-			// Moved this up a little so it's not on top of the weapon heat bar
-			if ( type == 0 ) {
-				CG_Text_Paint( rect->x + ( rect->w - value ) / 2, - 15 + rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
-			} else {
-				CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
-			}
+			// clip and reserve share one baseline now
+			CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
 		}
 	}
 }
 
-#define GRENADE_ICON_MAXCOUNT   5   // matches ammoTable maxclip
+/*
+==============
+CG_DrawPlayerAmmoCombined
+
+Single "clip | reserve" readout (e.g. "9 | 83") instead of two numbers.
+==============
+*/
+static void CG_DrawPlayerAmmoCombined( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
+	char text[32];
+	centity_t   *cent;
+	playerState_t   *ps;
+	int weap;
+	int clip, ammo;
+
+	cent = &cg_entities[cg.snap->ps.clientNum];
+	ps = &cg.snap->ps;
+	weap = cent->currentState.weapon;
+
+	if ( !weap ) {
+		return;
+	}
+
+	if ( ps->weaponstate == WEAPON_RELOADING ) {
+		return;
+	}
+
+	// venom powerup grants unlimited ammo - nothing meaningful to show
+	if ( weap == WP_VENOM && ps->powerups[PW_VENOM] ) {
+		return;
+	}
+
+	switch ( weap ) {
+	case WP_DYNAMITE:      // cooldown-based, no clip/reserve to show
+	case WP_AIRSTRIKE:
+	case WP_MEDCRATE:
+	case WP_LANDMINE:      // equip HUD icon shows this already
+	case WP_M7:            // equip HUD icon shows this already
+		return;
+	default:
+		break;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement( PLACE_RIGHT, PLACE_BOTTOM );
+	}
+
+	clip = ps->ammoclip[ BG_FindClipForWeapon( weap ) ];
+
+	switch ( weap ) {
+	// all ammo is in the clip for these
+	case WP_KNIFE:
+	case WP_GRENADE_LAUNCHER:
+	case WP_GRENADE_PINEAPPLE:
+	case WP_POISONGAS:
+	case WP_SMOKEBOMB:
+	case WP_TESLA:
+	case WP_FLAMETHROWER:
+		Com_sprintf( text, sizeof( text ), "%i", clip );
+		break;
+
+	default:
+		ammo = ps->ammo[ BG_FindAmmoForWeapon( weap ) ];
+		Com_sprintf( text, sizeof( text ), "%i | %i", clip, ammo );
+		break;
+	}
+
+	// centered, matching the grenade rows and weapon name below
+	{
+		float w = CG_Text_Width( text, font, scale, 0 );
+		CG_Text_Paint( rect->x + ( rect->w - w ) / 2, rect->y + rect->h, font, scale, color, text, 0, 0, textStyle );
+	}
+}
+
+/*
+==============
+CG_GrenadeShortLabel
+
+Short label for a grenade readout row - item->pickup_name is too wide.
+==============
+*/
+static const char *CG_GrenadeShortLabel( int wp ) {
+	switch ( wp ) {
+	case WP_GRENADE_LAUNCHER:
+		return "Grenade";
+	case WP_GRENADE_PINEAPPLE:
+		return "Pineapple";
+	case WP_POISONGAS:
+		return "Gas";
+	case WP_SMOKEBOMB:
+		return "Smoke";
+	default:
+		return "";
+	}
+}
+
+/*
+==============
+CG_DrawGrenadeReadoutRow
+
+Count, icon, then short label - shared by CG_DrawGrenadeCount and
+CG_DrawSpecialGrenadeCount below.
+==============
+*/
+static void CG_DrawGrenadeReadoutRow( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle, int wp, int value, float pulse ) {
+	char num[16];
+	const char *name;
+	qhandle_t icon;
+	float x, numW, iconSize, grow, gap, nameW, nameScale, totalW;
+
+	icon = cg_weapons[ wp ].weaponIcon[0];
+	name = CG_GrenadeShortLabel( wp );
+
+	iconSize = rect->h;
+	grow = 0.3f * pulse * iconSize;
+	gap = rect->h * 0.3f;
+	nameScale = scale * 0.55f;
+
+	Com_sprintf( num, sizeof( num ), "%i", value );
+	numW = CG_Text_Width( num, font, scale, 0 );
+	nameW = ( name && name[0] ) ? CG_Text_Width( name, font, nameScale, 0 ) : 0.0f;
+
+	// center the whole row, matching CG_DrawPlayerAmmoCombined below it
+	totalW = numW + gap + iconSize + gap + nameW;
+	x = rect->x + ( rect->w - totalW ) / 2;
+
+	CG_Text_Paint( x, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
+	x += numW + gap;
+
+	if ( icon ) {
+		CG_DrawPic( x - 0.5f * grow, rect->y - 0.5f * grow, iconSize + grow, iconSize + grow, icon );
+	}
+	x += iconSize + gap;
+
+	if ( name && name[0] ) {
+		CG_Text_Paint( x, rect->y + rect->h, font, nameScale, color, name, 0, 0, textStyle );
+	}
+}
 
 /*
 ==============
 CG_DrawGrenadeCount
 
-Always-visible grenade ammo readout: one icon per grenade held, instead of a number.
+Always-visible grenade ammo readout.
 ==============
 */
 static void CG_DrawGrenadeCount( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
 	playerState_t *ps;
 	int wp;
 	int value;
-	qhandle_t icon;
-	float pulse, grow;
+	float pulse;
 
 	ps = &cg.snap->ps;
 
@@ -700,35 +900,29 @@ static void CG_DrawGrenadeCount( rectDef_t *rect, int font, float scale, vec4_t 
 
 	// icons are normally only registered lazily when their bank shows in the weapon-select strip
 	CG_RegisterWeapon( wp );
-	icon = cg_weapons[ wp ].weaponIcon[0];
 
 	// pulse while actually cooking (quick-grenade or held grenade weapon)
 	pulse = 0.0f;
 	if ( cg.predictedPlayerState.grenadeTimeLeft > 0 ) {
 		pulse = 1.0f - ( (float)( cg.predictedPlayerState.grenadeTimeLeft % 1000 ) / 1000.0f );
 	}
-	{
-		// shrink icons so GRENADE_ICON_MAXCOUNT of them fit in the readout's width
-		float iconH = rect->h * 0.65f;
-		grow = 0.3f * pulse * iconH;
 
-		CG_DrawGrenadeIconRow( rect->x, rect->y + ( rect->h - iconH ) * 0.5f - 0.5f * grow, iconH + grow, icon, value, GRENADE_ICON_MAXCOUNT );
-	}
+	CG_DrawGrenadeReadoutRow( rect, font, scale, color, textStyle, wp, value, pulse );
 }
 
 /*
 ==============
 CG_DrawSpecialGrenadeCount
 
-Same as CG_DrawGrenadeCount, for the held special grenade (smoke or gas).
+Same as CG_DrawGrenadeCount, for the held special grenade - gas or smoke,
+whichever the player actually has (never both).
 ==============
 */
 static void CG_DrawSpecialGrenadeCount( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle ) {
 	playerState_t *ps;
 	int wp;
 	int value;
-	qhandle_t icon;
-	float pulse, grow;
+	float pulse;
 
 	ps = &cg.snap->ps;
 
@@ -759,19 +953,14 @@ static void CG_DrawSpecialGrenadeCount( rectDef_t *rect, int font, float scale, 
 	}
 
 	CG_RegisterWeapon( wp );
-	icon = cg_weapons[ wp ].weaponIcon[0];
 
 	// pulse while cooking
 	pulse = 0.0f;
 	if ( cg.predictedPlayerState.specialGrenadeTimeLeft > 0 ) {
 		pulse = 1.0f - ( (float)( cg.predictedPlayerState.specialGrenadeTimeLeft % 1000 ) / 1000.0f );
 	}
-	{
-		float iconH = rect->h * 0.65f;
-		grow = 0.3f * pulse * iconH;
 
-		CG_DrawGrenadeIconRow( rect->x, rect->y + ( rect->h - iconH ) * 0.5f - 0.5f * grow, iconH + grow, icon, value, GRENADE_ICON_MAXCOUNT );
-	}
+	CG_DrawGrenadeReadoutRow( rect, font, scale, color, textStyle, wp, value, pulse );
 }
 
 static void CG_DrawPlayerHead( rectDef_t *rect, qboolean draw2D ) {
@@ -2135,6 +2324,12 @@ void CG_OwnerDraw( float x, float y, float w, float h, float text_x, float text_
 		break;
 	case CG_PLAYER_WEAPON_ICON2D:
 		CG_DrawPlayerWeaponIcon( &rect, ownerDrawFlags & CG_SHOW_HIGHLIGHTED, align );
+		break;
+	case CG_PLAYER_WEAPON_NAME:
+		CG_DrawPlayerWeaponName( &rect, font, scale, color, textStyle );
+		break;
+	case CG_PLAYER_AMMO_COMBINED:
+		CG_DrawPlayerAmmoCombined( &rect, font, scale, color, textStyle );
 		break;
 	case CG_PLAYER_ARMOR_ICON:
 		break;
