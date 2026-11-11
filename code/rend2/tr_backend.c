@@ -121,6 +121,10 @@ void GL_State( unsigned long stateBits ) {
 		{
 			qglDepthFunc( GL_GREATER );
 		}
+		else if ( stateBits & GLS_DEPTHFUNC_ALWAYS )
+		{
+			qglDepthFunc( GL_ALWAYS );
+		}
 		else
 		{
 			qglDepthFunc( GL_LEQUAL );

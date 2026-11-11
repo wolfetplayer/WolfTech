@@ -539,6 +539,7 @@ ParseStage
 static qboolean ParseStage( shaderStage_t *stage, char **text ) {
 	char *token;
 	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
+	int noDepthTestBits = 0;
 	qboolean depthMaskExplicit = qfalse;
 
 	stage->active = qtrue;
@@ -805,10 +806,24 @@ static qboolean ParseStage( shaderStage_t *stage, char **text ) {
 				depthFuncBits = 0;
 			} else if ( !Q_stricmp( token, "equal" ) )    {
 				depthFuncBits = GLS_DEPTHFUNC_EQUAL;
+			} else if ( !Q_stricmp( token, "greater" ) )    {
+				depthFuncBits = GLS_DEPTHFUNC_GREATER;
+			} else if ( !Q_stricmp( token, "always" ) )    {
+				depthFuncBits = GLS_DEPTHFUNC_ALWAYS;
 			} else
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: unknown depthfunc '%s' in shader '%s'\n", token, shader.name );
 				continue;
+			}
+		}
+		//
+		// nodepthtest - stage ignores the depth buffer entirely, draws through everything
+		//
+		else if ( !Q_stricmp( token, "nodepthtest" ) ) {
+			noDepthTestBits = GLS_DEPTHTEST_DISABLE;
+
+			if ( !depthMaskExplicit ) {
+				depthMaskBits = 0;
 			}
 		}
 		//
@@ -1339,7 +1354,8 @@ static qboolean ParseStage( shaderStage_t *stage, char **text ) {
 	stage->stateBits = depthMaskBits |
 					   blendSrcBits | blendDstBits |
 					   atestBits |
-					   depthFuncBits;
+					   depthFuncBits |
+					   noDepthTestBits;
 
 	return qtrue;
 }

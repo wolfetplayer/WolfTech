@@ -249,30 +249,13 @@
 		}
 	}
 	
-	//	COMPASS	//
+	//	EQUIPMENT	//	stacked above the grenade counters, right side
 
 	menuDef {
-    	name "Compass"
-    	fullScreen MENU_FALSE
-    	visible MENU_TRUE
-    	rect 290 420 60 60		// CG_DrawCompass draws itself at a fixed position; rect is for reference only
-
-		itemDef {
-			name "compassicon"
-			visible MENU_TRUE
-			decoration
-			ownerdraw CG_PLAYER_COMPASS
-			rect 0 0 60 60
-		}
-	}
-
-	//	EQUIPMENT (flanking the compass)	//
-
-	menuDef {
-		name "EquipmentLeft"
+		name "EquipmentSlot1"
 		fullScreen MENU_FALSE
 		visible MENU_TRUE
-		rect 220 428 56 44
+		rect 532 198 56 44
 
 		itemDef {
 			name "equip1icon"
@@ -320,10 +303,10 @@
 	}
 
 	menuDef {
-		name "EquipmentRight"
+		name "EquipmentSlot2"
 		fullScreen MENU_FALSE
 		visible MENU_TRUE
-		rect 364 428 56 44
+		rect 532 252 56 44
 
 		itemDef {
 			name "equip2icon"
@@ -370,13 +353,13 @@
 		}
 	}
 
-	//	EQUIPMENT (M1 Garand grenade launcher attachment, right of equipment 2)	//
+	//	EQUIPMENT (M1 Garand grenade launcher attachment) - bottom of the stack	//
 
 	menuDef {
-		name "EquipmentGL"
+		name "EquipmentSlot3"
 		fullScreen MENU_FALSE
 		visible MENU_TRUE
-		rect 434 428 56 44
+		rect 532 306 56 44
 
 		itemDef {
 			name "equip3icon"

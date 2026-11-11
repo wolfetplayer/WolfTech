@@ -440,6 +440,15 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 			continue;
 		}
 
+		// always send same-team player state, bypassing PVS, so cgame can show teammates
+		// through walls/at range (see cg_drawTeamArrows/Outline/Names)
+		if ( e < MAX_CLIENTS && e != frame->ps.clientNum && !ent->s.aiChar &&
+			 ent->s.teamNum == frame->ps.teamNum &&
+			 frame->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR ) {
+			SV_AddEntToSnapshot( svEnt, ent, eNums );
+			continue;
+		}
+
 		// ignore if not touching a PV leaf
 		// check area
 		if ( !CM_AreasConnected( clientarea, svEnt->areanum ) ) {

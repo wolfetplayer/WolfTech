@@ -656,6 +656,87 @@ static void G_AddBot( const char *name, int skill, const char *team, int delay )
 
 /*
 ===============
+G_AddTestDummy
+
+Spawns a stationary, input-less teammate for testing without a second real player.
+Allocates a client slot like a bot, but skips botlib AI entirely - no usercmd ever
+reaches it, so it just stands there.
+===============
+*/
+static qboolean G_AddTestDummy( const char *name ) {
+	int clientNum;
+	char userinfo[MAX_INFO_STRING];
+
+	clientNum = trap_BotAllocateClient();
+	if ( clientNum == -1 ) {
+		G_Printf( S_COLOR_RED "Unable to add test dummy: no free client slot.\n" );
+		G_Printf( S_COLOR_RED "Raise sv_maxclients above sv_maxcoopclients to make room.\n" );
+		return qfalse;
+	}
+
+	userinfo[0] = '\0';
+	Info_SetValueForKey( userinfo, "name", name );
+	Info_SetValueForKey( userinfo, "ip", "localhost" );        // passes ClientConnect's IP-spoof check
+	Info_SetValueForKey( userinfo, "rate", "25000" );
+	Info_SetValueForKey( userinfo, "snaps", "20" );
+	Info_SetValueForKey( userinfo, "model", "multi/default" ); // DEFAULT_COOP_MODEL
+	Info_SetValueForKey( userinfo, "sex", "male" );
+	Info_SetValueForKey( userinfo, "color", "4" );
+
+	trap_SetUserinfo( clientNum, userinfo );
+
+	// isBot=qfalse: qtrue would force G_BotConnect/BotAISetupClient, which needs a
+	// real bot character file we don't have
+	if ( ClientConnect( clientNum, qtrue, qfalse ) ) {
+		trap_BotFreeClient( clientNum );
+		return qfalse;
+	}
+
+	ClientBegin( clientNum );
+
+	// settle into a proper idle pose (pure data lookup, no physics)
+	BG_AnimScriptAnimation( &g_entities[clientNum].client->ps, AISTATE_RELAXED, ANIM_MT_IDLE, qfalse );
+
+	return qtrue;
+}
+
+/*
+===============
+Svcmd_SpawnDummy_f
+
+Console command: "spawndummy [count] [name]" - adds up to 3 stationary test dummies.
+===============
+*/
+void Svcmd_SpawnDummy_f( void ) {
+	char arg[MAX_TOKEN_CHARS];
+	char baseName[MAX_TOKEN_CHARS];
+	int count, i;
+	static int dummySerial;
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+	count = arg[0] ? atoi( arg ) : 1;
+	count = Com_Clamp( 1, 3, count );
+
+	trap_Argv( 2, baseName, sizeof( baseName ) );
+	if ( !baseName[0] ) {
+		Q_strncpyz( baseName, "Dummy", sizeof( baseName ) );
+	}
+
+	for ( i = 0; i < count; i++ ) {
+		char name[MAX_TOKEN_CHARS];
+
+		dummySerial++;
+		Com_sprintf( name, sizeof( name ), "%s%d", baseName, dummySerial );
+
+		if ( !G_AddTestDummy( name ) ) {
+			break;
+		}
+	}
+}
+
+
+/*
+===============
 Svcmd_AddBot_f
 ===============
 */

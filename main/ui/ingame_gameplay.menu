@@ -165,14 +165,14 @@ menuDef {
 		}
 
 	itemDef {
-		name			ihud_compass
+		name			ihud_teamnames
 		group			performance
 		rect 0 76 443 16
 		type			ITEM_TYPE_MULTI
 		style			WINDOW_STYLE_FILLED
-		text			"@OPTIONS_COMPASS"
+		text			"@OPTIONS_TEAMNAMES"
 		textfont		UI_FONT_BIG
-		cvar			"cg_drawcompass"
+		cvar			"cg_drawTeamNames"
 		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 		textscale		.22
 		textalign		ITEM_ALIGN_RIGHT
@@ -181,8 +181,8 @@ menuDef {
 		backcolor		1 1 1 .07
 		forecolor		1 1 1 1
 		visible			0
-		mouseEnter { setitemcolor ihud_compass backcolor .3 0.5 0.2 .25 ; show tip_ihud_compass ; show tipbox }
-		mouseExit { setitemcolor ihud_compass backcolor 1 1 1 .07 ; hide tip_ihud_compass ; hide tipbox }
+		mouseEnter { setitemcolor ihud_teamnames backcolor .3 0.5 0.2 .25 ; show tip_ihud_teamnames ; show tipbox }
+		mouseExit { setitemcolor ihud_teamnames backcolor 1 1 1 .07 ; hide tip_ihud_teamnames ; hide tipbox }
 	}
 
 	itemDef {
@@ -679,11 +679,11 @@ menuDef {
 	}
 
 	itemDef {
-		name tip_ihud_compass
+		name tip_ihud_teamnames
 		group grpIngameGameplayTip
 		style WINDOW_STYLE_EMPTY
 		rect 10 330 423 30
-		text "@OPTIONS_TIP_COMPASS"
+		text "@OPTIONS_TIP_TEAMNAMES"
 		textfont UI_FONT_BIG
 		textscale .2
 		textalign ITEM_ALIGN_LEFT

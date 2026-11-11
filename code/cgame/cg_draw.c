@@ -3275,6 +3275,204 @@ void CG_DrawEnemyHealthbars( void ) {
 	trap_R_SetColor( NULL );
 }
 
+// true if a wall blocks line of sight to this entity's chest - gates the outline in cg_players.c
+qboolean CG_TeammateOccluded( centity_t *cent ) {
+	vec3_t checkPos;
+
+	VectorCopy( cent->lerpOrigin, checkPos );
+	checkPos[2] += 32.0f;
+
+	return !PointVisible( checkPos );
+}
+
+#define TEAM_ARROW_MARGIN  4.0f     // inset from the screen edge
+#define TEAM_ARROW_SIZE     22.0f
+
+// clamps direction (dx,dy) from screen center to the edge of the HUD box
+static void CG_ClampToHudEdge( float dx, float dy, float *outX, float *outY ) {
+	const float cx = 320.0f, cy = 240.0f;
+	const float left = TEAM_ARROW_MARGIN, right = 640.0f - TEAM_ARROW_MARGIN;
+	const float top = TEAM_ARROW_MARGIN, bottom = 480.0f - TEAM_ARROW_MARGIN;
+	float scale = 3.0e38f;
+
+	if ( dx > 0.0f ) {
+		scale = ( right - cx ) / dx;
+	} else if ( dx < 0.0f ) {
+		scale = ( left - cx ) / dx;
+	}
+
+	if ( dy > 0.0f ) {
+		scale = min( scale, ( bottom - cy ) / dy );
+	} else if ( dy < 0.0f ) {
+		scale = min( scale, ( top - cy ) / dy );
+	}
+
+	*outX = cx + dx * scale;
+	*outY = cy + dy * scale;
+}
+
+/*
+==============
+CG_DrawTeammateArrows
+
+Edge arrow pointing toward each same-team player currently outside our FOV.
+==============
+*/
+void CG_DrawTeammateArrows( void ) {
+	int i;
+	vec4_t color;
+	qhandle_t arrowShader;
+
+	if ( !cg_drawTeamArrows.integer ) {
+		return;
+	}
+	if ( cgs.gametype == GT_SINGLE_PLAYER ) {
+		return;
+	}
+	if ( cg.renderingThirdPerson ) {
+		return;
+	}
+	if ( cg.snap->ps.pm_flags & PMF_LIMBO || cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
+		return;
+	}
+
+	// force full-stretch mapping regardless of what prior HUD code left set
+	CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+
+	arrowShader = trap_R_RegisterShader( "gfx/2d/teamarrow.tga" );
+
+	for ( i = 0; i < MAX_CLIENTS; i++ ) {
+		centity_t *cent = &cg_entities[i];
+		vec3_t toTarget;
+		float dist, leftness, up, ex, ey, sx, sy, turns;
+
+		if ( cg.snap->ps.clientNum == i || !cgs.clientinfo[i].infoValid || cent->currentState.teamNum != cg.snap->ps.teamNum ) {
+			continue;
+		}
+
+		// don't point at friendly AI sharing our aiTeam/teamNum, only real players
+		if ( cent->currentState.aiChar ) {
+			continue;
+		}
+
+		VectorSubtract( cent->lerpOrigin, cg.refdef.vieworg, toTarget );
+		dist = VectorLength( toTarget );
+		if ( dist < 1.0f ) {
+			continue;
+		}
+		VectorScale( toTarget, 1.0f / dist, toTarget );
+
+		// already somewhere on screen - no arrow needed regardless of whether a wall is in the way
+		if ( CG_WorldToScreen( cent->lerpOrigin, &sx, &sy ) && sx >= 0.0f && sx <= 640.0f && sy >= 0.0f && sy <= 480.0f ) {
+			continue;
+		}
+
+		// undivided projection - stays well-defined even for targets behind us
+		leftness = DotProduct( toTarget, cg.refdef.viewaxis[1] );
+		up = DotProduct( toTarget, cg.refdef.viewaxis[2] );
+		ex = -leftness;
+		ey = -up;
+		if ( ex == 0.0f && ey == 0.0f ) {
+			ex = 0.0001f;
+		}
+
+		CG_ClampToHudEdge( ex, ey, &sx, &sy );
+
+		// -0.375: RB_RotatedPic's quad corners sit on the cardinal directions, not the edges
+		turns = atan2( ey, ex ) / ( 2.0 * M_PI ) - 0.375;
+		if ( turns < 0.0 ) {
+			turns += 1.0;
+		}
+
+		color[0] = color[1] = color[2] = 1.0f;
+		color[3] = cg_hudAlpha.value;
+		trap_R_SetColor( color );
+
+		CG_DrawRotatedPic( sx - TEAM_ARROW_SIZE * 0.5f, sy - TEAM_ARROW_SIZE * 0.5f,
+							TEAM_ARROW_SIZE, TEAM_ARROW_SIZE, arrowShader, turns );
+	}
+
+	trap_R_SetColor( NULL );
+}
+
+#define TEAM_NAME_HEIGHT_OFFSET  56.0f   // matches the height used for other floating head indicators
+#define TEAM_NAME_SCALE_MAX      0.22f   // size at or below TEAM_NAME_SCALE_REF_DIST
+#define TEAM_NAME_SCALE_MIN      0.13f   // never shrinks past this, however far away - stays legible
+#define TEAM_NAME_SCALE_REF_DIST 300.0f  // world units; full size up to here, then shrinks with distance
+
+/*
+==============
+CG_DrawTeammateNames
+
+Always-on nickname tag above every living teammate in our FOV, through walls.
+==============
+*/
+void CG_DrawTeammateNames( void ) {
+	int i;
+	vec4_t teamColor = { 0.1250f, 0.7608f, 0.0859f, 1.0f };    // light-green, matches CG_DrawCrosshairNames
+	fontInfoExtra_t *font = &cgDC.Assets.bigFont;
+
+	if ( !cg_drawTeamNames.integer ) {
+		return;
+	}
+	if ( cgs.gametype == GT_SINGLE_PLAYER ) {
+		return;
+	}
+	if ( cg.renderingThirdPerson ) {
+		return;
+	}
+	if ( cg.snap->ps.pm_flags & PMF_LIMBO || cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
+		return;
+	}
+
+	// force full-stretch mapping - see CG_DrawTeammateArrows
+	CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+
+	teamColor[3] = cg_hudAlpha.value;
+
+	for ( i = 0; i < MAX_CLIENTS; i++ ) {
+		centity_t *cent = &cg_entities[i];
+		const char *name;
+		vec3_t namePos;
+		float x, y, w, dist, scale;
+
+		if ( cg.snap->ps.clientNum == i || !cgs.clientinfo[i].infoValid || cent->currentState.teamNum != cg.snap->ps.teamNum ) {
+			continue;
+		}
+		if ( cent->currentState.aiChar ) {
+			continue;
+		}
+		if ( cent->currentState.eFlags & EF_DEAD || cgs.clientinfo[i].health <= 0 ) {
+			continue;
+		}
+
+		VectorCopy( cent->lerpOrigin, namePos );
+		namePos[2] += TEAM_NAME_HEIGHT_OFFSET;
+
+		if ( !CG_WorldToScreen( namePos, &x, &y ) || x < 0.0f || x > 640.0f || y < 0.0f || y > 480.0f ) {
+			continue;   // outside our FOV - CG_DrawTeammateArrows points the way instead
+		}
+		// deliberately no PointVisible/wall check here - the name tag stays up through walls too
+
+		name = cgs.clientinfo[i].name;
+		if ( !name[0] ) {
+			continue;
+		}
+
+		dist = sqrt( DistanceSquared( cg.refdef.vieworg, namePos ) );
+		scale = TEAM_NAME_SCALE_MAX;
+		if ( dist > TEAM_NAME_SCALE_REF_DIST ) {
+			scale = TEAM_NAME_SCALE_MAX * ( TEAM_NAME_SCALE_REF_DIST / dist );
+			if ( scale < TEAM_NAME_SCALE_MIN ) {
+				scale = TEAM_NAME_SCALE_MIN;
+			}
+		}
+
+		w = CG_Text_Width_Ext( name, scale, 0, font );
+		CG_Text_Paint_Ext( x - w * 0.5f, y, scale, scale, teamColor, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED, font );
+	}
+}
+
 
 /*
 =================
@@ -3842,147 +4040,6 @@ void CG_CheckForCursorHints( void ) {
 
 	// (SA) (8/14/01) removed all the client-side stuff.  don't think it's really necessary anymore
 }
-
-/*
-=====================
-CG_DrawCoopCrosshairNames
-=====================
-*/
-static void CG_DrawCoopCrosshairNames( void ) {
-	float       *color;
-	char        *name;
-	float w;
-	// NERVE - SMF
-	const char  *s;
-	int playerHealth, val;
-	vec4_t c;
-	float barFrac;
-	int armor;
-	// -NERVE - SMF
-	centity_t *cent;
-
-	if ( cg_drawCrosshair.integer < 0 ) {
-		return;
-	}
-	if ( !cg_drawCrosshairNames.integer ) {
-		return;
-	}
-	if ( cg.renderingThirdPerson ) {
-		return;
-	}
-
-	// Ridah
-	if ( cg_gameType.integer == GT_SINGLE_PLAYER ) {
-		return;
-	}
-	// done.
-
-	if ( cg_fixedAspect.integer ) {
-		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
-	}
-
-	// scan the known entities to see if the crosshair is sighted on one
-	CG_ScanForCrosshairEntity();
-
-	// draw the name of the player being looked at
-	color = CG_FadeColor( cg.crosshairClientTime, 1000 );
-
-	if ( !color ) {
-		trap_R_SetColor( NULL );
-		return;
-	}
-
-	// NERVE - SMF
-	if ( cg.crosshairClientNum > MAX_CLIENTS ) {
-		return;
-	}
-
-	// we only want to see players on our team
-	if ( cgs.clientinfo[cg.snap->ps.clientNum].team != TEAM_SPECTATOR
-		 && cgs.clientinfo[ cg.crosshairClientNum ].team != cgs.clientinfo[cg.snap->ps.clientNum].team ) {
-		return;
-	}
-
-	cent = &cg_entities[ cg.crosshairClientNum ];
-
-	// TODO make this look nice
-	if ( cent->currentState.eFlags & EF_FROZEN ) {
-		s = va( "Player is frozen." );
-		w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
-		CG_DrawSmallStringColor( 320 - w / 2, 170, s, color );
-
-		s = va( "Stab him with knife to respawn him." );
-		w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
-		CG_DrawSmallStringColor( 320 - w / 2, 170 + SMALLCHAR_HEIGHT + 5, s, color );
-		return;
-	}
-
-	playerHealth = cgs.clientinfo[ cg.crosshairClientNum ].health;
-
-	if ( playerHealth <= 0 ) {
-		return;
-	}
-
-	val = cgs.clientinfo[ cg.crosshairClientNum ].curWeapon;
-	name = cgs.clientinfo[ cg.crosshairClientNum ].name;
-	armor = cgs.clientinfo[ cg.crosshairClientNum ].armor;
-
-	//s = va( "[%s] %s", CG_TranslateString( playerClass ), name );
-	//s = va( "[%s] %s", playerClass, name );
-	if ( val == WP_KNIFE ) {
-		s = va( "%s", name );
-	} else if ( val == WP_GRENADE_LAUNCHER || val == WP_GRENADE_PINEAPPLE || val == WP_POISONGAS || val == WP_SMOKEBOMB || val == WP_DYNAMITE || val == WP_FLAMETHROWER || val == WP_TESLA ) {
-		s = va( "[%d] %s", cgs.clientinfo[ cg.crosshairClientNum ].ammoClip, name );
-	} else {
-		s = va( "[%d/%d] %s", cgs.clientinfo[ cg.crosshairClientNum ].ammoClip, cgs.clientinfo[ cg.crosshairClientNum ].ammo, name );
-	}
-
-
-	//s = va( "[%d]%s",armor , name );
-	if ( !s ) {
-		return;
-	}
-	w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
-
-	// draw the name and class
-	CG_DrawSmallStringColor( 320 - w / 2, 170, s, color );
-
-	// health bar
-	barFrac = (float)playerHealth / 100;
-
-	if ( barFrac > 1.0 ) {
-		barFrac = 1.0;
-	} else if ( barFrac < 0 ) {
-		barFrac = 0;
-	}
-
-	c[0] = 1.0f;
-	c[1] = c[2] = barFrac;
-	c[3] = 0.25 + barFrac * 0.5 * color[3];
-
-	CG_FilledBar( 241, 190, 158, 10, c, NULL, NULL, barFrac, 16 );
-
-
-	// armor bar
-	if ( cg_drawCrosshairNames.integer == 2 ) {
-		barFrac = (float)armor / 100;
-
-		if ( barFrac > 1.0 ) {
-			barFrac = 1.0;
-		} else if ( barFrac < 0 ) {
-			barFrac = 0;
-		}
-
-		c[0] = 1.0f;
-		c[1] = c[2] = barFrac;
-		c[3] = 0.25 + barFrac * 0.5 * color[3];
-
-		CG_FilledBar( 241, 205, 158, 10, c, NULL, NULL, barFrac, 16 );
-	}
-
-	trap_R_SetColor( NULL );
-}
-
 
 /*
 =====================
@@ -5007,8 +5064,9 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			CG_DrawSpecialGrenadeCount();
 			CG_DrawReviveProgress();
 			CG_DrawConstructProgress();
-			CG_DrawCoopCrosshairNames();
 			CG_DrawEnemyHealthbars();
+			CG_DrawTeammateArrows();
+			CG_DrawTeammateNames();
 			CG_DrawDamageNumbers();
 			CG_DrawAINameDebug();
 			CG_DrawAIStatsDebug();

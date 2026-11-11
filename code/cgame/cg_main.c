@@ -265,7 +265,9 @@ vmCvar_t cg_entityEditCounter;
 vmCvar_t cg_limbotime;
 vmCvar_t cg_reviveBleedoutTime;
 vmCvar_t cg_obituaries;
-vmCvar_t cg_drawcompass;
+vmCvar_t cg_drawTeamArrows;
+vmCvar_t cg_drawTeamOutline;
+vmCvar_t cg_drawTeamNames;
 vmCvar_t cg_fancyfx; // all new visual fx can be enabled/disabled with this cvar, it will be off by default so older machines dont just crash
 
 vmCvar_t cg_bloodTime;
@@ -542,7 +544,9 @@ cvarTable_t cvarTable[] = {
 	{&cg_gameType, "g_gametype", "0", 0}, // communicated by systeminfo
 
 	{&cg_obituaries, "cg_obituaries", "2", CVAR_ARCHIVE},
-	{&cg_drawcompass, "cg_drawcompass", "1", CVAR_ARCHIVE},
+	{&cg_drawTeamArrows, "cg_drawTeamArrows", "1", CVAR_ARCHIVE},
+	{&cg_drawTeamOutline, "cg_drawTeamOutline", "1", CVAR_ARCHIVE},
+	{&cg_drawTeamNames, "cg_drawTeamNames", "1", CVAR_ARCHIVE},
 	{&cg_fancyfx, "cg_fancyfx", "0", CVAR_ARCHIVE},
 	{&cg_entityEditCounter, "cg_entityEditCounter", "0", CVAR_ARCHIVE | CVAR_ROM},
 	{&cg_limbotime, "", "30000", 0},
@@ -1723,7 +1727,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.classIcons[PC_ENGINEER] = trap_R_RegisterShaderNoMip( "gfx/hud/class_engineer.tga" );
 	cgs.media.classIcons[PC_FIELDOPS] = trap_R_RegisterShaderNoMip( "gfx/hud/class_fieldops.tga" );
 	cgs.media.voiceChatShader = trap_R_RegisterShader( "sprites/voiceChat" );
-	cgs.media.reviveNeededShader = trap_R_RegisterShader( "sprites/voiceMedic" );
+	cgs.media.reviveNeededShader = trap_R_RegisterShader( "sprites/voiceMedic_xray" );   // visible through walls
 	cgs.media.reviveLoopSound = trap_S_RegisterSound( "sound/misc/revive_loop.wav" );
 	cgs.media.reviveLoopMedicSound = trap_S_RegisterSound( "sound/misc/revive_loop_medic.wav" );
 	cgs.media.constructLoopSound = trap_S_RegisterSound( "sound/world/build_loop.wav" );

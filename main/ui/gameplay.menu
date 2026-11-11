@@ -166,14 +166,14 @@ menuDef {
 		}
 
 	itemDef {
-		name			hud_compass
+		name			hud_teamnames
 		group			performance
 		rect 0 96 600 22
 		type			ITEM_TYPE_MULTI
 		style			WINDOW_STYLE_FILLED
-		text			"@OPTIONS_COMPASS"
+		text			"@OPTIONS_TEAMNAMES"
 		textfont 		UI_FONT_BIG				// RealRTCWCoop
-		cvar			"cg_drawcompass"
+		cvar			"cg_drawTeamNames"
 		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 		textscale		.32
 		textalign		ITEM_ALIGN_RIGHT
@@ -182,8 +182,8 @@ menuDef {
 		backcolor		1 1 1 .07
 		forecolor		1 1 1 1
 		visible			0
-		mouseEnter { setitemcolor hud_compass backcolor .3 0.5 0.2 .25 ; show tip_hud_compass ; show tipbox }
-		mouseExit { setitemcolor hud_compass backcolor 1 1 1 .07 ; hide tip_hud_compass ; hide tipbox }
+		mouseEnter { setitemcolor hud_teamnames backcolor .3 0.5 0.2 .25 ; show tip_hud_teamnames ; show tipbox }
+		mouseExit { setitemcolor hud_teamnames backcolor 1 1 1 .07 ; hide tip_hud_teamnames ; hide tipbox }
 	}
 
 	itemDef {
@@ -680,11 +680,11 @@ menuDef {
 	}
 
 	itemDef {
-		name tip_hud_compass
+		name tip_hud_teamnames
 		group grpGameplayTip
 		style WINDOW_STYLE_EMPTY
 		rect 15 280 570 28
-		text "@OPTIONS_TIP_COMPASS"
+		text "@OPTIONS_TIP_TEAMNAMES"
 		textfont UI_FONT_BIG
 		textscale .23
 		textalign ITEM_ALIGN_LEFT

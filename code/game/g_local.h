@@ -1282,6 +1282,7 @@ void G_CheckBotSpawn( void );
 void G_QueueBotBegin( int clientNum );
 qboolean G_BotConnect( int clientNum, qboolean restart );
 void Svcmd_AddBot_f( void );
+void Svcmd_SpawnDummy_f( void );
 void G_LoadArenas( void );
 
 // ai_main.c

@@ -283,23 +283,23 @@ menuDef {
 			}
 		
 		itemDef {
-			name			iq_compass
+			name			iq_teamnames
 			rect			0 224 170 12
 			textfont		UI_FONT_NORMAL
 			type			ITEM_TYPE_MULTI
 			style			WINDOW_STYLE_FILLED
-			text			"@OPTIONS_COMPASS"
-			cvar			"cg_drawcompass"
+			text			"@OPTIONS_TEAMNAMES"
+			cvar			"cg_drawTeamNames"
 			cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
 			textscale		.22
-			textalign		ITEM_ALIGN_RIGHT	
+			textalign		ITEM_ALIGN_RIGHT
 			textalignx		96
 			textaligny		11
-			backcolor		  1 1 1 .07 		  
+			backcolor		  1 1 1 .07
 			forecolor		1 1 1 1
 			visible			1
-			mouseEnter { setitemcolor iq_compass backcolor .3 0.5 0.2 .25 }
-			mouseExit { setitemcolor iq_compass backcolor 1 1 1 .07 }
+			mouseEnter { setitemcolor iq_teamnames backcolor .3 0.5 0.2 .25 }
+			mouseExit { setitemcolor iq_teamnames backcolor 1 1 1 .07 }
 			}
 
 

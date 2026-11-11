@@ -4729,7 +4729,9 @@ void CL_Init( void ) {
 	Cvar_Get( "cl_maxPing", "800", CVAR_ARCHIVE );
 
 	// NERVE - SMF
-	Cvar_Get( "cg_drawCompass", "1", CVAR_ARCHIVE );
+	Cvar_Get( "cg_drawTeamArrows", "1", CVAR_ARCHIVE );
+	Cvar_Get( "cg_drawTeamOutline", "1", CVAR_ARCHIVE );
+	Cvar_Get( "cg_drawTeamNames", "1", CVAR_ARCHIVE );
 	Cvar_Get( "cg_drawNotifyText", "1", CVAR_ARCHIVE );
 	Cvar_Get( "cg_quickMessageAlt", "1", CVAR_ARCHIVE );
 	Cvar_Get( "cg_popupLimboMenu", "1", CVAR_ARCHIVE );

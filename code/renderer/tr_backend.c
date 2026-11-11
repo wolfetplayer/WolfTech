@@ -199,9 +199,13 @@ void GL_State( unsigned long stateBits ) {
 	//
 	// check depthFunc bits
 	//
-	if ( diff & GLS_DEPTHFUNC_EQUAL ) {
+	if ( diff & GLS_DEPTHFUNC_BITS ) {
 		if ( stateBits & GLS_DEPTHFUNC_EQUAL ) {
 			qglDepthFunc( GL_EQUAL );
+		} else if ( stateBits & GLS_DEPTHFUNC_GREATER ) {
+			qglDepthFunc( GL_GREATER );
+		} else if ( stateBits & GLS_DEPTHFUNC_ALWAYS ) {
+			qglDepthFunc( GL_ALWAYS );
 		} else
 		{
 			qglDepthFunc( GL_LEQUAL );

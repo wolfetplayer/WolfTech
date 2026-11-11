@@ -4396,6 +4396,10 @@ void CG_AddHelgaSpiritEffect( centity_t *cent ) {
 
 //==========================================================================
 
+#define TEAM_OUTLINE_INFLATE 1.035f // outline pass size vs the real mesh
+#define TEAM_OUTLINE_CAMERA_NUDGE_MIN  3.0f    // floor (world units) for close range
+#define TEAM_OUTLINE_CAMERA_NUDGE_FRAC 0.015f  // scales with distance so it beats depth-buffer precision loss
+
 /*
 ===============
 CG_AddRefEntityWithPowerups
@@ -4413,6 +4417,36 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, int powerups, int team, enti
 	cent = &cg_entities[es->number];
 
 	ent->entityNum = es->number;
+
+	// through-wall teammate outline - two-pass mask+outline trick, see teammate_xray.shader
+	if ( cg_drawTeamOutline.integer && es->number >= 0 && es->number < MAX_CLIENTS &&
+		 es->number != cg.snap->ps.clientNum && cgs.clientinfo[es->number].infoValid &&
+		 es->teamNum == cg.snap->ps.teamNum && !es->aiChar &&
+		 CG_TeammateOccluded( cent ) ) {
+		refEntity_t mask = *ent;
+		refEntity_t outline = *ent;
+		int axisNum;
+		float camDist, nudge;
+
+		mask.customShader = trap_R_RegisterShader( "models/misc/teammate_xray_mask" );
+		mask.customSkin = 0;
+		trap_R_AddRefEntityToScene( &mask );
+
+		for ( axisNum = 0; axisNum < 3; axisNum++ ) {
+			VectorScale( outline.axis[axisNum], TEAM_OUTLINE_INFLATE, outline.axis[axisNum] );
+		}
+		// scale alone isn't reliable depth-wise (inflates from the feet, not toward camera)
+		camDist = sqrt( DistanceSquared( cg.refdef.vieworg, ent->origin ) );
+		nudge = camDist * TEAM_OUTLINE_CAMERA_NUDGE_FRAC;
+		if ( nudge < TEAM_OUTLINE_CAMERA_NUDGE_MIN ) {
+			nudge = TEAM_OUTLINE_CAMERA_NUDGE_MIN;
+		}
+		VectorMA( outline.origin, -nudge, cg.refdef.viewaxis[0], outline.origin );
+		outline.customShader = trap_R_RegisterShader( "models/misc/teammate_xray_outline" );
+		outline.customSkin = 0;
+		outline.shaderRGBA[0] = outline.shaderRGBA[1] = outline.shaderRGBA[2] = outline.shaderRGBA[3] = 255;
+		trap_R_AddRefEntityToScene( &outline );
+	}
 
 	if ( cent->pe.forceLOD ) {
 		ent->reFlags |= REFLAG_FORCE_LOD;
