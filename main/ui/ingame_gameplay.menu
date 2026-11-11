@@ -342,7 +342,7 @@ menuDef {
 		text			"@OPTIONS_SCOREPOP"
 		textfont		UI_FONT_BIG
 		cvar			"cg_drawScorePop"
-		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
+		cvarFloatList	{ "@OPTIONS_SCOREPOP_ALL" 1 "@OPTIONS_SCOREPOP_NOHITS" 2 "@GENERAL_OFF" 0}
 		textscale		.22
 		textalign		ITEM_ALIGN_RIGHT
 		textalignx		224
@@ -510,27 +510,6 @@ menuDef {
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0
-	}
-
-	itemDef {
-		name			icr2_names
-		group			crosshair
-		rect 0 133 443 16
-		type			ITEM_TYPE_MULTI
-		style			WINDOW_STYLE_FILLED
-		text			"@OPTIONS_CROSSHAIRNAMES"
-		textfont		UI_FONT_BIG
-		cvar			"cg_drawcrosshairnames"
-		cvarFloatList	{ "@GENERAL_OFF" 0 "@GENERAL_ON" 1}
-		textscale		.22
-		textalign		ITEM_ALIGN_RIGHT
-		textalignx		224
-		textaligny		12
-		backcolor		1 1 1 .07
-		forecolor		1 1 1 1
-		visible			0
-		mouseEnter { setitemcolor icr2_names backcolor .3 0.5 0.2 .25 ; show tip_icr2_names ; show tipbox }
-		mouseExit { setitemcolor icr2_names backcolor 1 1 1 .07 ; hide tip_icr2_names ; hide tipbox }
 	}
 
 	itemDef {
@@ -908,22 +887,6 @@ menuDef {
 		style WINDOW_STYLE_EMPTY
 		rect 10 330 423 30
 		text "@OPTIONS_TIP_SOLIDCROSSHAIR"
-		textfont UI_FONT_BIG
-		textscale .2
-		textalign ITEM_ALIGN_LEFT
-		textalignx 0
-		textaligny 20
-		forecolor 1 1 1 1
-		visible 0
-		decoration
-	}
-
-	itemDef {
-		name tip_icr2_names
-		group grpIngameGameplayTip
-		style WINDOW_STYLE_EMPTY
-		rect 10 330 423 30
-		text "@OPTIONS_TIP_CROSSHAIRNAMES"
 		textfont UI_FONT_BIG
 		textscale .2
 		textalign ITEM_ALIGN_LEFT

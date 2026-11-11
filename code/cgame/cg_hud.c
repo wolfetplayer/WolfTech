@@ -38,102 +38,124 @@ extern displayContextDef_t cgDC;
 
 int drawTeamOverlayModificationCount = -1;
 
-// floating "+N"/"-N" popups shown next to the score HUD element
-#define SCOREPOP_DURATION   1200    // msec
-#define SCOREPOP_RISE       24      // pixels risen over the popup's lifetime
-#define SCOREPOP_STACK_GAP  14      // vertical spacing between concurrent popups
-#define MAX_SCORE_POPS      5
+// floating "+N"/"-N" popup beside the crosshair; rapid awards merge into one running total instead of stacking lines
+#define SCOREPOP_DURATION   1200    // msec, counted from the last merge
+#define SCOREPOP_RISE       24      // pixels risen once the popup goes cold
 
 typedef struct {
 	qboolean active;
-	int amount;
-	int startTime;
-} scorePop_t;
+	int amount;       // running total for the current burst
+	int startTime;    // refreshed on every merge; anchors the rise/fade
+} scoreBurst_t;
 
-static scorePop_t scorePops[MAX_SCORE_POPS];
+static scoreBurst_t scoreBurst;
+
+// cg_drawScorePop values
+#define SCOREPOP_OFF        0
+#define SCOREPOP_ALL        1
+#define SCOREPOP_NO_HITS    2
 
 /*
 ============
 CG_AddScorePop
 
-Queues a floating score popup next to the score HUD element. Called from
-cg_servercmds.c when the server reports a PERS_SCORE change.
+Merges a score award into the current burst. isHit marks per-hit awards
+(dropped when cg_drawScorePop is 2); a sign change starts a fresh burst
+instead of merging a gain with a spend.
 ============
 */
-void CG_AddScorePop( int amount ) {
-	int i, oldest, oldestTime;
-
+void CG_AddScorePop( int amount, qboolean isHit ) {
 	if ( !amount ) {
 		return;
 	}
 
-	oldest = 0;
-	oldestTime = trap_Milliseconds() + 1;
-	for ( i = 0; i < MAX_SCORE_POPS; i++ ) {
-		if ( !scorePops[i].active ) {
-			oldest = i;
-			break;
-		}
-		if ( scorePops[i].startTime < oldestTime ) {
-			oldestTime = scorePops[i].startTime;
-			oldest = i;
-		}
+	if ( cg_drawScorePop.integer <= SCOREPOP_OFF ) {
+		return;
 	}
 
-	scorePops[oldest].active = qtrue;
-	scorePops[oldest].amount = amount;
-	scorePops[oldest].startTime = trap_Milliseconds();
+	if ( cg_drawScorePop.integer >= SCOREPOP_NO_HITS && isHit ) {
+		return;
+	}
+
+	if ( scoreBurst.active && ( ( scoreBurst.amount > 0 ) == ( amount > 0 ) ) ) {
+		scoreBurst.amount += amount;
+	} else {
+		scoreBurst.active = qtrue;
+		scoreBurst.amount = amount;
+	}
+	scoreBurst.startTime = trap_Milliseconds();
 }
 
 /*
 ============
 CG_DrawScorePops
 
-Draws any active score popups stacked above the given score HUD rect.
+Draws the current score burst at the given anchor (left-aligned baseline),
+fading/rising once it's gone cold. Gated by cg_drawScorePop: 0 off, 1 show
+all, 2 hide hit-only (+1) spam (filtered earlier, in CG_AddScorePop).
 ============
 */
 static void CG_DrawScorePops( rectDef_t *rect, int font, float scale ) {
-	int i, currentTime, count;
-	float progress, alpha, y, width;
+	int currentTime;
+	float progress, alpha, y;
 	vec4_t color;
 	char str[16];
 
-	if ( !cg_drawScorePop.integer ) {
+	if ( cg_drawScorePop.integer <= SCOREPOP_OFF || !scoreBurst.active ) {
 		return;
 	}
 
 	currentTime = trap_Milliseconds();
-	count = 0;
 
-	for ( i = 0; i < MAX_SCORE_POPS; i++ ) {
-		if ( !scorePops[i].active ) {
-			continue;
-		}
-
-		progress = (float)( currentTime - scorePops[i].startTime ) / (float)SCOREPOP_DURATION;
-		if ( progress >= 1.0f ) {
-			scorePops[i].active = qfalse;
-			continue;
-		}
-
-		alpha = ( progress < 0.6f ) ? 1.0f : 1.0f - ( progress - 0.6f ) / 0.4f;
-
-		if ( scorePops[i].amount > 0 ) {
-			color[0] = 0.2f; color[1] = 1.0f; color[2] = 0.2f;
-		} else {
-			color[0] = 1.0f; color[1] = 0.2f; color[2] = 0.2f;
-		}
-		color[3] = alpha;
-
-		Com_sprintf( str, sizeof( str ), "%s%i", scorePops[i].amount > 0 ? "+" : "", scorePops[i].amount );
-
-		width = CG_Text_Width( str, font, scale, 0 );
-		y = rect->y - SCOREPOP_RISE * progress - ( count * SCOREPOP_STACK_GAP );
-
-		CG_Text_Paint( rect->x + ( rect->w - width ) / 2, y, font, scale, color, str, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE );
-
-		count++;
+	progress = (float)( currentTime - scoreBurst.startTime ) / (float)SCOREPOP_DURATION;
+	if ( progress >= 1.0f ) {
+		scoreBurst.active = qfalse;
+		return;
 	}
+
+	alpha = ( progress < 0.6f ) ? 1.0f : 1.0f - ( progress - 0.6f ) / 0.4f;
+
+	if ( scoreBurst.amount > 0 ) {
+		color[0] = 0.2f; color[1] = 1.0f; color[2] = 0.2f;
+	} else {
+		color[0] = 1.0f; color[1] = 0.2f; color[2] = 0.2f;
+	}
+	color[3] = alpha;
+
+	Com_sprintf( str, sizeof( str ), "%s%i", scoreBurst.amount > 0 ? "+" : "", scoreBurst.amount );
+
+	y = rect->y - SCOREPOP_RISE * progress;
+
+	CG_Text_Paint( rect->x, y, font, scale, color, str, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE );
+}
+
+/*
+============
+CG_DrawScorePopsCrosshair
+
+Draws the local player's score burst beside the crosshair. Drawn once here
+rather than per row in CG_DrawPlayerInfo, since the server only notifies the
+scoring client - per-row drawing made teammates' screens show points they
+never earned.
+============
+*/
+#define SCOREPOP_CROSSHAIR_X 320
+#define SCOREPOP_CROSSHAIR_Y 244
+#define SCOREPOP_SIDE_GAP    26     // gap from screen center to the popup's left edge
+
+void CG_DrawScorePopsCrosshair( void ) {
+	rectDef_t rect;
+
+	if ( cgs.gametype != GT_COOP_SURVIVAL ) {
+		return;
+	}
+
+	rect.x = SCOREPOP_CROSSHAIR_X + SCOREPOP_SIDE_GAP;
+	rect.y = SCOREPOP_CROSSHAIR_Y;
+	rect.w = 0;
+	rect.h = 0;
+
+	CG_DrawScorePops( &rect, UI_FONT_NORMAL, 0.26f );
 }
 
 static void CG_DrawPlayerArmorValue( rectDef_t *rect, int font, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
@@ -818,39 +840,34 @@ static const char *CG_GrenadeShortLabel( int wp ) {
 ==============
 CG_DrawGrenadeReadoutRow
 
-Count, icon, then short label - shared by CG_DrawGrenadeCount and
-CG_DrawSpecialGrenadeCount below.
+Count then short label - shared by CG_DrawGrenadeCount and
+CG_DrawSpecialGrenadeCount below. No icon: the count itself pulses while
+cooking instead.
 ==============
 */
 static void CG_DrawGrenadeReadoutRow( rectDef_t *rect, int font, float scale, vec4_t color, int textStyle, int wp, int value, float pulse ) {
 	char num[16];
 	const char *name;
-	qhandle_t icon;
-	float x, numW, iconSize, grow, gap, nameW, nameScale, totalW;
+	float x, numW, numWPulsed, numScale, gap, nameW, nameScale, totalW;
 
-	icon = cg_weapons[ wp ].weaponIcon[0];
 	name = CG_GrenadeShortLabel( wp );
 
-	iconSize = rect->h;
-	grow = 0.3f * pulse * iconSize;
 	gap = rect->h * 0.3f;
 	nameScale = scale * 0.55f;
+	numScale = scale * ( 1.0f + 0.3f * pulse );
 
 	Com_sprintf( num, sizeof( num ), "%i", value );
-	numW = CG_Text_Width( num, font, scale, 0 );
+	numW = CG_Text_Width( num, font, scale, 0 );            // nominal width - keeps the row layout stable while pulsing
+	numWPulsed = CG_Text_Width( num, font, numScale, 0 );
 	nameW = ( name && name[0] ) ? CG_Text_Width( name, font, nameScale, 0 ) : 0.0f;
 
 	// center the whole row, matching CG_DrawPlayerAmmoCombined below it
-	totalW = numW + gap + iconSize + gap + nameW;
+	totalW = numW + gap + nameW;
 	x = rect->x + ( rect->w - totalW ) / 2;
 
-	CG_Text_Paint( x, rect->y + rect->h, font, scale, color, num, 0, 0, textStyle );
+	// grows symmetrically around its own slot instead of shifting the label next to it
+	CG_Text_Paint( x - 0.5f * ( numWPulsed - numW ), rect->y + rect->h, font, numScale, color, num, 0, 0, textStyle );
 	x += numW + gap;
-
-	if ( icon ) {
-		CG_DrawPic( x - 0.5f * grow, rect->y - 0.5f * grow, iconSize + grow, iconSize + grow, icon );
-	}
-	x += iconSize + gap;
 
 	if ( name && name[0] ) {
 		CG_Text_Paint( x, rect->y + rect->h, font, nameScale, color, name, 0, 0, textStyle );
@@ -1135,20 +1152,12 @@ static void CG_DrawPlayerInfoRow( float x, float y, clientInfo_t *ci, int score,
 
 	// top line: points (Survival only)
 	if ( cgs.gametype == GT_COOP_SURVIVAL ) {
-		rectDef_t pointsRect;
-
 		trap_R_SetColor( textColor );
 		CG_DrawPic( x, pointsY, PLAYERINFO_ICON_W, PLAYERINFO_ICON_H, cgs.media.scoreIconShader );
 		trap_R_SetColor( NULL );
 
 		Com_sprintf( num, sizeof( num ), "%i", score );
 		CG_Text_Paint( x + PLAYERINFO_ICON_W + 4, pointsY + 9, UI_FONT_NORMAL, 0.22f, textColor, num, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
-
-		pointsRect.x = x;
-		pointsRect.y = pointsY;
-		pointsRect.w = 60;
-		pointsRect.h = PLAYERINFO_ICON_H;
-		CG_DrawScorePops( &pointsRect, UI_FONT_NORMAL, 0.22f );
 
 		// perk icons; teammates' levels come from coopinfo's perkBits
 		{
@@ -1249,10 +1258,94 @@ static void CG_DrawPlayerInfoRow( float x, float y, clientInfo_t *ci, int score,
 
 /*
 ===============
+CG_DrawTeammateInfoRow
+
+Compact entry for another player's row: points, class icon, nickname, no
+health bar or perk icons. A downed teammate (health <= 0) shows the "needs
+heal" icon in place of the talk icon.
+===============
+*/
+#define PLAYERINFO_ROW_W_COMPACT  100
+#define PLAYERINFO_ROW_H_COMPACT  34
+#define PLAYERINFO_WOUNDED_ICON   12
+
+static void CG_DrawTeammateInfoRow( float x, float y, clientInfo_t *ci, int score, int health ) {
+	char nameClean[MAX_QPATH];
+	char num[16];
+	vec4_t bgcolor, nameColor, textColor;
+	float panelY, pointsY, nameY, nameX, nameW;
+
+	if ( !ci->infoValid ) {
+		return;
+	}
+
+	panelY = y;
+	pointsY = y + 5;
+	nameY = y + 27;
+
+	// larger, darker rect behind gives a cheap 1px border effect
+	bgcolor[0] = bgcolor[1] = bgcolor[2] = 0.0f;
+	bgcolor[3] = 0.6f * cg_hudAlpha.value;
+	CG_FillRectRounded( x - 7, panelY - 1, PLAYERINFO_ROW_W_COMPACT + 2, PLAYERINFO_ROW_H_COMPACT + 2, PLAYERINFO_PANEL_RAD + 1, bgcolor );
+
+	bgcolor[3] = 0.35f * cg_hudAlpha.value;
+	CG_FillRectRounded( x - 6, panelY, PLAYERINFO_ROW_W_COMPACT, PLAYERINFO_ROW_H_COMPACT, PLAYERINFO_PANEL_RAD, bgcolor );
+
+	textColor[0] = textColor[1] = textColor[2] = 1.0f;
+	textColor[3] = cg_hudAlpha.value;
+
+	// top line: points only (Survival only) - no perk icons for teammates
+	if ( cgs.gametype == GT_COOP_SURVIVAL ) {
+		trap_R_SetColor( textColor );
+		CG_DrawPic( x, pointsY, PLAYERINFO_ICON_W, PLAYERINFO_ICON_H, cgs.media.scoreIconShader );
+		trap_R_SetColor( NULL );
+
+		Com_sprintf( num, sizeof( num ), "%i", score );
+		CG_Text_Paint( x + PLAYERINFO_ICON_W + 4, pointsY + 9, UI_FONT_NORMAL, 0.22f, textColor, num, 0, 0, ITEM_TEXTSTYLE_SHADOWED );
+	}
+
+	// bottom line: class icon, nickname, then wounded icon (or talk icon)
+	nameX = x;
+
+	{
+		int pc = CG_PlayerInfoClass( ci );
+
+		if ( pc >= 0 && pc < 4 && cgs.media.classIcons[pc] ) {
+			trap_R_SetColor( textColor );
+			CG_DrawPic( x, nameY - 9, PLAYERINFO_CLASS_ICON, PLAYERINFO_CLASS_ICON, cgs.media.classIcons[pc] );
+			trap_R_SetColor( NULL );
+			nameX = x + PLAYERINFO_CLASS_ICON + PLAYERINFO_CLASS_GAP;
+		}
+	}
+
+	nameColor[0] = ci->c1RGBA[0] / 255.0f;
+	nameColor[1] = ci->c1RGBA[1] / 255.0f;
+	nameColor[2] = ci->c1RGBA[2] / 255.0f;
+	nameColor[3] = cg_hudAlpha.value;
+	Q_strncpyz( nameClean, ci->name, sizeof( nameClean ) );
+	Q_StripColorCodes( nameClean );
+	CG_Text_Paint( nameX, nameY, UI_FONT_NORMAL, 0.18f, nameColor, nameClean, 0, 10, ITEM_TEXTSTYLE_SHADOWED );
+
+	nameW = CG_Text_Width( nameClean, UI_FONT_NORMAL, 0.18f, 10 );
+
+	if ( health <= 0 && cgs.media.hintShaders[HINT_REVIVE] ) {
+		trap_R_SetColor( textColor );
+		CG_DrawPic( nameX + nameW + 4, nameY - 9, PLAYERINFO_WOUNDED_ICON, PLAYERINFO_WOUNDED_ICON, cgs.media.hintShaders[HINT_REVIVE] );
+		trap_R_SetColor( NULL );
+	} else if ( cg_entities[ci->clientNum].voipTalking ) {
+		trap_R_SetColor( textColor );
+		CG_DrawPic( nameX + nameW + 4, nameY - 6, 8, 8, cgs.media.speakingShader );
+		trap_R_SetColor( NULL );
+	}
+}
+
+/*
+===============
 CG_DrawPlayerInfo
 
 Bottom-left stack of player-info entries; local player anchors at the
-bottom, others stack upward above it.
+bottom (full row, with health bar and perks) and others stack upward above
+it as compact rows (name, class icon, points, no health bar/perks).
 ===============
 */
 #define PLAYERINFO_BASE_X  20
@@ -1290,8 +1383,9 @@ void CG_DrawPlayerInfo( void ) {
 			continue;
 		}
 		row++;
-		CG_DrawPlayerInfoRow( PLAYERINFO_BASE_X, PLAYERINFO_BASE_Y - row * ( PLAYERINFO_ROW_H + PLAYERINFO_ROW_GAP ),
-							   ci, ci->score, ci->health, ci->maxHealth, ci->armor );
+		// +20 lines this up with the self row's panel top, which sits 20px below its own anchor y
+		CG_DrawTeammateInfoRow( PLAYERINFO_BASE_X, PLAYERINFO_BASE_Y + 20 - row * ( PLAYERINFO_ROW_H_COMPACT + PLAYERINFO_ROW_GAP ),
+								 ci, ci->score, ci->health );
 	}
 
 	// local player's own score is always fresh via playerState_t
@@ -2198,6 +2292,113 @@ static void CG_DrawEquipKeyHint( rectDef_t *rect, int slot, int font, float scal
 	CG_Text_Paint( x, rect->y + rect->h, font, scale, color, keyName, 0, 0, textStyle );
 	x += keyW;
 	CG_Text_Paint( x, rect->y + rect->h, font, scale, color, "]", 0, 0, textStyle );
+}
+
+/*
+==============
+CG_EquipSlotHasContent
+
+Whether slot (1, 2 or 3) has anything to show - an owned equipment weapon,
+or (slot 2 only) a Field Ops' binoculars.
+==============
+*/
+static qboolean CG_EquipSlotHasContent( int slot ) {
+	if ( CG_GetEquipSlotWeapon( slot ) != WP_NONE ) {
+		return qtrue;
+	}
+
+	return (qboolean)( slot == 2 && cg.snap->ps.stats[STAT_PLAYER_CLASS] == PC_FIELDOPS &&
+					   ( cg.snap->ps.stats[STAT_KEYS] & ( 1 << INV_BINOCS ) ) );
+}
+
+/*
+==============
+CG_EquipStackAnchorX
+
+Mirrors CG_DrawGrenadeReadoutRow's centering math for the "Grenade" row, so
+the equipment stack lines up with where its number actually starts.
+==============
+*/
+static float CG_EquipStackAnchorX( void ) {
+	float numW, nameW, gap, totalW;
+	const float boxX = 490.0f, boxW = 140.0f, rowH = 24.0f, scale = 0.32f;
+
+	numW = CG_Text_Width( "5", UI_FONT_NORMAL, scale, 0 );
+	nameW = CG_Text_Width( "Grenade", UI_FONT_NORMAL, scale * 0.55f, 0 );
+	gap = rowH * 0.3f;
+	totalW = numW + gap + nameW;
+
+	return boxX + ( boxW - totalW ) * 0.5f;
+}
+
+/*
+==============
+CG_DrawEquipmentStack
+
+Bottom-anchored equipment stack: only slots with content are drawn,
+compacted so the lowest one always sits just above the grenade counter.
+==============
+*/
+#define EQUIP_STACK_BASE_Y  306   // bottom-most row's y - ~10px clear of the grenade counter at y=360
+#define EQUIP_STACK_PITCH   54
+
+void CG_DrawEquipmentStack( void ) {
+	vec4_t textColor;
+	float equipX;
+	int slot;
+	int present[3];
+	int count = 0;
+	int i;
+
+	if ( cgs.gametype != GT_COOP_SURVIVAL ) {
+		return;
+	}
+
+	equipX = CG_EquipStackAnchorX();
+
+	// grenade-counter rows leave this set without resetting it, so reset it ourselves first
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement( PLACE_RIGHT, PLACE_BOTTOM );
+	} else if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+	}
+
+	for ( slot = 1; slot <= 3; slot++ ) {
+		if ( CG_EquipSlotHasContent( slot ) ) {
+			present[count++] = slot;
+		}
+	}
+
+	textColor[0] = textColor[1] = textColor[2] = 1.0f;
+	textColor[3] = cg_hudAlpha.value;
+
+	for ( i = 0; i < count; i++ ) {
+		rectDef_t rect;
+		int slotNum = present[i];
+		float y = EQUIP_STACK_BASE_Y - i * EQUIP_STACK_PITCH;
+
+		rect.x = equipX + 12;
+		rect.y = y;
+		rect.w = 32;
+		rect.h = 32;
+		CG_DrawEquipIcon( &rect, slotNum );
+
+		rect.x = equipX + 12;
+		rect.y = y + 32;
+		rect.w = 32;
+		rect.h = 14;
+		CG_DrawEquipValue( &rect, slotNum, UI_FONT_NORMAL, 0.22f, textColor, ITEM_TEXTSTYLE_SHADOWED );
+
+		rect.x = equipX;
+		rect.y = y - 6;
+		rect.w = 22;
+		rect.h = 11;
+		CG_DrawEquipKeyHint( &rect, slotNum, UI_FONT_NORMAL, 0.17f, textColor, ITEM_TEXTSTYLE_SHADOWED );
+	}
+
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+	}
 }
 
 /*

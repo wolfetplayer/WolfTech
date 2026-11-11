@@ -2134,7 +2134,8 @@ void CG_Concussive( centity_t *cent );
 
 void CG_PlayHitSound( hitEvent_t hitType );
 void CG_HitMarker( hitEvent_t hitType );
-void CG_AddScorePop( int amount );
+void CG_AddScorePop( int amount, qboolean isHit );
+void CG_DrawScorePopsCrosshair( void );
 qboolean CG_WorldToScreen( vec3_t point, float *x, float *y );
 void CG_AddDamageNumber( vec3_t origin, int amount, int maxHealth );
 void CG_DrawDamageNumbers( void );
@@ -2211,6 +2212,7 @@ void CG_TileClear( void );
 void CG_ColorForHealth( vec4_t hcolor );
 void CG_ColorForHealthbar( float frac, vec4_t color );
 void CG_DrawPlayerInfo( void );
+void CG_DrawEquipmentStack( void );
 void CG_GetColorForHealth( int health, int armor, vec4_t hcolor );
 
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );

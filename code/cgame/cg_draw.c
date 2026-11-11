@@ -5035,6 +5035,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 			if(stereoFrame == STEREO_CENTER) {
 				CG_DrawCrosshair();
 				CG_DrawHitMarker();
+				CG_DrawScorePopsCrosshair();
 			}
 
 			if ( cg_drawStatus.integer ) {
@@ -5045,6 +5046,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 				if ( !cg_oldWolfUI.integer ) {
 					Menu_PaintAll();
 					CG_DrawTimedMenus();
+					CG_DrawEquipmentStack();
 				}
 
 				CG_DrawPlayerInfo();

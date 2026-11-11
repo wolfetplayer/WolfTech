@@ -975,24 +975,7 @@
 		}*/
 
 		
-//	HEAT INDICATOR	
-
-		// heat indicator	
-		itemDef {
-			name "heat"
-			
-			cvarTest "cg_hudWeapIcon"
-			showCvar { "1" }
-			
-			decoration
-			visible MENU_TRUE
-			rect 456 -55 83 43		// horizontal version
-			align HUD_HORIZONTAL
-			ownerdraw CG_PLAYER_WEAPON_HEAT
-		}
-
-
-//	WEAPON ICON		
+//	WEAPON ICON
 		
 		// ammo icon
 		itemDef {
@@ -1048,20 +1031,6 @@
 			forecolor 1 1 1 0
 		}
 
-		// heat indicator	
-		itemDef {
-			name "heat"
-			
-			cvarTest "cg_hudWeapIcon"
-			showCvar { "0" }
-			
-			decoration
-			visible MENU_TRUE
-			rect 445.5 -8.5 50 17		// horizontal version
-			align HUD_HORIZONTAL
-			ownerdraw CG_PLAYER_WEAPON_HEAT
-		}
-		
 		// clip count value
 		itemDef {
  			name "cliptex"

@@ -1578,7 +1578,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "scorePop" ) ) {
-		CG_AddScorePop( atoi( CG_Argv( 1 ) ) );
+		CG_AddScorePop( atoi( CG_Argv( 1 ) ), atoi( CG_Argv( 2 ) ) ? qtrue : qfalse );
 		return;
 	}
 

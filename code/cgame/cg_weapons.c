@@ -3769,6 +3769,22 @@ static qboolean CG_WeaponSelectable( int i ) {
 	return qtrue;
 }
 
+/*
+===============
+CG_WeaponCyclable
+
+	Same as CG_WeaponSelectable, but also excludes the knife, which has its
+	own dedicated select bind and should never be landed on by weapnext/weapprev.
+===============
+*/
+static qboolean CG_WeaponCyclable( int i ) {
+	if ( i == WP_KNIFE ) {
+		return qfalse;
+	}
+
+	return CG_WeaponSelectable( i );
+}
+
 
 
 
@@ -4305,7 +4321,7 @@ void CG_NextWeap( qboolean switchBanks ) {
 				}
 			}
 
-			if ( CG_WeaponSelectable( num ) ) {
+			if ( CG_WeaponCyclable( num ) ) {
 				break;
 			}
 		}
@@ -4330,7 +4346,7 @@ void CG_NextWeap( qboolean switchBanks ) {
 				continue;
 			}
 
-			if ( CG_WeaponSelectable( num ) ) {  // first entry in bank was selectable, no need to scan the bank
+			if ( CG_WeaponCyclable( num ) ) {  // first entry in bank was selectable, no need to scan the bank
 				break;
 			}
 
@@ -4339,7 +4355,7 @@ void CG_NextWeap( qboolean switchBanks ) {
 			for ( j = newcycle; j < maxWeapsInBank; j++ ) {
 				num = getNextWeapInBank( newbank, j );
 
-				if ( CG_WeaponSelectable( num ) ) {  // found selectable weapon
+				if ( CG_WeaponCyclable( num ) ) {  // found selectable weapon
 					break;
 				}
 
@@ -4407,7 +4423,7 @@ void CG_PrevWeap( qboolean switchBanks ) {
 				}
 			}
 
-			if ( CG_WeaponSelectable( num ) ) {
+			if ( CG_WeaponCyclable( num ) ) {
 				break;
 			}
 		}
@@ -4434,7 +4450,7 @@ void CG_PrevWeap( qboolean switchBanks ) {
 				continue;
 			}
 
-			if ( CG_WeaponSelectable( num ) ) {  // first entry in bank was selectable, no need to scan the bank
+			if ( CG_WeaponCyclable( num ) ) {  // first entry in bank was selectable, no need to scan the bank
 				break;
 			}
 
@@ -4443,7 +4459,7 @@ void CG_PrevWeap( qboolean switchBanks ) {
 			for ( j = maxWeapsInBank; j > 0; j-- ) {
 				num = getPrevWeapInBank( newbank, j );
 
-				if ( CG_WeaponSelectable( num ) ) {  // found selectable weapon
+				if ( CG_WeaponCyclable( num ) ) {  // found selectable weapon
 					break;
 				}
 

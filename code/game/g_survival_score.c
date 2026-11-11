@@ -43,18 +43,27 @@ If you have questions concerning this license or the applicable additional terms
 
 /*
 ============
-Survival_AwardScore
+Survival_AwardScoreType
 
-Adds score to a player and notifies their client so the HUD can
-show a "+N" popup next to the score counter.
+Adds score and notifies the client for the HUD popup. isHit marks small
+per-hit awards (SCORE_HIT) so the client can filter them out separately.
 ============
 */
-void Survival_AwardScore(gentity_t *player, int amount) {
+void Survival_AwardScoreType(gentity_t *player, int amount, qboolean isHit) {
 	if (!player || !player->client || !amount)
 		return;
 
 	player->client->ps.persistant[PERS_SCORE] += amount;
-	trap_SendServerCommand(player - g_entities, va("scorePop %d", amount));
+	trap_SendServerCommand(player - g_entities, va("scorePop %d %d", amount, isHit ? 1 : 0));
+}
+
+/*
+============
+Survival_AwardScore
+============
+*/
+void Survival_AwardScore(gentity_t *player, int amount) {
+	Survival_AwardScoreType(player, amount, qfalse);
 }
 
 /*
@@ -129,7 +138,7 @@ void Survival_AddPainScore(gentity_t *attacker, gentity_t *victim, int damage) {
 		}
 	}
 
-	Survival_AwardScore(attacker, SCORE_HIT);
+	Survival_AwardScoreType(attacker, SCORE_HIT, qtrue);
 }
 
 /*
