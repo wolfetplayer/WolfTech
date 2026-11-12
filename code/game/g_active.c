@@ -1051,6 +1051,7 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// JPW drop button drops secondary weapon so new one can be picked up
 	// TTimo explicit braces to avoid ambiguous 'else'
+#if DROPWEAPON_ENABLED
 	if ( g_gametype.integer <= GT_COOP ) {
 		if ( ucmd->wbuttons & WBUTTON_DROP ) {
 			if ( !client->dropWeaponTime ) {
@@ -1116,6 +1117,7 @@ void ClientThink_real( gentity_t *ent ) {
 			client->dropWeaponTime = 0;
 		}
 	}
+#endif
 
 	// check for inactivity timer, but never drop the local client of a non-dedicated server
 	if ( !G_IsEntityAI( ent ) ) { // don't drop bots

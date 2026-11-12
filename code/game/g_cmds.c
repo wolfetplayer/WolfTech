@@ -2359,6 +2359,10 @@ int Cmd_WolfKick_f( gentity_t *ent ) {
 
 	int damage = 15;
 
+#if !WOLFKICK_ENABLED
+	return 0;   // kick disabled - see WOLFKICK_ENABLED in g_local.h
+#endif
+
 	if ( ent->client->ps.leanf ) {
 		return 0;   // no kick when leaning
 

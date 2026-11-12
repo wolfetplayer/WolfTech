@@ -1307,7 +1307,11 @@ void BotTestAAS( vec3_t origin );
 // g_cmd.c
 qboolean G_ThrowChair( gentity_t *ent, vec3_t dir, qboolean force ); // Need to call this elsewhere.
 void Cmd_Activate_f( gentity_t *ent );
+// wolfkick disabled for now - flip to 1 and rebuild to re-enable
+#define WOLFKICK_ENABLED 0
 int Cmd_WolfKick_f( gentity_t *ent );
+// dropweapon disabled for now - flip to 1 and rebuild to re-enable
+#define DROPWEAPON_ENABLED 0
 // Ridah
 
 // g_save.c
