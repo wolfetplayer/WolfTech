@@ -3022,6 +3022,9 @@ void G_RunFrame( int levelTime ) {
 					}
 				}
 			}
+			if ( ent->r.svFlags & SVF_TESTDUMMY ) {
+				G_RunTestDummy( ent );
+			}
 			G_RunClient( ent );
 			continue;
 		}

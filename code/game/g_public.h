@@ -63,6 +63,10 @@ If you have questions concerning this license or the applicable additional terms
 #define SVF_NOTSINGLECLIENT     0x00002000  // send entity to everyone but one client
 											// (entityShared_t->singleClient)
 
+#define SVF_TESTDUMMY           0x00004000  // stationary test dummy (g_bot.c) - has no real
+											// connection or botlib AI pumping usercmds, so
+											// G_RunFrame force-feeds it a neutral think each frame
+
 //===============================================================
 
 

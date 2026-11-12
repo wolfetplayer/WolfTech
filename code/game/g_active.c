@@ -1688,6 +1688,16 @@ void G_RunClient( gentity_t *ent ) {
 
 /*
 ==================
+G_RunTestDummy
+==================
+*/
+void G_RunTestDummy( gentity_t *ent ) {
+	ent->client->pers.cmd.serverTime = level.time;
+	ClientThink_real( ent );
+}
+
+/*
+==================
 SpectatorClientEndFrame
 
 ==================
@@ -1879,7 +1889,8 @@ void ClientEndFrame( gentity_t *ent ) {
 	P_DamageFeedback( ent );
 
 	// add the EF_CONNECTION flag if we haven't gotten commands recently
-	if ( !( ent->r.svFlags & SVF_CASTAI ) ) {
+	// (test dummies have no real connection to go stale - see G_RunTestDummy)
+	if ( !( ent->r.svFlags & ( SVF_CASTAI | SVF_TESTDUMMY ) ) ) {
 		if ( level.time - ent->client->lastCmdTime > 1000 ) {
 			ent->client->ps.eFlags |= EF_CONNECTION;
 		} else {

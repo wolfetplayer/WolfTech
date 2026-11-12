@@ -1247,6 +1247,7 @@ extern void alarmExplosion ( gentity_t * ent ) ;
 extern void ClientEndFrame ( gentity_t * ent ) ;
 extern void SpectatorClientEndFrame ( gentity_t * ent ) ;
 extern void G_RunClient ( gentity_t * ent ) ;
+extern void G_RunTestDummy ( gentity_t * ent ) ;
 extern void ClientThink ( int clientNum ) ;
 extern void ClientThink_real ( gentity_t * ent ) ;
 extern void SendPendingPredictableEvents ( playerState_t * ps ) ;

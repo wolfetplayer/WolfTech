@@ -654,6 +654,25 @@ static void G_AddBot( const char *name, int skill, const char *team, int delay )
 }
 
 
+#define MAX_TEST_DUMMIES 3
+
+/*
+===============
+G_CountTestDummies
+===============
+*/
+static int G_CountTestDummies( void ) {
+	int i, count = 0;
+
+	for ( i = 0; i < level.maxclients; i++ ) {
+		if ( g_entities[i].inuse && g_entities[i].client && ( g_entities[i].r.svFlags & SVF_TESTDUMMY ) ) {
+			count++;
+		}
+	}
+
+	return count;
+}
+
 /*
 ===============
 G_AddTestDummy
@@ -685,16 +704,16 @@ static qboolean G_AddTestDummy( const char *name ) {
 
 	trap_SetUserinfo( clientNum, userinfo );
 
-	// isBot=qfalse: qtrue would force G_BotConnect/BotAISetupClient, which needs a
-	// real bot character file we don't have
 	if ( ClientConnect( clientNum, qtrue, qfalse ) ) {
 		trap_BotFreeClient( clientNum );
 		return qfalse;
 	}
 
+
+	g_entities[clientNum].r.svFlags |= SVF_TESTDUMMY;
+
 	ClientBegin( clientNum );
 
-	// settle into a proper idle pose (pure data lookup, no physics)
 	BG_AnimScriptAnimation( &g_entities[clientNum].client->ps, AISTATE_RELAXED, ANIM_MT_IDLE, qfalse );
 
 	return qtrue;
@@ -704,18 +723,30 @@ static qboolean G_AddTestDummy( const char *name ) {
 ===============
 Svcmd_SpawnDummy_f
 
-Console command: "spawndummy [count] [name]" - adds up to 3 stationary test dummies.
+Console command: "spawndummy [count] [name]" - adds up to MAX_TEST_DUMMIES
 ===============
 */
 void Svcmd_SpawnDummy_f( void ) {
 	char arg[MAX_TOKEN_CHARS];
 	char baseName[MAX_TOKEN_CHARS];
 	int count, i;
+	int existing;
 	static int dummySerial;
+
+	if ( !g_cheats.integer ) {
+		G_Printf( S_COLOR_RED "spawndummy requires sv_cheats 1.\n" );
+		return;
+	}
+
+	existing = G_CountTestDummies();
+	if ( existing >= MAX_TEST_DUMMIES ) {
+		G_Printf( S_COLOR_RED "spawndummy: already at the %i-dummy limit (coop only supports 4 players total).\n", MAX_TEST_DUMMIES );
+		return;
+	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
 	count = arg[0] ? atoi( arg ) : 1;
-	count = Com_Clamp( 1, 3, count );
+	count = Com_Clamp( 1, MAX_TEST_DUMMIES - existing, count );
 
 	trap_Argv( 2, baseName, sizeof( baseName ) );
 	if ( !baseName[0] ) {

@@ -1247,6 +1247,7 @@ If you have questions concerning this license or the applicable additional terms
 {"ClientEndFrame", (byte *)ClientEndFrame},
 {"SpectatorClientEndFrame", (byte *)SpectatorClientEndFrame},
 {"G_RunClient", (byte *)G_RunClient},
+{"G_RunTestDummy", (byte *)G_RunTestDummy},
 {"ClientThink", (byte *)ClientThink},
 {"ClientThink_real", (byte *)ClientThink_real},
 {"SendPendingPredictableEvents", (byte *)SendPendingPredictableEvents},
