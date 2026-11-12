@@ -146,7 +146,7 @@ void CG_Text_PaintChar( float x, float y, float width, float height, float scale
 
 void CG_Text_Paint( float x, float y, int font, float scale, vec4_t color, const char *text, float adjust, int limit, int style ) {
 	int len, count;
-	vec4_t newColor;
+	vec4_t drawColor, newColor;
 	glyphInfo_t *glyph;
 	float useScale;
 	fontInfoExtra_t *fnt = &cgDC.Assets.textFont;
@@ -162,13 +162,13 @@ void CG_Text_Paint( float x, float y, int font, float scale, vec4_t color, const
 	}
 
 	useScale = scale * fnt->glyphScale;
-
-	color[3] *= cg_hudAlpha.value;  // (SA) adjust for cg_hudalpha
+	memcpy( drawColor, color, sizeof( vec4_t ) );
+	drawColor[3] *= cg_hudAlpha.value;  // (SA) adjust for cg_hudalpha
 
 	if ( text ) {
 		const char *s = text;
-		trap_R_SetColor( color );
-		memcpy( &newColor[0], &color[0], sizeof( vec4_t ) );
+		trap_R_SetColor( drawColor );
+		memcpy( &newColor[0], &drawColor[0], sizeof( vec4_t ) );
 		len = Q_UTF8_Strlen( text );
 		if ( limit > 0 && len > limit ) {
 			len = limit;
@@ -178,7 +178,7 @@ void CG_Text_Paint( float x, float y, int font, float scale, vec4_t color, const
 			glyph = Q_UTF8_GetGlyphExtended( fnt, Q_UTF8_CodePoint( s ) );
 			if ( Q_IsColorString( s ) ) {
 				memcpy( newColor, g_color_table[ColorIndex( *( s + 1 ) )], sizeof( newColor ) );
-				newColor[3] = color[3];
+				newColor[3] = drawColor[3];
 				trap_R_SetColor( newColor );
 				s += 2;
 				continue;
