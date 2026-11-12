@@ -788,10 +788,12 @@ static void CG_DrawPlayerAmmoCombined( rectDef_t *rect, int font, float scale, v
 	}
 
 	clip = ps->ammoclip[ BG_FindClipForWeapon( weap ) ];
+	ammo = ps->ammo[ BG_FindAmmoForWeapon( weap ) ];
 
 	switch ( weap ) {
-	// all ammo is in the clip for these
 	case WP_KNIFE:
+		Com_sprintf( text, sizeof( text ), "%i", ammo );
+		break;
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_POISONGAS:
@@ -802,7 +804,6 @@ static void CG_DrawPlayerAmmoCombined( rectDef_t *rect, int font, float scale, v
 		break;
 
 	default:
-		ammo = ps->ammo[ BG_FindAmmoForWeapon( weap ) ];
 		Com_sprintf( text, sizeof( text ), "%i | %i", clip, ammo );
 		break;
 	}
