@@ -3862,7 +3862,7 @@ static void PM_Weapon( void ) {
 	wt = GetWeaponTableData( pm->ps->weapon );
 	wc = wt->weaponClass;
 
-	if ( wc & ( WEAPON_CLASS_SMG | WEAPON_CLASS_MINIGUN ) ) {
+	if ( wc & ( WEAPON_CLASS_SMG | WEAPON_CLASS_MINIGUN | WEAPON_CLASS_ASSAULT_RIFLE | WEAPON_CLASS_MG ) ) {
 		PM_ContinueWeaponAnim( weapattackanim );
 	} else {
 		PM_StartWeaponAnim( weapattackanim );
