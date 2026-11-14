@@ -1610,6 +1610,7 @@ void AIChar_spawn( gentity_t *ent ) {
 	newent->spawnflags = ent->spawnflags;
 	newent->aiTeam = ent->aiTeam;
 	newent->oneshot = ent->oneshot;
+	newent->aiSurvivalGeneric = ent->aiSurvivalGeneric;
 	if ( newent->aiTeam < 0 ) {
 		newent->aiTeam = aiCharDefaults->aiTeam;
 	}

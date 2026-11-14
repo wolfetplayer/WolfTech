@@ -1572,6 +1572,11 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	// general initialization
 	G_FindTeams();
 
+	// must run after G_SpawnEntitiesFromString() and before SaveRegisteredItems() - see AICast_InitSurvival
+	if ( g_gametype.integer == GT_COOP_SURVIVAL ) {
+		AICast_SpawnGenericSurvivalPool();
+	}
+
 	SaveRegisteredItems();
 
 	if ( g_gametype.integer <= GT_SINGLE_PLAYER || trap_Cvar_VariableIntegerValue( "com_buildScript" ) ) {

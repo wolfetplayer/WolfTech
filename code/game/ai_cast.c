@@ -392,6 +392,7 @@ gentity_t *AICast_CreateCharacter( gentity_t *ent, float *attributes, cast_weapo
 	//
 	newent->aiName = ent->aiName;
 	newent->aiTeam = ent->aiTeam;
+	newent->aiSurvivalGeneric = ent->aiSurvivalGeneric;
 	// RF, must run after aiTeam is set above, since it strips TFL_FRIENDLYCLIP for allies only
 	AICast_SetNavClass( cs );
 	newent->targetname = ent->targetname;

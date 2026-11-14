@@ -364,6 +364,8 @@ struct gentity_s {
 	int aiCharacter;            // the index of the type of character we are (from aicast_soldier.c)
 	// done.
 
+	qboolean aiSurvivalGeneric;    // set only on programmatically-created survival pool AI (ai_cast_survival.c)
+
 	char        *aiSkin;
 	char        *aihSkin;
 

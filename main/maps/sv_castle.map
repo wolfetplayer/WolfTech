@@ -35615,187 +35615,12 @@ cathedrale_wall/cathedrale_c06
 }
 // entity 416
 {
-"classname" "ai_soldier"
-"origin" "-78 146 -1518"
-"ainame" "nazi1"
-"skin" "infantryss/dig1"
-"head" "dig1"
-"spawnflags" "1"
-}
-// entity 417
-{
-"classname" "ai_soldier"
-"origin" "-20 152 -1522"
-"angle" "180"
-"ainame" "nazi2"
-"skin" "infantryss/dig1"
-"head" "dig2"
-"spawnflags" "1"
-}
-// entity 418
-{
-"classname" "ai_soldier"
-"origin" "40 152 -1520"
-"ainame" "nazi3"
-"head" "dig3"
-"skin" "infantryss/dig1"
-"spawnflags" "1"
-}
-// entity 419
-{
-"classname" "ai_soldier"
-"origin" "84 152 -1522"
-"ainame" "nazi4"
-"skin" "infantryss/dig1"
-"head" "dig1"
-"spawnflags" "1"
-}
-// entity 420
-{
-"classname" "ai_soldier"
-"origin" "134 150 -1522"
-"ainame" "nazi5"
-"angle" "180"
-"skin" "infantryss/dig1"
-"head" "dig2"
-"spawnflags" "1"
-}
-// entity 421
-{
-"classname" "ai_soldier"
-"origin" "182 148 -1520"
-"ainame" "nazi6"
-"angle" "180"
-"skin" "infantryss/dig1"
-"head" "dig3"
-"spawnflags" "1"
-}
-// entity 422
-{
-"classname" "ai_soldier"
-"origin" "230 146 -1520"
-"ainame" "nazi7"
-"angle" "180"
-"skin" "infantryss/dig1"
-"head" "dig1"
-"spawnflags" "1"
-}
-// entity 423
-{
-"classname" "ai_soldier"
-"origin" "278 150 -1520"
-"ainame" "nazi8"
-"angle" "180"
-"skin" "infantryss/dig1"
-"head" "dig2"
-"spawnflags" "1"
-}
-// entity 424
-{
-"classname" "ai_soldier"
-"origin" "328 150 -1522"
-"ainame" "nazi9"
-"angle" "180"
-"skin" "infantryss/dig1"
-"head" "dig3"
-"spawnflags" "1"
-}
-// entity 425
-{
-"classname" "ai_soldier"
-"origin" "380 148 -1520"
-"ainame" "nazi10"
-"angle" "180"
-"skin" "infantryss/dig1"
-"head" "dig1"
-"spawnflags" "1"
-}
-// entity 426
-{
-"classname" "ai_eliteguard"
-"origin" "268 252 -1522"
-"ainame" "eg3"
-"spawnflags" "1"
-"skin" "eliteguard/church2"
-"head" "church2"
-}
-// entity 427
-{
-"classname" "ai_eliteguard"
-"origin" "318 252 -1522"
-"ainame" "eg2"
-"spawnflags" "1"
-"skin" "eliteguard/church1"
-"head" "church2"
-}
-// entity 428
-{
-"classname" "ai_eliteguard"
-"origin" "370 252 -1522"
-"ainame" "eg1"
-"spawnflags" "1"
-"skin" "eliteguard/church1"
-"head" "church1"
-}
-// entity 429
-{
-"classname" "ai_eliteguard"
-"origin" "218 252 -1522"
-"ainame" "eg4"
-"spawnflags" "1"
-"skin" "eliteguard/church2"
-"head" "church1"
-}
-// entity 430
-{
-"classname" "ai_blackguard"
-"origin" "370 332 -1522"
-"ainame" "bg1"
-"spawnflags" "1"
-}
-// entity 431
-{
-"classname" "ai_blackguard"
-"origin" "322 332 -1522"
-"ainame" "bg2"
-"spawnflags" "1"
-}
-// entity 432
-{
-"classname" "ai_blackguard"
-"origin" "274 332 -1522"
-"ainame" "bg3"
-"spawnflags" "1"
-}
-// entity 433
-{
-"classname" "ai_blackguard"
-"origin" "226 332 -1522"
-"ainame" "bg4"
-"spawnflags" "1"
-}
-// entity 434
-{
-"classname" "ai_venom"
-"origin" "370 396 -1522"
-"ainame" "v1"
-"spawnflags" "1"
-}
-// entity 435
-{
-"classname" "ai_venom"
-"origin" "322 396 -1522"
-"ainame" "v2"
-"spawnflags" "1"
-}
-// entity 436
-{
 "classname" "misc_model"
 "origin" "-1887 1245 -154"
 "model" "models/mapobjects/malta/table_dine.md3"
 "modelscale" "1.2"
 }
-// entity 437
+// entity 417
 {
 "classname" "misc_model"
 "origin" "-1836.28 1288.34 -160"
@@ -35803,7 +35628,7 @@ cathedrale_wall/cathedrale_c06
 "modelscale" "1.2"
 "angle" "139.738"
 }
-// entity 438
+// entity 418
 {
 "classname" "misc_model"
 "origin" "-1903.43 1308.01 -160"
@@ -35811,7 +35636,7 @@ cathedrale_wall/cathedrale_c06
 "modelscale" "1.2"
 "angle" "-162.522"
 }
-// entity 439
+// entity 419
 {
 "classname" "misc_model"
 "origin" "-2038.55 1127.99 -161"
@@ -35819,21 +35644,21 @@ cathedrale_wall/cathedrale_c06
 "modelscale" "1.2"
 "angle" "-45.6353"
 }
-// entity 440
+// entity 420
 {
 "classname" "misc_model"
 "origin" "1707 709 192"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 441
+// entity 421
 {
 "classname" "misc_model"
 "origin" "-1704 1102 -160"
 "model" "models/mapobjects/malta/bookshelf.md3"
 "modelscale" "1.5"
 }
-// entity 442
+// entity 422
 {
 "classname" "misc_model"
 "origin" "-2059 1277 -160"
@@ -35841,7 +35666,7 @@ cathedrale_wall/cathedrale_c06
 "angle" "90"
 "modelscale" "1.2"
 }
-// entity 443
+// entity 423
 {
 "classname" "func_invisible_user"
 "target" "buy_random_weapon"
@@ -35861,7 +35686,7 @@ cathedrale_wall/cathedrale_c06
 ( -961 324 227 ) ( -961 472 227 ) ( -961 324 229 ) common/trigger 36 9.9969177246 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 444
+// entity 424
 {
 "classname" "target_buy"
 "origin" "-981 342 164"
@@ -35872,7 +35697,7 @@ cathedrale_wall/cathedrale_c06
 "randomGroup" "1"
 "angle" "-90"
 }
-// entity 445
+// entity 425
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_random_box"
@@ -35890,7 +35715,7 @@ cathedrale_wall/cathedrale_c06
 ( -909 452 169 ) ( -909 352 169 ) ( -909 452 185 ) common/trigger 60.0003662109 6.0001220703 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 446
+// entity 426
 {
 "classname" "misc_model"
 "origin" "-749.791 119.056 -128"
@@ -35898,7 +35723,7 @@ cathedrale_wall/cathedrale_c06
 "modelscale" "1.2"
 "angle" "-13.481"
 }
-// entity 447
+// entity 427
 {
 "classname" "func_group"
 // brush 0
@@ -35983,7 +35808,7 @@ cathedrale_wall/cathedrale_c06
 ( 1165.7960259312 659.3375406253 -264.4449697709 ) ( 1183.2200262249 659.3375406253 -264.4449697709 ) ( 1183.2200262249 577.6625392485 -264.4449697709 ) castle_wood/cwood_c10 112.9061279297 215.0434570312 -89.9999923706 0.54449898 0.54449898 134217728 0 0
 }
 }
-// entity 448
+// entity 428
 {
 "classname" "func_group"
 // brush 0
@@ -36068,7 +35893,7 @@ cathedrale_wall/cathedrale_c06
 ( 1165.7960259312 659.3375406253 -249.4449697709 ) ( 1183.2200262249 659.3375406253 -249.4449697709 ) ( 1183.2200262249 577.6625392485 -249.4449697709 ) castle_wood/cwood_c10 112.9063720703 215.0444335938 -89.9999923706 0.5444988012 0.5444988012 134217728 0 0
 }
 }
-// entity 449
+// entity 429
 {
 "classname" "func_group"
 // brush 0
@@ -36153,7 +35978,7 @@ cathedrale_wall/cathedrale_c06
 ( 1165.7960259312 659.3375406253 -234.4449697709 ) ( 1183.2200262249 659.3375406253 -234.4449697709 ) ( 1183.2200262249 577.6625392485 -234.4449697709 ) castle_wood/cwood_c10 112.9066162109 215.0444335938 -89.9999923706 0.5444987416 0.5444987416 134217728 0 0
 }
 }
-// entity 450
+// entity 430
 {
 "classname" "func_group"
 // brush 0
@@ -36238,7 +36063,7 @@ cathedrale_wall/cathedrale_c06
 ( 1165.7960259312 659.3375406253 -219.4449697709 ) ( 1183.2200262249 659.3375406253 -219.4449697709 ) ( 1183.2200262249 577.6625392485 -219.4449697709 ) castle_wood/cwood_c10 112.9067382812 215.0446777344 -89.9999923706 0.544498682 0.544498682 134217728 0 0
 }
 }
-// entity 451
+// entity 431
 {
 "classname" "func_group"
 // brush 0
@@ -36323,7 +36148,7 @@ cathedrale_wall/cathedrale_c06
 ( 1165.7960259312 659.3375406253 -204.4449697709 ) ( 1183.2200262249 659.3375406253 -204.4449697709 ) ( 1183.2200262249 577.6625392485 -204.4449697709 ) castle_wood/cwood_c10 112.9067382812 215.0451660156 -89.9999923706 0.5444986224 0.5444986224 134217728 0 0
 }
 }
-// entity 452
+// entity 432
 {
 "classname" "func_group"
 // brush 0
@@ -36408,7 +36233,7 @@ cathedrale_wall/cathedrale_c06
 ( 1165.7960259312 659.3375406253 -189.4449697709 ) ( 1183.2200262249 659.3375406253 -189.4449697709 ) ( 1183.2200262249 577.6625392485 -189.4449697709 ) castle_wood/cwood_c10 112.9069824219 215.0456542969 -89.9999923706 0.5444985628 0.5444985628 134217728 0 0
 }
 }
-// entity 453
+// entity 433
 {
 "classname" "func_group"
 // brush 0
@@ -36493,29 +36318,29 @@ cathedrale_wall/cathedrale_c06
 ( -1312.2039740688 1022.3375406253 -381.4449697709 ) ( -1294.7799737751 1022.3375406253 -381.4449697709 ) ( -1294.7799737751 940.6625392485 -381.4449697709 ) castle_wood/cwood_c10 11.5769042969 16.0686035156 -89.9999923706 0.544498384 0.544498384 134217728 0 0
 }
 }
-// entity 454
+// entity 434
 {
 "classname" "corona"
 "origin" "1600 2096 -44"
 }
-// entity 455
+// entity 435
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "1408 2096 -34"
 }
-// entity 456
+// entity 436
 {
 "classname" "misc_model"
 "origin" "1600 2096 -34"
 "model" "models/mapobjects/light/cagelighta.md3"
 }
-// entity 457
+// entity 437
 {
 "classname" "corona"
 "origin" "1408 2096 -44"
 }
-// entity 458
+// entity 438
 {
 "classname" "func_group"
 "type" "patchCapped"
@@ -36559,7 +36384,7 @@ cathedrale_wall/cathedrale_c06
 }
 }
 }
-// entity 459
+// entity 439
 {
 "classname" "func_group"
 "type" "patchCapped"
@@ -36603,48 +36428,48 @@ castle_wall/castle_c46_on_grid
 }
 }
 }
-// entity 460
+// entity 440
 {
 "classname" "lightJunior"
 "origin" "-1848 1456 40"
 "light" "250"
 "_color" "1.000000 0.901961 0.803922"
 }
-// entity 461
+// entity 441
 {
 "classname" "info_ai_respawn"
 "origin" "107 878 -167"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 462
+// entity 442
 {
 "classname" "info_ai_respawn"
 "origin" "19 878 -167"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 463
+// entity 443
 {
 "classname" "info_ai_respawn"
 "origin" "19 794 -167"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 464
+// entity 444
 {
 "classname" "info_ai_respawn"
 "origin" "86 794 -167"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 465
+// entity 445
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelightr.md3"
 "origin" "-196 391 276"
 }
-// entity 466
+// entity 446
 {
 "classname" "light"
 "origin" "-196 414 256"
@@ -36652,21 +36477,21 @@ castle_wall/castle_c46_on_grid
 "fade" ".25"
 "light" "35"
 }
-// entity 467
+// entity 447
 {
 "classname" "corona"
 "_color" "1.000000 0.000000 0.000000"
 "origin" "-196 391 263"
 "scale" "2"
 }
-// entity 468
+// entity 448
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelightr.md3"
 "origin" "-569 746 286"
 "angle" "-90"
 }
-// entity 469
+// entity 449
 {
 "classname" "light"
 "origin" "-546 746 266"
@@ -36674,7 +36499,7 @@ castle_wall/castle_c46_on_grid
 "fade" ".25"
 "light" "35"
 }
-// entity 470
+// entity 450
 {
 "classname" "corona"
 "_color" "1.000000 0.000000 0.000000"
@@ -36682,7 +36507,7 @@ castle_wall/castle_c46_on_grid
 "scale" "2"
 "angle" "-90"
 }
-// entity 471
+// entity 451
 {
 "classname" "func_invisible_user"
 "target" "buy_gren1"
@@ -36698,7 +36523,7 @@ castle_wall/castle_c46_on_grid
 ( 1246 413 -201 ) ( 1246 265 -201 ) ( 1246 413 -199 ) common/trigger 37.9996948242 50.0006103516 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 472
+// entity 452
 {
 "classname" "misc_gamemodel"
 "origin" "1228.54 379.17 -223.975"
@@ -36706,7 +36531,7 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 73.056 88.8022"
 "modelscale" "1.2"
 }
-// entity 473
+// entity 453
 {
 "classname" "target_buy"
 "origin" "1236 389 -125"
@@ -36714,7 +36539,7 @@ castle_wall/castle_c46_on_grid
 "buy_item" "ammo_grenades"
 "angle" "180"
 }
-// entity 474
+// entity 454
 {
 "classname" "misc_gamemodel"
 "origin" "1229.07 401.03 -223.975"
@@ -36722,7 +36547,7 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 130.007 88.8022"
 "modelscale" "1.2"
 }
-// entity 475
+// entity 455
 {
 "classname" "misc_gamemodel"
 "origin" "1228.53 390.08 -223.975"
@@ -36730,7 +36555,7 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 100.372 88.8022"
 "modelscale" "1.2"
 }
-// entity 476
+// entity 456
 {
 "classname" "misc_gamemodel"
 "origin" "1228.54 375.17 -223.975"
@@ -36738,7 +36563,7 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 73.056 88.8022"
 "modelscale" "1.2"
 }
-// entity 477
+// entity 457
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_grenades"
@@ -36753,7 +36578,7 @@ castle_wall/castle_c46_on_grid
 ( 1161 314 -189 ) ( 1161 414 -189 ) ( 1161 314 -173 ) common/trigger 0 61.9839172363 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 478
+// entity 458
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_armor"
@@ -36768,14 +36593,14 @@ castle_wall/castle_c46_on_grid
 ( -1992 1473 -126 ) ( -1992 1373 -126 ) ( -1992 1473 -110 ) common/trigger 58.0002441406 63.9907836914 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 479
+// entity 459
 {
 "classname" "target_buy"
 "origin" "-2070 1386 -21"
 "targetname" "buy_armor"
 "buy_item" "item_armor_body_hang"
 }
-// entity 480
+// entity 460
 {
 "classname" "func_invisible_user"
 "target" "buy_armor"
@@ -36791,7 +36616,7 @@ castle_wall/castle_c46_on_grid
 ( -2078 1363 -104 ) ( -2078 1511 -104 ) ( -2078 1363 -102 ) common/trigger 6 51.9963378906 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 481
+// entity 461
 {
 "classname" "func_invisible_user"
 "target" "buy_m1garand"
@@ -36807,7 +36632,7 @@ castle_wall/castle_c46_on_grid
 ( -1696 740 -246 ) ( -1696 888 -246 ) ( -1696 740 -244 ) common/trigger 36 23.9998779297 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 482
+// entity 462
 {
 "classname" "misc_gamemodel"
 "origin" "-1672.04 773.83 -271.975"
@@ -36815,14 +36640,14 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 -106.944 88.8022"
 "modelscale" "1.2"
 }
-// entity 483
+// entity 463
 {
 "classname" "target_buy"
 "origin" "-1678 764 -172"
 "targetname" "buy_m1garand"
 "buy_item" "weapon_m1garand"
 }
-// entity 484
+// entity 464
 {
 "classname" "trigger_objective_info"
 "isWeapon" "1"
@@ -36838,7 +36663,7 @@ castle_wall/castle_c46_on_grid
 ( -1654 678 -264 ) ( -1654 778 -264 ) ( -1654 678 -248 ) common/trigger 44 35.9998779297 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 485
+// entity 465
 {
 "classname" "func_invisible_user"
 "target" "buy_m97"
@@ -36854,7 +36679,7 @@ castle_wall/castle_c46_on_grid
 ( 1380 2240 -168 ) ( 1528 2240 -168 ) ( 1380 2240 -166 ) common/trigger 36 55.9998779297 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 486
+// entity 466
 {
 "classname" "misc_gamemodel"
 "origin" "1407.83 2222.54 -192.475"
@@ -36862,7 +36687,7 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 163.056 88.8022"
 "modelscale" "1.2"
 }
-// entity 487
+// entity 467
 {
 "classname" "target_buy"
 "origin" "1404 2180 -76"
@@ -36871,39 +36696,209 @@ castle_wall/castle_c46_on_grid
 "stringname" "buy_m97"
 "angle" "-90"
 }
-// entity 488
+// entity 468
 {
 "classname" "info_ai_respawn"
 "origin" "2308 156 -167"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 489
+// entity 469
 {
 "classname" "info_ai_respawn"
 "origin" "2308 80 -167"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 490
+// entity 470
 {
 "classname" "info_ai_respawn"
 "origin" "2378 156 -167"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 491
+// entity 471
 {
 "classname" "info_ai_respawn"
 "origin" "2378 80 -167"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 492
+// entity 472
 {
 "classname" "light"
 "fade" "3"
 "origin" "386 498 281"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 473
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "386 498 217"
+}
+// entity 474
+{
+"classname" "light"
+"fade" "3"
+"origin" "128 1562 403"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 475
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "128 1562 339"
+}
+// entity 476
+{
+"classname" "light"
+"fade" "3"
+"origin" "-446 1562 403"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 477
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "-446 1562 339"
+}
+// entity 478
+{
+"classname" "light"
+"fade" "3"
+"origin" "472 832 287"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 479
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "472 832 223"
+}
+// entity 480
+{
+"classname" "light"
+"fade" "3"
+"origin" "616 832 287"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 481
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "616 832 223"
+}
+// entity 482
+{
+"classname" "light"
+"fade" "3"
+"origin" "-302 1404 141"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 483
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "-302 1404 77"
+}
+// entity 484
+{
+"classname" "light"
+"fade" "3"
+"origin" "-704 1408 49"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 485
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "-704 1408 -15"
+}
+// entity 486
+{
+"classname" "light"
+"fade" "3"
+"origin" "-704 1092 49"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 487
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "-704 1092 -15"
+}
+// entity 488
+{
+"classname" "light"
+"fade" "3"
+"origin" "-1416 1536 23"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 489
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "-1416 1536 -41"
+}
+// entity 490
+{
+"classname" "light"
+"fade" "3"
+"origin" "-1270 1536 23"
+"spawnflags" "0"
+"light" "150"
+"_color" "1.000000 0.909804 0.819608"
+}
+// entity 491
+{
+"classname" "light"
+"_color" "1.000000 0.803922 0.603922"
+"light" "40"
+"spawnflags" "3"
+"origin" "-1270 1536 -41"
+}
+// entity 492
+{
+"classname" "light"
+"fade" "3"
+"origin" "-1054 606 -199"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -36914,13 +36909,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "386 498 217"
+"origin" "-1054 606 -263"
 }
 // entity 494
 {
 "classname" "light"
 "fade" "3"
-"origin" "128 1562 403"
+"origin" "-1212 672 -19"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -36931,13 +36926,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "128 1562 339"
+"origin" "-1212 672 -83"
 }
 // entity 496
 {
 "classname" "light"
 "fade" "3"
-"origin" "-446 1562 403"
+"origin" "-1212 928 -19"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -36948,13 +36943,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-446 1562 339"
+"origin" "-1212 928 -83"
 }
 // entity 498
 {
 "classname" "light"
 "fade" "3"
-"origin" "472 832 287"
+"origin" "-1216 1280 -229"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -36965,13 +36960,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "472 832 223"
+"origin" "-1216 1280 -293"
 }
 // entity 500
 {
 "classname" "light"
 "fade" "3"
-"origin" "616 832 287"
+"origin" "-1020 1280 -229"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -36982,13 +36977,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "616 832 223"
+"origin" "-1020 1280 -293"
 }
 // entity 502
 {
 "classname" "light"
 "fade" "3"
-"origin" "-302 1404 141"
+"origin" "-1020 1470 -229"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -36999,13 +36994,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-302 1404 77"
+"origin" "-1020 1470 -293"
 }
 // entity 504
 {
 "classname" "light"
 "fade" "3"
-"origin" "-704 1408 49"
+"origin" "80 1056 -65"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37016,13 +37011,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-704 1408 -15"
+"origin" "80 1056 -129"
 }
 // entity 506
 {
 "classname" "light"
 "fade" "3"
-"origin" "-704 1092 49"
+"origin" "80 864 -65"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37033,13 +37028,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-704 1092 -15"
+"origin" "80 864 -129"
 }
 // entity 508
 {
 "classname" "light"
 "fade" "3"
-"origin" "-1416 1536 23"
+"origin" "-128 960 -65"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37050,13 +37045,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-1416 1536 -41"
+"origin" "-128 960 -129"
 }
 // entity 510
 {
 "classname" "light"
 "fade" "3"
-"origin" "-1270 1536 23"
+"origin" "-708 618 -25"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37067,13 +37062,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-1270 1536 -41"
+"origin" "-708 618 -89"
 }
 // entity 512
 {
 "classname" "light"
 "fade" "3"
-"origin" "-1054 606 -199"
+"origin" "-448 608 -25"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37084,13 +37079,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-1054 606 -263"
+"origin" "-448 608 -89"
 }
 // entity 514
 {
 "classname" "light"
 "fade" "3"
-"origin" "-1212 672 -19"
+"origin" "-192 608 -25"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37101,13 +37096,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-1212 672 -83"
+"origin" "-192 608 -89"
 }
 // entity 516
 {
 "classname" "light"
 "fade" "3"
-"origin" "-1212 928 -19"
+"origin" "-384 128 -3"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37118,13 +37113,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-1212 928 -83"
+"origin" "-384 128 -67"
 }
 // entity 518
 {
 "classname" "light"
 "fade" "3"
-"origin" "-1216 1280 -229"
+"origin" "-610 128 -3"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37135,13 +37130,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-1216 1280 -293"
+"origin" "-610 128 -67"
 }
 // entity 520
 {
 "classname" "light"
 "fade" "3"
-"origin" "-1020 1280 -229"
+"origin" "1598 2096 -47"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37152,13 +37147,13 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-1020 1280 -293"
+"origin" "1598 2096 -111"
 }
 // entity 522
 {
 "classname" "light"
 "fade" "3"
-"origin" "-1020 1470 -229"
+"origin" "1408 2096 -47"
 "spawnflags" "0"
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
@@ -37169,186 +37164,16 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.803922 0.603922"
 "light" "40"
 "spawnflags" "3"
-"origin" "-1020 1470 -293"
-}
-// entity 524
-{
-"classname" "light"
-"fade" "3"
-"origin" "80 1056 -65"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 525
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "80 1056 -129"
-}
-// entity 526
-{
-"classname" "light"
-"fade" "3"
-"origin" "80 864 -65"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 527
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "80 864 -129"
-}
-// entity 528
-{
-"classname" "light"
-"fade" "3"
-"origin" "-128 960 -65"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 529
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "-128 960 -129"
-}
-// entity 530
-{
-"classname" "light"
-"fade" "3"
-"origin" "-708 618 -25"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 531
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "-708 618 -89"
-}
-// entity 532
-{
-"classname" "light"
-"fade" "3"
-"origin" "-448 608 -25"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 533
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "-448 608 -89"
-}
-// entity 534
-{
-"classname" "light"
-"fade" "3"
-"origin" "-192 608 -25"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 535
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "-192 608 -89"
-}
-// entity 536
-{
-"classname" "light"
-"fade" "3"
-"origin" "-384 128 -3"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 537
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "-384 128 -67"
-}
-// entity 538
-{
-"classname" "light"
-"fade" "3"
-"origin" "-610 128 -3"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 539
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "-610 128 -67"
-}
-// entity 540
-{
-"classname" "light"
-"fade" "3"
-"origin" "1598 2096 -47"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 541
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
-"origin" "1598 2096 -111"
-}
-// entity 542
-{
-"classname" "light"
-"fade" "3"
-"origin" "1408 2096 -47"
-"spawnflags" "0"
-"light" "150"
-"_color" "1.000000 0.909804 0.819608"
-}
-// entity 543
-{
-"classname" "light"
-"_color" "1.000000 0.803922 0.603922"
-"light" "40"
-"spawnflags" "3"
 "origin" "1408 2096 -126"
 }
-// entity 544
+// entity 524
 {
 "classname" "misc_model"
 "origin" "-1698 768 -194"
 "model" "models/mapobjects/hd_vanilla/shield.md3"
 "angle" "-90"
 }
-// entity 545
+// entity 525
 {
 "classname" "misc_mg42"
 "targetname" "mg42no2"
@@ -37358,42 +37183,42 @@ castle_wall/castle_c46_on_grid
 "harc" "120"
 "health" "9999"
 }
-// entity 546
+// entity 526
 {
 "classname" "misc_model"
 "origin" "177.547 371.9 130"
 "model" "models/mapobjects/malta/sandbag_curved.md3"
 "angle" "28.219"
 }
-// entity 547
+// entity 527
 {
 "classname" "misc_model"
 "origin" "1229 365 -225"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 "angle" "90"
 }
-// entity 548
+// entity 528
 {
 "classname" "misc_model"
 "origin" "-2061 1410 -129"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 "angle" "-90"
 }
-// entity 549
+// entity 529
 {
 "classname" "misc_model"
 "origin" "1426.53 2229.5 -192"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 "angle" "2.994"
 }
-// entity 550
+// entity 530
 {
 "classname" "misc_model"
 "origin" "-1686.5 788.455 -272"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 "angle" "84.8774"
 }
-// entity 551
+// entity 531
 {
 "classname" "func_group"
 // brush 0
@@ -37559,7 +37384,7 @@ castle_wall/castle_c46_on_grid
 ( 1184 1744 -224 ) ( 1184 1712 -224 ) ( 1184 1728 -208 ) common/slip_e 0 0 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 552
+// entity 532
 {
 "classname" "func_group"
 // brush 0
@@ -37572,7 +37397,7 @@ castle_wall/castle_c46_on_grid
 ( 1216 1728 -224 ) ( 1216 1696 -224 ) ( 1216 1712 -208 ) castle_wall/castle_m03_step 64 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 553
+// entity 533
 {
 "classname" "func_group"
 // brush 0
@@ -37585,7 +37410,7 @@ castle_wall/castle_c46_on_grid
 ( 1216 1744 -240 ) ( 1216 1712 -240 ) ( 1216 1728 -224 ) common/slip_e 0 0 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 554
+// entity 534
 {
 "classname" "func_group"
 // brush 0
@@ -37598,7 +37423,7 @@ castle_wall/castle_c46_on_grid
 ( 1036 1680 -144 ) ( 1028 1680 -144 ) ( 1032 1760 -144 ) castle_wall/castle_m03a_step -224 94 -180 0.5 -0.5 0 0 0
 }
 }
-// entity 555
+// entity 535
 {
 "classname" "func_group"
 // brush 0
@@ -37611,7 +37436,7 @@ castle_wall/castle_c46_on_grid
 ( 1004 1680 -128 ) ( 996 1680 -128 ) ( 1000 1760 -128 ) castle_wall/castle_m03a_step -32 93 -180 0.5 -0.5 0 0 0
 }
 }
-// entity 556
+// entity 536
 {
 "classname" "func_group"
 // brush 0
@@ -37624,7 +37449,7 @@ castle_wall/castle_c46_on_grid
 ( 972 1680 -112 ) ( 964 1680 -112 ) ( 968 1760 -112 ) castle_wall/castle_m03a_step -96 92 -180 0.5 -0.5 0 0 0
 }
 }
-// entity 557
+// entity 537
 {
 "classname" "func_invisible_user"
 "spawnflags" "40"
@@ -37641,7 +37466,7 @@ castle_wall/castle_c46_on_grid
 ( -854 14 -97 ) ( -825 14 -97 ) ( -854 14 -82 ) common/trigger 24 0 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 558
+// entity 538
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_reinforce"
@@ -37656,7 +37481,7 @@ castle_wall/castle_c46_on_grid
 ( -763 -90 -75 ) ( -863 -90 -75 ) ( -763 -90 -59 ) common/trigger 46 55.9961471558 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 559
+// entity 539
 {
 "classname" "info_ai_respawn"
 "origin" "-661.87 783.45 370"
@@ -37664,7 +37489,7 @@ castle_wall/castle_c46_on_grid
 "targetname" "friendly_spawner1"
 "aiteam" "1"
 }
-// entity 560
+// entity 540
 {
 "classname" "info_ai_respawn"
 "origin" "-665.87 689.45 378"
@@ -37672,7 +37497,7 @@ castle_wall/castle_c46_on_grid
 "targetname" "friendly_spawner2"
 "aiteam" "1"
 }
-// entity 561
+// entity 541
 {
 "classname" "func_invisible_user"
 "target" "buy_ammo"
@@ -37688,7 +37513,7 @@ castle_wall/castle_c46_on_grid
 ( 783.5655308861 1759.2212581021 -13.4588228883 ) ( 931.5359138857 1758.2011636746 -10.6793024622 ) ( 783.5278822045 1759.2085670057 -11.4592175903 ) common/trigger 27.5330810547 15.8463363647 1.076109767 0.4999876618 0.4999896586 134217728 0 0
 }
 }
-// entity 562
+// entity 542
 {
 "classname" "target_buy"
 "origin" "800.85 1747.79 41.06"
@@ -37696,14 +37521,14 @@ castle_wall/castle_c46_on_grid
 "buy_item" "ammo"
 "angles" "0.370937 -90.388 1.07613"
 }
-// entity 563
+// entity 543
 {
 "classname" "misc_model"
 "origin" "803 1750 -80"
 "model" "models/mapobjects/wt_props/stand_ammo.md3"
 "angle" "-90"
 }
-// entity 564
+// entity 544
 {
 "classname" "func_invisible_user"
 "target" "buy_ammo1"
@@ -37719,7 +37544,7 @@ castle_wall/castle_c46_on_grid
 ( -1223.5655308861 1424.7787418979 -62.4588228883 ) ( -1371.5359138857 1425.7988363254 -59.6793024622 ) ( -1223.5278822045 1424.7914329943 -60.4592175903 ) common/trigger 45.5070800781 29.3352966309 178.9238891602 0.4999875128 -0.4999895096 134217728 0 0
 }
 }
-// entity 565
+// entity 545
 {
 "classname" "target_buy"
 "origin" "-1240.85 1436.21 -7.94"
@@ -37727,14 +37552,14 @@ castle_wall/castle_c46_on_grid
 "buy_item" "ammo"
 "angles" "0.370937 89.612 1.07613"
 }
-// entity 566
+// entity 546
 {
 "classname" "misc_model"
 "origin" "-1243 1434 -129"
 "model" "models/mapobjects/wt_props/stand_ammo.md3"
 "angle" "90"
 }
-// entity 567
+// entity 547
 {
 "classname" "func_invisible_user"
 "target" "buy_ammo2"
@@ -37750,7 +37575,7 @@ castle_wall/castle_c46_on_grid
 ( -612.5655308861 -145.2212581021 -63.4588228883 ) ( -760.5359138857 -144.2011636746 -60.6793024622 ) ( -612.5278822045 -145.2085670057 -61.4592175903 ) common/trigger 51.3588867188 50.2856140137 178.9238891602 0.4999875128 -0.4999895096 134217728 0 0
 }
 }
-// entity 568
+// entity 548
 {
 "classname" "target_buy"
 "origin" "-629.85 -133.79 -8.94"
@@ -37758,14 +37583,14 @@ castle_wall/castle_c46_on_grid
 "buy_item" "ammo"
 "angles" "0.370937 89.612 1.07613"
 }
-// entity 569
+// entity 549
 {
 "classname" "misc_model"
 "origin" "-632 -136 -130"
 "model" "models/mapobjects/wt_props/stand_ammo.md3"
 "angle" "90"
 }
-// entity 570
+// entity 550
 {
 "classname" "trigger_objective_info"
 "target" "buy_m97"
@@ -37781,7 +37606,7 @@ castle_wall/castle_c46_on_grid
 ( 1380 2208 -168 ) ( 1528 2208 -168 ) ( 1380 2208 -166 ) common/trigger 36 55.9998779297 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 571
+// entity 551
 {
 "classname" "trigger_objective_info"
 "target" "buy_ammo"
@@ -37796,7 +37621,7 @@ castle_wall/castle_c46_on_grid
 ( 783.5655308861 1727.2212581021 -13.4588228883 ) ( 931.5359138857 1726.2011636746 -10.6793024622 ) ( 783.5278822045 1727.2085670057 -11.4592175903 ) common/trigger 27.5330810547 15.8463363647 1.076109767 0.4999876618 0.4999896586 134217728 0 0
 }
 }
-// entity 572
+// entity 552
 {
 "classname" "trigger_objective_info"
 "target" "buy_ammo1"
@@ -37811,7 +37636,7 @@ castle_wall/castle_c46_on_grid
 ( -1223.5655308861 1456.7787418979 -62.4588228883 ) ( -1371.5359138857 1457.7988363254 -59.6793024622 ) ( -1223.5278822045 1456.7914329943 -60.4592175903 ) common/trigger 45.5070800781 29.3352966309 178.9238891602 0.4999875128 -0.4999895096 134217728 0 0
 }
 }
-// entity 573
+// entity 553
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_ammo"
@@ -37826,25 +37651,25 @@ castle_wall/castle_c46_on_grid
 ( -612.5655308861 -113.2212581021 -63.4588228883 ) ( -760.5359138857 -112.2011636746 -60.6793024622 ) ( -612.5278822045 -113.2085670057 -61.4592175903 ) common/trigger 51.3587646484 50.2857513428 178.9238891602 0.499987483 -0.4999894798 134217728 0 0
 }
 }
-// entity 574
+// entity 554
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/p_nolight.md3"
 "origin" "-768 746 297"
 }
-// entity 575
+// entity 555
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "-768 746 297"
 }
-// entity 576
+// entity 556
 {
 "classname" "corona"
 "scale" ".5"
 "origin" "-768 746 287"
 }
-// entity 577
+// entity 557
 {
 "classname" "light"
 "fade" "3"
@@ -37853,7 +37678,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 578
+// entity 558
 {
 "classname" "info_ai_respawn"
 "origin" "-961.55 813.87 152"
@@ -37862,7 +37687,7 @@ castle_wall/castle_c46_on_grid
 "aiteam" "0"
 "targetname" "proto_spawner1"
 }
-// entity 579
+// entity 559
 {
 "classname" "misc_model"
 "origin" "1504.21 2165.06 -224"
@@ -37870,7 +37695,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "1.2"
 "angle" "-13.481"
 }
-// entity 580
+// entity 560
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -37887,7 +37712,7 @@ castle_wall/castle_c46_on_grid
 ( 1590 2240 -80 ) ( 1590 2238 -80 ) ( 1590 2238 -272 ) props/board_c03 0 0 0 0.25 0.25 0 0 0
 }
 }
-// entity 581
+// entity 561
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -37940,7 +37765,7 @@ castle_wall/castle_c46_on_grid
 ( 1714 2238 -190 ) ( 1714 2242 -190 ) ( 1714 2242 -132 ) common/caulk 0 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 582
+// entity 562
 {
 "classname" "func_group"
 // brush 0
@@ -38047,27 +37872,27 @@ castle_wall/castle_c46_on_grid
 ( 1282 2234 -118 ) ( 1282 2230 -118 ) ( 1282 2230 -120 ) assault/atrim_m01 254.9996643066 15.9970703125 -89.9999923706 0.4999997616 -0.4999997616 134217728 0 0
 }
 }
-// entity 583
+// entity 563
 {
 "classname" "misc_model"
 "origin" "2074 2164 12"
 "model" "models/mapobjects/light/cagelighta.md3"
 "angle" "-90"
 }
-// entity 584
+// entity 564
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "2074 2020 12"
 "angle" "-90"
 }
-// entity 585
+// entity 565
 {
 "classname" "corona"
 "origin" "2074 2164 2"
 "angle" "-90"
 }
-// entity 586
+// entity 566
 {
 "classname" "light"
 "fade" "3"
@@ -38076,7 +37901,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 587
+// entity 567
 {
 "classname" "light"
 "fade" "3"
@@ -38085,29 +37910,29 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 588
+// entity 568
 {
 "classname" "misc_model"
 "origin" "1860 2096 12"
 "model" "models/mapobjects/light/cagelighta.md3"
 }
-// entity 589
+// entity 569
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "2004 2096 12"
 }
-// entity 590
+// entity 570
 {
 "classname" "corona"
 "origin" "2004 2096 2"
 }
-// entity 591
+// entity 571
 {
 "classname" "corona"
 "origin" "1860 2096 2"
 }
-// entity 592
+// entity 572
 {
 "classname" "light"
 "fade" "3"
@@ -38116,7 +37941,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 593
+// entity 573
 {
 "classname" "light"
 "fade" "3"
@@ -38125,7 +37950,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 594
+// entity 574
 {
 "classname" "func_explosive"
 "mass" "70"
@@ -38141,20 +37966,20 @@ castle_wall/castle_c46_on_grid
 ( -724 176 272 ) ( -736 176 272 ) ( -730 180 272 ) snow/s_castle_m04 80.9999084473 0.0002441406 89.9999923706 0.3749999106 0.4999999106 134217728 0 0
 }
 }
-// entity 595
+// entity 575
 {
 "classname" "corona"
 "_color" "1.000000 0.901961 0.800000"
 "origin" "-948 387 270"
 }
-// entity 596
+// entity 576
 {
 "classname" "misc_model"
 "origin" "-948 387 280"
 "angle" "270"
 "model" "models/mapobjects/light/cagelighta.md3"
 }
-// entity 597
+// entity 577
 {
 "classname" "light"
 "_color" "1.000000 0.921569 0.843137"
@@ -38162,14 +37987,14 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "19"
 "origin" "-948 292 257"
 }
-// entity 598
+// entity 578
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "angle" "270"
 "origin" "-948 292 280"
 }
-// entity 599
+// entity 579
 {
 "classname" "light"
 "origin" "-948 387 257"
@@ -38177,13 +38002,13 @@ castle_wall/castle_c46_on_grid
 "light" "40"
 "_color" "1.000000 0.921569 0.843137"
 }
-// entity 600
+// entity 580
 {
 "classname" "corona"
 "_color" "1.000000 0.901961 0.800000"
 "origin" "-948 292 270"
 }
-// entity 601
+// entity 581
 {
 "classname" "lightJunior"
 "_color" "1.000000 0.909804 0.819608"
@@ -38191,7 +38016,7 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "0"
 "origin" "1920 1151 346"
 }
-// entity 602
+// entity 582
 {
 "classname" "light"
 "_color" "1.000000 0.850980 0.701961"
@@ -38200,7 +38025,7 @@ castle_wall/castle_c46_on_grid
 "origin" "1920 1151 258"
 "fade" ".4"
 }
-// entity 603
+// entity 583
 {
 "classname" "light"
 "origin" "1920 1151 282"
@@ -38208,7 +38033,7 @@ castle_wall/castle_c46_on_grid
 "light" "25"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 604
+// entity 584
 {
 "classname" "misc_model"
 "origin" "2143 1328 293"
@@ -38216,7 +38041,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.7"
 "angle" "180"
 }
-// entity 605
+// entity 585
 {
 "classname" "light"
 "_color" "1.000000 0.850980 0.701961"
@@ -38225,7 +38050,7 @@ castle_wall/castle_c46_on_grid
 "origin" "1920 832 258"
 "fade" ".4"
 }
-// entity 606
+// entity 586
 {
 "classname" "light"
 "origin" "1920 832 282"
@@ -38233,7 +38058,7 @@ castle_wall/castle_c46_on_grid
 "light" "25"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 607
+// entity 587
 {
 "classname" "func_explosive"
 "spawnflags" "17"
@@ -38249,7 +38074,7 @@ castle_wall/castle_c46_on_grid
 ( 1816 1326 536 ) ( 1904 1326 536 ) ( 1904 1326 264 ) props/flag_c03dmtad 224 15.9997558594 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 608
+// entity 588
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -38267,14 +38092,14 @@ castle_wall/castle_c46_on_grid
 ( 1816 1326 536 ) ( 1904 1326 536 ) ( 1904 1326 264 ) props/flag_c03dm 224 15.9997558594 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 609
+// entity 589
 {
 "classname" "misc_model"
 "origin" "2189 960 293"
 "model" "models/mapobjects/hd_vanilla/shield.md3"
 "modelscale" "0.7"
 }
-// entity 610
+// entity 590
 {
 "classname" "func_group"
 // brush 0
@@ -38350,7 +38175,7 @@ castle_wall/castle_c46_on_grid
 ( 1616 969 256 ) ( 1616 989 256 ) ( 1612 989 260 ) common/caulk 63.9991455078 63.9985351562 89.9999923706 0.499999851 0.499999851 134217728 0 0
 }
 }
-// entity 611
+// entity 591
 {
 "classname" "func_group"
 // brush 0
@@ -38363,7 +38188,7 @@ castle_wall/castle_c46_on_grid
 ( 1574 960 312 ) ( 1574 960 296 ) ( 1570 976 302 ) common/caulk 0.0001220703 0 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 612
+// entity 592
 {
 "classname" "corona"
 "origin" "1495 1163 232"
@@ -38371,7 +38196,7 @@ castle_wall/castle_c46_on_grid
 "scale" "10"
 "angle" "90"
 }
-// entity 613
+// entity 593
 {
 "classname" "light"
 "origin" "1469 1167 220"
@@ -38379,7 +38204,7 @@ castle_wall/castle_c46_on_grid
 "fade" "0.2"
 "light" "40"
 }
-// entity 614
+// entity 594
 {
 "classname" "misc_model"
 "origin" "1583 1328 293"
@@ -38387,13 +38212,13 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.7"
 "angle" "180"
 }
-// entity 615
+// entity 595
 {
 "classname" "info_notnull"
 "targetname" "t1"
 "origin" "1302 849 843"
 }
-// entity 616
+// entity 596
 {
 "classname" "target_smoke"
 "delay" "400"
@@ -38403,7 +38228,7 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "6"
 "origin" "1470 1146 768"
 }
-// entity 617
+// entity 597
 {
 "classname" "lightJunior"
 "origin" "2397 1152 336"
@@ -38411,7 +38236,7 @@ castle_wall/castle_c46_on_grid
 "light" "120"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 618
+// entity 598
 {
 "classname" "light"
 "fade" ".4"
@@ -38420,7 +38245,7 @@ castle_wall/castle_c46_on_grid
 "light" "60"
 "_color" "1.000000 0.850980 0.701961"
 }
-// entity 619
+// entity 599
 {
 "classname" "light"
 "_color" "1.000000 0.909804 0.819608"
@@ -38428,26 +38253,26 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "2397 1152 272"
 }
-// entity 620
+// entity 600
 {
 "classname" "misc_model"
 "origin" "2397 1152 356"
 "model" "models/mapobjects/light/p_nolight.md3"
 }
-// entity 621
+// entity 601
 {
 "classname" "corona"
 "origin" "2397 1152 348"
 "_color" "1.000000 0.909804 0.819608"
 "scale" ".5"
 }
-// entity 622
+// entity 602
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta5k.md3"
 "origin" "2397 1152 357"
 }
-// entity 623
+// entity 603
 {
 "classname" "func_explosive"
 "type" "wood"
@@ -38500,7 +38325,7 @@ castle_wall/castle_c46_on_grid
 ( 2477 1184 320 ) ( 2480 1184 320 ) ( 2477 1180 316 ) common/caulk 63.9997558594 33.9965820312 89.9999923706 0.4999999106 0.4999999106 0 0 0
 }
 }
-// entity 624
+// entity 604
 {
 "classname" "lightJunior"
 "_color" "1.000000 0.909804 0.819608"
@@ -38508,35 +38333,35 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "0"
 "origin" "2397 1345 336"
 }
-// entity 625
+// entity 605
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/p_nolight.md3"
 "origin" "2397 1345 356"
 "modelscale_vec" "1 -1 1"
 }
-// entity 626
+// entity 606
 {
 "classname" "corona"
 "scale" ".5"
 "_color" "1.000000 0.909804 0.819608"
 "origin" "2397 1345 348"
 }
-// entity 627
+// entity 607
 {
 "classname" "misc_model"
 "origin" "2397 1345 357"
 "model" "models/mapobjects/light/cagelighta5k.md3"
 "modelscale_vec" "1 -1 1"
 }
-// entity 628
+// entity 608
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "2397 1985 136"
 "angle" "90"
 }
-// entity 629
+// entity 609
 {
 "classname" "lightJunior"
 "origin" "2397 1985 112"
@@ -38544,7 +38369,7 @@ castle_wall/castle_c46_on_grid
 "light" "120"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 630
+// entity 610
 {
 "classname" "light"
 "fade" ".4"
@@ -38553,7 +38378,7 @@ castle_wall/castle_c46_on_grid
 "light" "60"
 "_color" "1.000000 0.850980 0.701961"
 }
-// entity 631
+// entity 611
 {
 "classname" "light"
 "_color" "1.000000 0.909804 0.819608"
@@ -38561,28 +38386,28 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "2397 1985 48"
 }
-// entity 632
+// entity 612
 {
 "classname" "misc_model"
 "origin" "2397 1985 132"
 "model" "models/mapobjects/light/p_nolight.md3"
 "modelscale_vec" "1 -1 1"
 }
-// entity 633
+// entity 613
 {
 "classname" "corona"
 "origin" "2397 1985 124"
 "_color" "1.000000 0.909804 0.819608"
 "scale" ".5"
 }
-// entity 634
+// entity 614
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "2397 2209 56"
 "angle" "90"
 }
-// entity 635
+// entity 615
 {
 "classname" "lightJunior"
 "origin" "2397 2209 32"
@@ -38590,7 +38415,7 @@ castle_wall/castle_c46_on_grid
 "light" "120"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 636
+// entity 616
 {
 "classname" "light"
 "fade" ".4"
@@ -38599,7 +38424,7 @@ castle_wall/castle_c46_on_grid
 "light" "60"
 "_color" "1.000000 0.850980 0.701961"
 }
-// entity 637
+// entity 617
 {
 "classname" "light"
 "_color" "1.000000 0.909804 0.819608"
@@ -38607,28 +38432,28 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "2397 2209 -32"
 }
-// entity 638
+// entity 618
 {
 "classname" "misc_model"
 "origin" "2397 2209 52"
 "model" "models/mapobjects/light/p_nolight.md3"
 "modelscale_vec" "1 -1 1"
 }
-// entity 639
+// entity 619
 {
 "classname" "corona"
 "origin" "2397 2209 44"
 "_color" "1.000000 0.909804 0.819608"
 "scale" ".5"
 }
-// entity 640
+// entity 620
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "2397 2529 -24"
 "angle" "90"
 }
-// entity 641
+// entity 621
 {
 "classname" "lightJunior"
 "origin" "2397 2529 -48"
@@ -38636,7 +38461,7 @@ castle_wall/castle_c46_on_grid
 "light" "120"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 642
+// entity 622
 {
 "classname" "light"
 "fade" ".4"
@@ -38645,7 +38470,7 @@ castle_wall/castle_c46_on_grid
 "light" "60"
 "_color" "1.000000 0.850980 0.701961"
 }
-// entity 643
+// entity 623
 {
 "classname" "light"
 "_color" "1.000000 0.909804 0.819608"
@@ -38653,28 +38478,28 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "2397 2529 -112"
 }
-// entity 644
+// entity 624
 {
 "classname" "misc_model"
 "origin" "2397 2529 -28"
 "model" "models/mapobjects/light/p_nolight.md3"
 "modelscale_vec" "1 -1 1"
 }
-// entity 645
+// entity 625
 {
 "classname" "corona"
 "origin" "2397 2529 -36"
 "_color" "1.000000 0.909804 0.819608"
 "scale" ".5"
 }
-// entity 646
+// entity 626
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "2077 2529 -24"
 "angle" "90"
 }
-// entity 647
+// entity 627
 {
 "classname" "lightJunior"
 "origin" "2077 2529 -48"
@@ -38682,7 +38507,7 @@ castle_wall/castle_c46_on_grid
 "light" "120"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 648
+// entity 628
 {
 "classname" "light"
 "fade" ".4"
@@ -38691,7 +38516,7 @@ castle_wall/castle_c46_on_grid
 "light" "60"
 "_color" "1.000000 0.850980 0.701961"
 }
-// entity 649
+// entity 629
 {
 "classname" "light"
 "_color" "1.000000 0.909804 0.819608"
@@ -38699,21 +38524,21 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "2077 2529 -112"
 }
-// entity 650
+// entity 630
 {
 "classname" "misc_model"
 "origin" "2077 2529 -28"
 "model" "models/mapobjects/light/p_nolight.md3"
 "modelscale_vec" "1 -1 1"
 }
-// entity 651
+// entity 631
 {
 "classname" "corona"
 "origin" "2077 2529 -36"
 "_color" "1.000000 0.909804 0.819608"
 "scale" ".5"
 }
-// entity 652
+// entity 632
 {
 "classname" "func_group"
 // brush 0
@@ -38798,7 +38623,7 @@ castle_wall/castle_c46_on_grid
 ( 792 520 364 ) ( 792 504 364 ) ( 800 504 364 ) common/caulk 0 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 653
+// entity 633
 {
 "classname" "light"
 "light" "20"
@@ -38807,7 +38632,7 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "0"
 "fade" "0.1"
 }
-// entity 654
+// entity 634
 {
 "classname" "light"
 "fade" "0.2"
@@ -38816,13 +38641,13 @@ castle_wall/castle_c46_on_grid
 "origin" "664 520 312"
 "light" "30"
 }
-// entity 655
+// entity 635
 {
 "classname" "info_null"
 "targetname" "t3"
 "origin" "604 588 264"
 }
-// entity 656
+// entity 636
 {
 "classname" "light"
 "origin" "770 512 384"
@@ -38830,7 +38655,7 @@ castle_wall/castle_c46_on_grid
 "fade" ".25"
 "_color" "0.717647 0.858824 1.000000"
 }
-// entity 657
+// entity 637
 {
 "classname" "light"
 "target" "t3"
@@ -38839,14 +38664,14 @@ castle_wall/castle_c46_on_grid
 "light" "300"
 "radius" "128"
 }
-// entity 658
+// entity 638
 {
 "classname" "corona"
 "_color" "0.643137 0.819608 1.000000"
 "scale" "10"
 "origin" "788 512 393"
 }
-// entity 659
+// entity 639
 {
 "classname" "light"
 "_color" "0.717647 0.858824 1.000000"
@@ -38854,25 +38679,25 @@ castle_wall/castle_c46_on_grid
 "light" "15"
 "origin" "770 512 432"
 }
-// entity 660
+// entity 640
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/p_nolight.md3"
 "origin" "-920 746 297"
 }
-// entity 661
+// entity 641
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "origin" "-920 746 297"
 }
-// entity 662
+// entity 642
 {
 "classname" "corona"
 "scale" ".5"
 "origin" "-920 746 287"
 }
-// entity 663
+// entity 643
 {
 "classname" "light"
 "fade" "3"
@@ -38881,7 +38706,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 664
+// entity 644
 {
 "classname" "func_group"
 // brush 0
@@ -38984,14 +38809,14 @@ castle_wall/castle_c46_on_grid
 ( -1184 696 360 ) ( -1164 696 360 ) ( -1164 700 364 ) common/caulk 0 16 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 665
+// entity 645
 {
 "classname" "lightJunior"
 "_color" "0.749020 0.874510 1.000000"
 "light" "250"
 "origin" "-1064 736 448"
 }
-// entity 666
+// entity 646
 {
 "classname" "misc_model"
 "angle" "76.0816"
@@ -38999,7 +38824,7 @@ castle_wall/castle_c46_on_grid
 "origin" "-864 807 128"
 "modelscale_vec" "-0.8 0.8 0.8"
 }
-// entity 667
+// entity 647
 {
 "classname" "misc_model"
 "angle" "-105.248"
@@ -39007,7 +38832,7 @@ castle_wall/castle_c46_on_grid
 "origin" "-876.05 804.05 160"
 "modelscale_vec" "-1.02 1.02 1.02"
 }
-// entity 668
+// entity 648
 {
 "classname" "misc_model"
 "angle" "-119.97"
@@ -39015,7 +38840,7 @@ castle_wall/castle_c46_on_grid
 "origin" "-849.32 811.52 158"
 "modelscale_vec" "-1 1 1"
 }
-// entity 669
+// entity 649
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
@@ -39023,7 +38848,7 @@ castle_wall/castle_c46_on_grid
 "angle" "90"
 "modelscale_vec" "1 -1 1"
 }
-// entity 670
+// entity 650
 {
 "classname" "lightJunior"
 "origin" "2717 2529 -48"
@@ -39031,7 +38856,7 @@ castle_wall/castle_c46_on_grid
 "light" "120"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 671
+// entity 651
 {
 "classname" "light"
 "fade" ".4"
@@ -39040,7 +38865,7 @@ castle_wall/castle_c46_on_grid
 "light" "60"
 "_color" "1.000000 0.850980 0.701961"
 }
-// entity 672
+// entity 652
 {
 "classname" "light"
 "_color" "1.000000 0.909804 0.819608"
@@ -39048,27 +38873,27 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "2717 2529 -112"
 }
-// entity 673
+// entity 653
 {
 "classname" "misc_model"
 "origin" "2717 2529 -28"
 "model" "models/mapobjects/light/p_nolight.md3"
 "modelscale_vec" "-1 -1 1"
 }
-// entity 674
+// entity 654
 {
 "classname" "corona"
 "origin" "2717 2529 -36"
 "_color" "1.000000 0.909804 0.819608"
 "scale" ".5"
 }
-// entity 675
+// entity 655
 {
 "classname" "corona"
 "origin" "1832 1648 4"
 "angle" "180"
 }
-// entity 676
+// entity 656
 {
 "classname" "light"
 "origin" "2024 1648 -72"
@@ -39076,14 +38901,14 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "_color" "1.000000 0.749020 0.501961"
 }
-// entity 677
+// entity 657
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta5k.md3"
 "origin" "2024 1648 14"
 "angle" "180"
 }
-// entity 678
+// entity 658
 {
 "classname" "light"
 "_color" "1.000000 0.749020 0.501961"
@@ -39091,14 +38916,14 @@ castle_wall/castle_c46_on_grid
 "light" "30"
 "origin" "1832 1648 -72"
 }
-// entity 679
+// entity 659
 {
 "classname" "misc_model"
 "origin" "1832 1648 14"
 "model" "models/mapobjects/light/cagelighta5k.md3"
 "angle" "180"
 }
-// entity 680
+// entity 660
 {
 "classname" "light"
 "_color" "1.000000 0.749020 0.501961"
@@ -39106,7 +38931,7 @@ castle_wall/castle_c46_on_grid
 "light" "10"
 "origin" "2024 1648 -156"
 }
-// entity 681
+// entity 661
 {
 "classname" "light"
 "origin" "1832 1648 -156"
@@ -39114,76 +38939,76 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "19"
 "_color" "1.000000 0.749020 0.501961"
 }
-// entity 682
+// entity 662
 {
 "classname" "lightJunior"
 "origin" "1832 1648 -88"
 "_color" "1.000000 0.784314 0.564706"
 "light" "250"
 }
-// entity 683
+// entity 663
 {
 "classname" "lightJunior"
 "light" "250"
 "_color" "1.000000 0.784314 0.564706"
 "origin" "2024 1648 -88"
 }
-// entity 684
+// entity 664
 {
 "classname" "corona"
 "origin" "2024 1648 4"
 "angle" "180"
 }
-// entity 685
+// entity 665
 {
 "classname" "misc_model"
 "model" "models/mapobjects/furniture/bunks.md3"
 "angle" "180"
 "origin" "1800 1556 -176"
 }
-// entity 686
+// entity 666
 {
 "classname" "misc_model"
 "origin" "1928 1556 -176"
 "angle" "180"
 "model" "models/mapobjects/furniture/bunks.md3"
 }
-// entity 687
+// entity 667
 {
 "classname" "misc_model"
 "model" "models/mapobjects/furniture/bunks.md3"
 "angle" "180"
 "origin" "2056 1556 -176"
 }
-// entity 688
+// entity 668
 {
 "classname" "info_ai_respawn"
 "origin" "1740 1734 -163"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 689
+// entity 669
 {
 "classname" "info_ai_respawn"
 "origin" "1740 1658 -163"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 690
+// entity 670
 {
 "classname" "info_ai_respawn"
 "origin" "1810 1734 -163"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 691
+// entity 671
 {
 "classname" "info_ai_respawn"
 "origin" "1810 1658 -163"
 "angle" "94.139"
 "aiteam" "0"
 }
-// entity 692
+// entity 672
 {
 "classname" "func_invisible_user"
 "target" "buy_mp44"
@@ -39199,7 +39024,7 @@ castle_wall/castle_c46_on_grid
 ( 1983 2496 -134 ) ( 1983 2644 -134 ) ( 1983 2496 -132 ) common/trigger 44 55.9981384277 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 693
+// entity 673
 {
 "classname" "misc_gamemodel"
 "origin" "2000.46 2529.83 -158.975"
@@ -39207,14 +39032,14 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 -106.944 88.8022"
 "modelscale" "1.2"
 }
-// entity 694
+// entity 674
 {
 "classname" "target_buy"
 "origin" "2001 2520 -60"
 "targetname" "buy_mp44"
 "buy_item" "weapon_mp44"
 }
-// entity 695
+// entity 675
 {
 "classname" "trigger_objective_info"
 "isWeapon" "1"
@@ -39230,14 +39055,14 @@ castle_wall/castle_c46_on_grid
 ( 2025 2434 -152 ) ( 2025 2534 -152 ) ( 2025 2434 -136 ) common/trigger 52 3.9981384277 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 696
+// entity 676
 {
 "classname" "misc_model"
 "origin" "1992.5 2544.46 -160"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 "angle" "84.877"
 }
-// entity 697
+// entity 677
 {
 "classname" "func_invisible_user"
 "target" "buy_speed1"
@@ -39253,7 +39078,7 @@ castle_wall/castle_c46_on_grid
 ( 2206.7787418979 2733.5655308861 -137.4588228883 ) ( 2207.7988363254 2881.5359138857 -134.6793024622 ) ( 2206.7914329943 2733.5278822045 -135.4592175903 ) common/trigger 42.8549804688 10.7487182617 1.076109767 0.4999874234 0.4999894202 134217728 0 0
 }
 }
-// entity 698
+// entity 678
 {
 "classname" "target_buy"
 "origin" "2176.21 2750.85 -36.94"
@@ -39261,7 +39086,7 @@ castle_wall/castle_c46_on_grid
 "buy_item" "upgrade_weapon"
 "angles" "0.370937 -0.388 1.07613"
 }
-// entity 699
+// entity 679
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_weapon_upgrade"
@@ -39276,7 +39101,7 @@ castle_wall/castle_c46_on_grid
 ( 2228.4518594877 2674.3853154135 -128.5274784483 ) ( 2229.1411124793 2774.3653039267 -126.6494241064 ) ( 2228.5533882589 2674.0841259611 -112.530636064 ) common/trigger 20.8627929688 14.5231628418 1.076109767 0.4999874532 0.49998945 134217728 0 0
 }
 }
-// entity 700
+// entity 680
 {
 "classname" "misc_model"
 "origin" "2180 2749 -193"
@@ -39284,134 +39109,14 @@ castle_wall/castle_c46_on_grid
 "modelscale" "1.2"
 "angle" "-90"
 }
-// entity 701
+// entity 681
 {
 "classname" "misc_model"
 "origin" "2167.5 2715.54 -131"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 "angle" "-95.123"
 }
-// entity 702
-{
-"classname" "ai_loper_special"
-"origin" "-112 1360 -1520"
-"spawnflags" "1"
-"ainame" "loper5"
-"targetname" "loper5"
-"aiteam" "0"
-}
-// entity 703
-{
-"classname" "ai_loper_special"
-"origin" "16 1360 -1520"
-"spawnflags" "1"
-"ainame" "loper6"
-"targetname" "loper6"
-"aiteam" "0"
-}
-// entity 704
-{
-"classname" "ai_loper_special"
-"origin" "-112 1248 -1520"
-"spawnflags" "1"
-"ainame" "loper4"
-"targetname" "loper4"
-"aiteam" "0"
-}
-// entity 705
-{
-"classname" "ai_loper_special"
-"origin" "-112 1056 -1520"
-"spawnflags" "1"
-"ainame" "loper2"
-"targetname" "loper2"
-"aiteam" "0"
-}
-// entity 706
-{
-"classname" "ai_loper_special"
-"origin" "-112 1152 -1520"
-"spawnflags" "1"
-"ainame" "loper3"
-"targetname" "loper3"
-"aiteam" "0"
-}
-// entity 707
-{
-"classname" "ai_loper_special"
-"origin" "-112 960 -1520"
-"spawnflags" "1"
-"ainame" "loper1"
-"targetname" "loper1"
-"aiteam" "0"
-}
-// entity 708
-{
-"classname" "ai_loper_special"
-"origin" "16 960 -1520"
-"spawnflags" "1"
-"ainame" "loper10"
-"targetname" "loper10"
-"aiteam" "0"
-}
-// entity 709
-{
-"classname" "ai_loper_special"
-"origin" "16 1232 -1520"
-"spawnflags" "1"
-"ainame" "loper7"
-"targetname" "loper7"
-"aiteam" "0"
-}
-// entity 710
-{
-"classname" "ai_loper_special"
-"origin" "16 1072 -1520"
-"spawnflags" "1"
-"ainame" "loper9"
-"targetname" "loper9"
-"aiteam" "0"
-}
-// entity 711
-{
-"classname" "ai_loper_special"
-"origin" "16 1152 -1520"
-"spawnflags" "1"
-"ainame" "loper8"
-"targetname" "loper8"
-"aiteam" "0"
-}
-// entity 712
-{
-"classname" "ai_protosoldier"
-"origin" "228 710 -1514"
-"aiteam" "0"
-"spawnflags" "1"
-"ainame" "proto2"
-}
-// entity 713
-{
-"classname" "ai_protosoldier"
-"origin" "324 710 -1514"
-"aiteam" "0"
-"spawnflags" "1"
-"ainame" "proto1"
-}
-// entity 714
-{
-"classname" "ai_venom"
-"origin" "274 396 -1522"
-"ainame" "v3"
-"spawnflags" "1"
-}
-// entity 715
-{
-"classname" "ai_venom"
-"origin" "226 396 -1522"
-"ainame" "v4"
-"spawnflags" "1"
-}
-// entity 716
+// entity 682
 {
 "classname" "func_group"
 // brush 0
@@ -39650,7 +39355,7 @@ castle_wall/castle_c46_on_grid
 ( -832 927 144 ) ( -856 927 128 ) ( -832 927 128 ) props/train_m06 80 58.0001525879 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 717
+// entity 683
 {
 "classname" "func_group"
 // brush 0
@@ -39942,371 +39647,371 @@ castle_wall/castle_c46_on_grid
 ( -800 922 128 ) ( -736 922 128 ) ( -800 922 160 ) common/caulk 0 63.9997253418 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 718
+// entity 684
 {
 "classname" "coop_spawnpoint"
 "origin" "-430.179 482.219 160"
 "spawnflags" "3"
 "angle" "84.5762"
 }
-// entity 719
+// entity 685
 {
 "classname" "coop_spawnpoint"
 "origin" "-509.821 489.781 160"
 "spawnflags" "3"
 "angle" "84.5762"
 }
-// entity 720
+// entity 686
 {
 "classname" "coop_spawnpoint"
 "origin" "-420 598 160"
 "spawnflags" "3"
 "angle" "90"
 }
-// entity 721
+// entity 687
 {
 "classname" "coop_spawnpoint"
 "origin" "-500 598 160"
 "spawnflags" "3"
 "angle" "90"
 }
-// entity 722
+// entity 688
 {
 "classname" "misc_model"
 "origin" "-632 -136 -91.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 723
+// entity 689
 {
 "classname" "misc_model"
 "origin" "-632 -136 -127.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 724
+// entity 690
 {
 "classname" "misc_model"
 "origin" "-622 -136 -91.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 725
+// entity 691
 {
 "classname" "misc_model"
 "origin" "-643 -136 -109.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 726
+// entity 692
 {
 "classname" "misc_model"
 "origin" "-632 -136 -109.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 727
+// entity 693
 {
 "classname" "misc_model"
 "origin" "-622 -136 -109.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 728
+// entity 694
 {
 "classname" "misc_model"
 "origin" "-643 -136 -91.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 729
+// entity 695
 {
 "classname" "misc_model"
 "origin" "-643 -136 -127.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 730
+// entity 696
 {
 "classname" "misc_model"
 "origin" "-622 -136 -127.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 731
+// entity 697
 {
 "classname" "misc_model"
 "origin" "-1254 1434 -90.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 732
+// entity 698
 {
 "classname" "misc_model"
 "origin" "-1243 1434 -126.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 733
+// entity 699
 {
 "classname" "misc_model"
 "origin" "-1233 1434 -90.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 734
+// entity 700
 {
 "classname" "misc_model"
 "origin" "-1254 1434 -108.75"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 735
+// entity 701
 {
 "classname" "misc_model"
 "origin" "-1254 1434 -126.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 736
+// entity 702
 {
 "classname" "misc_model"
 "origin" "-1233 1434 -126.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 737
+// entity 703
 {
 "classname" "misc_model"
 "origin" "-1243 1434 -108.75"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 738
+// entity 704
 {
 "classname" "misc_model"
 "origin" "-1243 1434 -90.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 739
+// entity 705
 {
 "classname" "misc_model"
 "origin" "-1233 1434 -108.75"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "90"
 }
-// entity 740
+// entity 706
 {
 "classname" "misc_model"
 "origin" "793 1750 -41.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 741
+// entity 707
 {
 "classname" "misc_model"
 "origin" "814 1750 -59.75"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 742
+// entity 708
 {
 "classname" "misc_model"
 "origin" "814 1750 -41.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 743
+// entity 709
 {
 "classname" "misc_model"
 "origin" "803 1750 -41.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 744
+// entity 710
 {
 "classname" "misc_model"
 "origin" "793 1750 -77.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 745
+// entity 711
 {
 "classname" "misc_model"
 "origin" "803 1750 -59.75"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 746
+// entity 712
 {
 "classname" "misc_model"
 "origin" "803 1750 -77.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 747
+// entity 713
 {
 "classname" "misc_model"
 "origin" "814 1750 -77.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 748
+// entity 714
 {
 "classname" "misc_model"
 "origin" "793 1750 -59.75"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "-90"
 }
-// entity 749
+// entity 715
 {
 "classname" "misc_model"
 "origin" "-1635.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 750
+// entity 716
 {
 "classname" "misc_model"
 "origin" "-1640.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angle" "-87.3774"
 }
-// entity 751
+// entity 717
 {
 "classname" "misc_model"
 "origin" "-1645.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 752
+// entity 718
 {
 "classname" "misc_model"
 "origin" "-1750.44 1101.9 -129"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 753
+// entity 719
 {
 "classname" "misc_model"
 "origin" "-1745.44 1101.9 -129"
 "model" "models/mapobjects/wt_props/book3.md3"
 "angle" "-87.3774"
 }
-// entity 754
+// entity 720
 {
 "classname" "misc_model"
 "origin" "-1740.44 1101.9 -129"
 "model" "models/mapobjects/wt_props/book4.md3"
 "angle" "-87.3774"
 }
-// entity 755
+// entity 721
 {
 "classname" "misc_model"
 "origin" "-1712.61 1099.39 -140.56"
 "model" "models/mapobjects/wt_props/book4.md3"
 "angles" "2.62259 -61.1019 -90"
 }
-// entity 756
+// entity 722
 {
 "classname" "misc_model"
 "origin" "-1740.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 757
+// entity 723
 {
 "classname" "misc_model"
 "origin" "-1745.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angle" "-87.3774"
 }
-// entity 758
+// entity 724
 {
 "classname" "misc_model"
 "origin" "-1750.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 759
+// entity 725
 {
 "classname" "misc_model"
 "origin" "-1735.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angle" "-87.3774"
 }
-// entity 760
+// entity 726
 {
 "classname" "misc_model"
 "origin" "-1730.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book4.md3"
 "angle" "-87.3774"
 }
-// entity 761
+// entity 727
 {
 "classname" "misc_model"
 "origin" "-1636.44 1101.9 -63"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angle" "-87.3774"
 }
-// entity 762
+// entity 728
 {
 "classname" "misc_model"
 "origin" "-1641.44 1101.9 -63"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 763
+// entity 729
 {
 "classname" "misc_model"
 "origin" "-1659.37 1103.64 -96.56"
 "model" "models/mapobjects/wt_props/book4.md3"
 "angles" "2.62259 121.714 -90"
 }
-// entity 764
+// entity 730
 {
 "classname" "misc_model"
 "origin" "-1648.25 1101.9 -64.7956"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angles" "0.43848 -87.4143 -9.61809"
 }
-// entity 765
+// entity 731
 {
 "classname" "misc_model"
 "origin" "-1661.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 766
+// entity 732
 {
 "classname" "misc_model"
 "origin" "-1666.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angle" "-87.3774"
 }
-// entity 767
+// entity 733
 {
 "classname" "misc_model"
 "origin" "-1671.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 768
+// entity 734
 {
 "classname" "misc_model"
 "origin" "-1656.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angle" "-87.3774"
 }
-// entity 769
+// entity 735
 {
 "classname" "misc_model"
 "origin" "-1651.44 1101.9 -107"
 "model" "models/mapobjects/wt_props/book4.md3"
 "angle" "-87.3774"
 }
-// entity 770
+// entity 736
 {
 "classname" "misc_model"
 "origin" "-1884.99 1249.12 -120"
@@ -40314,7 +40019,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.8"
 "angle" "85.7509"
 }
-// entity 771
+// entity 737
 {
 "classname" "misc_model"
 "origin" "-1884.99 1249.12 -112"
@@ -40322,35 +40027,35 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.8"
 "angle" "85.7509"
 }
-// entity 772
+// entity 738
 {
 "classname" "misc_model"
 "origin" "-1927.67 1265.37 -117"
 "model" "models/mapobjects/wt_props/book3_open.md3"
 "angle" "74.9009"
 }
-// entity 773
+// entity 739
 {
 "classname" "misc_model"
 "origin" "-1851.61 1272.06 -128.5"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angles" "0 -173.011 -90"
 }
-// entity 774
+// entity 740
 {
 "classname" "misc_model"
 "origin" "-1865.61 1248.56 -128.5"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angles" "0 -173.011 -90"
 }
-// entity 775
+// entity 741
 {
 "classname" "misc_model"
 "origin" "-1867.28 1248.05 -124.5"
 "model" "models/mapobjects/wt_props/book3.md3"
 "angles" "0 -153.08 -90"
 }
-// entity 776
+// entity 742
 {
 "classname" "misc_model"
 "origin" "-1703.49 1103.12 -88.5"
@@ -40358,7 +40063,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.8"
 "angle" "85.7509"
 }
-// entity 777
+// entity 743
 {
 "classname" "misc_model"
 "origin" "-1708.99 1101.62 -88.5"
@@ -40366,21 +40071,21 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.8"
 "angle" "121.195"
 }
-// entity 778
+// entity 744
 {
 "classname" "misc_model"
 "origin" "-1745.44 1101.9 -85.5"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angle" "-87.3774"
 }
-// entity 779
+// entity 745
 {
 "classname" "misc_model"
 "origin" "-1750.44 1101.9 -85.5"
 "model" "models/mapobjects/wt_props/book1.md3"
 "angle" "-87.3774"
 }
-// entity 780
+// entity 746
 {
 "classname" "misc_model"
 "origin" "-2066.49 1264.62 -117"
@@ -40388,7 +40093,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.8"
 "angle" "85.7509"
 }
-// entity 781
+// entity 747
 {
 "classname" "misc_model"
 "origin" "-2066.49 1264.62 -109"
@@ -40396,28 +40101,28 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.8"
 "angle" "85.7509"
 }
-// entity 782
+// entity 748
 {
 "classname" "misc_model"
 "origin" "-2057.47 1299.09 -125.5"
 "model" "models/mapobjects/wt_props/book2.md3"
 "angles" "0 143.295 -90"
 }
-// entity 783
+// entity 749
 {
 "classname" "misc_model"
 "origin" "-2059.03 1299.88 -121.5"
 "model" "models/mapobjects/wt_props/book3.md3"
 "angles" "0 163.226 -90"
 }
-// entity 784
+// entity 750
 {
 "classname" "misc_model"
 "origin" "-1681 766.5 -303.5"
 "model" "models/mapobjects/wt_crates/cargo_crate.md3"
 "modelscale_vec" "2.4 2 2.5"
 }
-// entity 785
+// entity 751
 {
 "classname" "misc_model"
 "origin" "1236 386.5 -256.5"
@@ -40425,14 +40130,14 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2.4 2 2.5"
 "angle" "180"
 }
-// entity 786
+// entity 752
 {
 "classname" "misc_model"
 "origin" "-2068 1388.5 -160.5"
 "model" "models/mapobjects/wt_crates/cargo_crate.md3"
 "modelscale_vec" "2.4 2 2.5"
 }
-// entity 787
+// entity 753
 {
 "classname" "misc_model"
 "origin" "-2050.51 1382.85 -130"
@@ -40440,7 +40145,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "1.3"
 "angles" "0 103.749 -90"
 }
-// entity 788
+// entity 754
 {
 "classname" "misc_model"
 "origin" "1404 2228 -223.5"
@@ -40448,14 +40153,14 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2.4 2 2.5"
 "angle" "-90"
 }
-// entity 789
+// entity 755
 {
 "classname" "misc_model"
 "origin" "1995 2523.5 -191.5"
 "model" "models/mapobjects/wt_crates/cargo_crate.md3"
 "modelscale_vec" "2.4 2 2.5"
 }
-// entity 790
+// entity 756
 {
 "classname" "misc_model"
 "origin" "2737.5 2592.5 -194"
@@ -40463,7 +40168,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "180"
 }
-// entity 791
+// entity 757
 {
 "classname" "misc_model"
 "origin" "2737.5 2592.5 -175.5"
@@ -40471,7 +40176,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "180"
 }
-// entity 792
+// entity 758
 {
 "classname" "misc_model"
 "origin" "2737.5 2592.5 -194"
@@ -40479,7 +40184,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "180"
 }
-// entity 793
+// entity 759
 {
 "classname" "misc_model"
 "origin" "2737.5 2592.5 -175.5"
@@ -40487,7 +40192,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "180"
 }
-// entity 794
+// entity 760
 {
 "classname" "misc_model"
 "origin" "2692 2592.5 -194"
@@ -40495,7 +40200,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 795
+// entity 761
 {
 "classname" "misc_model"
 "origin" "2692 2592.5 -175.5"
@@ -40503,7 +40208,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 796
+// entity 762
 {
 "classname" "misc_model"
 "origin" "2692 2592.5 -194"
@@ -40511,7 +40216,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 797
+// entity 763
 {
 "classname" "misc_model"
 "origin" "2692 2592.5 -175.5"
@@ -40519,7 +40224,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 798
+// entity 764
 {
 "classname" "func_group"
 // brush 0
@@ -40646,28 +40351,28 @@ castle_wall/castle_c46_on_grid
 ( -401.5 127 250.5 ) ( -401.5 191 250.5 ) ( -337.5 191 250.5 ) common/caulk 30.0009765625 20.9982910156 -89.9999923706 0.4999993443 0.4999993443 134217728 0 0
 }
 }
-// entity 799
+// entity 765
 {
 "classname" "misc_model"
 "origin" "-2055 1453 -162"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
 }
-// entity 800
+// entity 766
 {
 "classname" "misc_model"
 "origin" "-2055 1453 -143.5"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
 }
-// entity 801
+// entity 767
 {
 "classname" "misc_model"
 "origin" "-2055 1453 -125"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
 }
-// entity 802
+// entity 768
 {
 "classname" "ai_partisan"
 "origin" "-286 264 -1520"
@@ -40678,7 +40383,7 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "1"
 "aiteam" "1"
 }
-// entity 803
+// entity 769
 {
 "classname" "ai_partisan"
 "origin" "-276 378 -1520"
@@ -40690,35 +40395,35 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "1"
 "aiteam" "1"
 }
-// entity 804
+// entity 770
 {
 "classname" "info_notnull"
 "origin" "224 480 432"
 "angle" "127.465"
 "targetname" "gameover_cam1"
 }
-// entity 805
+// entity 771
 {
 "classname" "info_notnull"
 "origin" "-1656 1134 -22"
 "targetname" "gameover_cam2"
 "angle" "118.984"
 }
-// entity 806
+// entity 772
 {
 "classname" "info_notnull"
 "origin" "-672 596 -48"
 "targetname" "gameover_cam3"
 "angles" "0 0 0"
 }
-// entity 807
+// entity 773
 {
 "classname" "misc_model"
 "origin" "-168 756 136"
 "model" "models/mapobjects/wt_foliage/tree_temperate.md3"
 "modelscale" "2"
 }
-// entity 808
+// entity 774
 {
 "classname" "func_group"
 "_terraingen_size" "544 1376 32"
@@ -41436,20 +41141,20 @@ castle_wall/castle_c46_on_grid
 ( 932 336 -261 ) ( 932 336 -225.6163864136 ) ( 908 310 -261 ) common/caulk 0 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 809
+// entity 775
 {
 "classname" "misc_model"
 "origin" "-85 860 128"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 810
+// entity 776
 {
 "classname" "misc_model"
 "origin" "874 1254 -270"
 "model" "models/mapobjects/wt_foliage/bush.md3"
 }
-// entity 811
+// entity 777
 {
 "classname" "misc_model"
 "origin" "916.339 1085.53 -266"
@@ -41457,7 +41162,7 @@ castle_wall/castle_c46_on_grid
 "angle" "28.7374"
 "modelscale" "1.1"
 }
-// entity 812
+// entity 778
 {
 "classname" "misc_model"
 "origin" "868.339 1159.53 -266"
@@ -41465,7 +41170,7 @@ castle_wall/castle_c46_on_grid
 "angle" "28.7374"
 "modelscale" "1.1"
 }
-// entity 813
+// entity 779
 {
 "classname" "misc_model"
 "origin" "785.492 274.055 -268"
@@ -41473,7 +41178,7 @@ castle_wall/castle_c46_on_grid
 "angle" "-12.65"
 "modelscale" "1.3"
 }
-// entity 814
+// entity 780
 {
 "classname" "misc_model"
 "origin" "1997.02 2386.96 -146"
@@ -41481,7 +41186,7 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2 -2 -2"
 "angle" "157.065"
 }
-// entity 815
+// entity 781
 {
 "classname" "misc_model"
 "origin" "2001.03 2424.97 -146"
@@ -41489,13 +41194,13 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2 -2 -2"
 "angle" "-165.57"
 }
-// entity 816
+// entity 782
 {
 "classname" "misc_model"
 "origin" "1534 2214 -220"
 "model" "models/mapobjects/malta/oldtable.md3"
 }
-// entity 817
+// entity 783
 {
 "classname" "misc_model"
 "origin" "1516 2216.5 -193.5"
@@ -41503,21 +41208,21 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 818
+// entity 784
 {
 "classname" "misc_model"
 "origin" "1504 1967 -224"
 "model" "models/mapobjects/malta/metal_locker_gray.md3"
 "modelscale" "1.3"
 }
-// entity 819
+// entity 785
 {
 "classname" "misc_model"
 "origin" "1450 1967 -224"
 "model" "models/mapobjects/malta/metal_locker_gray.md3"
 "modelscale" "1.3"
 }
-// entity 820
+// entity 786
 {
 "classname" "misc_model"
 "origin" "1279.03 1892.97 -178"
@@ -41525,7 +41230,7 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2 -2 -2"
 "angle" "-165.57"
 }
-// entity 821
+// entity 787
 {
 "classname" "misc_model"
 "origin" "1238.7 1877.53 -178"
@@ -41533,7 +41238,7 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2 -2 -2"
 "angle" "-131.994"
 }
-// entity 822
+// entity 788
 {
 "classname" "misc_model"
 "origin" "1139.34 1085.53 -266"
@@ -41541,7 +41246,7 @@ castle_wall/castle_c46_on_grid
 "angle" "28.7374"
 "modelscale" "1.1"
 }
-// entity 823
+// entity 789
 {
 "classname" "misc_model"
 "origin" "1130.34 938.53 -271"
@@ -41549,21 +41254,21 @@ castle_wall/castle_c46_on_grid
 "angle" "28.7374"
 "modelscale" "1.1"
 }
-// entity 824
+// entity 790
 {
 "classname" "misc_model"
 "origin" "-2174 734 -509"
 "model" "models/mapobjects/wt_foliage/tree_temperate.md3"
 "modelscale" "2"
 }
-// entity 825
+// entity 791
 {
 "classname" "misc_model"
 "origin" "-2169 826 -512"
 "model" "models/mapobjects/malta/bench_wooden.md3"
 "angle" "90"
 }
-// entity 826
+// entity 792
 {
 "classname" "func_group"
 // brush 0
@@ -41576,7 +41281,7 @@ castle_wall/castle_c46_on_grid
 ( -128 338 -192 ) ( -128 370 -192 ) ( -128 354 -176 ) castle_wall/castle_m03_step 95.9998779297 63.9997558594 180 0.5 -0.5 0 0 0
 }
 }
-// entity 827
+// entity 793
 {
 "classname" "func_group"
 // brush 0
@@ -41589,7 +41294,7 @@ castle_wall/castle_c46_on_grid
 ( -96 338 -192 ) ( -96 370 -192 ) ( -96 354 -176 ) castle_wall/castle_m03_step 95.9998168945 63.9996948242 180 0.5 -0.5 0 0 0
 }
 }
-// entity 828
+// entity 794
 {
 "classname" "func_group"
 // brush 0
@@ -41809,7 +41514,7 @@ castle_wall/castle_c46_on_grid
 ( 50 200 -198 ) ( 74 200 -198 ) ( 62 200 -182 ) common/slip_e 19.9998378754 51.9997253418 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 829
+// entity 795
 {
 "classname" "func_group"
 // brush 0
@@ -41948,7 +41653,7 @@ castle_wall/castle_c46_on_grid
 ( -150 -158 -58 ) ( -150 -182 -58 ) ( -150 -170 -42 ) common/slip_e 43.9998168945 11.9997253418 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 830
+// entity 796
 {
 "classname" "func_group"
 // brush 0
@@ -42096,145 +41801,145 @@ castle_wall/castle_c46_on_grid
 ( -232 -54 16 ) ( -264 -54 16 ) ( -248 -54 32 ) common/slip_e 47.9996643066 63.9997253418 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 831
+// entity 797
 {
 "classname" "misc_model"
 "origin" "-192 608 -106"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 832
+// entity 798
 {
 "classname" "misc_model"
 "origin" "-447.5 608 -101"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 833
+// entity 799
 {
 "classname" "misc_model"
 "origin" "-447.5 608 -101"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 834
+// entity 800
 {
 "classname" "misc_model"
 "origin" "-704 608 -101"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 835
+// entity 801
 {
 "classname" "misc_model"
 "origin" "-704 608 -101"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 836
+// entity 802
 {
 "classname" "misc_model"
 "origin" "-1056 608 -276"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 837
+// entity 803
 {
 "classname" "misc_model"
 "origin" "-1056 608 -276"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 838
+// entity 804
 {
 "classname" "misc_model"
 "origin" "-1216 672 -100"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 839
+// entity 805
 {
 "classname" "misc_model"
 "origin" "-1216 672 -100"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 840
+// entity 806
 {
 "classname" "misc_model"
 "origin" "-1216 928 -102"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 841
+// entity 807
 {
 "classname" "misc_model"
 "origin" "-1216 928 -102"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 842
+// entity 808
 {
 "classname" "misc_model"
 "origin" "-1200 1296 -40"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 843
+// entity 809
 {
 "classname" "misc_model"
 "origin" "-1488 1296 -40"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 844
+// entity 810
 {
 "classname" "misc_model"
 "origin" "-704 1408 -35"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 845
+// entity 811
 {
 "classname" "misc_model"
 "origin" "-704 1088 -35"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 846
+// entity 812
 {
 "classname" "misc_model"
 "origin" "-704 832 -16"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 847
+// entity 813
 {
 "classname" "misc_model"
 "origin" "-244 384 -40"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 848
+// entity 814
 {
 "classname" "misc_model"
 "origin" "-448 384 -41"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 849
+// entity 815
 {
 "classname" "misc_model"
 "origin" "-384 128 -84"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 850
+// entity 816
 {
 "classname" "misc_model"
 "origin" "-384 128 -84"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 851
+// entity 817
 {
 "classname" "misc_model"
 "origin" "-608 128 -84"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 852
+// entity 818
 {
 "classname" "misc_model"
 "origin" "-608 128 -84"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 853
+// entity 819
 {
 "classname" "corona"
 "scale" ".5"
 "origin" "-608 -60 -1"
 }
-// entity 854
+// entity 820
 {
 "classname" "light"
 "fade" "3"
@@ -42243,7 +41948,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 855
+// entity 821
 {
 "classname" "light"
 "_color" "1.000000 0.803922 0.603922"
@@ -42251,25 +41956,25 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "-610 -60 -67"
 }
-// entity 856
+// entity 822
 {
 "classname" "misc_model"
 "origin" "-608 -60 -84"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 857
+// entity 823
 {
 "classname" "misc_model"
 "origin" "-608 -60 -84"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 858
+// entity 824
 {
 "classname" "corona"
 "scale" ".5"
 "origin" "-790 -60 -1"
 }
-// entity 859
+// entity 825
 {
 "classname" "light"
 "fade" "3"
@@ -42278,19 +41983,19 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 860
+// entity 826
 {
 "classname" "misc_model"
 "origin" "-790 -60 -84"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 861
+// entity 827
 {
 "classname" "misc_model"
 "origin" "-790 -60 -84"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 862
+// entity 828
 {
 "classname" "misc_model"
 "origin" "-270 199 -128"
@@ -42298,7 +42003,7 @@ castle_wall/castle_c46_on_grid
 "angle" "90"
 "modelscale" "1.2"
 }
-// entity 863
+// entity 829
 {
 "classname" "misc_model"
 "origin" "-270 116 -128"
@@ -42306,12 +42011,12 @@ castle_wall/castle_c46_on_grid
 "angle" "90"
 "modelscale" "1.2"
 }
-// entity 864
+// entity 830
 {
 "classname" "corona"
 "origin" "-18 347 -29"
 }
-// entity 865
+// entity 831
 {
 "classname" "light"
 "fade" "3"
@@ -42320,7 +42025,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 866
+// entity 832
 {
 "classname" "light"
 "_color" "1.000000 0.803922 0.603922"
@@ -42328,18 +42033,18 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "-18 351 -96"
 }
-// entity 867
+// entity 833
 {
 "classname" "misc_model"
 "origin" "-18 347 -116"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 868
+// entity 834
 {
 "classname" "corona"
 "origin" "-7 -95 82"
 }
-// entity 869
+// entity 835
 {
 "classname" "light"
 "fade" "3"
@@ -42348,7 +42053,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 870
+// entity 836
 {
 "classname" "light"
 "_color" "1.000000 0.803922 0.603922"
@@ -42356,18 +42061,18 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "-7 -91 15"
 }
-// entity 871
+// entity 837
 {
 "classname" "misc_model"
 "origin" "-7 -95 -5"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 872
+// entity 838
 {
 "classname" "corona"
 "origin" "-248 -97 194"
 }
-// entity 873
+// entity 839
 {
 "classname" "light"
 "fade" "3"
@@ -42376,7 +42081,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 874
+// entity 840
 {
 "classname" "light"
 "_color" "1.000000 0.803922 0.603922"
@@ -42384,13 +42089,13 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "-248 -93 127"
 }
-// entity 875
+// entity 841
 {
 "classname" "misc_model"
 "origin" "-248 -97 107"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 876
+// entity 842
 {
 "classname" "light"
 "origin" "-190 264 166"
@@ -42398,13 +42103,13 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "_color" "1.000000 0.749020 0.501961"
 }
-// entity 877
+// entity 843
 {
 "classname" "corona"
 "scale" ".5"
 "origin" "-190 264 284"
 }
-// entity 878
+// entity 844
 {
 "classname" "light"
 "fade" "3"
@@ -42413,7 +42118,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 879
+// entity 845
 {
 "classname" "light"
 "_color" "1.000000 0.803922 0.603922"
@@ -42421,25 +42126,25 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "-190 264 213"
 }
-// entity 880
+// entity 846
 {
 "classname" "misc_model"
 "origin" "-189.5 264 201"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 881
+// entity 847
 {
 "classname" "misc_model"
 "origin" "-189.5 264 201"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 882
+// entity 848
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelightr.md3"
 "origin" "544 775 608"
 }
-// entity 883
+// entity 849
 {
 "classname" "light"
 "origin" "544 798 588"
@@ -42447,19 +42152,19 @@ castle_wall/castle_c46_on_grid
 "fade" ".25"
 "light" "35"
 }
-// entity 884
+// entity 850
 {
 "classname" "corona"
 "_color" "1.000000 0.000000 0.000000"
 "origin" "544 775 595"
 "scale" "2"
 }
-// entity 885
+// entity 851
 {
 "classname" "props_skyportal"
 "origin" "-976 911 -1160"
 }
-// entity 886
+// entity 852
 {
 "classname" "func_group"
 "_terraingen_size" "416 480 64"
@@ -43360,13 +43065,13 @@ castle_wall/castle_c46_on_grid
 ( -816 1136 -1264 ) ( -752 1200 -1264 ) ( -816 1136 -1200 ) wt_terrain/grass_dense1 0 0 0 0.03125 0.03125 134217728 0 0
 }
 }
-// entity 887
+// entity 853
 {
 "classname" "misc_model"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 "origin" "-373 205 134"
 }
-// entity 888
+// entity 854
 {
 "classname" "light"
 "_color" "0.900000 0.880000 1.000000"
@@ -43374,7 +43079,7 @@ castle_wall/castle_c46_on_grid
 "origin" "-373 205 218"
 "fade" ".2"
 }
-// entity 889
+// entity 855
 {
 "classname" "light"
 "fade" "2.5"
@@ -43382,7 +43087,7 @@ castle_wall/castle_c46_on_grid
 "light" "200"
 "_color" "1.000000 1.000000 1.000000"
 }
-// entity 890
+// entity 856
 {
 "classname" "misc_model"
 "origin" "-373.45 215.07 176.5"
@@ -43390,7 +43095,7 @@ castle_wall/castle_c46_on_grid
 "angle" "-0.288002"
 "modelscale" "1.1"
 }
-// entity 891
+// entity 857
 {
 "classname" "func_group"
 // brush 0
@@ -43584,7 +43289,7 @@ castle_wall/castle_c46_on_grid
 ( 2676 2770 -192 ) ( 2612 2770 -192 ) ( 2612 2642 -192 ) wt_metal/metal_m02 223.9985351562 3.9975585938 89.9999923706 0.4999998808 0.4999998808 134217728 0 0
 }
 }
-// entity 892
+// entity 858
 {
 "classname" "func_group"
 // brush 0
@@ -43679,7 +43384,7 @@ castle_wall/castle_c46_on_grid
 ( 2546 2652 -192 ) ( 2542 2652 -188 ) ( 2542 2650 -188 ) swf/metal_m02 28.0024414062 57.9936523438 -180 0.499999851 0.499999851 134217728 0 0
 }
 }
-// entity 893
+// entity 859
 {
 "classname" "func_group"
 // brush 0
@@ -43710,7 +43415,7 @@ castle_wall/castle_c46_on_grid
 ( 2630 2770 -180 ) ( 2632 2770 -180 ) ( 2632 2770 -112 ) metal_misc/metal_m04dg 89 47.9971618652 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 894
+// entity 860
 {
 "classname" "func_group"
 // brush 0
@@ -43750,7 +43455,7 @@ castle_wall/castle_c46_on_grid
 ( 2650 2770 -180 ) ( 2648 2770 -180 ) ( 2648 2766 -184 ) metal_misc/metal_m04dg 66.9985351562 3.9975585938 89.9999923706 0.4999998808 0.4999998808 134217728 0 0
 }
 }
-// entity 895
+// entity 861
 {
 "classname" "func_group"
 // brush 0
@@ -43844,7 +43549,7 @@ castle_wall/castle_c46_on_grid
 ( 2507 2646 -12 ) ( 2515 2646 -12 ) ( 2515 2646 -140 ) metal_misc/ametal_m03 46 105.9968719482 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 896
+// entity 862
 {
 "classname" "func_group"
 // brush 0
@@ -43857,7 +43562,7 @@ castle_wall/castle_c46_on_grid
 ( 2509 2692 -72 ) ( 2509 2696 -72 ) ( 2514 2692 -72 ) common/caulk 15.9985351562 21.998046875 89.9999923706 0.4999998808 0.4999998808 134217728 0 0
 }
 }
-// entity 897
+// entity 863
 {
 "classname" "func_group"
 // brush 0
@@ -43870,7 +43575,7 @@ castle_wall/castle_c46_on_grid
 ( 2517 2696 48 ) ( 2509 2696 48 ) ( 2509 2696 -68 ) metal_misc/ametal_m03 46 46.9972839355 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 898
+// entity 864
 {
 "classname" "func_group"
 // brush 0
@@ -43883,7 +43588,7 @@ castle_wall/castle_c46_on_grid
 ( 2517 2698 -72 ) ( 2517 2748 -72 ) ( 2509 2748 -72 ) metal_misc/ametal_m03 71.9985351562 85.998046875 89.9999923706 0.4999998808 0.4999998808 134217728 0 0
 }
 }
-// entity 899
+// entity 865
 {
 "classname" "func_explosive"
 "health" "10"
@@ -43899,7 +43604,7 @@ castle_wall/castle_c46_on_grid
 ( 2510 2804 -181 ) ( 2510 2804 -77 ) ( 2510 2772 -77 ) props/sign_m2dm 112 30.9857177734 180 0.25 -0.25 134217728 0 0
 }
 }
-// entity 900
+// entity 866
 {
 "classname" "light"
 "spawnflags" "3"
@@ -43907,14 +43612,14 @@ castle_wall/castle_c46_on_grid
 "_color" "1.000000 0.000000 0.000000"
 "origin" "2604 2706 -80"
 }
-// entity 901
+// entity 867
 {
 "classname" "lightJunior"
 "origin" "2604 2706 -72"
 "light" "150"
 "_color" "1.000000 0.000000 0.000000"
 }
-// entity 902
+// entity 868
 {
 "classname" "func_group"
 // brush 0
@@ -43927,7 +43632,7 @@ castle_wall/castle_c46_on_grid
 ( 2517 2764 -74 ) ( 2517 2814 -74 ) ( 2509 2814 -74 ) metal_misc/ametal_m03 71.9985351562 85.998046875 89.9999923706 0.499999851 0.499999851 134217728 0 0
 }
 }
-// entity 903
+// entity 869
 {
 "classname" "func_group"
 // brush 0
@@ -43940,7 +43645,7 @@ castle_wall/castle_c46_on_grid
 ( 2517 2828 -72 ) ( 2509 2828 -72 ) ( 2509 2828 -188 ) metal_misc/ametal_m03 46 62.9969177246 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 904
+// entity 870
 {
 "classname" "func_group"
 // brush 0
@@ -43953,7 +43658,7 @@ castle_wall/castle_c46_on_grid
 ( 2517 2646 48 ) ( 2509 2646 48 ) ( 2509 2646 -68 ) metal_misc/ametal_m03 46 46.9968414307 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 905
+// entity 871
 {
 "classname" "func_group"
 // brush 0
@@ -43966,7 +43671,7 @@ castle_wall/castle_c46_on_grid
 ( 2509 2836 -188 ) ( 2517 2836 -188 ) ( 2517 2900 -188 ) wt_alpha/mesh_c02 238.9453125 256.375 -89.9999923706 0.0585937314 0.0039062488 134217728 13 0
 }
 }
-// entity 906
+// entity 872
 {
 "classname" "func_group"
 // brush 0
@@ -43979,13 +43684,13 @@ castle_wall/castle_c46_on_grid
 ( 2509 2648 -188 ) ( 2517 2648 -188 ) ( 2517 2712 -188 ) wt_alpha/mesh_c02 102.4140625 256.375 -89.9999923706 0.0585937314 0.0039062488 134217728 13 0
 }
 }
-// entity 907
+// entity 873
 {
 "classname" "corona"
 "origin" "2362 2784 -33"
 "scale" ".5"
 }
-// entity 908
+// entity 874
 {
 "classname" "light"
 "fade" "3"
@@ -43994,7 +43699,7 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 909
+// entity 875
 {
 "classname" "light"
 "_color" "1.000000 0.803922 0.603922"
@@ -44002,32 +43707,32 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "3"
 "origin" "2362 2784 -99"
 }
-// entity 910
+// entity 876
 {
 "classname" "misc_model"
 "origin" "2362 2784 -116"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 911
+// entity 877
 {
 "classname" "misc_model"
 "origin" "2362 2784 -116"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 912
+// entity 878
 {
 "classname" "misc_model"
 "origin" "2396 2600 -58"
 "model" "models/mapobjects/light/cagelightr.md3"
 }
-// entity 913
+// entity 879
 {
 "classname" "corona"
 "scale" "2"
 "_color" "1.000000 0.000000 0.000000"
 "origin" "2396 2600 -71"
 }
-// entity 914
+// entity 880
 {
 "classname" "misc_model"
 "origin" "2197 2662 -158"
@@ -44035,7 +43740,7 @@ castle_wall/castle_c46_on_grid
 "model" "models/mapobjects/toolshed/tools1.md3"
 "angle" "-45"
 }
-// entity 915
+// entity 881
 {
 "classname" "func_group"
 // brush 0
@@ -44156,7 +43861,7 @@ castle_wall/castle_c46_on_grid
 ( 2174 2656 -96 ) ( 2174 2652 -96 ) ( 2174 2656 -94 ) common/caulk 24 63.9986114502 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 916
+// entity 882
 {
 "classname" "misc_model"
 "origin" "2176.96 2880.98 -146"
@@ -44164,7 +43869,7 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2 -2 -2"
 "angle" "67.065"
 }
-// entity 917
+// entity 883
 {
 "classname" "misc_model"
 "origin" "2214.97 2876.97 -146"
@@ -44172,7 +43877,7 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2 -2 -2"
 "angle" "104.43"
 }
-// entity 918
+// entity 884
 {
 "classname" "misc_model"
 "origin" "2190.97 2844.97 -146"
@@ -44180,7 +43885,7 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2 -2 -2"
 "angle" "104.43"
 }
-// entity 919
+// entity 885
 {
 "classname" "misc_model"
 "origin" "-515.297 178.981 153.054"
@@ -44188,7 +43893,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "0.5"
 "angles" "0.712406 167.74 0.458247"
 }
-// entity 920
+// entity 886
 {
 "classname" "func_group"
 // brush 0
@@ -44201,7 +43906,7 @@ castle_wall/castle_c46_on_grid
 ( 2510 3016 -34 ) ( 2502 3016 -34 ) ( 2502 2640 -34 ) metal_misc/ametal_m03 68.998046875 91.9970703125 89.9999923706 0.4999998212 0.4999998212 134217728 0 0
 }
 }
-// entity 921
+// entity 887
 {
 "classname" "func_group"
 // brush 0
@@ -44214,7 +43919,7 @@ castle_wall/castle_c46_on_grid
 ( 2551 2698 -88 ) ( 2559 2698 -88 ) ( 2559 2762 -88 ) wt_alpha/mesh_c02 102.4140625 256.5 -89.9999923706 0.0585937276 0.0039062486 134217728 13 0
 }
 }
-// entity 922
+// entity 888
 {
 "classname" "func_group"
 // brush 0
@@ -44227,7 +43932,7 @@ castle_wall/castle_c46_on_grid
 ( 2510 3016 -4 ) ( 2502 3016 -4 ) ( 2502 2640 -4 ) metal_misc/ametal_m03 68.998046875 91.9970703125 89.9999923706 0.4999997914 0.4999997914 134217728 0 0
 }
 }
-// entity 923
+// entity 889
 {
 "classname" "func_invisible_user"
 "target" "buy_choice"
@@ -44243,7 +43948,7 @@ castle_wall/castle_c46_on_grid
 ( -728 -144 -71 ) ( -876 -144 -71 ) ( -728 -144 -69 ) common/trigger 38 27.9783477783 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 924
+// entity 890
 {
 "classname" "target_buy"
 "origin" "-756 -117 -1"
@@ -44251,7 +43956,7 @@ castle_wall/castle_c46_on_grid
 "buy_item" "perk_choice"
 "angle" "90"
 }
-// entity 925
+// entity 891
 {
 "classname" "misc_model"
 "origin" "-757.66 -141.48 -82.983"
@@ -44259,7 +43964,7 @@ castle_wall/castle_c46_on_grid
 "angle" "180"
 "modelscale" "1.3"
 }
-// entity 926
+// entity 892
 {
 "classname" "trigger_objective_info"
 "target" "buy_choice"
@@ -44274,14 +43979,14 @@ castle_wall/castle_c46_on_grid
 ( -728 -114 -71 ) ( -876 -114 -71 ) ( -728 -114 -69 ) common/trigger 38 27.9779815674 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 927
+// entity 893
 {
 "classname" "corona"
 "origin" "-753 -132 -65"
 "_color" "0 1 0"
 "angle" "90"
 }
-// entity 928
+// entity 894
 {
 "classname" "func_door_rotating"
 "type" "4"
@@ -44304,7 +44009,7 @@ castle_wall/castle_c46_on_grid
 ( 1733 811 208 ) ( 1733 863 208 ) ( 1733 811 320 ) castle_door/door_c17 128 438.8571777344 0 0.25 0.2187499851 0 0 0
 }
 }
-// entity 929
+// entity 895
 {
 "classname" "func_door_rotating"
 "type" "4"
@@ -44327,7 +44032,7 @@ castle_wall/castle_c46_on_grid
 ( -146 1377 0 ) ( -146 1393 0 ) ( -146 1385 112 ) castle_door/door_c17 202.328125 0 0 0.2421877235 0.2187499851 0 0 0
 }
 }
-// entity 930
+// entity 896
 {
 "classname" "func_door_rotating"
 "type" "4"
@@ -44350,7 +44055,7 @@ castle_wall/castle_c46_on_grid
 ( 1314 1931 -224 ) ( 1330 1931 -224 ) ( 1322 1931 -112 ) castle_door/door_c17 128 -0 0 0.25 0.2187500149 0 0 0
 }
 }
-// entity 931
+// entity 897
 {
 "classname" "func_group"
 // brush 0
@@ -44463,7 +44168,7 @@ castle_wall/castle_c46_on_grid
 ( -135.3999977112 653.999982357 140.200003624 ) ( -135.3999977112 615.5999808311 140.200003624 ) ( -116.1999969482 653.999982357 121.000002861 ) cathedrale_wall/cathedrale_c24 223.3333129883 4 0 0.3000000119 0.3000000119 0 0 0
 }
 }
-// entity 932
+// entity 898
 {
 "classname" "func_group"
 // brush 0
@@ -44576,7 +44281,7 @@ castle_wall/castle_c46_on_grid
 ( -135.3999977112 861.999982357 140.200003624 ) ( -135.3999977112 823.5999808311 140.200003624 ) ( -116.1999969482 861.999982357 121.000002861 ) cathedrale_wall/cathedrale_c24 223.3333129883 185.3332519531 0 0.3000000119 0.3000000119 0 0 0
 }
 }
-// entity 933
+// entity 899
 {
 "classname" "func_group"
 // brush 0
@@ -45351,7 +45056,7 @@ castle_wall/castle_c46_on_grid
 ( 2227.9999108315 1306.3999404907 214.5999855995 ) ( 2227.9999108315 1306.3999404907 215.1999856234 ) ( 2227.9999108315 1308.7999405861 214.5999855995 ) wt_metal/metal_m02 5.3334960938 63.3332519531 0 0.3000000119 0.3000000119 134217728 0 0
 }
 }
-// entity 934
+// entity 900
 {
 "classname" "func_group"
 // brush 0
@@ -46126,7 +45831,7 @@ castle_wall/castle_c46_on_grid
 ( 1964.9999108315 1306.3999404907 214.5999855995 ) ( 1964.9999108315 1306.3999404907 215.1999856234 ) ( 1964.9999108315 1308.7999405861 214.5999855995 ) wt_metal/metal_m02 5.3334960938 63.3332519531 0 0.3000000119 0.3000000119 134217728 0 0
 }
 }
-// entity 935
+// entity 901
 {
 "classname" "func_group"
 // brush 0
@@ -46901,7 +46606,7 @@ castle_wall/castle_c46_on_grid
 ( 1697.9999108315 1306.3999404907 214.5999855995 ) ( 1697.9999108315 1306.3999404907 215.1999856234 ) ( 1697.9999108315 1308.7999405861 214.5999855995 ) wt_metal/metal_m02 5.3334960938 63.3332519531 0 0.3000000119 0.3000000119 134217728 0 0
 }
 }
-// entity 936
+// entity 902
 {
 "classname" "func_group"
 // brush 0
@@ -47676,7 +47381,7 @@ castle_wall/castle_c46_on_grid
 ( 1500.0000891685 996.6000595093 214.5999855995 ) ( 1500.0000891685 996.6000595093 215.1999856234 ) ( 1500.0000891685 994.2000594139 214.5999855995 ) wt_metal/metal_m02 2 63.3332519531 0 -0.3000000119 0.3000000119 134217728 0 0
 }
 }
-// entity 937
+// entity 903
 {
 "classname" "func_group"
 // brush 0
@@ -47772,7 +47477,7 @@ castle_wall/castle_c46_on_grid
 ( -1088.1150089419 1212.8640511961 -46.5487486354 ) ( -1088.1150089419 1212.8640511961 -18.7027490662 ) ( -1090.0050088596 1212.8640511961 -46.5487486354 ) castle_wall/castle_d01 0 24 -0 0.5 0.5 0 0 0
 }
 }
-// entity 938
+// entity 904
 {
 "classname" "func_group"
 // brush 0
@@ -47868,7 +47573,7 @@ castle_wall/castle_c46_on_grid
 ( -1088.1150089419 1452.8640511961 -46.5487486354 ) ( -1088.1150089419 1452.8640511961 -18.7027490662 ) ( -1090.0050088596 1452.8640511961 -46.5487486354 ) castle_wall/castle_d01 0 24 -0 0.5 0.5 0 0 0
 }
 }
-// entity 939
+// entity 905
 {
 "classname" "func_group"
 // brush 0
@@ -47964,7 +47669,7 @@ castle_wall/castle_c46_on_grid
 ( -895.8849910581 946.1359488039 -46.5487486354 ) ( -895.8849910581 946.1359488039 -18.7027490662 ) ( -893.9949911404 946.1359488039 -46.5487486354 ) castle_wall/castle_d01 0 24.0004806519 180 0.5 -0.5 0 0 0
 }
 }
-// entity 940
+// entity 906
 {
 "classname" "func_group"
 // brush 0
@@ -48060,7 +47765,7 @@ castle_wall/castle_c46_on_grid
 ( -1329.1359488039 1151.1150089419 -119.5487486354 ) ( -1329.1359488039 1151.1150089419 -91.7027490662 ) ( -1329.1359488039 1153.0050088596 -119.5487486354 ) castle_wall/castle_d01 126 5.9990081787 180 0.5 -0.5 0 0 0
 }
 }
-// entity 941
+// entity 907
 {
 "classname" "func_group"
 // brush 0
@@ -48156,7 +47861,7 @@ castle_wall/castle_c46_on_grid
 ( -1555.1359488039 1019.1150089419 -198.5487486354 ) ( -1555.1359488039 1019.1150089419 -170.7027490662 ) ( -1555.1359488039 1021.0050088596 -198.5487486354 ) castle_wall/castle_d01 118 103.9992675781 180 0.5 -0.5 0 0 0
 }
 }
-// entity 942
+// entity 908
 {
 "classname" "func_group"
 // brush 0
@@ -48252,7 +47957,7 @@ castle_wall/castle_c46_on_grid
 ( 371.1359488039 512.8849910581 -246.5487486354 ) ( 371.1359488039 512.8849910581 -218.7027490662 ) ( 371.1359488039 510.9949911404 -246.5487486354 ) castle_wall/castle_d01 126 7.9998779297 0 0.5 0.5 0 0 0
 }
 }
-// entity 943
+// entity 909
 {
 "classname" "func_group"
 // brush 0
@@ -48348,7 +48053,7 @@ castle_wall/castle_c46_on_grid
 ( 321.8849910581 523.8640511961 -56.5487486354 ) ( 321.8849910581 523.8640511961 -28.7027490662 ) ( 319.9949911404 523.8640511961 -56.5487486354 ) castle_wall/castle_d01 124 4 -0 0.5 0.5 0 0 0
 }
 }
-// entity 944
+// entity 910
 {
 "classname" "func_group"
 // brush 0
@@ -49228,14 +48933,14 @@ castle_wall/castle_c46_on_grid
 ( -1797.6063723078 1440.4000172615 -98.893600967 ) ( -1789.9423721936 1440.4000172615 -96.5992009328 ) ( -1793.2743722432 1440.4000172615 -89.4536008263 ) castle_wall/castle_c17 24 86.0000305176 -0 0.200000003 0.200000003 134217728 0 0
 }
 }
-// entity 945
+// entity 911
 {
 "classname" "misc_model"
 "origin" "-2011 1453 -162"
 "model" "models/mapobjects/wt_crates/ammo_box.md3"
 "modelscale" "2"
 }
-// entity 946
+// entity 912
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -49252,7 +48957,7 @@ castle_wall/castle_c46_on_grid
 ( 2112 884 340 ) ( 2110 884 340 ) ( 2110 884 148 ) props/board_c03 0 144 -0 0.25 0.25 0 0 0
 }
 }
-// entity 947
+// entity 913
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -49305,7 +49010,7 @@ castle_wall/castle_c46_on_grid
 ( 2110 760 230 ) ( 2114 760 230 ) ( 2114 760 288 ) common/caulk 0 8 -0 0.5 0.5 0 0 0
 }
 }
-// entity 948
+// entity 914
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -49320,19 +49025,19 @@ castle_wall/castle_c46_on_grid
 ( 2271.7199973035 1071.1199869561 314.0800107193 ) ( 2271.7199973035 1004.8799877238 314.0800107193 ) ( 2270.2799973202 1004.8799877238 314.0800107193 ) wood/wood_m12 25.6665039062 195.3334960938 0 0.3599999845 0.3599999845 134217728 0 0
 }
 }
-// entity 949
+// entity 915
 {
 "classname" "misc_model"
 "origin" "1920 832 266"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 950
+// entity 916
 {
 "classname" "corona"
 "origin" "1920 832 354"
 "scale" ".5"
 }
-// entity 951
+// entity 917
 {
 "classname" "light"
 "fade" "3"
@@ -49341,25 +49046,25 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 952
+// entity 918
 {
 "classname" "misc_model"
 "origin" "1920 832 266"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 953
+// entity 919
 {
 "classname" "misc_model"
 "origin" "1918 1152 264"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 954
+// entity 920
 {
 "classname" "corona"
 "origin" "1918 1152 352"
 "scale" ".5"
 }
-// entity 955
+// entity 921
 {
 "classname" "light"
 "fade" "3"
@@ -49368,13 +49073,13 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 956
+// entity 922
 {
 "classname" "misc_model"
 "origin" "1918 1152 264"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 957
+// entity 923
 {
 "classname" "lightJunior"
 "_color" "1.000000 0.909804 0.819608"
@@ -49382,7 +49087,7 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "0"
 "origin" "2192 1151 346"
 }
-// entity 958
+// entity 924
 {
 "classname" "light"
 "_color" "1.000000 0.850980 0.701961"
@@ -49391,7 +49096,7 @@ castle_wall/castle_c46_on_grid
 "origin" "2192 1151 258"
 "fade" ".4"
 }
-// entity 959
+// entity 925
 {
 "classname" "light"
 "origin" "2192 1151 282"
@@ -49399,19 +49104,19 @@ castle_wall/castle_c46_on_grid
 "light" "25"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 960
+// entity 926
 {
 "classname" "misc_model"
 "origin" "2190 1152 264"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 961
+// entity 927
 {
 "classname" "corona"
 "origin" "2190 1152 352"
 "scale" ".5"
 }
-// entity 962
+// entity 928
 {
 "classname" "light"
 "fade" "3"
@@ -49420,13 +49125,13 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 963
+// entity 929
 {
 "classname" "misc_model"
 "origin" "2190 1152 264"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 964
+// entity 930
 {
 "classname" "lightJunior"
 "_color" "1.000000 0.909804 0.819608"
@@ -49434,7 +49139,7 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "0"
 "origin" "1636 1151 346"
 }
-// entity 965
+// entity 931
 {
 "classname" "light"
 "_color" "1.000000 0.850980 0.701961"
@@ -49443,7 +49148,7 @@ castle_wall/castle_c46_on_grid
 "origin" "1636 1151 258"
 "fade" ".4"
 }
-// entity 966
+// entity 932
 {
 "classname" "light"
 "origin" "1636 1151 282"
@@ -49451,19 +49156,19 @@ castle_wall/castle_c46_on_grid
 "light" "25"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 967
+// entity 933
 {
 "classname" "misc_model"
 "origin" "1634 1152 264"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 968
+// entity 934
 {
 "classname" "corona"
 "origin" "1634 1152 352"
 "scale" ".5"
 }
-// entity 969
+// entity 935
 {
 "classname" "light"
 "fade" "3"
@@ -49472,13 +49177,13 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 970
+// entity 936
 {
 "classname" "misc_model"
 "origin" "1634 1152 264"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 971
+// entity 937
 {
 "classname" "func_group"
 // brush 0
@@ -50849,7 +50554,7 @@ castle_wall/castle_c46_on_grid
 ( 915.9329 333.9995 -260 ) ( 925.9105 327.3326 -260 ) ( 915.9329 333.9995 -228 ) castle_wall/castle_c19 40 208 -0 0.25 0.25 134217728 0 0
 }
 }
-// entity 972
+// entity 938
 {
 "classname" "misc_model"
 "origin" "826.34 817.53 -272"
@@ -50857,7 +50562,7 @@ castle_wall/castle_c46_on_grid
 "angle" "28.7374"
 "modelscale" "1.3"
 }
-// entity 973
+// entity 939
 {
 "classname" "func_door_rotating"
 "type" "4"
@@ -50880,7 +50585,7 @@ castle_wall/castle_c46_on_grid
 ( -219 379 128 ) ( -167 379 128 ) ( -219 379 240 ) castle_door/door_c17 152 73.1428833008 -0 0.25 0.2187499851 0 0 0
 }
 }
-// entity 974
+// entity 940
 {
 "classname" "func_group"
 // brush 0
@@ -50993,28 +50698,28 @@ castle_wall/castle_c46_on_grid
 ( 1594.6000022888 945.999982357 206.200003624 ) ( 1594.6000022888 907.5999808311 206.200003624 ) ( 1613.8000030518 945.999982357 187.000002861 ) cathedrale_wall/cathedrale_c24 88.6669921875 209.3332519531 0 0.3000000119 0.3000000119 0 0 0
 }
 }
-// entity 975
+// entity 941
 {
 "classname" "misc_model"
 "origin" "815 414 -264"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 976
+// entity 942
 {
 "classname" "misc_model"
 "origin" "815 380 -266"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 977
+// entity 943
 {
 "classname" "misc_model"
 "origin" "797 348 -268"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 978
+// entity 944
 {
 "classname" "light"
 "_color" "1.000000 0.850980 0.701961"
@@ -51023,7 +50728,7 @@ castle_wall/castle_c46_on_grid
 "origin" "1188 386 -208"
 "fade" ".4"
 }
-// entity 979
+// entity 945
 {
 "classname" "light"
 "origin" "1188 386 -184"
@@ -51031,19 +50736,19 @@ castle_wall/castle_c46_on_grid
 "light" "25"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 980
+// entity 946
 {
 "classname" "misc_model"
 "origin" "1188 386 -200"
 "model" "models/mapobjects/wt_lights/Lampshade_no_chain.md3"
 }
-// entity 981
+// entity 947
 {
 "classname" "corona"
 "origin" "1188 386 -112"
 "scale" ".5"
 }
-// entity 982
+// entity 948
 {
 "classname" "light"
 "fade" "3"
@@ -51052,26 +50757,26 @@ castle_wall/castle_c46_on_grid
 "light" "150"
 "_color" "1.000000 0.909804 0.819608"
 }
-// entity 983
+// entity 949
 {
 "classname" "misc_model"
 "origin" "1188 386 -200"
 "model" "models/mapobjects/wt_lights/Lamp.md3"
 }
-// entity 984
+// entity 950
 {
 "classname" "corona"
 "_color" "1.000000 0.901961 0.800000"
 "origin" "-531 1203 223"
 }
-// entity 985
+// entity 951
 {
 "classname" "misc_model"
 "origin" "-531 1203 233"
 "angle" "270"
 "model" "models/mapobjects/light/cagelighta.md3"
 }
-// entity 986
+// entity 952
 {
 "classname" "light"
 "_color" "1.000000 0.921569 0.843137"
@@ -51079,14 +50784,14 @@ castle_wall/castle_c46_on_grid
 "spawnflags" "19"
 "origin" "-531 1117 210"
 }
-// entity 987
+// entity 953
 {
 "classname" "misc_model"
 "model" "models/mapobjects/light/cagelighta.md3"
 "angle" "270"
 "origin" "-531 1117 233"
 }
-// entity 988
+// entity 954
 {
 "classname" "light"
 "origin" "-531 1203 210"
@@ -51094,13 +50799,13 @@ castle_wall/castle_c46_on_grid
 "light" "40"
 "_color" "1.000000 0.921569 0.843137"
 }
-// entity 989
+// entity 955
 {
 "classname" "corona"
 "_color" "1.000000 0.901961 0.800000"
 "origin" "-531 1117 223"
 }
-// entity 990
+// entity 956
 {
 "classname" "props_decoration"
 "angle" "270"
@@ -51110,7 +50815,7 @@ castle_wall/castle_c46_on_grid
 "frames" "190"
 "loop" "1"
 }
-// entity 991
+// entity 957
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_armor"
@@ -51125,7 +50830,7 @@ castle_wall/castle_c46_on_grid
 ( 2468 2456 -157 ) ( 2568 2456 -157 ) ( 2468 2456 -141 ) common/trigger 48 1.9898986816 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 992
+// entity 958
 {
 "classname" "target_buy"
 "origin" "2555 2378 -52"
@@ -51133,7 +50838,7 @@ castle_wall/castle_c46_on_grid
 "buy_item" "item_armor_body_hang"
 "angle" "90"
 }
-// entity 993
+// entity 959
 {
 "classname" "func_invisible_user"
 "target" "buy_armor1"
@@ -51149,13 +50854,13 @@ castle_wall/castle_c46_on_grid
 ( 2578 2370 -135 ) ( 2430 2370 -135 ) ( 2578 2370 -133 ) common/trigger 16 53.9931640625 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 994
+// entity 960
 {
 "classname" "misc_model"
 "origin" "2531 2387 -160"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 }
-// entity 995
+// entity 961
 {
 "classname" "misc_model"
 "origin" "2552.5 2380 -191.5"
@@ -51163,7 +50868,7 @@ castle_wall/castle_c46_on_grid
 "modelscale_vec" "2.4 2 2.5"
 "angle" "90"
 }
-// entity 996
+// entity 962
 {
 "classname" "misc_model"
 "origin" "2558.15 2397.49 -161"
@@ -51171,7 +50876,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "1.3"
 "angles" "0 -166.251 -90"
 }
-// entity 997
+// entity 963
 {
 "classname" "misc_model"
 "origin" "2255.5 2388.5 -194"
@@ -51179,7 +50884,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "180"
 }
-// entity 998
+// entity 964
 {
 "classname" "misc_model"
 "origin" "2255.5 2388.5 -175.5"
@@ -51187,7 +50892,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "180"
 }
-// entity 999
+// entity 965
 {
 "classname" "misc_model"
 "origin" "2255.5 2388.5 -194"
@@ -51195,7 +50900,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "180"
 }
-// entity 1000
+// entity 966
 {
 "classname" "misc_model"
 "origin" "2255.5 2388.5 -175.5"
@@ -51203,7 +50908,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "180"
 }
-// entity 1001
+// entity 967
 {
 "classname" "misc_model"
 "origin" "2210 2388.5 -194"
@@ -51211,7 +50916,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 1002
+// entity 968
 {
 "classname" "misc_model"
 "origin" "2210 2388.5 -175.5"
@@ -51219,7 +50924,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 1003
+// entity 969
 {
 "classname" "misc_model"
 "origin" "2210 2388.5 -194"
@@ -51227,7 +50932,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 1004
+// entity 970
 {
 "classname" "misc_model"
 "origin" "2210 2388.5 -175.5"
@@ -51235,7 +50940,7 @@ castle_wall/castle_c46_on_grid
 "modelscale" "2"
 "angle" "-171.123"
 }
-// entity 1005
+// entity 971
 {
 "classname" "func_invisible_user"
 "target" "buy_thompson"
@@ -51251,7 +50956,7 @@ castle_wall/castle_c46_on_grid
 ( -576 1134 184 ) ( -576 1282 184 ) ( -576 1134 186 ) common/trigger 16 55.9997558594 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1006
+// entity 972
 {
 "classname" "misc_gamemodel"
 "origin" "-558.54 1161.83 159.525"
@@ -51259,7 +50964,7 @@ castle_wall/castle_c46_on_grid
 "angles" "0.386834 -106.944 88.8022"
 "modelscale" "1.2"
 }
-// entity 1007
+// entity 973
 {
 "classname" "target_buy"
 "origin" "-516 1158 255"
@@ -51267,14 +50972,14 @@ castle_wall/castle_c46_on_grid
 "buy_item" "weapon_thompson"
 "stringname" "buy_thompson"
 }
-// entity 1008
+// entity 974
 {
 "classname" "misc_model"
 "origin" "-565.5 1180.53 160"
 "model" "models/mapobjects/hd_vanilla/lantern.md3"
 "angle" "92.994"
 }
-// entity 1009
+// entity 975
 {
 "classname" "trigger_objective_info"
 "target" "buy_thompson"
@@ -51290,35 +50995,35 @@ castle_wall/castle_c46_on_grid
 ( -544 1134 184 ) ( -544 1282 184 ) ( -544 1134 186 ) common/trigger 16 55.9997558594 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1010
+// entity 976
 {
 "classname" "misc_model"
 "origin" "-564 1158 128.5"
 "model" "models/mapobjects/wt_crates/cargo_crate.md3"
 "modelscale_vec" "2.4 2 2.5"
 }
-// entity 1011
+// entity 977
 {
 "classname" "misc_model"
 "origin" "-330 1290 129"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 1012
+// entity 978
 {
 "classname" "misc_model"
 "origin" "-337 1258 129"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 1013
+// entity 979
 {
 "classname" "misc_model"
 "origin" "-363 1282 129"
 "model" "models/mapobjects/malta/merch_barrel.md3"
 "modelscale" "1.1"
 }
-// entity 1014
+// entity 980
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -51335,7 +51040,7 @@ castle_wall/castle_c46_on_grid
 ( 2143 2166 -26 ) ( 2141 2166 -26 ) ( 2141 2166 -218 ) props/board_c01 132 216 -0 0.25 0.25 0 0 0
 }
 }
-// entity 1015
+// entity 981
 {
 "classname" "func_explosive"
 "spawnflags" "20"
@@ -51352,7 +51057,7 @@ castle_wall/castle_c46_on_grid
 ( 2143 2103 -26 ) ( 2141 2103 -26 ) ( 2141 2103 -218 ) props/board_c03 132 216 -0 0.25 0.25 0 0 0
 }
 }
-// entity 1016
+// entity 982
 {
 "classname" "func_invisible_user"
 "target" "buy_ammo3"
@@ -51368,7 +51073,7 @@ castle_wall/castle_c46_on_grid
 ( 2111.2212581021 934.4344691139 259.5411771117 ) ( 2110.2011636746 786.4640861143 262.3206975378 ) ( 2111.2085670057 934.4721177955 261.5407824097 ) common/trigger 60.7581787109 50.2918395996 178.9238891602 0.4999875426 -0.4999895394 134217728 0 0
 }
 }
-// entity 1017
+// entity 983
 {
 "classname" "target_buy"
 "origin" "2099.79 917.15 314.06"
@@ -51376,14 +51081,14 @@ castle_wall/castle_c46_on_grid
 "buy_item" "ammo"
 "angles" "0.370937 179.612 1.07613"
 }
-// entity 1018
+// entity 984
 {
 "classname" "misc_model"
 "origin" "2102 915 193"
 "model" "models/mapobjects/wt_props/stand_ammo.md3"
 "angle" "180"
 }
-// entity 1019
+// entity 985
 {
 "classname" "trigger_objective_info"
 "target" "buy_ammo3"
@@ -51398,70 +51103,70 @@ castle_wall/castle_c46_on_grid
 ( 2079.2212581021 934.4344691139 259.5411771117 ) ( 2078.2011636746 786.4640861143 262.3206975378 ) ( 2079.2085670057 934.4721177955 261.5407824097 ) common/trigger 60.7581787109 50.2918395996 178.9238891602 0.4999875426 -0.4999895394 134217728 0 0
 }
 }
-// entity 1020
+// entity 986
 {
 "classname" "misc_model"
 "origin" "2102 925 231.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1021
+// entity 987
 {
 "classname" "misc_model"
 "origin" "2102 904 213.25"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1022
+// entity 988
 {
 "classname" "misc_model"
 "origin" "2102 904 231.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1023
+// entity 989
 {
 "classname" "misc_model"
 "origin" "2102 915 231.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1024
+// entity 990
 {
 "classname" "misc_model"
 "origin" "2102 925 195.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1025
+// entity 991
 {
 "classname" "misc_model"
 "origin" "2102 915 213.25"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1026
+// entity 992
 {
 "classname" "misc_model"
 "origin" "2102 915 195.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1027
+// entity 993
 {
 "classname" "misc_model"
 "origin" "2102 904 195.5"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1028
+// entity 994
 {
 "classname" "misc_model"
 "origin" "2102 925 213.25"
 "model" "models/mapobjects/wt_props/ammo_box.md3"
 "angle" "180"
 }
-// entity 1029
+// entity 995
 {
 "classname" "func_explosive"
 "type" "metal"
@@ -51475,7 +51180,7 @@ castle_wall/castle_c46_on_grid
 ( -1091 1643 -139 ) ( -1091 1643 69 ) ( -1091 1451 69 ) wt_metal/metal_m02 88 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 1030
+// entity 996
 {
 "classname" "func_explosive"
 "type" "metal"
@@ -51489,7 +51194,7 @@ castle_wall/castle_c46_on_grid
 ( -1091 1633 -139 ) ( -1091 1633 69 ) ( -1091 1441 69 ) wt_metal/metal_m02 108 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 1031
+// entity 997
 {
 "classname" "func_explosive"
 "type" "metal"
@@ -51503,7 +51208,7 @@ castle_wall/castle_c46_on_grid
 ( -1091 1621 -139 ) ( -1091 1621 69 ) ( -1091 1429 69 ) wt_metal/metal_m02 132 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 1032
+// entity 998
 {
 "classname" "func_explosive"
 "type" "metal"
@@ -51517,7 +51222,7 @@ castle_wall/castle_c46_on_grid
 ( -1091 1611 -139 ) ( -1091 1611 69 ) ( -1091 1419 69 ) wt_metal/metal_m02 152 0 0 0.5 0.5 0 0 0
 }
 }
-// entity 1033
+// entity 999
 {
 "classname" "func_static"
 "randomSet" "wbox1"
@@ -51542,7 +51247,7 @@ castle_wall/castle_c46_on_grid
 ( -1016 387 154 ) ( -948 387 154 ) ( -1016 387 204 ) common/clipweap 40 47.9984436035 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1034
+// entity 1000
 {
 "classname" "func_invisible_user"
 "target" "buy_random_weapon1"
@@ -51562,7 +51267,7 @@ castle_wall/castle_c46_on_grid
 ( 2210 1005 291 ) ( 2062 1005 291 ) ( 2210 1005 293 ) common/trigger 48 9.9955444336 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 1035
+// entity 1001
 {
 "classname" "target_buy"
 "origin" "2192 985 228"
@@ -51572,7 +51277,7 @@ castle_wall/castle_c46_on_grid
 "randomGroupCount" "3"
 "randomGroup" "2"
 }
-// entity 1036
+// entity 1002
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_random_box"
@@ -51590,7 +51295,7 @@ castle_wall/castle_c46_on_grid
 ( 2082 1057 233 ) ( 2182 1057 233 ) ( 2082 1057 249 ) common/trigger 48.0004882812 5.9991760254 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1037
+// entity 1003
 {
 "classname" "func_static"
 "randomSet" "wbox1"
@@ -51615,7 +51320,7 @@ castle_wall/castle_c46_on_grid
 ( 2147 950 218 ) ( 2147 1018 218 ) ( 2147 950 268 ) common/clipweap 12 47.9978637695 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1038
+// entity 1004
 {
 "classname" "func_invisible_user"
 "target" "buy_random_weapon2"
@@ -51635,7 +51340,7 @@ castle_wall/castle_c46_on_grid
 ( -1681 1436 -61 ) ( -1533 1436 -61 ) ( -1681 1436 -59 ) common/trigger 14 9.9972991943 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1039
+// entity 1005
 {
 "classname" "target_buy"
 "origin" "-1663 1456 -124"
@@ -51646,7 +51351,7 @@ castle_wall/castle_c46_on_grid
 "randomGroup" "3"
 "angle" "180"
 }
-// entity 1040
+// entity 1006
 {
 "classname" "trigger_objective_info"
 "stringname" "buy_random_box"
@@ -51664,7 +51369,7 @@ castle_wall/castle_c46_on_grid
 ( -1553 1384 -119 ) ( -1653 1384 -119 ) ( -1553 1384 -103 ) common/trigger 18.0004882812 6.0010986328 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 1041
+// entity 1007
 {
 "classname" "func_static"
 "randomSet" "wbox1"
@@ -51689,7 +51394,7 @@ castle_wall/castle_c46_on_grid
 ( -1618 1491 -134 ) ( -1618 1423 -134 ) ( -1618 1491 -84 ) common/clipweap 30 47.9974212646 180 0.5 -0.5 134217728 0 0
 }
 }
-// entity 1042
+// entity 1008
 {
 "classname" "misc_gamemodel"
 "origin" "-1662 1455 -160"
@@ -51699,7 +51404,7 @@ castle_wall/castle_c46_on_grid
 "randomGroupCount" "3"
 "randomGroup" "3"
 }
-// entity 1043
+// entity 1009
 {
 "classname" "misc_gamemodel"
 "origin" "-980 343 128"
@@ -51710,7 +51415,7 @@ castle_wall/castle_c46_on_grid
 "randomGroup" "1"
 "angle" "90"
 }
-// entity 1044
+// entity 1010
 {
 "classname" "misc_gamemodel"
 "origin" "2191 986 192"
@@ -51721,7 +51426,7 @@ castle_wall/castle_c46_on_grid
 "randomGroup" "2"
 "angle" "180"
 }
-// entity 1045
+// entity 1011
 {
 "classname" "func_static"
 // brush 0
@@ -51734,7 +51439,7 @@ castle_wall/castle_c46_on_grid
 ( -763 -137 -93 ) ( -737 -137 -93 ) ( -763 -137 -49 ) common/clipweap 40 58.0026245117 -0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1046
+// entity 1012
 {
 "classname" "ai_soldier"
 "head" "escape2"
@@ -51745,7 +51450,7 @@ castle_wall/castle_c46_on_grid
 "angle" "-29.2904"
 "oneshot" "1"
 }
-// entity 1047
+// entity 1013
 {
 "classname" "func_group"
 // brush 0
@@ -52066,7 +51771,7 @@ castle_wall/castle_c46_on_grid
 ( -1426.2173 1431 -70.0816 ) ( -1423.0816 1431 -68.7827 ) ( -1423.0816 1431 -73.2173 ) metal_misc/metal_m03 8 0.0025177002 180 0.25 -0.25 0 0 0
 }
 }
-// entity 1048
+// entity 1014
 {
 "classname" "func_group"
 // brush 0
@@ -52387,77 +52092,77 @@ castle_wall/castle_c46_on_grid
 ( -1417.7827 1353 -70.0816 ) ( -1420.9184 1353 -68.7827 ) ( -1420.9184 1353 -73.2173 ) metal_misc/metal_m03 120 0.0034790039 -0 0.25 0.25 0 0 0
 }
 }
-// entity 1049
+// entity 1015
 {
 "classname" "misc_model"
 "origin" "2004 1300 206"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "-90 0 -180"
 }
-// entity 1050
+// entity 1016
 {
 "classname" "misc_model"
 "origin" "1992.09 1300 206.981"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "-76.6786 0 -180"
 }
-// entity 1051
+// entity 1017
 {
 "classname" "misc_model"
 "origin" "2006.16 1255.97 198"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "0 39.618 180"
 }
-// entity 1052
+// entity 1018
 {
 "classname" "misc_model"
 "origin" "1670 1002 224"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "0 -90 180"
 }
-// entity 1053
+// entity 1019
 {
 "classname" "misc_model"
 "origin" "1667 1002 233"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angles" "0 -90 180"
 }
-// entity 1054
+// entity 1020
 {
 "classname" "misc_model"
 "origin" "1732 1298 193"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "-90"
 }
-// entity 1055
+// entity 1021
 {
 "classname" "misc_model"
 "origin" "1732 1298 202"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "-90"
 }
-// entity 1056
+// entity 1022
 {
 "classname" "misc_model"
 "origin" "1731.97 1298.04 211"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "-76.8804"
 }
-// entity 1057
+// entity 1023
 {
 "classname" "misc_model"
 "origin" "1732.02 1262.8 193"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "-139.948"
 }
-// entity 1058
+// entity 1024
 {
 "classname" "misc_model"
 "origin" "1731.56 1028.84 193"
 "model" "models/mapobjects/wt_props/suitcase.md3"
 "angle" "66.9835"
 }
-// entity 1059
+// entity 1025
 {
 "classname" "func_static"
 "randomSet" "key1"
@@ -52691,7 +52396,7 @@ castle_wall/castle_c46_on_grid
 ( 1709.2020536231 1985.7347437127 -176 ) ( 1709.5478296965 1984.7963997544 -176 ) ( 1709.2020536231 1985.7347437127 -175 ) wt_metal/mdoor_m01 236.0249023438 0 0 0.2538813055 0.25 134217728 0 0
 }
 }
-// entity 1060
+// entity 1026
 {
 "classname" "func_invisible_user"
 "spawnflags" "24"
@@ -52709,7 +52414,7 @@ castle_wall/castle_c46_on_grid
 ( 1712.7235835791 1980.0199685097 -186 ) ( 1704.6559621096 1987.497500062 -186 ) ( 1712.7235835791 1980.0199685097 -185 ) common/trigger 22.330078125 48.0003051758 -180 0.3667100668 -0.5 0 0 0
 }
 }
-// entity 1061
+// entity 1027
 {
 "classname" "func_static"
 "randomSet" "key1"
@@ -52943,7 +52648,7 @@ castle_wall/castle_c46_on_grid
 ( -680.4607792814 158.4501745735 -96 ) ( -680.7751852306 159.399489874 -96 ) ( -680.4607792814 158.4501745735 -95 ) wt_metal/mdoor_m01 0 0 0 0.5 0.5 134217728 0 0
 }
 }
-// entity 1062
+// entity 1028
 {
 "classname" "func_invisible_user"
 "spawnflags" "24"
@@ -52961,7 +52666,7 @@ castle_wall/castle_c46_on_grid
 ( -683.7904748629 164.2788076517 -106 ) ( -675.9757704673 156.5373343228 -106 ) ( -683.7904748629 164.2788076517 -105 ) common/trigger 28.8325195312 15.9998168945 -0 0.3552132547 0.5 0 0 0
 }
 }
-// entity 1063
+// entity 1029
 {
 "classname" "func_static"
 "randomSet" "key1"
@@ -53195,7 +52900,7 @@ castle_wall/castle_c46_on_grid
 ( 841.2020536231 667.7347437127 -211 ) ( 841.5478296965 666.7963997544 -211 ) ( 841.2020536231 667.7347437127 -210 ) wt_metal/mdoor_m01 307.4272460938 372 0 0.2538813055 0.25 134217728 0 0
 }
 }
-// entity 1064
+// entity 1030
 {
 "classname" "func_invisible_user"
 "spawnflags" "24"
@@ -53213,7 +52918,7 @@ castle_wall/castle_c46_on_grid
 ( 844.7235835791 662.0199685097 -221 ) ( 836.6559621096 669.497500062 -221 ) ( 844.7235835791 662.0199685097 -220 ) common/trigger 23.3374023438 42.0006103516 -180 0.3667100668 -0.5 0 0 0
 }
 }
-// entity 1065
+// entity 1031
 {
 "classname" "func_static"
 "randomSet" "key1"
@@ -53447,7 +53152,7 @@ castle_wall/castle_c46_on_grid
 ( -203.7979463769 859.7347437127 152 ) ( -203.4521703035 858.7963997544 152 ) ( -203.7979463769 859.7347437127 153 ) wt_metal/mdoor_m01 63.1684570312 288 0 0.2538813055 0.25 134217728 0 0
 }
 }
-// entity 1066
+// entity 1032
 {
 "classname" "func_invisible_user"
 "spawnflags" "24"
@@ -53465,7 +53170,7 @@ castle_wall/castle_c46_on_grid
 ( -200.2764164209 854.0199685097 142 ) ( -208.3440378904 861.497500062 142 ) ( -200.2764164209 854.0199685097 143 ) common/trigger 53.6746826172 0.0001831055 -180 0.3667100668 -0.5 0 0 0
 }
 }
-// entity 1067
+// entity 1033
 {
 "classname" "misc_model"
 "origin" "1934 704 334"

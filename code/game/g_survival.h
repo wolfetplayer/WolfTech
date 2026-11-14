@@ -62,6 +62,7 @@ void TossClientItems_Survival(gentity_t *self, gentity_t *attacker);
 void TossClientPowerups(gentity_t *self, gentity_t *attacker);
 gentity_t *SelectSpawnPoint_AI ( gentity_t *player, gentity_t *ent, vec3_t origin, vec3_t angles ) ;
 void AICast_TickSurvivalWave( void );
+void AICast_SpawnGenericSurvivalPool( void );
 void Survival_CheckWipe( void );
 void Survival_TickExfil( void );
 int Survival_CountActivePlayers( void );
@@ -131,6 +132,14 @@ typedef struct survCharSkill_s
 	survCharSkillTier_t easy;   // g_survivalDifficulty 0
 	survCharSkillTier_t hard;   // g_survivalDifficulty 1
 } survCharSkill_t;
+
+// One "model/skin:head" choice in a character's .surv skin pool (see survConfig_s.skinPool).
+#define MAX_SURV_SKIN_POOL 16
+typedef struct survSkinPair_s
+{
+	char skin[MAX_QPATH];
+	char head[MAX_QPATH];
+} survSkinPair_t;
 
 // Survival balance config, loaded server-side only from maps/survival_default.surv + maps/<mapname>.surv - see g_survival_config.c.
 typedef struct survConfig_s
@@ -228,6 +237,12 @@ typedef struct survConfig_s
 
 	// Per-character AI skill tiers, indexed by AICharacters_t; set via "<charname>.easy_<field>"/"<charname>.hard_<field>" keys.
 	survCharSkill_t charSkill[NUM_CHARACTERS];
+
+	// Generic survival AI pool (see AICast_SpawnGenericSurvivalPool, ai_cast_survival.c). Set via
+	// "<charname>.ainame <name>" and "<charname>.skins "skin1:head1 skin2:head2 ..."; empty = not opted in.
+	char survAiName[NUM_CHARACTERS][MAX_QPATH];
+	survSkinPair_t skinPool[NUM_CHARACTERS][MAX_SURV_SKIN_POOL];
+	int numSkinPool[NUM_CHARACTERS];
 
 	// -1 = no override; set via "weapon_price.<name> <price>" / "perk_price.<name> <price>".
 	int weaponPrice[WP_NUM_WEAPONS];

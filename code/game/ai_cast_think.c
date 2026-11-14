@@ -1003,6 +1003,9 @@ void AICast_StartFrame( int time ) {
 			} else if ( cs->aiFlags & AIFL_WAITINGTOSPAWN ) {
 				// check f the space is clear yet
 				ent->AIScript_AlertEntity( ent );
+			} else if ( ent->aiSurvivalGeneric && ent->AIScript_AlertEntity ) {
+				// one-time auto-bootstrap for programmatically-created survival pool AI
+				ent->AIScript_AlertEntity( ent );
 			}
 			//
 			// see if we've checked all cast AI's

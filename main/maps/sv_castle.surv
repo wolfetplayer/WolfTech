@@ -1,0 +1,13 @@
+// sv_castle.surv - generic survival AI pool (see survival_default.surv). Points each
+// type at one existing name from its .ai block - no .ai changes needed.
+
+soldier.ainame      "nazi1"
+soldier.skins       "infantryss/dig1:dig1 infantryss/dig1:dig2 infantryss/dig1:dig3"
+
+eliteguard.ainame   "eg1"
+eliteguard.skins    "eliteguard/church2:church2 eliteguard/church1:church2 eliteguard/church1:church1 eliteguard/church2:church1"
+
+blackguard.ainame   "bg1"
+venom.ainame        "v1"
+protosoldier.ainame "proto1"
+loper_special.ainame "loper1"

@@ -214,6 +214,50 @@ int Survival_ParseWeaponPool( const char *str, weapon_t *outPool, int maxCount, 
 	return count;
 }
 
+/*
+============
+Surv_ParseSkinPool
+  Parses a space-separated "skin:head" list into outPool[]. A token with no
+  ':' uses itself as both skin and head. Returns the count written.
+============
+*/
+static int Surv_ParseSkinPool( const char *str, survSkinPair_t *outPool, int maxCount, const char *sourceForLog ) {
+	char buf[1024];
+	char *p, *token, *colon;
+	int count = 0;
+
+	if ( !str || !str[0] ) {
+		return 0;
+	}
+
+	Q_strncpyz( buf, str, sizeof( buf ) );
+	p = buf;
+
+	while ( count < maxCount ) {
+		token = COM_ParseExt( &p, qfalse );
+		if ( !token[0] ) {
+			break;
+		}
+
+		colon = strchr( token, ':' );
+		if ( colon ) {
+			*colon = 0;
+			Q_strncpyz( outPool[count].skin, token, sizeof( outPool[count].skin ) );
+			Q_strncpyz( outPool[count].head, colon + 1, sizeof( outPool[count].head ) );
+		} else {
+			Q_strncpyz( outPool[count].skin, token, sizeof( outPool[count].skin ) );
+			Q_strncpyz( outPool[count].head, token, sizeof( outPool[count].head ) );
+		}
+		count++;
+	}
+
+	if ( count == maxCount ) {
+		G_Printf( "Survival: %s: skin pool truncated at %d entries\n", sourceForLog, maxCount );
+	}
+
+	return count;
+}
+
 static const survNamedInt_t survPerkNames[] = {
 	{ "secondchance",   PERK_SECONDCHANCE },
 	{ "runner",         PERK_RUNNER },
@@ -549,6 +593,11 @@ static void Surv_SetDefaults( void ) {
 	Surv_SetCharSkillTier( &survCfg.charSkill[AICHAR_PROTOSOLDIER].easy, 0.4f, 0.9f,  0.5f, 1.0f,  1.0f, 0.2f );
 	Surv_SetCharSkillTier( &survCfg.charSkill[AICHAR_PROTOSOLDIER].hard, 0.6f, 0.9f,  0.6f, 1.0f,  0.8f, 0.2f );
 
+	// generic survival AI pool - empty/zero by default (not opted in for any character)
+	Com_Memset( survCfg.survAiName, 0, sizeof( survCfg.survAiName ) );
+	Com_Memset( survCfg.skinPool, 0, sizeof( survCfg.skinPool ) );
+	Com_Memset( survCfg.numSkinPool, 0, sizeof( survCfg.numSkinPool ) );
+
 	{
 		int i;
 		for ( i = 0; i < WP_NUM_WEAPONS; i++ ) {
@@ -616,6 +665,17 @@ static qboolean Surv_ApplyDottedKey( const char *keybuf, const char *dot, const 
 		if ( !Q_stricmp( prefix, survCharNames[i].name ) ) {
 			int j;
 			char *base = (char *)&survCfg.charCurve[survCharNames[i].character];
+
+			// generic survival AI pool keys (see AICast_SpawnGenericSurvivalPool, ai_cast_survival.c)
+			if ( !Q_stricmp( suffix, "ainame" ) ) {
+				Q_strncpyz( survCfg.survAiName[survCharNames[i].character], valueStr, sizeof( survCfg.survAiName[0] ) );
+				return qtrue;
+			}
+			if ( !Q_stricmp( suffix, "skins" ) ) {
+				survCfg.numSkinPool[survCharNames[i].character] = Surv_ParseSkinPool(
+					valueStr, survCfg.skinPool[survCharNames[i].character], MAX_SURV_SKIN_POOL, sourceForLog );
+				return qtrue;
+			}
 
 			for ( j = 0; j < NUM_SURV_CHAR_FIELDS; j++ ) {
 				if ( !Q_stricmp( suffix, survCharFields[j].suffix ) ) {

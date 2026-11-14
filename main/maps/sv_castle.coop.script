@@ -39,40 +39,7 @@ game_manager
 	
 	start_survival
 	{
-		alertentity nazi1
-		alertentity nazi2
-		alertentity nazi3
-		alertentity nazi4
-		alertentity nazi5
-		alertentity nazi6
-		alertentity nazi7
-		alertentity nazi8
-		alertentity nazi9
-		alertentity nazi10
-        alertentity eg1
-        alertentity eg2
-        alertentity eg3
-        alertentity eg4
-        alertentity bg1
-        alertentity bg2
-        alertentity bg3
-        alertentity bg4
-        alertentity v1
-        alertentity v2
-		alertentity v3
-		alertentity v4
-		alertentity proto1
-		alertentity proto2
-		alertentity loper1
-		alertentity loper2
-		alertentity loper3
-		alertentity loper4
-		alertentity loper5
-		alertentity loper6
-		alertentity loper7
-		alertentity loper8
-		alertentity loper9
-		alertentity loper10	
+		// nazi/eg/bg/v/proto/loper pool bootstrap now happens in code (see sv_castle.surv)
 	    alertentity friendly1
 	    alertentity friendly2
 	}

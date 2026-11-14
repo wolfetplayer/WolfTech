@@ -54,11 +54,109 @@ void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client b
 
 /*
 ============
+AICast_SpawnGenericSurvivalPool
+
+  Creates the backing entities for each generic AI type opted in via a .surv
+  file's "<charname>.ainame" key, instead of a mapper hand-placing them in the
+  .map and hand-writing a matching "alertentity <name>" line per entity.
+  Reuses the normal AICast_DelayedSpawnCast()/AIChar_spawn() creation path and
+  the normal death/rebirth cycle unchanged. A type with no ainame set is left
+  on the legacy map-placed-pool path - this is opt-in per type, per map.
+============
+*/
+typedef struct {
+	AICharacters_t character;
+	char *classname;    // must match a case in AIChar_spawn's classname switch
+	int *maxField;       // this type's survCfg.maxX - how many to create
+} survGenericPoolDef_t;
+
+static const survGenericPoolDef_t survGenericPoolDefs[] = {
+	{ AICHAR_SOLDIER,      "ai_soldier",       &survCfg.maxSoldiers },
+	{ AICHAR_TRENCH,       "ai_trench",        &survCfg.maxTrench },
+	{ AICHAR_ZOMBIE_SURV,  "ai_zombie_surv",   &survCfg.maxZombies },
+	{ AICHAR_ZOMBIE_FLAME, "ai_zombie_flame",  &survCfg.maxFlamers },
+	{ AICHAR_WARZOMBIE,    "ai_warzombie",     &survCfg.maxWarriors },
+	{ AICHAR_ELITEGUARD,   "ai_eliteguard",    &survCfg.maxElites },
+	{ AICHAR_BLACKGUARD,   "ai_blackguard",    &survCfg.maxBlackguards },
+	{ AICHAR_VENOM,        "ai_venom",         &survCfg.maxVenoms },
+	{ AICHAR_LOPER,        "ai_loper",         &survCfg.maxLopers },
+	{ AICHAR_HELGA,        "ai_boss_helga",    &survCfg.maxHelgas },
+	{ AICHAR_HEINRICH,     "ai_boss_heinrich", &survCfg.maxHeinrichs },
+	{ AICHAR_PROTOSOLDIER, "ai_protosoldier",  &survCfg.maxProtos },
+	{ AICHAR_PRIEST,       "ai_priest",        &survCfg.maxPriests },
+	{ AICHAR_XSHEPHERD,    "ai_xshepherd",     &survCfg.maxXshepherds },
+
+	// special-wave types have no per-character max_X - size to specialWaveCountMax instead
+	{ AICHAR_LOPER_SPECIAL, "ai_loper_special", &survCfg.specialWaveCountMax },
+	{ AICHAR_ZOMBIE_GHOST,  "ai_zombie_ghost",  &survCfg.specialWaveCountMax },
+};
+#define NUM_SURV_GENERIC_POOL_DEFS ( sizeof( survGenericPoolDefs ) / sizeof( survGenericPoolDefs[0] ) )
+
+static void AICast_CreateGenericPoolEntity( AICharacters_t character, char *classname ) {
+	gentity_t *ent = G_Spawn();
+
+	ent->classname = classname;
+	ent->aiCharacter = character;
+	ent->aiTeam = -1;   // falls back to aiDefaults[character].aiTeam, same as an unset "aiteam" map key
+	ent->aiName = survCfg.survAiName[character];
+	ent->spawnflags = 1;    // TriggerSpawn - start aiInactive, exactly like a hand-placed pool entity
+	ent->aiSurvivalGeneric = qtrue;
+
+	if ( survCfg.numSkinPool[character] > 0 ) {
+		int idx = rand() % survCfg.numSkinPool[character];
+		ent->aiSkin = survCfg.skinPool[character][idx].skin;
+		ent->aihSkin = survCfg.skinPool[character][idx].head;
+	} else {
+		ent->aiSkin = "";          // non-NULL so AICast_DelayedSpawnCast's map-parsing fallback is skipped
+		ent->aihSkin = "default";
+	}
+
+	AICast_DelayedSpawnCast( ent, character );
+	ent->aiTeam = -1;    // re-force it - AICast_DelayedSpawnCast's G_SpawnInt("aiteam") would clobber this otherwise
+}
+
+void AICast_SpawnGenericSurvivalPool( void ) {
+	int i, n;
+	qboolean handled[NUM_CHARACTERS];
+
+	memset( handled, 0, sizeof( handled ) );
+
+	for ( i = 0; i < NUM_SURV_GENERIC_POOL_DEFS; i++ ) {
+		const survGenericPoolDef_t *def = &survGenericPoolDefs[i];
+
+		handled[def->character] = qtrue;
+
+		if ( !survCfg.survAiName[def->character][0] ) {
+			continue;   // not opted in for this type - legacy map-placed-pool-only
+		}
+
+		for ( n = 0; n < *def->maxField; n++ ) {
+			AICast_CreateGenericPoolEntity( def->character, def->classname );
+		}
+
+		G_Printf( "Survival: created %d programmatic '%s' pool entities (ainame \"%s\")\n",
+			*def->maxField, def->classname, survCfg.survAiName[def->character] );
+	}
+
+	// warn about ainame set on an unsupported character type instead of silently ignoring it
+	for ( i = 0; i < NUM_CHARACTERS; i++ ) {
+		if ( survCfg.survAiName[i][0] && !handled[i] ) {
+			G_Printf( "^1Survival: WARNING: ainame \"%s\" set for character index %d, which the generic survival AI pool doesn't support - ignored\n",
+				survCfg.survAiName[i], i );
+		}
+	}
+}
+
+/*
+============
 AICast_InitSurvival
 ============
 */
 void AICast_InitSurvival(void) {
 	Survival_LoadConfig();
+	// AICast_SpawnGenericSurvivalPool() is called separately from g_main.c, after
+	// G_SpawnEntitiesFromString() - this runs too early, before ClearRegisteredItems(),
+	// which would wipe its weapon RegisterItem() calls before they took effect.
 
 	svParams.killCountRequirement = survCfg.initialKillCountReq;
 	svParams.spawnedThisWave = 0;
