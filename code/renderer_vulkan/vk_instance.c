@@ -51,6 +51,7 @@ PFN_vkCmdBindVertexBuffers                      qvkCmdBindVertexBuffers;
 PFN_vkCmdBlitImage                              qvkCmdBlitImage;
 PFN_vkCmdClearAttachments                       qvkCmdClearAttachments;
 PFN_vkCmdClearColorImage                        qvkCmdClearColorImage;
+PFN_vkCmdCopyBuffer                             qvkCmdCopyBuffer;
 PFN_vkCmdCopyBufferToImage                      qvkCmdCopyBufferToImage;
 PFN_vkCmdCopyImage                              qvkCmdCopyImage;
 PFN_vkCmdCopyImageToBuffer                      qvkCmdCopyImageToBuffer;
@@ -461,6 +462,7 @@ static void vk_loadDeviceFunctions( void ) {
 	INIT_DEVICE_FUNCTION( vkCmdBlitImage )
 	INIT_DEVICE_FUNCTION( vkCmdClearAttachments )
 	INIT_DEVICE_FUNCTION( vkCmdClearColorImage )
+	INIT_DEVICE_FUNCTION( vkCmdCopyBuffer )
 	INIT_DEVICE_FUNCTION( vkCmdCopyBufferToImage )
 	INIT_DEVICE_FUNCTION( vkCmdCopyImage )
 	INIT_DEVICE_FUNCTION( vkCmdCopyImageToBuffer )

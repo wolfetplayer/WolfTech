@@ -67,11 +67,13 @@ void vk_begin_render_pass( float r, float g, float b, float a ) {
 	int width, height;
 	R_GetWinResolution( &width, &height );
 
-	VkClearValue clear_value;
-	clear_value.color.float32[0] = r;
-	clear_value.color.float32[1] = g;
-	clear_value.color.float32[2] = b;
-	clear_value.color.float32[3] = a;
+	VkClearValue clear_values[2];
+	clear_values[0].color.float32[0] = r;
+	clear_values[0].color.float32[1] = g;
+	clear_values[0].color.float32[2] = b;
+	clear_values[0].color.float32[3] = a;
+	clear_values[1].depthStencil.depth = 1.0f;
+	clear_values[1].depthStencil.stencil = 0;
 
 	VkRenderPassBeginInfo begin_info;
 	begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -82,8 +84,8 @@ void vk_begin_render_pass( float r, float g, float b, float a ) {
 	begin_info.renderArea.offset.y = 0;
 	begin_info.renderArea.extent.width = (uint32_t)width;
 	begin_info.renderArea.extent.height = (uint32_t)height;
-	begin_info.clearValueCount = 1;
-	begin_info.pClearValues = &clear_value;
+	begin_info.clearValueCount = 2;
+	begin_info.pClearValues = clear_values;
 
 	qvkCmdBeginRenderPass( vk.command_buffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE );
 }

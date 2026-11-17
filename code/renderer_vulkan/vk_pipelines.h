@@ -1,4 +1,4 @@
-// vk_pipelines.h -- render pass, framebuffers, pipeline layout, and the two 2D pipeline variants (opaque, alpha-blend).
+// vk_pipelines.h -- render pass, framebuffers, pipeline layout, and the 2D/3D pipeline variants.
 
 #ifndef VK_PIPELINES_H_
 #define VK_PIPELINES_H_
@@ -21,5 +21,8 @@ void vk_destroyPipelineLayout( void );
 
 void vk_create2DPipelines( void );
 void vk_destroy2DPipelines( void );
+
+void vk_create3DPipelines( void );
+void vk_destroy3DPipelines( void );
 
 #endif // VK_PIPELINES_H_

@@ -86,6 +86,54 @@ static void create_staging_buffer( VkDeviceSize size, VkBuffer *pBuf, VkDeviceMe
 	VK_CHECK( qvkMapMemory( vk.device, *pMem, 0, size, 0, pMapped ) );
 }
 
+// One-time upload of static data (e.g. world geometry) to a device-local buffer via a staging copy.
+qboolean vk_create_device_local_buffer( const void *data, VkDeviceSize size, VkBufferUsageFlags usage,
+										  VkBuffer *outBuffer, VkDeviceMemory *outMemory ) {
+	VkBuffer staging_buf;
+	VkDeviceMemory staging_mem;
+	void *mapped;
+	create_staging_buffer( size, &staging_buf, &staging_mem, &mapped );
+	memcpy( mapped, data, (size_t)size );
+	qvkUnmapMemory( vk.device, staging_mem );
+
+	VkBufferCreateInfo buf_desc;
+	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	buf_desc.pNext = NULL;
+	buf_desc.flags = 0;
+	buf_desc.size = size;
+	buf_desc.usage = usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	buf_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	buf_desc.queueFamilyIndexCount = 0;
+	buf_desc.pQueueFamilyIndices = NULL;
+	VK_CHECK( qvkCreateBuffer( vk.device, &buf_desc, NULL, outBuffer ) );
+
+	VkMemoryRequirements mem_reqs;
+	qvkGetBufferMemoryRequirements( vk.device, *outBuffer, &mem_reqs );
+
+	VkMemoryAllocateInfo alloc_info;
+	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	alloc_info.pNext = NULL;
+	alloc_info.allocationSize = mem_reqs.size;
+	alloc_info.memoryTypeIndex = vk_find_memory_type( mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+	VK_CHECK( qvkAllocateMemory( vk.device, &alloc_info, NULL, outMemory ) );
+	VK_CHECK( qvkBindBufferMemory( vk.device, *outBuffer, *outMemory, 0 ) );
+
+	{
+		VkCommandBuffer cmd = vk_begin_one_shot_cmd();
+		VkBufferCopy region;
+		region.srcOffset = 0;
+		region.dstOffset = 0;
+		region.size = size;
+		qvkCmdCopyBuffer( cmd, staging_buf, *outBuffer, 1, &region );
+		vk_end_one_shot_cmd( cmd );
+	}
+
+	qvkDestroyBuffer( vk.device, staging_buf, NULL );
+	qvkFreeMemory( vk.device, staging_mem, NULL );
+
+	return qtrue;
+}
+
 qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int height, int flags ) {
 	VkDeviceSize image_size = (VkDeviceSize)width * height * 4;
 

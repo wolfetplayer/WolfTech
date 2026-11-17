@@ -47,6 +47,7 @@ extern PFN_vkCmdBindVertexBuffers                      qvkCmdBindVertexBuffers;
 extern PFN_vkCmdBlitImage                              qvkCmdBlitImage;
 extern PFN_vkCmdClearAttachments                       qvkCmdClearAttachments;
 extern PFN_vkCmdClearColorImage                        qvkCmdClearColorImage;
+extern PFN_vkCmdCopyBuffer                             qvkCmdCopyBuffer;
 extern PFN_vkCmdCopyBufferToImage                      qvkCmdCopyBufferToImage;
 extern PFN_vkCmdCopyImage                              qvkCmdCopyImage;
 extern PFN_vkCmdCopyImageToBuffer                      qvkCmdCopyImageToBuffer;
@@ -155,7 +156,12 @@ struct Vk_Instance {
 	VkCommandPool command_pool;
 	VkCommandBuffer command_buffer;
 
-	VkRenderPass render_pass; // color only, no depth attachment yet
+	VkFormat depth_format;
+	VkImage depth_image;
+	VkDeviceMemory depth_memory;
+	VkImageView depth_view;
+
+	VkRenderPass render_pass;
 	VkFramebuffer framebuffers[MAX_SWAPCHAIN_IMAGES];
 
 	VkDescriptorPool descriptor_pool;
@@ -164,6 +170,7 @@ struct Vk_Instance {
 
 	VkPipeline pipeline_2d_opaque;
 	VkPipeline pipeline_2d_blend;
+	VkPipeline pipeline_3d_opaque;
 
 	VkBool32 isInitialized;
 

@@ -10,20 +10,34 @@
 #include "tr_image.h"
 
 void vk_createRenderPass( void ) {
-	VkAttachmentDescription attachment;
-	attachment.flags = 0;
-	attachment.format = vk.surface_format.format;
-	attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	VkAttachmentDescription attachments[2];
+	attachments[0].flags = 0;
+	attachments[0].format = vk.surface_format.format;
+	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	attachments[1].flags = 0;
+	attachments[1].format = vk.depth_format;
+	attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+	attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentReference color_ref;
 	color_ref.attachment = 0;
 	color_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference depth_ref;
+	depth_ref.attachment = 1;
+	depth_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 	VkSubpassDescription subpass;
 	subpass.flags = 0;
@@ -33,25 +47,25 @@ void vk_createRenderPass( void ) {
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &color_ref;
 	subpass.pResolveAttachments = NULL;
-	subpass.pDepthStencilAttachment = NULL;
+	subpass.pDepthStencilAttachment = &depth_ref;
 	subpass.preserveAttachmentCount = 0;
 	subpass.pPreserveAttachments = NULL;
 
 	VkSubpassDependency dependency;
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependency.dstSubpass = 0;
-	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	dependency.srcAccessMask = 0;
-	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	dependency.dependencyFlags = 0;
 
 	VkRenderPassCreateInfo desc;
 	desc.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	desc.pNext = NULL;
 	desc.flags = 0;
-	desc.attachmentCount = 1;
-	desc.pAttachments = &attachment;
+	desc.attachmentCount = 2;
+	desc.pAttachments = attachments;
 	desc.subpassCount = 1;
 	desc.pSubpasses = &subpass;
 	desc.dependencyCount = 1;
@@ -67,13 +81,17 @@ void vk_destroyRenderPass( void ) {
 void vk_createFrameBuffers( uint32_t width, uint32_t height ) {
 	uint32_t i;
 	for ( i = 0; i < vk.swapchain_image_count; i++ ) {
+		VkImageView attachments[2];
+		attachments[0] = vk.swapchain_image_views[i];
+		attachments[1] = vk.depth_view;
+
 		VkFramebufferCreateInfo desc;
 		desc.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		desc.pNext = NULL;
 		desc.flags = 0;
 		desc.renderPass = vk.render_pass;
-		desc.attachmentCount = 1;
-		desc.pAttachments = &vk.swapchain_image_views[i];
+		desc.attachmentCount = 2;
+		desc.pAttachments = attachments;
 		desc.width = width;
 		desc.height = height;
 		desc.layers = 1;
@@ -152,7 +170,8 @@ typedef struct {
 	int32_t clip_plane;
 } vk2d_spec_data_t;
 
-static VkPipeline create_2d_pipeline( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend ) {
+static VkPipeline create_pipeline( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
+									VkBool32 depthTestEnable, VkCullModeFlags cullMode ) {
 	VkPipeline pipeline;
 
 	vk2d_spec_data_t spec_data = { 0, 0, 0 };
@@ -242,7 +261,7 @@ static VkPipeline create_2d_pipeline( VkBool32 blendEnable, VkBlendFactor srcBle
 	rasterization.depthClampEnable = VK_FALSE;
 	rasterization.rasterizerDiscardEnable = VK_FALSE;
 	rasterization.polygonMode = VK_POLYGON_MODE_FILL;
-	rasterization.cullMode = VK_CULL_MODE_NONE;
+	rasterization.cullMode = cullMode;
 	rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterization.depthBiasEnable = VK_FALSE;
 	rasterization.depthBiasConstantFactor = 0.0f;
@@ -261,14 +280,14 @@ static VkPipeline create_2d_pipeline( VkBool32 blendEnable, VkBlendFactor srcBle
 	multisample.alphaToCoverageEnable = VK_FALSE;
 	multisample.alphaToOneEnable = VK_FALSE;
 
-	// no depth attachment, and 2D UI never wants depth testing anyway
+	// 2D UI shares the render pass's depth attachment but never tests/writes it.
 	VkPipelineDepthStencilStateCreateInfo depth_stencil;
 	depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	depth_stencil.pNext = NULL;
 	depth_stencil.flags = 0;
-	depth_stencil.depthTestEnable = VK_FALSE;
-	depth_stencil.depthWriteEnable = VK_FALSE;
-	depth_stencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+	depth_stencil.depthTestEnable = depthTestEnable;
+	depth_stencil.depthWriteEnable = depthTestEnable;
+	depth_stencil.depthCompareOp = depthTestEnable ? VK_COMPARE_OP_LESS : VK_COMPARE_OP_ALWAYS;
 	depth_stencil.depthBoundsTestEnable = VK_FALSE;
 	depth_stencil.stencilTestEnable = VK_FALSE;
 	memset( &depth_stencil.front, 0, sizeof( depth_stencil.front ) );
@@ -334,11 +353,20 @@ static VkPipeline create_2d_pipeline( VkBool32 blendEnable, VkBlendFactor srcBle
 }
 
 void vk_create2DPipelines( void ) {
-	vk.pipeline_2d_opaque = create_2d_pipeline( VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO );
-	vk.pipeline_2d_blend = create_2d_pipeline( VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA );
+	vk.pipeline_2d_opaque = create_pipeline( VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
+	vk.pipeline_2d_blend = create_pipeline( VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_FALSE, VK_CULL_MODE_NONE );
 }
 
 void vk_destroy2DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_opaque, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_blend, NULL );
+}
+
+// No cull mode yet -- tr_shader.c's parsed cullNone isn't wired to any pipeline choice yet.
+void vk_create3DPipelines( void ) {
+	vk.pipeline_3d_opaque = create_pipeline( VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
+}
+
+void vk_destroy3DPipelines( void ) {
+	qvkDestroyPipeline( vk.device, vk.pipeline_3d_opaque, NULL );
 }

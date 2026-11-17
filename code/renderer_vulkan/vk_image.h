@@ -10,6 +10,9 @@ uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properti
 VkCommandBuffer vk_begin_one_shot_cmd( void );
 void vk_end_one_shot_cmd( VkCommandBuffer cmd );
 
+qboolean vk_create_device_local_buffer( const void *data, VkDeviceSize size, VkBufferUsageFlags usage,
+										  VkBuffer *outBuffer, VkDeviceMemory *outMemory );
+
 // Fills in image's vk_* fields from an RGBA8 pixel buffer.
 qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int height, int flags );
 void vk_destroy_texture( image_t *image );

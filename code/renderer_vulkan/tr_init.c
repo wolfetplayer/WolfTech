@@ -35,7 +35,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_frame.h"
 #include "tr_image.h"
 #include "tr_shader.h"
+#include "tr_main.h"
+#include "tr_bsp.h"
 #include "vk_draw2d.h"
+#include "vk_draw3d.h"
+#include "vk_world.h"
 
 refimport_t ri;
 
@@ -47,6 +51,11 @@ void R_DoneFreeType( void );
 
 // True while this frame's command buffer is open for recording.
 static qboolean s_frameActive = qfalse;
+
+// Set by RE_RenderScene the first time it runs after a fresh vk_initialize(); see RE_RenderScene.
+static qboolean s_testCubeInit = qfalse;
+static vec3_t s_testCubeOrigin;
+static qboolean s_firstRealSceneLogged = qfalse;
 
 /*
 ===============
@@ -87,6 +96,8 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 		R_InitImages();
 		R_InitShaders();
 		R_InitFreeType();
+		R_InitMain();
+		s_testCubeInit = qfalse;
 	}
 
 	R_GetGlConfig( config );
@@ -94,26 +105,45 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 	ri.Printf( PRINT_ALL, "RE_BeginRegistration\n" );
 }
 
+// No real model/skin loading yet -- unique nonzero handles so callers can't alias them all to one.
 static qhandle_t RE_RegisterModel( const char *name ) {
+	static qboolean logged = qfalse;
+	static qhandle_t nextHandle = 1;
+	if ( !logged ) {
+		ri.Printf( PRINT_ALL, "...tr_init checkpoint: first RE_RegisterModel ('%s')\n", name ? name : "(null)" );
+		logged = qtrue;
+	}
 	(void)name;
-	return 0;
+	return nextHandle++;
 }
 
 static qhandle_t RE_RegisterSkin( const char *name ) {
+	static qboolean logged = qfalse;
+	static qhandle_t nextHandle = 1;
+	if ( !logged ) {
+		ri.Printf( PRINT_ALL, "...tr_init checkpoint: first RE_RegisterSkin ('%s')\n", name ? name : "(null)" );
+		logged = qtrue;
+	}
 	(void)name;
-	return 0;
+	return nextHandle++;
 }
 
 static qhandle_t RE_RegisterShader( const char *name ) {
+	static int callCount = 0;
+	callCount++;
+	if ( callCount % 200 == 0 ) {
+		ri.Printf( PRINT_ALL, "...tr_init checkpoint: RE_RegisterShader call #%d ('%s')\n", callCount, name ? name : "(null)" );
+	}
 	return RE_RegisterShaderInternal( name, qfalse );
 }
 
 static qhandle_t RE_RegisterShaderNoMip( const char *name ) {
+	static int callCount = 0;
+	callCount++;
+	if ( callCount % 200 == 0 ) {
+		ri.Printf( PRINT_ALL, "...tr_init checkpoint: RE_RegisterShaderNoMip call #%d ('%s')\n", callCount, name ? name : "(null)" );
+	}
 	return RE_RegisterShaderInternal( name, qtrue );
-}
-
-static void RE_LoadWorldMap( const char *name ) {
-	(void)name;
 }
 
 static qboolean RE_GetSkinModel( qhandle_t skinid, const char *type, char *name ) {
@@ -129,21 +159,33 @@ static qhandle_t RE_GetShaderFromModel( qhandle_t modelid, int surfnum, int with
 	return 0;
 }
 
+// Crash-hunt instrumentation -- prints the first time each still-stub entry point is hit.
+#define FIRST_CALL_CHECKPOINT( label ) \
+	do { \
+		static qboolean logged = qfalse; \
+		if ( !logged ) { ri.Printf( PRINT_ALL, "...tr_init checkpoint: first " label "\n" ); logged = qtrue; } \
+	} while ( 0 )
+
 static void RE_SetWorldVisData( const byte *vis ) {
+	FIRST_CALL_CHECKPOINT( "RE_SetWorldVisData" );
 	(void)vis;
 }
 
 static void RE_EndRegistration( void ) {
+	ri.Printf( PRINT_ALL, "...tr_init checkpoint: RE_EndRegistration\n" );
 }
 
 static void RE_ClearScene( void ) {
+	FIRST_CALL_CHECKPOINT( "RE_ClearScene" );
 }
 
 static void RE_AddRefEntityToScene( const refEntity_t *re ) {
+	FIRST_CALL_CHECKPOINT( "RE_AddRefEntityToScene" );
 	(void)re;
 }
 
 static int R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir ) {
+	FIRST_CALL_CHECKPOINT( "R_LightForPoint" );
 	(void)point;
 	VectorClear( ambientLight );
 	VectorClear( directedLight );
@@ -152,27 +194,59 @@ static int R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLi
 }
 
 static void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts ) {
+	FIRST_CALL_CHECKPOINT( "RE_AddPolyToScene" );
 	(void)hShader; (void)numVerts; (void)verts;
 }
 
 static void RE_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys ) {
+	FIRST_CALL_CHECKPOINT( "RE_AddPolysToScene" );
 	(void)hShader; (void)numVerts; (void)verts; (void)numPolys;
 }
 
 static void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b, int overdraw ) {
+	FIRST_CALL_CHECKPOINT( "RE_AddLightToScene" );
 	(void)org; (void)intensity; (void)r; (void)g; (void)b; (void)overdraw;
 }
 
 static void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, int flags ) {
+	FIRST_CALL_CHECKPOINT( "RE_AddCoronaToScene" );
 	(void)org; (void)r; (void)g; (void)b; (void)scale; (void)id; (void)flags;
 }
 
 static void R_SetFog( int fogvar, int var1, int var2, float r, float g, float b, float density ) {
+	FIRST_CALL_CHECKPOINT( "R_SetFog" );
 	(void)fogvar; (void)var1; (void)var2; (void)r; (void)g; (void)b; (void)density;
 }
 
+// Sanity test cube: fixed in world space on first run, so walking around it proves the camera matrices track correctly.
 static void RE_RenderScene( const refdef_t *fd ) {
-	(void)fd;
+	float viewMatrix[16], projMatrix[16], viewProj[16];
+
+	if ( !vk.isInitialized || !s_frameActive ) {
+		return;
+	}
+
+	FIRST_CALL_CHECKPOINT( "RE_RenderScene (any)" );
+
+	if ( !s_testCubeInit ) {
+		VectorMA( fd->vieworg, 200.0f, fd->viewaxis[0], s_testCubeOrigin );
+		s_testCubeInit = qtrue;
+	}
+
+	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) && !s_firstRealSceneLogged ) {
+		ri.Printf( PRINT_ALL, "...tr_init checkpoint: first real-world RE_RenderScene call\n" );
+		s_firstRealSceneLogged = qtrue;
+	}
+
+	R_SetupViewMatrix( fd, viewMatrix );
+	R_SetupProjectionMatrix( fd, projMatrix );
+	R_MultMatrix( projMatrix, viewMatrix, viewProj );
+
+	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+		vk_world_draw( viewProj );
+	}
+
+	vk_draw3d_test_cube( s_testCubeOrigin, 40.0f, viewProj );
 }
 
 static void RE_SetColor( const float *rgba ) {
@@ -187,11 +261,13 @@ static void RE_StretchPic( float x, float y, float w, float h, float s1, float t
 }
 
 static void RE_RotatedPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float angle ) {
+	FIRST_CALL_CHECKPOINT( "RE_RotatedPic" );
 	(void)x; (void)y; (void)w; (void)h; (void)s1; (void)t1; (void)s2; (void)t2; (void)hShader; (void)angle;
 }
 
 static void RE_StretchPicGradient( float x, float y, float w, float h, float s1, float t1, float s2, float t2,
 									qhandle_t hShader, const float *gradientColor, int gradientType ) {
+	FIRST_CALL_CHECKPOINT( "RE_StretchPicGradient" );
 	(void)x; (void)y; (void)w; (void)h; (void)s1; (void)t1; (void)s2; (void)t2;
 	(void)hShader; (void)gradientColor; (void)gradientType;
 }
@@ -213,10 +289,12 @@ static void RE_StretchPicSkewed( float x, float y, float w, float h, float s1, f
 }
 
 static void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty ) {
+	FIRST_CALL_CHECKPOINT( "RE_StretchRaw" );
 	(void)x; (void)y; (void)w; (void)h; (void)cols; (void)rows; (void)data; (void)client; (void)dirty;
 }
 
 static void RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty ) {
+	FIRST_CALL_CHECKPOINT( "RE_UploadCinematic" );
 	(void)w; (void)h; (void)cols; (void)rows; (void)data; (void)client; (void)dirty;
 }
 
@@ -253,11 +331,13 @@ static void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 
 static int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projection,
 							 int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t *fragmentBuffer ) {
+	FIRST_CALL_CHECKPOINT( "R_MarkFragments" );
 	(void)numPoints; (void)points; (void)projection; (void)maxPoints; (void)pointBuffer; (void)maxFragments; (void)fragmentBuffer;
 	return 0;
 }
 
 static int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagName, int startIndex ) {
+	FIRST_CALL_CHECKPOINT( "R_LerpTag" );
 	(void)refent; (void)tagName; (void)startIndex;
 	AxisClear( tag->axis );
 	VectorClear( tag->origin );
@@ -265,20 +345,24 @@ static int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char 
 }
 
 static void R_ModelBounds( qhandle_t model, vec3_t mins, vec3_t maxs ) {
+	FIRST_CALL_CHECKPOINT( "R_ModelBounds" );
 	(void)model;
 	VectorClear( mins );
 	VectorClear( maxs );
 }
 
 static void R_RemapShader( const char *oldShader, const char *newShader, const char *offsetTime ) {
+	FIRST_CALL_CHECKPOINT( "R_RemapShader" );
 	(void)oldShader; (void)newShader; (void)offsetTime;
 }
 
 static void RB_ZombieFXAddNewHit( int entityNum, const vec3_t hitPos, const vec3_t hitDir ) {
+	FIRST_CALL_CHECKPOINT( "RB_ZombieFXAddNewHit" );
 	(void)entityNum; (void)hitPos; (void)hitDir;
 }
 
 static qboolean R_GetEntityToken( char *buffer, int size ) {
+	FIRST_CALL_CHECKPOINT( "R_GetEntityToken" );
 	if ( buffer && size > 0 ) {
 		buffer[0] = '\0';
 	}
@@ -286,15 +370,18 @@ static qboolean R_GetEntityToken( char *buffer, int size ) {
 }
 
 static void RE_RenderToTexture( int textureid, int x, int y, int w, int h ) {
+	FIRST_CALL_CHECKPOINT( "RE_RenderToTexture" );
 	(void)textureid; (void)x; (void)y; (void)w; (void)h;
 }
 
 static int R_GetTextureId( const char *imagename ) {
+	FIRST_CALL_CHECKPOINT( "R_GetTextureId" );
 	(void)imagename;
 	return -1;
 }
 
 static void RE_TakeVideoFrame( int h, int w, byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg ) {
+	FIRST_CALL_CHECKPOINT( "RE_TakeVideoFrame" );
 	(void)h; (void)w; (void)captureBuffer; (void)encodeBuffer; (void)motionJpeg;
 }
 
