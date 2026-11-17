@@ -37,6 +37,9 @@ endif
 ifndef BUILD_RENDERER_REND2
   BUILD_RENDERER_REND2 =
 endif
+ifndef BUILD_RENDERER_VULKAN
+  BUILD_RENDERER_VULKAN =
+endif
 ifndef BUILD_ARCHIVE
   BUILD_ARCHIVE = 0
 endif
@@ -332,6 +335,7 @@ CDIR=$(MOUNT_DIR)/client
 SDIR=$(MOUNT_DIR)/server
 RDIR=$(MOUNT_DIR)/renderer
 R2DIR=$(MOUNT_DIR)/rend2
+RVDIR=$(MOUNT_DIR)/renderer_vulkan
 CMDIR=$(MOUNT_DIR)/qcommon
 SDLDIR=$(MOUNT_DIR)/sdl
 ASMDIR=$(MOUNT_DIR)/asm
@@ -1026,10 +1030,16 @@ ifneq ($(BUILD_CLIENT),0)
     ifneq ($(BUILD_RENDERER_REND2), 0)
       TARGETS += $(B)/renderer_rend2_$(SHLIBNAME)
     endif
+    ifneq ($(BUILD_RENDERER_VULKAN), 0)
+      TARGETS += $(B)/renderer_vulkan_$(SHLIBNAME)
+    endif
   else
     TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT)
     ifneq ($(BUILD_RENDERER_REND2), 0)
       TARGETS += $(B)/$(CLIENTBIN)_rend2$(FULLBINEXT)
+    endif
+    ifneq ($(BUILD_RENDERER_VULKAN), 0)
+      TARGETS += $(B)/$(CLIENTBIN)_vulkan$(FULLBINEXT)
     endif
   endif
 endif
@@ -1486,6 +1496,9 @@ makedirs:
 	@$(MKDIR) $(B)/renderer
 	@$(MKDIR) $(B)/rend2
 	@$(MKDIR) $(B)/rend2/glsl
+	@$(MKDIR) $(B)/renderer_vulkan
+	@$(MKDIR) $(B)/renderer_vulkan/shaders
+	@$(MKDIR) $(B)/renderer_vulkan/shaders/Compiled
 	@$(MKDIR) $(B)/ded
 	@$(MKDIR) $(B)/navgen
 	@$(MKDIR) $(B)/$(BASEGAME)/cgame
@@ -1950,6 +1963,28 @@ Q3R2STRINGOBJ = \
   $(B)/rend2/glsl/tonemap_fp.o \
   $(B)/rend2/glsl/tonemap_vp.o
 
+Q3RVOBJ = \
+  $(B)/renderer_vulkan/tr_init.o \
+  $(B)/renderer_vulkan/glConfig.o \
+  $(B)/renderer_vulkan/vk_instance.o \
+  $(B)/renderer_vulkan/vk_swapchain.o \
+  $(B)/renderer_vulkan/vk_cmd.o \
+  $(B)/renderer_vulkan/vk_frame.o \
+  $(B)/renderer_vulkan/vk_init.o \
+  $(B)/renderer_vulkan/vk_create_window.o \
+  $(B)/renderer_vulkan/tr_image_tga.o \
+  $(B)/renderer_vulkan/tr_image_jpg.o \
+  $(B)/renderer_vulkan/tr_image_png.o \
+  $(B)/renderer_vulkan/tr_font.o \
+  $(B)/renderer_vulkan/tr_image.o \
+  $(B)/renderer_vulkan/vk_image.o \
+  $(B)/renderer_vulkan/tr_shader.o \
+  $(B)/renderer_vulkan/vk_shaders.o \
+  $(B)/renderer_vulkan/vk_pipelines.o \
+  $(B)/renderer_vulkan/vk_draw2d.o \
+  $(B)/renderer_vulkan/shaders/Compiled/single_texture_vert.o \
+  $(B)/renderer_vulkan/shaders/Compiled/single_texture_frag.o \
+
 Q3ROBJ = \
   $(B)/renderer/tr_altivec.o \
   $(B)/renderer/tr_animation.o \
@@ -2001,6 +2036,12 @@ ifneq ($(USE_RENDERER_DLOPEN), 0)
     $(B)/renderer/tr_subs.o
 
   Q3R2OBJ += \
+    $(B)/renderer/q_shared.o \
+    $(B)/renderer/puff.o \
+    $(B)/renderer/q_math.o \
+    $(B)/renderer/tr_subs.o
+
+  Q3RVOBJ += \
     $(B)/renderer/q_shared.o \
     $(B)/renderer/puff.o \
     $(B)/renderer/q_math.o \
@@ -2366,6 +2407,11 @@ $(B)/renderer_rend2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
+
+$(B)/renderer_vulkan_$(SHLIBNAME): $(Q3RVOBJ) $(JPGOBJ) $(FTOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3RVOBJ) $(JPGOBJ) $(FTOBJ) \
+		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 else
 $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
@@ -2377,6 +2423,12 @@ $(B)/$(CLIENTBIN)_rend2$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPG
 	$(echo_cmd) "LD $@"
 	$(Q)$(CXX) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
 		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ) \
+		$(THREAD_LIBS) $(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
+
+$(B)/$(CLIENTBIN)_vulkan$(FULLBINEXT): $(Q3OBJ) $(Q3RVOBJ) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CXX) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
+		-o $@ $(Q3OBJ) $(Q3RVOBJ) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
 endif
 
@@ -2871,6 +2923,9 @@ $(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
 $(B)/rend2/%.o: $(R2DIR)/%.c
 	$(DO_REF_CC)
 
+$(B)/renderer_vulkan/%.o: $(RVDIR)/%.c
+	$(DO_REF_CC)
+
 $(B)/renderer/%.o: $(FTDIR)/src/autofit/%.c
 	$(DO_REF_CC)
 
@@ -3070,7 +3125,7 @@ $(B)/$(BASEGAME)/ui/q_unicode.asm: $(CMDIR)/q_unicode.c $(Q3LCC)
 # MISC
 #############################################################################
 
-OBJ = $(Q3OBJ) $(Q3ROBJ) $(Q3R2OBJ) $(Q3DOBJ) $(JPGOBJ) $(FTOBJ) \
+OBJ = $(Q3OBJ) $(Q3ROBJ) $(Q3R2OBJ) $(Q3RVOBJ) $(Q3DOBJ) $(JPGOBJ) $(FTOBJ) \
   $(Q3GOBJ) $(Q3CGOBJ) $(Q3UIOBJ) \
   $(Q3GVMOBJ) $(Q3CGVMOBJ) $(Q3UIVMOBJ) 
 TOOLSOBJ = $(LBURGOBJ) $(Q3CPPOBJ) $(Q3RCCOBJ) $(Q3LCCOBJ) $(Q3ASMOBJ)
@@ -3091,9 +3146,15 @@ ifneq ($(BUILD_CLIENT),0)
     ifneq ($(BUILD_RENDERER_REND2),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_rend2_$(SHLIBNAME) $(COPYBINDIR)/renderer_rend2_$(SHLIBNAME)
     endif
+    ifneq ($(BUILD_RENDERER_VULKAN),0)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_vulkan_$(SHLIBNAME) $(COPYBINDIR)/renderer_vulkan_$(SHLIBNAME)
+    endif
   else
     ifneq ($(BUILD_RENDERER_REND2),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)_rend2$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)_rend2$(FULLBINEXT)
+    endif
+    ifneq ($(BUILD_RENDERER_VULKAN),0)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)_vulkan$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)_vulkan$(FULLBINEXT)
     endif
   endif
 endif
