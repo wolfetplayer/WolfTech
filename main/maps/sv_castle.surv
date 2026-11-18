@@ -9,5 +9,36 @@ eliteguard.skins    "eliteguard/church2:church2 eliteguard/church1:church2 elite
 
 blackguard.ainame   "bg1"
 venom.ainame        "v1"
+trench.ainame       "trench1"
+// head_base1/2/3 and head_dam4 reference a missing head model (mhead2.md3) in z_pack.pk3's
+// override skins - a content bug, not a config one. head_dam1/2/3/5 correctly use head.md3.
+trench.skins        "trench/base1:dam1 trench/base2:dam2 trench/base1:dam3 trench/base2:dam5"
 protosoldier.ainame "proto1"
 loper_special.ainame "loper1"
+
+// ---- Human-map wave overhaul (see sv_castle.survwave for the roster/weapon script) ----
+// wave_eliteguard/wave_venom override survival_default.surv's 3/9 to match this map's
+// actual debut waves (6 and 8) - trench(5)/blackguard(7)/proto(10) already match the default.
+wave_eliteguard   6
+wave_venom        8
+
+// Wave 1's kill requirement was still the old flat "5", tuned for the old system's wave-1
+// concurrent cap of 5. This map's wave 1 caps at 24 concurrent (global_cap_base below), so
+// 5 kills let the wave "complete" with most of that 24 still alive and roaming. 15 keeps it
+// close to the quadratic formula's own wave-2 value (~16) instead of a jarring jump.
+initial_killcount_req   15
+
+// Special waves on this map are lopers only - no "zombie_ghost" in this list.
+// (Set via game_manager's "specialWaveType" key in sv_castle.coop.script, not here -
+// this comment is just a pointer so the two files don't drift out of sync.)
+
+global_cap_base              24   // AI alive at once, 1 player
+global_cap_per_player          4   // + this many per additional player
+
+single_type_roll_min_gap       2
+single_type_roll_max_gap       5
+single_type_roll_chance_pct   30
+boss_roll_min_gap              4
+boss_roll_max_gap              8
+boss_roll_chance_pct          15
+boss_escort_count              4

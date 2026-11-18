@@ -33,15 +33,6 @@ player
 }
 
 nazi1
-nazi2
-nazi3
-nazi4
-nazi5
-nazi6
-nazi7
-nazi8
-nazi9
-nazi10
 {
 
 	attributes
@@ -52,7 +43,6 @@ nazi10
 	{
 	resetscript
 	statetype alert
-	giveweaponfull weapon_mp40 weapon_luger weapon_mauserrifle
 	huntcast player
 	}
 	
@@ -92,9 +82,6 @@ nazi10
 }
 
 eg1
-eg2
-eg3
-eg4
 {
 
 	attributes
@@ -104,7 +91,6 @@ eg4
 	respawn
 	{
 	resetscript
-	giveweaponfull weapon_sten weapon_silencer
 	statetype alert
 	huntcast player
 	}
@@ -145,9 +131,6 @@ eg4
 }
 
 bg1
-bg2
-bg3
-bg4
 {
 
 	attributes
@@ -157,7 +140,6 @@ bg4
 	respawn
 	{
 	resetscript
-	giveweaponfull weapon_fg42
 	statetype alert
 	huntcast player
 	}
@@ -198,27 +180,72 @@ bg4
 }
 
 v1
-v2
-v3
-v4
 {
 
 	attributes
 	{
 	}
-	
+
 	respawn
 	{
 	resetscript
-	giveweaponfull weapon_flamethrower weapon_venom
 	statetype alert
 	huntcast player
 	}
-	
+
 	enemysight
 	{
 	}
-	
+
+	bulletimpact
+	{
+		deny
+	}
+
+	inspectsoundstart
+	{
+		deny
+	}
+
+	inspectsoundend
+	{
+		deny
+	}
+
+	inspectbodystart
+	{
+		deny
+	}
+
+	inspectbodyend
+	{
+		deny
+	}
+
+	death
+	{
+	}
+
+}
+
+trench1
+{
+
+	attributes
+	{
+	}
+
+	respawn
+	{
+	resetscript
+	statetype alert
+	huntcast player
+	}
+
+	enemysight
+	{
+	}
+
 	bulletimpact
 	{
 		deny
@@ -261,7 +288,6 @@ proto2
 	{
 		knockback off
 		statetype alert
-        giveweaponfull weapon_panzerfaust weapon_venom
 	    huntcast player
 	}
 	

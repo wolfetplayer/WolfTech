@@ -445,7 +445,8 @@ typedef enum {
 	PERS_WOLFKICK,
 
 	PERS_KILLS,
-	PERS_WAVES
+	PERS_WAVES,
+	PERS_SPECIALWAVE                // nonzero while an uncounted loper special wave is running; see CG_DrawPlayerWaves
 
 } persEnum_t;
 

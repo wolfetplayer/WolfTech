@@ -1,0 +1,46 @@
+// sv_castle.survwave - human-soldier wave roster/weapon script for survival mode.
+// See g_survival.h (survWaveTable_t) for the full file syntax. Loaded by
+// Survival_LoadWaveTable() right after sv_castle.surv; entirely additive - removing
+// this file just falls back to the legacy per-type ramp for every character.
+//
+// Early tier (lugers -> rifles -> smgs, specialists debut one at a time)
+
+wave 1   soldier:100:luger
+wave 2   soldier:100:mauser,luger
+wave 3   soldier:100:mauser,mp40,luger
+wave 4   soldier:100:mauser,mp40
+wave 5   soldier:90:mauser,mp40   trench:10:m97
+wave 6   soldier:80:mauser,mp40   trench:10:m97   eliteguard:10:silencer
+wave 7   soldier:70:mauser,mp40   trench:10:m97   eliteguard:10:silencer   blackguard:10:fg42
+wave 8   soldier:60:mauser,mp40   trench:10:m97   eliteguard:10:silencer   blackguard:10:fg42   venom:10:venom
+
+// Wave 9 - randomized single-type wave: 100% one of these, picked at random.
+// Treated like a normal wave for pacing/kill-count purposes.
+wave 9   singletype   eliteguard:0:silencer   blackguard:0:fg42   venom:0:venom   trench:0:m97
+
+// Boss 1 - 1x protosoldier, blackguard escort.
+wave 10  boss   protosoldier:1:panzerfaust,venom   escort:blackguard:4:fg42
+
+// Late tier - arsenal flips to mp44/g43; venom's flamethrower option unlocks here on.
+
+wave 11  soldier:100:mp44,g43
+wave 12  soldier:90:mp44,g43   trench:10:auto5
+wave 13  soldier:80:mp44,g43   trench:10:auto5   eliteguard:10:mp40
+wave 14  soldier:70:mp44,g43   trench:10:auto5   eliteguard:10:mp40   blackguard:10:fg42
+wave 15  soldier:60:mp44,g43   trench:10:auto5   eliteguard:10:mp40   blackguard:10:fg42   venom:10:venom,flamethrower
+
+// Boss 2 - 2x protosoldier, venom escort (some may roll a flamethrower instead).
+wave 16  boss   protosoldier:2:panzerfaust,venom   escort:venom:4:venom,flamethrower
+
+// ---- Post-16: endless phase ----
+// Normal wave composition whenever neither of the two rolls below fires.
+default   soldier:60:mp44,g43   trench:10:auto5   eliteguard:10:mp40   blackguard:10:fg42   venom:10:venom,flamethrower
+
+// Human single-type wave pool (own cooldown - see single_type_roll_* in sv_castle.surv).
+// Not counted as a "special wave" - that's the lopers-only track configured separately
+// via game_manager's specialWaveType key.
+singletype_pool   eliteguard:0:mp40   blackguard:0:fg42   venom:0:venom,flamethrower   trench:0:auto5
+
+// Boss-roll pool (own cooldown - see boss_roll_* in sv_castle.surv). Always protosoldier,
+// always venom escort, same shape as boss 1/boss 2 - just a random headcount and timing.
+bossroll   protosoldier:1:3:panzerfaust,venom   escort:venom:4:venom,flamethrower

@@ -39559,7 +39559,7 @@ sfx/xflame2_2250
 // entity 664
 {
 "classname" "trigger_exfil"
-"wait" "25"
+"wait" "60"
 // brush 0
 {
 ( -1646 1182 318 ) ( -1646 926 318 ) ( -1902 1182 318 ) common/trigger 0 32 0 0.5 0.5 134217728 0 0

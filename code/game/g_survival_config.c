@@ -340,6 +340,17 @@ static const survConfigKey_t survConfigKeys[] = {
 	{ "special_wave_count_increase", &survCfg.specialWaveCountIncrease },
 	{ "special_wave_count_max",      &survCfg.specialWaveCountMax },
 
+	{ "global_cap_base",             &survCfg.globalCapBase },
+	{ "global_cap_per_player",       &survCfg.globalCapPerPlayer },
+
+	{ "single_type_roll_min_gap",    &survCfg.singleTypeRollMinGap },
+	{ "single_type_roll_max_gap",    &survCfg.singleTypeRollMaxGap },
+	{ "single_type_roll_chance_pct", &survCfg.singleTypeRollChancePct },
+	{ "boss_roll_min_gap",           &survCfg.bossRollMinGap },
+	{ "boss_roll_max_gap",           &survCfg.bossRollMaxGap },
+	{ "boss_roll_chance_pct",        &survCfg.bossRollChancePct },
+	{ "boss_escort_count",           &survCfg.bossEscortCount },
+
 	{ "ghost_teleport_min_range",  &survCfg.ghostTeleportMinRange },
 	{ "ghost_teleport_max_range",  &survCfg.ghostTeleportMaxRange },
 	{ "ghost_teleport_delay",      &survCfg.ghostTeleportDelay },
@@ -501,6 +512,17 @@ static void Surv_SetDefaults( void ) {
 	survCfg.specialWaveCountInitial = 3;
 	survCfg.specialWaveCountIncrease = 1;
 	survCfg.specialWaveCountMax = 8;
+
+	survCfg.globalCapBase = 24;
+	survCfg.globalCapPerPlayer = 4;
+
+	survCfg.singleTypeRollMinGap = 2;
+	survCfg.singleTypeRollMaxGap = 5;
+	survCfg.singleTypeRollChancePct = 30;
+	survCfg.bossRollMinGap = 4;
+	survCfg.bossRollMaxGap = 8;
+	survCfg.bossRollChancePct = 15;
+	survCfg.bossEscortCount = 4;
 
 	survCfg.ghostTeleportMinRange = 200;
 	survCfg.ghostTeleportMaxRange = 900;
@@ -839,4 +861,350 @@ void Survival_LoadConfig( void ) {
 	Q_strcat( filename, sizeof( filename ), ".surv" );
 
 	Surv_LoadFile( filename );
+}
+
+// ===========================================================================
+// Wave table (.survwave) - see g_survival.h for the struct layout and the
+// file syntax. Entirely separate from the key/value .surv parser above:
+// a wave row has a variable number of roster entries, so it's easier to
+// read line-by-line and tokenize each line fresh than to reuse the flat
+// key/value loop. survCharNames[] (above) is reused for character names.
+// ===========================================================================
+
+survWaveTable_t survWaves;
+
+/*
+============
+Surv_ParseWeaponCsv
+  Comma-separated weapon-name list (e.g. "mauser,mp40") into outPool[]. Same
+  names as Survival_WeaponNameToId/survWeaponNames[] above, just comma- instead
+  of space-separated since a roster entry packs "char:amount:weapons" into one token.
+============
+*/
+static int Surv_ParseWeaponCsv( const char *str, weapon_t *outPool, int maxCount, const char *sourceForLog ) {
+	char buf[256];
+	char *p, *comma;
+	int count = 0;
+	weapon_t weaponId;
+
+	Q_strncpyz( buf, str, sizeof( buf ) );
+	p = buf;
+
+	while ( count < maxCount && p && p[0] ) {
+		comma = strchr( p, ',' );
+		if ( comma ) {
+			*comma = 0;
+		}
+
+		if ( Survival_WeaponNameToId( p, &weaponId ) ) {
+			outPool[count++] = weaponId;
+		} else {
+			G_Printf( "Survival: %s: unknown weapon name '%s' in wave table, ignoring\n", sourceForLog, p );
+		}
+
+		p = comma ? comma + 1 : NULL;
+	}
+
+	return count;
+}
+
+/*
+============
+Surv_ParseRosterToken
+  Parses one "char:amount[:weapons]" token into outEntry. amount is a plain
+  int - percent for a COMPOSITION row, headcount for a BOSS row (caller decides
+  which, this function just stores the number). weapons is optional - a boss's
+  protosoldier entry usually omits it, keeping whatever its .ai script already
+  gives it. Returns qfalse (and logs) on a malformed or unrecognized token.
+============
+*/
+static qboolean Surv_ParseRosterToken( const char *token, survRosterEntry_t *outEntry, const char *sourceForLog ) {
+	char buf[256];
+	char *p;
+	char *field[3];
+	int nFields = 0;
+	int i;
+
+	Com_Memset( outEntry, 0, sizeof( *outEntry ) );
+
+	Q_strncpyz( buf, token, sizeof( buf ) );
+	p = buf;
+	while ( nFields < 3 && p ) {
+		char *colon = strchr( p, ':' );
+		field[nFields++] = p;
+		if ( colon ) {
+			*colon = 0;
+			p = colon + 1;
+		} else {
+			p = NULL;
+		}
+	}
+
+	if ( nFields < 2 ) {
+		G_Printf( "Survival: %s: malformed roster entry '%s', ignoring\n", sourceForLog, token );
+		return qfalse;
+	}
+
+	for ( i = 0; i < NUM_SURV_CHAR_NAMES; i++ ) {
+		if ( !Q_stricmp( field[0], survCharNames[i].name ) ) {
+			outEntry->character = survCharNames[i].character;
+			break;
+		}
+	}
+	if ( i == NUM_SURV_CHAR_NAMES ) {
+		G_Printf( "Survival: %s: unknown character name '%s' in wave table, ignoring\n", sourceForLog, field[0] );
+		return qfalse;
+	}
+
+	outEntry->amount = atoi( field[1] );
+	outEntry->numWeapons = 0;
+	if ( nFields >= 3 ) {
+		outEntry->numWeapons = Surv_ParseWeaponCsv( field[2], outEntry->weapons, MAX_WEAPONS_PER_ENTRY, sourceForLog );
+	}
+
+	return qtrue;
+}
+
+/*
+============
+Surv_ParseBossRollProtoToken
+  "protosoldier:<min>:<max>[:<weapons>]" from the "bossroll" line - the
+  headcount range for the post-table random boss wave, plus an optional
+  weapon pool override (omit it to leave protosoldier's .ai-script weapon
+  alone, same as the fixed boss rows). The character name is accepted but not
+  stored (this feature only ever rolls protosoldier bosses); kept in the
+  syntax so the line reads the same shape as every other roster token.
+============
+*/
+static void Surv_ParseBossRollProtoToken( const char *token, const char *sourceForLog ) {
+	char buf[256];
+	char *field[4];
+	int nFields = 0;
+	char *p;
+
+	Q_strncpyz( buf, token, sizeof( buf ) );
+	p = buf;
+	while ( nFields < 4 && p ) {
+		char *colon = strchr( p, ':' );
+		field[nFields++] = p;
+		if ( colon ) {
+			*colon = 0;
+			p = colon + 1;
+		} else {
+			p = NULL;
+		}
+	}
+
+	if ( nFields < 3 ) {
+		G_Printf( "Survival: %s: malformed bossroll entry '%s', expected char:min:max\n", sourceForLog, token );
+		return;
+	}
+
+	survWaves.bossProtoMin = atoi( field[1] );
+	survWaves.bossProtoMax = atoi( field[2] );
+	survWaves.hasBossRoll = qtrue;
+
+	survWaves.numBossProtoWeapons = 0;
+	if ( nFields >= 4 ) {
+		survWaves.numBossProtoWeapons = Surv_ParseWeaponCsv( field[3], survWaves.bossProtoWeapons, MAX_WEAPONS_PER_ENTRY, sourceForLog );
+	}
+}
+
+/*
+============
+Surv_ParseWaveLine
+  Parses one non-blank, non-comment-only line of a .survwave file. See the
+  file-syntax comment on survWaveTable_t in g_survival.h for the five line
+  shapes this recognizes ("wave N", "default", "singletype_pool", "bossroll").
+============
+*/
+static void Surv_ParseWaveLine( char *lineBuf, const char *sourceForLog ) {
+	char *p = lineBuf;
+	const char *tok;
+	char tokens[16][256];
+	int numTokens = 0;
+	int i;
+
+	while ( numTokens < 16 ) {
+		tok = COM_ParseExt( &p, qfalse );
+		if ( !tok[0] ) {
+			break;
+		}
+		Q_strncpyz( tokens[numTokens], tok, sizeof( tokens[0] ) );
+		numTokens++;
+	}
+
+	if ( numTokens < 2 ) {
+		return;   // blank line - ignore quietly
+	}
+
+	if ( !Q_stricmp( tokens[0], "wave" ) ) {
+		int waveNum = atoi( tokens[1] );
+		survWaveRow_t *row;
+
+		if ( survWaves.numRows >= MAX_WAVE_ROWS ) {
+			G_Printf( "Survival: %s: too many wave rows, ignoring wave %d\n", sourceForLog, waveNum );
+			return;
+		}
+		row = &survWaves.rows[survWaves.numRows++];
+		Com_Memset( row, 0, sizeof( *row ) );
+		row->wave = waveNum;
+		if ( waveNum > survWaves.maxFixedWave ) {
+			survWaves.maxFixedWave = waveNum;
+		}
+
+		if ( numTokens >= 3 && !Q_stricmp( tokens[2], "singletype" ) ) {
+			row->kind = WAVEROW_SINGLETYPE;
+			for ( i = 3; i < numTokens && row->numRoster < MAX_ROSTER_PER_ROW; i++ ) {
+				if ( Surv_ParseRosterToken( tokens[i], &row->roster[row->numRoster], sourceForLog ) ) {
+					row->numRoster++;
+				}
+			}
+		} else if ( numTokens >= 3 && !Q_stricmp( tokens[2], "boss" ) ) {
+			row->kind = WAVEROW_BOSS;
+			for ( i = 3; i < numTokens && row->numRoster < MAX_ROSTER_PER_ROW; i++ ) {
+				char *entryTok = tokens[i];
+				if ( !Q_stricmpn( entryTok, "escort:", 7 ) ) {
+					entryTok += 7;
+				}
+				if ( Surv_ParseRosterToken( entryTok, &row->roster[row->numRoster], sourceForLog ) ) {
+					row->numRoster++;
+				}
+			}
+		} else {
+			row->kind = WAVEROW_COMPOSITION;
+			for ( i = 2; i < numTokens && row->numRoster < MAX_ROSTER_PER_ROW; i++ ) {
+				if ( Surv_ParseRosterToken( tokens[i], &row->roster[row->numRoster], sourceForLog ) ) {
+					row->numRoster++;
+				}
+			}
+		}
+		return;
+	}
+
+	if ( !Q_stricmp( tokens[0], "default" ) ) {
+		Com_Memset( &survWaves.defaultRow, 0, sizeof( survWaves.defaultRow ) );
+		survWaves.defaultRow.kind = WAVEROW_COMPOSITION;
+		for ( i = 1; i < numTokens && survWaves.defaultRow.numRoster < MAX_ROSTER_PER_ROW; i++ ) {
+			if ( Surv_ParseRosterToken( tokens[i], &survWaves.defaultRow.roster[survWaves.defaultRow.numRoster], sourceForLog ) ) {
+				survWaves.defaultRow.numRoster++;
+			}
+		}
+		survWaves.hasDefaultRow = qtrue;
+		return;
+	}
+
+	if ( !Q_stricmp( tokens[0], "singletype_pool" ) ) {
+		Com_Memset( &survWaves.singleTypePoolRow, 0, sizeof( survWaves.singleTypePoolRow ) );
+		survWaves.singleTypePoolRow.kind = WAVEROW_SINGLETYPE;
+		for ( i = 1; i < numTokens && survWaves.singleTypePoolRow.numRoster < MAX_ROSTER_PER_ROW; i++ ) {
+			if ( Surv_ParseRosterToken( tokens[i], &survWaves.singleTypePoolRow.roster[survWaves.singleTypePoolRow.numRoster], sourceForLog ) ) {
+				survWaves.singleTypePoolRow.numRoster++;
+			}
+		}
+		survWaves.hasSingleTypePool = qtrue;
+		return;
+	}
+
+	if ( !Q_stricmp( tokens[0], "bossroll" ) ) {
+		for ( i = 1; i < numTokens; i++ ) {
+			if ( !Q_stricmpn( tokens[i], "escort:", 7 ) ) {
+				survRosterEntry_t escortEntry;
+				if ( Surv_ParseRosterToken( tokens[i] + 7, &escortEntry, sourceForLog ) ) {
+					survWaves.bossEscortChar = escortEntry.character;
+					survWaves.numBossEscortWeapons = escortEntry.numWeapons;
+					Com_Memcpy( survWaves.bossEscortWeapons, escortEntry.weapons, sizeof( escortEntry.weapons ) );
+				}
+			} else {
+				Surv_ParseBossRollProtoToken( tokens[i], sourceForLog );
+			}
+		}
+		return;
+	}
+
+	G_Printf( "Survival: %s: unknown wave-table line starting with '%s', ignoring\n", sourceForLog, tokens[0] );
+}
+
+/*
+============
+Survival_LoadWaveTable
+
+  Server-side only. Loads maps/<mapname>.survwave if present; a map with no
+  such file leaves survWaves.numRows==0, in which case every character keeps
+  using the legacy AICast_UpdateMaxActiveAI() ramp exactly as before - this
+  whole feature is opt-in per map. Call once, after Survival_LoadConfig().
+============
+*/
+void Survival_LoadWaveTable( void ) {
+	vmCvar_t mapname;
+	char filename[MAX_QPATH];
+	fileHandle_t f;
+	int len;
+	char *buf;
+	char *lineStart, *bufEnd;
+
+	Com_Memset( &survWaves, 0, sizeof( survWaves ) );
+
+	trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+	Q_strncpyz( filename, "maps/", sizeof( filename ) );
+	Q_strcat( filename, sizeof( filename ), mapname.string );
+	Q_strcat( filename, sizeof( filename ), ".survwave" );
+
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( len < 0 ) {
+		return;   // no wave table for this map - legacy ramp governs every character
+	}
+
+	G_Printf( "Survival: loading %s\n", filename );
+
+	buf = G_Alloc( len + 1 );
+	trap_FS_Read( buf, len, f );
+	buf[len] = 0;
+	trap_FS_FCloseFile( f );
+
+	bufEnd = buf + len;
+	lineStart = buf;
+	while ( lineStart < bufEnd ) {
+		char *newline = strchr( lineStart, '\n' );
+		char *lineEnd = newline ? newline : bufEnd;
+		char lineBuf[512];
+		size_t lineLen = (size_t)( lineEnd - lineStart );
+		char *comment;
+
+		if ( lineLen >= sizeof( lineBuf ) ) {
+			lineLen = sizeof( lineBuf ) - 1;
+		}
+		memcpy( lineBuf, lineStart, lineLen );
+		lineBuf[lineLen] = 0;
+
+		comment = strstr( lineBuf, "//" );
+		if ( comment ) {
+			*comment = 0;
+		}
+
+		Surv_ParseWaveLine( lineBuf, filename );
+
+		lineStart = newline ? newline + 1 : bufEnd;
+	}
+
+	G_Printf( "Survival: wave table loaded - %d fixed rows, maxFixedWave=%d, singleTypePool=%d, bossRoll=%d\n",
+		survWaves.numRows, survWaves.maxFixedWave, survWaves.singleTypePoolRow.numRoster, survWaves.hasBossRoll );
+}
+
+/*
+============
+Survival_FindFixedWaveRow
+  Exact fixed-table row for this wave number, or NULL if this map has no
+  .survwave file or this wave isn't in it (e.g. anything past maxFixedWave).
+============
+*/
+const survWaveRow_t *Survival_FindFixedWaveRow( int wave ) {
+	int i;
+
+	for ( i = 0; i < survWaves.numRows; i++ ) {
+		if ( survWaves.rows[i].wave == wave ) {
+			return &survWaves.rows[i];
+		}
+	}
+	return NULL;
 }

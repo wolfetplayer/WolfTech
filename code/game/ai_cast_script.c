@@ -302,6 +302,8 @@ cast_script_event_define_t scriptEvents[] =
 	{"start_survival",          0},
 	{"specialwave_start",            0},
 	{"specialwave_end",          0},
+	{"boss_start",           0},
+	{"boss_end",             0},
 
 	{NULL,              0}
 };

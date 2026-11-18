@@ -184,6 +184,8 @@ g_script_event_define_t gScriptEvents[] =
 	{"start_survival",          0},
 	{"specialwave_start",            0},
 	{"specialwave_end",          0},
+	{"boss_start",           0},
+	{"boss_end",             0},
 	{"buildstart",           0},      // func_constructible started taking progress
 	{"built",            0},          // func_constructible finished construction
 

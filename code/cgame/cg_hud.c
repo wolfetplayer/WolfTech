@@ -1409,6 +1409,10 @@ static void CG_DrawPlayerWaves( rectDef_t *rect, int font, float scale, vec4_t c
 		trap_R_SetColor( color );
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
 		trap_R_SetColor( NULL );
+	} else if ( cg.snap->ps.persistant[PERS_SPECIALWAVE] ) {
+		// uncounted loper special wave in progress - show text instead of the frozen number
+		value = CG_Text_Width( "SPECIAL", font, scale, 0 );
+		CG_Text_Paint( rect->x + ( rect->w - value ) / 2, rect->y + rect->h, font, scale, color, "SPECIAL", 0, 0, textStyle );
 	} else {
 		Com_sprintf( num, sizeof( num ), "%i", value );
 		value = CG_Text_Width( num, font, scale, 0 );

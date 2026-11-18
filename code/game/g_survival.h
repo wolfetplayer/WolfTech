@@ -103,6 +103,86 @@ qboolean AICast_IsSpecialWaveChar( int aiChar );
 qboolean Survival_WeaponNameToId( const char *name, weapon_t *out );
 int Survival_ParseWeaponPool( const char *str, weapon_t *outPool, int maxCount, const char *sourceForLog );
 
+// ---------------------------------------------------------------------------
+// Wave table: per-map roster/weapon script for the new wave flow (see
+// maps/sv_castle.survwave for an example). Loaded by Survival_LoadWaveTable()
+// in g_survival_config.c, applied every wave by AICast_ApplyWaveTableComposition()
+// in ai_cast_survival.c. Entirely optional - a map with no .survwave file gets
+// numRows==0 and every character keeps using the legacy AICast_UpdateMaxActiveAI()
+// ramp exactly as before. File syntax (one row per line, COM_ParseExt tokens):
+//
+//   wave <N>  <char>:<pct>:<weapons>  [<char>:<pct>:<weapons>] ...   // composition row
+//   wave <N>  singletype <char>:0:<weapons>  [<char>:0:<weapons>] ...  // picks ONE at random
+//   wave <N>  boss <char>:<count>[:<weapons>]  escort:<char>:<count>:<weapons>
+//   default         <char>:<pct>:<weapons> ...          // post-table normal wave
+//   singletype_pool <char>:0:<weapons>  ...              // post-table single-type roll
+//   bossroll        protosoldier:<min>:<max>[:<weapons>]  escort:<char>:<count>:<weapons>
+//
+// <weapons> is a comma-separated weapon name list (see survWeaponNames[] in
+// g_survival_config.c, e.g. "mauser,mp40"); a character's pool is just whatever that
+// row lists - e.g. venom only needs "flamethrower" added starting from the wave it
+// should unlock, no separate variant mechanism needed: giveweaponfull (reused as-is
+// for this) already picks one name at random from the list. Omitting <weapons>
+// entirely (just "char:count") leaves that character's existing .ai-script weapon
+// alone instead of overriding it.
+// ---------------------------------------------------------------------------
+#define MAX_WAVE_ROWS           24
+#define MAX_ROSTER_PER_ROW       6
+#define MAX_WEAPONS_PER_ENTRY    4
+
+typedef enum
+{
+	WAVEROW_COMPOSITION,   // weighted roster (pct of the global cap), like a normal wave
+	WAVEROW_SINGLETYPE,    // this wave is 100% one random character out of its roster
+	WAVEROW_BOSS           // fixed headcounts (not weighted): roster[0]=boss, roster[1]=escort
+} waveRowKind_t;
+
+typedef struct survRosterEntry_s
+{
+	AICharacters_t character;
+	int amount;                                 // COMPOSITION: percent 0-100. BOSS: fixed headcount.
+	weapon_t weapons[MAX_WEAPONS_PER_ENTRY];
+	int numWeapons;
+} survRosterEntry_t;
+
+typedef struct survWaveRow_s
+{
+	int wave;                 // 1-based fixed wave number this row applies to (unused for defaultRow)
+	waveRowKind_t kind;
+	survRosterEntry_t roster[MAX_ROSTER_PER_ROW];
+	int numRoster;
+} survWaveRow_t;
+
+typedef struct survWaveTable_s
+{
+	survWaveRow_t rows[MAX_WAVE_ROWS];
+	int numRows;
+	int maxFixedWave;              // highest "wave N" row loaded; waveCount beyond this is "post-table"
+
+	survWaveRow_t defaultRow;      // post-table normal-wave composition ("default" line); kind is WAVEROW_COMPOSITION
+	qboolean hasDefaultRow;
+
+	survWaveRow_t singleTypePoolRow;   // post-table single-type roll pool ("singletype_pool" line); kind is WAVEROW_SINGLETYPE
+	qboolean hasSingleTypePool;
+
+	AICharacters_t bossEscortChar;
+	weapon_t bossEscortWeapons[MAX_WEAPONS_PER_ENTRY];
+	int numBossEscortWeapons;
+	int bossProtoMin, bossProtoMax;
+	weapon_t bossProtoWeapons[MAX_WEAPONS_PER_ENTRY];
+	int numBossProtoWeapons;
+	qboolean hasBossRoll;
+} survWaveTable_t;
+
+extern survWaveTable_t survWaves;
+
+void Survival_LoadWaveTable( void );
+const survWaveRow_t *Survival_FindFixedWaveRow( int wave );
+void AICast_ApplyWaveTableComposition( void );
+// struct cast_state_s (not the cast_state_t typedef) so this header doesn't need ai_cast.h -
+// several files that include g_survival.h (g_main.c, g_items.c, g_combat.c, ...) don't.
+void Survival_GiveWaveWeapons( gentity_t *ent, struct cast_state_s *cs );
+
 // Per-character health/speed-scaling curve used by AICast_ApplySurvivalAttributes(); leave runSpeedCap at 0 to skip speed scaling for a character.
 typedef struct survCharCurve_s
 {
@@ -203,6 +283,17 @@ typedef struct survConfig_s
 	int specialWaveCountIncrease;
 	int specialWaveCountMax;
 
+	// Global concurrent-AI cap for wave-table-governed characters (survWaveTable_t); unused
+	// (falls back to the legacy per-type ramp) on a map with no .survwave file.
+	int globalCapBase;             // alive at once for 1 player
+	int globalCapPerPlayer;        // + this many per additional player
+
+	// Post-table (wave > survWaves.maxFixedWave) random rotations - independent of the
+	// loper specialWave* cooldown above. "Boss" wins when both would roll the same wave.
+	int singleTypeRollMinGap, singleTypeRollMaxGap, singleTypeRollChancePct;
+	int bossRollMinGap, bossRollMaxGap, bossRollChancePct;
+	int bossEscortCount;          // escort headcount for a boss wave, fixed regardless of player count
+
 	int ghostTeleportMinRange;
 	int ghostTeleportMaxRange;
 	int ghostTeleportDelay;
@@ -279,6 +370,11 @@ typedef struct svParams_s
 	int waveKillCount;
 	int killCountRequirement;
 
+	// Lopers' own private wave tally - increments on every wave transition, counted or
+	// not, so their cooldown/count-scaling stays based on elapsed game time even though
+	// an uncounted loper wave itself never advances waveCount. See AICast_TickSurvivalWave.
+	int lopersWaveTally;
+
 	int playerCount;          // connected, non-spectator, non-bot clients - snapshotted at wave start
 	float playerCountScale;   // 1.0 + (playerCount-1) * playerScalePerExtraPct/100 - snapshotted at wave start
 
@@ -299,6 +395,27 @@ typedef struct svParams_s
 	int specialWaveTypes[MAX_SPECIAL_WAVE_TYPES];  // AICharacters_t pool, mapper-configurable
 	int numSpecialWaveTypes;
 	int currentSpecialWaveType;                    // AICharacters_t featured in the active special wave
+
+	// True for the duration of an uncounted loper special wave: waveCount/PERS_WAVES are
+	// frozen (see AICast_TickSurvivalWave) and the HUD shows "SPECIAL" instead of a number.
+	qboolean waveIsUncounted;
+
+	// The wave-table row resolved for the CURRENT wave (fixed 1-N row, or whichever of
+	// default/singletype/boss the post-table roll picked) - resolved once per wave start
+	// in AICast_TickSurvivalWave, read by both AICast_ApplyWaveTableComposition() and
+	// Survival_GiveWaveWeapons() so every spawn this wave sees the same roster/weapons.
+	survWaveRow_t currentWaveRow;
+	qboolean hasCurrentWaveRow;
+
+	// Post-table rotations (see survWaveTable_t) - independent bookkeeping from the
+	// specialWave*/loper fields above, so none of these three systems shares a budget.
+	qboolean singleTypeRollActive;
+	AICharacters_t currentSingleTypeRollChar;
+	int lastSingleTypeRoll;
+
+	qboolean bossRollActive;
+	int currentBossProtoCount;
+	int lastBossRoll;
 
 	qboolean waveGameOver;              // all players died mid-wave, game over triggered
 

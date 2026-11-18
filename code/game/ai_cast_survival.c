@@ -49,6 +49,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../steam/steam.h"
 
 void reinforce( gentity_t *ent );      // g_client.c - brings a limboed client back into the game
+qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params );      // ai_cast_script_actions.c - reused directly by Survival_GiveWaveWeapons() below
 
 // Balance values below all come from survCfg (see g_survival.h / g_survival_config.c) - no more compile-time defines here.
 
@@ -154,6 +155,7 @@ AICast_InitSurvival
 */
 void AICast_InitSurvival(void) {
 	Survival_LoadConfig();
+	Survival_LoadWaveTable();
 	// AICast_SpawnGenericSurvivalPool() is called separately from g_main.c, after
 	// G_SpawnEntitiesFromString() - this runs too early, before ClearRegisteredItems(),
 	// which would wipe its weapon RegisterItem() calls before they took effect.
@@ -196,6 +198,19 @@ void AICast_InitSurvival(void) {
     svParams.lastSpecialWave      = 0;
     svParams.numSpecialWaveTypes  = 0;
     svParams.currentSpecialWaveType = AICHAR_LOPER_SPECIAL;
+
+	svParams.lopersWaveTally = 0;
+
+	// Wave-table runtime state (see survWaveTable_t, g_survival.h) - independent of the
+	// loper specialWave* fields above.
+	svParams.waveIsUncounted = qfalse;
+	svParams.singleTypeRollActive = qfalse;
+	svParams.currentSingleTypeRollChar = AICHAR_NONE;
+	svParams.lastSingleTypeRoll = 0;
+	svParams.bossRollActive = qfalse;
+	svParams.currentBossProtoCount = 0;
+	svParams.lastBossRoll = 0;
+	svParams.hasCurrentWaveRow = qfalse;
 
 	svParams.maxActiveAI[AICHAR_SOLDIER] = survCfg.initialSoldiers;
 	svParams.maxActiveAI[AICHAR_TRENCH] = survCfg.initialTrench;
@@ -360,6 +375,12 @@ void AIChar_AIScript_AlertEntity_Survival( gentity_t *ent ) {
 
 	// trigger a spawn script event
 	AICast_ScriptEvent( AICast_GetCastState( ent->s.number ), "respawn", "" );
+
+	// Wave-table weapon override - runs after the script's own (static) giveweaponfull
+	// line, so it simply replaces whatever that just gave with this wave's dynamic pool.
+	// No-op (and no .ai script edits needed) on any map with no .survwave file, or for
+	// a character the current wave's row doesn't mention.
+	Survival_GiveWaveWeapons( ent, cs );
 
 	// Increment spawned counters based on aiTeam
 	if (ent->aiTeam == 1) { 
@@ -875,6 +896,342 @@ void AICast_UpdateMaxActiveAI(void)
     }
 }
 
+// ===========================================================================
+// Wave table (.survwave) runtime - see survWaveTable_t in g_survival.h. All
+// of this is additive and inert on any map with no .survwave file: every
+// function below either early-outs on hasCurrentWaveRow/numRows==0, or (for
+// AICast_UpdateMaxActiveAI above) is simply left untouched for characters the
+// table doesn't mention.
+// ===========================================================================
+
+// The six characters this feature governs for a map with a .survwave file -
+// everyone else (zombies, Helga/Heinrich, priests, ...) stays on the legacy
+// per-type ramp above, untouched, exactly as on any map with no wave table.
+static const AICharacters_t survTableGovernedChars[] = {
+	AICHAR_SOLDIER, AICHAR_TRENCH, AICHAR_ELITEGUARD, AICHAR_BLACKGUARD, AICHAR_VENOM, AICHAR_PROTOSOLDIER
+};
+#define NUM_SURV_TABLE_GOVERNED_CHARS ( sizeof( survTableGovernedChars ) / sizeof( survTableGovernedChars[0] ) )
+
+/*
+============
+AICast_ShouldRollBossWave / AICast_ShouldRollSingleTypeWave
+
+  Independent cooldown gates for the two post-table rotations, same shape as
+  AICast_ShouldStartSpecialWave() above but with their own min/max-gap/chance
+  fields and their own "last fired" tally, so none of the three systems
+  shares a budget. Only ever consulted once svParams.waveCount is already
+  past survWaves.maxFixedWave (see AICast_ResolveWaveTableRow).
+============
+*/
+static qboolean AICast_ShouldRollBossWave( void ) {
+	int wave = svParams.waveCount;
+	int gapSince;
+
+	if ( survCfg.bossRollChancePct <= 0 ) {
+		return qfalse;
+	}
+
+	if ( svParams.lastBossRoll > 0 ) {
+		if ( wave - svParams.lastBossRoll <= survCfg.bossRollMinGap ) {
+			return qfalse;
+		}
+		gapSince = wave - svParams.lastBossRoll - 1;
+	} else {
+		gapSince = wave - survWaves.maxFixedWave;
+	}
+
+	if ( gapSince >= survCfg.bossRollMaxGap ) {
+		return qtrue;
+	}
+
+	return ( rand() % 100 ) < survCfg.bossRollChancePct;
+}
+
+static qboolean AICast_ShouldRollSingleTypeWave( void ) {
+	int wave = svParams.waveCount;
+	int gapSince;
+
+	if ( survCfg.singleTypeRollChancePct <= 0 ) {
+		return qfalse;
+	}
+
+	if ( svParams.lastSingleTypeRoll > 0 ) {
+		if ( wave - svParams.lastSingleTypeRoll <= survCfg.singleTypeRollMinGap ) {
+			return qfalse;
+		}
+		gapSince = wave - svParams.lastSingleTypeRoll - 1;
+	} else {
+		gapSince = wave - survWaves.maxFixedWave;
+	}
+
+	if ( gapSince >= survCfg.singleTypeRollMaxGap ) {
+		return qtrue;
+	}
+
+	return ( rand() % 100 ) < survCfg.singleTypeRollChancePct;
+}
+
+/*
+============
+AICast_ResolveWaveTableRow
+
+  Picks which survWaveRow_t governs admission/weapons for the wave that just
+  started (svParams.waveCount, already incremented). A fixed row (1..maxFixedWave)
+  comes straight from the table; past that, this rolls (or skips) the two
+  independent post-table rotations - boss first, then single-type, so a wave
+  never tries to be more than one kind at once - falling back to the "default"
+  composition row otherwise. Writes svParams.currentWaveRow/hasCurrentWaveRow.
+  No-op (hasCurrentWaveRow left qfalse) on a map with no .survwave file.
+============
+*/
+static void AICast_ResolveWaveTableRow( void ) {
+	const survWaveRow_t *fixed;
+	int wave = svParams.waveCount;
+
+	svParams.singleTypeRollActive = qfalse;
+	svParams.bossRollActive = qfalse;
+
+	if ( survWaves.numRows == 0 && !survWaves.hasDefaultRow ) {
+		svParams.hasCurrentWaveRow = qfalse;
+		return;
+	}
+
+	fixed = Survival_FindFixedWaveRow( wave );
+	if ( fixed ) {
+		svParams.currentWaveRow = *fixed;
+		svParams.hasCurrentWaveRow = qtrue;
+
+		if ( fixed->kind == WAVEROW_SINGLETYPE && fixed->numRoster > 0 ) {
+			svParams.currentSingleTypeRollChar = fixed->roster[rand() % fixed->numRoster].character;
+		}
+		return;
+	}
+
+	if ( wave <= survWaves.maxFixedWave ) {
+		// inside the fixed range but this exact wave has no row defined - nothing to govern
+		svParams.hasCurrentWaveRow = qfalse;
+		return;
+	}
+
+	if ( survWaves.hasBossRoll && AICast_ShouldRollBossWave() ) {
+		svParams.bossRollActive = qtrue;
+		svParams.lastBossRoll = wave;
+		svParams.currentBossProtoCount = survWaves.bossProtoMin;
+		if ( survWaves.bossProtoMax > survWaves.bossProtoMin ) {
+			svParams.currentBossProtoCount += rand() % ( survWaves.bossProtoMax - survWaves.bossProtoMin + 1 );
+		}
+
+		Com_Memset( &svParams.currentWaveRow, 0, sizeof( svParams.currentWaveRow ) );
+		svParams.currentWaveRow.kind = WAVEROW_BOSS;
+		svParams.currentWaveRow.roster[0].character = AICHAR_PROTOSOLDIER;
+		svParams.currentWaveRow.roster[0].amount = svParams.currentBossProtoCount;
+		svParams.currentWaveRow.roster[0].numWeapons = survWaves.numBossProtoWeapons;
+		Com_Memcpy( svParams.currentWaveRow.roster[0].weapons, survWaves.bossProtoWeapons, sizeof( survWaves.bossProtoWeapons ) );
+		svParams.currentWaveRow.roster[1].character = survWaves.bossEscortChar;
+		svParams.currentWaveRow.roster[1].amount = survCfg.bossEscortCount;
+		svParams.currentWaveRow.roster[1].numWeapons = survWaves.numBossEscortWeapons;
+		Com_Memcpy( svParams.currentWaveRow.roster[1].weapons, survWaves.bossEscortWeapons, sizeof( survWaves.bossEscortWeapons ) );
+		svParams.currentWaveRow.numRoster = 2;
+		svParams.hasCurrentWaveRow = qtrue;
+		return;
+	}
+
+	if ( survWaves.hasSingleTypePool && AICast_ShouldRollSingleTypeWave() ) {
+		svParams.singleTypeRollActive = qtrue;
+		svParams.lastSingleTypeRoll = wave;
+
+		svParams.currentWaveRow = survWaves.singleTypePoolRow;
+		svParams.hasCurrentWaveRow = qtrue;
+		if ( svParams.currentWaveRow.numRoster > 0 ) {
+			svParams.currentSingleTypeRollChar = svParams.currentWaveRow.roster[rand() % svParams.currentWaveRow.numRoster].character;
+		}
+		return;
+	}
+
+	if ( survWaves.hasDefaultRow ) {
+		svParams.currentWaveRow = survWaves.defaultRow;
+		svParams.hasCurrentWaveRow = qtrue;
+		return;
+	}
+
+	svParams.hasCurrentWaveRow = qfalse;
+}
+
+/*
+============
+Surv_ScaleCountForAdmission
+
+  The admission check in AIChar_AIScript_AlertEntity_Survival applies
+  "maxActiveAI[char] * playerCountScale" - this divides a wave-table-derived
+  target back down in advance so that multiplication lands on the exact
+  intended number, rounded rather than truncated, and never silently rounds a
+  nonzero target down to 0.
+============
+*/
+static int Surv_ScaleCountForAdmission( int rawTarget ) {
+	int scaled = rawTarget;
+
+	if ( svParams.playerCountScale > 0 ) {
+		scaled = (int)( rawTarget / svParams.playerCountScale + 0.5f );
+	}
+	if ( rawTarget > 0 && scaled < 1 ) {
+		scaled = 1;
+	}
+	return scaled;
+}
+
+/*
+============
+AICast_ApplyWaveTableComposition
+
+  Called once at wave start and again after every kill (AICast_CheckSurvivalProgression),
+  and only takes effect if AICast_ResolveWaveTableRow() found a row to apply this wave.
+  Overwrites maxActiveAI[] for exactly the six table-governed characters - everyone else
+  keeps whatever the legacy ramp (AICast_UpdateMaxActiveAI) computed at wave start.
+
+  Every row kind is clamped to "remaining" (killCountRequirement - waveKillCount): the
+  concurrent cap shrinks as the wave's kill target gets closer instead of staying at the
+  full per-wave cap right up until the last required kill, which is what let a wave
+  "complete" while a cap's worth of enemies were still alive and roaming.
+============
+*/
+void AICast_ApplyWaveTableComposition( void ) {
+	int globalCapFlat;
+	int remaining;
+	int i;
+
+	// An uncounted loper special wave doesn't touch currentWaveRow at all - it's still the
+	// previous real wave's data. Table-governed admission must stay frozen at whatever that
+	// real wave set, not get recomputed against the special wave's own tiny kill requirement.
+	if ( svParams.waveIsUncounted ) {
+		return;
+	}
+
+	if ( !svParams.hasCurrentWaveRow ) {
+		return;
+	}
+
+	globalCapFlat = survCfg.globalCapBase + survCfg.globalCapPerPlayer * ( svParams.playerCount - 1 );
+	if ( globalCapFlat < 0 ) {
+		globalCapFlat = 0;
+	}
+
+	remaining = svParams.killCountRequirement - svParams.waveKillCount;
+	if ( remaining < 0 ) {
+		remaining = 0;
+	}
+
+	for ( i = 0; i < NUM_SURV_TABLE_GOVERNED_CHARS; i++ ) {
+		svParams.maxActiveAI[survTableGovernedChars[i]] = 0;
+	}
+
+	if ( svParams.currentWaveRow.kind == WAVEROW_BOSS ) {
+		// Fixed headcounts, weighted down by the same "remaining" clamp as everyone else -
+		// bossTotalRaw already equals killCountRequirement at wave start, so this is a
+		// no-op early on and only shrinks the escort/boss split as kills land.
+		int bossTotalRaw = 0;
+		int effectiveCap;
+
+		for ( i = 0; i < svParams.currentWaveRow.numRoster; i++ ) {
+			bossTotalRaw += svParams.currentWaveRow.roster[i].amount;
+		}
+		effectiveCap = ( remaining < bossTotalRaw ) ? remaining : bossTotalRaw;
+
+		for ( i = 0; i < svParams.currentWaveRow.numRoster; i++ ) {
+			const survRosterEntry_t *entry = &svParams.currentWaveRow.roster[i];
+			int rawTarget = 0;
+
+			if ( bossTotalRaw > 0 ) {
+				rawTarget = (int)( ( (float)effectiveCap * entry->amount ) / (float)bossTotalRaw + 0.5f );
+			}
+			svParams.maxActiveAI[entry->character] = Surv_ScaleCountForAdmission( rawTarget );
+		}
+		return;
+	}
+
+	{
+		int effectiveCap = ( remaining < globalCapFlat ) ? remaining : globalCapFlat;
+
+		if ( svParams.currentWaveRow.kind == WAVEROW_SINGLETYPE ) {
+			svParams.maxActiveAI[svParams.currentSingleTypeRollChar] = Surv_ScaleCountForAdmission( effectiveCap );
+			return;
+		}
+
+		// WAVEROW_COMPOSITION - each entry's weighted share of the (remaining-clamped) cap
+		for ( i = 0; i < svParams.currentWaveRow.numRoster; i++ ) {
+			const survRosterEntry_t *entry = &svParams.currentWaveRow.roster[i];
+			int rawTarget = (int)( ( (float)effectiveCap * entry->amount ) / 100.0f + 0.5f );
+
+			svParams.maxActiveAI[entry->character] = Surv_ScaleCountForAdmission( rawTarget );
+		}
+	}
+}
+
+/*
+============
+Survival_GiveWaveWeapons
+
+  Wave-table weapon override - called right after the survival spawn path's
+  own AICast_ScriptEvent("respawn") in AIChar_AIScript_AlertEntity_Survival.
+  Looks up ent->aiCharacter in svParams.currentWaveRow and, if that row lists
+  this character with a nonzero weapon pool, calls the same
+  AICast_ScriptAction_GiveWeaponFull() the .ai script's own "giveweaponfull"
+  line already uses - just with a dynamically built params string instead of
+  static text, so it picks one name at random from THIS wave's pool. A
+  character the row doesn't mention (or omits weapons for, e.g. a boss's own
+  protosoldier entry) is left exactly as the .ai script set it up.
+============
+*/
+void Survival_GiveWaveWeapons( gentity_t *ent, cast_state_t *cs ) {
+	const survWaveRow_t *row;
+	int i, j;
+	char params[256];
+
+	if ( g_gametype.integer != GT_COOP_SURVIVAL ) {
+		return;
+	}
+	if ( ent->aiTeam == AITEAM_ALLIES ) {
+		return;
+	}
+	if ( !svParams.hasCurrentWaveRow ) {
+		return;
+	}
+
+	row = &svParams.currentWaveRow;
+
+	for ( i = 0; i < row->numRoster; i++ ) {
+		const survRosterEntry_t *entry = &row->roster[i];
+
+		if ( entry->character != ent->aiCharacter || entry->numWeapons <= 0 ) {
+			continue;
+		}
+
+		params[0] = 0;
+		for ( j = 0; j < entry->numWeapons; j++ ) {
+			gitem_t *item = BG_FindItemForWeapon( entry->weapons[j] );
+
+			if ( !item || !item->classname ) {
+				continue;
+			}
+			if ( params[0] ) {
+				Q_strcat( params, sizeof( params ), " " );
+			}
+			Q_strcat( params, sizeof( params ), item->classname );
+		}
+
+		if ( params[0] ) {
+			AICast_ScriptAction_GiveWeaponFull( cs, params );
+
+			if ( g_survivalDebug.integer ) {
+				G_Printf( "^5[AI_SURVIVE][DEBUG] %s (char=%d ent=%d) wave=%d pool=\"%s\" -> gave weapon=%d\n",
+					ent->aiName ? ent->aiName : "?", ent->aiCharacter, ent->s.number,
+					svParams.waveCount, params, ent->client->ps.weapon );
+			}
+		}
+		return;
+	}
+}
+
 /*
 ============
 AICast_ApplySurvivalAttributes
@@ -1334,7 +1691,7 @@ static qboolean AICast_ShouldStartSpecialWave(void) {
     if (g_specialWaves.integer == 0 || survCfg.specialWaveChance <= 0)
         return qfalse;
 
-    int wave = svParams.waveCount; // wave we’re starting now
+    int wave = svParams.lopersWaveTally; // lopers' own tally - keeps ticking even through uncounted special waves
 
     // Too early
     if (wave < survCfg.specialWaveMinStart)
@@ -1976,6 +2333,11 @@ void AICast_CheckSurvivalProgression( gentity_t *attacker ) {
 		return;
 	}
 
+	// Re-shrink the wave-table admission targets every kill, clamped to how many kills are
+	// still needed - so the concurrent cap never holds more alive than the wave actually
+	// requires, instead of staying at the full per-wave cap right up until the last kill.
+	AICast_ApplyWaveTableComposition();
+
 	if ( svParams.waveKillCount < svParams.killCountRequirement ) {
 		enemiesAlive = 0;
 
@@ -2043,7 +2405,13 @@ void AICast_CheckSurvivalProgression( gentity_t *attacker ) {
 		svParams.waveInProgress = qfalse;
 		svParams.waveChangeTime = level.time + survCfg.intermissionTime * 1000;
 
-		endEvent = svParams.specialWaveActive ? "specialwave_end" : "wave_end";
+		if ( svParams.specialWaveActive ) {
+			endEvent = "specialwave_end";
+		} else if ( svParams.hasCurrentWaveRow && svParams.currentWaveRow.kind == WAVEROW_BOSS ) {
+			endEvent = "boss_end";
+		} else {
+			endEvent = "wave_end";
+		}
 
 		Survival_GameManagerEvent( endEvent );
 
@@ -2178,6 +2546,7 @@ void AICast_TickSurvivalWave( void ) {
 	int i;
 	int wave;
 	int killReq;
+	qboolean loperWaveThisTick;
 
 	AICast_SurvivalWatchdog();
 
@@ -2189,11 +2558,15 @@ void AICast_TickSurvivalWave( void ) {
 		return;
 	}
 
-	G_Printf( "Survival: starting wave %i\n", svParams.waveCount + 1 );
+	// Lopers roll first, on their own private tally, BEFORE waveCount is touched - see
+	// AICast_ShouldStartSpecialWave(). This is what makes a loper wave "uncounted": if it
+	// fires, waveCount/PERS_WAVES are never incremented, so the fixed wave table (and the
+	// number on the HUD) resume exactly where they left off once it's cleared.
+	svParams.lopersWaveTally++;
+	loperWaveThisTick = AICast_ShouldStartSpecialWave();
 
 	svParams.wavePending = qfalse;
 	svParams.waveInProgress = qtrue;
-	svParams.waveCount++;
 	svParams.waveKillCount = 0;
 	svParams.spawnedThisWave = 0;
 	svParams.lastProgressTime = level.time;
@@ -2219,7 +2592,6 @@ void AICast_TickSurvivalWave( void ) {
 		svParams.spawnedThisWave++;
 	}
 
-	wave = svParams.waveCount;
 	killReq = 0;
 
 	svParams.playerCount = Survival_CountActivePlayers();
@@ -2228,29 +2600,20 @@ void AICast_TickSurvivalWave( void ) {
 	}
 	svParams.playerCountScale = 1.0f + ( svParams.playerCount - 1 ) * ( survCfg.playerScalePerExtraPct / 100.0f );
 
-if ( wave == 1 ) {
-	G_Printf( "Survival: wave 1 before start_survival script\n" );
-	Survival_GameManagerEvent( "start_survival" );
-	G_Printf( "Survival: wave 1 after start_survival script\n" );
-
-	killReq = survCfg.initialKillCountReq;
-} else {
-		killReq = (int)( 0.15f * wave * wave + 3.0f * wave + 10.0f );
-	}
-
-	killReq = (int)( killReq * svParams.playerCountScale );
-
 	svParams.specialWaveActive = qfalse;
 
-	if ( AICast_ShouldStartSpecialWave() ) {
+	if ( loperWaveThisTick ) {
 		int count;
 
+		G_Printf( "Survival: starting special wave (uncounted; lopersWaveTally=%d)\n", svParams.lopersWaveTally );
+
+		svParams.waveIsUncounted = qtrue;
 		svParams.specialWaveActive = qtrue;
-		svParams.lastSpecialWave = wave;
+		svParams.lastSpecialWave = svParams.lopersWaveTally;
 		svParams.currentSpecialWaveType = AICast_PickSpecialWaveType();
 
 		count = survCfg.specialWaveCountInitial +
-			survCfg.specialWaveCountIncrease * ( wave - survCfg.specialWaveMinStart );
+			survCfg.specialWaveCountIncrease * ( svParams.lopersWaveTally - survCfg.specialWaveMinStart );
 
 		if ( count < survCfg.specialWaveCountInitial ) {
 			count = survCfg.specialWaveCountInitial;
@@ -2261,12 +2624,58 @@ if ( wave == 1 ) {
 
 		svParams.maxActiveAI[svParams.currentSpecialWaveType] =
 			( count < survCfg.specialWaveCountMax ) ? count : survCfg.specialWaveCountMax;
-	} else {
-		svParams.killCountRequirement = killReq;
 
-		if ( wave > 1 ) {
-			AICast_UpdateMaxActiveAI();
+		for ( i = 0; i < g_maxclients.integer; i++ ) {
+			gentity_t *cl = &g_entities[i];
+
+			if ( !cl->inuse || !cl->client || cl->client->pers.connected != CON_CONNECTED ) {
+				continue;
+			}
+			cl->client->ps.persistant[PERS_SPECIALWAVE] = 1;
 		}
+
+		Survival_GameManagerEvent( "specialwave_start" );
+		return;
+	}
+
+	// Real, counted wave from here on.
+	svParams.waveIsUncounted = qfalse;
+
+	G_Printf( "Survival: starting wave %i\n", svParams.waveCount + 1 );
+	svParams.waveCount++;
+	wave = svParams.waveCount;
+
+	if ( wave == 1 ) {
+		G_Printf( "Survival: wave 1 before start_survival script\n" );
+		Survival_GameManagerEvent( "start_survival" );
+		G_Printf( "Survival: wave 1 after start_survival script\n" );
+
+		killReq = survCfg.initialKillCountReq;
+	} else {
+		killReq = (int)( 0.15f * wave * wave + 3.0f * wave + 10.0f );
+	}
+
+	killReq = (int)( killReq * svParams.playerCountScale );
+
+	if ( wave > 1 ) {
+		AICast_UpdateMaxActiveAI();
+	}
+	svParams.killCountRequirement = killReq;
+
+	// Wave-table composition (soldier/trench/eliteguard/blackguard/venom/protosoldier)
+	// overrides whatever the legacy ramp above just set for those six characters - a
+	// no-op on any map with no .survwave file. See g_survival.h / g_survival_config.c.
+	AICast_ResolveWaveTableRow();
+	AICast_ApplyWaveTableComposition();
+
+	if ( svParams.hasCurrentWaveRow && svParams.currentWaveRow.kind == WAVEROW_BOSS ) {
+		// A boss wave is "clear everyone in it" - fixed headcounts, not the quadratic formula above.
+		int bossTotal = 0;
+
+		for ( i = 0; i < svParams.currentWaveRow.numRoster; i++ ) {
+			bossTotal += svParams.currentWaveRow.roster[i].amount;
+		}
+		svParams.killCountRequirement = bossTotal;
 	}
 
 	for ( i = 0; i < g_maxclients.integer; i++ ) {
@@ -2281,10 +2690,11 @@ if ( wave == 1 ) {
 		}
 
 		cl->client->ps.persistant[PERS_WAVES]++;
+		cl->client->ps.persistant[PERS_SPECIALWAVE] = 0;
 	}
 
-	if ( svParams.specialWaveActive ) {
-		Survival_GameManagerEvent( "specialwave_start" );
+	if ( svParams.hasCurrentWaveRow && svParams.currentWaveRow.kind == WAVEROW_BOSS ) {
+		Survival_GameManagerEvent( "boss_start" );
 	} else if ( wave == 1 ) {
 		Survival_GameManagerEvent( "first_wave_start" );
 	} else {
@@ -2470,6 +2880,13 @@ void AICast_SurvivalRespawn(gentity_t *ent, cast_state_t *cs) {
 
 				// Activate respawn scripts for AI
 				AICast_ScriptEvent(cs, "respawn", "");
+
+				// Wave-table weapon override - see the matching call (and its comment) in
+				// AIChar_AIScript_AlertEntity_Survival. That function only ever runs on an
+				// entity's first-ever activation; every death-and-rebirth after that comes
+				// through here instead, so this needs the exact same override or a respawned
+				// AI just keeps whatever weapon it had when it died, forever.
+				Survival_GiveWaveWeapons( ent, cs );
 
 				// Clear leftover vanilla/script movement state after respawn script.
 				cs->followEntity = -1;
