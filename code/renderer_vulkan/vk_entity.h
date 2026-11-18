@@ -9,7 +9,7 @@ void vk_entity_shutdown( void );
 // qtrue if this entity's model has real mesh data this module can draw (MD3/MDC/MDS/MDM).
 qboolean vk_entity_has_mesh( const refEntity_t *ent );
 
-// Draws every scene entity for which vk_entity_has_mesh is true.
-void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16] );
+// Draws every scene entity for which vk_entity_has_mesh is true (fogPush is tr_fog.h's push-constant block).
+void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16], const float fogPush[12] );
 
 #endif // VK_ENTITY_H_

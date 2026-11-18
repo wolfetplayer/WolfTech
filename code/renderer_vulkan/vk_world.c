@@ -365,7 +365,7 @@ static void DrawSurfRefRun( const worldSurfRef_t *refs, int numRefs ) {
 	}
 }
 
-void vk_world_draw( const float mvp[16] ) {
+void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	float push_data[32];
 	VkDeviceSize vb_offset = 0;
 	int i;
@@ -381,7 +381,8 @@ void vk_world_draw( const float mvp[16] ) {
 
 	memset( push_data, 0, sizeof( push_data ) );
 	memcpy( push_data, mvp, 16 * sizeof( float ) );
-	qvkCmdPushConstants( vk.command_buffer, vk.lightmap_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT,
+	memcpy( push_data + 16, fogPush, 12 * sizeof( float ) );
+	qvkCmdPushConstants( vk.command_buffer, vk.lightmap_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0, sizeof( push_data ), push_data );
 
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_3d_lightmap );

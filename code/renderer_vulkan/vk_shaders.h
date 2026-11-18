@@ -1,4 +1,4 @@
-// vk_shaders.h -- loads precompiled SPIR-V modules from shaders/Compiled/*.c (single_texture is vkQuake3, GPLv2-or-later; world_lightmap is ours).
+// vk_shaders.h -- loads precompiled SPIR-V modules from shaders/Compiled/*.c (single_texture started from vkQuake3, GPLv2-or-later, now modified; world_lightmap is ours).
 
 #ifndef VK_SHADERS_H_
 #define VK_SHADERS_H_

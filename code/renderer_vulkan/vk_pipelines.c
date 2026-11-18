@@ -160,9 +160,9 @@ void vk_createPipelineLayout( void ) {
 	}
 
 	{
-		// Matches single_texture.vert's push_constant size (128 bytes) even though only the first 64 are written.
+		// Matches single_texture.vert's push_constant size (128 bytes): mvp, then fog's camPos/fogColor/fogParams.
 		VkPushConstantRange push_range;
-		push_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		push_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		push_range.offset = 0;
 		push_range.size = 128;
 
@@ -193,6 +193,7 @@ typedef struct {
 	int32_t alpha_test_func;
 	int32_t color_op;
 	int32_t clip_plane;
+	int32_t fog_enabled;
 } vk2d_spec_data_t;
 
 static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipelineLayout layout,
@@ -363,10 +364,12 @@ static void Get2DAttribs( VkVertexInputBindingDescription *binding, VkVertexInpu
 	attribs[2].offset = offsetof( vk2d_vertex_t, uv );
 }
 
-static void GetSpecInfo( vk2d_spec_data_t *spec_data, VkSpecializationMapEntry spec_entries[3], VkSpecializationInfo *specInfo ) {
+// fogEnabled selects single_texture.vert's compile-time fog branch -- on for the 3D pipeline, off for the 2D UI ones (which share the shader and must never be fogged).
+static void GetSpecInfo( vk2d_spec_data_t *spec_data, VkSpecializationMapEntry spec_entries[4], VkSpecializationInfo *specInfo, qboolean fogEnabled ) {
 	spec_data->alpha_test_func = 0;
 	spec_data->color_op = 0;
 	spec_data->clip_plane = 0;
+	spec_data->fog_enabled = fogEnabled ? 1 : 0;
 
 	spec_entries[0].constantID = 0;
 	spec_entries[0].offset = offsetof( vk2d_spec_data_t, alpha_test_func );
@@ -377,8 +380,11 @@ static void GetSpecInfo( vk2d_spec_data_t *spec_data, VkSpecializationMapEntry s
 	spec_entries[2].constantID = 2;
 	spec_entries[2].offset = offsetof( vk2d_spec_data_t, clip_plane );
 	spec_entries[2].size = sizeof( int32_t );
+	spec_entries[3].constantID = 3;
+	spec_entries[3].offset = offsetof( vk2d_spec_data_t, fog_enabled );
+	spec_entries[3].size = sizeof( int32_t );
 
-	specInfo->mapEntryCount = 3;
+	specInfo->mapEntryCount = 4;
 	specInfo->pMapEntries = spec_entries;
 	specInfo->dataSize = sizeof( *spec_data );
 	specInfo->pData = spec_data;
@@ -388,11 +394,11 @@ void vk_create2DPipelines( void ) {
 	VkVertexInputBindingDescription binding;
 	VkVertexInputAttributeDescription attribs[3];
 	vk2d_spec_data_t spec_data;
-	VkSpecializationMapEntry spec_entries[3];
+	VkSpecializationMapEntry spec_entries[4];
 	VkSpecializationInfo specInfo;
 
 	Get2DAttribs( &binding, attribs );
-	GetSpecInfo( &spec_data, spec_entries, &specInfo );
+	GetSpecInfo( &spec_data, spec_entries, &specInfo, qfalse );
 
 	vk.pipeline_2d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding, attribs, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
@@ -405,15 +411,14 @@ void vk_destroy2DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_blend, NULL );
 }
 
-// pipeline_3d_opaque is vk_draw3d.c's test-cube pipeline (vk2d_vertex_t buffer); world rendering uses pipeline_3d_lightmap.
-// No cull mode yet -- tr_shader.c's parsed cullNone isn't wired to any pipeline choice yet.
+// pipeline_3d_opaque is vk_draw3d.c's/vk_entity.c's pipeline (vk2d_vertex_t buffer); world rendering uses pipeline_3d_lightmap. No cull mode yet -- tr_shader.c's parsed cullNone isn't wired to any pipeline choice yet.
 void vk_create3DPipelines( void ) {
 	VkVertexInputBindingDescription binding2d;
 	VkVertexInputAttributeDescription attribs2d[3];
 	VkVertexInputBindingDescription worldBinding;
 	VkVertexInputAttributeDescription lightmapAttribs[4];
 	vk2d_spec_data_t spec_data;
-	VkSpecializationMapEntry spec_entries[3];
+	VkSpecializationMapEntry spec_entries[4];
 	VkSpecializationInfo specInfo;
 
 	Get2DAttribs( &binding2d, attribs2d );
@@ -439,7 +444,7 @@ void vk_create3DPipelines( void ) {
 	lightmapAttribs[3].format = VK_FORMAT_R32G32_SFLOAT;
 	lightmapAttribs[3].offset = offsetof( vkWorldVertex_t, lmUv );
 
-	GetSpecInfo( &spec_data, spec_entries, &specInfo );
+	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue );
 
 	vk.pipeline_3d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );

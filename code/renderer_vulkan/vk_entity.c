@@ -319,7 +319,7 @@ static void CommitSurface( int numVerts, int numTriangles, const void *triangles
 	*idxWrite += (uint32_t)numTriangles * 3;
 }
 
-void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16] ) {
+void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16], const float fogPush[12] ) {
 	uint32_t vertWrite = 0, idxWrite = 0;
 	int numDraws = 0;
 	int e, s, i;
@@ -423,7 +423,8 @@ doneCollecting:
 
 		memset( push_data, 0, sizeof( push_data ) );
 		memcpy( push_data, mvp, 16 * sizeof( float ) );
-		qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT,
+		memcpy( push_data + 16, fogPush, 12 * sizeof( float ) );
+		qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 			0, sizeof( push_data ), push_data );
 
 		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_3d_opaque );

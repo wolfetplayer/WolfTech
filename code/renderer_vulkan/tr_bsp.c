@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 #include "tr_shader.h"
 #include "tr_bsp.h"
+#include "tr_fog.h"
 #include "vk_world.h"
 
 bspWorld_t tr_world;
@@ -326,6 +327,7 @@ void RE_LoadWorldMap( const char *name ) {
 
 	memset( &tr_world, 0, sizeof( tr_world ) );
 	Q_strncpyz( tr_world.name, name, sizeof( tr_world.name ) );
+	R_InitFog(); // clear any trigger_fog left active from the previous map
 
 	header = (dheader_t *)buffer;
 	fileBase = (byte *)header;

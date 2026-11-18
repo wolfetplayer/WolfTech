@@ -130,7 +130,7 @@ static void vk_draw2d_record_tris( const vk2d_vertex_t *verts, int count, shader
 	clip_space_xform[13] = -1.0f;                // col3.y
 	clip_space_xform[15] = 1.0f;                 // col3.w
 
-	qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT,
+	qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0, sizeof( clip_space_xform ), clip_space_xform );
 
 	pipeline = ( forceBlend || shader->stages[0].blendEnabled ) ? vk.pipeline_2d_blend : vk.pipeline_2d_opaque;

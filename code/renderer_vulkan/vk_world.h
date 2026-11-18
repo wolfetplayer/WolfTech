@@ -10,7 +10,7 @@ void vk_world_build( void );
 void vk_world_clear( void );
 void vk_world_shutdown( void );
 
-// Draws every visible PLANAR/TRIANGLE_SOUP/PATCH surface, batched by shader+lightmap. No-op if no world is built.
-void vk_world_draw( const float mvp[16] );
+// Draws every visible PLANAR/TRIANGLE_SOUP/PATCH surface, batched by shader+lightmap (fogPush is tr_fog.h's push-constant block). No-op if no world is built.
+void vk_world_draw( const float mvp[16], const float fogPush[12] );
 
 #endif // VK_WORLD_H_

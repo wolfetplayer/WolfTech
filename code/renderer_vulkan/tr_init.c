@@ -43,6 +43,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_bones.h"
 #include "tr_skin.h"
 #include "tr_light.h"
+#include "tr_fog.h"
 #include "tr_scene.h"
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
@@ -108,6 +109,7 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 		R_InitPatches();
 		R_InitModels();
 		R_InitSkins();
+		R_InitFog();
 		s_testCubeInit = qfalse;
 	}
 
@@ -189,14 +191,9 @@ static void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, fl
 	(void)org; (void)r; (void)g; (void)b; (void)scale; (void)id; (void)flags;
 }
 
-static void R_SetFog( int fogvar, int var1, int var2, float r, float g, float b, float density ) {
-	FIRST_CALL_CHECKPOINT( "R_SetFog" );
-	(void)fogvar; (void)var1; (void)var2; (void)r; (void)g; (void)b; (void)density;
-}
-
 // Sanity test cube: fixed in world space on first run, so walking around it proves the camera matrices track correctly.
 static void RE_RenderScene( const refdef_t *fd ) {
-	float viewMatrix[16], projMatrix[16], viewProj[16];
+	float viewMatrix[16], projMatrix[16], viewProj[16], fogPush[12];
 
 	if ( !vk.isInitialized || !s_frameActive ) {
 		return;
@@ -214,22 +211,25 @@ static void RE_RenderScene( const refdef_t *fd ) {
 		s_firstRealSceneLogged = qtrue;
 	}
 
+	R_SetFogFrameTime( fd->time );
+	R_GetFogPushConstants( fd->vieworg, fogPush );
+
 	R_SetupViewMatrix( fd, viewMatrix );
 	R_SetupProjectionMatrix( fd, projMatrix );
 	R_MultMatrix( projMatrix, viewMatrix, viewProj );
 
 	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
 		R_MarkVisibleSurfaces( fd );
-		vk_world_draw( viewProj );
+		vk_world_draw( viewProj, fogPush );
 	}
 
-	vk_draw3d_test_cube( s_testCubeOrigin, 40.0f, viewProj );
+	vk_draw3d_test_cube( s_testCubeOrigin, 40.0f, viewProj, fogPush );
 
 	{
 		int numEntities;
 		const refEntity_t *entities = R_GetSceneEntities( &numEntities );
-		vk_entity_draw_all( entities, numEntities, viewProj );
-		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj );
+		vk_entity_draw_all( entities, numEntities, viewProj, fogPush );
+		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj, fogPush );
 	}
 }
 

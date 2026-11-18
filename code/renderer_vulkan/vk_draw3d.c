@@ -116,12 +116,13 @@ static void build_cube( vk2d_vertex_t *verts, const vec3_t origin, float h ) {
 	set_vert( &verts[i++], x0, y0, z1, 255, 255, 0 ); set_vert( &verts[i++], x1, y1, z1, 255, 255, 0 ); set_vert( &verts[i++], x1, y0, z1, 255, 255, 0 );
 }
 
-static void bind_opaque_3d_for_draw( const float mvp[16] ) {
+static void bind_opaque_3d_for_draw( const float mvp[16], const float fogPush[12] ) {
 	float push_data[32];
 
 	memset( push_data, 0, sizeof( push_data ) );
 	memcpy( push_data, mvp, 16 * sizeof( float ) );
-	qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT,
+	memcpy( push_data + 16, fogPush, 12 * sizeof( float ) );
+	qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0, sizeof( push_data ), push_data );
 
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_3d_opaque );
@@ -130,7 +131,7 @@ static void bind_opaque_3d_for_draw( const float mvp[16] ) {
 		0, 1, &R_GetDefaultImage()->vk_descriptor, 0, NULL );
 }
 
-void vk_draw3d_test_cube( const vec3_t origin, float halfSize, const float mvp[16] ) {
+void vk_draw3d_test_cube( const vec3_t origin, float halfSize, const float mvp[16], const float fogPush[12] ) {
 	VkDeviceSize vb_offset = 0;
 
 	if ( !r_vk_test3d->integer ) {
@@ -139,13 +140,13 @@ void vk_draw3d_test_cube( const vec3_t origin, float halfSize, const float mvp[1
 
 	build_cube( s_mapped, origin, halfSize );
 
-	bind_opaque_3d_for_draw( mvp );
+	bind_opaque_3d_for_draw( mvp, fogPush );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 	qvkCmdDraw( vk.command_buffer, VERTS_PER_CUBE, 1, 0, 0 );
 }
 
 // r_vk_showEntityMarkers-gated: one small cube per scene entity, standing in for real model rendering.
-void vk_draw3d_entity_markers( const refEntity_t *entities, int numEntities, float halfSize, const float mvp[16] ) {
+void vk_draw3d_entity_markers( const refEntity_t *entities, int numEntities, float halfSize, const float mvp[16], const float fogPush[12] ) {
 	VkDeviceSize vb_offset = 0;
 	int i, written = 0;
 
@@ -168,7 +169,7 @@ void vk_draw3d_entity_markers( const refEntity_t *entities, int numEntities, flo
 		return;
 	}
 
-	bind_opaque_3d_for_draw( mvp );
+	bind_opaque_3d_for_draw( mvp, fogPush );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_markerVertexBuffer, &vb_offset );
 	qvkCmdDraw( vk.command_buffer, (uint32_t)written * VERTS_PER_CUBE, 1, 0, 0 );
 }
