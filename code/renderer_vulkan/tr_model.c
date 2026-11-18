@@ -248,14 +248,17 @@ static qboolean R_LoadMD3( model_t *mod, void *buffer, const char *name ) {
 	return qtrue;
 }
 
-// Tag data only -- surfaces/mesh are left unswapped in the hunk copy until real mesh rendering lands.
 static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *name ) {
 	mdsHeader_t *mds;
 	mdsFrame_t *frame;
 	mdsBoneInfo_t *bi;
 	mdsTag_t *tag;
+	mdsSurface_t *surf;
+	mdsTriangle_t *tri;
+	mdsVertex_t *v;
+	int *boneref;
 	int version, size, frameSize;
-	int i, j;
+	int i, j, k;
 
 	version = LittleLong( ( (mdsHeader_t *)buffer )->version );
 	if ( version != MDS_VERSION ) {
@@ -316,6 +319,56 @@ static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *name ) {
 		bi->torsoWeight = LittleFloat( bi->torsoWeight );
 		bi->parentDist = LittleFloat( bi->parentDist );
 		bi->flags = LittleLong( bi->flags );
+	}
+
+	// Surfaces: mesh + per-vertex bone weights, for vk_entity.c's CPU skinning.
+	surf = (mdsSurface_t *)( (byte *)mds + mds->ofsSurfaces );
+	for ( i = 0; i < mds->numSurfaces; i++ ) {
+		surf->ident = LittleLong( surf->ident );
+		surf->minLod = LittleLong( surf->minLod );
+		surf->ofsHeader = LittleLong( surf->ofsHeader );
+		surf->numVerts = LittleLong( surf->numVerts );
+		surf->ofsVerts = LittleLong( surf->ofsVerts );
+		surf->numTriangles = LittleLong( surf->numTriangles );
+		surf->ofsTriangles = LittleLong( surf->ofsTriangles );
+		surf->ofsCollapseMap = LittleLong( surf->ofsCollapseMap );
+		surf->numBoneReferences = LittleLong( surf->numBoneReferences );
+		surf->ofsBoneReferences = LittleLong( surf->ofsBoneReferences );
+		surf->ofsEnd = LittleLong( surf->ofsEnd );
+
+		surf->shaderIndex = RE_RegisterShaderInternal( surf->shader, qfalse );
+
+		tri = (mdsTriangle_t *)( (byte *)surf + surf->ofsTriangles );
+		for ( j = 0; j < surf->numTriangles; j++, tri++ ) {
+			tri->indexes[0] = LittleLong( tri->indexes[0] );
+			tri->indexes[1] = LittleLong( tri->indexes[1] );
+			tri->indexes[2] = LittleLong( tri->indexes[2] );
+		}
+
+		v = (mdsVertex_t *)( (byte *)surf + surf->ofsVerts );
+		for ( j = 0; j < surf->numVerts; j++ ) {
+			v->normal[0] = LittleFloat( v->normal[0] );
+			v->normal[1] = LittleFloat( v->normal[1] );
+			v->normal[2] = LittleFloat( v->normal[2] );
+			v->texCoords[0] = LittleFloat( v->texCoords[0] );
+			v->texCoords[1] = LittleFloat( v->texCoords[1] );
+			v->numWeights = LittleLong( v->numWeights );
+			for ( k = 0; k < v->numWeights; k++ ) {
+				v->weights[k].boneIndex = LittleLong( v->weights[k].boneIndex );
+				v->weights[k].boneWeight = LittleFloat( v->weights[k].boneWeight );
+				v->weights[k].offset[0] = LittleFloat( v->weights[k].offset[0] );
+				v->weights[k].offset[1] = LittleFloat( v->weights[k].offset[1] );
+				v->weights[k].offset[2] = LittleFloat( v->weights[k].offset[2] );
+			}
+			v = (mdsVertex_t *)&v->weights[v->numWeights];
+		}
+
+		boneref = (int *)( (byte *)surf + surf->ofsBoneReferences );
+		for ( j = 0; j < surf->numBoneReferences; j++, boneref++ ) {
+			*boneref = LittleLong( *boneref );
+		}
+
+		surf = (mdsSurface_t *)( (byte *)surf + surf->ofsEnd );
 	}
 
 	mod->type = MOD_MDS;
@@ -385,10 +438,12 @@ static qboolean R_LoadMDX( model_t *mod, void *buffer, const char *name ) {
 	return qtrue;
 }
 
-// Tag data only -- surfaces/mesh are left unswapped in the hunk copy until real mesh rendering lands.
 static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *name ) {
 	mdmHeader_t *mdm;
 	mdmTag_t *tag;
+	mdmSurface_t *surf;
+	mdmTriangle_t *tri;
+	mdmVertex_t *v;
 	int version, size;
 	int i, j, k;
 	int *boneref;
@@ -433,6 +488,56 @@ static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *name ) {
 		}
 
 		tag = (mdmTag_t *)( (byte *)tag + tag->ofsEnd );
+	}
+
+	// Surfaces: mesh + per-vertex bone weights, for vk_entity.c's CPU skinning.
+	surf = (mdmSurface_t *)( (byte *)mdm + mdm->ofsSurfaces );
+	for ( i = 0; i < mdm->numSurfaces; i++ ) {
+		surf->ident = LittleLong( surf->ident );
+		surf->minLod = LittleLong( surf->minLod );
+		surf->ofsHeader = LittleLong( surf->ofsHeader );
+		surf->numVerts = LittleLong( surf->numVerts );
+		surf->ofsVerts = LittleLong( surf->ofsVerts );
+		surf->numTriangles = LittleLong( surf->numTriangles );
+		surf->ofsTriangles = LittleLong( surf->ofsTriangles );
+		surf->ofsCollapseMap = LittleLong( surf->ofsCollapseMap );
+		surf->numBoneReferences = LittleLong( surf->numBoneReferences );
+		surf->ofsBoneReferences = LittleLong( surf->ofsBoneReferences );
+		surf->ofsEnd = LittleLong( surf->ofsEnd );
+
+		surf->shaderIndex = RE_RegisterShaderInternal( surf->shader, qfalse );
+
+		tri = (mdmTriangle_t *)( (byte *)surf + surf->ofsTriangles );
+		for ( j = 0; j < surf->numTriangles; j++, tri++ ) {
+			tri->indexes[0] = LittleLong( tri->indexes[0] );
+			tri->indexes[1] = LittleLong( tri->indexes[1] );
+			tri->indexes[2] = LittleLong( tri->indexes[2] );
+		}
+
+		v = (mdmVertex_t *)( (byte *)surf + surf->ofsVerts );
+		for ( j = 0; j < surf->numVerts; j++ ) {
+			v->normal[0] = LittleFloat( v->normal[0] );
+			v->normal[1] = LittleFloat( v->normal[1] );
+			v->normal[2] = LittleFloat( v->normal[2] );
+			v->texCoords[0] = LittleFloat( v->texCoords[0] );
+			v->texCoords[1] = LittleFloat( v->texCoords[1] );
+			v->numWeights = LittleLong( v->numWeights );
+			for ( k = 0; k < v->numWeights; k++ ) {
+				v->weights[k].boneIndex = LittleLong( v->weights[k].boneIndex );
+				v->weights[k].boneWeight = LittleFloat( v->weights[k].boneWeight );
+				v->weights[k].offset[0] = LittleFloat( v->weights[k].offset[0] );
+				v->weights[k].offset[1] = LittleFloat( v->weights[k].offset[1] );
+				v->weights[k].offset[2] = LittleFloat( v->weights[k].offset[2] );
+			}
+			v = (mdmVertex_t *)&v->weights[v->numWeights];
+		}
+
+		boneref = (int *)( (byte *)surf + surf->ofsBoneReferences );
+		for ( j = 0; j < surf->numBoneReferences; j++, boneref++ ) {
+			*boneref = LittleLong( *boneref );
+		}
+
+		surf = (mdmSurface_t *)( (byte *)surf + surf->ofsEnd );
 	}
 
 	mod->type = MOD_MDM;

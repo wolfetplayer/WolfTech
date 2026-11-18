@@ -11,6 +11,10 @@ void R_ClearScene( void ) {
 }
 
 void R_AddRefEntityToScene( const refEntity_t *ent ) {
+	// RF_THIRD_PERSON entities (the player's own body, etc.) are meant for mirrors/portals only, which we don't have.
+	if ( ent->renderfx & RF_THIRD_PERSON ) {
+		return;
+	}
 	if ( s_numEntities >= MAX_REFENTITIES ) {
 		return; // dropped, same cap the opengl1 renderer enforces
 	}

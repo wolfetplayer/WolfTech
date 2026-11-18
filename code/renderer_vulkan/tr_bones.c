@@ -46,6 +46,13 @@ static ID_INLINE void LocalScaledMatrixTransformVector( vec3_t in, float s, vec3
 	out[2] = ( 1.0f - s ) * in[2] + s * ( in[0] * mat[2][0] + in[1] * mat[2][1] + in[2] * mat[2][2] );
 }
 
+// out += s * (mat * in + tr) -- the per-weight contribution a skinned vertex accumulates from one influencing bone.
+static ID_INLINE void LocalAddScaledMatrixTransformVectorTranslate( const vec3_t in, float s, vec3_t mat[3], const vec3_t tr, vec3_t out ) {
+	out[0] += s * ( in[0] * mat[0][0] + in[1] * mat[0][1] + in[2] * mat[0][2] + tr[0] );
+	out[1] += s * ( in[0] * mat[1][0] + in[1] * mat[1][1] + in[2] * mat[1][2] + tr[1] );
+	out[2] += s * ( in[0] * mat[2][0] + in[1] * mat[2][1] + in[2] * mat[2][2] + tr[2] );
+}
+
 static ID_INLINE void LocalAngleVector( vec3_t angles, vec3_t forward ) {
 	float a, sp, sy, cp, cy;
 	a = angles[YAW] * ( M_PI * 2 / 360 ); sy = sinf( a ); cy = cosf( a );
@@ -792,4 +799,41 @@ int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNam
 	ri.Printf( PRINT_ALL, "...tr_bones checkpoint: R_LerpTag('%s') hModel=%d -- model %s, type=%d\n",
 			   tagNameIn, refent->hModel, model->name, (int)model->type );
 	return -1; // not an MD3/MDC/MDS/MDM, or tag support for this model type isn't implemented yet
+}
+
+void R_SkinMDSSurface( const mdsHeader_t *mds, const mdsSurface_t *surf, const refEntity_t *refent, vec3_t *outPos ) {
+	const int *boneRefs = (const int *)( (const byte *)surf + surf->ofsBoneReferences );
+	const mdsVertex_t *v = (const mdsVertex_t *)( (const byte *)surf + surf->ofsVerts );
+	int i, k;
+
+	R_CalcBones( (mdsHeader_t *)mds, refent, boneRefs, surf->numBoneReferences );
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		VectorClear( outPos[i] );
+		for ( k = 0; k < v->numWeights; k++ ) {
+			const mdsWeight_t *w = &v->weights[k];
+			LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bones[w->boneIndex].matrix, bones[w->boneIndex].translation, outPos[i] );
+		}
+		v = (const mdsVertex_t *)&v->weights[v->numWeights];
+	}
+}
+
+void R_SkinMDMSurface( const mdmSurface_t *surf, const refEntity_t *refent, vec3_t *outPos ) {
+	const int *boneRefs = (const int *)( (const byte *)surf + surf->ofsBoneReferences );
+	const mdmVertex_t *v = (const mdmVertex_t *)( (const byte *)surf + surf->ofsVerts );
+	qboolean skinned = R_MDM_CalcBones( refent, boneRefs, surf->numBoneReferences );
+	int i, k;
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		VectorClear( outPos[i] );
+		for ( k = 0; k < v->numWeights; k++ ) {
+			const mdmWeight_t *w = &v->weights[k];
+			if ( skinned ) {
+				LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bones[w->boneIndex].matrix, bones[w->boneIndex].translation, outPos[i] );
+			} else {
+				VectorMA( outPos[i], w->boneWeight, w->offset, outPos[i] ); // bind pose: no skeleton linked yet
+			}
+		}
+		v = (const mdmVertex_t *)&v->weights[v->numWeights];
+	}
 }
