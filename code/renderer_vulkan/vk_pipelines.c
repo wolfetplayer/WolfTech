@@ -279,7 +279,7 @@ static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipel
 	depth_stencil.flags = 0;
 	depth_stencil.depthTestEnable = depthTestEnable;
 	depth_stencil.depthWriteEnable = depthTestEnable;
-	depth_stencil.depthCompareOp = depthTestEnable ? VK_COMPARE_OP_LESS : VK_COMPARE_OP_ALWAYS;
+	depth_stencil.depthCompareOp = depthTestEnable ? VK_COMPARE_OP_LESS_OR_EQUAL : VK_COMPARE_OP_ALWAYS; // matches GL1's GL_LEQUAL default; needed so a later stage redrawing the same depth still passes
 	depth_stencil.depthBoundsTestEnable = VK_FALSE;
 	depth_stencil.stencilTestEnable = VK_FALSE;
 	memset( &depth_stencil.front, 0, sizeof( depth_stencil.front ) );

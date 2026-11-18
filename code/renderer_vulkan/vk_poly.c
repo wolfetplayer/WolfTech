@@ -90,14 +90,11 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 	for ( i = 0; i < numPolys; i++ ) {
 		const scenePoly_t *poly = &polys[i];
 		shader_t *shader = R_GetShaderByHandle( poly->shader );
-		const shaderStage_t *stage = &shader->stages[0];
-		VkPipeline pipeline;
 		uint32_t firstVert = writeOffset;
 		uint32_t vertCount;
-		int v;
+		int v, s;
 
-		if ( poly->numVerts < 3 || !shader->stages[0].image || shader->stages[0].image->vk_descriptor == VK_NULL_HANDLE ||
-			 writeOffset + (uint32_t)( poly->numVerts - 2 ) * 3 > POLY_SCRATCH_VERTS ) {
+		if ( poly->numVerts < 3 || writeOffset + (uint32_t)( poly->numVerts - 2 ) * 3 > POLY_SCRATCH_VERTS ) {
 			continue;
 		}
 
@@ -109,14 +106,24 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 		}
 		vertCount = writeOffset - firstVert;
 
-		pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-			vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );
-		if ( pipeline != boundPipeline ) {
-			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-			boundPipeline = pipeline;
+		// Every stage redraws the same triangles, layered in shader-script order.
+		for ( s = 0; s < shader->numStages; s++ ) {
+			const shaderStage_t *stage = &shader->stages[s];
+			VkPipeline pipeline;
+
+			if ( !stage->image || stage->image->vk_descriptor == VK_NULL_HANDLE ) {
+				continue;
+			}
+
+			pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );
+			if ( pipeline != boundPipeline ) {
+				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+				boundPipeline = pipeline;
+			}
+			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+				0, 1, &stage->image->vk_descriptor, 0, NULL );
+			qvkCmdDraw( vk.command_buffer, vertCount, 1, firstVert, 0 );
 		}
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-			0, 1, &shader->stages[0].image->vk_descriptor, 0, NULL );
-		qvkCmdDraw( vk.command_buffer, vertCount, 1, firstVert, 0 );
 	}
 }

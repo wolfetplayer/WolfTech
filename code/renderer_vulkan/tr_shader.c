@@ -156,10 +156,11 @@ static qboolean ParseShader( const char *name, char **text ) {
 		if ( token[0] == '}' ) {
 			break;
 		} else if ( token[0] == '{' ) {
-			if ( rawStageCount == 0 ) {
-				ParseStage( &tempShader.stages[0], text );
+			if ( rawStageCount < MAX_SHADER_STAGES ) {
+				ParseStage( &tempShader.stages[rawStageCount], text );
 			} else {
 				ParseStage( &throwaway, text );
+				ri.Printf( PRINT_WARNING, "WARNING: too many stages in shader %s (max is %i)\n", name, MAX_SHADER_STAGES );
 			}
 			rawStageCount++;
 		} else if ( !Q_stricmp( token, "nomipmaps" ) ) {
@@ -189,8 +190,10 @@ static qboolean ParseShader( const char *name, char **text ) {
 	}
 	if ( rawStageCount == 0 ) {
 		tempShader.stages[0].image = R_GetDefaultImage(); // sky-only shader -- stages[0] is unused but kept non-null
+		tempShader.numStages = 1;
+	} else {
+		tempShader.numStages = ( rawStageCount < MAX_SHADER_STAGES ) ? rawStageCount : MAX_SHADER_STAGES;
 	}
-	tempShader.numStages = 1;
 
 	if ( numShaders >= MAX_SHADERS ) {
 		ri.Printf( PRINT_WARNING, "MAX_SHADERS hit, dropping shader '%s'\n", name );

@@ -1,4 +1,4 @@
-// tr_shader.h -- trimmed shader-script parser; only keeps stage 0's image/blendfunc/alphaFunc plus the shader's cull type.
+// tr_shader.h -- trimmed shader-script parser; keeps every stage's image/blendfunc/alphaFunc plus the shader's cull type.
 
 #ifndef TR_SHADER_H_
 #define TR_SHADER_H_
@@ -6,6 +6,7 @@
 #include "tr_image.h"
 
 #define MAX_SHADERS     8192
+#define MAX_SHADER_STAGES 8
 
 // Matches code/renderer/tr_local.h's cullType_t.
 typedef enum {
@@ -34,7 +35,7 @@ typedef struct shader_s {
 	image_t *skyOuterBox[6]; // rt, lf, bk, ft, up, dn -- see ParseSkyParms
 
 	int numStages;
-	shaderStage_t stages[1]; // only stages[0] is ever drawn; extras just parse
+	shaderStage_t stages[MAX_SHADER_STAGES];
 } shader_t;
 
 void R_InitShaders( void );

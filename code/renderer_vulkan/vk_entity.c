@@ -433,26 +433,32 @@ doneCollecting:
 
 		for ( i = 0; i < numDraws; i++ ) {
 			shader_t *shaderPtr = R_GetShaderByHandle( s_draws[i].shader );
-			const shaderStage_t *stage;
-			VkPipeline pipeline;
+			int s;
 
-			if ( !shaderPtr || shaderPtr->numStages < 1 || !shaderPtr->stages[0].image ||
-				 shaderPtr->stages[0].image->vk_descriptor == VK_NULL_HANDLE ) {
+			if ( !shaderPtr || shaderPtr->numStages < 1 ) {
 				continue;
 			}
-			stage = &shaderPtr->stages[0];
 
-			// Per-surface, not per-entity: a skin's opaque body and blended visor can differ.
-			pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-				vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc );
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
+			// Every stage redraws the same indices/vertices, layered in shader-script order.
+			for ( s = 0; s < shaderPtr->numStages; s++ ) {
+				const shaderStage_t *stage = &shaderPtr->stages[s];
+				VkPipeline pipeline;
+
+				if ( !stage->image || stage->image->vk_descriptor == VK_NULL_HANDLE ) {
+					continue;
+				}
+
+				pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+					vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc );
+				if ( pipeline != boundPipeline ) {
+					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+					boundPipeline = pipeline;
+				}
+
+				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+					0, 1, &stage->image->vk_descriptor, 0, NULL );
+				qvkCmdDrawIndexed( vk.command_buffer, s_draws[i].idxCount, 1, s_draws[i].idxBase, (int32_t)s_draws[i].vertBase, 0 );
 			}
-
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stage->image->vk_descriptor, 0, NULL );
-			qvkCmdDrawIndexed( vk.command_buffer, s_draws[i].idxCount, 1, s_draws[i].idxBase, (int32_t)s_draws[i].vertBase, 0 );
 		}
 	}
 }
