@@ -7,6 +7,7 @@
 #include "vk_pipelines.h"
 #include "tr_image.h"
 #include "tr_shader.h"
+#include "tr_shade_calc.h"
 #include "tr_model.h"
 #include "tr_skin.h"
 #include "tr_bones.h"
@@ -25,12 +26,20 @@
 #define MDC_DIST_SCALE 0.05f
 #define MDC_MAX_OFS 127.0f
 
-// MDS_MAX_VERTS/MDM_MAX_VERTS are both 6000; sized with headroom for a single surface's skinned positions.
+// MDS_MAX_VERTS/MDM_MAX_VERTS are both 6000; also the cap for the base-vertex buffer below.
 #define SKIN_SCRATCH_VERTS 8192
 static vec3_t s_skinScratch[SKIN_SCRATCH_VERTS];
 
+// Position + UV only, before any per-stage rgbGen/alphaGen/tcMod or shader-level deformVertexes is applied.
 typedef struct {
-	uint32_t vertBase;
+	float pos[3];
+	float uv[2];
+} entityBaseVert_t;
+static entityBaseVert_t s_baseScratch[SKIN_SCRATCH_VERTS];
+
+typedef struct {
+	uint32_t vertBase; // stage s's copy of this surface lives at vertBase + s*numVerts
+	uint32_t numVerts;
 	uint32_t idxBase;
 	uint32_t idxCount;
 	qhandle_t shader;
@@ -106,8 +115,8 @@ qboolean vk_entity_has_mesh( const refEntity_t *ent ) {
 		   ( model->type == MOD_MDS && model->mds ) || ( model->type == MOD_MDM && model->mdm );
 }
 
-// xyz is model-local (frontlerp*frame + backlerp*oldframe, MD3_XYZ_SCALE applied), then placed by the entity's axis/origin; tint is from ComputeEntityTint.
-static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, int frame, int oldframe, float backlerp, const byte tint[4], vk2d_vertex_t *out ) {
+// xyz is model-local (frontlerp*frame + backlerp*oldframe, MD3_XYZ_SCALE applied), then placed by the entity's axis/origin.
+static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, int frame, int oldframe, float backlerp, entityBaseVert_t *out ) {
 	const md3XyzNormal_t *base = (const md3XyzNormal_t *)( (const byte *)surf + surf->ofsXyzNormals );
 	const md3XyzNormal_t *newXyz = base + (size_t)frame * surf->numVerts;
 	const md3XyzNormal_t *oldXyz = base + (size_t)oldframe * surf->numVerts;
@@ -125,7 +134,6 @@ static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, 
 		out[i].pos[1] = ent->origin[1] + local[0] * ent->axis[0][1] + local[1] * ent->axis[1][1] + local[2] * ent->axis[2][1];
 		out[i].pos[2] = ent->origin[2] + local[0] * ent->axis[0][2] + local[1] * ent->axis[1][2] + local[2] * ent->axis[2][2];
 
-		out[i].color[0] = tint[0]; out[i].color[1] = tint[1]; out[i].color[2] = tint[2]; out[i].color[3] = tint[3];
 		out[i].uv[0] = st[i].st[0];
 		out[i].uv[1] = st[i].st[1];
 	}
@@ -146,7 +154,7 @@ static void DecodeMDCVertex( const md3XyzNormal_t *base, const mdcXyzCompressed_
 }
 
 // Each actual frame maps to a base frame (full position) plus an optional compressed delta against it.
-static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *surf, int frame, int oldframe, float backlerp, const byte tint[4], vk2d_vertex_t *out ) {
+static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *surf, int frame, int oldframe, float backlerp, entityBaseVert_t *out ) {
 	const short *frameBaseFrames = (const short *)( (const byte *)surf + surf->ofsFrameBaseFrames );
 	const short *frameCompFrames = (const short *)( (const byte *)surf + surf->ofsFrameCompFrames );
 	const md3XyzNormal_t *baseArray = (const md3XyzNormal_t *)( (const byte *)surf + surf->ofsXyzNormals );
@@ -176,20 +184,16 @@ static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *sur
 		out[i].pos[1] = ent->origin[1] + local[0] * ent->axis[0][1] + local[1] * ent->axis[1][1] + local[2] * ent->axis[2][1];
 		out[i].pos[2] = ent->origin[2] + local[0] * ent->axis[0][2] + local[1] * ent->axis[1][2] + local[2] * ent->axis[2][2];
 
-		out[i].color[0] = tint[0]; out[i].color[1] = tint[1]; out[i].color[2] = tint[2]; out[i].color[3] = tint[3];
 		out[i].uv[0] = st[i].st[0];
 		out[i].uv[1] = st[i].st[1];
 	}
 }
 
 // Skins into s_skinScratch (model-local), then places by the entity's axis/origin like the MD3/MDC frame-morph verts.
-static void LerpMDSSurfaceVerts( const refEntity_t *ent, const mdsHeader_t *mds, const mdsSurface_t *surf, const byte tint[4], vk2d_vertex_t *out ) {
+static void LerpMDSSurfaceVerts( const refEntity_t *ent, const mdsHeader_t *mds, const mdsSurface_t *surf, entityBaseVert_t *out ) {
 	const mdsVertex_t *v = (const mdsVertex_t *)( (const byte *)surf + surf->ofsVerts );
 	int i;
 
-	if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
-		return;
-	}
 	R_SkinMDSSurface( mds, surf, ent, s_skinScratch );
 
 	for ( i = 0; i < surf->numVerts; i++ ) {
@@ -199,7 +203,6 @@ static void LerpMDSSurfaceVerts( const refEntity_t *ent, const mdsHeader_t *mds,
 		out[i].pos[1] = ent->origin[1] + local[0] * ent->axis[0][1] + local[1] * ent->axis[1][1] + local[2] * ent->axis[2][1];
 		out[i].pos[2] = ent->origin[2] + local[0] * ent->axis[0][2] + local[1] * ent->axis[1][2] + local[2] * ent->axis[2][2];
 
-		out[i].color[0] = tint[0]; out[i].color[1] = tint[1]; out[i].color[2] = tint[2]; out[i].color[3] = tint[3];
 		out[i].uv[0] = v->texCoords[0];
 		out[i].uv[1] = v->texCoords[1];
 
@@ -207,13 +210,10 @@ static void LerpMDSSurfaceVerts( const refEntity_t *ent, const mdsHeader_t *mds,
 	}
 }
 
-static void LerpMDMSurfaceVerts( const refEntity_t *ent, const mdmSurface_t *surf, const byte tint[4], vk2d_vertex_t *out ) {
+static void LerpMDMSurfaceVerts( const refEntity_t *ent, const mdmSurface_t *surf, entityBaseVert_t *out ) {
 	const mdmVertex_t *v = (const mdmVertex_t *)( (const byte *)surf + surf->ofsVerts );
 	int i;
 
-	if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
-		return;
-	}
 	R_SkinMDMSurface( surf, ent, s_skinScratch );
 
 	for ( i = 0; i < surf->numVerts; i++ ) {
@@ -223,7 +223,6 @@ static void LerpMDMSurfaceVerts( const refEntity_t *ent, const mdmSurface_t *sur
 		out[i].pos[1] = ent->origin[1] + local[0] * ent->axis[0][1] + local[1] * ent->axis[1][1] + local[2] * ent->axis[2][1];
 		out[i].pos[2] = ent->origin[2] + local[0] * ent->axis[0][2] + local[1] * ent->axis[1][2] + local[2] * ent->axis[2][2];
 
-		out[i].color[0] = tint[0]; out[i].color[1] = tint[1]; out[i].color[2] = tint[2]; out[i].color[3] = tint[3];
 		out[i].uv[0] = v->texCoords[0];
 		out[i].uv[1] = v->texCoords[1];
 
@@ -292,13 +291,39 @@ static qhandle_t ResolveShader( qhandle_t customShader, qhandle_t customSkin, co
 	return ResolveShaderDirect( customShader, customSkin, surfaceName, baked );
 }
 
-static qboolean ReserveSurface( int numVerts, int numTriangles, uint32_t vertWrite, uint32_t idxWrite, int numDraws ) {
-	return numDraws < ENTITY_MAX_DRAWS && vertWrite + (uint32_t)numVerts <= ENTITY_MAX_VERTS &&
+// Each stage gets its own contiguous copy of the surface at out[s*numVerts .. s*numVerts+numVerts-1].
+static void WriteStageVertices( const shader_t *shader, const byte *entityColor, const byte *lightingTint,
+								 int numVerts, const entityBaseVert_t *base, vk2d_vertex_t *out ) {
+	int v, s;
+	static const byte baseColor[4] = { 255, 255, 255, 255 }; // models carry no inherent per-vertex color
+
+	for ( v = 0; v < numVerts; v++ ) {
+		float deformed[3];
+		R_DeformPosition( shader, base[v].pos, deformed );
+
+		for ( s = 0; s < shader->numStages; s++ ) {
+			const shaderStage_t *stage = &shader->stages[s];
+			vk2d_vertex_t *dst = &out[(uint32_t)s * (uint32_t)numVerts + (uint32_t)v];
+			byte color[4];
+			float st[2];
+
+			R_CalcStageColorAlpha( stage, entityColor, lightingTint, baseColor, color );
+			R_CalcStageTexCoord( stage, base[v].uv[0], base[v].uv[1], deformed, st );
+
+			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
+			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
+			dst->uv[0] = st[0]; dst->uv[1] = st[1];
+		}
+	}
+}
+
+static qboolean ReserveSurface( int numVerts, int numStages, int numTriangles, uint32_t vertWrite, uint32_t idxWrite, int numDraws ) {
+	return numDraws < ENTITY_MAX_DRAWS && vertWrite + (uint32_t)numVerts * (uint32_t)numStages <= ENTITY_MAX_VERTS &&
 		   idxWrite + (uint32_t)numTriangles * 3 <= ENTITY_MAX_INDEXES;
 }
 
-// Copies triangle indices (local to this surface's own vertex range, matching vertexOffset at draw time) and records the draw call.
-static void CommitSurface( int numVerts, int numTriangles, const void *trianglesPtr, qhandle_t shader,
+// Copies triangle indices once (shared by every stage via vertexOffset at draw time) and records the draw call.
+static void CommitSurface( int numVerts, int numStages, int numTriangles, const void *trianglesPtr, qhandle_t shader,
 							uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
 	const md3Triangle_t *tri = (const md3Triangle_t *)trianglesPtr;
 	int i;
@@ -310,12 +335,13 @@ static void CommitSurface( int numVerts, int numTriangles, const void *triangles
 	}
 
 	s_draws[*numDraws].vertBase = *vertWrite;
+	s_draws[*numDraws].numVerts = (uint32_t)numVerts;
 	s_draws[*numDraws].idxBase = *idxWrite;
 	s_draws[*numDraws].idxCount = (uint32_t)numTriangles * 3;
 	s_draws[*numDraws].shader = shader;
 	(*numDraws)++;
 
-	*vertWrite += (uint32_t)numVerts;
+	*vertWrite += (uint32_t)numVerts * (uint32_t)numStages;
 	*idxWrite += (uint32_t)numTriangles * 3;
 }
 
@@ -342,15 +368,23 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			if ( oldframe < 0 || oldframe >= model->md3->numFrames ) oldframe = 0;
 
 			for ( s = 0; s < model->md3->numSurfaces; s++ ) {
-				if ( !ReserveSurface( surf->numVerts, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
+				qhandle_t shaderHandle = ResolveShader( ent->customShader, ent->customSkin, surf->name,
+					surf->numShaders, (const byte *)surf + surf->ofsShaders );
+				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
+
+				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+					goto nextMD3;
+				}
+				if ( !ReserveSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
 					goto overflow;
 				}
 
-				LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, tint, &s_vertexMapped[vertWrite] );
-				CommitSurface( surf->numVerts, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					ResolveShader( ent->customShader, ent->customSkin, surf->name, surf->numShaders, (const byte *)surf + surf->ofsShaders ),
-					&vertWrite, &idxWrite, &numDraws );
+				LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+				WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, surf->numVerts, s_baseScratch, &s_vertexMapped[vertWrite] );
+				CommitSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
+					shaderHandle, &vertWrite, &idxWrite, &numDraws );
 
+			nextMD3:
 				surf = (const md3Surface_t *)( (const byte *)surf + surf->ofsEnd );
 			}
 		} else if ( model->type == MOD_MDC && model->mdc ) {
@@ -360,45 +394,67 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			if ( oldframe < 0 || oldframe >= model->mdc->numFrames ) oldframe = 0;
 
 			for ( s = 0; s < model->mdc->numSurfaces; s++ ) {
-				if ( !ReserveSurface( surf->numVerts, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
+				qhandle_t shaderHandle = ResolveShader( ent->customShader, ent->customSkin, surf->name,
+					surf->numShaders, (const byte *)surf + surf->ofsShaders );
+				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
+
+				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+					goto nextMDC;
+				}
+				if ( !ReserveSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
 					goto overflow;
 				}
 
-				LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, tint, &s_vertexMapped[vertWrite] );
-				CommitSurface( surf->numVerts, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					ResolveShader( ent->customShader, ent->customSkin, surf->name, surf->numShaders, (const byte *)surf + surf->ofsShaders ),
-					&vertWrite, &idxWrite, &numDraws );
+				LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+				WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, surf->numVerts, s_baseScratch, &s_vertexMapped[vertWrite] );
+				CommitSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
+					shaderHandle, &vertWrite, &idxWrite, &numDraws );
 
+			nextMDC:
 				surf = (const mdcSurface_t *)( (const byte *)surf + surf->ofsEnd );
 			}
 		} else if ( model->type == MOD_MDS && model->mds ) {
 			const mdsSurface_t *surf = (const mdsSurface_t *)( (const byte *)model->mds + model->mds->ofsSurfaces );
 
 			for ( s = 0; s < model->mds->numSurfaces; s++ ) {
-				if ( !ReserveSurface( surf->numVerts, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
+				qhandle_t shaderHandle = ResolveShaderDirect( ent->customShader, ent->customSkin, surf->name, surf->shaderIndex );
+				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
+
+				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+					goto nextMDS;
+				}
+				if ( !ReserveSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
 					goto overflow;
 				}
 
-				LerpMDSSurfaceVerts( ent, model->mds, surf, tint, &s_vertexMapped[vertWrite] );
-				CommitSurface( surf->numVerts, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					ResolveShaderDirect( ent->customShader, ent->customSkin, surf->name, surf->shaderIndex ),
-					&vertWrite, &idxWrite, &numDraws );
+				LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
+				WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, surf->numVerts, s_baseScratch, &s_vertexMapped[vertWrite] );
+				CommitSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
+					shaderHandle, &vertWrite, &idxWrite, &numDraws );
 
+			nextMDS:
 				surf = (const mdsSurface_t *)( (const byte *)surf + surf->ofsEnd );
 			}
 		} else if ( model->type == MOD_MDM && model->mdm ) {
 			const mdmSurface_t *surf = (const mdmSurface_t *)( (const byte *)model->mdm + model->mdm->ofsSurfaces );
 
 			for ( s = 0; s < model->mdm->numSurfaces; s++ ) {
-				if ( !ReserveSurface( surf->numVerts, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
+				qhandle_t shaderHandle = ResolveShaderDirect( ent->customShader, ent->customSkin, surf->name, surf->shaderIndex );
+				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
+
+				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+					goto nextMDM;
+				}
+				if ( !ReserveSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
 					goto overflow;
 				}
 
-				LerpMDMSurfaceVerts( ent, surf, tint, &s_vertexMapped[vertWrite] );
-				CommitSurface( surf->numVerts, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					ResolveShaderDirect( ent->customShader, ent->customSkin, surf->name, surf->shaderIndex ),
-					&vertWrite, &idxWrite, &numDraws );
+				LerpMDMSurfaceVerts( ent, surf, s_baseScratch );
+				WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, surf->numVerts, s_baseScratch, &s_vertexMapped[vertWrite] );
+				CommitSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
+					shaderHandle, &vertWrite, &idxWrite, &numDraws );
 
+			nextMDM:
 				surf = (const mdmSurface_t *)( (const byte *)surf + surf->ofsEnd );
 			}
 		}
@@ -457,7 +513,8 @@ doneCollecting:
 
 				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
 					0, 1, &stage->image->vk_descriptor, 0, NULL );
-				qvkCmdDrawIndexed( vk.command_buffer, s_draws[i].idxCount, 1, s_draws[i].idxBase, (int32_t)s_draws[i].vertBase, 0 );
+				qvkCmdDrawIndexed( vk.command_buffer, s_draws[i].idxCount, 1, s_draws[i].idxBase,
+					(int32_t)( s_draws[i].vertBase + (uint32_t)s * s_draws[i].numVerts ), 0 );
 			}
 		}
 	}

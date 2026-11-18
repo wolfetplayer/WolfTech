@@ -53,6 +53,9 @@ typedef struct {
 	int numSubmodels;
 	dmodel_t *submodels;
 
+	char *entityString; // raw LUMP_ENTITIES text, null-terminated; read token-by-token by R_GetEntityToken
+	char *entityParsePoint;
+
 	int numClusters;
 	int clusterBytes;
 	byte *visData; // NULL if the map has no LUMP_VISIBILITY data
@@ -76,5 +79,8 @@ typedef struct {
 extern bspWorld_t tr_world;
 
 void RE_LoadWorldMap( const char *name );
+
+// Shares the client's already-loaded vis data (RE_SetWorldVisData) instead of allocating a second copy.
+void R_SetExternalVisData( const byte *vis );
 
 #endif // TR_BSP_H_

@@ -44,6 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_skin.h"
 #include "tr_light.h"
 #include "tr_fog.h"
+#include "tr_shade_calc.h"
 #include "tr_scene.h"
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
@@ -206,6 +207,7 @@ static void RE_RenderScene( const refdef_t *fd ) {
 	}
 
 	R_SetFogFrameTime( fd->time );
+	R_SetShaderTime( fd->time );
 	R_GetFogPushConstants( fd->vieworg, fogPush );
 
 	R_SetupViewMatrix( fd, viewMatrix );
@@ -326,22 +328,23 @@ static void R_ModelBounds( qhandle_t model, vec3_t mins, vec3_t maxs ) {
 	VectorClear( maxs );
 }
 
-static void R_RemapShader( const char *oldShader, const char *newShader, const char *offsetTime ) {
-	FIRST_CALL_CHECKPOINT( "R_RemapShader" );
-	(void)oldShader; (void)newShader; (void)offsetTime;
-}
+// Real R_RemapShader lives in tr_shader.c.
 
 static void RB_ZombieFXAddNewHit( int entityNum, const vec3_t hitPos, const vec3_t hitDir ) {
 	FIRST_CALL_CHECKPOINT( "RB_ZombieFXAddNewHit" );
 	(void)entityNum; (void)hitPos; (void)hitDir;
 }
 
+// Hands cgame the BSP's raw entity-lump text one COM_Parse token at a time; wraps back to the start at EOF.
 static qboolean R_GetEntityToken( char *buffer, int size ) {
-	FIRST_CALL_CHECKPOINT( "R_GetEntityToken" );
-	if ( buffer && size > 0 ) {
-		buffer[0] = '\0';
+	const char *s = COM_Parse( &tr_world.entityParsePoint );
+
+	Q_strncpyz( buffer, s, size );
+	if ( !tr_world.entityParsePoint && !s[0] ) {
+		tr_world.entityParsePoint = tr_world.entityString;
+		return qfalse;
 	}
-	return qfalse;
+	return qtrue;
 }
 
 static void RE_RenderToTexture( int textureid, int x, int y, int w, int h ) {

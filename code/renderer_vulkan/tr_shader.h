@@ -1,4 +1,4 @@
-// tr_shader.h -- trimmed shader-script parser; keeps every stage's image/blendfunc/alphaFunc plus the shader's cull type.
+// tr_shader.h -- trimmed shader-script parser; see tr_shade_calc.h for what's actually evaluated.
 
 #ifndef TR_SHADER_H_
 #define TR_SHADER_H_
@@ -7,6 +7,8 @@
 
 #define MAX_SHADERS     8192
 #define MAX_SHADER_STAGES 8
+#define TR_MAX_TEXMODS 4
+#define MAX_SHADER_DEFORMS 3
 
 // Matches code/renderer/tr_local.h's cullType_t.
 typedef enum {
@@ -15,12 +17,107 @@ typedef enum {
 	CT_TWO_SIDED
 } cullType_t;
 
+// Matches vkQuake3's genFunc_t. GF_NOISE has no real Perlin noise backing it here -- see tr_shade_calc.c.
+typedef enum {
+	GF_NONE,
+	GF_SIN,
+	GF_SQUARE,
+	GF_TRIANGLE,
+	GF_SAWTOOTH,
+	GF_INVERSE_SAWTOOTH,
+	GF_NOISE
+} genFunc_t;
+
+typedef struct {
+	genFunc_t func;
+	float base, amplitude, phase, frequency;
+} waveForm_t;
+
+// Matches vkQuake3's colorGen_t/alphaGen_t; some values are fallbacks, see tr_shade_calc.c.
+typedef enum {
+	CGEN_IDENTITY_LIGHTING,
+	CGEN_IDENTITY,
+	CGEN_ENTITY,
+	CGEN_ONE_MINUS_ENTITY,
+	CGEN_EXACT_VERTEX,
+	CGEN_VERTEX,
+	CGEN_ONE_MINUS_VERTEX,
+	CGEN_WAVEFORM,
+	CGEN_LIGHTING_DIFFUSE,
+	CGEN_FOG,
+	CGEN_CONST
+} colorGen_t;
+
+typedef enum {
+	AGEN_IDENTITY,
+	AGEN_SKIP,
+	AGEN_ENTITY,
+	AGEN_ONE_MINUS_ENTITY,
+	AGEN_VERTEX,
+	AGEN_ONE_MINUS_VERTEX,
+	AGEN_LIGHTING_SPECULAR,
+	AGEN_WAVEFORM,
+	AGEN_PORTAL,
+	AGEN_CONST
+} alphaGen_t;
+
+typedef enum {
+	TMOD_NONE,
+	TMOD_TRANSFORM,
+	TMOD_TURBULENT,
+	TMOD_SCROLL,
+	TMOD_SCALE,
+	TMOD_STRETCH,
+	TMOD_ROTATE,
+	TMOD_ENTITY_TRANSLATE // parsed, evaluated as a no-op -- see tr_shade_calc.c
+} texMod_t;
+
+typedef struct {
+	texMod_t type;
+	waveForm_t wave;	// TMOD_TURBULENT, TMOD_STRETCH
+	float matrix[2][2];	// TMOD_TRANSFORM: s' = s*m[0][0] + t*m[1][0] + translate[0]
+	float translate[2];
+	float scale[2];		// TMOD_SCALE
+	float scroll[2];	// TMOD_SCROLL
+	float rotateSpeed;	// TMOD_ROTATE
+} texModInfo_t;
+
+// Matches vkQuake3's deform_t; only DEFORM_MOVE is evaluated, see tr_shade_calc.c. TEXT0-7 collapse to one value.
+typedef enum {
+	DEFORM_NONE,
+	DEFORM_WAVE,
+	DEFORM_NORMALS,
+	DEFORM_BULGE,
+	DEFORM_MOVE,
+	DEFORM_PROJECTION_SHADOW,
+	DEFORM_AUTOSPRITE,
+	DEFORM_AUTOSPRITE2,
+	DEFORM_TEXT
+} deform_t;
+
+typedef struct {
+	deform_t deformation;
+	vec3_t moveVector;		// DEFORM_MOVE
+	waveForm_t deformationWave;	// DEFORM_WAVE, DEFORM_MOVE, DEFORM_NORMALS
+	float deformationSpread;	// DEFORM_WAVE
+	float bulgeWidth, bulgeHeight, bulgeSpeed; // DEFORM_BULGE
+} deformStage_t;
+
 typedef struct shaderStage_s {
 	image_t *image;
 	VkBlendFactor srcBlend;
 	VkBlendFactor dstBlend;
 	qboolean blendEnabled;
 	int alphaTestFunc; // 0=none, 1=GT0, 2=LT128, 3=GE128
+
+	colorGen_t rgbGen;
+	waveForm_t rgbWave;
+	alphaGen_t alphaGen;
+	waveForm_t alphaWave;
+	byte constantColor[4]; // CGEN_CONST (rgb) / AGEN_CONST (alpha)
+
+	int numTexMods;
+	texModInfo_t texMods[TR_MAX_TEXMODS];
 } shaderStage_t;
 
 typedef struct shader_s {
@@ -36,6 +133,11 @@ typedef struct shader_s {
 
 	int numStages;
 	shaderStage_t stages[MAX_SHADER_STAGES];
+
+	int numDeforms;
+	deformStage_t deforms[MAX_SHADER_DEFORMS];
+
+	qhandle_t remappedShader; // set by R_RemapShader; 0 means "no remap" (ambiguous with a remap to *default itself)
 } shader_t;
 
 void R_InitShaders( void );
@@ -47,5 +149,8 @@ shader_t *R_GetDefaultShader( void );
 
 // Wraps an already-built image_t in a plain alpha-blended single-stage shader.
 qhandle_t RE_RegisterShaderFromImage( const char *name, image_t *image );
+
+// R_GetShaderByHandle shows newShaderName's appearance for oldShaderName until remapped again; offsetTime is unused.
+void R_RemapShader( const char *oldShaderName, const char *newShaderName, const char *offsetTime );
 
 #endif // TR_SHADER_H_

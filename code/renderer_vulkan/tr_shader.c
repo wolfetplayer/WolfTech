@@ -1,6 +1,7 @@
 // tr_shader.c -- trimmed shader-script parser, see tr_shader.h.
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "tr_local.h"
 #include "tr_shader.h"
@@ -45,6 +46,81 @@ static int NameToAlphaTestFunc( const char *name ) {
 	return 0;
 }
 
+static genFunc_t NameToGenFunc( const char *name ) {
+	if ( !Q_stricmp( name, "sin" ) ) return GF_SIN;
+	if ( !Q_stricmp( name, "square" ) ) return GF_SQUARE;
+	if ( !Q_stricmp( name, "triangle" ) ) return GF_TRIANGLE;
+	if ( !Q_stricmp( name, "sawtooth" ) ) return GF_SAWTOOTH;
+	if ( !Q_stricmp( name, "inversesawtooth" ) ) return GF_INVERSE_SAWTOOTH;
+	if ( !Q_stricmp( name, "noise" ) ) return GF_NOISE;
+	return GF_NONE;
+}
+
+// func base amplitude phase frequency
+static void ParseWaveForm( char **text, waveForm_t *wave ) {
+	wave->func = NameToGenFunc( COM_ParseExt( text, qfalse ) );
+	wave->base = (float)atof( COM_ParseExt( text, qfalse ) );
+	wave->amplitude = (float)atof( COM_ParseExt( text, qfalse ) );
+	wave->phase = (float)atof( COM_ParseExt( text, qfalse ) );
+	wave->frequency = (float)atof( COM_ParseExt( text, qfalse ) );
+}
+
+// tcMod turb|scale|scroll|stretch|transform|rotate|entityTranslate <...>; appends to stage->texMods.
+static void ParseTexMod( char **text, shaderStage_t *stage ) {
+	char *token;
+	texModInfo_t *tmi;
+
+	if ( stage->numTexMods >= TR_MAX_TEXMODS ) {
+		ri.Printf( PRINT_WARNING, "WARNING: too many tcMod stages\n" );
+		SkipRestOfLine( text );
+		return;
+	}
+	tmi = &stage->texMods[stage->numTexMods];
+
+	token = COM_ParseExt( text, qfalse );
+	if ( !Q_stricmp( token, "turb" ) ) {
+		tmi->wave.base = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->wave.amplitude = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->wave.phase = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->wave.frequency = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->type = TMOD_TURBULENT;
+	} else if ( !Q_stricmp( token, "scale" ) ) {
+		tmi->scale[0] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->scale[1] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->type = TMOD_SCALE;
+	} else if ( !Q_stricmp( token, "scroll" ) ) {
+		tmi->scroll[0] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->scroll[1] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->type = TMOD_SCROLL;
+	} else if ( !Q_stricmp( token, "stretch" ) ) {
+		tmi->wave.func = NameToGenFunc( COM_ParseExt( text, qfalse ) );
+		tmi->wave.base = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->wave.amplitude = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->wave.phase = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->wave.frequency = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->type = TMOD_STRETCH;
+	} else if ( !Q_stricmp( token, "transform" ) ) {
+		tmi->matrix[0][0] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->matrix[0][1] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->matrix[1][0] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->matrix[1][1] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->translate[0] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->translate[1] = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->type = TMOD_TRANSFORM;
+	} else if ( !Q_stricmp( token, "rotate" ) ) {
+		tmi->rotateSpeed = (float)atof( COM_ParseExt( text, qfalse ) );
+		tmi->type = TMOD_ROTATE;
+	} else if ( !Q_stricmp( token, "entitytranslate" ) ) {
+		tmi->type = TMOD_ENTITY_TRANSLATE;
+	} else {
+		ri.Printf( PRINT_WARNING, "WARNING: unknown tcMod '%s'\n", token );
+		SkipRestOfLine( text );
+		return;
+	}
+	stage->numTexMods++;
+	SkipRestOfLine( text );
+}
+
 static void ParseStage( shaderStage_t *stage, char **text ) {
 	char *token;
 	char imageName[MAX_QPATH];
@@ -52,8 +128,18 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	VkBlendFactor srcBlend = VK_BLEND_FACTOR_ONE;
 	VkBlendFactor dstBlend = VK_BLEND_FACTOR_ZERO;
 	int alphaTestFunc = 0;
+	colorGen_t rgbGen = CGEN_IDENTITY_LIGHTING;
+	qboolean rgbGenExplicit = qfalse;
+	waveForm_t rgbWave;
+	alphaGen_t alphaGen = AGEN_IDENTITY;
+	waveForm_t alphaWave;
+	byte constantColor[4];
 
 	imageName[0] = '\0';
+	memset( &rgbWave, 0, sizeof( rgbWave ) );
+	memset( &alphaWave, 0, sizeof( alphaWave ) );
+	memset( constantColor, 0, sizeof( constantColor ) );
+	memset( stage, 0, sizeof( *stage ) ); // numTexMods must start at 0 -- ParseTexMod writes stage->texMods directly as it parses
 
 	while ( 1 ) {
 		token = COM_ParseExt( text, qtrue );
@@ -95,8 +181,71 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 			token = COM_ParseExt( text, qfalse );
 			alphaTestFunc = NameToAlphaTestFunc( token );
 			SkipRestOfLine( text );
+		} else if ( !Q_stricmp( token, "rgbGen" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			rgbGenExplicit = qtrue;
+			if ( !Q_stricmp( token, "wave" ) ) {
+				ParseWaveForm( text, &rgbWave );
+				rgbGen = CGEN_WAVEFORM;
+			} else if ( !Q_stricmp( token, "const" ) ) {
+				constantColor[0] = (byte)( 255 * atof( COM_ParseExt( text, qfalse ) ) );
+				constantColor[1] = (byte)( 255 * atof( COM_ParseExt( text, qfalse ) ) );
+				constantColor[2] = (byte)( 255 * atof( COM_ParseExt( text, qfalse ) ) );
+				rgbGen = CGEN_CONST;
+			} else if ( !Q_stricmp( token, "identity" ) ) {
+				rgbGen = CGEN_IDENTITY;
+			} else if ( !Q_stricmp( token, "identitylighting" ) ) {
+				rgbGen = CGEN_IDENTITY_LIGHTING;
+			} else if ( !Q_stricmp( token, "entity" ) ) {
+				rgbGen = CGEN_ENTITY;
+			} else if ( !Q_stricmp( token, "oneminusentity" ) ) {
+				rgbGen = CGEN_ONE_MINUS_ENTITY;
+			} else if ( !Q_stricmp( token, "vertex" ) ) {
+				rgbGen = CGEN_VERTEX;
+				if ( alphaGen == AGEN_IDENTITY ) {
+					alphaGen = AGEN_VERTEX;
+				}
+			} else if ( !Q_stricmp( token, "exactvertex" ) ) {
+				rgbGen = CGEN_EXACT_VERTEX;
+			} else if ( !Q_stricmp( token, "lightingdiffuse" ) ) {
+				rgbGen = CGEN_LIGHTING_DIFFUSE;
+			} else if ( !Q_stricmp( token, "oneminusvertex" ) ) {
+				rgbGen = CGEN_ONE_MINUS_VERTEX;
+			} else {
+				ri.Printf( PRINT_WARNING, "WARNING: unknown rgbGen '%s'\n", token );
+			}
+			SkipRestOfLine( text );
+		} else if ( !Q_stricmp( token, "alphaGen" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( !Q_stricmp( token, "wave" ) ) {
+				ParseWaveForm( text, &alphaWave );
+				alphaGen = AGEN_WAVEFORM;
+			} else if ( !Q_stricmp( token, "const" ) ) {
+				constantColor[3] = (byte)( 255 * atof( COM_ParseExt( text, qfalse ) ) );
+				alphaGen = AGEN_CONST;
+			} else if ( !Q_stricmp( token, "identity" ) ) {
+				alphaGen = AGEN_IDENTITY;
+			} else if ( !Q_stricmp( token, "entity" ) ) {
+				alphaGen = AGEN_ENTITY;
+			} else if ( !Q_stricmp( token, "oneminusentity" ) ) {
+				alphaGen = AGEN_ONE_MINUS_ENTITY;
+			} else if ( !Q_stricmp( token, "vertex" ) ) {
+				alphaGen = AGEN_VERTEX;
+			} else if ( !Q_stricmp( token, "lightingspecular" ) ) {
+				alphaGen = AGEN_LIGHTING_SPECULAR;
+			} else if ( !Q_stricmp( token, "oneminusvertex" ) ) {
+				alphaGen = AGEN_ONE_MINUS_VERTEX;
+			} else if ( !Q_stricmp( token, "portal" ) ) {
+				alphaGen = AGEN_PORTAL;
+				COM_ParseExt( text, qfalse ); // portal range -- unused, no portal/mirror support yet
+			} else {
+				ri.Printf( PRINT_WARNING, "WARNING: unknown alphaGen '%s'\n", token );
+			}
+			SkipRestOfLine( text );
+		} else if ( !Q_stricmp( token, "tcMod" ) ) {
+			ParseTexMod( text, stage );
 		} else {
-			// rgbGen, tcMod, depthFunc, etc. -- parsed-and-discarded, see tr_shader.h.
+			// tcGen, depthFunc, detail, etc. -- parsed-and-discarded.
 			SkipRestOfLine( text );
 		}
 	}
@@ -105,6 +254,20 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	stage->srcBlend = srcBlend;
 	stage->dstBlend = dstBlend;
 	stage->alphaTestFunc = alphaTestFunc;
+
+	// If rgbGen wasn't given explicitly, default depends on blend (matches code/renderer's ParseStage).
+	if ( !rgbGenExplicit ) {
+		rgbGen = ( !hasBlend || srcBlend == VK_BLEND_FACTOR_ONE || srcBlend == VK_BLEND_FACTOR_SRC_ALPHA ) ?
+			CGEN_IDENTITY_LIGHTING : CGEN_IDENTITY;
+	}
+	if ( alphaGen == AGEN_IDENTITY && ( rgbGen == CGEN_IDENTITY || rgbGen == CGEN_LIGHTING_DIFFUSE ) ) {
+		alphaGen = AGEN_SKIP;
+	}
+	stage->rgbGen = rgbGen;
+	stage->rgbWave = rgbWave;
+	stage->alphaGen = alphaGen;
+	stage->alphaWave = alphaWave;
+	memcpy( stage->constantColor, constantColor, 4 );
 
 	stage->image = imageName[0] ? R_FindImageFile( imageName, IMGFLAG_NONE ) : NULL;
 	if ( !stage->image ) {
@@ -134,6 +297,57 @@ static void ParseSkyParms( shader_t *shader, char **text ) {
 	}
 
 	SkipRestOfLine( text ); // cloudheight, innerbox
+}
+
+// deformVertexes wave|normal|bulge|move|autosprite|autosprite2|projectionShadow|text[0-7]; appends to shader->deforms.
+static void ParseDeform( shader_t *shader, char **text ) {
+	char *token;
+	deformStage_t *ds;
+
+	if ( shader->numDeforms >= MAX_SHADER_DEFORMS ) {
+		ri.Printf( PRINT_WARNING, "WARNING: MAX_SHADER_DEFORMS hit in shader '%s'\n", shader->name );
+		SkipRestOfLine( text );
+		return;
+	}
+	ds = &shader->deforms[shader->numDeforms];
+
+	token = COM_ParseExt( text, qfalse );
+	if ( !Q_stricmp( token, "projectionshadow" ) ) {
+		ds->deformation = DEFORM_PROJECTION_SHADOW;
+	} else if ( !Q_stricmp( token, "autosprite" ) ) {
+		ds->deformation = DEFORM_AUTOSPRITE;
+	} else if ( !Q_stricmp( token, "autosprite2" ) ) {
+		ds->deformation = DEFORM_AUTOSPRITE2;
+	} else if ( !Q_stricmpn( token, "text", 4 ) ) {
+		ds->deformation = DEFORM_TEXT;
+	} else if ( !Q_stricmp( token, "bulge" ) ) {
+		ds->bulgeWidth = (float)atof( COM_ParseExt( text, qfalse ) );
+		ds->bulgeHeight = (float)atof( COM_ParseExt( text, qfalse ) );
+		ds->bulgeSpeed = (float)atof( COM_ParseExt( text, qfalse ) );
+		ds->deformation = DEFORM_BULGE;
+	} else if ( !Q_stricmp( token, "wave" ) ) {
+		float div = (float)atof( COM_ParseExt( text, qfalse ) );
+		ds->deformationSpread = ( div != 0.0f ) ? 1.0f / div : 100.0f;
+		ParseWaveForm( text, &ds->deformationWave );
+		ds->deformation = DEFORM_WAVE;
+	} else if ( !Q_stricmp( token, "normal" ) ) {
+		ds->deformationWave.amplitude = (float)atof( COM_ParseExt( text, qfalse ) );
+		ds->deformationWave.frequency = (float)atof( COM_ParseExt( text, qfalse ) );
+		ds->deformation = DEFORM_NORMALS;
+	} else if ( !Q_stricmp( token, "move" ) ) {
+		int i;
+		for ( i = 0; i < 3; i++ ) {
+			ds->moveVector[i] = (float)atof( COM_ParseExt( text, qfalse ) );
+		}
+		ParseWaveForm( text, &ds->deformationWave );
+		ds->deformation = DEFORM_MOVE;
+	} else {
+		ri.Printf( PRINT_WARNING, "WARNING: unknown deformVertexes '%s' in shader '%s'\n", token, shader->name );
+		SkipRestOfLine( text );
+		return;
+	}
+	shader->numDeforms++;
+	SkipRestOfLine( text );
 }
 
 // qfalse if the shader had no usable stage (e.g. sky/portal-only).
@@ -179,8 +393,10 @@ static qboolean ParseShader( const char *name, char **text ) {
 			}
 		} else if ( !Q_stricmp( token, "skyparms" ) ) {
 			ParseSkyParms( &tempShader, text );
+		} else if ( !Q_stricmp( token, "deformVertexes" ) ) {
+			ParseDeform( &tempShader, text );
 		} else {
-			// sort, fogParms, deformVertexes, etc. -- parsed-and-discarded.
+			// sort, fogParms, etc. -- parsed-and-discarded.
 			SkipRestOfLine( text );
 		}
 	}
@@ -410,12 +626,37 @@ qhandle_t RE_RegisterShaderFromImage( const char *name, image_t *image ) {
 }
 
 shader_t *R_GetShaderByHandle( qhandle_t hShader ) {
+	shader_t *shader;
+	int guard;
+
 	if ( hShader < 0 || hShader >= numShaders ) {
 		return &shaders[0];
 	}
-	return &shaders[hShader];
+
+	shader = &shaders[hShader];
+	// Bounded, not recursive: a remap cycle (A->B->A) stops here instead of looping forever.
+	for ( guard = 0; guard < 8 && shader->remappedShader; guard++ ) {
+		shader = &shaders[shader->remappedShader];
+	}
+	return shader;
 }
 
 shader_t *R_GetDefaultShader( void ) {
 	return &shaders[0];
+}
+
+void R_RemapShader( const char *oldShaderName, const char *newShaderName, const char *offsetTime ) {
+	shader_t *oldShader = R_FindShaderInList( oldShaderName );
+	qhandle_t newHandle;
+
+	(void)offsetTime;
+
+	if ( !oldShader ) {
+		ri.Printf( PRINT_WARNING, "WARNING: R_RemapShader: shader '%s' not found\n", oldShaderName );
+		return;
+	}
+
+	newHandle = RE_RegisterShaderInternal( newShaderName, qfalse );
+	// Remapping a shader to itself clears any existing remap, instead of making remappedShader self-referential.
+	oldShader->remappedShader = ( newHandle == oldShader->index ) ? 0 : newHandle;
 }

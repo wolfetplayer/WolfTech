@@ -290,6 +290,12 @@ static void R_LoadLightGrid( const lump_t *l ) {
 	memcpy( tr_world.lightGridData, fileBase + l->fileofs, l->filelen );
 }
 
+static const byte *s_externalVisData;
+
+void R_SetExternalVisData( const byte *vis ) {
+	s_externalVisData = vis;
+}
+
 // Lump layout: int numClusters, int clusterBytes, then numClusters*clusterBytes PVS bits.
 static void R_LoadVisibility( const lump_t *l ) {
 	const int *buf;
@@ -306,8 +312,24 @@ static void R_LoadVisibility( const lump_t *l ) {
 	tr_world.numClusters = LittleLong( buf[0] );
 	tr_world.clusterBytes = LittleLong( buf[1] );
 
+	// CM_Load already parsed and holds an identical copy for collision; reuse it instead of allocating a second one.
+	if ( s_externalVisData ) {
+		tr_world.visData = (byte *)s_externalVisData;
+		return;
+	}
+
 	tr_world.visData = ri.Hunk_Alloc( l->filelen - 8, h_low );
 	memcpy( tr_world.visData, fileBase + l->fileofs + 8, l->filelen - 8 );
+}
+
+// Stores the raw entity-lump text verbatim; R_GetEntityToken (tr_init.c) hands it to cgame token-by-token.
+static void R_LoadEntities( const lump_t *l ) {
+	const char *p = (const char *)( fileBase + l->fileofs );
+
+	tr_world.entityString = ri.Hunk_Alloc( l->filelen + 1, h_low );
+	memcpy( tr_world.entityString, p, l->filelen );
+	tr_world.entityString[l->filelen] = '\0';
+	tr_world.entityParsePoint = tr_world.entityString;
 }
 
 void RE_LoadWorldMap( const char *name ) {
@@ -365,6 +387,7 @@ void RE_LoadWorldMap( const char *name ) {
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: light grid (%s)\n", tr_world.lightGridData ? "loaded" : "absent" );
 	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: visibility (%d clusters)\n", tr_world.numClusters );
+	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
 
 	ri.FS_FreeFile( buffer );
 

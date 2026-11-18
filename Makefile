@@ -1991,6 +1991,7 @@ Q3RVOBJ = \
   $(B)/renderer_vulkan/tr_skin.o \
   $(B)/renderer_vulkan/tr_light.o \
   $(B)/renderer_vulkan/tr_fog.o \
+  $(B)/renderer_vulkan/tr_shade_calc.o \
   $(B)/renderer_vulkan/tr_scene.o \
   $(B)/renderer_vulkan/vk_entity.o \
   $(B)/renderer_vulkan/vk_world.o \

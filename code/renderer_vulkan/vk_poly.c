@@ -1,4 +1,4 @@
-// vk_poly.c -- see vk_poly.h. Each poly is fan-triangulated on the CPU (matching RB_SurfacePolychain) into a scratch buffer, then drawn with its own draw call since each may use a different shader.
+// vk_poly.c -- see vk_poly.h. Fan-triangulated on the CPU, drawn once per shader stage.
 
 #include <string.h>
 
@@ -6,11 +6,15 @@
 #include "vk_instance.h"
 #include "vk_pipelines.h"
 #include "tr_shader.h"
+#include "tr_shade_calc.h"
 #include "tr_scene.h"
 #include "vk_poly.h"
 
 // A poly with numVerts fans into (numVerts - 2) triangles; this is the worst case summed over every scene poly.
 #define POLY_SCRATCH_VERTS ( 3 * MAX_SCENE_POLY_VERTS )
+
+// Per-poly scratch cap before fan-triangulating; real scene polys are always well under this.
+#define MAX_POLY_SOURCE_VERTS 256
 
 static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
@@ -55,16 +59,10 @@ void vk_poly_shutdown( void ) {
 	qvkFreeMemory( vk.device, s_vertexMemory, NULL );
 }
 
-static void set_poly_vert( vk2d_vertex_t *out, const polyVert_t *in ) {
-	out->pos[0] = in->xyz[0];
-	out->pos[1] = in->xyz[1];
-	out->pos[2] = in->xyz[2];
-	out->color[0] = in->modulate[0];
-	out->color[1] = in->modulate[1];
-	out->color[2] = in->modulate[2];
-	out->color[3] = in->modulate[3];
-	out->uv[0] = in->st[0];
-	out->uv[1] = in->st[1];
+static void write_scratch_vert( vk2d_vertex_t *out, const float pos[3], const byte color[4], const float uv[2] ) {
+	out->pos[0] = pos[0]; out->pos[1] = pos[1]; out->pos[2] = pos[2];
+	out->color[0] = color[0]; out->color[1] = color[1]; out->color[2] = color[2]; out->color[3] = color[3];
+	out->uv[0] = uv[0]; out->uv[1] = uv[1];
 }
 
 void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
@@ -90,30 +88,45 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 	for ( i = 0; i < numPolys; i++ ) {
 		const scenePoly_t *poly = &polys[i];
 		shader_t *shader = R_GetShaderByHandle( poly->shader );
-		uint32_t firstVert = writeOffset;
-		uint32_t vertCount;
+		float deformedPos[MAX_POLY_SOURCE_VERTS][3];
 		int v, s;
 
-		if ( poly->numVerts < 3 || writeOffset + (uint32_t)( poly->numVerts - 2 ) * 3 > POLY_SCRATCH_VERTS ) {
+		if ( poly->numVerts < 3 || poly->numVerts > MAX_POLY_SOURCE_VERTS ) {
 			continue;
 		}
 
-		for ( v = 0; v < poly->numVerts - 2; v++ ) {
-			set_poly_vert( &s_mapped[writeOffset + 0], &polyVerts[poly->firstVert] );
-			set_poly_vert( &s_mapped[writeOffset + 1], &polyVerts[poly->firstVert + v + 1] );
-			set_poly_vert( &s_mapped[writeOffset + 2], &polyVerts[poly->firstVert + v + 2] );
-			writeOffset += 3;
+		// deformVertexes is shader-level: computed once, shared by every stage below.
+		for ( v = 0; v < poly->numVerts; v++ ) {
+			R_DeformPosition( shader, polyVerts[poly->firstVert + v].xyz, deformedPos[v] );
 		}
-		vertCount = writeOffset - firstVert;
 
-		// Every stage redraws the same triangles, layered in shader-script order.
+		// rgbGen/alphaGen/tcMod are per-stage, so each stage gets its own fresh copy of the triangle fan.
 		for ( s = 0; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
+			byte stageColor[MAX_POLY_SOURCE_VERTS][4];
+			float stageUV[MAX_POLY_SOURCE_VERTS][2];
+			uint32_t firstVert = writeOffset;
+			uint32_t vertCount;
 			VkPipeline pipeline;
 
-			if ( !stage->image || stage->image->vk_descriptor == VK_NULL_HANDLE ) {
+			if ( !stage->image || stage->image->vk_descriptor == VK_NULL_HANDLE ||
+				 writeOffset + (uint32_t)( poly->numVerts - 2 ) * 3 > POLY_SCRATCH_VERTS ) {
 				continue;
 			}
+
+			for ( v = 0; v < poly->numVerts; v++ ) {
+				const polyVert_t *srcVert = &polyVerts[poly->firstVert + v];
+				R_CalcStageColorAlpha( stage, NULL, NULL /* no entity/lighting context for scene polys */, srcVert->modulate, stageColor[v] );
+				R_CalcStageTexCoord( stage, srcVert->st[0], srcVert->st[1], deformedPos[v], stageUV[v] );
+			}
+
+			for ( v = 0; v < poly->numVerts - 2; v++ ) {
+				write_scratch_vert( &s_mapped[writeOffset + 0], deformedPos[0], stageColor[0], stageUV[0] );
+				write_scratch_vert( &s_mapped[writeOffset + 1], deformedPos[v + 1], stageColor[v + 1], stageUV[v + 1] );
+				write_scratch_vert( &s_mapped[writeOffset + 2], deformedPos[v + 2], stageColor[v + 2], stageUV[v + 2] );
+				writeOffset += 3;
+			}
+			vertCount = writeOffset - firstVert;
 
 			pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );

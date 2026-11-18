@@ -9,6 +9,7 @@
 #include "vk_image.h"
 #include "tr_local.h"
 #include "tr_shader.h"
+#include "tr_shade_calc.h"
 #include "tr_bsp.h"
 #include "tr_world.h"
 #include "tr_patch.h"
@@ -138,6 +139,19 @@ static int CompareSurfByShaderThenLightmap( const void *a, const void *b ) {
 	return sa->lightmapNum - sb->lightmapNum;
 }
 
+// Bakes stage 0's rgbGen/alphaGen once at load time; world vertex data is static, so this can't rerun per frame.
+static void ApplyBuildTimeColorGen( const shaderStage_t *stage, vkWorldVertex_t *verts, int firstVert, int numVerts ) {
+	int i;
+
+	for ( i = 0; i < numVerts; i++ ) {
+		vkWorldVertex_t *v = &verts[firstVert + i];
+		byte outColor[4];
+
+		R_CalcStageColorAlpha( stage, NULL, NULL, v->color, outColor );
+		v->color[0] = outColor[0]; v->color[1] = outColor[1]; v->color[2] = outColor[2]; v->color[3] = outColor[3];
+	}
+}
+
 // RGB8 -> RGBA8 (opaque) so it can go through the same texture upload path as everything else.
 static void BuildLightmapTexture( const byte *rgb, lightmapTex_t *out ) {
 	byte *rgba = malloc( LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 4 );
@@ -259,7 +273,25 @@ void vk_world_build( void ) {
 				curLightmapIdx = lightmapIdx;
 			}
 
-			EmitSurfaceGeometry( surf, verts, &nextVertSlot, indexes, &writeOffset, &firstIndex, &indexCount );
+			{
+				uint32_t vertBaseBefore = nextVertSlot;
+
+				EmitSurfaceGeometry( surf, verts, &nextVertSlot, indexes, &writeOffset, &firstIndex, &indexCount );
+
+				{
+					shader_t *surfShader = R_GetShaderByHandle( tr_world.shaders[surf->shaderNum].shader );
+					qboolean hasRealLightmap = ( lightmapIdx != whiteLightmapIdx );
+					const shaderStage_t *stage0 = &surfShader->stages[0];
+
+					// No real lightmap: skip the bake on a default rgbGen so baked vertex lighting survives.
+					if ( surfShader->numStages >= 1 &&
+						 ( hasRealLightmap || !( stage0->rgbGen == CGEN_IDENTITY_LIGHTING || stage0->rgbGen == CGEN_IDENTITY ) ) ) {
+						int bakedFirstVert = ( surf->surfaceType == MST_PATCH ) ? (int)vertBaseBefore : surf->firstVert;
+						int bakedNumVerts = ( surf->surfaceType == MST_PATCH ) ? (int)( nextVertSlot - vertBaseBefore ) : surf->numVerts;
+						ApplyBuildTimeColorGen( stage0, verts, bakedFirstVert, bakedNumVerts );
+					}
+				}
+			}
 
 			surfRefs[numSurfRefs].surfaceIndex = sIdx;
 			surfRefs[numSurfRefs].firstIndex = firstIndex;
