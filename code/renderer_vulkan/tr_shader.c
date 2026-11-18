@@ -98,6 +98,30 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	}
 }
 
+// skyParms <outerbox> <cloudheight> <innerbox> -- only outerbox is ported (innerbox/cloud layers aren't).
+static void ParseSkyParms( shader_t *shader, char **text ) {
+	static const char *suf[6] = { "rt", "lf", "bk", "ft", "up", "dn" };
+	char pathBase[MAX_QPATH];
+	char *token;
+	int i;
+
+	token = COM_ParseExt( text, qfalse ); // outerbox
+	if ( token[0] && Q_stricmp( token, "-" ) ) {
+		Q_strncpyz( pathBase, token, sizeof( pathBase ) );
+		for ( i = 0; i < 6; i++ ) {
+			char facePath[MAX_QPATH];
+			Com_sprintf( facePath, sizeof( facePath ), "%s_%s", pathBase, suf[i] );
+			shader->skyOuterBox[i] = R_FindImageFile( facePath, IMGFLAG_CLAMPTOEDGE );
+			if ( !shader->skyOuterBox[i] ) {
+				shader->skyOuterBox[i] = R_GetDefaultImage();
+			}
+		}
+		shader->isSky = qtrue;
+	}
+
+	SkipRestOfLine( text ); // cloudheight, innerbox
+}
+
 // qfalse if the shader had no usable stage (e.g. sky/portal-only).
 static qboolean ParseShader( const char *name, char **text ) {
 	char *token;
@@ -133,14 +157,19 @@ static qboolean ParseShader( const char *name, char **text ) {
 			if ( !Q_stricmp( token, "none" ) || !Q_stricmp( token, "disable" ) || !Q_stricmp( token, "twosided" ) ) {
 				tempShader.cullNone = qtrue;
 			}
+		} else if ( !Q_stricmp( token, "skyparms" ) ) {
+			ParseSkyParms( &tempShader, text );
 		} else {
-			// sort, skyParms, fogParms, deformVertexes, etc. -- parsed-and-discarded.
+			// sort, fogParms, deformVertexes, etc. -- parsed-and-discarded.
 			SkipRestOfLine( text );
 		}
 	}
 
-	if ( rawStageCount == 0 ) {
+	if ( rawStageCount == 0 && !tempShader.isSky ) {
 		return qfalse;
+	}
+	if ( rawStageCount == 0 ) {
+		tempShader.stages[0].image = R_GetDefaultImage(); // sky-only shader -- stages[0] is unused but kept non-null
 	}
 	tempShader.numStages = 1;
 

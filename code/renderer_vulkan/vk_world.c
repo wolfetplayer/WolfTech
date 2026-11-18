@@ -180,8 +180,20 @@ void vk_world_build( void ) {
 
 	sortedSurfs = malloc( tr_world.numSurfaces * sizeof( int ) );
 
+	tr_world.hasSky = qfalse;
+
 	for ( surfIdx = 0; surfIdx < tr_world.numSurfaces; surfIdx++ ) {
 		const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
+		shader_t *surfShader = R_GetShaderByHandle( tr_world.shaders[surf->shaderNum].shader );
+
+		if ( surfShader->isSky ) {
+			// Sky-shaded surfaces aren't batched/drawn here -- vk_sky.c paints the whole box every frame instead.
+			if ( !tr_world.hasSky ) {
+				memcpy( tr_world.skyOuterBox, surfShader->skyOuterBox, sizeof( tr_world.skyOuterBox ) );
+				tr_world.hasSky = qtrue;
+			}
+			continue;
+		}
 
 		if ( surf->surfaceType == MST_PLANAR || surf->surfaceType == MST_TRIANGLE_SOUP ) {
 			totalIndexCount += (uint32_t)surf->numIndexes;

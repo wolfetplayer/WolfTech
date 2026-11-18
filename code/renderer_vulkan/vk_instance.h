@@ -176,6 +176,7 @@ struct Vk_Instance {
 	VkPipeline pipeline_2d_blend;
 	VkPipeline pipeline_3d_opaque;
 	VkPipeline pipeline_3d_lightmap;
+	VkPipeline pipeline_sky; // single_texture shader, 2D vertex layout, depth test/write off, never fogged
 
 	VkBool32 isInitialized;
 

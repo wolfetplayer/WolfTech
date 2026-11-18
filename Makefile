@@ -1996,6 +1996,7 @@ Q3RVOBJ = \
   $(B)/renderer_vulkan/vk_world.o \
   $(B)/renderer_vulkan/vk_draw2d.o \
   $(B)/renderer_vulkan/vk_draw3d.o \
+  $(B)/renderer_vulkan/vk_sky.o \
   $(B)/renderer_vulkan/shaders/Compiled/single_texture_vert.o \
   $(B)/renderer_vulkan/shaders/Compiled/single_texture_frag.o \
   $(B)/renderer_vulkan/shaders/Compiled/world_lightmap_vert.o \

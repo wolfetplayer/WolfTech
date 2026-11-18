@@ -22,6 +22,9 @@ typedef struct shader_s {
 	qboolean noPicMip;
 	qboolean cullNone;
 
+	qboolean isSky;
+	image_t *skyOuterBox[6]; // rt, lf, bk, ft, up, dn -- see ParseSkyParms
+
 	int numStages;
 	shaderStage_t stages[1]; // only stages[0] is ever drawn; extras just parse
 } shader_t;

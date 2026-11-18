@@ -66,6 +66,10 @@ typedef struct {
 	int lightGridBounds[3];
 	byte *lightGridData; // 8 bytes/point: ambient RGB, directed RGB, direction as lat/long; NULL if absent (e.g. -nolight)
 
+	// First sky-shaded surface's outer box faces, found while vk_world_build sorts drawable surfaces.
+	qboolean hasSky;
+	struct image_s *skyOuterBox[6]; // rt, lf, bk, ft, up, dn
+
 	qboolean loaded;
 } bspWorld_t;
 

@@ -417,9 +417,9 @@ void vk_create3DPipelines( void ) {
 	VkVertexInputAttributeDescription attribs2d[3];
 	VkVertexInputBindingDescription worldBinding;
 	VkVertexInputAttributeDescription lightmapAttribs[4];
-	vk2d_spec_data_t spec_data;
-	VkSpecializationMapEntry spec_entries[4];
-	VkSpecializationInfo specInfo;
+	vk2d_spec_data_t spec_data, sky_spec_data;
+	VkSpecializationMapEntry spec_entries[4], sky_spec_entries[4];
+	VkSpecializationInfo specInfo, skySpecInfo;
 
 	Get2DAttribs( &binding2d, attribs2d );
 
@@ -445,14 +445,19 @@ void vk_create3DPipelines( void ) {
 	lightmapAttribs[3].offset = offsetof( vkWorldVertex_t, lmUv );
 
 	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue );
+	GetSpecInfo( &sky_spec_data, sky_spec_entries, &skySpecInfo, qfalse );
 
 	vk.pipeline_3d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
 	vk.pipeline_3d_lightmap = create_pipeline( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
 		&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
+	// Depth test/write off so draw order alone keeps the sky behind everything -- see vk_sky.c.
+	vk.pipeline_sky = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &skySpecInfo,
+		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
 }
 
 void vk_destroy3DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_opaque, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap, NULL );
+	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
 }

@@ -48,6 +48,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
 #include "vk_entity.h"
+#include "vk_sky.h"
 #include "vk_world.h"
 
 refimport_t ri;
@@ -220,6 +221,7 @@ static void RE_RenderScene( const refdef_t *fd ) {
 
 	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
 		R_MarkVisibleSurfaces( fd );
+		vk_sky_draw( fd->vieworg, viewProj, fogPush );
 		vk_world_draw( viewProj, fogPush );
 	}
 

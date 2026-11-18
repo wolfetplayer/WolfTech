@@ -13,6 +13,7 @@
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
 #include "vk_entity.h"
+#include "vk_sky.h"
 #include "vk_world.h"
 #include "glConfig.h"
 #include "vk_init.h"
@@ -51,6 +52,7 @@ void vk_initialize( void ) {
 	vk_draw2d_init();
 	vk_draw3d_init();
 	vk_entity_init();
+	vk_sky_init();
 
 	vk.isInitialized = VK_TRUE;
 }
@@ -59,6 +61,7 @@ void vk_shutdown( void ) {
 	ri.Printf( PRINT_ALL, "vk_shutdown()\n" );
 
 	vk_world_shutdown();
+	vk_sky_shutdown();
 	vk_entity_shutdown();
 	vk_draw3d_shutdown();
 	vk_draw2d_shutdown();
