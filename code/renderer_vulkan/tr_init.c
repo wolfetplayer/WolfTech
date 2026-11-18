@@ -49,6 +49,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_draw3d.h"
 #include "vk_entity.h"
 #include "vk_sky.h"
+#include "vk_poly.h"
 #include "vk_world.h"
 
 refimport_t ri;
@@ -172,15 +173,7 @@ static void RE_AddRefEntityToScene( const refEntity_t *re ) {
 
 // Real light grid sampling lives in tr_light.c.
 
-static void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts ) {
-	FIRST_CALL_CHECKPOINT( "RE_AddPolyToScene" );
-	(void)hShader; (void)numVerts; (void)verts;
-}
-
-static void RE_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys ) {
-	FIRST_CALL_CHECKPOINT( "RE_AddPolysToScene" );
-	(void)hShader; (void)numVerts; (void)verts; (void)numPolys;
-}
+// Real poly-scene storage (RE_AddPolyToScene/RE_AddPolysToScene) lives in tr_scene.c; drawing lives in vk_poly.c.
 
 static void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b, int overdraw ) {
 	(void)overdraw; // REF_FORCE_DLIGHT/REF_JUNIOR_DLIGHT/REF_MUZZLEFLASH_DLIGHT tiers aren't implemented -- every light always applies
@@ -233,6 +226,8 @@ static void RE_RenderScene( const refdef_t *fd ) {
 		vk_entity_draw_all( entities, numEntities, viewProj, fogPush );
 		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj, fogPush );
 	}
+
+	vk_poly_draw( viewProj, fogPush );
 }
 
 static void RE_SetColor( const float *rgba ) {

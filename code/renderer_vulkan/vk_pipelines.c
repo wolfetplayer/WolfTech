@@ -449,6 +449,9 @@ void vk_create3DPipelines( void ) {
 
 	vk.pipeline_3d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
+	// Fixed alpha-blend factors regardless of the poly's own shader (same simplification vk_draw2d.c's 2D pipelines make).
+	vk.pipeline_3d_blend = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, attribs2d, 3, VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_TRUE, VK_CULL_MODE_NONE );
 	vk.pipeline_3d_lightmap = create_pipeline( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
 		&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
 	// Depth test/write off so draw order alone keeps the sky behind everything -- see vk_sky.c.
@@ -458,6 +461,7 @@ void vk_create3DPipelines( void ) {
 
 void vk_destroy3DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_opaque, NULL );
+	qvkDestroyPipeline( vk.device, vk.pipeline_3d_blend, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
 }

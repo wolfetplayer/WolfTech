@@ -175,6 +175,7 @@ struct Vk_Instance {
 	VkPipeline pipeline_2d_opaque;
 	VkPipeline pipeline_2d_blend;
 	VkPipeline pipeline_3d_opaque;
+	VkPipeline pipeline_3d_blend; // pipeline_3d_opaque's blended twin, for poly-scene effects whose shader wants blendfunc (see vk_poly.c)
 	VkPipeline pipeline_3d_lightmap;
 	VkPipeline pipeline_sky; // single_texture shader, 2D vertex layout, depth test/write off, never fogged
 
