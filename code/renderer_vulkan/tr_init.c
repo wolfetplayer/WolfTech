@@ -39,6 +39,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_bsp.h"
 #include "tr_world.h"
 #include "tr_patch.h"
+#include "tr_model.h"
+#include "tr_bones.h"
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
 #include "vk_world.h"
@@ -100,6 +102,7 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 		R_InitFreeType();
 		R_InitMain();
 		R_InitPatches();
+		R_InitModels();
 		s_testCubeInit = qfalse;
 	}
 
@@ -108,18 +111,9 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 	ri.Printf( PRINT_ALL, "RE_BeginRegistration\n" );
 }
 
-// No real model/skin loading yet -- unique nonzero handles so callers can't alias them all to one.
-static qhandle_t RE_RegisterModel( const char *name ) {
-	static qboolean logged = qfalse;
-	static qhandle_t nextHandle = 1;
-	if ( !logged ) {
-		ri.Printf( PRINT_ALL, "...tr_init checkpoint: first RE_RegisterModel ('%s')\n", name ? name : "(null)" );
-		logged = qtrue;
-	}
-	(void)name;
-	return nextHandle++;
-}
+// Real .mdx/.mdm loading and model registry live in tr_model.c.
 
+// No real skin loading yet -- unique nonzero handles so callers can't alias them all to one.
 static qhandle_t RE_RegisterSkin( const char *name ) {
 	static qboolean logged = qfalse;
 	static qhandle_t nextHandle = 1;
@@ -340,13 +334,7 @@ static int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t pr
 	return 0;
 }
 
-static int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagName, int startIndex ) {
-	FIRST_CALL_CHECKPOINT( "R_LerpTag" );
-	(void)refent; (void)tagName; (void)startIndex;
-	AxisClear( tag->axis );
-	VectorClear( tag->origin );
-	return -1;
-}
+// Real tag lookup (R_LerpTag) lives in tr_bones.c.
 
 static void R_ModelBounds( qhandle_t model, vec3_t mins, vec3_t maxs ) {
 	FIRST_CALL_CHECKPOINT( "R_ModelBounds" );

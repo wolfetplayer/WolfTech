@@ -19,8 +19,8 @@ static cvar_t *r_vk_test3d;
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
 
 void vk_draw3d_init( void ) {
-	// Sanity check: draws a fixed RGB cube in the 3D scene.
-	r_vk_test3d = ri.Cvar_Get( "r_vk_test3d", "1", CVAR_ARCHIVE );
+	// Sanity check: draws a fixed RGB cube in the 3D scene. Off by default now that real world geometry renders.
+	r_vk_test3d = ri.Cvar_Get( "r_vk_test3d", "0", CVAR_ARCHIVE );
 
 	VkBufferCreateInfo buf_desc;
 	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
