@@ -25,7 +25,7 @@ menuDef {
 		text "@SYSTEM_RENDERER"
 		textfont		UI_FONT_BIG
 		cvar "cl_renderer"
-		cvarStrList { "@SYSTEM_RENDERER_OPENGL1", "opengl1", "@SYSTEM_RENDERER_REND2", "rend2"  }
+		cvarStrList { "@SYSTEM_RENDERER_OPENGL1", "opengl1", "@SYSTEM_RENDERER_REND2", "rend2", "@SYSTEM_RENDERER_VULKAN", "vulkan"  }
 		rect 0 0 443 16
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 224
