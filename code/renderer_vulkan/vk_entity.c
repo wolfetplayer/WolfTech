@@ -8,6 +8,7 @@
 #include "tr_image.h"
 #include "tr_shader.h"
 #include "tr_model.h"
+#include "tr_skin.h"
 #include "vk_entity.h"
 
 #define ENTITY_MAX_VERTS 65536
@@ -169,14 +170,21 @@ static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *sur
 	}
 }
 
-static qhandle_t ResolveShader( qhandle_t customShader, int numShaders, const void *shadersPtr ) {
+// customShader overrides every surface; customSkin looks the surface name up in a .skin file; otherwise each surface uses its own baked-in shader.
+static qhandle_t ResolveShader( qhandle_t customShader, qhandle_t customSkin, const char *surfaceName, int numShaders, const void *shadersPtr ) {
+	qhandle_t fallback;
+
 	if ( customShader ) {
 		return customShader;
 	}
-	if ( numShaders > 0 ) {
-		return (qhandle_t)( (const md3Shader_t *)shadersPtr )->shaderIndex;
+
+	fallback = ( numShaders > 0 ) ? (qhandle_t)( (const md3Shader_t *)shadersPtr )->shaderIndex : 0;
+
+	if ( customSkin ) {
+		return R_SkinShaderForSurface( R_GetSkinByHandle( customSkin ), surfaceName, fallback );
 	}
-	return 0;
+
+	return fallback;
 }
 
 static qboolean ReserveSurface( int numVerts, int numTriangles, uint32_t vertWrite, uint32_t idxWrite, int numDraws ) {
@@ -233,7 +241,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 
 				LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, &s_vertexMapped[vertWrite] );
 				CommitSurface( surf->numVerts, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					ResolveShader( ent->customShader, surf->numShaders, (const byte *)surf + surf->ofsShaders ),
+					ResolveShader( ent->customShader, ent->customSkin, surf->name, surf->numShaders, (const byte *)surf + surf->ofsShaders ),
 					&vertWrite, &idxWrite, &numDraws );
 
 				surf = (const md3Surface_t *)( (const byte *)surf + surf->ofsEnd );
@@ -251,7 +259,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 
 				LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, &s_vertexMapped[vertWrite] );
 				CommitSurface( surf->numVerts, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					ResolveShader( ent->customShader, surf->numShaders, (const byte *)surf + surf->ofsShaders ),
+					ResolveShader( ent->customShader, ent->customSkin, surf->name, surf->numShaders, (const byte *)surf + surf->ofsShaders ),
 					&vertWrite, &idxWrite, &numDraws );
 
 				surf = (const mdcSurface_t *)( (const byte *)surf + surf->ofsEnd );

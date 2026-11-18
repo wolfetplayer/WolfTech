@@ -1988,6 +1988,7 @@ Q3RVOBJ = \
   $(B)/renderer_vulkan/tr_patch.o \
   $(B)/renderer_vulkan/tr_model.o \
   $(B)/renderer_vulkan/tr_bones.o \
+  $(B)/renderer_vulkan/tr_skin.o \
   $(B)/renderer_vulkan/tr_scene.o \
   $(B)/renderer_vulkan/vk_entity.o \
   $(B)/renderer_vulkan/vk_world.o \

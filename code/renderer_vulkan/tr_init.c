@@ -41,6 +41,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_patch.h"
 #include "tr_model.h"
 #include "tr_bones.h"
+#include "tr_skin.h"
 #include "tr_scene.h"
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
@@ -105,6 +106,7 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 		R_InitMain();
 		R_InitPatches();
 		R_InitModels();
+		R_InitSkins();
 		s_testCubeInit = qfalse;
 	}
 
@@ -115,17 +117,7 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 
 // Real .mdx/.mdm loading and model registry live in tr_model.c.
 
-// No real skin loading yet -- unique nonzero handles so callers can't alias them all to one.
-static qhandle_t RE_RegisterSkin( const char *name ) {
-	static qboolean logged = qfalse;
-	static qhandle_t nextHandle = 1;
-	if ( !logged ) {
-		ri.Printf( PRINT_ALL, "...tr_init checkpoint: first RE_RegisterSkin ('%s')\n", name ? name : "(null)" );
-		logged = qtrue;
-	}
-	(void)name;
-	return nextHandle++;
-}
+// Real .skin parsing lives in tr_skin.c.
 
 static qhandle_t RE_RegisterShader( const char *name ) {
 	static int callCount = 0;
@@ -143,14 +135,6 @@ static qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 		ri.Printf( PRINT_ALL, "...tr_init checkpoint: RE_RegisterShaderNoMip call #%d ('%s')\n", callCount, name ? name : "(null)" );
 	}
 	return RE_RegisterShaderInternal( name, qtrue );
-}
-
-static qboolean RE_GetSkinModel( qhandle_t skinid, const char *type, char *name ) {
-	(void)skinid; (void)type;
-	if ( name ) {
-		name[0] = '\0';
-	}
-	return qfalse;
 }
 
 static qhandle_t RE_GetShaderFromModel( qhandle_t modelid, int surfnum, int withlightmap ) {
