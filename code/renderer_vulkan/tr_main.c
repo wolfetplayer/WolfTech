@@ -86,6 +86,51 @@ void R_SetupViewMatrix( const refdef_t *fd, float viewMatrix[16] ) {
 	viewMatrix[15] = 1.0f;
 }
 
+// Side planes of the view frustum in world space; zProj is implicitly 1 (only its ratio to px/py matters).
+void R_SetupFrustumPlanes( const refdef_t *fd, cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
+	const float *forward = fd->viewaxis[0];
+	const float *left = fd->viewaxis[1];
+	const float *up = fd->viewaxis[2];
+	float px = tanf( fd->fov_x * ( M_PI / 360.0f ) );
+	float py = tanf( fd->fov_y * ( M_PI / 360.0f ) );
+	float lenX = sqrtf( px * px + 1.0f );
+	float lenY = sqrtf( py * py + 1.0f );
+	float oppX = px / lenX, adjX = 1.0f / lenX;
+	float oppY = py / lenY, adjY = 1.0f / lenY;
+	int i;
+
+	VectorScale( forward, oppX, frustum[0].normal );
+	VectorMA( frustum[0].normal, adjX, left, frustum[0].normal );
+
+	VectorScale( forward, oppX, frustum[1].normal );
+	VectorMA( frustum[1].normal, -adjX, left, frustum[1].normal );
+
+	VectorScale( forward, oppY, frustum[2].normal );
+	VectorMA( frustum[2].normal, adjY, up, frustum[2].normal );
+
+	VectorScale( forward, oppY, frustum[3].normal );
+	VectorMA( frustum[3].normal, -adjY, up, frustum[3].normal );
+
+	for ( i = 0; i < NUM_FRUSTUM_PLANES; i++ ) {
+		frustum[i].dist = DotProduct( fd->vieworg, frustum[i].normal );
+	}
+}
+
+qboolean R_CullBoundsVsFrustum( const vec3_t mins, const vec3_t maxs, const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
+	int i, j;
+
+	for ( i = 0; i < NUM_FRUSTUM_PLANES; i++ ) {
+		vec3_t positive;
+		for ( j = 0; j < 3; j++ ) {
+			positive[j] = ( frustum[i].normal[j] >= 0.0f ) ? maxs[j] : mins[j];
+		}
+		if ( DotProduct( positive, frustum[i].normal ) - frustum[i].dist < 0.0f ) {
+			return qfalse; // entirely on the outside of this plane
+		}
+	}
+	return qtrue;
+}
+
 // Vulkan clip space: Y-down, Z in [0,1] (vs GL's Y-up, Z in [-1,1]).
 void R_SetupProjectionMatrix( const refdef_t *fd, float projMatrix[16] ) {
 	float zNear = r_znear->value;

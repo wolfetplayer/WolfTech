@@ -1,4 +1,4 @@
-// vk_world.c -- uploads tr_world into GPU buffers and draws it, brute force (no culling yet).
+// vk_world.c -- uploads tr_world into GPU buffers and draws it, culled per surface by tr_world.c.
 
 #include <stdlib.h>
 #include <string.h>
@@ -10,12 +10,20 @@
 #include "tr_local.h"
 #include "tr_shader.h"
 #include "tr_bsp.h"
+#include "tr_world.h"
 #include "vk_world.h"
+
+// One entry per drawable surface; consecutive entries in a batch are contiguous in the index buffer.
+typedef struct {
+	int surfaceIndex;
+	uint32_t firstIndex;
+	uint32_t indexCount;
+} worldSurfRef_t;
 
 typedef struct {
 	qhandle_t shader;
-	uint32_t firstIndex;
-	uint32_t indexCount;
+	int firstSurfRef;
+	int numSurfRefs;
 } worldDrawBatch_t;
 
 static VkBuffer s_vertexBuffer;
@@ -25,6 +33,7 @@ static VkDeviceMemory s_indexMemory;
 
 static worldDrawBatch_t *s_batches;
 static int s_numBatches;
+static worldSurfRef_t *s_surfRefs;
 static qboolean s_built = qfalse;
 
 void vk_world_clear( void ) {
@@ -33,6 +42,7 @@ void vk_world_clear( void ) {
 	if ( s_indexBuffer ) { qvkDestroyBuffer( vk.device, s_indexBuffer, NULL ); s_indexBuffer = VK_NULL_HANDLE; }
 	if ( s_indexMemory ) { qvkFreeMemory( vk.device, s_indexMemory, NULL ); s_indexMemory = VK_NULL_HANDLE; }
 	if ( s_batches ) { free( s_batches ); s_batches = NULL; }
+	if ( s_surfRefs ) { free( s_surfRefs ); s_surfRefs = NULL; }
 	s_numBatches = 0;
 	s_built = qfalse;
 }
@@ -45,8 +55,9 @@ void vk_world_build( void ) {
 	vk2d_vertex_t *verts;
 	uint32_t *indexes;
 	worldDrawBatch_t *batches;
+	worldSurfRef_t *surfRefs;
 	uint32_t writeOffset;
-	int numBatches;
+	int numBatches, numSurfRefs;
 	int shaderIdx, surfIdx, i;
 
 	vk_world_clear();
@@ -72,23 +83,29 @@ void vk_world_build( void ) {
 	// Surfaces' index ranges can overlap, so numIndexes can sum past tr_world.numDrawIndexes -- count first.
 	{
 		uint32_t totalIndexCount = 0;
+		int numDrawable = 0;
 		for ( surfIdx = 0; surfIdx < tr_world.numSurfaces; surfIdx++ ) {
 			const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
 			if ( surf->surfaceType == MST_PLANAR || surf->surfaceType == MST_TRIANGLE_SOUP ) {
 				totalIndexCount += (uint32_t)surf->numIndexes;
+				numDrawable++;
 			}
 		}
 		indexes = malloc( totalIndexCount * sizeof( uint32_t ) );
+		surfRefs = malloc( numDrawable * sizeof( worldSurfRef_t ) );
 	}
 	batches = malloc( tr_world.numShaders * sizeof( worldDrawBatch_t ) );
 	numBatches = 0;
+	numSurfRefs = 0;
 	writeOffset = 0;
 
 	for ( shaderIdx = 0; shaderIdx < tr_world.numShaders; shaderIdx++ ) {
 		uint32_t batchStart = writeOffset;
+		int batchFirstRef = numSurfRefs;
 
 		for ( surfIdx = 0; surfIdx < tr_world.numSurfaces; surfIdx++ ) {
 			const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
+			uint32_t surfFirstIndex;
 
 			if ( surf->shaderNum != shaderIdx ) {
 				continue;
@@ -97,16 +114,22 @@ void vk_world_build( void ) {
 				continue; // patches/flares/foliage: not tessellated/drawable yet
 			}
 
+			surfFirstIndex = writeOffset;
 			for ( i = 0; i < surf->numIndexes; i++ ) {
 				// BSP indices are local to the surface's own vertex range; remap to the global vertex buffer.
 				indexes[writeOffset++] = (uint32_t)( surf->firstVert + tr_world.drawIndexes[surf->firstIndex + i] );
 			}
+
+			surfRefs[numSurfRefs].surfaceIndex = surfIdx;
+			surfRefs[numSurfRefs].firstIndex = surfFirstIndex;
+			surfRefs[numSurfRefs].indexCount = writeOffset - surfFirstIndex;
+			numSurfRefs++;
 		}
 
 		if ( writeOffset > batchStart ) {
 			batches[numBatches].shader = tr_world.shaders[shaderIdx].shader;
-			batches[numBatches].firstIndex = batchStart;
-			batches[numBatches].indexCount = writeOffset - batchStart;
+			batches[numBatches].firstSurfRef = batchFirstRef;
+			batches[numBatches].numSurfRefs = numSurfRefs - batchFirstRef;
 			numBatches++;
 		}
 	}
@@ -115,6 +138,7 @@ void vk_world_build( void ) {
 		free( verts );
 		free( indexes );
 		free( batches );
+		free( surfRefs );
 		return;
 	}
 
@@ -128,6 +152,7 @@ void vk_world_build( void ) {
 
 	s_batches = batches; // already sized to numShaders, no need to shrink
 	s_numBatches = numBatches;
+	s_surfRefs = surfRefs;
 	s_built = qtrue;
 
 	free( verts );
@@ -161,7 +186,12 @@ void vk_world_draw( const float mvp[16] ) {
 	qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
 
 	for ( i = 0; i < s_numBatches; i++ ) {
-		shader_t *shader = R_GetShaderByHandle( s_batches[i].shader );
+		const worldDrawBatch_t *batch = &s_batches[i];
+		qboolean runOpen = qfalse;
+		uint32_t runFirst = 0, runCount = 0;
+		int j;
+
+		shader_t *shader = R_GetShaderByHandle( batch->shader );
 		if ( !shader || shader->numStages < 1 || !shader->stages[0].image ||
 			 shader->stages[0].image->vk_descriptor == VK_NULL_HANDLE ) {
 			continue;
@@ -170,7 +200,29 @@ void vk_world_draw( const float mvp[16] ) {
 		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
 			0, 1, &shader->stages[0].image->vk_descriptor, 0, NULL );
 
-		qvkCmdDrawIndexed( vk.command_buffer, s_batches[i].indexCount, 1, s_batches[i].firstIndex, 0, 0 );
+		// Contiguous visible refs still merge into a single draw call.
+		for ( j = 0; j < batch->numSurfRefs; j++ ) {
+			const worldSurfRef_t *ref = &s_surfRefs[batch->firstSurfRef + j];
+
+			if ( R_SurfaceIsVisible( ref->surfaceIndex ) ) {
+				if ( runOpen && ref->firstIndex == runFirst + runCount ) {
+					runCount += ref->indexCount;
+				} else {
+					if ( runOpen ) {
+						qvkCmdDrawIndexed( vk.command_buffer, runCount, 1, runFirst, 0, 0 );
+					}
+					runFirst = ref->firstIndex;
+					runCount = ref->indexCount;
+					runOpen = qtrue;
+				}
+			} else if ( runOpen ) {
+				qvkCmdDrawIndexed( vk.command_buffer, runCount, 1, runFirst, 0, 0 );
+				runOpen = qfalse;
+			}
+		}
+		if ( runOpen ) {
+			qvkCmdDrawIndexed( vk.command_buffer, runCount, 1, runFirst, 0, 0 );
+		}
 	}
 
 	if ( firstDraw ) {

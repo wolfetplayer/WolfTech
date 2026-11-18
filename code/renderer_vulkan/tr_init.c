@@ -37,6 +37,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_shader.h"
 #include "tr_main.h"
 #include "tr_bsp.h"
+#include "tr_world.h"
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
 #include "vk_world.h"
@@ -243,6 +244,7 @@ static void RE_RenderScene( const refdef_t *fd ) {
 	R_MultMatrix( projMatrix, viewMatrix, viewProj );
 
 	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+		R_MarkVisibleSurfaces( fd );
 		vk_world_draw( viewProj );
 	}
 
