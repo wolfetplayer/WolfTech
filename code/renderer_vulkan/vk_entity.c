@@ -1,4 +1,4 @@
-// vk_entity.c -- CPU-lerped MD3 entity mesh rendering, see vk_entity.h.
+// vk_entity.c -- CPU-lerped MD3/MDC entity mesh rendering, see vk_entity.h.
 
 #include <string.h>
 
@@ -13,6 +13,9 @@
 #define ENTITY_MAX_VERTS 65536
 #define ENTITY_MAX_INDEXES 262144
 #define ENTITY_MAX_DRAWS 4096
+
+#define MDC_DIST_SCALE 0.05f
+#define MDC_MAX_OFS 127.0f
 
 typedef struct {
 	uint32_t vertBase;
@@ -84,7 +87,10 @@ void vk_entity_shutdown( void ) {
 
 qboolean vk_entity_has_mesh( const refEntity_t *ent ) {
 	model_t *model = R_GetModelByHandle( ent->hModel );
-	return model && model->type == MOD_MD3 && model->md3;
+	if ( !model ) {
+		return qfalse;
+	}
+	return ( model->type == MOD_MD3 && model->md3 ) || ( model->type == MOD_MDC && model->mdc );
 }
 
 // xyz is model-local (frontlerp*frame + backlerp*oldframe, MD3_XYZ_SCALE applied), then placed by the entity's axis/origin.
@@ -112,6 +118,94 @@ static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, 
 	}
 }
 
+// Position only -- the compressed delta's normal byte is unused since entities aren't lit yet.
+static void DecodeMDCVertex( const md3XyzNormal_t *base, const mdcXyzCompressed_t *comp, vec3_t out ) {
+	out[0] = (float)base->xyz[0] * MD3_XYZ_SCALE;
+	out[1] = (float)base->xyz[1] * MD3_XYZ_SCALE;
+	out[2] = (float)base->xyz[2] * MD3_XYZ_SCALE;
+
+	if ( comp ) {
+		unsigned int ofsVec = comp->ofsVec;
+		out[0] += ( (float)( ofsVec & 255 ) - MDC_MAX_OFS ) * MDC_DIST_SCALE;
+		out[1] += ( (float)( ( ofsVec >> 8 ) & 255 ) - MDC_MAX_OFS ) * MDC_DIST_SCALE;
+		out[2] += ( (float)( ( ofsVec >> 16 ) & 255 ) - MDC_MAX_OFS ) * MDC_DIST_SCALE;
+	}
+}
+
+// Each actual frame maps to a base frame (full position) plus an optional compressed delta against it.
+static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *surf, int frame, int oldframe, float backlerp, vk2d_vertex_t *out ) {
+	const short *frameBaseFrames = (const short *)( (const byte *)surf + surf->ofsFrameBaseFrames );
+	const short *frameCompFrames = (const short *)( (const byte *)surf + surf->ofsFrameCompFrames );
+	const md3XyzNormal_t *baseArray = (const md3XyzNormal_t *)( (const byte *)surf + surf->ofsXyzNormals );
+	const mdcXyzCompressed_t *compArray = (const mdcXyzCompressed_t *)( (const byte *)surf + surf->ofsXyzCompressed );
+	const md3St_t *st = (const md3St_t *)( (const byte *)surf + surf->ofsSt );
+	qboolean hasComp = surf->numCompFrames > 0;
+	int newBase = frameBaseFrames[frame];
+	int oldBase = frameBaseFrames[oldframe];
+	int newComp = hasComp ? frameCompFrames[frame] : -1;
+	int oldComp = hasComp ? frameCompFrames[oldframe] : -1;
+	float frontlerp = 1.0f - backlerp;
+	int i;
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		vec3_t newXyz, oldXyz, local;
+
+		DecodeMDCVertex( &baseArray[(size_t)newBase * surf->numVerts + i],
+			newComp >= 0 ? &compArray[(size_t)newComp * surf->numVerts + i] : NULL, newXyz );
+		DecodeMDCVertex( &baseArray[(size_t)oldBase * surf->numVerts + i],
+			oldComp >= 0 ? &compArray[(size_t)oldComp * surf->numVerts + i] : NULL, oldXyz );
+
+		local[0] = frontlerp * newXyz[0] + backlerp * oldXyz[0];
+		local[1] = frontlerp * newXyz[1] + backlerp * oldXyz[1];
+		local[2] = frontlerp * newXyz[2] + backlerp * oldXyz[2];
+
+		out[i].pos[0] = ent->origin[0] + local[0] * ent->axis[0][0] + local[1] * ent->axis[1][0] + local[2] * ent->axis[2][0];
+		out[i].pos[1] = ent->origin[1] + local[0] * ent->axis[0][1] + local[1] * ent->axis[1][1] + local[2] * ent->axis[2][1];
+		out[i].pos[2] = ent->origin[2] + local[0] * ent->axis[0][2] + local[1] * ent->axis[1][2] + local[2] * ent->axis[2][2];
+
+		out[i].color[0] = 255; out[i].color[1] = 255; out[i].color[2] = 255; out[i].color[3] = 255;
+		out[i].uv[0] = st[i].st[0];
+		out[i].uv[1] = st[i].st[1];
+	}
+}
+
+static qhandle_t ResolveShader( qhandle_t customShader, int numShaders, const void *shadersPtr ) {
+	if ( customShader ) {
+		return customShader;
+	}
+	if ( numShaders > 0 ) {
+		return (qhandle_t)( (const md3Shader_t *)shadersPtr )->shaderIndex;
+	}
+	return 0;
+}
+
+static qboolean ReserveSurface( int numVerts, int numTriangles, uint32_t vertWrite, uint32_t idxWrite, int numDraws ) {
+	return numDraws < ENTITY_MAX_DRAWS && vertWrite + (uint32_t)numVerts <= ENTITY_MAX_VERTS &&
+		   idxWrite + (uint32_t)numTriangles * 3 <= ENTITY_MAX_INDEXES;
+}
+
+// Copies triangle indices (local to this surface's own vertex range, matching vertexOffset at draw time) and records the draw call.
+static void CommitSurface( int numVerts, int numTriangles, const void *trianglesPtr, qhandle_t shader,
+							uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
+	const md3Triangle_t *tri = (const md3Triangle_t *)trianglesPtr;
+	int i;
+
+	for ( i = 0; i < numTriangles; i++, tri++ ) {
+		s_indexMapped[*idxWrite + (uint32_t)i * 3 + 0] = (uint32_t)tri->indexes[0];
+		s_indexMapped[*idxWrite + (uint32_t)i * 3 + 1] = (uint32_t)tri->indexes[1];
+		s_indexMapped[*idxWrite + (uint32_t)i * 3 + 2] = (uint32_t)tri->indexes[2];
+	}
+
+	s_draws[*numDraws].vertBase = *vertWrite;
+	s_draws[*numDraws].idxBase = *idxWrite;
+	s_draws[*numDraws].idxCount = (uint32_t)numTriangles * 3;
+	s_draws[*numDraws].shader = shader;
+	(*numDraws)++;
+
+	*vertWrite += (uint32_t)numVerts;
+	*idxWrite += (uint32_t)numTriangles * 3;
+}
+
 void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16] ) {
 	uint32_t vertWrite = 0, idxWrite = 0;
 	int numDraws = 0;
@@ -121,60 +215,56 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 	for ( e = 0; e < numEntities; e++ ) {
 		const refEntity_t *ent = &entities[e];
 		model_t *model = R_GetModelByHandle( ent->hModel );
-		const md3Surface_t *surf;
-		int frame, oldframe;
-		float backlerp;
 
-		if ( !model || model->type != MOD_MD3 || !model->md3 ) {
+		if ( !model ) {
 			continue;
 		}
 
-		frame = ent->frame;
-		oldframe = ent->oldframe;
-		if ( frame < 0 || frame >= model->md3->numFrames ) frame = 0;
-		if ( oldframe < 0 || oldframe >= model->md3->numFrames ) oldframe = 0;
-		backlerp = ent->backlerp;
+		if ( model->type == MOD_MD3 && model->md3 ) {
+			const md3Surface_t *surf = (const md3Surface_t *)( (const byte *)model->md3 + model->md3->ofsSurfaces );
+			int frame = ent->frame, oldframe = ent->oldframe;
+			if ( frame < 0 || frame >= model->md3->numFrames ) frame = 0;
+			if ( oldframe < 0 || oldframe >= model->md3->numFrames ) oldframe = 0;
 
-		surf = (const md3Surface_t *)( (const byte *)model->md3 + model->md3->ofsSurfaces );
-		for ( s = 0; s < model->md3->numSurfaces; s++ ) {
-			qhandle_t shader = ent->customShader;
-
-			if ( numDraws >= ENTITY_MAX_DRAWS || vertWrite + (uint32_t)surf->numVerts > ENTITY_MAX_VERTS ||
-				 idxWrite + (uint32_t)surf->numTriangles * 3 > ENTITY_MAX_INDEXES ) {
-				if ( !overflowLogged ) {
-					ri.Printf( PRINT_WARNING, "vk_entity_draw_all: scratch buffer full, dropping remaining entity surfaces this frame\n" );
-					overflowLogged = qtrue;
+			for ( s = 0; s < model->md3->numSurfaces; s++ ) {
+				if ( !ReserveSurface( surf->numVerts, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
+					goto overflow;
 				}
-				goto doneCollecting;
+
+				LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, &s_vertexMapped[vertWrite] );
+				CommitSurface( surf->numVerts, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
+					ResolveShader( ent->customShader, surf->numShaders, (const byte *)surf + surf->ofsShaders ),
+					&vertWrite, &idxWrite, &numDraws );
+
+				surf = (const md3Surface_t *)( (const byte *)surf + surf->ofsEnd );
 			}
+		} else if ( model->type == MOD_MDC && model->mdc ) {
+			const mdcSurface_t *surf = (const mdcSurface_t *)( (const byte *)model->mdc + model->mdc->ofsSurfaces );
+			int frame = ent->frame, oldframe = ent->oldframe;
+			if ( frame < 0 || frame >= model->mdc->numFrames ) frame = 0;
+			if ( oldframe < 0 || oldframe >= model->mdc->numFrames ) oldframe = 0;
 
-			if ( !shader && surf->numShaders > 0 ) {
-				const md3Shader_t *surfShader = (const md3Shader_t *)( (const byte *)surf + surf->ofsShaders );
-				shader = (qhandle_t)surfShader->shaderIndex;
-			}
-
-			LerpSurfaceVerts( ent, surf, frame, oldframe, backlerp, &s_vertexMapped[vertWrite] );
-
-			{
-				const md3Triangle_t *tri = (const md3Triangle_t *)( (const byte *)surf + surf->ofsTriangles );
-				for ( i = 0; i < surf->numTriangles; i++, tri++ ) {
-					s_indexMapped[idxWrite + (uint32_t)i * 3 + 0] = (uint32_t)tri->indexes[0];
-					s_indexMapped[idxWrite + (uint32_t)i * 3 + 1] = (uint32_t)tri->indexes[1];
-					s_indexMapped[idxWrite + (uint32_t)i * 3 + 2] = (uint32_t)tri->indexes[2];
+			for ( s = 0; s < model->mdc->numSurfaces; s++ ) {
+				if ( !ReserveSurface( surf->numVerts, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
+					goto overflow;
 				}
+
+				LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, &s_vertexMapped[vertWrite] );
+				CommitSurface( surf->numVerts, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
+					ResolveShader( ent->customShader, surf->numShaders, (const byte *)surf + surf->ofsShaders ),
+					&vertWrite, &idxWrite, &numDraws );
+
+				surf = (const mdcSurface_t *)( (const byte *)surf + surf->ofsEnd );
 			}
-
-			s_draws[numDraws].vertBase = vertWrite;
-			s_draws[numDraws].idxBase = idxWrite;
-			s_draws[numDraws].idxCount = (uint32_t)surf->numTriangles * 3;
-			s_draws[numDraws].shader = shader;
-			numDraws++;
-
-			vertWrite += (uint32_t)surf->numVerts;
-			idxWrite += (uint32_t)surf->numTriangles * 3;
-
-			surf = (const md3Surface_t *)( (const byte *)surf + surf->ofsEnd );
 		}
+	}
+
+	goto doneCollecting;
+
+overflow:
+	if ( !overflowLogged ) {
+		ri.Printf( PRINT_WARNING, "vk_entity_draw_all: scratch buffer full, dropping remaining entity surfaces this frame\n" );
+		overflowLogged = qtrue;
 	}
 
 doneCollecting:

@@ -698,6 +698,73 @@ static int R_MD3LerpTag( orientation_t *outTag, const md3Header_t *md3, int star
 	return retval;
 }
 
+// MDC tags: flat frame*numTags array of quantized {xyz, angles} (names stored once, separately) -- no bones.
+static int R_MDCGetTag( const mdcHeader_t *mdc, int frameNum, const char *tagName, int startTagIndex, const mdcTag_t **outTag ) {
+	const mdcTagName_t *pTagName;
+	int i;
+
+	if ( frameNum < 0 || frameNum >= mdc->numFrames ) {
+		frameNum = mdc->numFrames - 1;
+	}
+	if ( startTagIndex > mdc->numTags ) {
+		*outTag = NULL;
+		return -1;
+	}
+
+	pTagName = (const mdcTagName_t *)( (const byte *)mdc + mdc->ofsTagNames );
+	for ( i = 0; i < mdc->numTags; i++, pTagName++ ) {
+		if ( i >= startTagIndex && !strcmp( pTagName->name, tagName ) ) {
+			break;
+		}
+	}
+	if ( i >= mdc->numTags ) {
+		*outTag = NULL;
+		return -1;
+	}
+
+	*outTag = (const mdcTag_t *)( (const byte *)mdc + mdc->ofsTags ) + (size_t)frameNum * mdc->numTags + i;
+	return i;
+}
+
+static int R_MDCLerpTag( orientation_t *outTag, const mdcHeader_t *mdc, int startTagIndex, const refEntity_t *refent, const char *tagName ) {
+	const mdcTag_t *start, *end;
+	vec3_t sangles, eangles;
+	orientation_t ustart, uend;
+	float frontLerp, backLerp;
+	int retval, j;
+
+	retval = R_MDCGetTag( mdc, refent->oldframe, tagName, startTagIndex, &start );
+	R_MDCGetTag( mdc, refent->frame, tagName, startTagIndex, &end );
+
+	if ( !start || !end ) {
+		return -1;
+	}
+
+	for ( j = 0; j < 3; j++ ) {
+		ustart.origin[j] = (float)start->xyz[j] * MD3_XYZ_SCALE;
+		uend.origin[j] = (float)end->xyz[j] * MD3_XYZ_SCALE;
+		sangles[j] = (float)start->angles[j] * MDC_TAG_ANGLE_SCALE;
+		eangles[j] = (float)end->angles[j] * MDC_TAG_ANGLE_SCALE;
+	}
+	AnglesToAxis( sangles, ustart.axis );
+	AnglesToAxis( eangles, uend.axis );
+
+	frontLerp = 1.0f - refent->backlerp;
+	backLerp = refent->backlerp;
+
+	for ( j = 0; j < 3; j++ ) {
+		outTag->origin[j] = ustart.origin[j] * backLerp + uend.origin[j] * frontLerp;
+		outTag->axis[0][j] = ustart.axis[0][j] * backLerp + uend.axis[0][j] * frontLerp;
+		outTag->axis[1][j] = ustart.axis[1][j] * backLerp + uend.axis[1][j] * frontLerp;
+		outTag->axis[2][j] = ustart.axis[2][j] * backLerp + uend.axis[2][j] * frontLerp;
+	}
+	VectorNormalize( outTag->axis[0] );
+	VectorNormalize( outTag->axis[1] );
+	VectorNormalize( outTag->axis[2] );
+
+	return retval;
+}
+
 int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNameIn, int startIndex ) {
 	model_t *model;
 
@@ -712,6 +779,9 @@ int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNam
 	if ( model->type == MOD_MD3 && model->md3 ) {
 		return R_MD3LerpTag( tag, model->md3, startIndex, refent, tagNameIn );
 	}
+	if ( model->type == MOD_MDC && model->mdc ) {
+		return R_MDCLerpTag( tag, model->mdc, startIndex, refent, tagNameIn );
+	}
 	if ( model->type == MOD_MDS && model->mds ) {
 		return R_GetBoneTag( tag, model->mds, startIndex, refent, tagNameIn );
 	}
@@ -721,5 +791,5 @@ int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNam
 
 	ri.Printf( PRINT_ALL, "...tr_bones checkpoint: R_LerpTag('%s') hModel=%d -- model %s, type=%d\n",
 			   tagNameIn, refent->hModel, model->name, (int)model->type );
-	return -1; // not an MD3/MDS/MDM, or tag support for this model type isn't implemented yet
+	return -1; // not an MD3/MDC/MDS/MDM, or tag support for this model type isn't implemented yet
 }

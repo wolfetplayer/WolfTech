@@ -22,6 +22,126 @@ model_t *R_GetModelByHandle( qhandle_t hModel ) {
 	return &models[hModel];
 }
 
+// Base frames plus optional per-model-frame compressed deltas against the nearest one -- vk_entity.c decodes them at draw time.
+static qboolean R_LoadMDC( model_t *mod, void *buffer, const char *name ) {
+	mdcHeader_t *mdc;
+	md3Frame_t *frame;
+	mdcSurface_t *surf;
+	md3Shader_t *shader;
+	md3Triangle_t *tri;
+	md3St_t *st;
+	md3XyzNormal_t *xyz;
+	mdcXyzCompressed_t *xyzComp;
+	short *ps;
+	int version, size;
+	int i, j;
+
+	version = LittleLong( ( (mdcHeader_t *)buffer )->version );
+	if ( version != MDC_VERSION ) {
+		ri.Printf( PRINT_WARNING, "R_LoadMDC: %s has wrong version (%i should be %i)\n", name, version, MDC_VERSION );
+		return qfalse;
+	}
+
+	size = LittleLong( ( (mdcHeader_t *)buffer )->ofsEnd );
+	mdc = mod->mdc = ri.Hunk_Alloc( size, h_low );
+	memcpy( mdc, buffer, size );
+
+	mdc->ident = LittleLong( mdc->ident );
+	mdc->version = LittleLong( mdc->version );
+	mdc->numFrames = LittleLong( mdc->numFrames );
+	mdc->numTags = LittleLong( mdc->numTags );
+	mdc->numSurfaces = LittleLong( mdc->numSurfaces );
+	mdc->ofsFrames = LittleLong( mdc->ofsFrames );
+	mdc->ofsTagNames = LittleLong( mdc->ofsTagNames );
+	mdc->ofsTags = LittleLong( mdc->ofsTags );
+	mdc->ofsSurfaces = LittleLong( mdc->ofsSurfaces );
+	mdc->ofsEnd = LittleLong( mdc->ofsEnd );
+	mdc->flags = LittleLong( mdc->flags );
+	mdc->numSkins = LittleLong( mdc->numSkins );
+
+	if ( mdc->numFrames < 1 ) {
+		ri.Printf( PRINT_WARNING, "R_LoadMDC: %s has no frames\n", name );
+		return qfalse;
+	}
+
+	frame = (md3Frame_t *)( (byte *)mdc + mdc->ofsFrames );
+	for ( i = 0; i < mdc->numFrames; i++, frame++ ) {
+		frame->radius = LittleFloat( frame->radius );
+		for ( j = 0; j < 3; j++ ) {
+			frame->bounds[0][j] = LittleFloat( frame->bounds[0][j] );
+			frame->bounds[1][j] = LittleFloat( frame->bounds[1][j] );
+			frame->localOrigin[j] = LittleFloat( frame->localOrigin[j] );
+		}
+	}
+
+	// mdcTag_t is plain shorts, already little-endian on this platform -- no swap needed.
+
+	surf = (mdcSurface_t *)( (byte *)mdc + mdc->ofsSurfaces );
+	for ( i = 0; i < mdc->numSurfaces; i++ ) {
+		surf->ident = LittleLong( surf->ident );
+		surf->flags = LittleLong( surf->flags );
+		surf->numBaseFrames = LittleLong( surf->numBaseFrames );
+		surf->numCompFrames = LittleLong( surf->numCompFrames );
+		surf->numShaders = LittleLong( surf->numShaders );
+		surf->numTriangles = LittleLong( surf->numTriangles );
+		surf->ofsTriangles = LittleLong( surf->ofsTriangles );
+		surf->numVerts = LittleLong( surf->numVerts );
+		surf->ofsShaders = LittleLong( surf->ofsShaders );
+		surf->ofsSt = LittleLong( surf->ofsSt );
+		surf->ofsXyzNormals = LittleLong( surf->ofsXyzNormals );
+		surf->ofsXyzCompressed = LittleLong( surf->ofsXyzCompressed );
+		surf->ofsFrameBaseFrames = LittleLong( surf->ofsFrameBaseFrames );
+		surf->ofsFrameCompFrames = LittleLong( surf->ofsFrameCompFrames );
+		surf->ofsEnd = LittleLong( surf->ofsEnd );
+
+		shader = (md3Shader_t *)( (byte *)surf + surf->ofsShaders );
+		for ( j = 0; j < surf->numShaders; j++, shader++ ) {
+			shader->shaderIndex = RE_RegisterShaderInternal( shader->name, qfalse );
+		}
+
+		tri = (md3Triangle_t *)( (byte *)surf + surf->ofsTriangles );
+		for ( j = 0; j < surf->numTriangles; j++, tri++ ) {
+			tri->indexes[0] = LittleLong( tri->indexes[0] );
+			tri->indexes[1] = LittleLong( tri->indexes[1] );
+			tri->indexes[2] = LittleLong( tri->indexes[2] );
+		}
+
+		st = (md3St_t *)( (byte *)surf + surf->ofsSt );
+		for ( j = 0; j < surf->numVerts; j++, st++ ) {
+			st->st[0] = LittleFloat( st->st[0] );
+			st->st[1] = LittleFloat( st->st[1] );
+		}
+
+		xyz = (md3XyzNormal_t *)( (byte *)surf + surf->ofsXyzNormals );
+		for ( j = 0; j < surf->numVerts * surf->numBaseFrames; j++, xyz++ ) {
+			xyz->xyz[0] = LittleShort( xyz->xyz[0] );
+			xyz->xyz[1] = LittleShort( xyz->xyz[1] );
+			xyz->xyz[2] = LittleShort( xyz->xyz[2] );
+			xyz->normal = LittleShort( xyz->normal );
+		}
+
+		xyzComp = (mdcXyzCompressed_t *)( (byte *)surf + surf->ofsXyzCompressed );
+		for ( j = 0; j < surf->numVerts * surf->numCompFrames; j++, xyzComp++ ) {
+			xyzComp->ofsVec = (unsigned int)LittleLong( (int)xyzComp->ofsVec );
+		}
+
+		ps = (short *)( (byte *)surf + surf->ofsFrameBaseFrames );
+		for ( j = 0; j < mdc->numFrames; j++, ps++ ) {
+			*ps = LittleShort( *ps );
+		}
+
+		ps = (short *)( (byte *)surf + surf->ofsFrameCompFrames );
+		for ( j = 0; j < mdc->numFrames; j++, ps++ ) {
+			*ps = LittleShort( *ps );
+		}
+
+		surf = (mdcSurface_t *)( (byte *)surf + surf->ofsEnd );
+	}
+
+	mod->type = MOD_MDC;
+	return qtrue;
+}
+
 // Full surface/vertex/triangle data -- unlike MDS/MDM, MD3 carries its own per-frame mesh, so this is all drawing needs.
 static qboolean R_LoadMD3( model_t *mod, void *buffer, const char *name ) {
 	md3Header_t *md3;
@@ -349,13 +469,15 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	ext = COM_GetExtension( name );
 	loaded = qfalse;
 
-	if ( !Q_stricmp( ext, "md3" ) || !Q_stricmp( ext, "mds" ) || !Q_stricmp( ext, "mdx" ) || !Q_stricmp( ext, "mdm" ) ) {
+	if ( !Q_stricmp( ext, "md3" ) || !Q_stricmp( ext, "mdc" ) || !Q_stricmp( ext, "mds" ) || !Q_stricmp( ext, "mdx" ) || !Q_stricmp( ext, "mdm" ) ) {
 		long readLen;
 		buffer = NULL;
 		readLen = ri.FS_ReadFile( name, &buffer );
 		if ( readLen > 0 && buffer ) {
 			if ( !Q_stricmp( ext, "md3" ) ) {
 				loaded = R_LoadMD3( mod, buffer, name );
+			} else if ( !Q_stricmp( ext, "mdc" ) ) {
+				loaded = R_LoadMDC( mod, buffer, name );
 			} else if ( !Q_stricmp( ext, "mds" ) ) {
 				loaded = R_LoadMDS( mod, buffer, name );
 			} else if ( !Q_stricmp( ext, "mdx" ) ) {
