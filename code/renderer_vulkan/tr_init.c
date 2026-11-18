@@ -180,8 +180,8 @@ static void RE_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_
 }
 
 static void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b, int overdraw ) {
-	FIRST_CALL_CHECKPOINT( "RE_AddLightToScene" );
-	(void)org; (void)intensity; (void)r; (void)g; (void)b; (void)overdraw;
+	(void)overdraw; // REF_FORCE_DLIGHT/REF_JUNIOR_DLIGHT/REF_MUZZLEFLASH_DLIGHT tiers aren't implemented -- every light always applies
+	R_AddLightToScene( org, intensity, r, g, b );
 }
 
 static void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, int flags ) {

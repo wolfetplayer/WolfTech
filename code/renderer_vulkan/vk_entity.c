@@ -11,7 +11,12 @@
 #include "tr_skin.h"
 #include "tr_bones.h"
 #include "tr_light.h"
+#include "tr_scene.h"
 #include "vk_entity.h"
+
+// Same falloff shape the opengl1 renderer uses for dlight contributions to entity lighting.
+#define DLIGHT_AT_RADIUS 16.0f
+#define DLIGHT_MINIMUM_RADIUS 16.0f
 
 #define ENTITY_MAX_VERTS 65536
 #define ENTITY_MAX_INDEXES 262144
@@ -226,10 +231,12 @@ static void LerpMDMSurfaceVerts( const refEntity_t *ent, const mdmSurface_t *sur
 	}
 }
 
-// Flat per-entity shading from the light grid (ambient+directed summed) -- stands in for real per-vertex lighting until entities carry normals through this draw path.
+// Flat per-entity tint from the light grid plus dynamic lights -- stands in for real per-vertex lighting.
 static void ComputeEntityTint( const refEntity_t *ent, byte outColor[4] ) {
 	vec3_t origin, ambient, directed, lightDir;
-	int r, g, b;
+	qboolean hasGrid;
+	const dlight_t *dlights;
+	int numDlights, i, r, g, b;
 
 	if ( ent->renderfx & RF_LIGHTING_ORIGIN ) {
 		VectorCopy( ent->lightingOrigin, origin );
@@ -237,9 +244,26 @@ static void ComputeEntityTint( const refEntity_t *ent, byte outColor[4] ) {
 		VectorCopy( ent->origin, origin );
 	}
 
-	if ( !R_LightForPoint( origin, ambient, directed, lightDir ) ) {
+	hasGrid = R_LightForPoint( origin, ambient, directed, lightDir );
+	dlights = R_GetSceneDlights( &numDlights );
+
+	if ( !hasGrid && numDlights == 0 ) {
 		outColor[0] = outColor[1] = outColor[2] = outColor[3] = 255;
 		return;
+	}
+
+	for ( i = 0; i < numDlights; i++ ) {
+		vec3_t dir;
+		float dist, power, d;
+
+		VectorSubtract( dlights[i].origin, origin, dir );
+		dist = VectorNormalize( dir );
+		power = DLIGHT_AT_RADIUS * ( dlights[i].radius * dlights[i].radius );
+		if ( dist < DLIGHT_MINIMUM_RADIUS ) {
+			dist = DLIGHT_MINIMUM_RADIUS;
+		}
+		d = power / ( dist * dist );
+		VectorMA( directed, d, dlights[i].color, directed );
 	}
 
 	r = (int)( ambient[0] + directed[0] );
