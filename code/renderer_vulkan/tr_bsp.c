@@ -29,6 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // tr_bsp.c -- loads .bsp lumps into flat arrays; no tree-walk/PVS/tessellation yet, see tr_bsp.h.
 
 #include <string.h>
+#include <math.h>
 
 #include "tr_local.h"
 #include "tr_shader.h"
@@ -249,6 +250,45 @@ static void R_LoadSubmodels( const lump_t *l ) {
 	}
 }
 
+// Grid cell size the map was compiled with; RTCW lets worldspawn override this, but we don't parse entity keys yet.
+#define LIGHTGRID_SIZE_X 64.0f
+#define LIGHTGRID_SIZE_Y 64.0f
+#define LIGHTGRID_SIZE_Z 128.0f
+
+// Bounds come from the world model, same simplification the opengl1 renderer itself falls back to.
+static void R_LoadLightGrid( const lump_t *l ) {
+	vec3_t gridSize = { LIGHTGRID_SIZE_X, LIGHTGRID_SIZE_Y, LIGHTGRID_SIZE_Z };
+	const float *mins, *maxs;
+	vec3_t gridMaxs;
+	int numGridPoints;
+	int i;
+
+	tr_world.lightGridData = NULL;
+
+	if ( tr_world.numSubmodels == 0 ) {
+		return;
+	}
+
+	mins = tr_world.submodels[0].mins;
+	maxs = tr_world.submodels[0].maxs;
+
+	for ( i = 0; i < 3; i++ ) {
+		tr_world.lightGridInverseSize[i] = 1.0f / gridSize[i];
+		tr_world.lightGridOrigin[i] = gridSize[i] * ceilf( mins[i] / gridSize[i] );
+		gridMaxs[i] = gridSize[i] * floorf( maxs[i] / gridSize[i] );
+		tr_world.lightGridBounds[i] = (int)( ( gridMaxs[i] - tr_world.lightGridOrigin[i] ) / gridSize[i] ) + 1;
+	}
+
+	numGridPoints = tr_world.lightGridBounds[0] * tr_world.lightGridBounds[1] * tr_world.lightGridBounds[2];
+
+	if ( l->filelen != numGridPoints * 8 ) {
+		return; // mismatched or absent (e.g. a -nolight compile) -- R_LightForPoint falls back gracefully
+	}
+
+	tr_world.lightGridData = ri.Hunk_Alloc( l->filelen, h_low );
+	memcpy( tr_world.lightGridData, fileBase + l->fileofs, l->filelen );
+}
+
 // Lump layout: int numClusters, int clusterBytes, then numClusters*clusterBytes PVS bits.
 static void R_LoadVisibility( const lump_t *l ) {
 	const int *buf;
@@ -319,6 +359,8 @@ void RE_LoadWorldMap( const char *name ) {
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: leafs (%d)\n", tr_world.numLeafs );
 	R_LoadSubmodels( &header->lumps[LUMP_MODELS] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: submodels (%d)\n", tr_world.numSubmodels );
+	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
+	ri.Printf( PRINT_ALL, "...bsp checkpoint: light grid (%s)\n", tr_world.lightGridData ? "loaded" : "absent" );
 	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: visibility (%d clusters)\n", tr_world.numClusters );
 

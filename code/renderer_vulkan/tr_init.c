@@ -42,6 +42,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_model.h"
 #include "tr_bones.h"
 #include "tr_skin.h"
+#include "tr_light.h"
 #include "tr_scene.h"
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
@@ -166,14 +167,7 @@ static void RE_AddRefEntityToScene( const refEntity_t *re ) {
 	R_AddRefEntityToScene( re );
 }
 
-static int R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir ) {
-	FIRST_CALL_CHECKPOINT( "R_LightForPoint" );
-	(void)point;
-	VectorClear( ambientLight );
-	VectorClear( directedLight );
-	VectorSet( lightDir, 0.0f, 0.0f, 1.0f );
-	return 0;
-}
+// Real light grid sampling lives in tr_light.c.
 
 static void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts ) {
 	FIRST_CALL_CHECKPOINT( "RE_AddPolyToScene" );

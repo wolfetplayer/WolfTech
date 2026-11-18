@@ -60,6 +60,12 @@ typedef struct {
 	int numLightmaps;
 	byte *lightmapData; // RGB8, numLightmaps * LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 3 bytes
 
+	// Ambient/directed light samples on a regular 3D grid, used to shade entities (which have no lightmap of their own).
+	vec3_t lightGridOrigin;
+	vec3_t lightGridInverseSize;
+	int lightGridBounds[3];
+	byte *lightGridData; // 8 bytes/point: ambient RGB, directed RGB, direction as lat/long; NULL if absent (e.g. -nolight)
+
 	qboolean loaded;
 } bspWorld_t;
 
