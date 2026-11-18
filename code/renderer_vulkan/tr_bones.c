@@ -644,6 +644,60 @@ static int R_MDM_GetTag( orientation_t *outTag, mdmHeader_t *mdm, int startTagIn
 	return i;
 }
 
+// MD3 tags are a flat frame*numTags array (no ofsEnd chaining, no bones) -- just a named per-frame transform.
+static int R_MD3GetTag( const md3Header_t *md3, int frameNum, const char *tagName, int startTagIndex, const md3Tag_t **outTag ) {
+	const md3Tag_t *tag;
+	int i;
+
+	if ( frameNum < 0 || frameNum >= md3->numFrames ) {
+		frameNum = md3->numFrames - 1; // bad frame mid-model-change isn't an error
+	}
+	if ( startTagIndex > md3->numTags ) {
+		*outTag = NULL;
+		return -1;
+	}
+
+	tag = (const md3Tag_t *)( (const byte *)md3 + md3->ofsTags ) + (size_t)frameNum * md3->numTags;
+	for ( i = 0; i < md3->numTags; i++, tag++ ) {
+		if ( i >= startTagIndex && !strcmp( tag->name, tagName ) ) {
+			*outTag = tag;
+			return i;
+		}
+	}
+
+	*outTag = NULL;
+	return -1;
+}
+
+static int R_MD3LerpTag( orientation_t *outTag, const md3Header_t *md3, int startTagIndex, const refEntity_t *refent, const char *tagName ) {
+	const md3Tag_t *start, *end;
+	float frontLerp, backLerp;
+	int retval, j;
+
+	retval = R_MD3GetTag( md3, refent->oldframe, tagName, startTagIndex, &start );
+	R_MD3GetTag( md3, refent->frame, tagName, startTagIndex, &end );
+
+	if ( !start || !end ) {
+		return -1;
+	}
+
+	frontLerp = 1.0f - refent->backlerp;
+	backLerp = refent->backlerp;
+
+	for ( j = 0; j < 3; j++ ) {
+		outTag->origin[j] = start->origin[j] * backLerp + end->origin[j] * frontLerp;
+		outTag->axis[0][j] = start->axis[0][j] * backLerp + end->axis[0][j] * frontLerp;
+		outTag->axis[1][j] = start->axis[1][j] * backLerp + end->axis[1][j] * frontLerp;
+		outTag->axis[2][j] = start->axis[2][j] * backLerp + end->axis[2][j] * frontLerp;
+	}
+
+	VectorNormalize( outTag->axis[0] );
+	VectorNormalize( outTag->axis[1] );
+	VectorNormalize( outTag->axis[2] );
+
+	return retval;
+}
+
 int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNameIn, int startIndex ) {
 	model_t *model;
 
@@ -655,6 +709,9 @@ int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNam
 		return -1;
 	}
 
+	if ( model->type == MOD_MD3 && model->md3 ) {
+		return R_MD3LerpTag( tag, model->md3, startIndex, refent, tagNameIn );
+	}
 	if ( model->type == MOD_MDS && model->mds ) {
 		return R_GetBoneTag( tag, model->mds, startIndex, refent, tagNameIn );
 	}
@@ -664,5 +721,5 @@ int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNam
 
 	ri.Printf( PRINT_ALL, "...tr_bones checkpoint: R_LerpTag('%s') hModel=%d -- model %s, type=%d\n",
 			   tagNameIn, refent->hModel, model->name, (int)model->type );
-	return -1; // not an MDS/MDM, or tag support for this model type isn't implemented yet
+	return -1; // not an MD3/MDS/MDM, or tag support for this model type isn't implemented yet
 }

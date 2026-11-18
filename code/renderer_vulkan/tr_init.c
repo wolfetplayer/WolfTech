@@ -41,8 +41,10 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_patch.h"
 #include "tr_model.h"
 #include "tr_bones.h"
+#include "tr_scene.h"
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
+#include "vk_entity.h"
 #include "vk_world.h"
 
 refimport_t ri;
@@ -173,12 +175,11 @@ static void RE_EndRegistration( void ) {
 }
 
 static void RE_ClearScene( void ) {
-	FIRST_CALL_CHECKPOINT( "RE_ClearScene" );
+	R_ClearScene();
 }
 
 static void RE_AddRefEntityToScene( const refEntity_t *re ) {
-	FIRST_CALL_CHECKPOINT( "RE_AddRefEntityToScene" );
-	(void)re;
+	R_AddRefEntityToScene( re );
 }
 
 static int R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir ) {
@@ -245,6 +246,13 @@ static void RE_RenderScene( const refdef_t *fd ) {
 	}
 
 	vk_draw3d_test_cube( s_testCubeOrigin, 40.0f, viewProj );
+
+	{
+		int numEntities;
+		const refEntity_t *entities = R_GetSceneEntities( &numEntities );
+		vk_entity_draw_all( entities, numEntities, viewProj );
+		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj );
+	}
 }
 
 static void RE_SetColor( const float *rgba ) {

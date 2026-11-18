@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "tr_local.h"
+#include "tr_shader.h"
 #include "tr_model.h"
 
 #define MAX_MOD_KNOWN 1024
@@ -19,6 +20,112 @@ model_t *R_GetModelByHandle( qhandle_t hModel ) {
 		return NULL;
 	}
 	return &models[hModel];
+}
+
+// Full surface/vertex/triangle data -- unlike MDS/MDM, MD3 carries its own per-frame mesh, so this is all drawing needs.
+static qboolean R_LoadMD3( model_t *mod, void *buffer, const char *name ) {
+	md3Header_t *md3;
+	md3Frame_t *frame;
+	md3Surface_t *surf;
+	md3Shader_t *shader;
+	md3Triangle_t *tri;
+	md3St_t *st;
+	md3XyzNormal_t *xyz;
+	md3Tag_t *tag;
+	int version, size;
+	int i, j;
+
+	version = LittleLong( ( (md3Header_t *)buffer )->version );
+	if ( version != MD3_VERSION ) {
+		ri.Printf( PRINT_WARNING, "R_LoadMD3: %s has wrong version (%i should be %i)\n", name, version, MD3_VERSION );
+		return qfalse;
+	}
+
+	size = LittleLong( ( (md3Header_t *)buffer )->ofsEnd );
+	md3 = mod->md3 = ri.Hunk_Alloc( size, h_low );
+	memcpy( md3, buffer, size );
+
+	md3->ident = LittleLong( md3->ident );
+	md3->version = LittleLong( md3->version );
+	md3->numFrames = LittleLong( md3->numFrames );
+	md3->numTags = LittleLong( md3->numTags );
+	md3->numSurfaces = LittleLong( md3->numSurfaces );
+	md3->ofsFrames = LittleLong( md3->ofsFrames );
+	md3->ofsTags = LittleLong( md3->ofsTags );
+	md3->ofsSurfaces = LittleLong( md3->ofsSurfaces );
+	md3->ofsEnd = LittleLong( md3->ofsEnd );
+
+	if ( md3->numFrames < 1 ) {
+		ri.Printf( PRINT_WARNING, "R_LoadMD3: %s has no frames\n", name );
+		return qfalse;
+	}
+
+	frame = (md3Frame_t *)( (byte *)md3 + md3->ofsFrames );
+	for ( i = 0; i < md3->numFrames; i++, frame++ ) {
+		frame->radius = LittleFloat( frame->radius );
+		for ( j = 0; j < 3; j++ ) {
+			frame->bounds[0][j] = LittleFloat( frame->bounds[0][j] );
+			frame->bounds[1][j] = LittleFloat( frame->bounds[1][j] );
+			frame->localOrigin[j] = LittleFloat( frame->localOrigin[j] );
+		}
+	}
+
+	tag = (md3Tag_t *)( (byte *)md3 + md3->ofsTags );
+	for ( i = 0; i < md3->numTags * md3->numFrames; i++, tag++ ) {
+		for ( j = 0; j < 3; j++ ) {
+			tag->origin[j] = LittleFloat( tag->origin[j] );
+			tag->axis[0][j] = LittleFloat( tag->axis[0][j] );
+			tag->axis[1][j] = LittleFloat( tag->axis[1][j] );
+			tag->axis[2][j] = LittleFloat( tag->axis[2][j] );
+		}
+	}
+
+	surf = (md3Surface_t *)( (byte *)md3 + md3->ofsSurfaces );
+	for ( i = 0; i < md3->numSurfaces; i++ ) {
+		surf->ident = LittleLong( surf->ident );
+		surf->flags = LittleLong( surf->flags );
+		surf->numFrames = LittleLong( surf->numFrames );
+		surf->numShaders = LittleLong( surf->numShaders );
+		surf->numTriangles = LittleLong( surf->numTriangles );
+		surf->ofsTriangles = LittleLong( surf->ofsTriangles );
+		surf->numVerts = LittleLong( surf->numVerts );
+		surf->ofsShaders = LittleLong( surf->ofsShaders );
+		surf->ofsSt = LittleLong( surf->ofsSt );
+		surf->ofsXyzNormals = LittleLong( surf->ofsXyzNormals );
+		surf->ofsEnd = LittleLong( surf->ofsEnd );
+
+		// shaderIndex is repurposed here as the resolved renderer shader handle, not a file-local index.
+		shader = (md3Shader_t *)( (byte *)surf + surf->ofsShaders );
+		for ( j = 0; j < surf->numShaders; j++, shader++ ) {
+			shader->shaderIndex = RE_RegisterShaderInternal( shader->name, qfalse );
+		}
+
+		tri = (md3Triangle_t *)( (byte *)surf + surf->ofsTriangles );
+		for ( j = 0; j < surf->numTriangles; j++, tri++ ) {
+			tri->indexes[0] = LittleLong( tri->indexes[0] );
+			tri->indexes[1] = LittleLong( tri->indexes[1] );
+			tri->indexes[2] = LittleLong( tri->indexes[2] );
+		}
+
+		st = (md3St_t *)( (byte *)surf + surf->ofsSt );
+		for ( j = 0; j < surf->numVerts; j++, st++ ) {
+			st->st[0] = LittleFloat( st->st[0] );
+			st->st[1] = LittleFloat( st->st[1] );
+		}
+
+		xyz = (md3XyzNormal_t *)( (byte *)surf + surf->ofsXyzNormals );
+		for ( j = 0; j < surf->numVerts * surf->numFrames; j++, xyz++ ) {
+			xyz->xyz[0] = LittleShort( xyz->xyz[0] );
+			xyz->xyz[1] = LittleShort( xyz->xyz[1] );
+			xyz->xyz[2] = LittleShort( xyz->xyz[2] );
+			xyz->normal = LittleShort( xyz->normal );
+		}
+
+		surf = (md3Surface_t *)( (byte *)surf + surf->ofsEnd );
+	}
+
+	mod->type = MOD_MD3;
+	return qtrue;
 }
 
 // Tag data only -- surfaces/mesh are left unswapped in the hunk copy until real mesh rendering lands.
@@ -242,12 +349,14 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	ext = COM_GetExtension( name );
 	loaded = qfalse;
 
-	if ( !Q_stricmp( ext, "mds" ) || !Q_stricmp( ext, "mdx" ) || !Q_stricmp( ext, "mdm" ) ) {
+	if ( !Q_stricmp( ext, "md3" ) || !Q_stricmp( ext, "mds" ) || !Q_stricmp( ext, "mdx" ) || !Q_stricmp( ext, "mdm" ) ) {
 		long readLen;
 		buffer = NULL;
 		readLen = ri.FS_ReadFile( name, &buffer );
 		if ( readLen > 0 && buffer ) {
-			if ( !Q_stricmp( ext, "mds" ) ) {
+			if ( !Q_stricmp( ext, "md3" ) ) {
+				loaded = R_LoadMD3( mod, buffer, name );
+			} else if ( !Q_stricmp( ext, "mds" ) ) {
 				loaded = R_LoadMDS( mod, buffer, name );
 			} else if ( !Q_stricmp( ext, "mdx" ) ) {
 				loaded = R_LoadMDX( mod, buffer, name );
