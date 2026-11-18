@@ -168,9 +168,14 @@ struct Vk_Instance {
 	VkDescriptorSetLayout set_layout;
 	VkPipelineLayout pipeline_layout;
 
+	// 2 bindings (diffuse + lightmap) for the world's lightmapped draw path; sets come from vk_world.c's own pool.
+	VkDescriptorSetLayout lightmap_set_layout;
+	VkPipelineLayout lightmap_pipeline_layout;
+
 	VkPipeline pipeline_2d_opaque;
 	VkPipeline pipeline_2d_blend;
 	VkPipeline pipeline_3d_opaque;
+	VkPipeline pipeline_3d_lightmap;
 
 	VkBool32 isInitialized;
 

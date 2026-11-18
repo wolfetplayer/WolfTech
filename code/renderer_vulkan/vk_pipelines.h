@@ -10,6 +10,14 @@ typedef struct {
 	float uv[2];
 } vk2d_vertex_t;
 
+// World geometry: same layout as vk2d_vertex_t plus a second (lightmap) UV set.
+typedef struct {
+	float pos[3];
+	byte color[4];
+	float uv[2];
+	float lmUv[2];
+} vkWorldVertex_t;
+
 void vk_createRenderPass( void );
 void vk_destroyRenderPass( void );
 

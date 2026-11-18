@@ -1,4 +1,4 @@
-// vk_world.h -- uploads tr_world (see tr_bsp.h) into GPU buffers and draws it, brute force (no culling yet).
+// vk_world.h -- uploads tr_world (see tr_bsp.h) into GPU buffers and draws it, culled per surface by tr_world.c.
 
 #ifndef VK_WORLD_H_
 #define VK_WORLD_H_
@@ -10,7 +10,7 @@ void vk_world_build( void );
 void vk_world_clear( void );
 void vk_world_shutdown( void );
 
-// Draws every PLANAR/TRIANGLE_SOUP surface, grouped by shader. No-op if no world is built.
+// Draws every visible PLANAR/TRIANGLE_SOUP/PATCH surface, batched by shader+lightmap. No-op if no world is built.
 void vk_world_draw( const float mvp[16] );
 
 #endif // VK_WORLD_H_

@@ -1,4 +1,4 @@
-// vk_pipelines.c -- render pass, framebuffers, descriptor/pipeline layout, and the two 2D pipeline variants.
+// vk_pipelines.c -- render pass, framebuffers, descriptor/pipeline layouts, and the 2D/3D pipeline variants.
 
 #include <string.h>
 #include <stddef.h>
@@ -140,6 +140,26 @@ void vk_createPipelineLayout( void ) {
 	}
 
 	{
+		// binding 0 = diffuse, binding 1 = lightmap; sets are allocated from vk_world.c's own pool, not vk.descriptor_pool.
+		VkDescriptorSetLayoutBinding bindings[2];
+		bindings[0].binding = 0;
+		bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		bindings[0].descriptorCount = 1;
+		bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		bindings[0].pImmutableSamplers = NULL;
+		bindings[1] = bindings[0];
+		bindings[1].binding = 1;
+
+		VkDescriptorSetLayoutCreateInfo desc;
+		desc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		desc.pNext = NULL;
+		desc.flags = 0;
+		desc.bindingCount = 2;
+		desc.pBindings = bindings;
+		VK_CHECK( qvkCreateDescriptorSetLayout( vk.device, &desc, NULL, &vk.lightmap_set_layout ) );
+	}
+
+	{
 		// Matches single_texture.vert's push_constant size (128 bytes) even though only the first 64 are written.
 		VkPushConstantRange push_range;
 		push_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -155,10 +175,15 @@ void vk_createPipelineLayout( void ) {
 		desc.pushConstantRangeCount = 1;
 		desc.pPushConstantRanges = &push_range;
 		VK_CHECK( qvkCreatePipelineLayout( vk.device, &desc, NULL, &vk.pipeline_layout ) );
+
+		desc.pSetLayouts = &vk.lightmap_set_layout;
+		VK_CHECK( qvkCreatePipelineLayout( vk.device, &desc, NULL, &vk.lightmap_pipeline_layout ) );
 	}
 }
 
 void vk_destroyPipelineLayout( void ) {
+	qvkDestroyPipelineLayout( vk.device, vk.lightmap_pipeline_layout, NULL );
+	qvkDestroyDescriptorSetLayout( vk.device, vk.lightmap_set_layout, NULL );
 	qvkDestroyPipelineLayout( vk.device, vk.pipeline_layout, NULL );
 	qvkDestroyDescriptorSetLayout( vk.device, vk.set_layout, NULL );
 	qvkDestroyDescriptorPool( vk.device, vk.descriptor_pool, NULL );
@@ -170,72 +195,38 @@ typedef struct {
 	int32_t clip_plane;
 } vk2d_spec_data_t;
 
-static VkPipeline create_pipeline( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
+static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipelineLayout layout,
+									const VkSpecializationInfo *specInfo,
+									const VkVertexInputBindingDescription *binding,
+									const VkVertexInputAttributeDescription *attribs, uint32_t numAttribs,
+									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 									VkBool32 depthTestEnable, VkCullModeFlags cullMode ) {
 	VkPipeline pipeline;
-
-	vk2d_spec_data_t spec_data = { 0, 0, 0 };
-
-	VkSpecializationMapEntry spec_entries[3];
-	spec_entries[0].constantID = 0;
-	spec_entries[0].offset = offsetof( vk2d_spec_data_t, alpha_test_func );
-	spec_entries[0].size = sizeof( int32_t );
-	spec_entries[1].constantID = 1;
-	spec_entries[1].offset = offsetof( vk2d_spec_data_t, color_op );
-	spec_entries[1].size = sizeof( int32_t );
-	spec_entries[2].constantID = 2;
-	spec_entries[2].offset = offsetof( vk2d_spec_data_t, clip_plane );
-	spec_entries[2].size = sizeof( int32_t );
-
-	VkSpecializationInfo spec_info;
-	spec_info.mapEntryCount = 3;
-	spec_info.pMapEntries = spec_entries;
-	spec_info.dataSize = sizeof( spec_data );
-	spec_info.pData = &spec_data;
 
 	VkPipelineShaderStageCreateInfo stages[2];
 	stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	stages[0].pNext = NULL;
 	stages[0].flags = 0;
 	stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-	stages[0].module = vk_single_texture_vs;
+	stages[0].module = vs;
 	stages[0].pName = "main";
-	stages[0].pSpecializationInfo = &spec_info;
+	stages[0].pSpecializationInfo = specInfo;
 
 	stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	stages[1].pNext = NULL;
 	stages[1].flags = 0;
 	stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	stages[1].module = vk_single_texture_fs;
+	stages[1].module = fs;
 	stages[1].pName = "main";
-	stages[1].pSpecializationInfo = &spec_info;
-
-	VkVertexInputBindingDescription binding;
-	binding.binding = 0;
-	binding.stride = sizeof( vk2d_vertex_t );
-	binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	VkVertexInputAttributeDescription attribs[3];
-	attribs[0].location = 0;
-	attribs[0].binding = 0;
-	attribs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attribs[0].offset = offsetof( vk2d_vertex_t, pos );
-	attribs[1].location = 1;
-	attribs[1].binding = 0;
-	attribs[1].format = VK_FORMAT_R8G8B8A8_UNORM;
-	attribs[1].offset = offsetof( vk2d_vertex_t, color );
-	attribs[2].location = 2;
-	attribs[2].binding = 0;
-	attribs[2].format = VK_FORMAT_R32G32_SFLOAT;
-	attribs[2].offset = offsetof( vk2d_vertex_t, uv );
+	stages[1].pSpecializationInfo = specInfo;
 
 	VkPipelineVertexInputStateCreateInfo vertex_input;
 	vertex_input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertex_input.pNext = NULL;
 	vertex_input.flags = 0;
 	vertex_input.vertexBindingDescriptionCount = 1;
-	vertex_input.pVertexBindingDescriptions = &binding;
-	vertex_input.vertexAttributeDescriptionCount = 3;
+	vertex_input.pVertexBindingDescriptions = binding;
+	vertex_input.vertexAttributeDescriptionCount = numAttribs;
 	vertex_input.pVertexAttributeDescriptions = attribs;
 
 	VkPipelineInputAssemblyStateCreateInfo input_assembly;
@@ -342,7 +333,7 @@ static VkPipeline create_pipeline( VkBool32 blendEnable, VkBlendFactor srcBlend,
 	desc.pDepthStencilState = &depth_stencil;
 	desc.pColorBlendState = &blend_state;
 	desc.pDynamicState = &dynamic_state;
-	desc.layout = vk.pipeline_layout;
+	desc.layout = layout;
 	desc.renderPass = vk.render_pass;
 	desc.subpass = 0;
 	desc.basePipelineHandle = VK_NULL_HANDLE;
@@ -352,9 +343,61 @@ static VkPipeline create_pipeline( VkBool32 blendEnable, VkBlendFactor srcBlend,
 	return pipeline;
 }
 
+// vk2d_vertex_t attribs, shared by the 2D pipelines and the (unused-for-world-now) opaque 3D one.
+static void Get2DAttribs( VkVertexInputBindingDescription *binding, VkVertexInputAttributeDescription attribs[3] ) {
+	binding->binding = 0;
+	binding->stride = sizeof( vk2d_vertex_t );
+	binding->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	attribs[0].location = 0;
+	attribs[0].binding = 0;
+	attribs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attribs[0].offset = offsetof( vk2d_vertex_t, pos );
+	attribs[1].location = 1;
+	attribs[1].binding = 0;
+	attribs[1].format = VK_FORMAT_R8G8B8A8_UNORM;
+	attribs[1].offset = offsetof( vk2d_vertex_t, color );
+	attribs[2].location = 2;
+	attribs[2].binding = 0;
+	attribs[2].format = VK_FORMAT_R32G32_SFLOAT;
+	attribs[2].offset = offsetof( vk2d_vertex_t, uv );
+}
+
+static void GetSpecInfo( vk2d_spec_data_t *spec_data, VkSpecializationMapEntry spec_entries[3], VkSpecializationInfo *specInfo ) {
+	spec_data->alpha_test_func = 0;
+	spec_data->color_op = 0;
+	spec_data->clip_plane = 0;
+
+	spec_entries[0].constantID = 0;
+	spec_entries[0].offset = offsetof( vk2d_spec_data_t, alpha_test_func );
+	spec_entries[0].size = sizeof( int32_t );
+	spec_entries[1].constantID = 1;
+	spec_entries[1].offset = offsetof( vk2d_spec_data_t, color_op );
+	spec_entries[1].size = sizeof( int32_t );
+	spec_entries[2].constantID = 2;
+	spec_entries[2].offset = offsetof( vk2d_spec_data_t, clip_plane );
+	spec_entries[2].size = sizeof( int32_t );
+
+	specInfo->mapEntryCount = 3;
+	specInfo->pMapEntries = spec_entries;
+	specInfo->dataSize = sizeof( *spec_data );
+	specInfo->pData = spec_data;
+}
+
 void vk_create2DPipelines( void ) {
-	vk.pipeline_2d_opaque = create_pipeline( VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
-	vk.pipeline_2d_blend = create_pipeline( VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_FALSE, VK_CULL_MODE_NONE );
+	VkVertexInputBindingDescription binding;
+	VkVertexInputAttributeDescription attribs[3];
+	vk2d_spec_data_t spec_data;
+	VkSpecializationMapEntry spec_entries[3];
+	VkSpecializationInfo specInfo;
+
+	Get2DAttribs( &binding, attribs );
+	GetSpecInfo( &spec_data, spec_entries, &specInfo );
+
+	vk.pipeline_2d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding, attribs, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
+	vk.pipeline_2d_blend = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding, attribs, 3, VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_FALSE, VK_CULL_MODE_NONE );
 }
 
 void vk_destroy2DPipelines( void ) {
@@ -362,11 +405,49 @@ void vk_destroy2DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_blend, NULL );
 }
 
+// pipeline_3d_opaque is vk_draw3d.c's test-cube pipeline (vk2d_vertex_t buffer); world rendering uses pipeline_3d_lightmap.
 // No cull mode yet -- tr_shader.c's parsed cullNone isn't wired to any pipeline choice yet.
 void vk_create3DPipelines( void ) {
-	vk.pipeline_3d_opaque = create_pipeline( VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
+	VkVertexInputBindingDescription binding2d;
+	VkVertexInputAttributeDescription attribs2d[3];
+	VkVertexInputBindingDescription worldBinding;
+	VkVertexInputAttributeDescription lightmapAttribs[4];
+	vk2d_spec_data_t spec_data;
+	VkSpecializationMapEntry spec_entries[3];
+	VkSpecializationInfo specInfo;
+
+	Get2DAttribs( &binding2d, attribs2d );
+
+	worldBinding.binding = 0;
+	worldBinding.stride = sizeof( vkWorldVertex_t );
+	worldBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	lightmapAttribs[0].location = 0;
+	lightmapAttribs[0].binding = 0;
+	lightmapAttribs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	lightmapAttribs[0].offset = offsetof( vkWorldVertex_t, pos );
+	lightmapAttribs[1].location = 1;
+	lightmapAttribs[1].binding = 0;
+	lightmapAttribs[1].format = VK_FORMAT_R8G8B8A8_UNORM;
+	lightmapAttribs[1].offset = offsetof( vkWorldVertex_t, color );
+	lightmapAttribs[2].location = 2;
+	lightmapAttribs[2].binding = 0;
+	lightmapAttribs[2].format = VK_FORMAT_R32G32_SFLOAT;
+	lightmapAttribs[2].offset = offsetof( vkWorldVertex_t, uv );
+	lightmapAttribs[3].location = 3;
+	lightmapAttribs[3].binding = 0;
+	lightmapAttribs[3].format = VK_FORMAT_R32G32_SFLOAT;
+	lightmapAttribs[3].offset = offsetof( vkWorldVertex_t, lmUv );
+
+	GetSpecInfo( &spec_data, spec_entries, &specInfo );
+
+	vk.pipeline_3d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
+	vk.pipeline_3d_lightmap = create_pipeline( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
+		&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
 }
 
 void vk_destroy3DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_opaque, NULL );
+	qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap, NULL );
 }

@@ -17,4 +17,9 @@ qboolean vk_create_device_local_buffer( const void *data, VkDeviceSize size, VkB
 qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int height, int flags );
 void vk_destroy_texture( image_t *image );
 
+// Image+view+sampler only, no descriptor set -- for textures bound into a caller-owned descriptor set (e.g. lightmaps).
+qboolean vk_create_texture_image( const byte *pixels, int width, int height, int flags,
+									VkImage *outImage, VkDeviceMemory *outMemory, VkImageView *outView, VkSampler *outSampler );
+void vk_destroy_texture_image( VkImage image, VkDeviceMemory memory, VkImageView view, VkSampler sampler );
+
 #endif // VK_IMAGE_H_

@@ -134,7 +134,8 @@ qboolean vk_create_device_local_buffer( const void *data, VkDeviceSize size, VkB
 	return qtrue;
 }
 
-qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int height, int flags ) {
+qboolean vk_create_texture_image( const byte *pixels, int width, int height, int flags,
+									VkImage *outImage, VkDeviceMemory *outMemory, VkImageView *outView, VkSampler *outSampler ) {
 	VkDeviceSize image_size = (VkDeviceSize)width * height * 4;
 
 	VkBuffer staging_buf;
@@ -162,18 +163,18 @@ qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int h
 	image_desc.queueFamilyIndexCount = 0;
 	image_desc.pQueueFamilyIndices = NULL;
 	image_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	VK_CHECK( qvkCreateImage( vk.device, &image_desc, NULL, &image->vk_image ) );
+	VK_CHECK( qvkCreateImage( vk.device, &image_desc, NULL, outImage ) );
 
 	VkMemoryRequirements mem_reqs;
-	qvkGetImageMemoryRequirements( vk.device, image->vk_image, &mem_reqs );
+	qvkGetImageMemoryRequirements( vk.device, *outImage, &mem_reqs );
 
 	VkMemoryAllocateInfo alloc_info;
 	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	alloc_info.pNext = NULL;
 	alloc_info.allocationSize = mem_reqs.size;
 	alloc_info.memoryTypeIndex = vk_find_memory_type( mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
-	VK_CHECK( qvkAllocateMemory( vk.device, &alloc_info, NULL, &image->vk_memory ) );
-	VK_CHECK( qvkBindImageMemory( vk.device, image->vk_image, image->vk_memory, 0 ) );
+	VK_CHECK( qvkAllocateMemory( vk.device, &alloc_info, NULL, outMemory ) );
+	VK_CHECK( qvkBindImageMemory( vk.device, *outImage, *outMemory, 0 ) );
 
 	{
 		VkCommandBuffer cmd = vk_begin_one_shot_cmd();
@@ -187,7 +188,7 @@ qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int h
 		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = image->vk_image;
+		barrier.image = *outImage;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		barrier.subresourceRange.baseMipLevel = 0;
 		barrier.subresourceRange.levelCount = 1;
@@ -210,7 +211,7 @@ qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int h
 		region.imageExtent.width = (uint32_t)width;
 		region.imageExtent.height = (uint32_t)height;
 		region.imageExtent.depth = 1;
-		qvkCmdCopyBufferToImage( cmd, staging_buf, image->vk_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region );
+		qvkCmdCopyBufferToImage( cmd, staging_buf, *outImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region );
 
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -229,7 +230,7 @@ qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int h
 	view_desc.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	view_desc.pNext = NULL;
 	view_desc.flags = 0;
-	view_desc.image = image->vk_image;
+	view_desc.image = *outImage;
 	view_desc.viewType = VK_IMAGE_VIEW_TYPE_2D;
 	view_desc.format = VK_FORMAT_R8G8B8A8_UNORM;
 	view_desc.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -241,7 +242,7 @@ qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int h
 	view_desc.subresourceRange.levelCount = 1;
 	view_desc.subresourceRange.baseArrayLayer = 0;
 	view_desc.subresourceRange.layerCount = 1;
-	VK_CHECK( qvkCreateImageView( vk.device, &view_desc, NULL, &image->vk_view ) );
+	VK_CHECK( qvkCreateImageView( vk.device, &view_desc, NULL, outView ) );
 
 	VkSamplerAddressMode address_mode = ( flags & IMGFLAG_CLAMPTOEDGE ) ?
 		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE : VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -265,7 +266,31 @@ qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int h
 	sampler_desc.maxLod = 0.0f;
 	sampler_desc.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	sampler_desc.unnormalizedCoordinates = VK_FALSE;
-	VK_CHECK( qvkCreateSampler( vk.device, &sampler_desc, NULL, &image->vk_sampler ) );
+	VK_CHECK( qvkCreateSampler( vk.device, &sampler_desc, NULL, outSampler ) );
+
+	return qtrue;
+}
+
+void vk_destroy_texture_image( VkImage image, VkDeviceMemory memory, VkImageView view, VkSampler sampler ) {
+	if ( sampler ) {
+		qvkDestroySampler( vk.device, sampler, NULL );
+	}
+	if ( view ) {
+		qvkDestroyImageView( vk.device, view, NULL );
+	}
+	if ( image ) {
+		qvkDestroyImage( vk.device, image, NULL );
+	}
+	if ( memory ) {
+		qvkFreeMemory( vk.device, memory, NULL );
+	}
+}
+
+qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int height, int flags ) {
+	if ( !vk_create_texture_image( pixels, width, height, flags,
+			&image->vk_image, &image->vk_memory, &image->vk_view, &image->vk_sampler ) ) {
+		return qfalse;
+	}
 
 	VkDescriptorSetAllocateInfo set_alloc;
 	set_alloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -300,16 +325,5 @@ void vk_destroy_texture( image_t *image ) {
 	if ( image->vk_descriptor ) {
 		qvkFreeDescriptorSets( vk.device, vk.descriptor_pool, 1, &image->vk_descriptor );
 	}
-	if ( image->vk_sampler ) {
-		qvkDestroySampler( vk.device, image->vk_sampler, NULL );
-	}
-	if ( image->vk_view ) {
-		qvkDestroyImageView( vk.device, image->vk_view, NULL );
-	}
-	if ( image->vk_image ) {
-		qvkDestroyImage( vk.device, image->vk_image, NULL );
-	}
-	if ( image->vk_memory ) {
-		qvkFreeMemory( vk.device, image->vk_memory, NULL );
-	}
+	vk_destroy_texture_image( image->vk_image, image->vk_memory, image->vk_view, image->vk_sampler );
 }

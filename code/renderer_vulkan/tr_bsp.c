@@ -141,7 +141,23 @@ static void R_LoadSurfaces( const lump_t *l ) {
 		out->numIndexes = LittleLong( in->numIndexes );
 		out->patchWidth = LittleLong( in->patchWidth );
 		out->patchHeight = LittleLong( in->patchHeight );
+		out->lightmapNum = LittleLong( in->lightmapNum );
 	}
+}
+
+// Each lightmap is its own LIGHTMAP_WIDTH*LIGHTMAP_HEIGHT RGB8 image; surfaces index it directly, no atlasing.
+static void R_LoadLightmaps( const lump_t *l ) {
+	int lightmapSize = LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 3;
+
+	tr_world.numLightmaps = l->filelen / lightmapSize;
+	tr_world.lightmapData = NULL;
+
+	if ( tr_world.numLightmaps == 0 ) {
+		return;
+	}
+
+	tr_world.lightmapData = ri.Hunk_Alloc( l->filelen, h_low );
+	memcpy( tr_world.lightmapData, fileBase + l->fileofs, l->filelen );
 }
 
 static void R_LoadLeafSurfaces( const lump_t *l ) {
@@ -293,6 +309,8 @@ void RE_LoadWorldMap( const char *name ) {
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: drawindexes (%d)\n", tr_world.numDrawIndexes );
 	R_LoadSurfaces( &header->lumps[LUMP_SURFACES] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: surfaces (%d)\n", tr_world.numSurfaces );
+	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS] );
+	ri.Printf( PRINT_ALL, "...bsp checkpoint: lightmaps (%d)\n", tr_world.numLightmaps );
 	R_LoadLeafSurfaces( &header->lumps[LUMP_LEAFSURFACES] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: leafsurfaces (%d)\n", tr_world.numLeafSurfaces );
 	R_LoadNodes( &header->lumps[LUMP_NODES] );

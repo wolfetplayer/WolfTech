@@ -10,7 +10,7 @@ typedef struct {
 	qhandle_t shader; // resolved once at load time via RE_RegisterShaderInternal
 } bspShader_t;
 
-// MST_PATCH/FLARE/FOLIAGE surfaces are stored but not yet tessellated/drawable.
+// MST_PATCH is tessellated by tr_patch.c at build time; FLARE/FOLIAGE are stored but not yet drawable.
 typedef struct {
 	int shaderNum; // index into bspWorld_t.shaders
 	int surfaceType; // mapSurfaceType_t
@@ -19,6 +19,8 @@ typedef struct {
 	int firstIndex, numIndexes; // into bspWorld_t.drawIndexes; already-triangulated for PLANAR and TRIANGLE_SOUP
 
 	int patchWidth, patchHeight; // MST_PATCH only
+
+	int lightmapNum; // index into bspWorld_t.lightmapData, or -1 for vertex-lit/no lightmap
 } bspSurface_t;
 
 typedef struct {
@@ -54,6 +56,9 @@ typedef struct {
 	int numClusters;
 	int clusterBytes;
 	byte *visData; // NULL if the map has no LUMP_VISIBILITY data
+
+	int numLightmaps;
+	byte *lightmapData; // RGB8, numLightmaps * LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 3 bytes
 
 	qboolean loaded;
 } bspWorld_t;

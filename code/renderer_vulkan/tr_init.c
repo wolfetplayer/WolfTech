@@ -38,6 +38,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_main.h"
 #include "tr_bsp.h"
 #include "tr_world.h"
+#include "tr_patch.h"
 #include "vk_draw2d.h"
 #include "vk_draw3d.h"
 #include "vk_world.h"
@@ -98,6 +99,7 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 		R_InitShaders();
 		R_InitFreeType();
 		R_InitMain();
+		R_InitPatches();
 		s_testCubeInit = qfalse;
 	}
 

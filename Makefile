@@ -1985,11 +1985,14 @@ Q3RVOBJ = \
   $(B)/renderer_vulkan/tr_main.o \
   $(B)/renderer_vulkan/tr_bsp.o \
   $(B)/renderer_vulkan/tr_world.o \
+  $(B)/renderer_vulkan/tr_patch.o \
   $(B)/renderer_vulkan/vk_world.o \
   $(B)/renderer_vulkan/vk_draw2d.o \
   $(B)/renderer_vulkan/vk_draw3d.o \
   $(B)/renderer_vulkan/shaders/Compiled/single_texture_vert.o \
   $(B)/renderer_vulkan/shaders/Compiled/single_texture_frag.o \
+  $(B)/renderer_vulkan/shaders/Compiled/world_lightmap_vert.o \
+  $(B)/renderer_vulkan/shaders/Compiled/world_lightmap_frag.o \
 
 Q3ROBJ = \
   $(B)/renderer/tr_altivec.o \
