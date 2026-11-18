@@ -3,6 +3,8 @@
 #ifndef VK_PIPELINES_H_
 #define VK_PIPELINES_H_
 
+#include "tr_shader.h" // cullType_t
+
 // Single interleaved binding: position, RGBA8 color (byte[4] to dodge endianness), UV.
 typedef struct {
 	float pos[3];
@@ -32,5 +34,12 @@ void vk_destroy2DPipelines( void );
 
 void vk_create3DPipelines( void );
 void vk_destroy3DPipelines( void );
+
+// cullType_t -> the matching Vulkan cull mode (see vk_pipelines.c).
+VkCullModeFlags vk_cullModeForShader( cullType_t cullType );
+
+// Lazily creates/caches a single_texture pipeline for this exact state (depth test always on).
+VkPipeline vk_getPipeline3D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
+							  VkCullModeFlags cullMode, int32_t alphaTestFunc );
 
 #endif // VK_PIPELINES_H_

@@ -90,6 +90,7 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 	for ( i = 0; i < numPolys; i++ ) {
 		const scenePoly_t *poly = &polys[i];
 		shader_t *shader = R_GetShaderByHandle( poly->shader );
+		const shaderStage_t *stage = &shader->stages[0];
 		VkPipeline pipeline;
 		uint32_t firstVert = writeOffset;
 		uint32_t vertCount;
@@ -108,7 +109,8 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 		}
 		vertCount = writeOffset - firstVert;
 
-		pipeline = shader->stages[0].blendEnabled ? vk.pipeline_3d_blend : vk.pipeline_3d_opaque;
+		pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+			vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );
 		if ( pipeline != boundPipeline ) {
 			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 			boundPipeline = pipeline;

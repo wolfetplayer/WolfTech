@@ -365,8 +365,8 @@ static void Get2DAttribs( VkVertexInputBindingDescription *binding, VkVertexInpu
 }
 
 // fogEnabled selects single_texture.vert's compile-time fog branch -- on for the 3D pipeline, off for the 2D UI ones (which share the shader and must never be fogged).
-static void GetSpecInfo( vk2d_spec_data_t *spec_data, VkSpecializationMapEntry spec_entries[4], VkSpecializationInfo *specInfo, qboolean fogEnabled ) {
-	spec_data->alpha_test_func = 0;
+static void GetSpecInfo( vk2d_spec_data_t *spec_data, VkSpecializationMapEntry spec_entries[4], VkSpecializationInfo *specInfo, qboolean fogEnabled, int32_t alphaTestFunc ) {
+	spec_data->alpha_test_func = alphaTestFunc;
 	spec_data->color_op = 0;
 	spec_data->clip_plane = 0;
 	spec_data->fog_enabled = fogEnabled ? 1 : 0;
@@ -398,7 +398,7 @@ void vk_create2DPipelines( void ) {
 	VkSpecializationInfo specInfo;
 
 	Get2DAttribs( &binding, attribs );
-	GetSpecInfo( &spec_data, spec_entries, &specInfo, qfalse );
+	GetSpecInfo( &spec_data, spec_entries, &specInfo, qfalse, 0 );
 
 	vk.pipeline_2d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding, attribs, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
@@ -411,7 +411,78 @@ void vk_destroy2DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_blend, NULL );
 }
 
-// pipeline_3d_opaque is vk_draw3d.c's/vk_entity.c's pipeline (vk2d_vertex_t buffer); world rendering uses pipeline_3d_lightmap. No cull mode yet -- tr_shader.c's parsed cullNone isn't wired to any pipeline choice yet.
+// Matches code/renderer's GL_Cull given this renderer's Y-flip + CLOCKWISE frontFace (no mirror flip: no mirrors yet).
+VkCullModeFlags vk_cullModeForShader( cullType_t cullType ) {
+	if ( cullType == CT_TWO_SIDED ) {
+		return VK_CULL_MODE_NONE;
+	}
+	return ( cullType == CT_BACK_SIDED ) ? VK_CULL_MODE_FRONT_BIT : VK_CULL_MODE_BACK_BIT;
+}
+
+// Cache of pipelines by (blend, cull, alphaTest) state; linear-scanned, real shader sets stay small.
+#define MAX_CACHED_3D_PIPELINES 64
+
+typedef struct {
+	VkBool32 blendEnable;
+	VkBlendFactor srcBlend;
+	VkBlendFactor dstBlend;
+	VkCullModeFlags cullMode;
+	int32_t alphaTestFunc;
+} cachedPipelineKey_t;
+
+static cachedPipelineKey_t s_cachedPipelineKeys[MAX_CACHED_3D_PIPELINES];
+static VkPipeline s_cachedPipelines[MAX_CACHED_3D_PIPELINES];
+static int s_numCachedPipelines;
+
+static void vk_resetPipelineCache3D( void ) {
+	s_numCachedPipelines = 0;
+}
+
+static void vk_destroyPipelineCache3D( void ) {
+	int i;
+	for ( i = 0; i < s_numCachedPipelines; i++ ) {
+		qvkDestroyPipeline( vk.device, s_cachedPipelines[i], NULL );
+	}
+	s_numCachedPipelines = 0;
+}
+
+VkPipeline vk_getPipeline3D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
+							  VkCullModeFlags cullMode, int32_t alphaTestFunc ) {
+	VkVertexInputBindingDescription binding2d;
+	VkVertexInputAttributeDescription attribs2d[3];
+	vk2d_spec_data_t spec_data;
+	VkSpecializationMapEntry spec_entries[4];
+	VkSpecializationInfo specInfo;
+	int i;
+
+	for ( i = 0; i < s_numCachedPipelines; i++ ) {
+		const cachedPipelineKey_t *key = &s_cachedPipelineKeys[i];
+		if ( key->blendEnable == blendEnable && key->srcBlend == srcBlend && key->dstBlend == dstBlend &&
+			 key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc ) {
+			return s_cachedPipelines[i];
+		}
+	}
+
+	if ( s_numCachedPipelines >= MAX_CACHED_3D_PIPELINES ) {
+		ri.Printf( PRINT_WARNING, "MAX_CACHED_3D_PIPELINES hit, falling back to the default pipeline\n" );
+		return blendEnable ? vk.pipeline_3d_blend : vk.pipeline_3d_opaque;
+	}
+
+	Get2DAttribs( &binding2d, attribs2d );
+	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue, alphaTestFunc );
+
+	s_cachedPipelineKeys[s_numCachedPipelines].blendEnable = blendEnable;
+	s_cachedPipelineKeys[s_numCachedPipelines].srcBlend = srcBlend;
+	s_cachedPipelineKeys[s_numCachedPipelines].dstBlend = dstBlend;
+	s_cachedPipelineKeys[s_numCachedPipelines].cullMode = cullMode;
+	s_cachedPipelineKeys[s_numCachedPipelines].alphaTestFunc = alphaTestFunc;
+	s_cachedPipelines[s_numCachedPipelines] = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, attribs2d, 3, blendEnable, srcBlend, dstBlend, VK_TRUE, cullMode );
+
+	return s_cachedPipelines[s_numCachedPipelines++];
+}
+
+// pipeline_3d_opaque/blend are vk_draw3d.c's debug pipeline + the cache's fallback; real entity/poly draws use vk_getPipeline3D.
 void vk_create3DPipelines( void ) {
 	VkVertexInputBindingDescription binding2d;
 	VkVertexInputAttributeDescription attribs2d[3];
@@ -420,6 +491,7 @@ void vk_create3DPipelines( void ) {
 	vk2d_spec_data_t spec_data, sky_spec_data;
 	VkSpecializationMapEntry spec_entries[4], sky_spec_entries[4];
 	VkSpecializationInfo specInfo, skySpecInfo;
+	int ct;
 
 	Get2DAttribs( &binding2d, attribs2d );
 
@@ -444,24 +516,33 @@ void vk_create3DPipelines( void ) {
 	lightmapAttribs[3].format = VK_FORMAT_R32G32_SFLOAT;
 	lightmapAttribs[3].offset = offsetof( vkWorldVertex_t, lmUv );
 
-	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue );
-	GetSpecInfo( &sky_spec_data, sky_spec_entries, &skySpecInfo, qfalse );
+	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue, 0 );
+	GetSpecInfo( &sky_spec_data, sky_spec_entries, &skySpecInfo, qfalse, 0 );
 
 	vk.pipeline_3d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
-	// Fixed alpha-blend factors regardless of the poly's own shader (same simplification vk_draw2d.c's 2D pipelines make).
 	vk.pipeline_3d_blend = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_TRUE, VK_CULL_MODE_NONE );
-	vk.pipeline_3d_lightmap = create_pipeline( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
-		&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
+	for ( ct = CT_FRONT_SIDED; ct <= CT_TWO_SIDED; ct++ ) {
+		vk.pipeline_3d_lightmap[ct] = create_pipeline( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
+			&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, vk_cullModeForShader( (cullType_t)ct ) );
+	}
 	// Depth test/write off so draw order alone keeps the sky behind everything -- see vk_sky.c.
 	vk.pipeline_sky = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &skySpecInfo,
 		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
+
+	vk_resetPipelineCache3D();
 }
 
 void vk_destroy3DPipelines( void ) {
+	int ct;
+
+	vk_destroyPipelineCache3D();
+
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_opaque, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_blend, NULL );
-	qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap, NULL );
+	for ( ct = CT_FRONT_SIDED; ct <= CT_TWO_SIDED; ct++ ) {
+		qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap[ct], NULL );
+	}
 	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
 }

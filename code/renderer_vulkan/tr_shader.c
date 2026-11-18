@@ -37,12 +37,21 @@ static VkBlendFactor NameToBlendFactor( const char *name, qboolean isSrc ) {
 	return isSrc ? VK_BLEND_FACTOR_ONE : VK_BLEND_FACTOR_ZERO;
 }
 
+// Matches single_texture.frag's alpha_test_func encoding.
+static int NameToAlphaTestFunc( const char *name ) {
+	if ( !Q_stricmp( name, "GT0" ) ) return 1;
+	if ( !Q_stricmp( name, "LT128" ) ) return 2;
+	if ( !Q_stricmp( name, "GE128" ) ) return 3;
+	return 0;
+}
+
 static void ParseStage( shaderStage_t *stage, char **text ) {
 	char *token;
 	char imageName[MAX_QPATH];
 	qboolean hasBlend = qfalse;
 	VkBlendFactor srcBlend = VK_BLEND_FACTOR_ONE;
 	VkBlendFactor dstBlend = VK_BLEND_FACTOR_ZERO;
+	int alphaTestFunc = 0;
 
 	imageName[0] = '\0';
 
@@ -82,8 +91,12 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 				dstBlend = NameToBlendFactor( token, qfalse );
 			}
 			SkipRestOfLine( text );
+		} else if ( !Q_stricmp( token, "alphaFunc" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			alphaTestFunc = NameToAlphaTestFunc( token );
+			SkipRestOfLine( text );
 		} else {
-			// alphaFunc, rgbGen, tcMod, etc. -- parsed-and-discarded, see tr_shader.h.
+			// rgbGen, tcMod, depthFunc, etc. -- parsed-and-discarded, see tr_shader.h.
 			SkipRestOfLine( text );
 		}
 	}
@@ -91,6 +104,7 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	stage->blendEnabled = hasBlend;
 	stage->srcBlend = srcBlend;
 	stage->dstBlend = dstBlend;
+	stage->alphaTestFunc = alphaTestFunc;
 
 	stage->image = imageName[0] ? R_FindImageFile( imageName, IMGFLAG_NONE ) : NULL;
 	if ( !stage->image ) {
@@ -153,9 +167,14 @@ static qboolean ParseShader( const char *name, char **text ) {
 		} else if ( !Q_stricmp( token, "nopicmip" ) ) {
 			tempShader.noPicMip = qtrue;
 		} else if ( !Q_stricmp( token, "cull" ) ) {
+			// Default (no keyword) stays CT_FRONT_SIDED.
 			token = COM_ParseExt( text, qfalse );
 			if ( !Q_stricmp( token, "none" ) || !Q_stricmp( token, "disable" ) || !Q_stricmp( token, "twosided" ) ) {
-				tempShader.cullNone = qtrue;
+				tempShader.cullType = CT_TWO_SIDED;
+			} else if ( !Q_stricmp( token, "back" ) || !Q_stricmp( token, "backside" ) || !Q_stricmp( token, "backsided" ) ) {
+				tempShader.cullType = CT_BACK_SIDED;
+			} else if ( token[0] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: invalid cull parm '%s' in shader '%s'\n", token, name );
 			}
 		} else if ( !Q_stricmp( token, "skyparms" ) ) {
 			ParseSkyParms( &tempShader, text );

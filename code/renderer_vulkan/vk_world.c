@@ -381,6 +381,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	float push_data[32];
 	VkDeviceSize vb_offset = 0;
 	int i;
+	VkPipeline boundPipeline = VK_NULL_HANDLE;
 	static qboolean firstDraw = qtrue;
 
 	if ( !s_built ) {
@@ -397,15 +398,22 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	qvkCmdPushConstants( vk.command_buffer, vk.lightmap_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0, sizeof( push_data ), push_data );
 
-	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_3d_lightmap );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 	qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
 
 	for ( i = 0; i < s_numBatches; i++ ) {
 		const worldBatch_t *batch = &s_batches[i];
+		VkPipeline pipeline;
 
 		if ( batch->descriptor == VK_NULL_HANDLE ) {
 			continue;
+		}
+
+		// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
+		pipeline = vk.pipeline_3d_lightmap[R_GetShaderByHandle( batch->shader )->cullType];
+		if ( pipeline != boundPipeline ) {
+			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+			boundPipeline = pipeline;
 		}
 
 		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,

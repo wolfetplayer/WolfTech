@@ -420,6 +420,7 @@ doneCollecting:
 	{
 		float push_data[32];
 		VkDeviceSize vb_offset = 0;
+		VkPipeline boundPipeline = VK_NULL_HANDLE;
 
 		memset( push_data, 0, sizeof( push_data ) );
 		memcpy( push_data, mvp, 16 * sizeof( float ) );
@@ -427,19 +428,30 @@ doneCollecting:
 		qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 			0, sizeof( push_data ), push_data );
 
-		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_3d_opaque );
 		qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
 
 		for ( i = 0; i < numDraws; i++ ) {
 			shader_t *shaderPtr = R_GetShaderByHandle( s_draws[i].shader );
+			const shaderStage_t *stage;
+			VkPipeline pipeline;
+
 			if ( !shaderPtr || shaderPtr->numStages < 1 || !shaderPtr->stages[0].image ||
 				 shaderPtr->stages[0].image->vk_descriptor == VK_NULL_HANDLE ) {
 				continue;
 			}
+			stage = &shaderPtr->stages[0];
+
+			// Per-surface, not per-entity: a skin's opaque body and blended visor can differ.
+			pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+				vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc );
+			if ( pipeline != boundPipeline ) {
+				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+				boundPipeline = pipeline;
+			}
 
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &shaderPtr->stages[0].image->vk_descriptor, 0, NULL );
+				0, 1, &stage->image->vk_descriptor, 0, NULL );
 			qvkCmdDrawIndexed( vk.command_buffer, s_draws[i].idxCount, 1, s_draws[i].idxBase, (int32_t)s_draws[i].vertBase, 0 );
 		}
 	}
