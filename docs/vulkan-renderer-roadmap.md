@@ -135,6 +135,19 @@ first; several later phases are hard to validate without it.
       case, wrong for a stage with its own distinct `rgbGen`) and reuse stage 0's static UVs (no
       per-frame `tcMod` on extra stages) — both are explicitly Phase 1's job (the generic multi-stage
       iterator), not re-solved here.
+- [x] View-weapon depth hack (`RF_DEPTHHACK`, flagged by the user: "my gun drowns in walls, never
+      happens in OpenGL1"): this renderer had *zero* handling of the flag at all. code/renderer
+      compresses the depth range to `glDepthRange(0, 0.3)` for depth-hacked entities so the weapon
+      always wins the depth test against nearby geometry; ported as a per-draw-call
+      `vkCmdSetViewport` switch in `vk_entity.c` (`SetDepthRange`), threaded through the existing
+      vertex/index batching (`entityDrawCall_t`/`entityMTDrawCall_t` now carry a `depthHack` flag
+      set from `ent->renderfx` at commit time, since draws are batched across entities and emitted
+      later, not issued per-entity) with change-tracking so the viewport only gets reset when the
+      flag actually flips, and restored to normal before returning so polys/2D HUD aren't affected.
+      **Not ported**: code/renderer also swaps to a flatter projection matrix for depth-hacked draws
+      (reduces visual distortion on the weapon model specifically) — a separate, more cosmetic
+      concern from the reported bug (geometry disappearing into walls), left as a follow-up. Not yet
+      confirmed in-game.
 
 ## Phase 1 — Generic multi-stage shader/draw core
 
@@ -504,3 +517,7 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   to a second real gap (no `polygonOffset`/depth-bias support anywhere in this renderer) and fixed
   that too (same checkmark). Both fixes compiled clean; decals confirmed showing up in-game, the
   polygon-offset flicker fix itself not yet separately re-confirmed.
+- **2026-11-19** — User reported the view-weapon model sinking into walls at close range on
+  Vulkan, never on OpenGL1. Root cause: `RF_DEPTHHACK` (the view-weapon depth-range hack) was
+  completely unimplemented in `renderer_vulkan`. Ported it to `vk_entity.c` — see the new Phase 0
+  checkmark above for the design. Compiled clean; not yet confirmed in-game.

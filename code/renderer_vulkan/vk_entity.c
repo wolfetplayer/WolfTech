@@ -5,6 +5,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "glConfig.h"
 #include "tr_image.h"
 #include "tr_shader.h"
 #include "tr_shade_calc.h"
@@ -43,6 +44,7 @@ typedef struct {
 	uint32_t idxBase;
 	uint32_t idxCount;
 	qhandle_t shader;
+	qboolean depthHack; // RF_DEPTHHACK -- view weapon, see SetDepthRange
 } entityDrawCall_t;
 
 // An opaque stage 0 + modulate/add-blended stage 1 collapsed into one draw; see vk_canCollapseMultiTex.
@@ -56,7 +58,23 @@ typedef struct {
 	int combineMode;
 	VkCullModeFlags cullMode;
 	int32_t alphaTestFunc;
+	qboolean depthHack;
 } entityMTDrawCall_t;
+
+// RF_DEPTHHACK: same minDepth/maxDepth values as code/renderer's glDepthRange(0, 0.3) weapon hack.
+static void SetDepthRange( qboolean weaponHack ) {
+	int width, height;
+	VkViewport viewport;
+
+	R_GetWinResolution( &width, &height );
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)width;
+	viewport.height = (float)height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = weaponHack ? 0.3f : 1.0f;
+	qvkCmdSetViewport( vk.command_buffer, 0, 1, &viewport );
+}
 
 static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
@@ -357,7 +375,7 @@ static void WriteIndices( int numTriangles, const void *trianglesPtr, uint32_t i
 
 // Copies triangle indices once (shared by every stage via vertexOffset at draw time) and records the draw call.
 static void CommitSurface( int numVerts, int numStages, int numTriangles, const void *trianglesPtr, qhandle_t shader,
-							uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
+							qboolean depthHack, uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
 	WriteIndices( numTriangles, trianglesPtr, *idxWrite );
 
 	s_draws[*numDraws].vertBase = *vertWrite;
@@ -365,6 +383,7 @@ static void CommitSurface( int numVerts, int numStages, int numTriangles, const 
 	s_draws[*numDraws].idxBase = *idxWrite;
 	s_draws[*numDraws].idxCount = (uint32_t)numTriangles * 3;
 	s_draws[*numDraws].shader = shader;
+	s_draws[*numDraws].depthHack = depthHack;
 	(*numDraws)++;
 
 	*vertWrite += (uint32_t)numVerts * (uint32_t)numStages;
@@ -397,7 +416,7 @@ static void WriteMultiTexVertices( const shader_t *shader, const byte *entityCol
 }
 
 static void CommitMultiTexSurface( const shader_t *shader, int combineMode, int numVerts, int numTriangles, const void *trianglesPtr,
-									uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
+									qboolean depthHack, uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
 	const shaderStage_t *stage0 = &shader->stages[0];
 
 	WriteIndices( numTriangles, trianglesPtr, *idxWrite );
@@ -411,6 +430,7 @@ static void CommitMultiTexSurface( const shader_t *shader, int combineMode, int 
 	s_mtDraws[*numDraws].combineMode = combineMode;
 	s_mtDraws[*numDraws].cullMode = vk_cullModeForShader( shader->cullType );
 	s_mtDraws[*numDraws].alphaTestFunc = stage0->alphaTestFunc;
+	s_mtDraws[*numDraws].depthHack = depthHack;
 	(*numDraws)++;
 
 	*vertWrite += (uint32_t)numVerts;
@@ -423,6 +443,7 @@ static qboolean ProcessSurface( const shader_t *shaderPtr, qhandle_t shaderHandl
 								 uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws,
 								 uint32_t *mtVertWrite, int *numMTDraws ) {
 	int combineMode;
+	qboolean depthHack = ( ent->renderfx & RF_DEPTHHACK ) != 0;
 
 	if ( !shaderPtr || shaderPtr->numStages < 1 ) {
 		return qtrue;
@@ -433,7 +454,7 @@ static qboolean ProcessSurface( const shader_t *shaderPtr, qhandle_t shaderHandl
 			return qfalse;
 		}
 		WriteMultiTexVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts, &s_mtVertexMapped[*mtVertWrite] );
-		CommitMultiTexSurface( shaderPtr, combineMode, numVerts, numTriangles, trianglesPtr, mtVertWrite, idxWrite, numMTDraws );
+		CommitMultiTexSurface( shaderPtr, combineMode, numVerts, numTriangles, trianglesPtr, depthHack, mtVertWrite, idxWrite, numMTDraws );
 		return qtrue;
 	}
 
@@ -441,7 +462,7 @@ static qboolean ProcessSurface( const shader_t *shaderPtr, qhandle_t shaderHandl
 		return qfalse;
 	}
 	WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts, &s_vertexMapped[*vertWrite] );
-	CommitSurface( numVerts, shaderPtr->numStages, numTriangles, trianglesPtr, shaderHandle, vertWrite, idxWrite, numDraws );
+	CommitSurface( numVerts, shaderPtr->numStages, numTriangles, trianglesPtr, shaderHandle, depthHack, vertWrite, idxWrite, numDraws );
 	return qtrue;
 }
 
@@ -569,6 +590,7 @@ doneCollecting:
 		float push_data[32];
 		VkDeviceSize vb_offset = 0;
 		VkPipeline boundPipeline = VK_NULL_HANDLE;
+		qboolean curDepthHack = qfalse;
 
 		memset( push_data, 0, sizeof( push_data ) );
 		memcpy( push_data, mvp, 16 * sizeof( float ) );
@@ -587,6 +609,11 @@ doneCollecting:
 
 				if ( !shaderPtr || shaderPtr->numStages < 1 ) {
 					continue;
+				}
+
+				if ( s_draws[i].depthHack != curDepthHack ) {
+					SetDepthRange( s_draws[i].depthHack );
+					curDepthHack = s_draws[i].depthHack;
 				}
 
 				// Every stage redraws the same indices/vertices, layered in shader-script order.
@@ -627,6 +654,11 @@ doneCollecting:
 					continue;
 				}
 
+				if ( draw->depthHack != curDepthHack ) {
+					SetDepthRange( draw->depthHack );
+					curDepthHack = draw->depthHack;
+				}
+
 				pipeline = vk_getPipelineMultiTexture( draw->combineMode, draw->cullMode, draw->alphaTestFunc );
 				if ( pipeline != boundPipeline ) {
 					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
@@ -638,6 +670,10 @@ doneCollecting:
 					0, 1, &descSet, 0, NULL );
 				qvkCmdDrawIndexed( vk.command_buffer, draw->idxCount, 1, draw->idxBase, (int32_t)draw->vertBase, 0 );
 			}
+		}
+
+		if ( curDepthHack ) {
+			SetDepthRange( qfalse ); // leave the viewport normal for whatever draws next (polys, 2D)
 		}
 	}
 }
