@@ -1,6 +1,6 @@
 #version 450
 
-// Trimmed from vkQuake3's original (GPLv2-or-later): dropped unused clip-plane/mirror support, added the fog blend (frag_fogFactor is 1.0, a no-op mix, when fog_enabled was off in the vert shader).
+// Adapted from vkQuake3's original (GPLv2-or-later). clip_plane is the fragment-discard fallback for mirror/portal world draws -- see single_texture.vert.
 layout(set = 0, binding = 0) uniform sampler2D texture0;
 
 layout(push_constant) uniform Transform {
@@ -8,17 +8,22 @@ layout(push_constant) uniform Transform {
     vec4 camPos;
     vec4 fogColor;
     vec4 fogParams;
+    vec4 clipPlane;
 };
 
 layout(location = 0) in vec4 frag_color;
 layout(location = 1) in vec2 frag_tex_coord;
 layout(location = 2) in float frag_fogFactor;
+layout(location = 3) in float frag_clip_dist;
 
 layout(location = 0) out vec4 out_color;
 
 layout (constant_id = 0) const int alpha_test_func = 0;
+layout (constant_id = 2) const int clip_plane = 0;
 
 void main() {
+    if (clip_plane != 0 && frag_clip_dist < 0.0) discard;
+
     out_color = frag_color * texture(texture0, frag_tex_coord);
 
     if (alpha_test_func == 1) {

@@ -13,4 +13,7 @@ void vk_world_shutdown( void );
 // Draws every visible PLANAR/TRIANGLE_SOUP/PATCH surface, batched by shader+lightmap (fogPush is tr_fog.h's push-constant block). No-op if no world is built.
 void vk_world_draw( const float mvp[16], const float fogPush[12] );
 
+// First currently-visible isPortal surface (tr_shader.h), if any: its world-space plane plus a representative point (for tr_portal.c's RT_PORTALSURFACE search).
+qboolean vk_world_findVisiblePortalSurface( vec3_t outNormal, float *outDist, vec3_t outPoint );
+
 #endif // VK_WORLD_H_

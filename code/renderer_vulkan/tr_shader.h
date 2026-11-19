@@ -138,6 +138,9 @@ typedef struct shader_s {
 	qboolean isSky;
 	image_t *skyOuterBox[6]; // rt, lf, bk, ft, up, dn -- see ParseSkyParms
 
+	qboolean isPortal;   // "portal" or "sort portal" keyword -- triggers mirror/portal-surface recursion, see tr_portal.c
+	float portalRange;   // distance (world units) the portal entity may sit from this surface's plane; see tr_portal.c
+
 	int numStages;
 	shaderStage_t stages[MAX_SHADER_STAGES];
 

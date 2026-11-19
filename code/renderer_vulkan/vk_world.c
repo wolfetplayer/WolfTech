@@ -15,6 +15,7 @@
 #include "tr_patch.h"
 #include "tr_light.h"
 #include "tr_scene.h"
+#include "tr_portal.h"
 #include "vk_world.h"
 
 // Same falloff shape vk_entity.c's ComputeEntityTint uses for dlight contributions.
@@ -659,6 +660,13 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	memset( push_data, 0, sizeof( push_data ) );
 	memcpy( push_data, mvp, 16 * sizeof( float ) );
 	memcpy( push_data + 16, fogPush, 12 * sizeof( float ) );
+	if ( R_InPortalView() ) {
+		// push_data[28..31] is the Transform struct's clipPlane vec4 (world_lightmap.vert).
+		vec3_t normal;
+		float dist;
+		R_GetActivePortalPlane( normal, &dist );
+		push_data[28] = normal[0]; push_data[29] = normal[1]; push_data[30] = normal[2]; push_data[31] = dist;
+	}
 	qvkCmdPushConstants( vk.command_buffer, vk.lightmap_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0, sizeof( push_data ), push_data );
 
@@ -673,7 +681,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		}
 
 		// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
-		pipeline = vk.pipeline_3d_lightmap[shader->cullType];
+		pipeline = vk_getWorldLightmapPipeline( shader->cullType );
 		if ( pipeline != boundPipeline ) {
 			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 			boundPipeline = pipeline;
@@ -700,7 +708,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			}
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );
+				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView() );
 			if ( pipeline != boundPipeline ) {
 				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 				boundPipeline = pipeline;
@@ -743,7 +751,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 				}
 
 				pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), VK_TRUE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE,
-					vk_cullModeForShader( shader->cullType ), 0 );
+					vk_cullModeForShader( shader->cullType ), 0, R_InPortalView(), R_InMirrorView() );
 				if ( pipeline != boundPipeline ) {
 					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 					boundPipeline = pipeline;
@@ -784,4 +792,57 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		ri.Printf( PRINT_ALL, "...vk_world_draw checkpoint: first draw recorded ok\n" );
 		firstDraw = qfalse;
 	}
+}
+
+qboolean vk_world_findVisiblePortalSurface( vec3_t outNormal, float *outDist, vec3_t outPoint ) {
+	int i, j;
+
+	if ( !s_built ) {
+		return qfalse;
+	}
+
+	for ( i = 0; i < s_numBatches; i++ ) {
+		const worldBatch_t *batch = &s_batches[i];
+		shader_t *shader;
+
+		if ( batch->descriptor == VK_NULL_HANDLE ) {
+			continue;
+		}
+		shader = R_GetShaderByHandle( batch->shader );
+		if ( !shader->isPortal ) {
+			continue;
+		}
+
+		for ( j = 0; j < batch->numSurfRefs; j++ ) {
+			const worldSurfRef_t *ref = &s_surfRefs[batch->firstSurfRef + j];
+			const vkWorldVertex_t *v0, *v1, *v2;
+			vec3_t e1, e2, normal;
+			float len;
+
+			if ( !R_SurfaceIsVisible( ref->surfaceIndex ) || ref->indexCount < 3 ) {
+				continue;
+			}
+
+			v0 = &s_cachedVerts[s_cachedIndices[ref->firstIndex + 0]];
+			v1 = &s_cachedVerts[s_cachedIndices[ref->firstIndex + 1]];
+			v2 = &s_cachedVerts[s_cachedIndices[ref->firstIndex + 2]];
+
+			VectorSubtract( v1->pos, v0->pos, e1 );
+			VectorSubtract( v2->pos, v0->pos, e2 );
+			CrossProduct( e1, e2, normal );
+			len = VectorNormalize( normal );
+			if ( len < 0.001f ) {
+				continue; // degenerate triangle -- try this batch's next surface
+			}
+
+			VectorCopy( normal, outNormal );
+			*outDist = DotProduct( normal, v0->pos );
+			VectorAdd( v0->pos, v1->pos, outPoint );
+			VectorAdd( outPoint, v2->pos, outPoint );
+			VectorScale( outPoint, 1.0f / 3.0f, outPoint );
+			return qtrue;
+		}
+	}
+
+	return qfalse;
 }

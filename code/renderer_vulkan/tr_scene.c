@@ -96,3 +96,19 @@ const scenePoly_t *R_GetScenePolys( int *outCount ) {
 const polyVert_t *R_GetScenePolyVerts( void ) {
 	return s_polyVerts;
 }
+
+static qboolean s_skyboxPortalActive = qfalse;
+
+void R_ResetSkyboxPortal( void ) {
+	s_skyboxPortalActive = qfalse;
+}
+
+void R_NoteSkyboxPortalScene( int rdflags ) {
+	if ( ( rdflags & RDF_SKYBOXPORTAL ) && ( rdflags & RDF_DRAWSKYBOX ) ) {
+		s_skyboxPortalActive = qtrue;
+	}
+}
+
+qboolean R_SkyboxPortalActive( void ) {
+	return s_skyboxPortalActive;
+}

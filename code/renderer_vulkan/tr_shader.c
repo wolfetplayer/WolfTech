@@ -252,7 +252,7 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 				alphaGen = AGEN_ONE_MINUS_VERTEX;
 			} else if ( !Q_stricmp( token, "portal" ) ) {
 				alphaGen = AGEN_PORTAL;
-				COM_ParseExt( text, qfalse ); // portal range -- unused, no portal/mirror support yet
+				COM_ParseExt( text, qfalse ); // range value -- not wired, see the shader-level "portal" keyword (tr_portal.c) for the actual trigger
 			} else {
 				ri.Printf( PRINT_WARNING, "WARNING: unknown alphaGen '%s'\n", token );
 			}
@@ -423,8 +423,23 @@ static qboolean ParseShader( const char *name, char **text ) {
 			ParseSkyParms( &tempShader, text );
 		} else if ( !Q_stricmp( token, "deformVertexes" ) ) {
 			ParseDeform( &tempShader, text );
+		} else if ( !Q_stricmp( token, "portal" ) ) {
+			// Bare "portal" keyword -- shorthand for "sort portal", see tr_portal.c.
+			tempShader.isPortal = qtrue;
+			if ( tempShader.portalRange <= 0.0f ) {
+				tempShader.portalRange = 256.0f;
+			}
+		} else if ( !Q_stricmp( token, "sort" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( !Q_stricmp( token, "portal" ) ) {
+				tempShader.isPortal = qtrue;
+				if ( tempShader.portalRange <= 0.0f ) {
+					tempShader.portalRange = 256.0f;
+				}
+			}
+			SkipRestOfLine( text );
 		} else {
-			// sort, fogParms, etc. -- parsed-and-discarded.
+			// fogParms, etc. -- parsed-and-discarded.
 			SkipRestOfLine( text );
 		}
 	}

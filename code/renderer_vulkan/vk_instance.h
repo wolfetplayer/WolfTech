@@ -178,6 +178,8 @@ struct Vk_Instance {
 	VkPipeline pipeline_3d_opaque; // fallback only; see vk_getPipeline3D
 	VkPipeline pipeline_3d_blend;  // ditto, blended twin
 	VkPipeline pipeline_3d_lightmap[3]; // indexed by cullType_t
+	VkPipeline pipeline_3d_lightmap_portal[3]; // ditto, world-space clip plane active, no cull flip -- see tr_portal.h
+	VkPipeline pipeline_3d_lightmap_mirror[3]; // ditto, clip plane + cull flip (proper reflection)
 	VkPipeline pipeline_sky; // single_texture shader, 2D vertex layout, depth test/write off, never fogged
 	VkPipeline pipeline_world_wireframe; // r_showtris overlay; VK_NULL_HANDLE if the device lacks fillModeNonSolid
 

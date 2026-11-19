@@ -25,4 +25,7 @@ void R_SetupFrustumPlanes( const refdef_t *fd, cullPlane_t frustum[NUM_FRUSTUM_P
 // qtrue if an axis-aligned box could be at least partly inside every frustum plane.
 qboolean R_CullBoundsVsFrustum( const vec3_t mins, const vec3_t maxs, const cullPlane_t frustum[NUM_FRUSTUM_PLANES] );
 
+// Defined in tr_init.c: RE_RenderScene's guts, callable recursively by tr_portal.c for a mirror/portal's destination view.
+void R_RenderViewInternal( const refdef_t *fd );
+
 #endif // TR_MAIN_H_

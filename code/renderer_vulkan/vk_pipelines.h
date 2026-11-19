@@ -47,8 +47,12 @@ void vk_destroy3DPipelines( void );
 VkCullModeFlags vk_cullModeForShader( cullType_t cullType );
 
 // Lazily creates/caches a single_texture pipeline for this state; vertexStride retargets the binding to vk2d_vertex_t-compatible layouts like vkWorldVertex_t.
+// clipPlane/mirror activate tr_portal.h's clip plane (and, for mirror, a flipped cull mode); pass VK_FALSE/VK_FALSE outside a world mirror/portal pass.
 VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-							  VkCullModeFlags cullMode, int32_t alphaTestFunc );
+							  VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 clipPlane, VkBool32 mirror );
+
+// vk.pipeline_3d_lightmap[cullType], auto-swapped for the clip-plane/mirror variant while tr_portal.c is recursing.
+VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType );
 
 // Lazily creates/caches a multi_texture pipeline (two samplers combined in one pass, always opaque); combineMode: 0 = modulate, 1 = add.
 VkPipeline vk_getPipelineMultiTexture( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc );

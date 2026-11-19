@@ -1,11 +1,12 @@
 #version 450
 
-// 128 bytes to match vk.lightmap_pipeline_layout's push constant range: mvp, then the fog state (see tr_fog.h).
+// 128 bytes: mvp, fog state (tr_fog.h), then a clip plane for mirror/portal draws, tested directly in world space since in_position already is (tr_portal.h).
 layout(push_constant) uniform Transform {
     mat4 mvp;
     vec4 camPos;     // xyz = camera world position
     vec4 fogColor;   // rgb = fog color
     vec4 fogParams;  // x = start (linear) / density (exp), y = end (linear only), z = mode (0=linear,1=exp), w = enabled
+    vec4 clipPlane;  // xyz = world-space plane normal, w = dist; zero when clip_plane is 0
 };
 
 layout(location = 0) in vec3 in_position;
@@ -17,6 +18,10 @@ layout(location = 0) out vec4 frag_color;
 layout(location = 1) out vec2 frag_tex_coord;
 layout(location = 2) out vec2 frag_lightmap_coord;
 layout(location = 3) out float frag_fogFactor;
+layout(location = 4) out float frag_clip_dist;
+
+// On only for the fragment-discard fallback (no hardware gl_ClipDistance); see vk_pipelines.c.
+layout (constant_id = 0) const int clip_plane = 0;
 
 out gl_PerVertex {
     vec4 gl_Position;
@@ -36,4 +41,6 @@ void main() {
     } else {
         frag_fogFactor = 1.0;
     }
+
+    frag_clip_dist = (clip_plane != 0) ? (dot(in_position, clipPlane.xyz) - clipPlane.w) : 1.0;
 }

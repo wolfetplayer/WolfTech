@@ -15,4 +15,8 @@ extern VkShaderModule vk_world_lightmap_fs;
 extern VkShaderModule vk_multi_texture_vs;
 extern VkShaderModule vk_multi_texture_fs;
 
+// Hardware-gl_ClipDistance twins, used only when vk.features.shaderClipDistance is true (vk_pipelines.c).
+extern VkShaderModule vk_single_texture_clip_vs;
+extern VkShaderModule vk_world_lightmap_clip_vs;
+
 #endif // VK_SHADERS_H_

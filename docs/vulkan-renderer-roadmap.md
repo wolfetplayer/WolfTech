@@ -238,9 +238,52 @@ it once, make world/entity/poly submission all go through it.
       discarded), loading the BSP's fog lump, tagging each world surface with a `fogIndex`, and
       determining which fog volume (if any) the camera is currently inside each frame. Scoped as
       its own item, not a quick add.
-- [ ] Portal/mirror clip-plane pipeline variants, with the same graceful fallback vkQuake3 uses for
+- [x] Portal/mirror clip-plane pipeline variants, with the same graceful fallback vkQuake3 uses for
       GPUs lacking `shaderClipDistance` (discard-in-fragment-shader via specialization constant).
-      Required for RTCW mirrors, periscopes, and underwater clipping.
+      **Turned out to need far more than a pipeline variant**: this renderer had *zero* mirror/portal
+      scaffolding going in (no shader `sort`/`isPortal` parsing, no `RT_PORTALSURFACE` handling, no
+      recursive view-render, no `viewParms_t` concept at all — `RE_RenderScene` was one flat
+      single-pass function). Built, in order: (1) `shader_t.isPortal`/`portalRange` + `portal`/`sort
+      portal` keyword parsing (`tr_shader.c`); (2) new `tr_portal.c`/`.h` — ports
+      `R_SetupPortalPlane`/`R_GetPortalOrientations` from vkQuake3/code/renderer (GPLv2-or-later),
+      trimmed to *world surfaces only* (an entity-attached portal surface, e.g. a handheld mirror,
+      isn't handled — see the file header); (3) `RE_RenderScene` split into a thin wrapper +
+      `R_RenderViewInternal` (`tr_main.h`), callable recursively so a found portal/mirror renders its
+      destination view into the same target before the real one; (4) `vk_world_findVisiblePortalSurface`
+      (`vk_world.c`) to locate a visible `isPortal` surface's plane from its cached first triangle;
+      (5) backend clip-plane support added to `single_texture`/`world_lightmap`'s shaders (a
+      `clipPlane` vec4 reusing 16 bytes of push-constant padding that were already zeroed, not a size
+      increase) plus new `*_clip.vert` hardware-`gl_ClipDistance` twins, selected by
+      `vk.features.shaderClipDistance` exactly like vkQuake3; (6) `vk.pipeline_3d_lightmap_portal/_mirror[cullType]`
+      eager variants (mirror also flips cull mode) plus `clipPlane`/`mirror` params on
+      `vk_getPipeline3D`, so world stage 1+/dlight draws and (if ever passed `qtrue`) entity/poly
+      draws can opt in. **Scoped out, documented, not a silent gap**: entities/polys/sky are drawn
+      unclipped inside a mirror view (only world geometry clips) — call sites in `vk_entity.c`/
+      `vk_poly.c` pass `VK_FALSE, VK_FALSE` explicitly; an entity-attached (moving) portal surface;
+      `deformVertexes projectionShadow`'s pairing with real shadows (unrelated, already tracked under
+      Phase 1's deform item). The world-space clip-plane math (test done directly in world space,
+      not vkQuake3's eye-space one — proven equivalent in a comment in `world_lightmap.vert`) and the
+      plane's sign/orientation are derived, not yet visually confirmed in-game — if a mirror shows the
+      wrong half of the scene (or none of it), the fix is a one-line sign flip in
+      `R_TryRenderPortalView`'s `s_portalNormal`/`s_portalDist` setup (`tr_portal.c`). Compiles clean;
+      not yet tested against a real mirror/portal shader in a map.
+- [x] Sky-portal (`RDF_SKYBOXPORTAL`/`RDF_DRAWSKYBOX`, the `_skyboxOrigin` worldspawn key's distant
+      "sky room") — **a completely different mechanism from the mirror/portal surfaces above**,
+      flagged by the user as something they rely on for their skybox and folded into this pass once
+      confirmed unrelated to (and much smaller than) the clip-plane work. It's just two
+      back-to-back `RE_RenderScene` calls per frame from cgame's `CG_DrawSkyBoxPortal`: a small
+      "sky room" scene first, then the real scene on top *without re-clearing color* so the sky
+      room's painted background survives wherever the real scene draws nothing. Added: a sticky
+      `R_SkyboxPortalActive()` flag (`tr_scene.c`, reset per `RE_LoadWorldMap`) set once a scene has
+      both `RDF_SKYBOXPORTAL` and `RDF_DRAWSKYBOX`; `R_RenderViewInternal` then skips the real
+      scene's own sky draw (the sky room already painted it) and does a mid-render-pass
+      `vkCmdClearAttachments` depth-only clear (new `vk_clear_depth_only`, `vk_frame.c` — our render
+      pass only clears at load, once per frame, unlike classic GL's per-call `glClear`) before the
+      real scene's own draws. Deliberately conservative: the sticky flag requires *both* flags (not
+      just `RDF_SKYBOXPORTAL` alone) specifically so a map with a `_skyboxOrigin` key but
+      `cg_skybox 0` can't accidentally suppress its own normal sky — unverified against upstream's
+      exact behavior in that edge case, but safe by construction. Compiles clean; not yet tested
+      against a map that actually sets `_skyboxOrigin`.
 
 ## Phase 2 — Classic feature parity (decals, flares, shadows, cinematics)
 
@@ -409,3 +452,14 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   hit an unrelated pre-existing `PRODUCT_VERSION` quoting failure in `common.c` under this session's
   MSYS2 shell invocation — not caused by this change, and not worth chasing since it doesn't touch
   anything `renderer_vulkan` depends on). Not yet visually confirmed in-game.
+- **2026-11-19** — Re-verified this doc against the code at the start of a new session (user asked
+  for a status check before continuing): confirmed every checkmark above still matches
+  `code/renderer_vulkan`, confirmed via a full `release` build (`BUILD_RENDERER_VULKAN=1`) that it
+  still compiles clean end to end. No code changes.
+- **2026-11-19** — Implemented Phase 1's portal/mirror clip-plane item, plus sky-portal support
+  (flagged by the user as a separate thing they rely on for their skybox, confirmed unrelated and
+  folded in alongside it) — see both items' checkmarks above for the full design and the known
+  gaps/risks (notably: the clip-plane's sign/orientation is derived, not yet visually confirmed).
+  Compiled clean (full `release` build, zero warnings in `renderer_vulkan`). Neither feature has
+  been tested in-game yet — next session should load a map with an actual mirror/portal shader
+  and, separately, one with a `_skyboxOrigin` key, before trusting either further.

@@ -1,11 +1,12 @@
 #version 450
 
-// 128 bytes: mvp, then fog state (tr_fog.h). Trimmed from vkQuake3's original (GPLv2-or-later), dropping the clip-plane/mirror support this renderer doesn't use.
+// 128 bytes: mvp, fog state (tr_fog.h), then a world-space clip plane for mirror/portal world draws (tr_portal.h). Adapted from vkQuake3's original (GPLv2-or-later).
 layout(push_constant) uniform Transform {
     mat4 mvp;
     vec4 camPos;     // xyz = camera world position
     vec4 fogColor;   // rgb = fog color
     vec4 fogParams;  // x = start (linear) / density (exp), y = end (linear only), z = mode (0=linear,1=exp), w = enabled
+    vec4 clipPlane;  // xyz = world-space plane normal, w = dist; zero when clip_plane is 0
 };
 
 layout(location = 0) in vec3 in_position;
@@ -15,9 +16,12 @@ layout(location = 2) in vec2 in_tex_coord;
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) out vec2 frag_tex_coord;
 layout(location = 2) out float frag_fogFactor;
+layout(location = 3) out float frag_clip_dist;
 
 // Off for the 2D UI pipelines, which share this shader but must never be fogged.
 layout (constant_id = 3) const int fog_enabled = 0;
+// On only for the fragment-discard fallback (no hardware gl_ClipDistance); see vk_pipelines.c.
+layout (constant_id = 2) const int clip_plane = 0;
 
 out gl_PerVertex {
     vec4 gl_Position;
@@ -36,4 +40,6 @@ void main() {
     } else {
         frag_fogFactor = 1.0;
     }
+
+    frag_clip_dist = (clip_plane != 0) ? (dot(in_position, clipPlane.xyz) - clipPlane.w) : 1.0;
 }

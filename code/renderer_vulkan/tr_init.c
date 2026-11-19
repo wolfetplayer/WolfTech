@@ -54,6 +54,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_poly.h"
 #include "vk_world.h"
 #include "vk_screenshot.h"
+#include "tr_portal.h"
 
 refimport_t ri;
 
@@ -138,6 +139,7 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 		R_InitShaders();
 		R_InitFreeType();
 		R_InitMain();
+		R_InitPortals();
 		R_InitPatches();
 		R_InitModels();
 		R_InitSkins();
@@ -218,10 +220,51 @@ static void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, fl
 	(void)org; (void)r; (void)g; (void)b; (void)scale; (void)id; (void)flags;
 }
 
+// The guts of RE_RenderScene -- see tr_main.h; tr_portal.c calls this recursively for a mirror/portal's destination view.
+void R_RenderViewInternal( const refdef_t *fd ) {
+	float viewMatrix[16], projMatrix[16], viewProj[16], fogPush[12];
+	qboolean isSkyboxPortalScene = ( fd->rdflags & RDF_SKYBOXPORTAL ) != 0;
+
+	R_NoteSkyboxPortalScene( fd->rdflags ); // must run before the "skip this scene's sky" check below
+
+	R_SetFogFrameTime( fd->time );
+	R_SetShaderTime( fd->time );
+	R_GetFogPushConstants( fd->vieworg, fogPush );
+
+	R_SetupViewMatrix( fd, viewMatrix );
+	R_SetupProjectionMatrix( fd, projMatrix );
+	R_MultMatrix( projMatrix, viewMatrix, viewProj );
+
+	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+		R_MarkVisibleSurfaces( fd );
+		if ( R_TryRenderPortalView( fd ) ) {
+			R_MarkVisibleSurfaces( fd ); // the recursive call above overwrote tr_world.c's shared visibility buffer
+		}
+
+		if ( R_SkyboxPortalActive() && !isSkyboxPortalScene ) {
+			vk_clear_depth_only(); // reset depth for the real scene, but leave color so the sky room's background survives
+		}
+
+		if ( isSkyboxPortalScene || !R_SkyboxPortalActive() ) {
+			vk_sky_draw( fd->vieworg, viewProj, fogPush );
+		}
+		vk_world_draw( viewProj, fogPush );
+	}
+
+	vk_draw3d_test_cube( s_testCubeOrigin, 40.0f, viewProj, fogPush );
+
+	{
+		int numEntities;
+		const refEntity_t *entities = R_GetSceneEntities( &numEntities );
+		vk_entity_draw_all( entities, numEntities, viewProj, fogPush );
+		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj, fogPush );
+	}
+
+	vk_poly_draw( viewProj, fogPush );
+}
+
 // Sanity test cube: fixed in world space on first run, so walking around it proves the camera matrices track correctly.
 static void RE_RenderScene( const refdef_t *fd ) {
-	float viewMatrix[16], projMatrix[16], viewProj[16], fogPush[12];
-
 	if ( !vk.isInitialized || !s_frameActive ) {
 		return;
 	}
@@ -243,30 +286,7 @@ static void RE_RenderScene( const refdef_t *fd ) {
 		s_firstRealSceneLogged = qtrue;
 	}
 
-	R_SetFogFrameTime( fd->time );
-	R_SetShaderTime( fd->time );
-	R_GetFogPushConstants( fd->vieworg, fogPush );
-
-	R_SetupViewMatrix( fd, viewMatrix );
-	R_SetupProjectionMatrix( fd, projMatrix );
-	R_MultMatrix( projMatrix, viewMatrix, viewProj );
-
-	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
-		R_MarkVisibleSurfaces( fd );
-		vk_sky_draw( fd->vieworg, viewProj, fogPush );
-		vk_world_draw( viewProj, fogPush );
-	}
-
-	vk_draw3d_test_cube( s_testCubeOrigin, 40.0f, viewProj, fogPush );
-
-	{
-		int numEntities;
-		const refEntity_t *entities = R_GetSceneEntities( &numEntities );
-		vk_entity_draw_all( entities, numEntities, viewProj, fogPush );
-		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj, fogPush );
-	}
-
-	vk_poly_draw( viewProj, fogPush );
+	R_RenderViewInternal( fd );
 }
 
 static void RE_SetColor( const float *rgba ) {
