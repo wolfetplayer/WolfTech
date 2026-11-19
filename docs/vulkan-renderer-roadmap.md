@@ -287,10 +287,38 @@ it once, make world/entity/poly submission all go through it.
 
 ## Phase 2 — Classic feature parity (decals, flares, shadows, cinematics)
 
-- [ ] Decals (`R_MarkFragments`, currently always returns 0): port the BSP mark-fragment clipping
-      (`R_ChopPolyBehindPlane`/`R_BoxSurfaces_r` equivalents) — this is pure CPU geometry work that
-      feeds the Phase 1 generic draw path; no decal-specific Vulkan code needed beyond that.
-      Without this, bullet holes/scorch marks/blood never appear — highly visible in RTCW.
+- [x] Decals (`R_MarkFragments`, previously always returned 0): new `tr_marks.c`/`.h` ports
+      `R_ChopPolyBehindPlane` verbatim from code/renderer (GPLv2-or-later). Everything else is
+      simplified rather than ported 1:1, since `bspSurface_t` is already uniformly pre-triangulated
+      (no `SF_FACE`/`SF_GRID`/`SF_TRIANGLES` split to dispatch on) and surfaces aren't walkable via a
+      node tree the way classic `R_BoxSurfaces_r` needs: candidate surfaces are found with a flat
+      linear scan over `tr_world.surfaces` plus a per-surface AABB-vs-decal-bounds reject, and output
+      is always upstream's "old mapping" convention (raw xyz only, no fitted ST) — cgame's
+      `CG_ImpactMark` already computes a perfectly fine planar UV itself when a fragment's
+      `numPoints` comes back positive, so this isn't a hack, just always taking the simpler of
+      upstream's two legitimate modes. **Scoped out, not a silent gap**: `MST_PATCH` surfaces (curved
+      geometry) don't get decals — patches store raw control points here, not triangles, and
+      tessellating them too (like `vk_world.c` does for drawing) is a real follow-up, not done this
+      pass; the classic engine's per-node "recently rendered" leaf freshness filter and
+      `CONTENTS_TRANSLUCENT` leaf check are also dropped (the flat scan has no leaf context to check
+      either against) — worst case is a slightly wider candidate-surface set, not a correctness bug.
+      No new Vulkan draw code needed: decals submit through the existing `RE_AddPolyToScene`/poly
+      draw path once `R_MarkFragments` returns real fragments.
+      **In-game testing found two real bugs, both fixed**: (1) the 4 side-clip-plane normals came
+      out pointing outward instead of inward — the cross-product formula matches code/renderer's
+      literally, but something about how it transfers here flips the sign (not fully root-caused;
+      see the git history for the debug-logging session that caught it: every candidate triangle
+      was being clipped to zero points). Fixed by making the planes self-correcting: each one is
+      flipped if the quad's own center ends up on its wrong side, rather than trusting the
+      cross-product order. (2) Working decals then z-fought/flickered against the coplanar wall
+      underneath them, because this renderer had no `polygonOffset` support at all
+      (`VkPipelineRasterizationStateCreateInfo.depthBiasEnable` was hardcoded off everywhere). Added
+      `shader_t.polygonOffset` (parses the `polygonOffset` shader keyword) and a `depthBiasEnable`
+      pipeline-variant axis on `vk_getPipeline3D` (new `r_offsetfactor -1` / `r_offsetunits -2`
+      cvars, matching code/renderer's defaults) — entity/poly/world-stage1+ draws all pick it up for
+      free from their shader's own flag. Confirmed working in-game by the user (bullet holes and
+      blood decals both render); not yet re-confirmed that the polygon-offset fix fully eliminates
+      the flicker (added right after the report, not separately re-tested in isolation yet).
 - [ ] Dynamic light coronas/flares (`RE_AddCoronaToScene`, currently stubbed): visibility-test
       against the depth buffer (occlusion query via `VkQueryPool`, or a depth readback/compare) with
       multi-frame fade in/out to avoid popping.
@@ -463,3 +491,16 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   Compiled clean (full `release` build, zero warnings in `renderer_vulkan`). Neither feature has
   been tested in-game yet — next session should load a map with an actual mirror/portal shader
   and, separately, one with a `_skyboxOrigin` key, before trusting either further.
+- **2026-11-19** — Implemented Phase 2's decals item (`R_MarkFragments`), jumping ahead of the rest
+  of Phase 1 at the user's request. New `tr_marks.c`/`.h`; see its checkmark above for the full
+  design and scoped-out gaps (no patch/curved-surface decals yet). Compiled clean. Not yet fired in
+  a real game session — next step is shooting a wall and confirming a decal actually shows up.
+- **2026-11-19** — User tested decals in-game (side-by-side against OpenGL1, which worked
+  "flawlessly") and found none appeared on Vulkan. Added temporary stage-counter diagnostic
+  logging to `tr_marks.c` rather than guess; the user's log showed candidate surfaces and triangles
+  were being found (`boundsOk=2 tris=74`) but 100% clipped away (`fragments=0`), pointing straight
+  at the clip-plane math. Fixed the side-plane sign bug (see the decal checkmark above) and removed
+  the diagnostic logging once confirmed. User then reported decals appearing but flickering; traced
+  to a second real gap (no `polygonOffset`/depth-bias support anywhere in this renderer) and fixed
+  that too (same checkmark). Both fixes compiled clean; decals confirmed showing up in-game, the
+  polygon-offset flicker fix itself not yet separately re-confirmed.

@@ -134,6 +134,7 @@ typedef struct shader_s {
 	qboolean noMipMaps;
 	qboolean noPicMip;
 	cullType_t cullType;
+	qboolean polygonOffset; // decal shaders set this to avoid z-fighting with coplanar world geometry; see vk_getPipeline3D
 
 	qboolean isSky;
 	image_t *skyOuterBox[6]; // rt, lf, bk, ft, up, dn -- see ParseSkyParms

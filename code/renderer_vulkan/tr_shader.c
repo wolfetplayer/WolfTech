@@ -419,6 +419,8 @@ static qboolean ParseShader( const char *name, char **text ) {
 			} else if ( token[0] ) {
 				ri.Printf( PRINT_WARNING, "WARNING: invalid cull parm '%s' in shader '%s'\n", token, name );
 			}
+		} else if ( !Q_stricmp( token, "polygonOffset" ) ) {
+			tempShader.polygonOffset = qtrue;
 		} else if ( !Q_stricmp( token, "skyparms" ) ) {
 			ParseSkyParms( &tempShader, text );
 		} else if ( !Q_stricmp( token, "deformVertexes" ) ) {

@@ -600,7 +600,7 @@ doneCollecting:
 					}
 
 					pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-						vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc, VK_FALSE, VK_FALSE );
+						vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc, VK_FALSE, VK_FALSE, shaderPtr->polygonOffset );
 					if ( pipeline != boundPipeline ) {
 						qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 						boundPipeline = pipeline;

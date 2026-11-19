@@ -10,6 +10,10 @@
 #include "tr_image.h"
 #include "tr_portal.h"
 
+// Decal shaders set shader_t.polygonOffset to avoid z-fighting; defaults match code/renderer's.
+static cvar_t *r_offsetFactor;
+static cvar_t *r_offsetUnits;
+
 void vk_createRenderPass( void ) {
 	VkAttachmentDescription attachments[2];
 	attachments[0].flags = 0;
@@ -226,7 +230,8 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 									const VkVertexInputBindingDescription *binding,
 									const VkVertexInputAttributeDescription *attribs, uint32_t numAttribs,
 									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-									VkBool32 depthTestEnable, VkCullModeFlags cullMode, VkPolygonMode polygonMode ) {
+									VkBool32 depthTestEnable, VkCullModeFlags cullMode, VkPolygonMode polygonMode,
+									VkBool32 polygonOffset ) {
 	VkPipeline pipeline;
 
 	VkPipelineShaderStageCreateInfo stages[2];
@@ -280,10 +285,10 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 	rasterization.polygonMode = polygonMode;
 	rasterization.cullMode = cullMode;
 	rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE;
-	rasterization.depthBiasEnable = VK_FALSE;
-	rasterization.depthBiasConstantFactor = 0.0f;
+	rasterization.depthBiasEnable = polygonOffset;
+	rasterization.depthBiasConstantFactor = polygonOffset ? r_offsetUnits->value : 0.0f;
 	rasterization.depthBiasClamp = 0.0f;
-	rasterization.depthBiasSlopeFactor = 0.0f;
+	rasterization.depthBiasSlopeFactor = polygonOffset ? r_offsetFactor->value : 0.0f;
 	rasterization.lineWidth = 1.0f;
 
 	VkPipelineMultisampleStateCreateInfo multisample;
@@ -376,7 +381,7 @@ static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipel
 									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 									VkBool32 depthTestEnable, VkCullModeFlags cullMode ) {
 	return create_pipeline_ex( vs, fs, layout, specInfo, binding, attribs, numAttribs,
-		blendEnable, srcBlend, dstBlend, depthTestEnable, cullMode, VK_POLYGON_MODE_FILL );
+		blendEnable, srcBlend, dstBlend, depthTestEnable, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE );
 }
 
 // vk2d_vertex_t attribs, shared by the 2D pipelines and the (unused-for-world-now) opaque 3D one.
@@ -466,7 +471,7 @@ static VkCullModeFlags vk_flipCullMode( VkCullModeFlags cullMode ) {
 	return cullMode;
 }
 
-// Cache of pipelines by (blend, cull, alphaTest, clipPlane, mirror) state; linear-scanned, real shader sets stay small.
+// Cache of pipelines by (blend, cull, alphaTest, clipPlane, mirror, polygonOffset) state; linear-scanned, real shader sets stay small.
 #define MAX_CACHED_3D_PIPELINES 64
 
 typedef struct {
@@ -478,6 +483,7 @@ typedef struct {
 	int32_t alphaTestFunc;
 	VkBool32 clipPlane;
 	VkBool32 mirror;
+	VkBool32 polygonOffset;
 } cachedPipelineKey_t;
 
 static cachedPipelineKey_t s_cachedPipelineKeys[MAX_CACHED_3D_PIPELINES];
@@ -497,7 +503,8 @@ static void vk_destroyPipelineCache3D( void ) {
 }
 
 VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-							  VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 clipPlane, VkBool32 mirror ) {
+							  VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 clipPlane, VkBool32 mirror,
+							  VkBool32 polygonOffset ) {
 	VkVertexInputBindingDescription binding2d;
 	VkVertexInputAttributeDescription attribs2d[3];
 	vk2d_spec_data_t spec_data;
@@ -510,7 +517,7 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 		const cachedPipelineKey_t *key = &s_cachedPipelineKeys[i];
 		if ( key->vertexStride == vertexStride && key->blendEnable == blendEnable && key->srcBlend == srcBlend &&
 			 key->dstBlend == dstBlend && key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc &&
-			 key->clipPlane == clipPlane && key->mirror == mirror ) {
+			 key->clipPlane == clipPlane && key->mirror == mirror && key->polygonOffset == polygonOffset ) {
 			return s_cachedPipelines[i];
 		}
 	}
@@ -535,8 +542,10 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 	s_cachedPipelineKeys[s_numCachedPipelines].alphaTestFunc = alphaTestFunc;
 	s_cachedPipelineKeys[s_numCachedPipelines].clipPlane = clipPlane;
 	s_cachedPipelineKeys[s_numCachedPipelines].mirror = mirror;
-	s_cachedPipelines[s_numCachedPipelines] = create_pipeline( vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
-		&binding2d, attribs2d, 3, blendEnable, srcBlend, dstBlend, VK_TRUE, mirror ? vk_flipCullMode( cullMode ) : cullMode );
+	s_cachedPipelineKeys[s_numCachedPipelines].polygonOffset = polygonOffset;
+	s_cachedPipelines[s_numCachedPipelines] = create_pipeline_ex( vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, attribs2d, 3, blendEnable, srcBlend, dstBlend, VK_TRUE, mirror ? vk_flipCullMode( cullMode ) : cullMode,
+		VK_POLYGON_MODE_FILL, polygonOffset );
 
 	return s_cachedPipelines[s_numCachedPipelines++];
 }
@@ -575,6 +584,9 @@ void vk_create3DPipelines( void ) {
 	VkBool32 hwClip = vk.features.shaderClipDistance;
 	VkShaderModule worldPortalVs = hwClip ? vk_world_lightmap_clip_vs : vk_world_lightmap_vs;
 	int ct;
+
+	r_offsetFactor = ri.Cvar_Get( "r_offsetfactor", "-1", CVAR_CHEAT );
+	r_offsetUnits = ri.Cvar_Get( "r_offsetunits", "-2", CVAR_CHEAT );
 
 	Get2DAttribs( &binding2d, attribs2d );
 
@@ -627,7 +639,7 @@ void vk_create3DPipelines( void ) {
 	vk.pipeline_world_wireframe = vk.features.fillModeNonSolid ?
 		create_pipeline_ex( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
 			&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
-			VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_LINE ) : VK_NULL_HANDLE;
+			VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_LINE, VK_FALSE ) : VK_NULL_HANDLE;
 
 	vk_resetPipelineCache3D();
 }

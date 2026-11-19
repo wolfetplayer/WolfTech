@@ -48,8 +48,10 @@ VkCullModeFlags vk_cullModeForShader( cullType_t cullType );
 
 // Lazily creates/caches a single_texture pipeline for this state; vertexStride retargets the binding to vk2d_vertex_t-compatible layouts like vkWorldVertex_t.
 // clipPlane/mirror activate tr_portal.h's clip plane (and, for mirror, a flipped cull mode); pass VK_FALSE/VK_FALSE outside a world mirror/portal pass.
+// polygonOffset should be shader_t.polygonOffset (decal shaders set this to avoid z-fighting).
 VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-							  VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 clipPlane, VkBool32 mirror );
+							  VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 clipPlane, VkBool32 mirror,
+							  VkBool32 polygonOffset );
 
 // vk.pipeline_3d_lightmap[cullType], auto-swapped for the clip-plane/mirror variant while tr_portal.c is recursing.
 VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType );

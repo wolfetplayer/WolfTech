@@ -708,7 +708,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			}
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView() );
+				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset );
 			if ( pipeline != boundPipeline ) {
 				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 				boundPipeline = pipeline;
@@ -751,7 +751,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 				}
 
 				pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), VK_TRUE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE,
-					vk_cullModeForShader( shader->cullType ), 0, R_InPortalView(), R_InMirrorView() );
+					vk_cullModeForShader( shader->cullType ), 0, R_InPortalView(), R_InMirrorView(), VK_FALSE );
 				if ( pipeline != boundPipeline ) {
 					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 					boundPipeline = pipeline;

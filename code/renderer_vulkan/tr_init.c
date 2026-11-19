@@ -55,6 +55,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_world.h"
 #include "vk_screenshot.h"
 #include "tr_portal.h"
+#include "tr_marks.h"
 
 refimport_t ri;
 
@@ -372,14 +373,7 @@ static void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 	}
 }
 
-static int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t projection,
-							 int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t *fragmentBuffer ) {
-	FIRST_CALL_CHECKPOINT( "R_MarkFragments" );
-	(void)numPoints; (void)points; (void)projection; (void)maxPoints; (void)pointBuffer; (void)maxFragments; (void)fragmentBuffer;
-	return 0;
-}
-
-// Real tag lookup (R_LerpTag) lives in tr_bones.c.
+// Real tag lookup (R_LerpTag) lives in tr_bones.c; real decal clipping (R_MarkFragments) lives in tr_marks.c.
 
 // Frame-0 local-space bounds, matching code/renderer and code/rend2's R_ModelBounds semantics.
 static void R_ModelBounds( qhandle_t hModel, vec3_t mins, vec3_t maxs ) {

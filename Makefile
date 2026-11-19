@@ -1985,6 +1985,7 @@ Q3RVOBJ = \
   $(B)/renderer_vulkan/tr_main.o \
   $(B)/renderer_vulkan/tr_portal.o \
   $(B)/renderer_vulkan/tr_bsp.o \
+  $(B)/renderer_vulkan/tr_marks.o \
   $(B)/renderer_vulkan/tr_world.o \
   $(B)/renderer_vulkan/tr_patch.o \
   $(B)/renderer_vulkan/tr_model.o \
