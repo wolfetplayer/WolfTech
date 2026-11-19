@@ -697,8 +697,18 @@ static void GetMultiTexAttribs( VkVertexInputBindingDescription *binding, VkVert
 	attribs[3].offset = offsetof( vkMultiTexVertex_t, uv1 );
 }
 
+// Bisection aid for the shattered-geometry report; ruled out (no effect) but left in for now.
+static cvar_t *r_vk_disableMultiTex;
+
 qboolean vk_canCollapseMultiTex( const shader_t *shader, int *outCombineMode ) {
 	const shaderStage_t *s0, *s1;
+
+	if ( !r_vk_disableMultiTex ) {
+		r_vk_disableMultiTex = ri.Cvar_Get( "r_vk_disableMultiTex", "0", 0 ); // not CVAR_CHEAT, needs no sv_cheats
+	}
+	if ( r_vk_disableMultiTex->integer ) {
+		return qfalse;
+	}
 
 	if ( shader->numStages != 2 ) {
 		return qfalse;

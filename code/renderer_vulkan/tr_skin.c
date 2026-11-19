@@ -93,6 +93,10 @@ static char *CommaParse( char **data_p ) {
 		c = *data;
 	} while ( c > 32 && c != ',' );
 
+	if ( c == ',' ) {
+		data++; // consume the separator so the next field doesn't start with it
+	}
+
 	token[len] = 0;
 	*data_p = data;
 	return token;

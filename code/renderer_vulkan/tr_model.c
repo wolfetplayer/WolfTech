@@ -547,12 +547,42 @@ static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *name ) {
 	return qtrue;
 }
 
+// Supported extensions, in the reference engine's fallback preference order (minus iqm/mdr, unsupported here).
+static const char *s_modelExts[] = { "mds", "mdm", "mdx", "md3", "mdc" };
+static const int s_numModelExts = sizeof( s_modelExts ) / sizeof( s_modelExts[0] );
+
+// Reads and parses filename as the format named by ext; false if missing or unparseable.
+static qboolean TryLoadModelFile( model_t *mod, const char *filename, const char *ext ) {
+	void *buffer;
+	long readLen;
+	qboolean loaded = qfalse;
+
+	buffer = NULL;
+	readLen = ri.FS_ReadFile( filename, &buffer );
+	if ( readLen > 0 && buffer ) {
+		if ( !Q_stricmp( ext, "md3" ) ) {
+			loaded = R_LoadMD3( mod, buffer, filename );
+		} else if ( !Q_stricmp( ext, "mdc" ) ) {
+			loaded = R_LoadMDC( mod, buffer, filename );
+		} else if ( !Q_stricmp( ext, "mds" ) ) {
+			loaded = R_LoadMDS( mod, buffer, filename );
+		} else if ( !Q_stricmp( ext, "mdx" ) ) {
+			loaded = R_LoadMDX( mod, buffer, filename );
+		} else {
+			loaded = R_LoadMDM( mod, buffer, filename );
+		}
+		ri.FS_FreeFile( buffer );
+	}
+	ri.Printf( PRINT_ALL, "...tr_model checkpoint: RE_RegisterModel('%s') readLen=%ld loaded=%d\n", filename, readLen, (int)loaded );
+	return loaded;
+}
+
 qhandle_t RE_RegisterModel( const char *name ) {
 	model_t *mod;
-	void *buffer;
 	const char *ext;
 	qhandle_t handle;
 	qboolean loaded;
+	char localName[MAX_QPATH];
 
 	if ( !name || !name[0] || strlen( name ) >= MAX_QPATH ) {
 		return 0;
@@ -591,25 +621,25 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	ext = COM_GetExtension( name );
 	loaded = qfalse;
 
-	if ( !Q_stricmp( ext, "md3" ) || !Q_stricmp( ext, "mdc" ) || !Q_stricmp( ext, "mds" ) || !Q_stricmp( ext, "mdx" ) || !Q_stricmp( ext, "mdm" ) ) {
-		long readLen;
-		buffer = NULL;
-		readLen = ri.FS_ReadFile( name, &buffer );
-		if ( readLen > 0 && buffer ) {
-			if ( !Q_stricmp( ext, "md3" ) ) {
-				loaded = R_LoadMD3( mod, buffer, name );
-			} else if ( !Q_stricmp( ext, "mdc" ) ) {
-				loaded = R_LoadMDC( mod, buffer, name );
-			} else if ( !Q_stricmp( ext, "mds" ) ) {
-				loaded = R_LoadMDS( mod, buffer, name );
-			} else if ( !Q_stricmp( ext, "mdx" ) ) {
-				loaded = R_LoadMDX( mod, buffer, name );
-			} else {
-				loaded = R_LoadMDM( mod, buffer, name );
+	if ( ext[0] && ( !Q_stricmp( ext, "md3" ) || !Q_stricmp( ext, "mdc" ) || !Q_stricmp( ext, "mds" ) || !Q_stricmp( ext, "mdx" ) || !Q_stricmp( ext, "mdm" ) ) ) {
+		loaded = TryLoadModelFile( mod, name, ext );
+	}
+
+	// Named extension missing -- try every other supported one, same fallback the reference engine does.
+	if ( !loaded ) {
+		int i;
+		COM_StripExtension( name, localName, sizeof( localName ) );
+		for ( i = 0; i < s_numModelExts; i++ ) {
+			char altName[MAX_QPATH];
+			if ( ext[0] && !Q_stricmp( ext, s_modelExts[i] ) ) {
+				continue; // already tried above
 			}
-			ri.FS_FreeFile( buffer );
+			Com_sprintf( altName, sizeof( altName ), "%s.%s", localName, s_modelExts[i] );
+			loaded = TryLoadModelFile( mod, altName, s_modelExts[i] );
+			if ( loaded ) {
+				break;
+			}
 		}
-		ri.Printf( PRINT_ALL, "...tr_model checkpoint: RE_RegisterModel('%s') readLen=%ld loaded=%d\n", name, readLen, (int)loaded );
 	}
 
 	// Any other/failed format: a valid placeholder handle with no tag data, same as before this file existed.

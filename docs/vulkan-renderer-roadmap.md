@@ -551,5 +551,35 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   brush-entity surfaces (they're not in any BSP leaf's surface list). Added full brush-model entity
   rendering: see the new Phase 1 checkmark above for the design (`MOD_BRUSH`, `vk_world_draw_brushmodel`,
   the `vk_world_build` submodel-0 scoping fix, `R_ModelBounds` coverage). Compiled clean (full release
-  build, MSYS2 MINGW64, zero new warnings). Not yet confirmed in-game — next session should load a map
-  with a working door and a rotating door/elevator before trusting this further.
+  build, MSYS2 MINGW64, zero new warnings). **User confirmed working in-game** (doors and rotating
+  doors render and animate correctly).
+- **2026-11-20** — User reported weapon view-models looking "shattered"/misplaced/badly textured
+  (varying by weapon and location) and enemy characters rendering plain white with no heads.
+  Diagnosed from the user's console log plus direct inspection of the mod's pk3 content (not
+  guesswork): found two real, previously-unnoticed bugs, both pre-existing (not introduced this
+  session) and both outside `code/renderer_vulkan` proper but load-bearing for it.
+  **(1) `RE_RegisterModel` (`tr_model.c`) had no cross-extension fallback.** The reference engine
+  (`code/renderer/tr_model.c`) tries every supported model extension (iqm/mdr/mds/mdm/mdx/md3/mdc,
+  in that preference order) when the exact named file is missing — content routinely references one
+  extension (e.g. a `.skin`'s `md3_part` value, or a weapon's configured hand model) while only a
+  different one ships (confirmed directly: `models/players/officerss/head.mdc` exists in `pak0.pk3`
+  but every head skin's `md3_part` names `head.md3`, which doesn't; same pattern for several
+  weapons' `_hand` models, e.g. `v_luger_hand.md3` ships in `z_pack.pk3` but `.mdc` gets requested).
+  Without the fallback this renderer had been silently failing to load these models (`RE_RegisterModel`
+  returning 0), which cgame treats as "don't draw this part" — explaining the missing enemy heads
+  outright, and likely contributing to the weapon oddities. Ported the reference engine's fallback
+  logic (try the named extension first, then every other supported one) into `RE_RegisterModel`.
+  **(2) `CommaParse` (`tr_skin.c`) didn't consume the field separator.** Every `.skin` file is
+  `surfaceName,shaderPath` pairs; the parser's token-scanning loop stopped exactly *at* a comma
+  without advancing past it, so the *next* field always started with a leading `,` glued onto it.
+  Confirmed directly in the user's log: `R_LoadImage: no .tga/.jpg/.png found for
+  ',models/players/trench/t_legsordnungspolizei2.tga'` — a literal leading comma baked into the
+  path. This silently failed every second field of every skin file (shader/image names), explaining
+  the uniform white characters (texture lookups failing and falling back to the engine's 1x1 white
+  default image, `tr_image.c`'s `R_CreateDefaultImage`). Fixed by advancing past the comma once the
+  token loop stops on one.
+  Both fixes compiled clean (full `mingw32-make` release build, MSYS2 MINGW64, zero new warnings).
+  Not yet re-confirmed in-game by the user as of this entry — next step is relaunching and checking
+  both enemy heads and weapon appearance. The "shattered" weapon geometry specifically (as opposed to
+  missing/wrong-textured parts) is not fully explained by either fix and may need its own follow-up
+  if it persists.
