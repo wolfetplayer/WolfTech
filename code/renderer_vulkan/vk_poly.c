@@ -20,9 +20,13 @@ static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
 static vk2d_vertex_t *s_mapped;
 
+static VkBuffer s_mtVertexBuffer;
+static VkDeviceMemory s_mtVertexMemory;
+static vkMultiTexVertex_t *s_mtMapped;
+
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
 
-void vk_poly_init( void ) {
+static void create_mapped_buffer( VkDeviceSize size, VkBuffer *outBuffer, VkDeviceMemory *outMemory, void **outMapped ) {
 	VkBufferCreateInfo buf_desc;
 	VkMemoryRequirements mem_reqs;
 	VkMemoryAllocateInfo alloc_info;
@@ -30,39 +34,57 @@ void vk_poly_init( void ) {
 	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	buf_desc.pNext = NULL;
 	buf_desc.flags = 0;
-	buf_desc.size = POLY_SCRATCH_VERTS * sizeof( vk2d_vertex_t );
+	buf_desc.size = size;
 	buf_desc.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	buf_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	buf_desc.queueFamilyIndexCount = 0;
 	buf_desc.pQueueFamilyIndices = NULL;
-	VK_CHECK( qvkCreateBuffer( vk.device, &buf_desc, NULL, &s_vertexBuffer ) );
+	VK_CHECK( qvkCreateBuffer( vk.device, &buf_desc, NULL, outBuffer ) );
 
-	qvkGetBufferMemoryRequirements( vk.device, s_vertexBuffer, &mem_reqs );
+	qvkGetBufferMemoryRequirements( vk.device, *outBuffer, &mem_reqs );
 
 	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	alloc_info.pNext = NULL;
 	alloc_info.allocationSize = mem_reqs.size;
 	alloc_info.memoryTypeIndex = vk_find_memory_type( mem_reqs.memoryTypeBits,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-	VK_CHECK( qvkAllocateMemory( vk.device, &alloc_info, NULL, &s_vertexMemory ) );
-	VK_CHECK( qvkBindBufferMemory( vk.device, s_vertexBuffer, s_vertexMemory, 0 ) );
+	VK_CHECK( qvkAllocateMemory( vk.device, &alloc_info, NULL, outMemory ) );
+	VK_CHECK( qvkBindBufferMemory( vk.device, *outBuffer, *outMemory, 0 ) );
 
-	VK_CHECK( qvkMapMemory( vk.device, s_vertexMemory, 0, VK_WHOLE_SIZE, 0, (void **)&s_mapped ) );
+	VK_CHECK( qvkMapMemory( vk.device, *outMemory, 0, VK_WHOLE_SIZE, 0, outMapped ) );
+}
+
+static void destroy_mapped_buffer( VkBuffer buffer, VkDeviceMemory memory, void *mapped ) {
+	if ( mapped ) {
+		qvkUnmapMemory( vk.device, memory );
+	}
+	qvkDestroyBuffer( vk.device, buffer, NULL );
+	qvkFreeMemory( vk.device, memory, NULL );
+}
+
+void vk_poly_init( void ) {
+	create_mapped_buffer( POLY_SCRATCH_VERTS * sizeof( vk2d_vertex_t ), &s_vertexBuffer, &s_vertexMemory, (void **)&s_mapped );
+	create_mapped_buffer( POLY_SCRATCH_VERTS * sizeof( vkMultiTexVertex_t ), &s_mtVertexBuffer, &s_mtVertexMemory, (void **)&s_mtMapped );
 }
 
 void vk_poly_shutdown( void ) {
-	if ( s_mapped ) {
-		qvkUnmapMemory( vk.device, s_vertexMemory );
-		s_mapped = NULL;
-	}
-	qvkDestroyBuffer( vk.device, s_vertexBuffer, NULL );
-	qvkFreeMemory( vk.device, s_vertexMemory, NULL );
+	destroy_mapped_buffer( s_vertexBuffer, s_vertexMemory, s_mapped );
+	s_mapped = NULL;
+	destroy_mapped_buffer( s_mtVertexBuffer, s_mtVertexMemory, s_mtMapped );
+	s_mtMapped = NULL;
 }
 
 static void write_scratch_vert( vk2d_vertex_t *out, const float pos[3], const byte color[4], const float uv[2] ) {
 	out->pos[0] = pos[0]; out->pos[1] = pos[1]; out->pos[2] = pos[2];
 	out->color[0] = color[0]; out->color[1] = color[1]; out->color[2] = color[2]; out->color[3] = color[3];
 	out->uv[0] = uv[0]; out->uv[1] = uv[1];
+}
+
+static void write_scratch_vert_mt( vkMultiTexVertex_t *out, const float pos[3], const byte color[4], const float uv0[2], const float uv1[2] ) {
+	out->pos[0] = pos[0]; out->pos[1] = pos[1]; out->pos[2] = pos[2];
+	out->color[0] = color[0]; out->color[1] = color[1]; out->color[2] = color[2]; out->color[3] = color[3];
+	out->uv0[0] = uv0[0]; out->uv0[1] = uv0[1];
+	out->uv1[0] = uv1[0]; out->uv1[1] = uv1[1];
 }
 
 void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
@@ -72,7 +94,9 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 	const scenePoly_t *polys = R_GetScenePolys( &numPolys );
 	const polyVert_t *polyVerts = R_GetScenePolyVerts();
 	uint32_t writeOffset = 0;
+	uint32_t mtWriteOffset = 0;
 	VkPipeline boundPipeline = VK_NULL_HANDLE;
+	VkBuffer boundVertexBuffer = s_vertexBuffer;
 
 	if ( numPolys <= 0 || !s_mapped ) {
 		return;
@@ -89,7 +113,7 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 		const scenePoly_t *poly = &polys[i];
 		shader_t *shader = R_GetShaderByHandle( poly->shader );
 		float deformedPos[MAX_POLY_SOURCE_VERTS][3];
-		int v, s;
+		int v, s, combineMode;
 
 		if ( poly->numVerts < 3 || poly->numVerts > MAX_POLY_SOURCE_VERTS ) {
 			continue;
@@ -98,6 +122,54 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 		// deformVertexes is shader-level: computed once, shared by every stage below.
 		for ( v = 0; v < poly->numVerts; v++ ) {
 			R_DeformPosition( shader, polyVerts[poly->firstVert + v].xyz, deformedPos[v] );
+		}
+
+		if ( vk_canCollapseMultiTex( shader, &combineMode ) ) {
+			const shaderStage_t *stage0 = &shader->stages[0];
+			const shaderStage_t *stage1 = &shader->stages[1];
+			image_t *image0 = R_GetStageImage( stage0 );
+			image_t *image1 = R_GetStageImage( stage1 );
+			byte stageColor[MAX_POLY_SOURCE_VERTS][4];
+			float uv0[MAX_POLY_SOURCE_VERTS][2], uv1[MAX_POLY_SOURCE_VERTS][2];
+			uint32_t firstVert = mtWriteOffset;
+			uint32_t vertCount;
+			VkDescriptorSet descSet;
+			VkPipeline pipeline;
+
+			if ( !image0 || !image1 || mtWriteOffset + (uint32_t)( poly->numVerts - 2 ) * 3 > POLY_SCRATCH_VERTS ) {
+				continue;
+			}
+
+			for ( v = 0; v < poly->numVerts; v++ ) {
+				const polyVert_t *srcVert = &polyVerts[poly->firstVert + v];
+				R_CalcStageColorAlpha( stage0, NULL, NULL, srcVert->modulate, stageColor[v] );
+				R_CalcStageTexCoord( stage0, srcVert->st[0], srcVert->st[1], deformedPos[v], NULL, uv0[v] );
+				R_CalcStageTexCoord( stage1, srcVert->st[0], srcVert->st[1], deformedPos[v], NULL, uv1[v] );
+			}
+
+			for ( v = 0; v < poly->numVerts - 2; v++ ) {
+				write_scratch_vert_mt( &s_mtMapped[mtWriteOffset + 0], deformedPos[0], stageColor[0], uv0[0], uv1[0] );
+				write_scratch_vert_mt( &s_mtMapped[mtWriteOffset + 1], deformedPos[v + 1], stageColor[v + 1], uv0[v + 1], uv1[v + 1] );
+				write_scratch_vert_mt( &s_mtMapped[mtWriteOffset + 2], deformedPos[v + 2], stageColor[v + 2], uv0[v + 2], uv1[v + 2] );
+				mtWriteOffset += 3;
+			}
+			vertCount = mtWriteOffset - firstVert;
+
+			if ( boundVertexBuffer != s_mtVertexBuffer ) {
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_mtVertexBuffer, &vb_offset );
+				boundVertexBuffer = s_mtVertexBuffer;
+			}
+
+			pipeline = vk_getPipelineMultiTexture( combineMode, vk_cullModeForShader( shader->cullType ), stage0->alphaTestFunc );
+			if ( pipeline != boundPipeline ) {
+				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+				boundPipeline = pipeline;
+			}
+			descSet = vk_getMultiTextureDescriptor( image0, image1 );
+			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
+				0, 1, &descSet, 0, NULL );
+			qvkCmdDraw( vk.command_buffer, vertCount, 1, firstVert, 0 );
+			continue;
 		}
 
 		// rgbGen/alphaGen/tcMod are per-stage, so each stage gets its own fresh copy of the triangle fan.
@@ -118,7 +190,7 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 			for ( v = 0; v < poly->numVerts; v++ ) {
 				const polyVert_t *srcVert = &polyVerts[poly->firstVert + v];
 				R_CalcStageColorAlpha( stage, NULL, NULL /* no entity/lighting context for scene polys */, srcVert->modulate, stageColor[v] );
-				R_CalcStageTexCoord( stage, srcVert->st[0], srcVert->st[1], deformedPos[v], stageUV[v] );
+				R_CalcStageTexCoord( stage, srcVert->st[0], srcVert->st[1], deformedPos[v], NULL, stageUV[v] );
 			}
 
 			for ( v = 0; v < poly->numVerts - 2; v++ ) {
@@ -128,6 +200,11 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 				writeOffset += 3;
 			}
 			vertCount = writeOffset - firstVert;
+
+			if ( boundVertexBuffer != s_vertexBuffer ) {
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
+				boundVertexBuffer = s_vertexBuffer;
+			}
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );

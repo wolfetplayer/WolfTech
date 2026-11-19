@@ -167,7 +167,8 @@ void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 	outColor[0] = rgb[0]; outColor[1] = rgb[1]; outColor[2] = rgb[2]; outColor[3] = alpha;
 }
 
-void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, const float worldPos[3], float outST[2] ) {
+void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, const float worldPos[3],
+						   const float entityTranslate[2], float outST[2] ) {
 	float s = baseS, t = baseT;
 	int m;
 
@@ -178,7 +179,13 @@ void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, 
 		switch ( tmi->type ) {
 		default:
 		case TMOD_NONE:
-		case TMOD_ENTITY_TRANSLATE: // fallback -- needs the entity's own shader-time offset, not threaded in yet
+			break;
+
+		case TMOD_ENTITY_TRANSLATE:
+			if ( entityTranslate ) {
+				s += entityTranslate[0];
+				t += entityTranslate[1];
+			}
 			break;
 
 		case TMOD_TRANSFORM:

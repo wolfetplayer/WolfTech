@@ -106,6 +106,10 @@ void vk_destroyFrameBuffers( void ) {
 	}
 }
 
+#define MAX_MULTITEX_DESCRIPTORS 256
+static VkDescriptorPool s_multiTexDescriptorPool;
+static void vk_resetMultiTexDescriptorCache( void );
+
 void vk_createPipelineLayout( void ) {
 	{
 		VkDescriptorPoolSize pool_size;
@@ -179,9 +183,29 @@ void vk_createPipelineLayout( void ) {
 		desc.pSetLayouts = &vk.lightmap_set_layout;
 		VK_CHECK( qvkCreatePipelineLayout( vk.device, &desc, NULL, &vk.lightmap_pipeline_layout ) );
 	}
+
+	{
+		// vk_getMultiTextureDescriptor's cache allocates from this -- same 2-binding layout as the world lightmap pass.
+		VkDescriptorPoolSize poolSize;
+		VkDescriptorPoolCreateInfo poolDesc;
+
+		poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSize.descriptorCount = MAX_MULTITEX_DESCRIPTORS * 2;
+
+		poolDesc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolDesc.pNext = NULL;
+		poolDesc.flags = 0;
+		poolDesc.maxSets = MAX_MULTITEX_DESCRIPTORS;
+		poolDesc.poolSizeCount = 1;
+		poolDesc.pPoolSizes = &poolSize;
+		VK_CHECK( qvkCreateDescriptorPool( vk.device, &poolDesc, NULL, &s_multiTexDescriptorPool ) );
+	}
+
+	vk_resetMultiTexDescriptorCache(); // drop any sets cached against a previous (now-destroyed) pool, e.g. on vid_restart
 }
 
 void vk_destroyPipelineLayout( void ) {
+	qvkDestroyDescriptorPool( vk.device, s_multiTexDescriptorPool, NULL );
 	qvkDestroyPipelineLayout( vk.device, vk.lightmap_pipeline_layout, NULL );
 	qvkDestroyDescriptorSetLayout( vk.device, vk.lightmap_set_layout, NULL );
 	qvkDestroyPipelineLayout( vk.device, vk.pipeline_layout, NULL );
@@ -495,6 +519,8 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 	return s_cachedPipelines[s_numCachedPipelines++];
 }
 
+static void vk_destroyMultiTexPipelineCache( void );
+
 // pipeline_3d_opaque/blend are vk_draw3d.c's debug pipeline + the cache's fallback; real entity/poly draws use vk_getPipeline3D.
 void vk_create3DPipelines( void ) {
 	VkVertexInputBindingDescription binding2d;
@@ -565,4 +591,191 @@ void vk_destroy3DPipelines( void ) {
 	}
 	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_world_wireframe, NULL );
+
+	vk_destroyMultiTexPipelineCache();
+}
+
+// vkMultiTexVertex_t attribs -- byte-identical layout to vkWorldVertex_t, described independently since the types aren't otherwise related.
+static void GetMultiTexAttribs( VkVertexInputBindingDescription *binding, VkVertexInputAttributeDescription attribs[4] ) {
+	binding->binding = 0;
+	binding->stride = sizeof( vkMultiTexVertex_t );
+	binding->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	attribs[0].location = 0;
+	attribs[0].binding = 0;
+	attribs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attribs[0].offset = offsetof( vkMultiTexVertex_t, pos );
+	attribs[1].location = 1;
+	attribs[1].binding = 0;
+	attribs[1].format = VK_FORMAT_R8G8B8A8_UNORM;
+	attribs[1].offset = offsetof( vkMultiTexVertex_t, color );
+	attribs[2].location = 2;
+	attribs[2].binding = 0;
+	attribs[2].format = VK_FORMAT_R32G32_SFLOAT;
+	attribs[2].offset = offsetof( vkMultiTexVertex_t, uv0 );
+	attribs[3].location = 3;
+	attribs[3].binding = 0;
+	attribs[3].format = VK_FORMAT_R32G32_SFLOAT;
+	attribs[3].offset = offsetof( vkMultiTexVertex_t, uv1 );
+}
+
+qboolean vk_canCollapseMultiTex( const shader_t *shader, int *outCombineMode ) {
+	const shaderStage_t *s0, *s1;
+
+	if ( shader->numStages != 2 ) {
+		return qfalse;
+	}
+	s0 = &shader->stages[0];
+	s1 = &shader->stages[1];
+	if ( s0->blendEnabled || !s1->blendEnabled || s1->rgbGen != CGEN_IDENTITY ) {
+		return qfalse;
+	}
+	if ( s1->srcBlend == VK_BLEND_FACTOR_DST_COLOR && s1->dstBlend == VK_BLEND_FACTOR_ZERO ) {
+		*outCombineMode = 0;
+		return qtrue;
+	}
+	if ( s1->srcBlend == VK_BLEND_FACTOR_ONE && s1->dstBlend == VK_BLEND_FACTOR_ONE ) {
+		*outCombineMode = 1;
+		return qtrue;
+	}
+	return qfalse;
+}
+
+typedef struct {
+	int32_t combine_mode;
+	int32_t alpha_test_func;
+} multiTexSpecData_t;
+
+// Cache of multi_texture pipelines by (combine, cull, alphaTest); linear-scanned like vk_getPipeline3D's.
+#define MAX_CACHED_MULTITEX_PIPELINES 32
+
+typedef struct {
+	int32_t combineMode;
+	VkCullModeFlags cullMode;
+	int32_t alphaTestFunc;
+} cachedMultiTexPipelineKey_t;
+
+static cachedMultiTexPipelineKey_t s_cachedMultiTexKeys[MAX_CACHED_MULTITEX_PIPELINES];
+static VkPipeline s_cachedMultiTexPipelines[MAX_CACHED_MULTITEX_PIPELINES];
+static int s_numCachedMultiTexPipelines;
+
+static void vk_destroyMultiTexPipelineCache( void ) {
+	int i;
+	for ( i = 0; i < s_numCachedMultiTexPipelines; i++ ) {
+		qvkDestroyPipeline( vk.device, s_cachedMultiTexPipelines[i], NULL );
+	}
+	s_numCachedMultiTexPipelines = 0;
+}
+
+VkPipeline vk_getPipelineMultiTexture( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc ) {
+	VkVertexInputBindingDescription binding;
+	VkVertexInputAttributeDescription attribs[4];
+	multiTexSpecData_t spec_data;
+	VkSpecializationMapEntry spec_entries[2];
+	VkSpecializationInfo specInfo;
+	int i;
+
+	for ( i = 0; i < s_numCachedMultiTexPipelines; i++ ) {
+		const cachedMultiTexPipelineKey_t *key = &s_cachedMultiTexKeys[i];
+		if ( key->combineMode == combineMode && key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc ) {
+			return s_cachedMultiTexPipelines[i];
+		}
+	}
+
+	if ( s_numCachedMultiTexPipelines >= MAX_CACHED_MULTITEX_PIPELINES ) {
+		ri.Printf( PRINT_WARNING, "MAX_CACHED_MULTITEX_PIPELINES hit, falling back to the opaque 3D pipeline\n" );
+		return vk.pipeline_3d_opaque;
+	}
+
+	GetMultiTexAttribs( &binding, attribs );
+
+	spec_data.combine_mode = combineMode;
+	spec_data.alpha_test_func = alphaTestFunc;
+	spec_entries[0].constantID = 0;
+	spec_entries[0].offset = offsetof( multiTexSpecData_t, combine_mode );
+	spec_entries[0].size = sizeof( int32_t );
+	spec_entries[1].constantID = 1;
+	spec_entries[1].offset = offsetof( multiTexSpecData_t, alpha_test_func );
+	spec_entries[1].size = sizeof( int32_t );
+	specInfo.mapEntryCount = 2;
+	specInfo.pMapEntries = spec_entries;
+	specInfo.dataSize = sizeof( spec_data );
+	specInfo.pData = &spec_data;
+
+	s_cachedMultiTexKeys[s_numCachedMultiTexPipelines].combineMode = combineMode;
+	s_cachedMultiTexKeys[s_numCachedMultiTexPipelines].cullMode = cullMode;
+	s_cachedMultiTexKeys[s_numCachedMultiTexPipelines].alphaTestFunc = alphaTestFunc;
+	// Always opaque (no blend) -- see vk_getPipelineMultiTexture's header comment for why.
+	s_cachedMultiTexPipelines[s_numCachedMultiTexPipelines] = create_pipeline( vk_multi_texture_vs, vk_multi_texture_fs,
+		vk.lightmap_pipeline_layout, &specInfo, &binding, attribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
+		VK_TRUE, cullMode );
+
+	return s_cachedMultiTexPipelines[s_numCachedMultiTexPipelines++];
+}
+
+// img0/img1 pointer-pair cache for vk.lightmap_set_layout-shaped sets; never freed individually, just dropped when s_multiTexDescriptorPool is destroyed.
+static struct {
+	const struct image_s *img0;
+	const struct image_s *img1;
+} s_cachedMultiTexDescKeys[MAX_MULTITEX_DESCRIPTORS];
+static VkDescriptorSet s_cachedMultiTexDescSets[MAX_MULTITEX_DESCRIPTORS];
+static int s_numCachedMultiTexDescSets;
+
+static void vk_resetMultiTexDescriptorCache( void ) {
+	s_numCachedMultiTexDescSets = 0;
+}
+
+VkDescriptorSet vk_getMultiTextureDescriptor( struct image_s *img0, struct image_s *img1 ) {
+	VkDescriptorSetAllocateInfo allocInfo;
+	VkDescriptorImageInfo imageInfo[2];
+	VkWriteDescriptorSet writes[2];
+	VkDescriptorSet set;
+	int i;
+
+	for ( i = 0; i < s_numCachedMultiTexDescSets; i++ ) {
+		if ( s_cachedMultiTexDescKeys[i].img0 == img0 && s_cachedMultiTexDescKeys[i].img1 == img1 ) {
+			return s_cachedMultiTexDescSets[i];
+		}
+	}
+
+	if ( s_numCachedMultiTexDescSets >= MAX_MULTITEX_DESCRIPTORS ) {
+		ri.Printf( PRINT_WARNING, "MAX_MULTITEX_DESCRIPTORS hit, reusing the last cached descriptor set\n" );
+		return s_cachedMultiTexDescSets[MAX_MULTITEX_DESCRIPTORS - 1];
+	}
+
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.pNext = NULL;
+	allocInfo.descriptorPool = s_multiTexDescriptorPool;
+	allocInfo.descriptorSetCount = 1;
+	allocInfo.pSetLayouts = &vk.lightmap_set_layout;
+	VK_CHECK( qvkAllocateDescriptorSets( vk.device, &allocInfo, &set ) );
+
+	imageInfo[0].sampler = img0->vk_sampler;
+	imageInfo[0].imageView = img0->vk_view;
+	imageInfo[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	imageInfo[1].sampler = img1->vk_sampler;
+	imageInfo[1].imageView = img1->vk_view;
+	imageInfo[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	writes[0].pNext = NULL;
+	writes[0].dstSet = set;
+	writes[0].dstBinding = 0;
+	writes[0].dstArrayElement = 0;
+	writes[0].descriptorCount = 1;
+	writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	writes[0].pImageInfo = &imageInfo[0];
+	writes[0].pBufferInfo = NULL;
+	writes[0].pTexelBufferView = NULL;
+	writes[1] = writes[0];
+	writes[1].dstBinding = 1;
+	writes[1].pImageInfo = &imageInfo[1];
+
+	qvkUpdateDescriptorSets( vk.device, 2, writes, 0, NULL );
+
+	s_cachedMultiTexDescKeys[s_numCachedMultiTexDescSets].img0 = img0;
+	s_cachedMultiTexDescKeys[s_numCachedMultiTexDescSets].img1 = img1;
+	s_cachedMultiTexDescSets[s_numCachedMultiTexDescSets] = set;
+
+	return s_cachedMultiTexDescSets[s_numCachedMultiTexDescSets++];
 }

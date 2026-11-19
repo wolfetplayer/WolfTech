@@ -70,7 +70,7 @@ typedef enum {
 	TMOD_SCALE,
 	TMOD_STRETCH,
 	TMOD_ROTATE,
-	TMOD_ENTITY_TRANSLATE // parsed, evaluated as a no-op -- see tr_shade_calc.c
+	TMOD_ENTITY_TRANSLATE // scrolls by the entity's refEntity_t.shaderTexCoord; see tr_shade_calc.c
 } texMod_t;
 
 typedef struct {

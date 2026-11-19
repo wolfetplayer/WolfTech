@@ -39,10 +39,7 @@ static void R_BuildGammaTableIfNeeded( void ) {
 	}
 }
 
-// dst is the staging buffer's mapped pointer -- likely uncached/write-combined GPU-visible memory, so
-// this reads only from src (normal RAM) and writes only to dst, never reading dst back (see the
-// "post-Phase-0 slowdown" note in docs/vulkan-renderer-roadmap.md: doing the gamma lookup in place on
-// dst was a ~50ms-per-texture regression from read latency on that memory, not from the math itself).
+// dst is the staging buffer's mapped pointer -- likely uncached/write-combined GPU-visible memory, so this reads only from src (normal RAM) and writes only to dst; reading dst back is drastically slow (~50ms/texture) and isn't needed here.
 static void R_CopyWithGammaCorrection( byte *dst, const byte *src, int width, int height ) {
 	int i, count;
 

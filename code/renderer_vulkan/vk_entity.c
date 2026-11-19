@@ -1,4 +1,4 @@
-// vk_entity.c -- CPU-skinned entity mesh rendering (MD3/MDC frame-morph, MDS/MDM bone-weighted), see vk_entity.h.
+﻿// vk_entity.c -- CPU-skinned entity mesh rendering (MD3/MDC frame-morph, MDS/MDM bone-weighted), see vk_entity.h.
 
 #include <string.h>
 
@@ -45,15 +45,33 @@ typedef struct {
 	qhandle_t shader;
 } entityDrawCall_t;
 
+// An opaque stage 0 + modulate/add-blended stage 1 collapsed into one draw; see vk_canCollapseMultiTex.
+typedef struct {
+	uint32_t vertBase;
+	uint32_t numVerts;
+	uint32_t idxBase;
+	uint32_t idxCount;
+	image_t *image0;
+	image_t *image1;
+	int combineMode;
+	VkCullModeFlags cullMode;
+	int32_t alphaTestFunc;
+} entityMTDrawCall_t;
+
 static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
 static vk2d_vertex_t *s_vertexMapped;
+
+static VkBuffer s_mtVertexBuffer;
+static VkDeviceMemory s_mtVertexMemory;
+static vkMultiTexVertex_t *s_mtVertexMapped;
 
 static VkBuffer s_indexBuffer;
 static VkDeviceMemory s_indexMemory;
 static uint32_t *s_indexMapped;
 
 static entityDrawCall_t s_draws[ENTITY_MAX_DRAWS];
+static entityMTDrawCall_t s_mtDraws[ENTITY_MAX_DRAWS];
 
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
 
@@ -95,6 +113,8 @@ static void destroy_mapped_buffer( VkBuffer buffer, VkDeviceMemory memory, void 
 void vk_entity_init( void ) {
 	create_mapped_buffer( ENTITY_MAX_VERTS * sizeof( vk2d_vertex_t ), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		&s_vertexBuffer, &s_vertexMemory, (void **)&s_vertexMapped );
+	create_mapped_buffer( ENTITY_MAX_VERTS * sizeof( vkMultiTexVertex_t ), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		&s_mtVertexBuffer, &s_mtVertexMemory, (void **)&s_mtVertexMapped );
 	create_mapped_buffer( ENTITY_MAX_INDEXES * sizeof( uint32_t ), VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		&s_indexBuffer, &s_indexMemory, (void **)&s_indexMapped );
 }
@@ -102,6 +122,8 @@ void vk_entity_init( void ) {
 void vk_entity_shutdown( void ) {
 	destroy_mapped_buffer( s_vertexBuffer, s_vertexMemory, s_vertexMapped );
 	s_vertexMapped = NULL;
+	destroy_mapped_buffer( s_mtVertexBuffer, s_mtVertexMemory, s_mtVertexMapped );
+	s_mtVertexMapped = NULL;
 	destroy_mapped_buffer( s_indexBuffer, s_indexMemory, s_indexMapped );
 	s_indexMapped = NULL;
 }
@@ -293,7 +315,7 @@ static qhandle_t ResolveShader( qhandle_t customShader, qhandle_t customSkin, co
 
 // Each stage gets its own contiguous copy of the surface at out[s*numVerts .. s*numVerts+numVerts-1].
 static void WriteStageVertices( const shader_t *shader, const byte *entityColor, const byte *lightingTint,
-								 int numVerts, const entityBaseVert_t *base, vk2d_vertex_t *out ) {
+								 const float *shaderTexCoord, int numVerts, const entityBaseVert_t *base, vk2d_vertex_t *out ) {
 	int v, s;
 	static const byte baseColor[4] = { 255, 255, 255, 255 }; // models carry no inherent per-vertex color
 
@@ -308,7 +330,7 @@ static void WriteStageVertices( const shader_t *shader, const byte *entityColor,
 			float st[2];
 
 			R_CalcStageColorAlpha( stage, entityColor, lightingTint, baseColor, color );
-			R_CalcStageTexCoord( stage, base[v].uv[0], base[v].uv[1], deformed, st );
+			R_CalcStageTexCoord( stage, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st );
 
 			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
 			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
@@ -322,17 +344,21 @@ static qboolean ReserveSurface( int numVerts, int numStages, int numTriangles, u
 		   idxWrite + (uint32_t)numTriangles * 3 <= ENTITY_MAX_INDEXES;
 }
 
-// Copies triangle indices once (shared by every stage via vertexOffset at draw time) and records the draw call.
-static void CommitSurface( int numVerts, int numStages, int numTriangles, const void *trianglesPtr, qhandle_t shader,
-							uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
+static void WriteIndices( int numTriangles, const void *trianglesPtr, uint32_t idxWrite ) {
 	const md3Triangle_t *tri = (const md3Triangle_t *)trianglesPtr;
 	int i;
 
 	for ( i = 0; i < numTriangles; i++, tri++ ) {
-		s_indexMapped[*idxWrite + (uint32_t)i * 3 + 0] = (uint32_t)tri->indexes[0];
-		s_indexMapped[*idxWrite + (uint32_t)i * 3 + 1] = (uint32_t)tri->indexes[1];
-		s_indexMapped[*idxWrite + (uint32_t)i * 3 + 2] = (uint32_t)tri->indexes[2];
+		s_indexMapped[idxWrite + (uint32_t)i * 3 + 0] = (uint32_t)tri->indexes[0];
+		s_indexMapped[idxWrite + (uint32_t)i * 3 + 1] = (uint32_t)tri->indexes[1];
+		s_indexMapped[idxWrite + (uint32_t)i * 3 + 2] = (uint32_t)tri->indexes[2];
 	}
+}
+
+// Copies triangle indices once (shared by every stage via vertexOffset at draw time) and records the draw call.
+static void CommitSurface( int numVerts, int numStages, int numTriangles, const void *trianglesPtr, qhandle_t shader,
+							uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
+	WriteIndices( numTriangles, trianglesPtr, *idxWrite );
 
 	s_draws[*numDraws].vertBase = *vertWrite;
 	s_draws[*numDraws].numVerts = (uint32_t)numVerts;
@@ -345,9 +371,83 @@ static void CommitSurface( int numVerts, int numStages, int numTriangles, const 
 	*idxWrite += (uint32_t)numTriangles * 3;
 }
 
+// Same per-vertex evaluation as WriteStageVertices, but stage 0 and stage 1 land in one vertex's uv0/uv1.
+static void WriteMultiTexVertices( const shader_t *shader, const byte *entityColor, const byte *lightingTint,
+									const float *shaderTexCoord, int numVerts, const entityBaseVert_t *base, vkMultiTexVertex_t *out ) {
+	const shaderStage_t *stage0 = &shader->stages[0];
+	const shaderStage_t *stage1 = &shader->stages[1];
+	static const byte baseColor[4] = { 255, 255, 255, 255 };
+	int v;
+
+	for ( v = 0; v < numVerts; v++ ) {
+		float deformed[3];
+		byte color[4];
+		float st0[2], st1[2];
+
+		R_DeformPosition( shader, base[v].pos, deformed );
+		R_CalcStageColorAlpha( stage0, entityColor, lightingTint, baseColor, color );
+		R_CalcStageTexCoord( stage0, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st0 );
+		R_CalcStageTexCoord( stage1, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st1 );
+
+		out[v].pos[0] = deformed[0]; out[v].pos[1] = deformed[1]; out[v].pos[2] = deformed[2];
+		out[v].color[0] = color[0]; out[v].color[1] = color[1]; out[v].color[2] = color[2]; out[v].color[3] = color[3];
+		out[v].uv0[0] = st0[0]; out[v].uv0[1] = st0[1];
+		out[v].uv1[0] = st1[0]; out[v].uv1[1] = st1[1];
+	}
+}
+
+static void CommitMultiTexSurface( const shader_t *shader, int combineMode, int numVerts, int numTriangles, const void *trianglesPtr,
+									uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
+	const shaderStage_t *stage0 = &shader->stages[0];
+
+	WriteIndices( numTriangles, trianglesPtr, *idxWrite );
+
+	s_mtDraws[*numDraws].vertBase = *vertWrite;
+	s_mtDraws[*numDraws].numVerts = (uint32_t)numVerts;
+	s_mtDraws[*numDraws].idxBase = *idxWrite;
+	s_mtDraws[*numDraws].idxCount = (uint32_t)numTriangles * 3;
+	s_mtDraws[*numDraws].image0 = R_GetStageImage( stage0 );
+	s_mtDraws[*numDraws].image1 = R_GetStageImage( &shader->stages[1] );
+	s_mtDraws[*numDraws].combineMode = combineMode;
+	s_mtDraws[*numDraws].cullMode = vk_cullModeForShader( shader->cullType );
+	s_mtDraws[*numDraws].alphaTestFunc = stage0->alphaTestFunc;
+	(*numDraws)++;
+
+	*vertWrite += (uint32_t)numVerts;
+	*idxWrite += (uint32_t)numTriangles * 3;
+}
+
+// Picks the multitexture-collapsed path or the regular per-stage path for one surface.
+static qboolean ProcessSurface( const shader_t *shaderPtr, qhandle_t shaderHandle, const refEntity_t *ent, const byte *tint,
+								 int numVerts, int numTriangles, const void *trianglesPtr, const entityBaseVert_t *baseVerts,
+								 uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws,
+								 uint32_t *mtVertWrite, int *numMTDraws ) {
+	int combineMode;
+
+	if ( !shaderPtr || shaderPtr->numStages < 1 ) {
+		return qtrue;
+	}
+
+	if ( vk_canCollapseMultiTex( shaderPtr, &combineMode ) ) {
+		if ( !ReserveSurface( numVerts, 1, numTriangles, *mtVertWrite, *idxWrite, *numMTDraws ) ) {
+			return qfalse;
+		}
+		WriteMultiTexVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts, &s_mtVertexMapped[*mtVertWrite] );
+		CommitMultiTexSurface( shaderPtr, combineMode, numVerts, numTriangles, trianglesPtr, mtVertWrite, idxWrite, numMTDraws );
+		return qtrue;
+	}
+
+	if ( !ReserveSurface( numVerts, shaderPtr->numStages, numTriangles, *vertWrite, *idxWrite, *numDraws ) ) {
+		return qfalse;
+	}
+	WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts, &s_vertexMapped[*vertWrite] );
+	CommitSurface( numVerts, shaderPtr->numStages, numTriangles, trianglesPtr, shaderHandle, vertWrite, idxWrite, numDraws );
+	return qtrue;
+}
+
 void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16], const float fogPush[12] ) {
-	uint32_t vertWrite = 0, idxWrite = 0;
-	int numDraws = 0;
+	uint32_t vertWrite = 0, idxWrite = 0, mtVertWrite = 0;
+	int numDraws = 0, numMTDraws = 0;
 	int e, s, i;
 	static qboolean overflowLogged = qfalse;
 
@@ -375,14 +475,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMD3;
 				}
-				if ( !ReserveSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
-					goto overflow;
-				}
 
 				LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
-				WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, surf->numVerts, s_baseScratch, &s_vertexMapped[vertWrite] );
-				CommitSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					shaderHandle, &vertWrite, &idxWrite, &numDraws );
+				if ( !ProcessSurface( shaderPtr, shaderHandle, ent, tint, surf->numVerts, surf->numTriangles,
+						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
+					goto overflow;
+				}
 
 			nextMD3:
 				surf = (const md3Surface_t *)( (const byte *)surf + surf->ofsEnd );
@@ -401,14 +499,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDC;
 				}
-				if ( !ReserveSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
-					goto overflow;
-				}
 
 				LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
-				WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, surf->numVerts, s_baseScratch, &s_vertexMapped[vertWrite] );
-				CommitSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					shaderHandle, &vertWrite, &idxWrite, &numDraws );
+				if ( !ProcessSurface( shaderPtr, shaderHandle, ent, tint, surf->numVerts, surf->numTriangles,
+						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
+					goto overflow;
+				}
 
 			nextMDC:
 				surf = (const mdcSurface_t *)( (const byte *)surf + surf->ofsEnd );
@@ -423,14 +519,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDS;
 				}
-				if ( !ReserveSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
-					goto overflow;
-				}
 
 				LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
-				WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, surf->numVerts, s_baseScratch, &s_vertexMapped[vertWrite] );
-				CommitSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					shaderHandle, &vertWrite, &idxWrite, &numDraws );
+				if ( !ProcessSurface( shaderPtr, shaderHandle, ent, tint, surf->numVerts, surf->numTriangles,
+						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
+					goto overflow;
+				}
 
 			nextMDS:
 				surf = (const mdsSurface_t *)( (const byte *)surf + surf->ofsEnd );
@@ -445,14 +539,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDM;
 				}
-				if ( !ReserveSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, vertWrite, idxWrite, numDraws ) ) {
-					goto overflow;
-				}
 
 				LerpMDMSurfaceVerts( ent, surf, s_baseScratch );
-				WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, surf->numVerts, s_baseScratch, &s_vertexMapped[vertWrite] );
-				CommitSurface( surf->numVerts, shaderPtr->numStages, surf->numTriangles, (const byte *)surf + surf->ofsTriangles,
-					shaderHandle, &vertWrite, &idxWrite, &numDraws );
+				if ( !ProcessSurface( shaderPtr, shaderHandle, ent, tint, surf->numVerts, surf->numTriangles,
+						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
+					goto overflow;
+				}
 
 			nextMDM:
 				surf = (const mdmSurface_t *)( (const byte *)surf + surf->ofsEnd );
@@ -469,7 +561,7 @@ overflow:
 	}
 
 doneCollecting:
-	if ( numDraws == 0 ) {
+	if ( numDraws == 0 && numMTDraws == 0 ) {
 		return;
 	}
 
@@ -484,38 +576,67 @@ doneCollecting:
 		qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 			0, sizeof( push_data ), push_data );
 
-		qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
 
-		for ( i = 0; i < numDraws; i++ ) {
-			shader_t *shaderPtr = R_GetShaderByHandle( s_draws[i].shader );
-			int s;
+		if ( numDraws > 0 ) {
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 
-			if ( !shaderPtr || shaderPtr->numStages < 1 ) {
-				continue;
-			}
+			for ( i = 0; i < numDraws; i++ ) {
+				shader_t *shaderPtr = R_GetShaderByHandle( s_draws[i].shader );
+				int s;
 
-			// Every stage redraws the same indices/vertices, layered in shader-script order.
-			for ( s = 0; s < shaderPtr->numStages; s++ ) {
-				const shaderStage_t *stage = &shaderPtr->stages[s];
-				image_t *stageImage = R_GetStageImage( stage );
-				VkPipeline pipeline;
-
-				if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
+				if ( !shaderPtr || shaderPtr->numStages < 1 ) {
 					continue;
 				}
 
-				pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-					vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc );
+				// Every stage redraws the same indices/vertices, layered in shader-script order.
+				for ( s = 0; s < shaderPtr->numStages; s++ ) {
+					const shaderStage_t *stage = &shaderPtr->stages[s];
+					image_t *stageImage = R_GetStageImage( stage );
+					VkPipeline pipeline;
+
+					if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
+						continue;
+					}
+
+					pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+						vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc );
+					if ( pipeline != boundPipeline ) {
+						qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+						boundPipeline = pipeline;
+					}
+
+					qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+						0, 1, &stageImage->vk_descriptor, 0, NULL );
+					qvkCmdDrawIndexed( vk.command_buffer, s_draws[i].idxCount, 1, s_draws[i].idxBase,
+						(int32_t)( s_draws[i].vertBase + (uint32_t)s * s_draws[i].numVerts ), 0 );
+				}
+			}
+		}
+
+		if ( numMTDraws > 0 ) {
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_mtVertexBuffer, &vb_offset );
+			boundPipeline = VK_NULL_HANDLE;
+
+			for ( i = 0; i < numMTDraws; i++ ) {
+				const entityMTDrawCall_t *draw = &s_mtDraws[i];
+				VkDescriptorSet descSet;
+				VkPipeline pipeline;
+
+				if ( !draw->image0 || !draw->image1 ) {
+					continue;
+				}
+
+				pipeline = vk_getPipelineMultiTexture( draw->combineMode, draw->cullMode, draw->alphaTestFunc );
 				if ( pipeline != boundPipeline ) {
 					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 					boundPipeline = pipeline;
 				}
 
-				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-					0, 1, &stageImage->vk_descriptor, 0, NULL );
-				qvkCmdDrawIndexed( vk.command_buffer, s_draws[i].idxCount, 1, s_draws[i].idxBase,
-					(int32_t)( s_draws[i].vertBase + (uint32_t)s * s_draws[i].numVerts ), 0 );
+				descSet = vk_getMultiTextureDescriptor( draw->image0, draw->image1 );
+				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
+					0, 1, &descSet, 0, NULL );
+				qvkCmdDrawIndexed( vk.command_buffer, draw->idxCount, 1, draw->idxBase, (int32_t)draw->vertBase, 0 );
 			}
 		}
 	}

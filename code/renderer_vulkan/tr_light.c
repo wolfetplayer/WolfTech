@@ -7,6 +7,38 @@
 #include "tr_bsp.h"
 #include "tr_light.h"
 
+static cvar_t *r_mapOverBrightBits;
+
+void R_ShiftLightingBytes( const byte in[3], byte out[3] ) {
+	int shift, r, g, b;
+
+	if ( !r_mapOverBrightBits ) {
+		r_mapOverBrightBits = ri.Cvar_Get( "r_mapOverBrightBits", "2", CVAR_LATCH );
+	}
+	shift = r_mapOverBrightBits->integer;
+
+	if ( shift > 0 ) {
+		r = in[0] << shift;
+		g = in[1] << shift;
+		b = in[2] << shift;
+
+		// normalize by color instead of clamping to white
+		if ( ( r | g | b ) > 255 ) {
+			int max = ( r > g ) ? r : g;
+			max = ( max > b ) ? max : b;
+			r = r * 255 / max;
+			g = g * 255 / max;
+			b = b * 255 / max;
+		}
+	} else {
+		r = in[0]; g = in[1]; b = in[2];
+	}
+
+	out[0] = (byte)r;
+	out[1] = (byte)g;
+	out[2] = (byte)b;
+}
+
 // Grid sample's packed direction (data[6]=lng, data[7]=lat, each 0-255) back to a unit vector.
 static void LatLongToNormal( int lat, int lng, vec3_t normal ) {
 	float latRad = (float)lat * ( 2.0f * (float)M_PI / 256.0f );

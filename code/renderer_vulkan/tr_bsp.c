@@ -35,6 +35,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_shader.h"
 #include "tr_bsp.h"
 #include "tr_fog.h"
+#include "tr_light.h"
 #include "vk_world.h"
 
 bspWorld_t tr_world;
@@ -102,6 +103,7 @@ static void R_LoadDrawVerts( const lump_t *l ) {
 			out[i].st[j] = LittleFloat( out[i].st[j] );
 			out[i].lightmap[j] = LittleFloat( out[i].lightmap[j] );
 		}
+		R_ShiftLightingBytes( out[i].color, out[i].color );
 	}
 }
 
@@ -288,6 +290,12 @@ static void R_LoadLightGrid( const lump_t *l ) {
 
 	tr_world.lightGridData = ri.Hunk_Alloc( l->filelen, h_low );
 	memcpy( tr_world.lightGridData, fileBase + l->fileofs, l->filelen );
+
+	for ( i = 0; i < numGridPoints; i++ ) {
+		byte *data = tr_world.lightGridData + i * 8;
+		R_ShiftLightingBytes( data, data );         // ambient RGB
+		R_ShiftLightingBytes( data + 3, data + 3 ); // directed RGB
+	}
 }
 
 static const byte *s_externalVisData;

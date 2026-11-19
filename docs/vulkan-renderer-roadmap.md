@@ -143,30 +143,104 @@ WolfTech's Vulkan renderer currently has per-caller, ad hoc stage loops (world d
 entities/polys loop stages correctly but independently) instead of one shared generic path. Build
 it once, make world/entity/poly submission all go through it.
 
-- [ ] Shared multi-stage iterator: given a shader's `stages[]`, evaluate `rgbGen`/`alphaGen`,
-      `tcGen`/`tcMod` (scroll/rotate/stretch/turb/transform — `entityTranslate` is currently a
-      documented no-op, fix it), and emit one draw per stage through a common path used by world,
-      entity, and poly geometry.
-- [ ] Add real multitexture pipelines: `single_texture`, `multi_texture_mul` (modulate, e.g.
-      lightmap × diffuse in one pass), `multi_texture_add` — currently only `single_texture` and
-      `world_lightmap` exist as compiled shader programs.
-- [ ] Dynamic lights as a real additive pass (`ProjectDlightTexture` equivalent) instead of the
-      current flat-tint-per-entity hack — depends on entities/world carrying normal data (tracked
-      formally in Phase 4, but a coarse per-face or per-vertex normal is enough to unblock this).
-- [ ] Real fog pass: port BSP-brush volumetric fog (currently not implemented — only RTCW's global
-      wolf-fog with fade transitions is ported); move from the current push-constant approximation
-      to a proper fog-volume draw pass.
-- [ ] `deformVertexes`: implement `wave`/`bulge`/`normal`/`autosprite`/`projectionShadow`/`text`
-      (currently parsed but passthrough — only `move` actually displaces geometry).
+- [x] Fixed `tcMod entityTranslate`: threaded `refEntity_t.shaderTexCoord` through
+      `R_CalcStageTexCoord` (new parameter, `NULL` for world/poly which have no entity context) and
+      into `vk_entity.c`'s `WriteStageVertices`. Scrolls correctly for entity surfaces now (e.g.
+      conveyor-belt-style shaders); world/poly shaders using `entityTranslate` still see no offset,
+      which matches upstream semantics (it's inherently an entity-only tcMod).
+- [x] Overbright bits: added `R_ShiftLightingBytes` (`tr_light.c`/`.h`), a direct port of
+      `code/renderer`'s `R_ColorShiftLightingBytes` minus the gamma call (gamma happens separately
+      at Vulkan texture-upload time, see Phase 0). `r_mapOverBrightBits` defaults to `"2"`, matching
+      `code/renderer`. Applied at BSP load time to: vertex colors (`tr_bsp.c`'s `R_LoadDrawVerts`),
+      light-grid ambient+directed samples (`tr_bsp.c`'s `R_LoadLightGrid`), and lightmap texels
+      (`vk_world.c`'s `BuildLightmapTexture`) — the same three places the reference engine shifts.
+- [ ] `deformVertexes` — **investigated, mostly blocked, not faked**:
+      - `wave`/`bulge`/`normal` all displace a vertex along its own normal
+        (`xyz[i] += normal[i] * scale` in `code/renderer/tr_shade_calc.c`'s
+        `RB_CalcDeformVertexes`/`RB_CalcBulgeVertexes`/`RB_CalcDeformNormals`) — blocked on the same
+        missing per-vertex normal data as `r_shownormals` (Phase 0) and dynamic lighting (below).
+        Don't implement until Phase 4's vertex-format work lands.
+      - `autosprite`/`autosprite2` billboard a whole **quad** (both triangles, 4 shared corners) to
+        face the camera — they need the primitive's other 3 corners and their shared-edge topology,
+        not just one vertex. `R_DeformPosition`'s signature (`shader, basePos[3] → outPos[3]`) is
+        fundamentally per-vertex and can't express this; it needs a per-primitive calling
+        convention instead. That's exactly the kind of restructuring the "shared multi-stage
+        iterator" item below would naturally introduce — fold autosprite into that work rather than
+        bolting a separate quad-aware path onto the current per-vertex one.
+      - `projectionShadow` (cheap "blob" shadow, no stencil buffer needed) is feasible without
+        normals — it needs the entity's local axis, origin, `shadowPlane`, and a light direction
+        (`code/renderer/tr_shadows.c`'s `RB_ProjectionShadowDeform`) — but `R_DeformPosition` has no
+        entity context today, and the coordinate-space assumptions (what space `backEnd.or`/`tess.xyz`
+        are in relative to this renderer's model-local CPU-side vertices) need careful verification
+        this session couldn't do (no way to visually confirm a shadow lands in the right place).
+        Pair this with Phase 2's real stencil shadows so both get tested together.
+      - `text0`-`text7` (in-world floating text, e.g. killer-tomato-style effects) needs a
+        `refdef.text[]` data path this renderer doesn't have. Rare usage; lowest priority.
+- [x] Shared multi-stage iterator (world side): **rewrote `vk_world.c`**. World rendering no longer
+      bakes a static GPU vertex/index buffer at map load. `vk_world_build` now only sorts/batches
+      surfaces and caches tessellated (patch) geometry as plain CPU arrays (`s_cachedVerts`/
+      `s_cachedIndices` — load-time cost, unchanged). Every frame, `vk_world_draw` expands each
+      *visible* surface's cached geometry into a per-frame dynamic vertex buffer, calling the same
+      `R_CalcStageColorAlpha`/`R_CalcStageTexCoord` entities and polys already use, so `rgbGen`/
+      `tcMod` (scroll, rotate, turbulent, transform, stretch, `entityTranslate`) now animate on world
+      surfaces exactly like they do on entities. Two dynamic buffers: `s_dynLMBuffer`
+      (`vkWorldVertex_t`, stage 0's diffuse×lightmap pass) and `s_dyn2DBuffer` (`vk2d_vertex_t`,
+      stages 1+ — these now get their *own* independent `rgbGen`/`tcMod` instead of sharing stage
+      0's baked data, fixing the limitation noted in Phase 0). Both are sized from
+      `s_numCachedIndices` (a hard per-map upper bound, known at load time) with overflow protection
+      (warn-once-and-drop, matching this codebase's existing style) rather than an unbounded/dynamic
+      allocation. Contiguous-visible-surface draw-call merging is preserved (same technique as the
+      old `DrawSurfRefRun`, just merging dynamic-buffer *writes* instead of static index ranges), so
+      draw-call count shouldn't regress — only added CPU cost is the per-visible-vertex `rgbGen`/
+      `tcMod` evaluation itself. **Not yet performance-tested on a real map** — user explicitly
+      accepted this risk and will test frame time after. If it's too slow, the two likely fixes are
+      (a) skip recomputation for stages whose `rgbGen`/`tcMod` are provably static (identity/none)
+      and cache those like before, or (b) partially revert to static-with-exceptions (only dynamic
+      for shaders that actually have animating `tcMod`/non-identity `rgbGen`).
+      `deformVertexes` was *not* added to world surfaces in this pass (world never called
+      `R_DeformPosition` before; out of scope here, tracked separately above).
+- [x] Real multitexture pipelines for entities/polys: new `multi_texture.vert`/`.frag` shader pair
+      (`layout(constant_id=0) combine_mode`: 0=modulate/"filter" `GL_DST_COLOR,GL_ZERO`, 1=add
+      `GL_ONE,GL_ONE`; `constant_id=1` carries stage 0's `alphaTestFunc`) plus `vk_getPipelineMultiTexture`/
+      `vk_getMultiTextureDescriptor` lazy caches in `vk_pipelines.c` (the latter allocates from its own
+      256-set pool, `vk.lightmap_set_layout` reused as-is: binding 0/1 = texture0/texture1). `vk_canCollapseMultiTex`
+      (`vk_pipelines.c`/`.h`) gates it: shader must have *exactly* 2 stages, stage 0 opaque, stage 1
+      blended with trivial (`CGEN_IDENTITY`) color and one of the two blend modes above — the collapsed
+      shader only ever samples stage 0's color (see `multi_texture.frag`), so this must stay false
+      whenever stage 1's own tint could actually show. `vk_entity.c` and `vk_poly.c` each got a second
+      vertex buffer (`vkMultiTexVertex_t`: pos/color/uv0/uv1) and branch per-surface/per-poly into the
+      collapsed single-draw path or the existing per-stage path. **Deliberately not touched: `vk_world.c`**
+      — piling more complexity onto the just-rewritten (Phase 1, static→dynamic) world path before it's
+      stabilized wasn't worth it; world stage 0+lightmap already gets one draw via `world_lightmap`
+      anyway, so the remaining win there (collapsing world stage 1+ pairs) is smaller. Compiles clean
+      debug+release; not yet visually confirmed in-game (look for a shader using a modulate/add filter
+      stage on a model or a scene decal/poly to verify combine_mode looks right).
+- [x] Dynamic lights as a real additive pass **for world geometry**: world surfaces had *zero*
+      dlight effect before (dlights only ever reached entities, via the flat-tint hack). Added
+      `ExpandAndDrawWorldDlights` in `vk_world.c` — a third dynamic buffer, drawn after the normal
+      per-batch loop only when `R_GetSceneDlights` returns `numDlights > 0` (no cost when nothing's
+      exploding/firing). Per-vertex falloff uses the exact same formula as `vk_entity.c`'s
+      `ComputeEntityTint` (not true projected-texture dlights like vkQuake3's `ProjectDlightTexture`
+      — a scoped simplification: real per-vertex distance falloff, diffuse-texture-modulated,
+      additively blended on top of the lit surface, just not a radial-blob projection). Entities
+      still use the pre-existing flat-tint hack (unchanged) — replacing that with its own real
+      additive pass is a separate, larger change (would need splitting `ComputeEntityTint`'s
+      ambient/directed base lighting from a per-dlight overlay with its own draw call) and is still
+      open below.
+      Dynamic lights as a real additive pass **for entities** (replacing the flat-tint-per-entity
+      hack) is still open — also depends on entities carrying normal data for a believable result
+      (tracked formally in Phase 4; a coarse per-face normal would be enough to unblock this).
+- [ ] Real fog pass: port BSP-brush volumetric fog. **Investigated this session**: this is a
+      genuinely separate system from the wolf-fog already ported — RTCW keeps *both* the classic
+      id-tech-3 `fogParms`-shader-keyword + BSP fog-brush-volume system (used for things like
+      underwater boxes) and its own `trigger_fog`/`target_fog` global system (already done, Phase
+      0-adjacent). Real BSP fog needs: parsing `fogParms` in `tr_shader.c` (currently parsed and
+      discarded), loading the BSP's fog lump, tagging each world surface with a `fogIndex`, and
+      determining which fog volume (if any) the camera is currently inside each frame. Scoped as
+      its own item, not a quick add.
 - [ ] Portal/mirror clip-plane pipeline variants, with the same graceful fallback vkQuake3 uses for
       GPUs lacking `shaderClipDistance` (discard-in-fragment-shader via specialization constant).
       Required for RTCW mirrors, periscopes, and underwater clipping.
-- [ ] Overbright bits: `tr_shade_calc.c`'s own comment already flags this
-      ("`tr.identityLight` is always 1.0 here (no overbright bits)") — lightmaps are meant to store
-      intensity above 1.0 and get compensated via `r_mapOverBrightBits`/`tr.overbrightBits`
-      (classic id-tech-3 trick, see `code/renderer/tr_bsp.c` for the reference shift-and-scale
-      logic). Without it, lightmapped world surfaces will read uniformly darker/flatter than the
-      OpenGL1/rend2 output even after Phase 0's gamma fix lands — it's a separate, additive problem.
 
 ## Phase 2 — Classic feature parity (decals, flares, shadows, cinematics)
 
@@ -295,3 +369,43 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   batching) remain. See the "Correctness trap" note under Phase 0's gamma item for the generalized
   lesson. Lesson for *this* doc: when a regression is reported, get real timing data before
   theorizing — three plausible-sounding mechanisms in a row were wrong.
+- **2026-11-19** — Started Phase 1. Shipped two clean, low-risk, verified-to-compile fixes:
+  `tcMod entityTranslate` and overbright bits (see checkmarks above for both). Investigated the
+  rest of Phase 1 in depth before touching more code and found real scope/risk issues the original
+  bullet list didn't capture: `deformVertexes`' remaining types split into "blocked on Phase 4
+  normals" (wave/bulge/normal), "needs a per-primitive not per-vertex calling convention"
+  (autosprite/autosprite2 — fold into the shared-iterator work), "feasible but needs paired testing
+  with Phase 2's real shadows" (projectionShadow), and "rare, lowest priority" (text0-7). The
+  "shared multi-stage iterator" item turns out to require converting world rendering from a static
+  load-time-baked vertex buffer to vkQuake3's per-frame-regenerated model (same as entities/polys
+  already do) to get real per-frame `tcMod` on world surfaces — a genuine performance-profile
+  change, not just a correctness fix, right after this session's long unverified-performance-
+  regression debugging arc. Flagged rather than assumed; see Phase 1's iterator bullet. "Real BSP
+  fog volumes" also turned out to be its own multi-part feature (shader `fogParms` parsing + BSP fog
+  lump + per-surface fog tagging + camera-in-fog-zone test), not a quick add. Multitexture pipelines
+  were scoped as independently doable (pure draw-count optimization, no static/dynamic question)
+  with `glslangValidator`/`glslc` confirmed available via MSYS2 for compiling new shaders.
+- **2026-11-19** — Asked the user directly about the world static-vs-dynamic performance tradeoff
+  rather than assuming; they said go ahead and accepted testing performance afterward. Rewrote
+  `vk_world.c` accordingly (see the iterator item's checkmark above for the full design). Compiled
+  clean in both debug and release. **User tested in-game**: Castle holds a constant 250 FPS, River
+  Outpost runs 150-250 FPS — no dramatic regression. Caveat (the user's own, worth keeping in mind):
+  most of the renderer's eventual workload (shadows, normal maps, real fog, etc.) still doesn't
+  exist, so this isn't a final verdict, just confirmation the per-frame world expansion itself isn't
+  immediately disqualifying. Re-test again once more Phase 1/4/5 per-frame work lands on top.
+- **2026-11-19** — Added dynamic lights as a real additive pass for world geometry (see checkmark
+  above) now that the world-expansion architecture makes it natural: a third dynamic buffer, same
+  per-vertex falloff formula as `vk_entity.c`, only costs anything when `numDlights > 0`. Compiled
+  clean in debug and release; not yet visually confirmed in-game (should show as muzzle
+  flashes/explosions lighting up nearby world surfaces, which they couldn't do at all before).
+  Entity dlights still use the older flat-tint approach — left as its own open item rather than
+  scope-creeping this change further.
+- **2026-11-19** — Implemented multitexture pipelines for entities/polys (see checkmark above):
+  new `multi_texture` shader pair + `vk_getPipelineMultiTexture`/`vk_getMultiTextureDescriptor`
+  lazy caches in `vk_pipelines.c`, gated by a shared `vk_canCollapseMultiTex` eligibility check, with
+  `vk_entity.c`/`vk_poly.c` each branching per-surface into a collapsed single-draw path. World
+  deliberately left alone (see the checkmark's note on why). Compiled clean in both debug and
+  release via direct `renderer_vulkan_x64.dll` make targets (the full `debug`/`release` meta-targets
+  hit an unrelated pre-existing `PRODUCT_VERSION` quoting failure in `common.c` under this session's
+  MSYS2 shell invocation — not caused by this change, and not worth chasing since it doesn't touch
+  anything `renderer_vulkan` depends on). Not yet visually confirmed in-game.

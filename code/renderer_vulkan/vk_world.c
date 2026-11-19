@@ -1,4 +1,4 @@
-// vk_world.c -- uploads tr_world into GPU buffers and draws it, culled per surface by tr_world.c.
+// vk_world.c -- sorts/batches tr_world's (shader, lightmap) surfaces once at map load, then expands each visible surface into a per-frame dynamic vertex buffer with real per-frame rgbGen/tcMod (like vk_entity.c/vk_poly.c).
 
 #include <stdlib.h>
 #include <string.h>
@@ -13,9 +13,15 @@
 #include "tr_bsp.h"
 #include "tr_world.h"
 #include "tr_patch.h"
+#include "tr_light.h"
+#include "tr_scene.h"
 #include "vk_world.h"
 
-// One entry per drawable surface; consecutive entries in a batch are contiguous in the index buffer.
+// Same falloff shape vk_entity.c's ComputeEntityTint uses for dlight contributions.
+#define DLIGHT_AT_RADIUS 16.0f
+#define DLIGHT_MINIMUM_RADIUS 16.0f
+
+// One entry per drawable surface; consecutive entries in a batch are contiguous in s_cachedIndices.
 typedef struct {
 	int surfaceIndex;
 	uint32_t firstIndex;
@@ -38,10 +44,13 @@ typedef struct {
 	VkSampler sampler;
 } lightmapTex_t;
 
-static VkBuffer s_vertexBuffer;
-static VkDeviceMemory s_vertexMemory;
-static VkBuffer s_indexBuffer;
-static VkDeviceMemory s_indexMemory;
+// Cached once at load (tessellation included); the per-frame source data for expansion below.
+// Vertex color here is the BSP's raw (overbright-shifted) color -- rgbGen/tcMod are evaluated fresh
+// every frame from this, never baked in.
+static vkWorldVertex_t *s_cachedVerts;
+static uint32_t s_numCachedVerts;
+static uint32_t *s_cachedIndices;
+static uint32_t s_numCachedIndices;
 
 static worldBatch_t *s_batches;
 static int s_numBatches;
@@ -55,13 +64,89 @@ static qboolean s_built = qfalse;
 
 static cvar_t *r_showtris;
 
+// Per-frame dynamic buffers that visible-surface geometry is expanded into. Sized at load time from
+// s_numCachedIndices, which is a hard upper bound on any single frame's visible vertex count (the
+// *2 covers the normal stage-0 pass plus a same-frame r_showtris wireframe re-pass, which reuses the
+// same expansion into the same buffer rather than keeping a separate wireframe-only path).
+static VkBuffer s_dynLMBuffer;
+static VkDeviceMemory s_dynLMMemory;
+static vkWorldVertex_t *s_dynLMMapped;
+static uint32_t s_dynLMCapacity;
+static uint32_t s_dynLMWriteOffset;
+static qboolean s_dynLMOverflowWarned;
+
+static VkBuffer s_dyn2DBuffer;
+static VkDeviceMemory s_dyn2DMemory;
+static vk2d_vertex_t *s_dyn2DMapped;
+static uint32_t s_dyn2DCapacity;
+static uint32_t s_dyn2DWriteOffset;
+static qboolean s_dyn2DOverflowWarned;
+
+// Dynamic lights are a separate additive pass over world geometry (previously they had zero effect
+// on world surfaces at all); kept in its own buffer so it doesn't contend with extra-stage capacity.
+static VkBuffer s_dynDlightBuffer;
+static VkDeviceMemory s_dynDlightMemory;
+static vk2d_vertex_t *s_dynDlightMapped;
+static uint32_t s_dynDlightCapacity;
+static uint32_t s_dynDlightWriteOffset;
+static qboolean s_dynDlightOverflowWarned;
+
+extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
+
+static void create_dynamic_vertex_buffer( VkDeviceSize bytes, VkBuffer *outBuf, VkDeviceMemory *outMem, void **outMapped ) {
+	VkBufferCreateInfo buf_desc;
+	VkMemoryRequirements mem_reqs;
+	VkMemoryAllocateInfo alloc_info;
+
+	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	buf_desc.pNext = NULL;
+	buf_desc.flags = 0;
+	buf_desc.size = bytes;
+	buf_desc.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	buf_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	buf_desc.queueFamilyIndexCount = 0;
+	buf_desc.pQueueFamilyIndices = NULL;
+	VK_CHECK( qvkCreateBuffer( vk.device, &buf_desc, NULL, outBuf ) );
+
+	qvkGetBufferMemoryRequirements( vk.device, *outBuf, &mem_reqs );
+
+	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	alloc_info.pNext = NULL;
+	alloc_info.allocationSize = mem_reqs.size;
+	alloc_info.memoryTypeIndex = vk_find_memory_type( mem_reqs.memoryTypeBits,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+	VK_CHECK( qvkAllocateMemory( vk.device, &alloc_info, NULL, outMem ) );
+	VK_CHECK( qvkBindBufferMemory( vk.device, *outBuf, *outMem, 0 ) );
+
+	VK_CHECK( qvkMapMemory( vk.device, *outMem, 0, VK_WHOLE_SIZE, 0, outMapped ) );
+}
+
+static void destroy_dynamic_vertex_buffer( VkBuffer buf, VkDeviceMemory mem, void *mapped ) {
+	if ( mapped ) {
+		qvkUnmapMemory( vk.device, mem );
+	}
+	if ( buf ) {
+		qvkDestroyBuffer( vk.device, buf, NULL );
+	}
+	if ( mem ) {
+		qvkFreeMemory( vk.device, mem, NULL );
+	}
+}
+
 void vk_world_clear( void ) {
 	int i;
 
-	if ( s_vertexBuffer ) { qvkDestroyBuffer( vk.device, s_vertexBuffer, NULL ); s_vertexBuffer = VK_NULL_HANDLE; }
-	if ( s_vertexMemory ) { qvkFreeMemory( vk.device, s_vertexMemory, NULL ); s_vertexMemory = VK_NULL_HANDLE; }
-	if ( s_indexBuffer ) { qvkDestroyBuffer( vk.device, s_indexBuffer, NULL ); s_indexBuffer = VK_NULL_HANDLE; }
-	if ( s_indexMemory ) { qvkFreeMemory( vk.device, s_indexMemory, NULL ); s_indexMemory = VK_NULL_HANDLE; }
+	destroy_dynamic_vertex_buffer( s_dynLMBuffer, s_dynLMMemory, s_dynLMMapped );
+	s_dynLMBuffer = VK_NULL_HANDLE; s_dynLMMemory = VK_NULL_HANDLE; s_dynLMMapped = NULL;
+	s_dynLMCapacity = 0; s_dynLMWriteOffset = 0; s_dynLMOverflowWarned = qfalse;
+
+	destroy_dynamic_vertex_buffer( s_dyn2DBuffer, s_dyn2DMemory, s_dyn2DMapped );
+	s_dyn2DBuffer = VK_NULL_HANDLE; s_dyn2DMemory = VK_NULL_HANDLE; s_dyn2DMapped = NULL;
+	s_dyn2DCapacity = 0; s_dyn2DWriteOffset = 0; s_dyn2DOverflowWarned = qfalse;
+
+	destroy_dynamic_vertex_buffer( s_dynDlightBuffer, s_dynDlightMemory, s_dynDlightMapped );
+	s_dynDlightBuffer = VK_NULL_HANDLE; s_dynDlightMemory = VK_NULL_HANDLE; s_dynDlightMapped = NULL;
+	s_dynDlightCapacity = 0; s_dynDlightWriteOffset = 0; s_dynDlightOverflowWarned = qfalse;
 
 	if ( s_lmDescriptorPool ) { qvkDestroyDescriptorPool( vk.device, s_lmDescriptorPool, NULL ); s_lmDescriptorPool = VK_NULL_HANDLE; }
 
@@ -75,6 +160,12 @@ void vk_world_clear( void ) {
 	if ( s_batches ) { free( s_batches ); s_batches = NULL; }
 	if ( s_surfRefs ) { free( s_surfRefs ); s_surfRefs = NULL; }
 	s_numBatches = 0;
+
+	if ( s_cachedVerts ) { free( s_cachedVerts ); s_cachedVerts = NULL; }
+	if ( s_cachedIndices ) { free( s_cachedIndices ); s_cachedIndices = NULL; }
+	s_numCachedVerts = 0;
+	s_numCachedIndices = 0;
+
 	s_built = qfalse;
 }
 
@@ -82,6 +173,7 @@ void vk_world_shutdown( void ) {
 	vk_world_clear();
 }
 
+// Raw BSP vertex color (already overbright-shifted by R_LoadDrawVerts) -- not stage-baked.
 static void CopyVertex( vkWorldVertex_t *out, const drawVert_t *in ) {
 	out->pos[0] = in->xyz[0];
 	out->pos[1] = in->xyz[1];
@@ -141,28 +233,13 @@ static int CompareSurfByShaderThenLightmap( const void *a, const void *b ) {
 	return sa->lightmapNum - sb->lightmapNum;
 }
 
-// Bakes stage 0's rgbGen/alphaGen once at load time; world vertex data is static, so this can't rerun per frame.
-static void ApplyBuildTimeColorGen( const shaderStage_t *stage, vkWorldVertex_t *verts, int firstVert, int numVerts ) {
-	int i;
-
-	for ( i = 0; i < numVerts; i++ ) {
-		vkWorldVertex_t *v = &verts[firstVert + i];
-		byte outColor[4];
-
-		R_CalcStageColorAlpha( stage, NULL, NULL, v->color, outColor );
-		v->color[0] = outColor[0]; v->color[1] = outColor[1]; v->color[2] = outColor[2]; v->color[3] = outColor[3];
-	}
-}
-
 // RGB8 -> RGBA8 (opaque) so it can go through the same texture upload path as everything else.
 static void BuildLightmapTexture( const byte *rgb, lightmapTex_t *out ) {
 	byte *rgba = malloc( LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 4 );
 	int i;
 
 	for ( i = 0; i < LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT; i++ ) {
-		rgba[i * 4 + 0] = rgb[i * 3 + 0];
-		rgba[i * 4 + 1] = rgb[i * 3 + 1];
-		rgba[i * 4 + 2] = rgb[i * 3 + 2];
+		R_ShiftLightingBytes( &rgb[i * 3], &rgba[i * 4] );
 		rgba[i * 4 + 3] = 255;
 	}
 
@@ -275,25 +352,7 @@ void vk_world_build( void ) {
 				curLightmapIdx = lightmapIdx;
 			}
 
-			{
-				uint32_t vertBaseBefore = nextVertSlot;
-
-				EmitSurfaceGeometry( surf, verts, &nextVertSlot, indexes, &writeOffset, &firstIndex, &indexCount );
-
-				{
-					shader_t *surfShader = R_GetShaderByHandle( tr_world.shaders[surf->shaderNum].shader );
-					qboolean hasRealLightmap = ( lightmapIdx != whiteLightmapIdx );
-					const shaderStage_t *stage0 = &surfShader->stages[0];
-
-					// No real lightmap: skip the bake on a default rgbGen so baked vertex lighting survives.
-					if ( surfShader->numStages >= 1 &&
-						 ( hasRealLightmap || !( stage0->rgbGen == CGEN_IDENTITY_LIGHTING || stage0->rgbGen == CGEN_IDENTITY ) ) ) {
-						int bakedFirstVert = ( surf->surfaceType == MST_PATCH ) ? (int)vertBaseBefore : surf->firstVert;
-						int bakedNumVerts = ( surf->surfaceType == MST_PATCH ) ? (int)( nextVertSlot - vertBaseBefore ) : surf->numVerts;
-						ApplyBuildTimeColorGen( stage0, verts, bakedFirstVert, bakedNumVerts );
-					}
-				}
-			}
+			EmitSurfaceGeometry( surf, verts, &nextVertSlot, indexes, &writeOffset, &firstIndex, &indexCount );
 
 			surfRefs[numSurfRefs].surfaceIndex = sIdx;
 			surfRefs[numSurfRefs].firstIndex = firstIndex;
@@ -361,53 +420,220 @@ void vk_world_build( void ) {
 		}
 	}
 
-	ri.Printf( PRINT_ALL, "...vk_world_build checkpoint: about to upload %d verts\n", (int)nextVertSlot );
-	vk_create_device_local_buffer( verts, (VkDeviceSize)nextVertSlot * sizeof( vkWorldVertex_t ),
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &s_vertexBuffer, &s_vertexMemory );
-	ri.Printf( PRINT_ALL, "...vk_world_build checkpoint: about to upload %d indexes\n", (int)writeOffset );
-	vk_create_device_local_buffer( indexes, (VkDeviceSize)writeOffset * sizeof( uint32_t ),
-		VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &s_indexBuffer, &s_indexMemory );
-	ri.Printf( PRINT_ALL, "...vk_world_build checkpoint: GPU buffers uploaded\n" );
+	// Cached CPU-side source data for per-frame expansion -- not uploaded as a static GPU buffer.
+	s_cachedVerts = verts;
+	s_numCachedVerts = nextVertSlot;
+	s_cachedIndices = indexes;
+	s_numCachedIndices = writeOffset;
+
+	// *2: one full pass for real rendering, a second full pass' worth of headroom for a same-frame
+	// r_showtris re-expansion (see the wireframe block in vk_world_draw).
+	s_dynLMCapacity = writeOffset * 2;
+	create_dynamic_vertex_buffer( (VkDeviceSize)s_dynLMCapacity * sizeof( vkWorldVertex_t ),
+		&s_dynLMBuffer, &s_dynLMMemory, (void **)&s_dynLMMapped );
+
+	// Headroom for a couple of extra-stage passes across the whole visible world within one frame.
+	s_dyn2DCapacity = writeOffset * 2;
+	create_dynamic_vertex_buffer( (VkDeviceSize)s_dyn2DCapacity * sizeof( vk2d_vertex_t ),
+		&s_dyn2DBuffer, &s_dyn2DMemory, (void **)&s_dyn2DMapped );
+
+	// One full visible-world's worth; dlights are rare/bounded so no extra headroom needed here.
+	s_dynDlightCapacity = writeOffset;
+	create_dynamic_vertex_buffer( (VkDeviceSize)s_dynDlightCapacity * sizeof( vk2d_vertex_t ),
+		&s_dynDlightBuffer, &s_dynDlightMemory, (void **)&s_dynDlightMapped );
 
 	s_batches = batches; // already sized to numDrawable, no need to shrink
 	s_numBatches = numBatches;
 	s_surfRefs = surfRefs;
 	s_built = qtrue;
 
-	free( verts );
-	free( indexes );
-
 	ri.Printf( PRINT_ALL, "...vk_world_build: %d verts, %d indexes, %d batches, %d lightmaps\n",
 			   (int)nextVertSlot, (int)writeOffset, numBatches, tr_world.numLightmaps );
 }
 
-// Draws refs[0..numRefs), merging contiguous visible ones into a single draw call per run.
-static void DrawSurfRefRun( const worldSurfRef_t *refs, int numRefs ) {
+// Expands refs[0..numRefs)'s visible surfaces into s_dynLMMapped with stage's real per-frame
+// rgbGen/tcMod, merging contiguous visible writes into one draw call per run.
+static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const shaderStage_t *stage0 ) {
 	qboolean runOpen = qfalse;
-	uint32_t runFirst = 0, runCount = 0;
+	uint32_t runStart = 0;
 	int j;
 
 	for ( j = 0; j < numRefs; j++ ) {
 		const worldSurfRef_t *ref = &refs[j];
+		uint32_t k;
 
-		if ( R_SurfaceIsVisible( ref->surfaceIndex ) ) {
-			if ( runOpen && ref->firstIndex == runFirst + runCount ) {
-				runCount += ref->indexCount;
-			} else {
-				if ( runOpen ) {
-					qvkCmdDrawIndexed( vk.command_buffer, runCount, 1, runFirst, 0, 0 );
-				}
-				runFirst = ref->firstIndex;
-				runCount = ref->indexCount;
-				runOpen = qtrue;
+		if ( !R_SurfaceIsVisible( ref->surfaceIndex ) ) {
+			if ( runOpen ) {
+				qvkCmdDraw( vk.command_buffer, s_dynLMWriteOffset - runStart, 1, runStart, 0 );
+				runOpen = qfalse;
 			}
-		} else if ( runOpen ) {
-			qvkCmdDrawIndexed( vk.command_buffer, runCount, 1, runFirst, 0, 0 );
-			runOpen = qfalse;
+			continue;
+		}
+
+		if ( s_dynLMWriteOffset + ref->indexCount > s_dynLMCapacity ) {
+			if ( runOpen ) {
+				qvkCmdDraw( vk.command_buffer, s_dynLMWriteOffset - runStart, 1, runStart, 0 );
+				runOpen = qfalse;
+			}
+			if ( !s_dynLMOverflowWarned ) {
+				ri.Printf( PRINT_WARNING, "vk_world: dynamic lightmap vertex buffer full, dropping remaining world geometry this frame\n" );
+				s_dynLMOverflowWarned = qtrue;
+			}
+			continue;
+		}
+
+		if ( !runOpen ) {
+			runStart = s_dynLMWriteOffset;
+			runOpen = qtrue;
+		}
+
+		for ( k = 0; k < ref->indexCount; k++ ) {
+			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
+			vkWorldVertex_t *dst = &s_dynLMMapped[s_dynLMWriteOffset++];
+			byte color[4];
+			float uv[2];
+
+			R_CalcStageColorAlpha( stage0, NULL, NULL, src->color, color );
+			R_CalcStageTexCoord( stage0, src->uv[0], src->uv[1], src->pos, NULL, uv );
+
+			dst->pos[0] = src->pos[0]; dst->pos[1] = src->pos[1]; dst->pos[2] = src->pos[2];
+			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
+			dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
+			dst->lmUv[0] = src->lmUv[0]; dst->lmUv[1] = src->lmUv[1];
 		}
 	}
+
 	if ( runOpen ) {
-		qvkCmdDrawIndexed( vk.command_buffer, runCount, 1, runFirst, 0, 0 );
+		qvkCmdDraw( vk.command_buffer, s_dynLMWriteOffset - runStart, 1, runStart, 0 );
+	}
+}
+
+// Same as above but for stages 1+: no lightmap UV, writes vk2d_vertex_t into s_dyn2DMapped.
+static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, const shaderStage_t *stage ) {
+	qboolean runOpen = qfalse;
+	uint32_t runStart = 0;
+	int j;
+
+	for ( j = 0; j < numRefs; j++ ) {
+		const worldSurfRef_t *ref = &refs[j];
+		uint32_t k;
+
+		if ( !R_SurfaceIsVisible( ref->surfaceIndex ) ) {
+			if ( runOpen ) {
+				qvkCmdDraw( vk.command_buffer, s_dyn2DWriteOffset - runStart, 1, runStart, 0 );
+				runOpen = qfalse;
+			}
+			continue;
+		}
+
+		if ( s_dyn2DWriteOffset + ref->indexCount > s_dyn2DCapacity ) {
+			if ( runOpen ) {
+				qvkCmdDraw( vk.command_buffer, s_dyn2DWriteOffset - runStart, 1, runStart, 0 );
+				runOpen = qfalse;
+			}
+			if ( !s_dyn2DOverflowWarned ) {
+				ri.Printf( PRINT_WARNING, "vk_world: dynamic extra-stage vertex buffer full, dropping remaining world geometry this frame\n" );
+				s_dyn2DOverflowWarned = qtrue;
+			}
+			continue;
+		}
+
+		if ( !runOpen ) {
+			runStart = s_dyn2DWriteOffset;
+			runOpen = qtrue;
+		}
+
+		for ( k = 0; k < ref->indexCount; k++ ) {
+			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
+			vk2d_vertex_t *dst = &s_dyn2DMapped[s_dyn2DWriteOffset++];
+			byte color[4];
+			float uv[2];
+
+			R_CalcStageColorAlpha( stage, NULL, NULL, src->color, color );
+			R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], src->pos, NULL, uv );
+
+			dst->pos[0] = src->pos[0]; dst->pos[1] = src->pos[1]; dst->pos[2] = src->pos[2];
+			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
+			dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
+		}
+	}
+
+	if ( runOpen ) {
+		qvkCmdDraw( vk.command_buffer, s_dyn2DWriteOffset - runStart, 1, runStart, 0 );
+	}
+}
+
+// Additive dlight pass: diffuse texture modulated by the summed per-vertex dlight contribution,
+// blended ONE/ONE on top of the already-drawn lit surface. World surfaces got zero dlight effect
+// before this; this is a per-vertex distance falloff (same shape as vk_entity.c's ComputeEntityTint),
+// not true projected-texture dlights like vkQuake3's ProjectDlightTexture -- a scoped simplification,
+// not a faked feature: it's real per-vertex light falloff, just not a radial-blob projection.
+static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, const dlight_t *dlights, int numDlights ) {
+	qboolean runOpen = qfalse;
+	uint32_t runStart = 0;
+	int j;
+
+	for ( j = 0; j < numRefs; j++ ) {
+		const worldSurfRef_t *ref = &refs[j];
+		uint32_t k;
+
+		if ( !R_SurfaceIsVisible( ref->surfaceIndex ) ) {
+			if ( runOpen ) {
+				qvkCmdDraw( vk.command_buffer, s_dynDlightWriteOffset - runStart, 1, runStart, 0 );
+				runOpen = qfalse;
+			}
+			continue;
+		}
+
+		if ( s_dynDlightWriteOffset + ref->indexCount > s_dynDlightCapacity ) {
+			if ( runOpen ) {
+				qvkCmdDraw( vk.command_buffer, s_dynDlightWriteOffset - runStart, 1, runStart, 0 );
+				runOpen = qfalse;
+			}
+			if ( !s_dynDlightOverflowWarned ) {
+				ri.Printf( PRINT_WARNING, "vk_world: dynamic dlight vertex buffer full, dropping remaining world geometry this frame\n" );
+				s_dynDlightOverflowWarned = qtrue;
+			}
+			continue;
+		}
+
+		if ( !runOpen ) {
+			runStart = s_dynDlightWriteOffset;
+			runOpen = qtrue;
+		}
+
+		for ( k = 0; k < ref->indexCount; k++ ) {
+			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
+			vk2d_vertex_t *dst = &s_dynDlightMapped[s_dynDlightWriteOffset++];
+			vec3_t sum = { 0.0f, 0.0f, 0.0f };
+			int lightIdx, r, g, b;
+
+			for ( lightIdx = 0; lightIdx < numDlights; lightIdx++ ) {
+				vec3_t dir;
+				float dist, power, d;
+
+				VectorSubtract( dlights[lightIdx].origin, src->pos, dir );
+				dist = VectorNormalize( dir );
+				power = DLIGHT_AT_RADIUS * ( dlights[lightIdx].radius * dlights[lightIdx].radius );
+				if ( dist < DLIGHT_MINIMUM_RADIUS ) {
+					dist = DLIGHT_MINIMUM_RADIUS;
+				}
+				d = power / ( dist * dist );
+				VectorMA( sum, d, dlights[lightIdx].color, sum );
+			}
+
+			r = (int)sum[0]; g = (int)sum[1]; b = (int)sum[2];
+			dst->pos[0] = src->pos[0]; dst->pos[1] = src->pos[1]; dst->pos[2] = src->pos[2];
+			dst->color[0] = (byte)( r < 0 ? 0 : ( r > 255 ? 255 : r ) );
+			dst->color[1] = (byte)( g < 0 ? 0 : ( g > 255 ? 255 : g ) );
+			dst->color[2] = (byte)( b < 0 ? 0 : ( b > 255 ? 255 : b ) );
+			dst->color[3] = 255;
+			dst->uv[0] = src->uv[0]; dst->uv[1] = src->uv[1];
+		}
+	}
+
+	if ( runOpen ) {
+		qvkCmdDraw( vk.command_buffer, s_dynDlightWriteOffset - runStart, 1, runStart, 0 );
 	}
 }
 
@@ -416,6 +642,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	VkDeviceSize vb_offset = 0;
 	int i;
 	VkPipeline boundPipeline = VK_NULL_HANDLE;
+	qboolean lmBufferBound = qfalse, bound2DBuffer = qfalse;
 	static qboolean firstDraw = qtrue;
 
 	if ( !s_built ) {
@@ -426,14 +653,14 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		ri.Printf( PRINT_ALL, "...vk_world_draw checkpoint: first draw starting, %d batches\n", s_numBatches );
 	}
 
+	s_dynLMWriteOffset = 0;
+	s_dyn2DWriteOffset = 0;
+
 	memset( push_data, 0, sizeof( push_data ) );
 	memcpy( push_data, mvp, 16 * sizeof( float ) );
 	memcpy( push_data + 16, fogPush, 12 * sizeof( float ) );
 	qvkCmdPushConstants( vk.command_buffer, vk.lightmap_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0, sizeof( push_data ), push_data );
-
-	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
-	qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
 
 	for ( i = 0; i < s_numBatches; i++ ) {
 		const worldBatch_t *batch = &s_batches[i];
@@ -451,15 +678,19 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 			boundPipeline = pipeline;
 		}
+		if ( !lmBufferBound ) {
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &vb_offset );
+			lmBufferBound = qtrue; bound2DBuffer = qfalse;
+		}
 
 		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
 			0, 1, &batch->descriptor, 0, NULL );
 
-		DrawSurfRefRun( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs );
+		ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, &shader->stages[0] );
 
-		// Stages 1+ redraw the same indices with that stage's own texture/blend state, sharing stage 0's
-		// baked vertex color/UV data. vk.pipeline_layout and vk.lightmap_pipeline_layout declare identical
-		// push constant ranges, so the mvp/fog push above still applies -- no need to push it again here.
+		// Stages 1+ get their own real per-frame rgbGen/tcMod now, sharing no state with stage 0.
+		// vk.pipeline_layout and vk.lightmap_pipeline_layout declare identical push constant ranges,
+		// so the mvp/fog push above still applies -- no need to push it again here.
 		for ( s = 1; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
 			image_t *stageImage = R_GetStageImage( stage );
@@ -468,17 +699,61 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 				continue;
 			}
 
-			pipeline = vk_getPipeline3D( sizeof( vkWorldVertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );
 			if ( pipeline != boundPipeline ) {
 				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 				boundPipeline = pipeline;
 			}
+			if ( !bound2DBuffer ) {
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dyn2DBuffer, &vb_offset );
+				bound2DBuffer = qtrue; lmBufferBound = qfalse;
+			}
 
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
 				0, 1, &stageImage->vk_descriptor, 0, NULL );
 
-			DrawSurfRefRun( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs );
+			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, stage );
+		}
+	}
+
+	s_dynDlightWriteOffset = 0;
+	{
+		int numDlights;
+		const dlight_t *dlights = R_GetSceneDlights( &numDlights );
+
+		if ( numDlights > 0 ) {
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynDlightBuffer, &vb_offset );
+			lmBufferBound = qfalse; bound2DBuffer = qfalse;
+			boundPipeline = VK_NULL_HANDLE;
+
+			for ( i = 0; i < s_numBatches; i++ ) {
+				const worldBatch_t *batch = &s_batches[i];
+				shader_t *shader;
+				image_t *diffuse;
+				VkPipeline pipeline;
+
+				if ( batch->descriptor == VK_NULL_HANDLE ) {
+					continue;
+				}
+				shader = R_GetShaderByHandle( batch->shader );
+				diffuse = ( shader->numStages >= 1 && shader->stages[0].image ) ? shader->stages[0].image : R_GetDefaultImage();
+				if ( diffuse->vk_descriptor == VK_NULL_HANDLE ) {
+					continue;
+				}
+
+				pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), VK_TRUE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE,
+					vk_cullModeForShader( shader->cullType ), 0 );
+				if ( pipeline != boundPipeline ) {
+					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+					boundPipeline = pipeline;
+				}
+
+				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+					0, 1, &diffuse->vk_descriptor, 0, NULL );
+
+				ExpandAndDrawWorldDlights( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, dlights, numDlights );
+			}
 		}
 	}
 
@@ -487,15 +762,21 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	}
 	if ( r_showtris->integer && vk.pipeline_world_wireframe != VK_NULL_HANDLE ) {
 		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_world_wireframe );
+		if ( !lmBufferBound ) {
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &vb_offset );
+			lmBufferBound = qtrue; bound2DBuffer = qfalse;
+		}
 		for ( i = 0; i < s_numBatches; i++ ) {
 			const worldBatch_t *batch = &s_batches[i];
+			shader_t *shader;
 
 			if ( batch->descriptor == VK_NULL_HANDLE ) {
 				continue;
 			}
+			shader = R_GetShaderByHandle( batch->shader );
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
 				0, 1, &batch->descriptor, 0, NULL );
-			DrawSurfRefRun( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs );
+			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, &shader->stages[0] );
 		}
 	}
 

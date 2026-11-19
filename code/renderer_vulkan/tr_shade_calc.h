@@ -16,7 +16,10 @@ void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 							 const byte baseColor[4], byte outColor[4] );
 
 // worldPos is the vertex's world-space xyz (TMOD_TURBULENT wiggles by position, not just by UV).
-void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, const float worldPos[3], float outST[2] );
+// entityTranslate is refEntity_t.shaderTexCoord (TMOD_ENTITY_TRANSLATE's scroll offset), or NULL where
+// there's no entity context (world surfaces, scene polys).
+void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, const float worldPos[3],
+						   const float entityTranslate[2], float outST[2] );
 
 // Only deformVertexes move is a real deformation; every other type passes basePos through unchanged.
 void R_DeformPosition( const shader_t *shader, const float basePos[3], float outPos[3] );
