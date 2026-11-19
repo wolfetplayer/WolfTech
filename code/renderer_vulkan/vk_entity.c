@@ -498,13 +498,14 @@ doneCollecting:
 			// Every stage redraws the same indices/vertices, layered in shader-script order.
 			for ( s = 0; s < shaderPtr->numStages; s++ ) {
 				const shaderStage_t *stage = &shaderPtr->stages[s];
+				image_t *stageImage = R_GetStageImage( stage );
 				VkPipeline pipeline;
 
-				if ( !stage->image || stage->image->vk_descriptor == VK_NULL_HANDLE ) {
+				if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
 					continue;
 				}
 
-				pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+				pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 					vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc );
 				if ( pipeline != boundPipeline ) {
 					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
@@ -512,7 +513,7 @@ doneCollecting:
 				}
 
 				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-					0, 1, &stage->image->vk_descriptor, 0, NULL );
+					0, 1, &stageImage->vk_descriptor, 0, NULL );
 				qvkCmdDrawIndexed( vk.command_buffer, s_draws[i].idxCount, 1, s_draws[i].idxBase,
 					(int32_t)( s_draws[i].vertBase + (uint32_t)s * s_draws[i].numVerts ), 0 );
 			}

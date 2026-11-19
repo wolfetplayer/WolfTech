@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_init.h"
 #include "vk_frame.h"
 #include "tr_image.h"
+#include "vk_image.h"
 #include "tr_shader.h"
 #include "tr_main.h"
 #include "tr_bsp.h"
@@ -52,6 +53,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_sky.h"
 #include "vk_poly.h"
 #include "vk_world.h"
+#include "vk_screenshot.h"
 
 refimport_t ri;
 
@@ -69,6 +71,30 @@ static qboolean s_testCubeInit = qfalse;
 static vec3_t s_testCubeOrigin;
 static qboolean s_firstRealSceneLogged = qfalse;
 
+static cvar_t *r_showImages;
+
+// Replaces the normal scene with a grid of every loaded texture, for spotting texture-load/thrashing problems.
+static void R_DrawShowImages( void ) {
+	int width, height, numImages, i;
+	float cellW, cellH;
+
+	R_GetWinResolution( &width, &height );
+	cellW = (float)width / 40.0f;
+	cellH = (float)height / 30.0f;
+
+	numImages = R_GetNumImages();
+	for ( i = 0; i < numImages; i++ ) {
+		image_t *image = R_GetImageByIndex( i );
+		float x = (float)( i % 40 ) * cellW;
+		float y = (float)( i / 40 ) * cellH;
+
+		if ( y + cellH > (float)height ) {
+			break; // grid is full; the rest just wouldn't be visible
+		}
+		vk_draw2d_raw_image( x, y, cellW, cellH, image );
+	}
+}
+
 /*
 ===============
 RE_Shutdown
@@ -80,6 +106,9 @@ static void RE_Shutdown( qboolean destroyWindow ) {
 	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", destroyWindow );
 
 	if ( wasInitialized ) {
+		vk_screenshot_shutdown();
+		vk_flush_pending_uploads(); // don't leave a batch dangling if shutdown lands mid-registration
+
 		// must tear down before vk_shutdown() frees the descriptor pool
 		R_DoneFreeType();
 		R_ShutdownShaders();
@@ -113,6 +142,8 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 		R_InitModels();
 		R_InitSkins();
 		R_InitFog();
+		vk_screenshot_init();
+		r_showImages = ri.Cvar_Get( "r_showImages", "0", CVAR_TEMP );
 		s_testCubeInit = qfalse;
 	}
 
@@ -161,6 +192,7 @@ static void RE_SetWorldVisData( const byte *vis ) {
 }
 
 static void RE_EndRegistration( void ) {
+	vk_flush_pending_uploads();
 	ri.Printf( PRINT_ALL, "...tr_init checkpoint: RE_EndRegistration\n" );
 }
 
@@ -199,6 +231,11 @@ static void RE_RenderScene( const refdef_t *fd ) {
 	if ( !s_testCubeInit ) {
 		VectorMA( fd->vieworg, 200.0f, fd->viewaxis[0], s_testCubeOrigin );
 		s_testCubeInit = qtrue;
+	}
+
+	if ( r_showImages->integer ) {
+		R_DrawShowImages();
+		return;
 	}
 
 	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) && !s_firstRealSceneLogged ) {
@@ -288,6 +325,8 @@ static void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		return;
 	}
 
+	vk_flush_pending_uploads(); // any texture registered since the last frame must be uploaded before this one samples it
+
 	s_frameActive = vk_begin_frame();
 	if ( !s_frameActive ) {
 		return; // swapchain was just recreated, nothing to record this frame
@@ -302,6 +341,7 @@ static void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 		vk_end_render_pass();
 		vk_end_frame();
 		s_frameActive = qfalse;
+		vk_screenshot_process_pending();
 	}
 
 	if ( frontEndMsec ) {
@@ -321,9 +361,38 @@ static int R_MarkFragments( int numPoints, const vec3_t *points, const vec3_t pr
 
 // Real tag lookup (R_LerpTag) lives in tr_bones.c.
 
-static void R_ModelBounds( qhandle_t model, vec3_t mins, vec3_t maxs ) {
-	FIRST_CALL_CHECKPOINT( "R_ModelBounds" );
-	(void)model;
+// Frame-0 local-space bounds, matching code/renderer and code/rend2's R_ModelBounds semantics.
+static void R_ModelBounds( qhandle_t hModel, vec3_t mins, vec3_t maxs ) {
+	model_t *mod = R_GetModelByHandle( hModel );
+
+	if ( mod ) {
+		if ( mod->md3 ) {
+			md3Frame_t *frame = (md3Frame_t *)( (byte *)mod->md3 + mod->md3->ofsFrames );
+			VectorCopy( frame->bounds[0], mins );
+			VectorCopy( frame->bounds[1], maxs );
+			return;
+		}
+		if ( mod->mdc ) {
+			md3Frame_t *frame = (md3Frame_t *)( (byte *)mod->mdc + mod->mdc->ofsFrames );
+			VectorCopy( frame->bounds[0], mins );
+			VectorCopy( frame->bounds[1], maxs );
+			return;
+		}
+		if ( mod->mds ) {
+			mdsFrame_t *frame = (mdsFrame_t *)( (byte *)mod->mds + mod->mds->ofsFrames );
+			VectorCopy( frame->bounds[0], mins );
+			VectorCopy( frame->bounds[1], maxs );
+			return;
+		}
+		if ( mod->mdx ) {
+			mdxFrame_t *frame = (mdxFrame_t *)( (byte *)mod->mdx + mod->mdx->ofsFrames );
+			VectorCopy( frame->bounds[0], mins );
+			VectorCopy( frame->bounds[1], maxs );
+			return;
+		}
+		// mdm carries no frame data of its own -- bounds live on its separate MDX skeleton, not reachable from a bare handle
+	}
+
 	VectorClear( mins );
 	VectorClear( maxs );
 }

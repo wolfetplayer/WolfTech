@@ -308,6 +308,7 @@ static void vk_selectPhysicalDevice( void ) {
 	ri.Printf( PRINT_ALL, " Total %d graphics card, the first one is chosen. \n", gpu_count );
 
 	qvkGetPhysicalDeviceMemoryProperties( vk.physical_device, &vk.devMemProperties );
+	qvkGetPhysicalDeviceProperties( vk.physical_device, &vk.deviceProperties );
 }
 
 

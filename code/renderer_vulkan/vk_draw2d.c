@@ -7,6 +7,7 @@
 #include "vk_instance.h"
 #include "vk_pipelines.h"
 #include "glConfig.h"
+#include "tr_shade_calc.h"
 #include "vk_draw2d.h"
 
 #define VK2D_VERTEX_BUFFER_BYTES ( 1024 * 1024 )
@@ -106,8 +107,13 @@ static void vk_draw2d_record_tris( const vk2d_vertex_t *verts, int count, shader
 	float clip_space_xform[32];
 	VkPipeline pipeline;
 	VkDeviceSize vb_offset;
+	image_t *stageImage;
 
-	if ( !shader || shader->numStages < 1 || !shader->stages[0].image ) {
+	if ( !shader || shader->numStages < 1 ) {
+		return;
+	}
+	stageImage = R_GetStageImage( &shader->stages[0] );
+	if ( !stageImage ) {
 		return;
 	}
 
@@ -137,7 +143,7 @@ static void vk_draw2d_record_tris( const vk2d_vertex_t *verts, int count, shader
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 
 	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-		0, 1, &shader->stages[0].image->vk_descriptor, 0, NULL );
+		0, 1, &stageImage->vk_descriptor, 0, NULL );
 
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 
@@ -299,4 +305,51 @@ void vk_draw2d_quad_rounded( float x, float y, float w, float h,
 
 	// force blend so the alpha=0 outer ring actually fades
 	vk_draw2d_record_tris( verts, n, shader, qtrue );
+}
+
+// Same clip-space transform and vertex layout as vk_draw2d_record_tris, but keyed on a raw image_t
+// instead of a shader_t -- r_showImages wants every loaded texture, not a registered shader per one.
+void vk_draw2d_raw_image( float x, float y, float w, float h, image_t *image ) {
+	static const float uvs[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+	static const int order[6] = { 0, 1, 2, 0, 2, 3 };
+	float corners[4][2] = { { x, y }, { x + w, y }, { x + w, y + h }, { x, y + h } };
+	vk2d_vertex_t verts[6];
+	float clip_space_xform[32];
+	int width, height, i;
+	VkDeviceSize vb_offset;
+
+	if ( !image || image->vk_descriptor == VK_NULL_HANDLE || s_writeIndex + 6 > VK2D_MAX_VERTS ) {
+		return;
+	}
+
+	for ( i = 0; i < 6; i++ ) {
+		int c = order[i];
+		verts[i].pos[0] = corners[c][0];
+		verts[i].pos[1] = corners[c][1];
+		verts[i].pos[2] = 0.0f;
+		verts[i].uv[0] = uvs[c][0];
+		verts[i].uv[1] = uvs[c][1];
+		verts[i].color[0] = verts[i].color[1] = verts[i].color[2] = verts[i].color[3] = 255;
+	}
+
+	vb_offset = (VkDeviceSize)s_writeIndex * sizeof( vk2d_vertex_t );
+	memcpy( &s_mapped[s_writeIndex], verts, sizeof( verts ) );
+	s_writeIndex += 6;
+
+	R_GetWinResolution( &width, &height );
+	memset( clip_space_xform, 0, sizeof( clip_space_xform ) );
+	clip_space_xform[0] = 2.0f / (float)width;
+	clip_space_xform[5] = 2.0f / (float)height;
+	clip_space_xform[10] = 1.0f;
+	clip_space_xform[12] = -1.0f;
+	clip_space_xform[13] = -1.0f;
+	clip_space_xform[15] = 1.0f;
+	qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+		0, sizeof( clip_space_xform ), clip_space_xform );
+
+	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_2d_opaque );
+	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+		0, 1, &image->vk_descriptor, 0, NULL );
+	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
+	qvkCmdDraw( vk.command_buffer, 6, 1, 0, 0 );
 }

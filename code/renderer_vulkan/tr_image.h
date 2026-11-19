@@ -42,4 +42,8 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height );
 // A 1x1 white texture: the "hShader == 0 means white" fallback image.
 image_t *R_GetDefaultImage( void );
 
+// Every registered image, in load order -- used by r_showImages' texture-atlas debug overlay.
+int R_GetNumImages( void );
+image_t *R_GetImageByIndex( int index );
+
 #endif // TR_IMAGE_H_

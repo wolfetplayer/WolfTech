@@ -27,4 +27,7 @@ void vk_draw2d_quad_rounded( float x, float y, float w, float h,
 							  float s1, float t1, float s2, float t2,
 							  shader_t *shader, float radius );
 
+// Draws image's whole texture into the given screen rect, bypassing the shader system -- for r_showImages.
+void vk_draw2d_raw_image( float x, float y, float w, float h, image_t *image );
+
 #endif // VK_DRAW2D_H_

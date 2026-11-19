@@ -134,6 +134,17 @@ image_t *R_GetDefaultImage( void ) {
 	return default_image;
 }
 
+int R_GetNumImages( void ) {
+	return r_numImages;
+}
+
+image_t *R_GetImageByIndex( int index ) {
+	if ( index < 0 || index >= r_numImages ) {
+		return NULL;
+	}
+	return &r_images[index];
+}
+
 static void R_CreateDefaultImage( void ) {
 	// 1x1 white: serves both "hShader == 0 means white" and the not-found fallback
 	byte pixels[4] = { 255, 255, 255, 255 };

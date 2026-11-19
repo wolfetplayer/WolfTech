@@ -9,6 +9,7 @@
 #define MAX_SHADER_STAGES 8
 #define TR_MAX_TEXMODS 4
 #define MAX_SHADER_DEFORMS 3
+#define MAX_IMAGE_ANIMATIONS 16
 
 // Matches code/renderer/tr_local.h's cullType_t.
 typedef enum {
@@ -104,7 +105,13 @@ typedef struct {
 } deformStage_t;
 
 typedef struct shaderStage_s {
-	image_t *image;
+	image_t *image; // frame 0; the only frame when numAnimImages <= 1
+
+	// animmap: cycles through animImages at animFrequency Hz. See R_GetStageImage.
+	int numAnimImages;
+	image_t *animImages[MAX_IMAGE_ANIMATIONS];
+	float animFrequency;
+
 	VkBlendFactor srcBlend;
 	VkBlendFactor dstBlend;
 	qboolean blendEnabled;

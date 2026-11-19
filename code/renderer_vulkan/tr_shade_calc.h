@@ -8,6 +8,9 @@
 // fd->time (ms); call once per frame before drawing anything that uses the functions below.
 void R_SetShaderTime( int timeMs );
 
+// Resolves animmap's current frame from shaderTime; returns stage->image unchanged for non-animated stages.
+image_t *R_GetStageImage( const shaderStage_t *stage );
+
 // entityColor: ent->shaderRGBA or NULL. lightingTint: CGEN_LIGHTING_DIFFUSE substitute or NULL. baseColor: the mesh's own vertex color.
 void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor, const byte *lightingTint,
 							 const byte baseColor[4], byte outColor[4] );

@@ -401,7 +401,8 @@ static qboolean R_LoadScalableFont( const char *fontName, int pointSize, fontInf
 
 			Com_sprintf( name, sizeof( name ), "fonts/%s_%i_%i.tga", fontName, imageNumber++, pointSize );
 
-			image = R_CreateImage( name, imageBuff, 256, 256, IMGFLAG_CLAMPTOEDGE );
+			// Rendered ~1:1, same as RegisterShaderNoMip's UI images -- mipmapping just costs load time for no benefit.
+			image = R_CreateImage( name, imageBuff, 256, 256, IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOMIPMAP );
 			h = RE_RegisterShaderFromImage( name, image );
 			for ( j = lastStart; j < i; j++ ) {
 				font->glyphs[j].glyph = h;
@@ -590,7 +591,8 @@ static qboolean R_LoadScalableFontExtended( const char *fontName, int pointSize,
 
 			Com_sprintf( name, sizeof( name ), "fonts/%s_%i_%i_utf8.tga", fontName, imageNumber++, pointSize );
 
-			image = R_CreateImage( name, imageBuff, 256, 256, IMGFLAG_CLAMPTOEDGE );
+			// Rendered ~1:1, same as RegisterShaderNoMip's UI images -- mipmapping just costs load time for no benefit.
+			image = R_CreateImage( name, imageBuff, 256, 256, IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOMIPMAP );
 			h = RE_RegisterShaderFromImage( name, image );
 			for ( j = lastStart; j < i; j++ ) {
 				if ( j <= GLYPH_END ) {

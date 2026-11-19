@@ -86,7 +86,8 @@ void vk_createSwapChain( VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatK
 		desc.imageColorSpace = surface_format.colorSpace;
 		desc.imageExtent = image_extent;
 		desc.imageArrayLayers = 1;
-		desc.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		// TRANSFER_SRC lets vk_screenshot.c copy the presented image back out for "screenshot"/"screenshotJPEG".
+		desc.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		desc.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		desc.queueFamilyIndexCount = 0;
 		desc.pQueueFamilyIndices = NULL;

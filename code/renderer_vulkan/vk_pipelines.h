@@ -39,7 +39,10 @@ void vk_destroy3DPipelines( void );
 VkCullModeFlags vk_cullModeForShader( cullType_t cullType );
 
 // Lazily creates/caches a single_texture pipeline for this exact state (depth test always on).
-VkPipeline vk_getPipeline3D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
+// vertexStride lets callers feed a vertex buffer laid out as vk2d_vertex_t with trailing fields
+// (e.g. vkWorldVertex_t's lmUv) tacked on -- the first three attributes (pos/color/uv) land at the
+// same offsets in both, so only the binding's stride needs to change.
+VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 							  VkCullModeFlags cullMode, int32_t alphaTestFunc );
 
 #endif // VK_PIPELINES_H_

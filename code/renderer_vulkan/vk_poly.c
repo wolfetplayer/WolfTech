@@ -103,13 +103,14 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 		// rgbGen/alphaGen/tcMod are per-stage, so each stage gets its own fresh copy of the triangle fan.
 		for ( s = 0; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
+			image_t *stageImage = R_GetStageImage( stage );
 			byte stageColor[MAX_POLY_SOURCE_VERTS][4];
 			float stageUV[MAX_POLY_SOURCE_VERTS][2];
 			uint32_t firstVert = writeOffset;
 			uint32_t vertCount;
 			VkPipeline pipeline;
 
-			if ( !stage->image || stage->image->vk_descriptor == VK_NULL_HANDLE ||
+			if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ||
 				 writeOffset + (uint32_t)( poly->numVerts - 2 ) * 3 > POLY_SCRATCH_VERTS ) {
 				continue;
 			}
@@ -128,14 +129,14 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 			}
 			vertCount = writeOffset - firstVert;
 
-			pipeline = vk_getPipeline3D( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );
 			if ( pipeline != boundPipeline ) {
 				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 				boundPipeline = pipeline;
 			}
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stage->image->vk_descriptor, 0, NULL );
+				0, 1, &stageImage->vk_descriptor, 0, NULL );
 			qvkCmdDraw( vk.command_buffer, vertCount, 1, firstVert, 0 );
 		}
 	}

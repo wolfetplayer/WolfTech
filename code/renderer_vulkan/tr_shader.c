@@ -124,6 +124,9 @@ static void ParseTexMod( char **text, shaderStage_t *stage ) {
 static void ParseStage( shaderStage_t *stage, char **text ) {
 	char *token;
 	char imageName[MAX_QPATH];
+	char animImageNames[MAX_IMAGE_ANIMATIONS][MAX_QPATH];
+	int numAnimImageNames = 0;
+	float animFrequency = 0.0f;
 	qboolean hasBlend = qfalse;
 	VkBlendFactor srcBlend = VK_BLEND_FACTOR_ONE;
 	VkBlendFactor dstBlend = VK_BLEND_FACTOR_ZERO;
@@ -154,11 +157,23 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 			Q_strncpyz( imageName, token, sizeof( imageName ) );
 			SkipRestOfLine( text );
 		} else if ( !Q_stricmp( token, "animmap" ) ) {
-			// <frequency> <image1> <image2> ... -- just take the first frame.
-			COM_ParseExt( text, qfalse );
+			// animmap <frequency> <image1> <image2> ...
 			token = COM_ParseExt( text, qfalse );
-			Q_strncpyz( imageName, token, sizeof( imageName ) );
-			SkipRestOfLine( text );
+			animFrequency = (float)atof( token );
+			numAnimImageNames = 0;
+			while ( 1 ) {
+				token = COM_ParseExt( text, qfalse );
+				if ( !token[0] ) {
+					break;
+				}
+				if ( numAnimImageNames < MAX_IMAGE_ANIMATIONS ) {
+					Q_strncpyz( animImageNames[numAnimImageNames], token, sizeof( animImageNames[0] ) );
+					numAnimImageNames++;
+				}
+			}
+			if ( numAnimImageNames > 0 ) {
+				Q_strncpyz( imageName, animImageNames[0], sizeof( imageName ) );
+			}
 		} else if ( !Q_stricmp( token, "blendfunc" ) ) {
 			token = COM_ParseExt( text, qfalse );
 			hasBlend = qtrue;
@@ -272,6 +287,19 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	stage->image = imageName[0] ? R_FindImageFile( imageName, IMGFLAG_NONE ) : NULL;
 	if ( !stage->image ) {
 		stage->image = R_GetDefaultImage();
+	}
+
+	if ( numAnimImageNames > 0 ) {
+		int i;
+		stage->animImages[0] = stage->image; // already resolved above, and R_FindImageFile caches by name anyway
+		for ( i = 1; i < numAnimImageNames; i++ ) {
+			stage->animImages[i] = R_FindImageFile( animImageNames[i], IMGFLAG_NONE );
+			if ( !stage->animImages[i] ) {
+				stage->animImages[i] = R_GetDefaultImage();
+			}
+		}
+		stage->numAnimImages = numAnimImageNames;
+		stage->animFrequency = animFrequency;
 	}
 }
 

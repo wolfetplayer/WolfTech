@@ -22,4 +22,8 @@ qboolean vk_create_texture_image( const byte *pixels, int width, int height, int
 									VkImage *outImage, VkDeviceMemory *outMemory, VkImageView *outView, VkSampler *outSampler );
 void vk_destroy_texture_image( VkImage image, VkDeviceMemory memory, VkImageView view, VkSampler sampler );
 
+// Submits and waits on any uploads vk_create_texture_image batched up instead of waiting per-texture.
+// Must run before the frame that first samples them -- called from RE_BeginFrame and RE_EndRegistration.
+void vk_flush_pending_uploads( void );
+
 #endif // VK_IMAGE_H_

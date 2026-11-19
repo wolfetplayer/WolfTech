@@ -46,6 +46,21 @@ void R_SetShaderTime( int timeMs ) {
 	s_shaderTime = timeMs * 0.001f;
 }
 
+image_t *R_GetStageImage( const shaderStage_t *stage ) {
+	int index;
+
+	if ( stage->numAnimImages <= 1 ) {
+		return stage->image;
+	}
+
+	index = (int)floorf( s_shaderTime * stage->animFrequency );
+	index %= stage->numAnimImages;
+	if ( index < 0 ) {
+		index += stage->numAnimImages;
+	}
+	return stage->animImages[index];
+}
+
 static const float *TableForFunc( genFunc_t func ) {
 	switch ( func ) {
 	case GF_SIN: return s_sinTable;

@@ -196,12 +196,12 @@ typedef struct {
 	int32_t fog_enabled;
 } vk2d_spec_data_t;
 
-static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipelineLayout layout,
+static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPipelineLayout layout,
 									const VkSpecializationInfo *specInfo,
 									const VkVertexInputBindingDescription *binding,
 									const VkVertexInputAttributeDescription *attribs, uint32_t numAttribs,
 									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-									VkBool32 depthTestEnable, VkCullModeFlags cullMode ) {
+									VkBool32 depthTestEnable, VkCullModeFlags cullMode, VkPolygonMode polygonMode ) {
 	VkPipeline pipeline;
 
 	VkPipelineShaderStageCreateInfo stages[2];
@@ -252,7 +252,7 @@ static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipel
 	rasterization.flags = 0;
 	rasterization.depthClampEnable = VK_FALSE;
 	rasterization.rasterizerDiscardEnable = VK_FALSE;
-	rasterization.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterization.polygonMode = polygonMode;
 	rasterization.cullMode = cullMode;
 	rasterization.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterization.depthBiasEnable = VK_FALSE;
@@ -344,6 +344,16 @@ static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipel
 	return pipeline;
 }
 
+static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipelineLayout layout,
+									const VkSpecializationInfo *specInfo,
+									const VkVertexInputBindingDescription *binding,
+									const VkVertexInputAttributeDescription *attribs, uint32_t numAttribs,
+									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
+									VkBool32 depthTestEnable, VkCullModeFlags cullMode ) {
+	return create_pipeline_ex( vs, fs, layout, specInfo, binding, attribs, numAttribs,
+		blendEnable, srcBlend, dstBlend, depthTestEnable, cullMode, VK_POLYGON_MODE_FILL );
+}
+
 // vk2d_vertex_t attribs, shared by the 2D pipelines and the (unused-for-world-now) opaque 3D one.
 static void Get2DAttribs( VkVertexInputBindingDescription *binding, VkVertexInputAttributeDescription attribs[3] ) {
 	binding->binding = 0;
@@ -423,6 +433,7 @@ VkCullModeFlags vk_cullModeForShader( cullType_t cullType ) {
 #define MAX_CACHED_3D_PIPELINES 64
 
 typedef struct {
+	VkDeviceSize vertexStride;
 	VkBool32 blendEnable;
 	VkBlendFactor srcBlend;
 	VkBlendFactor dstBlend;
@@ -446,7 +457,7 @@ static void vk_destroyPipelineCache3D( void ) {
 	s_numCachedPipelines = 0;
 }
 
-VkPipeline vk_getPipeline3D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
+VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 							  VkCullModeFlags cullMode, int32_t alphaTestFunc ) {
 	VkVertexInputBindingDescription binding2d;
 	VkVertexInputAttributeDescription attribs2d[3];
@@ -457,8 +468,8 @@ VkPipeline vk_getPipeline3D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBle
 
 	for ( i = 0; i < s_numCachedPipelines; i++ ) {
 		const cachedPipelineKey_t *key = &s_cachedPipelineKeys[i];
-		if ( key->blendEnable == blendEnable && key->srcBlend == srcBlend && key->dstBlend == dstBlend &&
-			 key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc ) {
+		if ( key->vertexStride == vertexStride && key->blendEnable == blendEnable && key->srcBlend == srcBlend &&
+			 key->dstBlend == dstBlend && key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc ) {
 			return s_cachedPipelines[i];
 		}
 	}
@@ -469,8 +480,10 @@ VkPipeline vk_getPipeline3D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBle
 	}
 
 	Get2DAttribs( &binding2d, attribs2d );
+	binding2d.stride = vertexStride; // attribute offsets are stride-independent, so this alone retargets the binding
 	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue, alphaTestFunc );
 
+	s_cachedPipelineKeys[s_numCachedPipelines].vertexStride = vertexStride;
 	s_cachedPipelineKeys[s_numCachedPipelines].blendEnable = blendEnable;
 	s_cachedPipelineKeys[s_numCachedPipelines].srcBlend = srcBlend;
 	s_cachedPipelineKeys[s_numCachedPipelines].dstBlend = dstBlend;
@@ -531,6 +544,12 @@ void vk_create3DPipelines( void ) {
 	vk.pipeline_sky = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &skySpecInfo,
 		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
 
+	// r_showtris: VK_POLYGON_MODE_LINE needs fillModeNonSolid, which not every device supports.
+	vk.pipeline_world_wireframe = vk.features.fillModeNonSolid ?
+		create_pipeline_ex( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
+			&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
+			VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_LINE ) : VK_NULL_HANDLE;
+
 	vk_resetPipelineCache3D();
 }
 
@@ -545,4 +564,5 @@ void vk_destroy3DPipelines( void ) {
 		qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap[ct], NULL );
 	}
 	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
+	qvkDestroyPipeline( vk.device, vk.pipeline_world_wireframe, NULL );
 }

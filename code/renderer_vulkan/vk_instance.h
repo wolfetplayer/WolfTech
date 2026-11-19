@@ -136,6 +136,7 @@ struct Vk_Instance {
 	VkInstance instance;
 	VkPhysicalDevice physical_device;
 	VkPhysicalDeviceFeatures features;
+	VkPhysicalDeviceProperties deviceProperties;
 
 	VkSurfaceKHR surface;
 	VkSurfaceFormatKHR surface_format;
@@ -178,6 +179,7 @@ struct Vk_Instance {
 	VkPipeline pipeline_3d_blend;  // ditto, blended twin
 	VkPipeline pipeline_3d_lightmap[3]; // indexed by cullType_t
 	VkPipeline pipeline_sky; // single_texture shader, 2D vertex layout, depth test/write off, never fogged
+	VkPipeline pipeline_world_wireframe; // r_showtris overlay; VK_NULL_HANDLE if the device lacks fillModeNonSolid
 
 	VkBool32 isInitialized;
 

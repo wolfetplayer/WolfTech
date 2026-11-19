@@ -1,10 +1,61 @@
-// vk_image.c -- uploads a decoded RGBA8 buffer to a device-local VkImage via a one-shot staging buffer (one mip level, no mipmap generation).
+// vk_image.c -- uploads a decoded RGBA8 buffer to a device-local VkImage via a one-shot staging buffer, generating a full mip chain with vkCmdBlitImage unless IMGFLAG_NOMIPMAP is set.
 
 #include <string.h>
+#include <math.h>
 
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_image.h"
+
+// Baked into every texture at upload time: there's no hardware gamma ramp or postprocess pass yet
+// (see docs/vulkan-renderer-roadmap.md), so a changed r_gamma only affects textures loaded afterward.
+static cvar_t *r_gamma;
+static byte s_gammaTable[256];
+static float s_gammaTableBuiltFor = -1.0f;
+
+static void R_BuildGammaTableIfNeeded( void ) {
+	int i;
+
+	if ( !r_gamma ) {
+		r_gamma = ri.Cvar_Get( "r_gamma", "1.4", CVAR_ARCHIVE | CVAR_LATCH );
+	}
+
+	if ( r_gamma->value == s_gammaTableBuiltFor ) {
+		return;
+	}
+
+	{
+		float g = r_gamma->value;
+		if ( g < 0.5f ) g = 0.5f;
+		if ( g > 3.0f ) g = 3.0f;
+
+		for ( i = 0; i < 256; i++ ) {
+			float corrected = 255.0f * powf( i / 255.0f, 1.0f / g ) + 0.5f;
+			if ( corrected < 0.0f ) corrected = 0.0f;
+			if ( corrected > 255.0f ) corrected = 255.0f;
+			s_gammaTable[i] = (byte)corrected;
+		}
+		s_gammaTableBuiltFor = r_gamma->value;
+	}
+}
+
+// dst is the staging buffer's mapped pointer -- likely uncached/write-combined GPU-visible memory, so
+// this reads only from src (normal RAM) and writes only to dst, never reading dst back (see the
+// "post-Phase-0 slowdown" note in docs/vulkan-renderer-roadmap.md: doing the gamma lookup in place on
+// dst was a ~50ms-per-texture regression from read latency on that memory, not from the math itself).
+static void R_CopyWithGammaCorrection( byte *dst, const byte *src, int width, int height ) {
+	int i, count;
+
+	R_BuildGammaTableIfNeeded();
+
+	count = width * height;
+	for ( i = 0; i < count; i++ ) {
+		dst[i * 4 + 0] = s_gammaTable[src[i * 4 + 0]];
+		dst[i * 4 + 1] = s_gammaTable[src[i * 4 + 1]];
+		dst[i * 4 + 2] = s_gammaTable[src[i * 4 + 2]];
+		dst[i * 4 + 3] = src[i * 4 + 3]; // alpha is coverage/opacity, not luminance -- never gamma-corrected
+	}
+}
 
 uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties ) {
 	uint32_t i;
@@ -37,6 +88,53 @@ VkCommandBuffer vk_begin_one_shot_cmd( void ) {
 	VK_CHECK( qvkBeginCommandBuffer( cmd, &begin_info ) );
 
 	return cmd;
+}
+
+// Bulk loading (a map's textures/lightmaps, a model's skins, a menu's UI images) can mean hundreds to
+// thousands of vk_create_texture_image calls back to back. A vkQueueWaitIdle() per texture -- cheap when
+// each one is just a trivial copy -- becomes the dominant cost once mip-chain blits make each submission
+// bigger, so uploads share one command buffer and one wait across up to MAX_PENDING_UPLOADS textures
+// instead. vk_flush_pending_uploads() must run before anything uploaded this way gets sampled.
+#define MAX_PENDING_UPLOADS 32
+
+typedef struct {
+	VkBuffer buffer;
+	VkDeviceMemory memory;
+} pendingStaging_t;
+
+static VkCommandBuffer s_uploadCmd = VK_NULL_HANDLE;
+static pendingStaging_t s_pendingStaging[MAX_PENDING_UPLOADS];
+static int s_numPendingStaging = 0;
+
+static VkCommandBuffer vk_get_upload_cmd( void ) {
+	if ( s_uploadCmd == VK_NULL_HANDLE ) {
+		s_uploadCmd = vk_begin_one_shot_cmd();
+	}
+	return s_uploadCmd;
+}
+
+void vk_flush_pending_uploads( void ) {
+	int i;
+
+	if ( s_uploadCmd == VK_NULL_HANDLE ) {
+		return;
+	}
+
+	vk_end_one_shot_cmd( s_uploadCmd );
+	s_uploadCmd = VK_NULL_HANDLE;
+
+	for ( i = 0; i < s_numPendingStaging; i++ ) {
+		qvkDestroyBuffer( vk.device, s_pendingStaging[i].buffer, NULL );
+		qvkFreeMemory( vk.device, s_pendingStaging[i].memory, NULL );
+	}
+
+	s_numPendingStaging = 0;
+}
+
+static void vk_track_pending_staging( VkBuffer buffer, VkDeviceMemory memory ) {
+	s_pendingStaging[s_numPendingStaging].buffer = buffer;
+	s_pendingStaging[s_numPendingStaging].memory = memory;
+	s_numPendingStaging++;
 }
 
 void vk_end_one_shot_cmd( VkCommandBuffer cmd ) {
@@ -134,15 +232,26 @@ qboolean vk_create_device_local_buffer( const void *data, VkDeviceSize size, VkB
 	return qtrue;
 }
 
+static uint32_t calc_mip_levels( int width, int height ) {
+	uint32_t levels = 1;
+	int dim = ( width > height ) ? width : height;
+	while ( dim > 1 ) {
+		dim >>= 1;
+		levels++;
+	}
+	return levels;
+}
+
 qboolean vk_create_texture_image( const byte *pixels, int width, int height, int flags,
 									VkImage *outImage, VkDeviceMemory *outMemory, VkImageView *outView, VkSampler *outSampler ) {
 	VkDeviceSize image_size = (VkDeviceSize)width * height * 4;
+	uint32_t mipLevels = ( flags & IMGFLAG_NOMIPMAP ) ? 1 : calc_mip_levels( width, height );
 
 	VkBuffer staging_buf;
 	VkDeviceMemory staging_mem;
 	void *mapped;
 	create_staging_buffer( image_size, &staging_buf, &staging_mem, &mapped );
-	memcpy( mapped, pixels, (size_t)image_size );
+	R_CopyWithGammaCorrection( (byte *)mapped, pixels, width, height );
 	qvkUnmapMemory( vk.device, staging_mem );
 
 	VkImageCreateInfo image_desc;
@@ -154,11 +263,11 @@ qboolean vk_create_texture_image( const byte *pixels, int width, int height, int
 	image_desc.extent.width = (uint32_t)width;
 	image_desc.extent.height = (uint32_t)height;
 	image_desc.extent.depth = 1;
-	image_desc.mipLevels = 1;
+	image_desc.mipLevels = mipLevels;
 	image_desc.arrayLayers = 1;
 	image_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 	image_desc.tiling = VK_IMAGE_TILING_OPTIMAL;
-	image_desc.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	image_desc.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	image_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	image_desc.queueFamilyIndexCount = 0;
 	image_desc.pQueueFamilyIndices = NULL;
@@ -176,8 +285,12 @@ qboolean vk_create_texture_image( const byte *pixels, int width, int height, int
 	VK_CHECK( qvkAllocateMemory( vk.device, &alloc_info, NULL, outMemory ) );
 	VK_CHECK( qvkBindImageMemory( vk.device, *outImage, *outMemory, 0 ) );
 
+	if ( s_numPendingStaging >= MAX_PENDING_UPLOADS ) {
+		vk_flush_pending_uploads();
+	}
+
 	{
-		VkCommandBuffer cmd = vk_begin_one_shot_cmd();
+		VkCommandBuffer cmd = vk_get_upload_cmd();
 
 		VkImageMemoryBarrier barrier;
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -191,7 +304,7 @@ qboolean vk_create_texture_image( const byte *pixels, int width, int height, int
 		barrier.image = *outImage;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.levelCount = mipLevels; // every level starts out undefined, not just level 0
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.layerCount = 1;
 		qvkCmdPipelineBarrier( cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
@@ -213,18 +326,72 @@ qboolean vk_create_texture_image( const byte *pixels, int width, int height, int
 		region.imageExtent.depth = 1;
 		qvkCmdCopyBufferToImage( cmd, staging_buf, *outImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region );
 
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		qvkCmdPipelineBarrier( cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-			0, 0, NULL, 0, NULL, 1, &barrier );
+		if ( mipLevels > 1 ) {
+			int srcWidth = width, srcHeight = height;
+			uint32_t level;
 
-		vk_end_one_shot_cmd( cmd );
+			barrier.subresourceRange.levelCount = 1;
+
+			for ( level = 1; level < mipLevels; level++ ) {
+				int dstWidth = ( srcWidth > 1 ) ? srcWidth / 2 : 1;
+				int dstHeight = ( srcHeight > 1 ) ? srcHeight / 2 : 1;
+				VkImageBlit blit;
+
+				barrier.subresourceRange.baseMipLevel = level - 1;
+				barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+				qvkCmdPipelineBarrier( cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+					0, 0, NULL, 0, NULL, 1, &barrier );
+
+				blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				blit.srcSubresource.mipLevel = level - 1;
+				blit.srcSubresource.baseArrayLayer = 0;
+				blit.srcSubresource.layerCount = 1;
+				blit.srcOffsets[0].x = 0; blit.srcOffsets[0].y = 0; blit.srcOffsets[0].z = 0;
+				blit.srcOffsets[1].x = srcWidth; blit.srcOffsets[1].y = srcHeight; blit.srcOffsets[1].z = 1;
+				blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				blit.dstSubresource.mipLevel = level;
+				blit.dstSubresource.baseArrayLayer = 0;
+				blit.dstSubresource.layerCount = 1;
+				blit.dstOffsets[0].x = 0; blit.dstOffsets[0].y = 0; blit.dstOffsets[0].z = 0;
+				blit.dstOffsets[1].x = dstWidth; blit.dstOffsets[1].y = dstHeight; blit.dstOffsets[1].z = 1;
+				qvkCmdBlitImage( cmd, *outImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					*outImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR );
+
+				srcWidth = dstWidth;
+				srcHeight = dstHeight;
+			}
+
+			// levels [0, mipLevels-2] are now TRANSFER_SRC_OPTIMAL from the loop above; the last level is still TRANSFER_DST_OPTIMAL.
+			barrier.subresourceRange.baseMipLevel = 0;
+			barrier.subresourceRange.levelCount = mipLevels - 1;
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			qvkCmdPipelineBarrier( cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				0, 0, NULL, 0, NULL, 1, &barrier );
+
+			barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+			barrier.subresourceRange.levelCount = 1;
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			qvkCmdPipelineBarrier( cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				0, 0, NULL, 0, NULL, 1, &barrier );
+		} else {
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			qvkCmdPipelineBarrier( cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				0, 0, NULL, 0, NULL, 1, &barrier );
+		}
+
 	}
 
-	qvkDestroyBuffer( vk.device, staging_buf, NULL );
-	qvkFreeMemory( vk.device, staging_mem, NULL );
+	vk_track_pending_staging( staging_buf, staging_mem );
 
 	VkImageViewCreateInfo view_desc;
 	view_desc.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -239,7 +406,7 @@ qboolean vk_create_texture_image( const byte *pixels, int width, int height, int
 	view_desc.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 	view_desc.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	view_desc.subresourceRange.baseMipLevel = 0;
-	view_desc.subresourceRange.levelCount = 1;
+	view_desc.subresourceRange.levelCount = mipLevels;
 	view_desc.subresourceRange.baseArrayLayer = 0;
 	view_desc.subresourceRange.layerCount = 1;
 	VK_CHECK( qvkCreateImageView( vk.device, &view_desc, NULL, outView ) );
@@ -253,17 +420,17 @@ qboolean vk_create_texture_image( const byte *pixels, int width, int height, int
 	sampler_desc.flags = 0;
 	sampler_desc.magFilter = VK_FILTER_LINEAR;
 	sampler_desc.minFilter = VK_FILTER_LINEAR;
-	sampler_desc.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+	sampler_desc.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	sampler_desc.addressModeU = address_mode;
 	sampler_desc.addressModeV = address_mode;
 	sampler_desc.addressModeW = address_mode;
 	sampler_desc.mipLodBias = 0.0f;
-	sampler_desc.anisotropyEnable = VK_FALSE;
-	sampler_desc.maxAnisotropy = 1.0f;
+	sampler_desc.anisotropyEnable = vk.features.samplerAnisotropy;
+	sampler_desc.maxAnisotropy = vk.features.samplerAnisotropy ? vk.deviceProperties.limits.maxSamplerAnisotropy : 1.0f;
 	sampler_desc.compareEnable = VK_FALSE;
 	sampler_desc.compareOp = VK_COMPARE_OP_ALWAYS;
 	sampler_desc.minLod = 0.0f;
-	sampler_desc.maxLod = 0.0f;
+	sampler_desc.maxLod = (float)( mipLevels - 1 );
 	sampler_desc.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	sampler_desc.unnormalizedCoordinates = VK_FALSE;
 	VK_CHECK( qvkCreateSampler( vk.device, &sampler_desc, NULL, outSampler ) );

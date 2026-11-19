@@ -53,6 +53,8 @@ static VkDescriptorPool s_lmDescriptorPool;
 
 static qboolean s_built = qfalse;
 
+static cvar_t *r_showtris;
+
 void vk_world_clear( void ) {
 	int i;
 
@@ -435,14 +437,16 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 
 	for ( i = 0; i < s_numBatches; i++ ) {
 		const worldBatch_t *batch = &s_batches[i];
+		shader_t *shader = R_GetShaderByHandle( batch->shader );
 		VkPipeline pipeline;
+		int s;
 
 		if ( batch->descriptor == VK_NULL_HANDLE ) {
 			continue;
 		}
 
 		// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
-		pipeline = vk.pipeline_3d_lightmap[R_GetShaderByHandle( batch->shader )->cullType];
+		pipeline = vk.pipeline_3d_lightmap[shader->cullType];
 		if ( pipeline != boundPipeline ) {
 			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 			boundPipeline = pipeline;
@@ -452,6 +456,47 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			0, 1, &batch->descriptor, 0, NULL );
 
 		DrawSurfRefRun( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs );
+
+		// Stages 1+ redraw the same indices with that stage's own texture/blend state, sharing stage 0's
+		// baked vertex color/UV data. vk.pipeline_layout and vk.lightmap_pipeline_layout declare identical
+		// push constant ranges, so the mvp/fog push above still applies -- no need to push it again here.
+		for ( s = 1; s < shader->numStages; s++ ) {
+			const shaderStage_t *stage = &shader->stages[s];
+			image_t *stageImage = R_GetStageImage( stage );
+
+			if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
+				continue;
+			}
+
+			pipeline = vk_getPipeline3D( sizeof( vkWorldVertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc );
+			if ( pipeline != boundPipeline ) {
+				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+				boundPipeline = pipeline;
+			}
+
+			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+				0, 1, &stageImage->vk_descriptor, 0, NULL );
+
+			DrawSurfRefRun( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs );
+		}
+	}
+
+	if ( !r_showtris ) {
+		r_showtris = ri.Cvar_Get( "r_showtris", "0", CVAR_CHEAT );
+	}
+	if ( r_showtris->integer && vk.pipeline_world_wireframe != VK_NULL_HANDLE ) {
+		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_world_wireframe );
+		for ( i = 0; i < s_numBatches; i++ ) {
+			const worldBatch_t *batch = &s_batches[i];
+
+			if ( batch->descriptor == VK_NULL_HANDLE ) {
+				continue;
+			}
+			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
+				0, 1, &batch->descriptor, 0, NULL );
+			DrawSurfRefRun( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs );
+		}
 	}
 
 	if ( firstDraw ) {
