@@ -2,9 +2,12 @@
 
 #include <string.h>
 
+#include <stdlib.h>
+
 #include "tr_local.h"
 #include "tr_shader.h"
 #include "tr_model.h"
+#include "tr_bsp.h"
 
 #define MAX_MOD_KNOWN 1024
 static model_t models[MAX_MOD_KNOWN];
@@ -570,6 +573,20 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	mod = &models[handle];
 	memset( mod, 0, sizeof( *mod ) );
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );
+
+	// Inline BSP submodel (func_door/func_rotating/etc.), not a loaded file.
+	if ( name[0] == '*' ) {
+		int index = atoi( name + 1 );
+		if ( index >= 0 && index < tr_world.numSubmodels ) {
+			mod->type = MOD_BRUSH;
+			mod->bmodelIndex = index;
+		} else {
+			ri.Printf( PRINT_WARNING, "RE_RegisterModel: invalid inline model '%s' (%d submodels loaded)\n",
+				name, tr_world.numSubmodels );
+			mod->type = MOD_OTHER;
+		}
+		return handle;
+	}
 
 	ext = COM_GetExtension( name );
 	loaded = qfalse;

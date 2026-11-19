@@ -380,6 +380,16 @@ static void R_ModelBounds( qhandle_t hModel, vec3_t mins, vec3_t maxs ) {
 	model_t *mod = R_GetModelByHandle( hModel );
 
 	if ( mod ) {
+		if ( mod->type == MOD_BRUSH ) {
+			if ( mod->bmodelIndex >= 0 && mod->bmodelIndex < tr_world.numSubmodels ) {
+				VectorCopy( tr_world.submodels[mod->bmodelIndex].mins, mins );
+				VectorCopy( tr_world.submodels[mod->bmodelIndex].maxs, maxs );
+			} else {
+				VectorClear( mins );
+				VectorClear( maxs );
+			}
+			return;
+		}
 		if ( mod->md3 ) {
 			md3Frame_t *frame = (md3Frame_t *)( (byte *)mod->md3 + mod->md3->ofsFrames );
 			VectorCopy( frame->bounds[0], mins );

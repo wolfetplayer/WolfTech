@@ -14,6 +14,7 @@
 #include "tr_bones.h"
 #include "tr_light.h"
 #include "tr_scene.h"
+#include "vk_world.h"
 #include "vk_entity.h"
 
 // Same falloff shape the opengl1 renderer uses for dlight contributions to entity lighting.
@@ -152,7 +153,8 @@ qboolean vk_entity_has_mesh( const refEntity_t *ent ) {
 		return qfalse;
 	}
 	return ( model->type == MOD_MD3 && model->md3 ) || ( model->type == MOD_MDC && model->mdc ) ||
-		   ( model->type == MOD_MDS && model->mds ) || ( model->type == MOD_MDM && model->mdm );
+		   ( model->type == MOD_MDS && model->mds ) || ( model->type == MOD_MDM && model->mdm ) ||
+		   model->type == MOD_BRUSH;
 }
 
 // xyz is model-local (frontlerp*frame + backlerp*oldframe, MD3_XYZ_SCALE applied), then placed by the entity's axis/origin.
@@ -570,6 +572,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			nextMDM:
 				surf = (const mdmSurface_t *)( (const byte *)surf + surf->ofsEnd );
 			}
+		} else if ( model->type == MOD_BRUSH ) {
+			// Geometry lives in tr_world, so draw it directly instead of collecting into s_draws below.
+			vk_world_draw_brushmodel( ent, model->bmodelIndex, mvp, fogPush );
 		}
 	}
 

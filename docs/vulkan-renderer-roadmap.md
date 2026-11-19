@@ -298,6 +298,28 @@ it once, make world/entity/poly submission all go through it.
       exact behavior in that edge case, but safe by construction. Compiles clean; not yet tested
       against a map that actually sets `_skyboxOrigin`.
 
+- [x] Brush-model entities (func_door/func_rotating/func_plat/func_train/etc.): **found by the user as
+      "doors are invisible," root cause was a complete gap this audit missed entirely, not a rendering
+      bug** -- `tr_model.c`'s `RE_RegisterModel` had no case for inline-BSP-submodel names (`"*N"`), so
+      every brush entity registered as `MOD_OTHER` (empty placeholder). Even if it had, `tr_world.c`'s
+      `R_MarkVisibleSurfaces` only walks the static world's BSP leaf tree, which never references
+      brush-entity surfaces at all -- they'd be permanently marked invisible regardless. Fixed: added
+      `MOD_BRUSH` (`tr_model.h`/`.c`, stores a `tr_world.submodels[]` index) and a new
+      `vk_world_draw_brushmodel` (`vk_world.c`, dispatched from `vk_entity.c`'s `MOD_BRUSH` case) that
+      transforms each surface in the submodel's range by the entity's current origin/axis every frame
+      (own dynamic buffers + a lazy shader/lightmap descriptor cache, since a door's geometry changes
+      position every frame unlike the static world's load-time cache) and draws it through the same
+      lightmap/multi-stage machinery as static world surfaces -- brush entities keep their baked
+      lightmap/vertex color rather than sampling the light grid, which is real id-tech-3 behavior (bmodels
+      never queried the grid), not a shortcut. Also restricted `vk_world_build`'s static-world batching to
+      submodel 0's surface range only (it was previously scanning *all* surfaces including brush-entity
+      ones, harmlessly dead-batching them since they were never visible -- now moot, but correct either
+      way) and added the `MOD_BRUSH` case to `R_ModelBounds` (`tr_init.c`) for completeness. Compiled
+      clean (full `mingw32-make` release build under MSYS2 MINGW64, zero new warnings). **Not yet
+      confirmed in-game** -- next step is opening a map with a func_door and func_rotating and checking
+      both render and animate correctly; patches-on-brush-models are untested (rare in practice, most
+      door/plat brushes are planar).
+
 ## Phase 2 — Classic feature parity (decals, flares, shadows, cinematics)
 
 - [x] Decals (`R_MarkFragments`, previously always returned 0): new `tr_marks.c`/`.h` ports
@@ -521,3 +543,13 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   Vulkan, never on OpenGL1. Root cause: `RF_DEPTHHACK` (the view-weapon depth-range hack) was
   completely unimplemented in `renderer_vulkan`. Ported it to `vk_entity.c` — see the new Phase 0
   checkmark above for the design. Compiled clean; not yet confirmed in-game.
+- **2026-11-19** — User reported func_door and func_rotating being completely invisible
+  ("transparent") in-game. Root cause was not a rendering bug but a missing feature the original
+  audit never caught: brush-model entities (inline BSP submodels, name convention `"*N"`) had zero
+  support anywhere in `renderer_vulkan` — no `MOD_BRUSH` model type existed, so they registered as
+  empty placeholders, and even with geometry the static world's visibility marking never reaches
+  brush-entity surfaces (they're not in any BSP leaf's surface list). Added full brush-model entity
+  rendering: see the new Phase 1 checkmark above for the design (`MOD_BRUSH`, `vk_world_draw_brushmodel`,
+  the `vk_world_build` submodel-0 scoping fix, `R_ModelBounds` coverage). Compiled clean (full release
+  build, MSYS2 MINGW64, zero new warnings). Not yet confirmed in-game — next session should load a map
+  with a working door and a rotating door/elevator before trusting this further.

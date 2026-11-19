@@ -10,6 +10,7 @@ typedef enum {
 	MOD_MDS, // self-contained skeletal mesh + tags (legacy RTCW SP format; BJ's own player model is this)
 	MOD_MDM, // skeletal mesh + tags; bone data comes from a separate MOD_MDX model (refEntity_t.frameModel)
 	MOD_MDX, // skeletal data only, no mesh
+	MOD_BRUSH, // inline BSP submodel ("*N"); geometry lives in tr_world, see vk_world_draw_brushmodel
 	MOD_OTHER // registered, but not a format this renderer loads yet -- no tag/mesh data
 } modelType_t;
 
@@ -21,6 +22,7 @@ typedef struct {
 	mdsHeader_t *mds;
 	mdmHeader_t *mdm;
 	mdxHeader_t *mdx;
+	int bmodelIndex; // MOD_BRUSH only: index into tr_world.submodels
 } model_t;
 
 void R_InitModels( void );
