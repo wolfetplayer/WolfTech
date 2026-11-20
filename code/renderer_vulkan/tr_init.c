@@ -288,6 +288,8 @@ static void RE_RenderScene( const refdef_t *fd ) {
 	}
 
 	R_RenderViewInternal( fd );
+
+	R_AdvanceSceneWindow(); // see tr_scene.h -- windows off this call's entities/dlights/polys for the next one
 }
 
 static void RE_SetColor( const float *rgba ) {
@@ -355,6 +357,11 @@ static void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 
 	vk_begin_render_pass( 0.0f, 0.2f, 0.4f, 1.0f );
 	vk_draw2d_begin_frame();
+
+	// reset once per real frame, not per scene -- see e.g. vk_entity_begin_frame's comment
+	vk_world_begin_frame();
+	vk_entity_begin_frame();
+	vk_poly_begin_frame();
 }
 
 static void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {

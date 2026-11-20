@@ -35,6 +35,9 @@ const dlight_t *R_GetSceneDlights( int *outCount );
 const scenePoly_t *R_GetScenePolys( int *outCount );
 const polyVert_t *R_GetScenePolyVerts( void );
 
+// Windows off entities/dlights/polys added since the last call, for a frame with multiple RE_RenderScene calls (sky-portal, main, view-weapon). Call right after each one returns.
+void R_AdvanceSceneWindow( void );
+
 // Sky-portal (RDF_SKYBOXPORTAL/RDF_DRAWSKYBOX) tracking -- separate from tr_portal.h's mirror/portal surfaces; see tr_init.c's R_RenderViewInternal.
 void R_ResetSkyboxPortal( void ); // call once per RE_LoadWorldMap -- otherwise sticky for the rest of the map
 void R_NoteSkyboxPortalScene( int rdflags ); // call once per RE_RenderScene(fd), with fd->rdflags

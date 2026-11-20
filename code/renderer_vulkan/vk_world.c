@@ -949,6 +949,15 @@ void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const fl
 	}
 }
 
+// Resets the shared dynamic-buffer write cursors; call once per real frame (vk_world_draw can run more than once per frame -- resetting inside it, as before, let one scene's reset clobber another's).
+void vk_world_begin_frame( void ) {
+	s_dynLMWriteOffset = 0;
+	s_dyn2DWriteOffset = 0;
+	s_dynBrushLMWriteOffset = 0;
+	s_dynBrushExtraWriteOffset = 0;
+	s_dynDlightWriteOffset = 0;
+}
+
 void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	float push_data[32];
 	VkDeviceSize vb_offset = 0;
@@ -964,12 +973,6 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	if ( firstDraw ) {
 		ri.Printf( PRINT_ALL, "...vk_world_draw checkpoint: first draw starting, %d batches\n", s_numBatches );
 	}
-
-	s_dynLMWriteOffset = 0;
-	s_dyn2DWriteOffset = 0;
-	// Brush-entity draws happen later this same frame (from vk_entity_draw_all) -- reset their offsets too.
-	s_dynBrushLMWriteOffset = 0;
-	s_dynBrushExtraWriteOffset = 0;
 
 	memset( push_data, 0, sizeof( push_data ) );
 	memcpy( push_data, mvp, 16 * sizeof( float ) );
@@ -1039,7 +1042,6 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		}
 	}
 
-	s_dynDlightWriteOffset = 0;
 	{
 		int numDlights;
 		const dlight_t *dlights = R_GetSceneDlights( &numDlights );

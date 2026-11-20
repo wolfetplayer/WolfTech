@@ -24,6 +24,15 @@ static VkBuffer s_mtVertexBuffer;
 static VkDeviceMemory s_mtVertexMemory;
 static vkMultiTexVertex_t *s_mtMapped;
 
+// Shared write cursors into s_mapped/s_mtMapped; persist across every vk_poly_draw call this frame, reset only in vk_poly_begin_frame (see vk_entity.c's s_vertWrite).
+static uint32_t s_writeOffset;
+static uint32_t s_mtWriteOffset;
+
+void vk_poly_begin_frame( void ) {
+	s_writeOffset = 0;
+	s_mtWriteOffset = 0;
+}
+
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
 
 static void create_mapped_buffer( VkDeviceSize size, VkBuffer *outBuffer, VkDeviceMemory *outMemory, void **outMapped ) {
@@ -93,8 +102,8 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 	int numPolys, i;
 	const scenePoly_t *polys = R_GetScenePolys( &numPolys );
 	const polyVert_t *polyVerts = R_GetScenePolyVerts();
-	uint32_t writeOffset = 0;
-	uint32_t mtWriteOffset = 0;
+	uint32_t writeOffset = s_writeOffset;
+	uint32_t mtWriteOffset = s_mtWriteOffset;
 	VkPipeline boundPipeline = VK_NULL_HANDLE;
 	VkBuffer boundVertexBuffer = s_vertexBuffer;
 
@@ -217,4 +226,8 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 			qvkCmdDraw( vk.command_buffer, vertCount, 1, firstVert, 0 );
 		}
 	}
+
+	// Persist back for the next vk_poly_draw call this frame (see s_writeOffset comment above).
+	s_writeOffset = writeOffset;
+	s_mtWriteOffset = mtWriteOffset;
 }

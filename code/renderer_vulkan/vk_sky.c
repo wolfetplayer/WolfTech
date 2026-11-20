@@ -87,10 +87,25 @@ static void build_sky_box( vk2d_vertex_t *out, const vec3_t camPos, float s ) {
 	set_sky_vert( &out[i++], camPos, -s, s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, -s, -s, 1, 1 ); set_sky_vert( &out[i++], camPos, -s, -s, -s, 0, 1 );
 }
 
+// Same r_vk_debugSky cvar as tr_world.c's R_MarkVisibleSurfaces (own cvar_t pointer, registered here too). Remove once root-caused.
+static cvar_t *r_vk_debugSky_sky;
+
 void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[12] ) {
 	float push_data[32];
 	VkDeviceSize vb_offset = 0;
 	int face;
+
+	if ( !r_vk_debugSky_sky ) {
+		r_vk_debugSky_sky = ri.Cvar_Get( "r_vk_debugSky", "0", 0 );
+	}
+	if ( r_vk_debugSky_sky->integer ) {
+		int validFaces = 0;
+		for ( face = 0; face < 6; face++ ) {
+			if ( tr_world.skyOuterBox[face] && tr_world.skyOuterBox[face]->vk_descriptor != VK_NULL_HANDLE ) { validFaces++; }
+		}
+		ri.Printf( PRINT_ALL, "vk_sky dbg: vk_sky_draw hasSky=%d camPos=(%.1f %.1f %.1f) validFaces=%d/6\n",
+			tr_world.hasSky, camPos[0], camPos[1], camPos[2], validFaces );
+	}
 
 	if ( !tr_world.hasSky || !s_mapped ) {
 		return;

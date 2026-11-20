@@ -6,6 +6,9 @@
 void vk_poly_init( void );
 void vk_poly_shutdown( void );
 
+// Resets the shared vertex write cursors; call once per real frame (vk_poly_draw can run more than once per frame).
+void vk_poly_begin_frame( void );
+
 // fogPush is tr_fog.h's push-constant block.
 void vk_poly_draw( const float mvp[16], const float fogPush[12] );
 

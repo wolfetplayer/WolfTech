@@ -11,28 +11,48 @@ Reference implementations used for this plan:
 - `code/renderer` (this repo) — classic OpenGL1 renderer; shares shader-script semantics with
   the Vulkan renderer and is the easiest cross-check for "does this shader keyword do anything."
 
-## Current state (last updated 2026-11-19 — Phase 0 complete)
+## Current state (last updated 2026-11-20 — Phase 0 complete, most of Phase 1 + first Phase 2 item done)
 
 The Vulkan renderer is **real and live**, not a dead stub: `cl_renderer` (`code/client/cl_main.c`)
 dynamically loads `renderer_vulkan_<arch>.<dll|so>`, it builds by default
 (`BUILD_RENDERER_VULKAN` in the `Makefile` defaults to building), and selecting
-`cl_renderer vulkan` + restart actually renders the game today. Starting from "clear the screen,"
-it now has: world geometry with lightmaps (including non-stage-0 shader stages), frustum/PVS
-culling, curved patches, MD3/MDC/MDS/MDM model loading + CPU skinning, tags/attachments, `.skins`
-files, ambient light-grid sampling, dynamic lights (as a flat tint), wolf-fog, basic sky, scene
-polys, a real (if minimal) multi-stage shader-script evaluator, mipmapping + anisotropic
-filtering, baseline gamma correction, screenshot capture, and `r_showtris`/`r_showImages` debug
-overlays — all of Phase 0 below, confirmed working at runtime as of this date.
+`cl_renderer vulkan` + restart actually renders the game today. Beyond Phase 0's baseline (world
+geometry with lightmaps, frustum/PVS culling, curved patches, MD3/MDC/MDS/MDM model loading + CPU
+skinning, tags/attachments, `.skins` files, ambient light-grid sampling, mipmapping + anisotropic
+filtering, gamma correction, screenshot capture, `r_showtris`/`r_showImages` debug overlays,
+view-weapon `RF_DEPTHHACK` depth-range compression), it now also has: real per-frame `rgbGen`/
+`tcMod` on every world stage (no more baked stage-0-only animation), overbright bits, multitexture
+collapse pipelines for entities/polys, dynamic lights as a real additive world pass, mirror/portal
+clip-plane rendering (world surfaces only) and sky-portal (`_skyboxOrigin`) support, brush-model
+entities (func_door/func_rotating/func_plat/etc. — previously invisible), and decals (bullet
+holes/blood, with `polygonOffset` support to stop them z-fighting). Two load-bearing but easy-to-miss
+model/skin-loading bugs (missing cross-extension fallback in `RE_RegisterModel`, a skin-file comma
+parser that didn't consume its own separator) were also found and fixed — both were silently
+breaking enemy character models/skins regardless of which later phase landed.
 
-It's still well behind both reference points on everything past Phase 0:
-- **vs. vkQuake3**: no decals, no coronas/flares, no stencil shadows, no cinematics, frame pacing
-  is single-buffered (no frames-in-flight), and resize does a full `vid_restart` instead of an
-  in-place swapchain rebuild. World multi-stage drawing exists now but still shares stage 0's
-  baked vertex color/UVs rather than evaluating each stage's own `rgbGen`/`tcMod` per frame.
+It's still well behind both reference points on everything not yet checked off below:
+- **vs. vkQuake3**: no coronas/flares, no stencil shadows, no cinematics, frame pacing is
+  single-buffered (no frames-in-flight), resize does a full `vid_restart` instead of an in-place
+  swapchain rebuild, no real BSP volumetric fog, and `deformVertexes` beyond `move` is blocked on
+  Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
+  draw unclipped inside a mirror) and hasn't been visually confirmed in-game yet.
 - **vs. rend2**: no normal/specular/parallax/deluxe maps, no per-pixel lighting (entities get one
   flat RGBA tint for the whole model, world gets baked lightmap only), no tangent/normal data in
   the vertex formats at all, no HDR/bloom/tonemap, no SSAO/FXAA/DOF, no cubemap reflection probes,
-  no shadow mapping, no overbright bits (Phase 1).
+  no shadow mapping.
+- **Open/unverified from the most recent session**: the "shattered" view-weapon/held-item geometry
+  report has two fixes built now (shared-buffer-cursor persistence, then per-scene entity/dlight/poly
+  windowing — see Changelog below); retesting after the first fix alone surfaced some weapons
+  rendering invisible (FG42 body, scope still visible), which the second fix addresses, but neither
+  has been confirmed in-game yet. Separately, the user reports the skybox portal itself renders
+  nothing (pitch black plus the raw render-pass clear color showing through where sky should be) —
+  not yet root-caused; `r_vk_debugSky` diagnostic logging (`tr_world.c`'s `R_MarkVisibleSurfaces`,
+  `vk_sky.c`'s `vk_sky_draw`) was added to investigate it, pending a log capture. A
+  `r_vk_disableMultiTex` bisection cvar from an earlier (inconclusive) attempt at the shattered-weapon
+  bug is still sitting in `vk_pipelines.c`, undocumented until now — safe to leave (off by default,
+  no `sv_cheats` requirement) but should be removed once that investigation is fully closed out. The
+  `r_vk_debugWeapon` and `r_vk_debugSky` diagnostic cvars/logging should be removed once their
+  respective reports are confirmed fixed.
 
 Full raw findings from the original audit are folded into the phases below; this doc is the actionable
 version, not a dump of the investigation.
@@ -583,3 +603,98 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   both enemy heads and weapon appearance. The "shattered" weapon geometry specifically (as opposed to
   missing/wrong-textured parts) is not fully explained by either fix and may need its own follow-up
   if it persists.
+- **2026-11-20** — User asked for a repo audit + doc sync after work landed outside this session
+  (two commits: brush-model entities, then the model-extension-fallback/skin-comma fixes). Verified
+  both commits' existing roadmap entries directly against the code (`MOD_BRUSH`, the
+  `RE_RegisterModel` fallback loop, `tr_skin.c`'s `CommaParse` separator-consume) — all accurate, no
+  drift. Found one real gap: `vk_pipelines.c` has an undocumented `r_vk_disableMultiTex` bisection
+  cvar left over from the shattered-weapon investigation (ruled out, no effect, but never written up
+  — see the new "Open/unverified" bullet above). Refreshed the "Current state" summary at the top of
+  this doc, which neither of the last two commits had touched and which had drifted well behind the
+  Phase 1/2 checklists (still said "Phase 0 complete" and listed decals/overbright as missing, both
+  long since done). No code changes this session.
+- **2026-11-20** — Root-caused and fixed the "shattered weapon/held-item" report (streaked/exploded
+  geometry, wrong texture glued onto an unrelated held item, an MDS character's body disappearing
+  while its tag-attached head rendered fine, a world prop disappearing when a held item that uses
+  the same mechanism was equipped). Diagnostic logging (`r_vk_debugWeapon`, see "Open/unverified")
+  plus a user-provided `rtcwconsole.log` caught a real discrepancy: between two consecutive logged
+  entities in the same frame, `vertWrite`/`numDraws` had advanced by more than the entities actually
+  logged in between could account for. Tracing that against `tr_init.c`'s `R_RenderViewInternal`
+  confirmed the mechanism: this map uses a skybox portal (`RDF_SKYBOXPORTAL`), so cgame calls
+  `RE_RenderScene` (and therefore `R_RenderViewInternal`) **twice per real frame** — once for the
+  sky-room scene, once for the real scene (a mirror/portal destination view adds a third, recursive
+  call via `R_TryRenderPortalView`). `vk_world_draw`, `vk_entity_draw_all`, and `vk_poly_draw` each
+  reset their shared dynamic-buffer write cursors (`vertWrite`/`idxWrite`/`mtVertWrite` in
+  `vk_entity.c`, `writeOffset`/`mtWriteOffset` in `vk_poly.c`, `s_dynLMWriteOffset`/`s_dyn2DWriteOffset`/
+  `s_dynBrushLMWriteOffset`/`s_dynBrushExtraWriteOffset`/`s_dynDlightWriteOffset` in `vk_world.c`) to 0
+  on **every call**, but all three write into persistently-mapped GPU buffers that are only actually
+  read when the whole frame's command buffer is submitted — after *every* scene this frame has already
+  recorded its draw commands. So the second scene's reset-to-0 silently overwrote the first scene's
+  vertex/index data before the GPU ever read it, while the first scene's already-recorded draw calls
+  still pointed at those now-overwritten buffer offsets — exactly the "architecture decision #5"
+  multi-scene-per-frame risk this doc already flagged when sky-portal support was added, now confirmed
+  as the actual cause. Fixed by moving all these resets out of the per-scene draw functions into new
+  `vk_world_begin_frame()` / `vk_entity_begin_frame()` / `vk_poly_begin_frame()` calls, invoked once
+  per real frame from `RE_BeginFrame` (`tr_init.c`), so the cursors now correctly accumulate across
+  every scene rendered within one frame instead of restarting at 0. Compiled clean (full
+  `mingw32-make -j4 BUILD_RENDERER_VULKAN=1 release`, zero new warnings). Not yet re-confirmed in-game
+  by the user — next step is retesting the mine/Thompson/MDS-soldier repro, then removing the
+  `r_vk_debugWeapon` diagnostic logging and the unrelated `r_vk_disableMultiTex` bisection cvar.
+- **2026-11-20** — Retesting the fix above (same session) showed real improvement but surfaced a new
+  symptom: some weapons (FG42) render with their body invisible while an attached part (scope) still
+  renders. A second `rtcwconsole.log` traced this to a *different* bug the first fix's design exposed:
+  `tr_scene.c`'s `R_GetSceneEntities`/`R_GetSceneDlights`/`R_GetScenePolys` return the whole
+  accumulated-this-frame list on every call, with no per-scene windowing. Cross-checked against
+  `code/cgame/cg_view.c`'s `CG_DrawSkyBoxPortal` (called from `CG_DrawActiveFrame` right after
+  `trap_R_ClearScene()`, before any entities/polys/lights are added) and classic `code/renderer`'s
+  `tr_scene.c` (`r_firstSceneEntity`/`r_firstSceneDlight`/`r_firstScenePoly`, advanced after every
+  `RE_RenderScene` call): the intended behavior is that the skybox-portal scene sees an *empty* list
+  (cgame hasn't added anything yet) and the main scene afterward sees only what's added since —
+  never both scenes drawing the same full entity list. Without that windowing, every entity (the view
+  weapon included) was being fully processed twice per frame, eating roughly double the per-frame
+  vertex/index budget now that the first fix makes that budget shared across a frame's scenes — and a
+  real `scratch buffer full, dropping remaining entity surfaces this frame` overflow turned up later
+  in the same log, confirming the budget was in fact being exceeded. Fixed by giving `tr_scene.c` the
+  same sliding-window mechanism as the classic renderer (`s_firstSceneEntity`/`s_firstSceneDlight`/
+  `s_firstScenePoly`, reset in `R_ClearScene`, advanced by a new `R_AdvanceSceneWindow()` called from
+  `tr_init.c`'s `RE_RenderScene` right after `R_RenderViewInternal` returns). `R_GetScenePolyVerts`
+  needed no change (`scenePoly_t.firstVert` already indexes the poly-vert array absolutely). This is
+  additive to the first fix, not a replacement for it — the shared-buffer-cursor persistence is still
+  required so that whatever each windowed scene *does* draw doesn't overwrite another scene's data
+  before the GPU reads it. Compiled clean. Also added temporary `r_vk_debugSky` diagnostic logging
+  (`tr_world.c` / `vk_sky.c`) for a separately-reported, not-yet-root-caused issue: the skybox portal
+  itself renders nothing in-game (pitch black, with the render pass's raw clear color showing through
+  where sky should be) — unclear yet whether this is a pre-existing gap (sky-portal was never visually
+  confirmed before this session) or related to the entity-windowing change. Next step: retest with
+  this build, and if the sky issue persists, capture a log with `r_vk_debugSky 1` set.
+- **2026-11-20** — Retesting the windowing fix showed real improvement (most frames now correctly
+  start at `vertWrite=0`) but FG42/MP44 were still reported with their body invisible (scope/mag
+  visible), plus a new symptom: any weapon disappears after sustained firing and only reappears
+  10-15s later. A third `rtcwconsole.log`, read raw around the climbing `vertWrite` values, found the
+  real cause: `code/cgame/cg_weapons.c`'s `CG_RenderViewWeapon()` — "Renders the entities cached by
+  CG_AddViewWeapon ... in their own scene pass ... Must be called after the main world scene has been
+  rendered" — is a **third** `RE_RenderScene` call every frame (confirmed via `code/cgame/cg_draw.c`:
+  main scene render immediately followed by `CG_RenderViewWeapon()`), with its own
+  `trap_R_ClearScene()` right before it. So a frame is really sky-portal → main (NPCs, items, effects)
+  → view-weapon, not just two scenes, and the view weapon — drawn *last* — is the one whose entities
+  get silently dropped first once the frame's shared vertex/index budget (now correctly shared across
+  all three scenes by the first fix in this session) runs out. `ENTITY_MAX_VERTS`/`ENTITY_MAX_INDEXES`
+  in `vk_entity.c` were still sized for a single scene's worth of content (65536/262144) from before
+  that fix; a busy main scene alone during combat can approach that on its own, leaving the
+  view-weapon's few thousand verts no room, and a real `scratch buffer full` overflow in the log
+  confirmed the cap was in fact being hit. This also fully explains the FG42/MP44 symptom at the
+  per-surface level: the scope/mag belong to whichever of the weapon's several linked entities happens
+  to be processed before the cap is reached, the gun-body surface is whichever one hits it. Fixed by
+  giving `ENTITY_MAX_VERTS`/`ENTITY_MAX_INDEXES` real headroom for three scenes instead of one (4x,
+  to 262144/1048576 — trivial extra GPU memory, ~19MB total across both vertex buffers and the index
+  buffer). `vk_world.c`'s dynamic world buffers were checked too: already sized at `2x` the whole
+  map's total index count, comfortably covering "main pass + small sky-room pass" without a change.
+  `vk_poly.c`'s scratch capacity was left alone — no poly/world overflow warnings appeared in any of
+  the three logs collected so far, only the entity one. Compiled clean. Also chased, then ruled out, a
+  false lead here: raw `vk_sky dbg` lines briefly looked like the sky-portal and main scenes render in
+  the wrong order (main before sky), which would misexplain the still-open black-sky report — a wider
+  sample of the same log's `rdflags=` sequence showed the true, correctly-repeating order is sky (24)
+  then main (16), matching `cg_view.c`'s actual call order (`CG_DrawSkyBoxPortal()` then
+  `CG_DrawActive()`); the two-line excerpt that suggested otherwise just happened to span a frame
+  boundary. The black-sky report itself is still open and unexplained — not yet re-investigated this
+  round, since the user's latest report focused on the weapon disappearance instead.

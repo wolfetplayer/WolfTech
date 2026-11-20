@@ -10,6 +10,9 @@ void vk_world_build( void );
 void vk_world_clear( void );
 void vk_world_shutdown( void );
 
+// Resets the shared dynamic-buffer write cursors; call once per real frame (vk_world_draw can run more than once per frame).
+void vk_world_begin_frame( void );
+
 // Draws every visible PLANAR/TRIANGLE_SOUP/PATCH surface, batched by shader+lightmap (fogPush is tr_fog.h's push-constant block). No-op if no world is built.
 void vk_world_draw( const float mvp[16], const float fogPush[12] );
 

@@ -6,6 +6,9 @@
 void vk_entity_init( void );
 void vk_entity_shutdown( void );
 
+// Resets the shared vertex/index write cursors; call once per real frame (vk_entity_draw_all can run more than once per frame).
+void vk_entity_begin_frame( void );
+
 // qtrue if this entity's model has real mesh data this module can draw (MD3/MDC/MDS/MDM).
 qboolean vk_entity_has_mesh( const refEntity_t *ent );
 

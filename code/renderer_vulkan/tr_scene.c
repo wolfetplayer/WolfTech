@@ -9,20 +9,32 @@
 
 static refEntity_t s_entities[MAX_REFENTITIES];
 static int s_numEntities;
+static int s_firstSceneEntity;
 
 static dlight_t s_dlights[MAX_SCENE_DLIGHTS];
 static int s_numDlights;
+static int s_firstSceneDlight;
 
 static scenePoly_t s_polys[MAX_SCENE_POLYS];
 static int s_numPolys;
+static int s_firstScenePoly;
 static polyVert_t s_polyVerts[MAX_SCENE_POLY_VERTS];
 static int s_numPolyVerts;
 
 void R_ClearScene( void ) {
 	s_numEntities = 0;
+	s_firstSceneEntity = 0;
 	s_numDlights = 0;
+	s_firstSceneDlight = 0;
 	s_numPolys = 0;
+	s_firstScenePoly = 0;
 	s_numPolyVerts = 0;
+}
+
+void R_AdvanceSceneWindow( void ) {
+	s_firstSceneEntity = s_numEntities;
+	s_firstSceneDlight = s_numDlights;
+	s_firstScenePoly = s_numPolys;
 }
 
 void R_AddRefEntityToScene( const refEntity_t *ent ) {
@@ -79,18 +91,18 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 }
 
 const refEntity_t *R_GetSceneEntities( int *outCount ) {
-	*outCount = s_numEntities;
-	return s_entities;
+	*outCount = s_numEntities - s_firstSceneEntity;
+	return &s_entities[s_firstSceneEntity];
 }
 
 const dlight_t *R_GetSceneDlights( int *outCount ) {
-	*outCount = s_numDlights;
-	return s_dlights;
+	*outCount = s_numDlights - s_firstSceneDlight;
+	return &s_dlights[s_firstSceneDlight];
 }
 
 const scenePoly_t *R_GetScenePolys( int *outCount ) {
-	*outCount = s_numPolys;
-	return s_polys;
+	*outCount = s_numPolys - s_firstScenePoly;
+	return &s_polys[s_firstScenePoly];
 }
 
 const polyVert_t *R_GetScenePolyVerts( void ) {

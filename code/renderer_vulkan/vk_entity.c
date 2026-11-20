@@ -21,8 +21,9 @@
 #define DLIGHT_AT_RADIUS 16.0f
 #define DLIGHT_MINIMUM_RADIUS 16.0f
 
-#define ENTITY_MAX_VERTS 65536
-#define ENTITY_MAX_INDEXES 262144
+// 4x the old single-scene budget: shared across every scene drawn in one real frame (sky-portal, main, view-weapon -- see CG_RenderViewWeapon), not just one.
+#define ENTITY_MAX_VERTS ( 65536 * 4 )
+#define ENTITY_MAX_INDEXES ( 262144 * 4 )
 #define ENTITY_MAX_DRAWS 4096
 
 #define MDC_DIST_SCALE 0.05f
@@ -91,6 +92,17 @@ static uint32_t *s_indexMapped;
 
 static entityDrawCall_t s_draws[ENTITY_MAX_DRAWS];
 static entityMTDrawCall_t s_mtDraws[ENTITY_MAX_DRAWS];
+
+// Shared write cursors into s_vertexMapped/s_mtVertexMapped/s_indexMapped; persist across every vk_entity_draw_all call this frame, reset only in vk_entity_begin_frame.
+static uint32_t s_vertWrite;
+static uint32_t s_idxWrite;
+static uint32_t s_mtVertWrite;
+
+void vk_entity_begin_frame( void ) {
+	s_vertWrite = 0;
+	s_idxWrite = 0;
+	s_mtVertWrite = 0;
+}
 
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
 
@@ -468,21 +480,40 @@ static qboolean ProcessSurface( const shader_t *shaderPtr, qhandle_t shaderHandl
 	return qtrue;
 }
 
+// Temporary diagnostic for the weapon-visibility investigation: set r_vk_debugWeapon 1 and check rtcwconsole.log. Remove once root-caused.
+static cvar_t *r_vk_debugWeapon;
+static int s_weaponDbgFrame = 0;
+
 void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16], const float fogPush[12] ) {
-	uint32_t vertWrite = 0, idxWrite = 0, mtVertWrite = 0;
+	// numDraws/numMTDraws stay local -- s_draws/s_mtDraws are fully recorded into GPU commands before this function returns, so each call can reuse them from index 0.
+	uint32_t vertWrite = s_vertWrite, idxWrite = s_idxWrite, mtVertWrite = s_mtVertWrite;
 	int numDraws = 0, numMTDraws = 0;
 	int e, s, i;
 	static qboolean overflowLogged = qfalse;
+	qboolean dbgFrame;
+
+	if ( !r_vk_debugWeapon ) {
+		r_vk_debugWeapon = ri.Cvar_Get( "r_vk_debugWeapon", "0", 0 );
+	}
+	s_weaponDbgFrame++;
+	dbgFrame = r_vk_debugWeapon->integer && ( s_weaponDbgFrame % 10 ) == 0;
 
 	for ( e = 0; e < numEntities; e++ ) {
 		const refEntity_t *ent = &entities[e];
 		model_t *model = R_GetModelByHandle( ent->hModel );
 		byte tint[4];
+		qboolean dbgWeapon = dbgFrame; // logs every entity, not just RF_DEPTHHACK ones -- held items like mines don't all set it
 
 		if ( !model ) {
 			continue;
 		}
 		ComputeEntityTint( ent, tint );
+
+		if ( dbgWeapon ) {
+			ri.Printf( PRINT_ALL, "vk_entity dbg: e=%d '%s' type=%d renderfx=%d frame=%d oldframe=%d backlerp=%.2f origin=(%.1f %.1f %.1f) vertWrite=%u idxWrite=%u numDraws=%d\n",
+				e, model->name, model->type, ent->renderfx, ent->frame, ent->oldframe, ent->backlerp,
+				ent->origin[0], ent->origin[1], ent->origin[2], vertWrite, idxWrite, numDraws );
+		}
 
 		if ( model->type == MOD_MD3 && model->md3 ) {
 			const md3Surface_t *surf = (const md3Surface_t *)( (const byte *)model->md3 + model->md3->ofsSurfaces );
@@ -497,6 +528,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMD3;
+				}
+
+				if ( dbgWeapon ) {
+					ri.Printf( PRINT_ALL, "  MD3 surf '%s' numVerts=%d numTriangles=%d numShaders=%d shader='%s' stages=%d vertWrite=%u idxWrite=%u\n",
+						surf->name, surf->numVerts, surf->numTriangles, surf->numShaders,
+						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, vertWrite, idxWrite );
 				}
 
 				LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
@@ -523,6 +560,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 					goto nextMDC;
 				}
 
+				if ( dbgWeapon ) {
+					ri.Printf( PRINT_ALL, "  MDC surf '%s' numVerts=%d numTriangles=%d numShaders=%d numCompFrames=%d shader='%s' stages=%d vertWrite=%u idxWrite=%u\n",
+						surf->name, surf->numVerts, surf->numTriangles, surf->numShaders, surf->numCompFrames,
+						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, vertWrite, idxWrite );
+				}
+
 				LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
 				if ( !ProcessSurface( shaderPtr, shaderHandle, ent, tint, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
@@ -543,6 +586,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 					goto nextMDS;
 				}
 
+				if ( dbgWeapon ) {
+					ri.Printf( PRINT_ALL, "  MDS surf '%s' numVerts=%d numTriangles=%d shader='%s' stages=%d vertWrite=%u idxWrite=%u\n",
+						surf->name, surf->numVerts, surf->numTriangles,
+						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, vertWrite, idxWrite );
+				}
+
 				LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
 				if ( !ProcessSurface( shaderPtr, shaderHandle, ent, tint, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
@@ -561,6 +610,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDM;
+				}
+
+				if ( dbgWeapon ) {
+					ri.Printf( PRINT_ALL, "  MDM surf '%s' numVerts=%d numTriangles=%d shader='%s' stages=%d vertWrite=%u idxWrite=%u\n",
+						surf->name, surf->numVerts, surf->numTriangles,
+						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, vertWrite, idxWrite );
 				}
 
 				LerpMDMSurfaceVerts( ent, surf, s_baseScratch );
@@ -587,6 +642,11 @@ overflow:
 	}
 
 doneCollecting:
+	// Persist back for the next vk_entity_draw_all call this frame (see s_vertWrite comment above).
+	s_vertWrite = vertWrite;
+	s_idxWrite = idxWrite;
+	s_mtVertWrite = mtVertWrite;
+
 	if ( numDraws == 0 && numMTDraws == 0 ) {
 		return;
 	}
