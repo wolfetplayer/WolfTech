@@ -500,8 +500,7 @@ static int R_GetBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIn
 	}
 
 	if ( i >= mds->numTags ) {
-		ri.Printf( PRINT_ALL, "...tr_bones checkpoint: R_GetBoneTag couldn't find tag '%s' among %d tags\n", tagName, mds->numTags );
-		return -1;
+		return -1; // not every model defines every tag cgame probes for -- this is a normal, silent miss
 	}
 
 	boneInfoList = (mdxBoneInfo_t *)( (byte *)mds + mds->ofsBones );
@@ -630,8 +629,7 @@ static int R_MDM_GetTag( orientation_t *outTag, mdmHeader_t *mdm, int startTagIn
 	}
 
 	if ( i >= mdm->numTags ) {
-		ri.Printf( PRINT_ALL, "...tr_bones checkpoint: R_MDM_GetTag couldn't find tag '%s' among %d tags\n", tagName, mdm->numTags );
-		return -1;
+		return -1; // not every model defines every tag cgame probes for -- this is a normal, silent miss
 	}
 
 	boneRefs = (int *)( (byte *)pTag + pTag->ofsBoneReferences );
