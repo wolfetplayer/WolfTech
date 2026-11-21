@@ -528,6 +528,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMD3;
 				}
+				if ( !Q_stricmp( surf->name, "h_blink" ) && !( ent->renderfx & RF_BLINK ) ) {
+					goto nextMD3;
+				}
 
 				if ( dbgWeapon ) {
 					ri.Printf( PRINT_ALL, "  MD3 surf '%s' numVerts=%d numTriangles=%d numShaders=%d shader='%s' stages=%d vertWrite=%u idxWrite=%u\n",
@@ -558,6 +561,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDC;
 				}
+				if ( !Q_stricmp( surf->name, "h_blink" ) && !( ent->renderfx & RF_BLINK ) ) {
+					goto nextMDC;
+				}
 
 				if ( dbgWeapon ) {
 					ri.Printf( PRINT_ALL, "  MDC surf '%s' numVerts=%d numTriangles=%d numShaders=%d numCompFrames=%d shader='%s' stages=%d vertWrite=%u idxWrite=%u\n",
@@ -584,6 +590,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDS;
 				}
+				if ( !Q_stricmp( surf->name, "h_blink" ) && !( ent->renderfx & RF_BLINK ) ) {
+					goto nextMDS;
+				}
 
 				if ( dbgWeapon ) {
 					ri.Printf( PRINT_ALL, "  MDS surf '%s' numVerts=%d numTriangles=%d shader='%s' stages=%d vertWrite=%u idxWrite=%u\n",
@@ -608,6 +617,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
 
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+					goto nextMDM;
+				}
+				if ( !Q_stricmp( surf->name, "h_blink" ) && !( ent->renderfx & RF_BLINK ) ) {
 					goto nextMDM;
 				}
 

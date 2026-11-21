@@ -742,3 +742,19 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   `goto nextMD3` overflow guard every frame while the smaller mag surfaces didn't. Reference engine
   uses `SHADER_MAX_VERTEXES` (40000) and doesn't enforce the format limit at all, which is why OpenGL1
   renders this off-spec content fine. Bumped `SKIN_SCRATCH_VERTS` to match. Compiled clean.
+- **2026-11-21** — Follow-up: NPC heads showed a solid white mask over the eyes. Parsed
+  `officerss/head.mdc`'s surfaces directly: a 5th, 20-vert `h_blink` surface exists alongside
+  h_head/h_teethup/h_teethbot/h_mouthin. Reference engine (`tr_mesh.c`/`tr_cmesh.c`/`tr_animation.c`)
+  explicitly skips drawing any surface named `h_blink` unless `RF_BLINK` is set on the entity (cgame
+  only sets it for the brief blink animation) — this renderer had no such check, so the blink/closed-
+  eyelid texture rendered permanently on every head. Added the same name+flag check to all four
+  surface loops (MD3/MDC/MDS/MDM) in `vk_entity.c`. Compiled clean. **User confirmed major
+  improvement**: normal (non-blinking) eyes now render correctly. Residual, much smaller issue: during
+  the brief actual blink moment, `h_blink` itself still shows wrong/white instead of the correct brown
+  eyelid texture. Ruled out: texture content (brown/skin-toned even in "transparent" areas, not white
+  — a naive opaque render would show brown, not white), all 19 officerss head skins (identical
+  `h_blink` reference), and pk3 case-sensitivity (`FS_ReadFile` lowercases pk3 entries at load,
+  confirmed case-insensitive). Noted but not yet chased down: `h_blink` has 1 base frame + 17
+  compressed delta frames, i.e. it's a real animated sequence sharing `ent->frame`/`oldframe` with the
+  rest of the head, not a simple on/off overlay — a frame-indexing issue there is the next lead, not
+  yet confirmed. Deferred at user's request (minor/intermittent vs. the fixed permanent case).
