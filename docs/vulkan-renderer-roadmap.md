@@ -469,7 +469,17 @@ it once, make world/entity/poly submission all go through it.
       build, MSYS2 MINGW64, zero new warnings). Not yet re-confirmed in-game after the fix.
 - [ ] Cinematics/video playback (`RE_UploadCinematic`, `RE_StretchRaw`, both currently stubbed) —
       RTCW SP uses in-engine cutscenes/briefing videos; this is gameplay-visible, not cosmetic.
-- [ ] 2D completeness: `RE_RotatedPic`, `RE_StretchPicGradient` (currently stubbed).
+- [x] 2D completeness: `RE_RotatedPic`, `RE_StretchPicGradient` (were stubbed). Both ported from the
+      reference's own backend math (`code/renderer/tr_backend.c`'s `RB_RotatedPic`/
+      `RB_StretchPicGradient`): rotated pic inscribes the quad in a circle sized to the original
+      diagonal so every corner stays equidistant from center at any angle, then places 4 corners at
+      90°-apart angles; gradient fades the current 2D color (`vk_draw2d_set_color`) at the top edge
+      into `gradientColor` at the bottom, always top-to-bottom -- matches the reference exactly,
+      which ignores its own `gradientType` parameter too (`RB_StretchPicGradient` never reads it).
+      New `vk_draw2d_quad_rotated`/`vk_draw2d_quad_gradient` in `vk_draw2d.c`, reusing the existing
+      `vk_draw2d_quad_generic`/`vk_draw2d_record_tris` plumbing (rotated) or a small dedicated
+      per-corner-color variant (gradient, since the generic path hardcodes one uniform color for all
+      4 corners). Not yet built or tested in-game.
 - [ ] Sweep remaining stubs for actual usage before investing further: `RE_RenderToTexture`,
       `R_GetTextureId`, `RE_TakeVideoFrame`, `RE_SetWorldVisData` — confirm whether game/cgame code
       paths this project actually exercises call these; implement only what's load-bearing.
@@ -846,3 +856,13 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   (the Makefile's `git show` version-string subshell fails when `mingw32-make` runs from this
   session's background shell) and couldn't self-verify; next step is a real build plus an in-game
   test with `r_shadows 2` set.
+- **2026-11-21** — Removed two leftover bring-up diagnostics in `tr_bones.c` (`R_GetBoneTag`/
+  `R_MDM_GetTag` both printed a line every time a requested tag wasn't found on a model). User
+  spotted the spam in-game (console full of `R_MDM_GetTag couldn't find tag 'TAG_FOOTLEFT'...`
+  repeating) and asked what it was: confirmed against the reference engine's own
+  `R_MDM_GetTag` (`code/renderer/tr_animation.c`) that a missing tag is a normal, silent miss there
+  (cgame routinely probes for optional tags like `tag_footleft`/`tag_footright`/`tag_torso` that not
+  every model defines, and just skips the effect) — not a bug, just logging that should never have
+  stayed in. Removed both prints.
+- **2026-11-21** — Implemented the "2D completeness" item (`RE_RotatedPic`/`RE_StretchPicGradient`,
+  see its checkmark above for the full design). Not yet built or tested in-game.

@@ -22,6 +22,16 @@ void vk_draw2d_quad_skewed( float x, float y, float w, float h,
 							 float s1, float t1, float s2, float t2,
 							 shader_t *shader, float skewLeft, float skewRight );
 
+// angle is in turns (0..1 = a full rotation), about the quad's own center.
+void vk_draw2d_quad_rotated( float x, float y, float w, float h,
+							   float s1, float t1, float s2, float t2,
+							   shader_t *shader, float angle );
+
+// gradientColor may be NULL (defaults to white); see vk_draw2d.c for why gradientType isn't a parameter.
+void vk_draw2d_quad_gradient( float x, float y, float w, float h,
+								float s1, float t1, float s2, float t2,
+								shader_t *shader, const float *gradientColor );
+
 // Center fan + a 1px alpha-feathered boundary ring (anti-aliases without MSAA).
 void vk_draw2d_quad_rounded( float x, float y, float w, float h,
 							  float s1, float t1, float s2, float t2,

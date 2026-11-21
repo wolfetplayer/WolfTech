@@ -200,6 +200,68 @@ void vk_draw2d_quad_skewed( float x, float y, float w, float h,
 	vk_draw2d_quad_generic( corners, uvs, shader );
 }
 
+// Diagonal half-size used for both radii, so every corner stays the same distance from center at any angle.
+void vk_draw2d_quad_rotated( float x, float y, float w, float h,
+							   float s1, float t1, float s2, float t2,
+							   shader_t *shader, float angle ) {
+	float corners[4][2];
+	float uvs[4][2] = { { s1, t1 }, { s2, t1 }, { s2, t2 }, { s1, t2 } };
+	float cx = x + w * 0.5f, cy = y + h * 0.5f;
+	float r = sqrtf( ( w * 0.5f ) * ( w * 0.5f ) + ( h * 0.5f ) * ( h * 0.5f ) );
+	float turn = angle * (float)( 2.0 * M_PI );
+	int i;
+
+	for ( i = 0; i < 4; i++ ) {
+		float a = turn + (float)i * 0.25f * (float)( 2.0 * M_PI );
+		corners[i][0] = cx + cosf( a ) * r;
+		corners[i][1] = cy + sinf( a ) * r;
+	}
+
+	vk_draw2d_quad_generic( corners, uvs, shader );
+}
+
+// Top edge uses the current color, bottom edge uses gradientColor -- always top-to-bottom, matching the reference.
+void vk_draw2d_quad_gradient( float x, float y, float w, float h,
+								float s1, float t1, float s2, float t2,
+								shader_t *shader, const float *gradientColor ) {
+	static const float white[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	static const int order[6] = { 0, 1, 2, 0, 2, 3 };
+	float corners[4][2] = { { x, y }, { x + w, y }, { x + w, y + h }, { x, y + h } };
+	float uvs[4][2] = { { s1, t1 }, { s2, t1 }, { s2, t2 }, { s1, t2 } };
+	byte cornerColors[4][4];
+	vk2d_vertex_t verts[6];
+	int i;
+
+	if ( !gradientColor ) {
+		gradientColor = white;
+	}
+
+	for ( i = 0; i < 2; i++ ) {
+		cornerColors[i][0] = float_to_byte( s_color[0] );
+		cornerColors[i][1] = float_to_byte( s_color[1] );
+		cornerColors[i][2] = float_to_byte( s_color[2] );
+		cornerColors[i][3] = float_to_byte( s_color[3] );
+	}
+	for ( i = 2; i < 4; i++ ) {
+		cornerColors[i][0] = float_to_byte( gradientColor[0] );
+		cornerColors[i][1] = float_to_byte( gradientColor[1] );
+		cornerColors[i][2] = float_to_byte( gradientColor[2] );
+		cornerColors[i][3] = float_to_byte( gradientColor[3] );
+	}
+
+	for ( i = 0; i < 6; i++ ) {
+		int c = order[i];
+		verts[i].pos[0] = corners[c][0];
+		verts[i].pos[1] = corners[c][1];
+		verts[i].pos[2] = 0.0f;
+		verts[i].uv[0] = uvs[c][0];
+		verts[i].uv[1] = uvs[c][1];
+		memcpy( verts[i].color, cornerColors[c], 4 );
+	}
+
+	vk_draw2d_record_tris( verts, 6, shader, qfalse );
+}
+
 // segments per 90-degree corner, and the AA feather width in pixels
 #define RPIC_CORNER_SEGS   8
 #define RPIC_NUM_BOUNDARY  ( 4 * ( RPIC_CORNER_SEGS + 1 ) )

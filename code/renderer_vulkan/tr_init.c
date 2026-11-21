@@ -314,15 +314,19 @@ static void RE_StretchPic( float x, float y, float w, float h, float s1, float t
 }
 
 static void RE_RotatedPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float angle ) {
-	FIRST_CALL_CHECKPOINT( "RE_RotatedPic" );
-	(void)x; (void)y; (void)w; (void)h; (void)s1; (void)t1; (void)s2; (void)t2; (void)hShader; (void)angle;
+	if ( !vk.isInitialized || !s_frameActive ) {
+		return;
+	}
+	vk_draw2d_quad_rotated( x, y, w, h, s1, t1, s2, t2, R_GetShaderByHandle( hShader ), angle );
 }
 
 static void RE_StretchPicGradient( float x, float y, float w, float h, float s1, float t1, float s2, float t2,
 									qhandle_t hShader, const float *gradientColor, int gradientType ) {
-	FIRST_CALL_CHECKPOINT( "RE_StretchPicGradient" );
-	(void)x; (void)y; (void)w; (void)h; (void)s1; (void)t1; (void)s2; (void)t2;
-	(void)hShader; (void)gradientColor; (void)gradientType;
+	(void)gradientType; // the reference's own backend ignores this too -- always fades top-to-bottom, see vk_draw2d_quad_gradient
+	if ( !vk.isInitialized || !s_frameActive ) {
+		return;
+	}
+	vk_draw2d_quad_gradient( x, y, w, h, s1, t1, s2, t2, R_GetShaderByHandle( hShader ), gradientColor );
 }
 
 static void RE_StretchPicRounded( float x, float y, float w, float h, float s1, float t1, float s2, float t2,
