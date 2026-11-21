@@ -189,6 +189,9 @@ struct Vk_Instance {
 	VkPipeline pipeline_sky; // single_texture shader, 2D vertex layout, depth test/write off, never fogged
 	VkPipeline pipeline_world_wireframe; // r_showtris overlay; VK_NULL_HANDLE if the device lacks fillModeNonSolid
 	VkPipeline pipeline_occlusion_probe; // coronas' visibility test; see vk_flares.c
+	VkPipeline pipeline_shadow_volume_incr; // stencil shadow volumes' back-face stamp; see vk_shadows.c
+	VkPipeline pipeline_shadow_volume_decr; // ditto, front-face stamp
+	VkPipeline pipeline_shadow_darken; // ditto, full-screen finish pass
 
 	VkBool32 isInitialized;
 

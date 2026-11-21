@@ -54,6 +54,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_poly.h"
 #include "vk_world.h"
 #include "vk_flares.h"
+#include "vk_shadows.h"
 #include "vk_screenshot.h"
 #include "tr_portal.h"
 #include "tr_marks.h"
@@ -262,6 +263,9 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj, fogPush );
 	}
 
+	// One-shot per real frame: only draws if some entity above actually stamped the stencil buffer.
+	vk_shadows_draw_darken( viewProj, fogPush );
+
 	vk_poly_draw( viewProj, fogPush );
 
 	// Coronas are real-world effects (torches, treasure glow, fuses) -- skip the sky room and any mirror/portal recursion.
@@ -370,6 +374,7 @@ static void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	vk_world_begin_frame();
 	vk_entity_begin_frame();
 	vk_poly_begin_frame();
+	vk_shadows_begin_frame();
 }
 
 static void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {

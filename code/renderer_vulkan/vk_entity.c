@@ -15,6 +15,7 @@
 #include "tr_light.h"
 #include "tr_scene.h"
 #include "vk_world.h"
+#include "vk_shadows.h"
 #include "vk_entity.h"
 
 // Same falloff shape the opengl1 renderer uses for dlight contributions to entity lighting.
@@ -502,11 +503,17 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 		model_t *model = R_GetModelByHandle( ent->hModel );
 		byte tint[4];
 		qboolean dbgWeapon = dbgFrame; // logs every entity, not just RF_DEPTHHACK ones -- held items like mines don't all set it
+		qboolean castsShadow;
 
 		if ( !model ) {
 			continue;
 		}
 		ComputeEntityTint( ent, tint );
+
+		castsShadow = vk_shadows_entity_casts( ent );
+		if ( castsShadow ) {
+			vk_shadows_begin_entity();
+		}
 
 		if ( dbgWeapon ) {
 			ri.Printf( PRINT_ALL, "vk_entity dbg: e=%d '%s' type=%d renderfx=%d frame=%d oldframe=%d backlerp=%.2f origin=(%.1f %.1f %.1f) vertWrite=%u idxWrite=%u numDraws=%d\n",
@@ -543,6 +550,10 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
 					goto overflow;
 				}
+				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
+					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
+						(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
+				}
 
 			nextMD3:
 				surf = (const md3Surface_t *)( (const byte *)surf + surf->ofsEnd );
@@ -576,6 +587,10 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
 					goto overflow;
 				}
+				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
+					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
+						(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
+				}
 
 			nextMDC:
 				surf = (const mdcSurface_t *)( (const byte *)surf + surf->ofsEnd );
@@ -604,6 +619,10 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( !ProcessSurface( shaderPtr, shaderHandle, ent, tint, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
 					goto overflow;
+				}
+				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
+					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
+						(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
 				}
 
 			nextMDS:
@@ -634,6 +653,10 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &vertWrite, &idxWrite, &numDraws, &mtVertWrite, &numMTDraws ) ) {
 					goto overflow;
 				}
+				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
+					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
+						(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
+				}
 
 			nextMDM:
 				surf = (const mdmSurface_t *)( (const byte *)surf + surf->ofsEnd );
@@ -641,6 +664,10 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 		} else if ( model->type == MOD_BRUSH ) {
 			// Geometry lives in tr_world, so draw it directly instead of collecting into s_draws below.
 			vk_world_draw_brushmodel( ent, model->bmodelIndex, mvp, fogPush );
+		}
+
+		if ( castsShadow ) {
+			vk_shadows_finish_entity( ent, mvp, fogPush );
 		}
 	}
 

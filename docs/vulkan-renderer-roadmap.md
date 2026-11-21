@@ -31,9 +31,9 @@ parser that didn't consume its own separator) were also found and fixed — both
 breaking enemy character models/skins regardless of which later phase landed.
 
 It's still well behind both reference points on everything not yet checked off below:
-- **vs. vkQuake3**: no stencil shadows, no cinematics, frame pacing is single-buffered (no
-  frames-in-flight), resize does a full `vid_restart` instead of an in-place swapchain rebuild, and
-  `deformVertexes` beyond `move` is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
+- **vs. vkQuake3**: no cinematics, frame pacing is single-buffered (no frames-in-flight), resize does
+  a full `vid_restart` instead of an in-place swapchain rebuild, and `deformVertexes` beyond `move`
+  is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
   draw unclipped inside a mirror) and hasn't been visually confirmed in-game yet.
 - **vs. rend2**: no normal/specular/parallax/deluxe maps, no per-pixel lighting (entities get one
   flat RGBA tint for the whole model, world gets baked lightmap only), no tangent/normal data in
@@ -402,10 +402,41 @@ it once, make world/entity/poly submission all go through it.
       the Makefile's explicit `Q3RVOBJ` object list, so it compiled standalone but 5 symbols stayed
       undefined at link time -- fixed by adding `vk_flares.o` there. **User confirmed working
       in-game.**
-- [ ] Stencil shadow volumes (`r_shadows 2`): silhouette edge extraction, two-pass front/back-face
-      stencil draw, full-screen darkening finish pass; plus the cheap `projectionShadow` blob
-      fallback via `deformVertexes projectionShadow` (Phase 1 item). Needs stencil ops enabled in
-      the pipeline (`stencilTestEnable` is currently hardcoded off).
+- [x] Stencil shadow volumes (`r_shadows 2`): same algorithm as `code/renderer/tr_shadows.c`'s classic
+      two-sided "z-pass" volumes -- extrude every vertex 512 units away from the entity's light
+      direction to build a far cap, find silhouette edges (front-facing-relative-to-the-light edges
+      with no matching back-facing reverse edge), and stamp each silhouette quad into the stencil
+      buffer twice (cull front faces + `INCREMENT`, cull back faces + `DECREMENT`), finishing with
+      one full-screen multiply-darken pass per view once every shadow-casting entity has been
+      stamped (so overlapping shadows from different entities/body parts don't double-darken, same
+      reason the reference delays it). New `vk_shadows.c`/`.h`. Geometry comes from `vk_entity.c`'s
+      existing per-surface world-space expansion (`entityBaseVert_t.pos` is already entity-origin/
+      axis-transformed) -- the accumulation call sits right alongside the normal draw at each of the
+      4 model-type loops' `ProcessSurface` calls, zero extra skinning cost, gated on an opacity proxy
+      (`!stage[0].blendEnabled`, since this trimmed `shader_t` has no `sort` field to check against
+      `SS_OPAQUE` directly) and `RF_NOSHADOW`/`RF_DEPTHHACK`.
+      **Found and fixed a real prerequisite bug while scoping this**: `vk_depth.c`'s depth-format
+      picker tried `VK_FORMAT_D32_SFLOAT` first, which has no stencil bits at all -- so this renderer
+      had effectively no usable stencil buffer on any GPU before now, despite the format list's name
+      suggesting otherwise. Reordered to the two stencil-bearing candidates only, and added
+      `VK_IMAGE_ASPECT_STENCIL_BIT` to the depth view and `stencilLoadOp = CLEAR` to the render pass's
+      depth attachment (both were silently depth-only before). `vk_pipelines.c`'s pipeline factory
+      gained `stencilTestEnable`/`stencilCompareOp`/`stencilPassOp` parameters (previously hardcoded
+      off) for the same reason the corona work added `depthWriteEnable`/`colorWriteMask` there --
+      avoids duplicating the ~150-line pipeline-creation function for 3 more one-off variants (the
+      two stamp passes plus the darken pass).
+      **Scoped out**: the `deformVertexes projectionShadow` blob fallback this item also listed.
+      Investigated it directly: `code/renderer/tr_shader.c`'s registration of
+      `tr.projectionShadowShader` is commented out in this codebase, so `r_shadows 3` is dead code
+      in the reference engine itself (`R_AddDrawSurf` is called with a shader pointer that's always
+      NULL) -- porting a mode that doesn't actually work in the reference either wasn't worth
+      chasing, and there'd be no working baseline to compare against even if I did.
+      Not yet confirmed compiling: hit the same background-build environment issue as the corona
+      work's first attempt (the Makefile's `git show` version-string subshell fails specifically
+      when `mingw32-make` is invoked from this session's background shell, reporting a bogus
+      "Nothing to be done"), and remembered to add `vk_shadows.o` to `Q3RVOBJ` this time but
+      couldn't self-verify the rest. Next step is a real build and an in-game test with `r_shadows 2`
+      set (look for a character casting a dark silhouette on the ground opposite a light source).
 - [x] Validated curved-patch (Bezier) tessellation and found a real bug, confirmed in-game by the
       user: "arches that are supposed to be curved render triangular/faceted" — `r_subdivisions`
       is `CVAR_ARCHIVE` in the reference renderer (`code/renderer/tr_init.c`), so it's saved in the
@@ -800,3 +831,18 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   function. Hit a build issue after the code compiled standalone: `vk_flares.c` was missing from the
   Makefile's explicit `Q3RVOBJ` object list, leaving 5 symbols undefined at link time — fixed by
   adding `vk_flares.o` there. **User confirmed coronas working in-game.**
+- **2026-11-21** — Implemented stencil shadow volumes (see the item's checkmark above for the full
+  design). Found a real prerequisite bug while scoping it: `vk_depth.c` picked `VK_FORMAT_D32_SFLOAT`
+  first, which has no stencil bits, so this renderer never actually had a usable stencil buffer on
+  any GPU — fixed the format order, the depth view's aspect mask, and the render pass's
+  `stencilLoadOp`. New `vk_shadows.c`/`.h`; `vk_pipelines.c`'s pipeline factory gained
+  `stencilTestEnable`/`stencilCompareOp`/`stencilPassOp` parameters for the same reason the corona
+  work added two others there — one more one-off pipeline variant not worth a ~150-line duplicate.
+  Scoped out the `deformVertexes projectionShadow` fallback this item also listed: its registration
+  is commented out in `code/renderer/tr_shader.c`, so `r_shadows 3` is dead code in the reference
+  engine itself, not worth porting with no working baseline to match. Remembered to add
+  `vk_shadows.o` to the Makefile's `Q3RVOBJ` list this time (missed that for `vk_flares.o` last
+  entry). Not yet confirmed compiling — hit the same background-build environment issue as before
+  (the Makefile's `git show` version-string subshell fails when `mingw32-make` runs from this
+  session's background shell) and couldn't self-verify; next step is a real build plus an in-game
+  test with `r_shadows 2` set.

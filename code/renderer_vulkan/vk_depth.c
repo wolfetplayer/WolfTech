@@ -5,11 +5,11 @@
 #include "vk_image.h"
 #include "vk_depth.h"
 
+// D32_SFLOAT has no stencil bits, so it's deliberately left out -- stencil shadows (vk_shadows.c) need one.
 static VkFormat find_depth_format( void ) {
 	static const VkFormat candidates[] = {
-		VK_FORMAT_D32_SFLOAT,
-		VK_FORMAT_D32_SFLOAT_S8_UINT,
 		VK_FORMAT_D24_UNORM_S8_UINT,
+		VK_FORMAT_D32_SFLOAT_S8_UINT,
 	};
 	int i;
 
@@ -70,7 +70,7 @@ void vk_createDepthResources( uint32_t width, uint32_t height ) {
 	view_desc.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 	view_desc.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 	view_desc.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-	view_desc.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+	view_desc.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 	view_desc.subresourceRange.baseMipLevel = 0;
 	view_desc.subresourceRange.levelCount = 1;
 	view_desc.subresourceRange.baseArrayLayer = 0;

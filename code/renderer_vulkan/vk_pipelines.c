@@ -31,7 +31,7 @@ void vk_createRenderPass( void ) {
 	attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
 	attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; // stencil shadow volumes (vk_shadows.c) need it cleared every frame
 	attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -231,7 +231,8 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 									const VkVertexInputAttributeDescription *attribs, uint32_t numAttribs,
 									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 									VkBool32 depthTestEnable, VkCullModeFlags cullMode, VkPolygonMode polygonMode,
-									VkBool32 polygonOffset, VkBool32 depthWriteEnable, VkColorComponentFlags colorWriteMask ) {
+									VkBool32 polygonOffset, VkBool32 depthWriteEnable, VkColorComponentFlags colorWriteMask,
+									VkBool32 stencilTestEnable, VkCompareOp stencilCompareOp, VkStencilOp stencilPassOp ) {
 	VkPipeline pipeline;
 
 	VkPipelineShaderStageCreateInfo stages[2];
@@ -311,9 +312,15 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 	depth_stencil.depthWriteEnable = depthWriteEnable;
 	depth_stencil.depthCompareOp = depthTestEnable ? VK_COMPARE_OP_LESS_OR_EQUAL : VK_COMPARE_OP_ALWAYS; // matches GL1's GL_LEQUAL default; needed so a later stage redrawing the same depth still passes
 	depth_stencil.depthBoundsTestEnable = VK_FALSE;
-	depth_stencil.stencilTestEnable = VK_FALSE;
-	memset( &depth_stencil.front, 0, sizeof( depth_stencil.front ) );
-	memset( &depth_stencil.back, 0, sizeof( depth_stencil.back ) );
+	depth_stencil.stencilTestEnable = stencilTestEnable;
+	depth_stencil.front.failOp = VK_STENCIL_OP_KEEP;
+	depth_stencil.front.passOp = stencilPassOp;
+	depth_stencil.front.depthFailOp = VK_STENCIL_OP_KEEP;
+	depth_stencil.front.compareOp = stencilCompareOp;
+	depth_stencil.front.compareMask = 0xFF;
+	depth_stencil.front.writeMask = 0xFF;
+	depth_stencil.front.reference = 0;
+	depth_stencil.back = depth_stencil.front;
 	depth_stencil.minDepthBounds = 0.0f;
 	depth_stencil.maxDepthBounds = 1.0f;
 
@@ -383,7 +390,7 @@ static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipel
 									   VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	return create_pipeline_ex( vs, fs, layout, specInfo, binding, attribs, numAttribs,
 		blendEnable, srcBlend, dstBlend, depthTestEnable, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE,
-		depthTestEnable, fullMask );
+		depthTestEnable, fullMask, VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
 }
 
 // vk2d_vertex_t attribs, shared by the 2D pipelines and the (unused-for-world-now) opaque 3D one.
@@ -548,7 +555,8 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 	s_cachedPipelines[s_numCachedPipelines] = create_pipeline_ex( vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, blendEnable, srcBlend, dstBlend, VK_TRUE, mirror ? vk_flipCullMode( cullMode ) : cullMode,
 		VK_POLYGON_MODE_FILL, polygonOffset, VK_TRUE,
-		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT );
+		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
 
 	return s_cachedPipelines[s_numCachedPipelines++];
 }
@@ -643,12 +651,29 @@ void vk_create3DPipelines( void ) {
 		create_pipeline_ex( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
 			&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 			VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_LINE, VK_FALSE, VK_TRUE,
-			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT ) : VK_NULL_HANDLE;
+			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+			VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP ) : VK_NULL_HANDLE;
 
 	// Coronas' occlusion-visibility probe (vk_flares.c): depth-tested like real geometry, writes neither depth nor color.
 	vk.pipeline_occlusion_probe = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
-		VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, 0 );
+		VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, 0,
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+
+	// Stencil shadow volumes (vk_shadows.c): two cull-flipped stamp passes plus one full-screen darken pass.
+	vk.pipeline_shadow_volume_incr = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
+		VK_TRUE, VK_CULL_MODE_FRONT_BIT, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, 0,
+		VK_TRUE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_INCREMENT_AND_CLAMP );
+	vk.pipeline_shadow_volume_decr = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
+		VK_TRUE, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, 0,
+		VK_TRUE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_DECREMENT_AND_CLAMP );
+	vk.pipeline_shadow_darken = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, attribs2d, 3, VK_TRUE, VK_BLEND_FACTOR_DST_COLOR, VK_BLEND_FACTOR_ZERO,
+		VK_FALSE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE,
+		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		VK_TRUE, VK_COMPARE_OP_NOT_EQUAL, VK_STENCIL_OP_KEEP );
 
 	vk_resetPipelineCache3D();
 }
@@ -668,6 +693,9 @@ void vk_destroy3DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_world_wireframe, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_occlusion_probe, NULL );
+	qvkDestroyPipeline( vk.device, vk.pipeline_shadow_volume_incr, NULL );
+	qvkDestroyPipeline( vk.device, vk.pipeline_shadow_volume_decr, NULL );
+	qvkDestroyPipeline( vk.device, vk.pipeline_shadow_darken, NULL );
 
 	vk_destroyMultiTexPipelineCache();
 }
