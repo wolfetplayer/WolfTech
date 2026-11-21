@@ -48,6 +48,9 @@ PFN_vkCmdBindDescriptorSets                     qvkCmdBindDescriptorSets;
 PFN_vkCmdBindIndexBuffer                        qvkCmdBindIndexBuffer;
 PFN_vkCmdBindPipeline                           qvkCmdBindPipeline;
 PFN_vkCmdBindVertexBuffers                      qvkCmdBindVertexBuffers;
+PFN_vkCmdBeginQuery                              qvkCmdBeginQuery;
+PFN_vkCmdEndQuery                                qvkCmdEndQuery;
+PFN_vkCmdResetQueryPool                          qvkCmdResetQueryPool;
 PFN_vkCmdBlitImage                              qvkCmdBlitImage;
 PFN_vkCmdClearAttachments                       qvkCmdClearAttachments;
 PFN_vkCmdClearColorImage                        qvkCmdClearColorImage;
@@ -77,6 +80,9 @@ PFN_vkCreateRenderPass                          qvkCreateRenderPass;
 PFN_vkCreateSampler                             qvkCreateSampler;
 PFN_vkCreateSemaphore                           qvkCreateSemaphore;
 PFN_vkCreateShaderModule                        qvkCreateShaderModule;
+PFN_vkCreateQueryPool                            qvkCreateQueryPool;
+PFN_vkDestroyQueryPool                           qvkDestroyQueryPool;
+PFN_vkGetQueryPoolResults                        qvkGetQueryPoolResults;
 PFN_vkDestroyBuffer                             qvkDestroyBuffer;
 PFN_vkDestroyCommandPool                        qvkDestroyCommandPool;
 PFN_vkDestroyDescriptorPool                     qvkDestroyDescriptorPool;
@@ -475,6 +481,9 @@ static void vk_loadDeviceFunctions( void ) {
 	INIT_DEVICE_FUNCTION( vkCmdSetDepthBias )
 	INIT_DEVICE_FUNCTION( vkCmdSetScissor )
 	INIT_DEVICE_FUNCTION( vkCmdSetViewport )
+	INIT_DEVICE_FUNCTION( vkCmdBeginQuery )
+	INIT_DEVICE_FUNCTION( vkCmdEndQuery )
+	INIT_DEVICE_FUNCTION( vkCmdResetQueryPool )
 	INIT_DEVICE_FUNCTION( vkCreateBuffer )
 	INIT_DEVICE_FUNCTION( vkCreateCommandPool )
 	INIT_DEVICE_FUNCTION( vkCreateDescriptorPool )
@@ -521,6 +530,9 @@ static void vk_loadDeviceFunctions( void ) {
 	INIT_DEVICE_FUNCTION( vkResetFences )
 	INIT_DEVICE_FUNCTION( vkUpdateDescriptorSets )
 	INIT_DEVICE_FUNCTION( vkWaitForFences )
+	INIT_DEVICE_FUNCTION( vkCreateQueryPool )
+	INIT_DEVICE_FUNCTION( vkDestroyQueryPool )
+	INIT_DEVICE_FUNCTION( vkGetQueryPoolResults )
 
 	INIT_DEVICE_FUNCTION( vkCreateSwapchainKHR )
 	INIT_DEVICE_FUNCTION( vkDestroySwapchainKHR )

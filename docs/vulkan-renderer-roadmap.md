@@ -31,9 +31,9 @@ parser that didn't consume its own separator) were also found and fixed — both
 breaking enemy character models/skins regardless of which later phase landed.
 
 It's still well behind both reference points on everything not yet checked off below:
-- **vs. vkQuake3**: no coronas/flares, no stencil shadows, no cinematics, frame pacing is
-  single-buffered (no frames-in-flight), resize does a full `vid_restart` instead of an in-place
-  swapchain rebuild, and `deformVertexes` beyond `move` is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
+- **vs. vkQuake3**: no stencil shadows, no cinematics, frame pacing is single-buffered (no
+  frames-in-flight), resize does a full `vid_restart` instead of an in-place swapchain rebuild, and
+  `deformVertexes` beyond `move` is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
   draw unclipped inside a mirror) and hasn't been visually confirmed in-game yet.
 - **vs. rend2**: no normal/specular/parallax/deluxe maps, no per-pixel lighting (entities get one
   flat RGBA tint for the whole model, world gets baked lightmap only), no tangent/normal data in
@@ -379,9 +379,29 @@ it once, make world/entity/poly submission all go through it.
       free from their shader's own flag. Confirmed working in-game by the user (bullet holes and
       blood decals both render); not yet re-confirmed that the polygon-offset fix fully eliminates
       the flicker (added right after the report, not separately re-tested in isolation yet).
-- [ ] Dynamic light coronas/flares (`RE_AddCoronaToScene`, currently stubbed): visibility-test
-      against the depth buffer (occlusion query via `VkQueryPool`, or a depth readback/compare) with
-      multi-frame fade in/out to avoid popping.
+- [x] Dynamic light coronas/flares (`RE_AddCoronaToScene`, was stubbed). Visibility comes from a
+      1-sample `VkQueryPool` occlusion query per corona (`vk_flares.c`, new) instead of the classic
+      GL1 renderer's `glReadPixels`-the-depth-buffer trick: a tiny depth-tested, color/depth-write-
+      disabled quad is drawn at the corona's position wrapped in `vkCmdBeginQuery`/`vkCmdEndQuery`,
+      and the *previous* frame's result is read back with `vkGetQueryPoolResults` -- that read never
+      blocks, since `vk_begin_frame()` already waits on the previous frame's fence before this frame
+      starts recording, so the GPU work that wrote it has long since finished (this renderer's
+      single-buffered frame pacing made the usual double-buffered ping-pong query trick, e.g.
+      rend2's own `tr_flares.c`, unnecessary -- one query per corona slot is enough). Visible/hidden
+      transitions fade linearly over 300ms instead of popping. The billboard itself is a camera-
+      facing world-space quad drawn through `flareShader`'s real stages (so blend/cull/alphaTest/
+      tcMod come from the actual shader script), projected by the GPU like any other world-space
+      sprite here -- not a dedicated screen-space pixel-constant-size overlay pass like the
+      reference engine. That's a deliberate scope cut: it shrinks with distance like every other
+      scene effect in this renderer, instead of RTCW's distance-independent `flareCoeff` intensity
+      curve. New scene storage (`tr_scene.c`'s `sceneCorona_t`/`R_GetSceneCoronas`) mirrors the
+      existing dlight/poly pattern; `vk_pipelines.c` gained a `depthWriteEnable`/`colorWriteMask`
+      parameter to its pipeline factory (previously tied to `depthTestEnable`) to build the probe's
+      depth-test-but-no-write-or-color pipeline without duplicating ~150 lines of pipeline-creation
+      boilerplate. Hit one build issue after the code was written: `vk_flares.c` was never added to
+      the Makefile's explicit `Q3RVOBJ` object list, so it compiled standalone but 5 symbols stayed
+      undefined at link time -- fixed by adding `vk_flares.o` there. **User confirmed working
+      in-game.**
 - [ ] Stencil shadow volumes (`r_shadows 2`): silhouette edge extraction, two-pass front/back-face
       stencil draw, full-screen darkening finish pass; plus the cheap `projectionShadow` blob
       fallback via `deformVertexes projectionShadow` (Phase 1 item). Needs stencil ops enabled in
@@ -771,3 +791,12 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   roadmap item itself was phrased, and avoids a new shader permutation/pass for this. Compiled clean
   (full release build, zero new warnings). Not yet tested in-game — next step is finding a map with an
   actual fog brush (e.g. an underwater area) and confirming the screen fogs on entry/exit.
+- **2026-11-21** — Implemented the coronas/flares item (see its checkmark above for the full design):
+  `vk_flares.c`/`.h` (new), a `VkQueryPool`-based occlusion-visibility test with multi-frame fade, and
+  a camera-facing world-space billboard drawn through `flareShader`'s real stages. New scene storage
+  in `tr_scene.c`/`.h`; `vk_pipelines.c`'s pipeline factory gained `depthWriteEnable`/`colorWriteMask`
+  parameters (previously `depthWriteEnable` was always tied to `depthTestEnable`) to build the probe's
+  depth-test-but-no-write-or-color pipeline without duplicating the ~150-line pipeline-creation
+  function. Hit a build issue after the code compiled standalone: `vk_flares.c` was missing from the
+  Makefile's explicit `Q3RVOBJ` object list, leaving 5 symbols undefined at link time — fixed by
+  adding `vk_flares.o` there. **User confirmed coronas working in-game.**

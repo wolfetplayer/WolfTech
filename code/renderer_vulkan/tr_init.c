@@ -53,6 +53,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_sky.h"
 #include "vk_poly.h"
 #include "vk_world.h"
+#include "vk_flares.h"
 #include "vk_screenshot.h"
 #include "tr_portal.h"
 #include "tr_marks.h"
@@ -217,8 +218,7 @@ static void RE_AddLightToScene( const vec3_t org, float intensity, float r, floa
 }
 
 static void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, int flags ) {
-	FIRST_CALL_CHECKPOINT( "RE_AddCoronaToScene" );
-	(void)org; (void)r; (void)g; (void)b; (void)scale; (void)id; (void)flags;
+	R_AddCoronaToScene( org, r, g, b, scale, id, flags );
 }
 
 // The guts of RE_RenderScene -- see tr_main.h; tr_portal.c calls this recursively for a mirror/portal's destination view.
@@ -263,6 +263,11 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 	}
 
 	vk_poly_draw( viewProj, fogPush );
+
+	// Coronas are real-world effects (torches, treasure glow, fuses) -- skip the sky room and any mirror/portal recursion.
+	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) && !isSkyboxPortalScene && !R_InPortalView() ) {
+		vk_flares_draw( fd, viewProj, fogPush );
+	}
 }
 
 // Sanity test cube: fixed in world space on first run, so walking around it proves the camera matrices track correctly.
@@ -355,6 +360,8 @@ static void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	if ( !s_frameActive ) {
 		return; // swapchain was just recreated, nothing to record this frame
 	}
+
+	vk_flares_begin_frame(); // resets this frame's occlusion queries -- vkCmdResetQueryPool needs to run outside the render pass
 
 	vk_begin_render_pass( 0.0f, 0.2f, 0.4f, 1.0f );
 	vk_draw2d_begin_frame();

@@ -231,7 +231,7 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 									const VkVertexInputAttributeDescription *attribs, uint32_t numAttribs,
 									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 									VkBool32 depthTestEnable, VkCullModeFlags cullMode, VkPolygonMode polygonMode,
-									VkBool32 polygonOffset ) {
+									VkBool32 polygonOffset, VkBool32 depthWriteEnable, VkColorComponentFlags colorWriteMask ) {
 	VkPipeline pipeline;
 
 	VkPipelineShaderStageCreateInfo stages[2];
@@ -308,7 +308,7 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 	depth_stencil.pNext = NULL;
 	depth_stencil.flags = 0;
 	depth_stencil.depthTestEnable = depthTestEnable;
-	depth_stencil.depthWriteEnable = depthTestEnable;
+	depth_stencil.depthWriteEnable = depthWriteEnable;
 	depth_stencil.depthCompareOp = depthTestEnable ? VK_COMPARE_OP_LESS_OR_EQUAL : VK_COMPARE_OP_ALWAYS; // matches GL1's GL_LEQUAL default; needed so a later stage redrawing the same depth still passes
 	depth_stencil.depthBoundsTestEnable = VK_FALSE;
 	depth_stencil.stencilTestEnable = VK_FALSE;
@@ -325,8 +325,7 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 	blend_attachment.srcAlphaBlendFactor = srcBlend;
 	blend_attachment.dstAlphaBlendFactor = dstBlend;
 	blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
-	blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-									   VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	blend_attachment.colorWriteMask = colorWriteMask;
 
 	VkPipelineColorBlendStateCreateInfo blend_state;
 	blend_state.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -380,8 +379,11 @@ static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipel
 									const VkVertexInputAttributeDescription *attribs, uint32_t numAttribs,
 									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 									VkBool32 depthTestEnable, VkCullModeFlags cullMode ) {
+	VkColorComponentFlags fullMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+									   VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	return create_pipeline_ex( vs, fs, layout, specInfo, binding, attribs, numAttribs,
-		blendEnable, srcBlend, dstBlend, depthTestEnable, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE );
+		blendEnable, srcBlend, dstBlend, depthTestEnable, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE,
+		depthTestEnable, fullMask );
 }
 
 // vk2d_vertex_t attribs, shared by the 2D pipelines and the (unused-for-world-now) opaque 3D one.
@@ -545,7 +547,8 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 	s_cachedPipelineKeys[s_numCachedPipelines].polygonOffset = polygonOffset;
 	s_cachedPipelines[s_numCachedPipelines] = create_pipeline_ex( vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, blendEnable, srcBlend, dstBlend, VK_TRUE, mirror ? vk_flipCullMode( cullMode ) : cullMode,
-		VK_POLYGON_MODE_FILL, polygonOffset );
+		VK_POLYGON_MODE_FILL, polygonOffset, VK_TRUE,
+		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT );
 
 	return s_cachedPipelines[s_numCachedPipelines++];
 }
@@ -639,7 +642,13 @@ void vk_create3DPipelines( void ) {
 	vk.pipeline_world_wireframe = vk.features.fillModeNonSolid ?
 		create_pipeline_ex( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, NULL,
 			&worldBinding, lightmapAttribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
-			VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_LINE, VK_FALSE ) : VK_NULL_HANDLE;
+			VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_LINE, VK_FALSE, VK_TRUE,
+			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT ) : VK_NULL_HANDLE;
+
+	// Coronas' occlusion-visibility probe (vk_flares.c): depth-tested like real geometry, writes neither depth nor color.
+	vk.pipeline_occlusion_probe = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
+		VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, 0 );
 
 	vk_resetPipelineCache3D();
 }
@@ -658,6 +667,7 @@ void vk_destroy3DPipelines( void ) {
 	}
 	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_world_wireframe, NULL );
+	qvkDestroyPipeline( vk.device, vk.pipeline_occlusion_probe, NULL );
 
 	vk_destroyMultiTexPipelineCache();
 }

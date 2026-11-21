@@ -21,6 +21,10 @@ static int s_firstScenePoly;
 static polyVert_t s_polyVerts[MAX_SCENE_POLY_VERTS];
 static int s_numPolyVerts;
 
+static sceneCorona_t s_coronas[MAX_SCENE_CORONAS];
+static int s_numCoronas;
+static int s_firstSceneCorona;
+
 void R_ClearScene( void ) {
 	s_numEntities = 0;
 	s_firstSceneEntity = 0;
@@ -29,12 +33,15 @@ void R_ClearScene( void ) {
 	s_numPolys = 0;
 	s_firstScenePoly = 0;
 	s_numPolyVerts = 0;
+	s_numCoronas = 0;
+	s_firstSceneCorona = 0;
 }
 
 void R_AdvanceSceneWindow( void ) {
 	s_firstSceneEntity = s_numEntities;
 	s_firstSceneDlight = s_numDlights;
 	s_firstScenePoly = s_numPolys;
+	s_firstSceneCorona = s_numCoronas;
 }
 
 void R_AddRefEntityToScene( const refEntity_t *ent ) {
@@ -107,6 +114,28 @@ const scenePoly_t *R_GetScenePolys( int *outCount ) {
 
 const polyVert_t *R_GetScenePolyVerts( void ) {
 	return s_polyVerts;
+}
+
+void R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, int flags ) {
+	sceneCorona_t *cor;
+
+	if ( s_numCoronas >= MAX_SCENE_CORONAS ) {
+		return;
+	}
+
+	cor = &s_coronas[s_numCoronas++];
+	VectorCopy( org, cor->origin );
+	cor->color[0] = r;
+	cor->color[1] = g;
+	cor->color[2] = b;
+	cor->scale = scale;
+	cor->id = id;
+	cor->flags = flags;
+}
+
+const sceneCorona_t *R_GetSceneCoronas( int *outCount ) {
+	*outCount = s_numCoronas - s_firstSceneCorona;
+	return &s_coronas[s_firstSceneCorona];
 }
 
 static qboolean s_skyboxPortalActive = qfalse;

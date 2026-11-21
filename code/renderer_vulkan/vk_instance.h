@@ -44,6 +44,9 @@ extern PFN_vkCmdBindDescriptorSets                     qvkCmdBindDescriptorSets;
 extern PFN_vkCmdBindIndexBuffer                        qvkCmdBindIndexBuffer;
 extern PFN_vkCmdBindPipeline                           qvkCmdBindPipeline;
 extern PFN_vkCmdBindVertexBuffers                      qvkCmdBindVertexBuffers;
+extern PFN_vkCmdBeginQuery                             qvkCmdBeginQuery;
+extern PFN_vkCmdEndQuery                               qvkCmdEndQuery;
+extern PFN_vkCmdResetQueryPool                         qvkCmdResetQueryPool;
 extern PFN_vkCmdBlitImage                              qvkCmdBlitImage;
 extern PFN_vkCmdClearAttachments                       qvkCmdClearAttachments;
 extern PFN_vkCmdClearColorImage                        qvkCmdClearColorImage;
@@ -73,6 +76,9 @@ extern PFN_vkCreateRenderPass                          qvkCreateRenderPass;
 extern PFN_vkCreateSampler                             qvkCreateSampler;
 extern PFN_vkCreateSemaphore                           qvkCreateSemaphore;
 extern PFN_vkCreateShaderModule                        qvkCreateShaderModule;
+extern PFN_vkCreateQueryPool                            qvkCreateQueryPool;
+extern PFN_vkDestroyQueryPool                           qvkDestroyQueryPool;
+extern PFN_vkGetQueryPoolResults                        qvkGetQueryPoolResults;
 extern PFN_vkDestroyBuffer                             qvkDestroyBuffer;
 extern PFN_vkDestroyCommandPool                        qvkDestroyCommandPool;
 extern PFN_vkDestroyDescriptorPool                     qvkDestroyDescriptorPool;
@@ -182,6 +188,7 @@ struct Vk_Instance {
 	VkPipeline pipeline_3d_lightmap_mirror[3]; // ditto, clip plane + cull flip (proper reflection)
 	VkPipeline pipeline_sky; // single_texture shader, 2D vertex layout, depth test/write off, never fogged
 	VkPipeline pipeline_world_wireframe; // r_showtris overlay; VK_NULL_HANDLE if the device lacks fillModeNonSolid
+	VkPipeline pipeline_occlusion_probe; // coronas' visibility test; see vk_flares.c
 
 	VkBool32 isInitialized;
 

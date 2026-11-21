@@ -16,6 +16,7 @@
 #include "vk_sky.h"
 #include "vk_poly.h"
 #include "vk_world.h"
+#include "vk_flares.h"
 #include "glConfig.h"
 #include "vk_init.h"
 
@@ -55,6 +56,7 @@ void vk_initialize( void ) {
 	vk_entity_init();
 	vk_sky_init();
 	vk_poly_init();
+	vk_flares_init();
 
 	vk.isInitialized = VK_TRUE;
 }
@@ -63,6 +65,7 @@ void vk_shutdown( void ) {
 	ri.Printf( PRINT_ALL, "vk_shutdown()\n" );
 
 	vk_world_shutdown();
+	vk_flares_shutdown();
 	vk_poly_shutdown();
 	vk_sky_shutdown();
 	vk_entity_shutdown();
