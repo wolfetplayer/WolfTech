@@ -29,8 +29,7 @@
 #define MDC_DIST_SCALE 0.05f
 #define MDC_MAX_OFS 127.0f
 
-// MDS_MAX_VERTS/MDM_MAX_VERTS are both 6000; also the cap for the base-vertex buffer below.
-#define SKIN_SCRATCH_VERTS 8192
+#define SKIN_SCRATCH_VERTS 40000
 static vec3_t s_skinScratch[SKIN_SCRATCH_VERTS];
 
 // Position + UV only, before any per-stage rgbGen/alphaGen/tcMod or shader-level deformVertexes is applied.

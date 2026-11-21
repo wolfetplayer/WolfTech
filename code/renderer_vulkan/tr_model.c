@@ -560,10 +560,15 @@ static qboolean TryLoadModelFile( model_t *mod, const char *filename, const char
 	buffer = NULL;
 	readLen = ri.FS_ReadFile( filename, &buffer );
 	if ( readLen > 0 && buffer ) {
-		if ( !Q_stricmp( ext, "md3" ) ) {
-			loaded = R_LoadMD3( mod, buffer, filename );
-		} else if ( !Q_stricmp( ext, "mdc" ) ) {
-			loaded = R_LoadMDC( mod, buffer, filename );
+		if ( !Q_stricmp( ext, "md3" ) || !Q_stricmp( ext, "mdc" ) ) {
+			int ident = LittleLong( *(const int *)buffer );
+			if ( ident == MD3_IDENT ) {
+				loaded = R_LoadMD3( mod, buffer, filename );
+			} else if ( ident == MDC_IDENT ) {
+				loaded = R_LoadMDC( mod, buffer, filename );
+			} else {
+				ri.Printf( PRINT_WARNING, "RE_RegisterModel: unknown fileid for '%s'\n", filename );
+			}
 		} else if ( !Q_stricmp( ext, "mds" ) ) {
 			loaded = R_LoadMDS( mod, buffer, filename );
 		} else if ( !Q_stricmp( ext, "mdx" ) ) {

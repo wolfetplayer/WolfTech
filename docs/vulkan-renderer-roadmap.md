@@ -724,3 +724,21 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   `CG_DrawActive()`); the two-line excerpt that suggested otherwise just happened to span a frame
   boundary. The black-sky report itself is still open and unexplained — not yet re-investigated this
   round, since the user's latest report focused on the weapon disappearance instead.
+- **2026-11-21** — Three fixes. (1) Validated curved-patch tessellation (Phase 2 item) and confirmed
+  a real bug: `r_subdivisions` is a world-unit error tolerance in the reference engine, but a literal
+  fixed segment count here — made it adaptive per patch (`tr_patch.c`'s new `R_ComputeAdaptiveSubdiv`),
+  fixing user-reported faceted/triangular arches. (2) `make deploysteam` was missing the
+  `BUILD_RENDERER_VULKAN` copy block that `copyfiles` already had, so the vulkan DLL never reached the
+  user's Steam install — added it to `Makefile`. (3) `misc_mg42` wasn't rendering: its model
+  (`mg42a.mdc`) is actually raw MD3 data shipped under a `.mdc` name (confirmed by reading its header:
+  ident/version are MD3's, not MDC's). `RE_RegisterModel` dispatched by file extension, so it always
+  went through `R_LoadMDC` and failed the version check. Fixed to sniff the file's own ident and
+  dispatch to the matching loader, same as the reference engine's `R_RegisterMD3`. All three compiled
+  clean; none re-confirmed in-game yet.
+- **2026-11-21** — Follow-up: mg42a now partially rendered (mag visible, main body missing), same
+  symptom on mp44/fg42. Parsed `mg42a`'s real MD3 surfaces directly: its body surface
+  (`mg34_reference`) has 11582 verts, over both the format's documented 8192-per-surface max and this
+  renderer's `SKIN_SCRATCH_VERTS` scratch-buffer cap (`vk_entity.c`), so it silently hit the
+  `goto nextMD3` overflow guard every frame while the smaller mag surfaces didn't. Reference engine
+  uses `SHADER_MAX_VERTEXES` (40000) and doesn't enforce the format limit at all, which is why OpenGL1
+  renders this off-spec content fine. Bumped `SKIN_SCRATCH_VERTS` to match. Compiled clean.
