@@ -381,10 +381,36 @@ it once, make world/entity/poly submission all go through it.
       stencil draw, full-screen darkening finish pass; plus the cheap `projectionShadow` blob
       fallback via `deformVertexes projectionShadow` (Phase 1 item). Needs stencil ops enabled in
       the pipeline (`stencilTestEnable` is currently hardcoded off).
-- [ ] Validate curved-patch (Bezier) tessellation: `tr_patch.c` already exists and git history
-      claims "curved patches" support — confirm LOD/stitching behavior matches `tr_curve.c`'s
-      reference behavior (adaptive subdivision, t-junction stitching between differing LOD
-      neighbors) rather than just "doesn't crash."
+- [x] Validated curved-patch (Bezier) tessellation and found a real bug, confirmed in-game by the
+      user: "arches that are supposed to be curved render triangular/faceted" — `r_subdivisions`
+      is `CVAR_ARCHIVE` in the reference renderer (`code/renderer/tr_init.c`), so it's saved in the
+      user's config from prior OpenGL1/rend2 play and shared across all three renderer DLLs. The
+      reference (`code/renderer/tr_curve.c`'s `R_SubdividePatchToGrid`) treats that value as a
+      **world-unit curvature error tolerance** — adaptively subdividing each patch until its actual
+      deviation from a flat chord is under that many units, so flat patches get collapsed to no
+      extra subdivision and sharply curved ones get many. `tr_patch.c` instead treated the same
+      number as a **literal fixed segment count**, identical for every patch regardless of
+      curvature — so a typical saved value like `"4"` (plenty smooth under the reference's
+      tolerance semantics, which could mean 8-16+ actual segments for a wide arch) produced exactly
+      4 straight segments no matter how sharply the patch curved, visibly faceting any wide/tight
+      arch. Fixed by porting the reference's actual curvature measurement (`Sagitta()`, the t=0.5
+      Bezier midpoint's perpendicular deviation from its chord — identical formula to
+      `tr_curve.c`'s midpoint check) into a new `R_ComputeAdaptiveSubdiv()`, which measures the
+      worst-case curvature anywhere in a patch's control grid and derives a subdivision level from
+      it (quadratic Bezier error roughly quarters per binary split, so `segments = 2^k` for the
+      smallest `k` keeping worst-case error under tolerance), clamped to the same `[1,16]` range
+      `r_subdivisions` was already clamped to. `R_PatchTessVertCount`/`R_PatchTessIndexCount` now
+      take the control-vert array too (not just the dimensions), so their vertex/index counts stay
+      consistent with what `R_TessellatePatch` actually emits — all three call sites (`vk_world.c`,
+      3 places: the static-world sizing pass, `EmitSurfaceGeometry`, and
+      `vk_world_draw_brushmodel`'s patch branch) updated to match. **Known gap, not fixed here**:
+      the subdivision level is now picked *per patch surface*, uniform within it (so internal biquad
+      edges still always match, same as before) — but two *different* adjacent patches can still
+      pick different levels from each other and crack at their shared edge, same risk the reference
+      solves with a load-time `R_StitchAllPatches` pass this port doesn't have. Not yet observed in
+      practice (most adjacent patches in typical maps share similar curvature); worth adding if a
+      visible seam turns up. Compiled clean (full `mingw32-make -j4 BUILD_RENDERER_VULKAN=1 release`
+      build, MSYS2 MINGW64, zero new warnings). Not yet re-confirmed in-game after the fix.
 - [ ] Cinematics/video playback (`RE_UploadCinematic`, `RE_StretchRaw`, both currently stubbed) —
       RTCW SP uses in-engine cutscenes/briefing videos; this is gameplay-visible, not cosmetic.
 - [ ] 2D completeness: `RE_RotatedPic`, `RE_StretchPicGradient` (currently stubbed).

@@ -250,8 +250,8 @@ static void EmitSurfaceGeometry( const bspSurface_t *surf, vkWorldVertex_t *vert
 			indexes[(*writeOffset)++] = (uint32_t)( surf->firstVert + tr_world.drawIndexes[surf->firstIndex + i] );
 		}
 	} else if ( surf->surfaceType == MST_PATCH ) {
-		int pv = R_PatchTessVertCount( surf->patchWidth, surf->patchHeight );
-		int pi = R_PatchTessIndexCount( surf->patchWidth, surf->patchHeight );
+		int pv = R_PatchTessVertCount( &tr_world.drawVerts[surf->firstVert], surf->patchWidth, surf->patchHeight );
+		int pi = R_PatchTessIndexCount( &tr_world.drawVerts[surf->firstVert], surf->patchWidth, surf->patchHeight );
 		uint32_t vertBase = *nextVertSlot;
 		drawVert_t *tessVerts = malloc( pv * sizeof( drawVert_t ) );
 		int *localIdx = malloc( pi * sizeof( int ) );
@@ -343,8 +343,8 @@ void vk_world_build( void ) {
 		if ( surf->surfaceType == MST_PLANAR || surf->surfaceType == MST_TRIANGLE_SOUP ) {
 			totalIndexCount += (uint32_t)surf->numIndexes;
 		} else if ( surf->surfaceType == MST_PATCH ) {
-			int pv = R_PatchTessVertCount( surf->patchWidth, surf->patchHeight );
-			int pi = R_PatchTessIndexCount( surf->patchWidth, surf->patchHeight );
+			int pv = R_PatchTessVertCount( &tr_world.drawVerts[surf->firstVert], surf->patchWidth, surf->patchHeight );
+			int pi = R_PatchTessIndexCount( &tr_world.drawVerts[surf->firstVert], surf->patchWidth, surf->patchHeight );
 			if ( pv <= 0 || pi <= 0 ) {
 				continue; // malformed control grid
 			}
@@ -915,8 +915,8 @@ void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const fl
 			indexes = &tr_world.drawIndexes[surf->firstIndex];
 			numIndexes = surf->numIndexes;
 		} else if ( surf->surfaceType == MST_PATCH ) {
-			int pv = R_PatchTessVertCount( surf->patchWidth, surf->patchHeight );
-			int pi = R_PatchTessIndexCount( surf->patchWidth, surf->patchHeight );
+			int pv = R_PatchTessVertCount( &tr_world.drawVerts[surf->firstVert], surf->patchWidth, surf->patchHeight );
+			int pi = R_PatchTessIndexCount( &tr_world.drawVerts[surf->firstVert], surf->patchWidth, surf->patchHeight );
 			if ( pv <= 0 || pi <= 0 || pv > BRUSH_SURF_MAX_VERTS ) {
 				continue; // malformed control grid, or too large for the scratch buffer
 			}

@@ -3224,6 +3224,9 @@ ifneq ($(BUILD_CLIENT),0)
     ifneq ($(BUILD_RENDERER_REND2),0)
 	$(INSTALL) -m 0755 $(BR)/renderer_rend2_$(SHLIBNAME) "$(STEAMGAMEDIR)/renderer_rend2_$(SHLIBNAME)"
     endif
+    ifneq ($(BUILD_RENDERER_VULKAN),0)
+	$(INSTALL) -m 0755 $(BR)/renderer_vulkan_$(SHLIBNAME) "$(STEAMGAMEDIR)/renderer_vulkan_$(SHLIBNAME)"
+    endif
   endif
 endif
 ifneq ($(BUILD_SERVER),0)
