@@ -21,7 +21,17 @@ typedef struct {
 	int patchWidth, patchHeight; // MST_PATCH only
 
 	int lightmapNum; // index into bspWorld_t.lightmapData, or -1 for vertex-lit/no lightmap
+
+	int fogIndex; // into bspWorld_t.fogs; 0 means "not in any fog volume"
 } bspSurface_t;
+
+
+typedef struct {
+	qboolean active;
+	vec3_t mins, maxs; // world-space AABB, from the referenced brush's 6 axial sides
+	vec3_t color;
+	float depthForOpaque;
+} bspFog_t;
 
 typedef struct {
 	char name[MAX_QPATH];
@@ -52,6 +62,9 @@ typedef struct {
 
 	int numSubmodels;
 	dmodel_t *submodels;
+
+	int numFogs; // always >= 1; index 0 is the reserved inactive "no fog" entry
+	bspFog_t *fogs;
 
 	char *entityString; // raw LUMP_ENTITIES text, null-terminated; read token-by-token by R_GetEntityToken
 	char *entityParsePoint;

@@ -33,8 +33,7 @@ breaking enemy character models/skins regardless of which later phase landed.
 It's still well behind both reference points on everything not yet checked off below:
 - **vs. vkQuake3**: no coronas/flares, no stencil shadows, no cinematics, frame pacing is
   single-buffered (no frames-in-flight), resize does a full `vid_restart` instead of an in-place
-  swapchain rebuild, no real BSP volumetric fog, and `deformVertexes` beyond `move` is blocked on
-  Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
+  swapchain rebuild, and `deformVertexes` beyond `move` is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
   draw unclipped inside a mirror) and hasn't been visually confirmed in-game yet.
 - **vs. rend2**: no normal/specular/parallax/deluxe maps, no per-pixel lighting (entities get one
   flat RGBA tint for the whole model, world gets baked lightmap only), no tangent/normal data in
@@ -263,14 +262,20 @@ it once, make world/entity/poly submission all go through it.
       Dynamic lights as a real additive pass **for entities** (replacing the flat-tint-per-entity
       hack) is still open — also depends on entities carrying normal data for a believable result
       (tracked formally in Phase 4; a coarse per-face normal would be enough to unblock this).
-- [ ] Real fog pass: port BSP-brush volumetric fog. **Investigated this session**: this is a
-      genuinely separate system from the wolf-fog already ported — RTCW keeps *both* the classic
-      id-tech-3 `fogParms`-shader-keyword + BSP fog-brush-volume system (used for things like
-      underwater boxes) and its own `trigger_fog`/`target_fog` global system (already done, Phase
-      0-adjacent). Real BSP fog needs: parsing `fogParms` in `tr_shader.c` (currently parsed and
-      discarded), loading the BSP's fog lump, tagging each world surface with a `fogIndex`, and
-      determining which fog volume (if any) the camera is currently inside each frame. Scoped as
-      its own item, not a quick add.
+- [x] Real fog pass: port BSP-brush volumetric fog (e.g. underwater boxes), separate from the
+      already-ported `trigger_fog`/`target_fog` wolf-fog system. `fogParms` is now actually parsed
+      in `tr_shader.c` (was parsed-and-discarded) into a new `fogParms_t` on `shader_t`. `tr_bsp.c`
+      has a new `R_LoadFogs`, reading LUMP_FOGS + the referenced brush's 6 axial LUMP_BRUSHSIDES
+      planes to build each fog volume's world-space AABB (color/depthForOpaque come from the fog's
+      shader); each `bspSurface_t` gets a `fogIndex` from `dsurface_t.fogNum`. `tr_fog.c` adds
+      `R_SetBSPFogForPoint`, an AABB camera-containment check run once per view
+      (`R_RenderViewInternal` in `tr_init.c`) that, when inside a volume, overrides that frame's fog
+      push constants with the volume's color/depth. **Scoped simplification vs. the reference's real
+      per-surface distance gradient** (`RB_CalcFogTexCoords`): this reuses the existing wolf-fog
+      push-constant plumbing with a linear falloff instead of adding a new shader permutation or
+      per-batch gradient pass — matches the roadmap's own framing ("which fog volume the camera is
+      inside"), not a per-pixel depth-correct fog. Compiles clean; not yet visually confirmed
+      in-game (needs a map with a fog brush, e.g. an underwater area).
 - [x] Portal/mirror clip-plane pipeline variants, with the same graceful fallback vkQuake3 uses for
       GPUs lacking `shaderClipDistance` (discard-in-fragment-shader via specialization constant).
       **Turned out to need far more than a pipeline variant**: this renderer had *zero* mirror/portal
@@ -758,3 +763,11 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   compressed delta frames, i.e. it's a real animated sequence sharing `ent->frame`/`oldframe` with the
   rest of the head, not a simple on/off overlay — a frame-indexing issue there is the next lead, not
   yet confirmed. Deferred at user's request (minor/intermittent vs. the fixed permanent case).
+- **2026-11-21** — Implemented the "Real fog pass" item (BSP-brush volumetric fog, see its checkmark
+  above for the full design): `fogParms` shader-keyword parsing, `R_LoadFogs` in `tr_bsp.c`,
+  per-surface `fogIndex`, and a per-view camera-in-fog-volume AABB check feeding the existing wolf-fog
+  push-constant path. Deliberately scoped to camera-containment + the existing per-vertex fog
+  infrastructure rather than the reference's true per-surface distance gradient — matches how the
+  roadmap item itself was phrased, and avoids a new shader permutation/pass for this. Compiled clean
+  (full release build, zero new warnings). Not yet tested in-game — next step is finding a map with an
+  actual fog brush (e.g. an underwater area) and confirming the screen fogs on entry/exit.

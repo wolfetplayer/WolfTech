@@ -127,6 +127,12 @@ typedef struct shaderStage_s {
 	texModInfo_t texMods[TR_MAX_TEXMODS];
 } shaderStage_t;
 
+
+typedef struct {
+	vec3_t color;
+	float depthForOpaque;
+} fogParms_t;
+
 typedef struct shader_s {
 	char name[MAX_QPATH];
 	int index; // handle returned to the game/cgame/ui VMs
@@ -141,6 +147,8 @@ typedef struct shader_s {
 
 	qboolean isPortal;   // "portal" or "sort portal" keyword -- triggers mirror/portal-surface recursion, see tr_portal.c
 	float portalRange;   // distance (world units) the portal entity may sit from this surface's plane; see tr_portal.c
+
+	fogParms_t fogParms;
 
 	int numStages;
 	shaderStage_t stages[MAX_SHADER_STAGES];

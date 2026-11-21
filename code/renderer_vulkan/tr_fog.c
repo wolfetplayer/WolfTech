@@ -1,8 +1,9 @@
-// tr_fog.c -- RTCW's global "wolf fog" (trigger_fog/target_fog/the sky shader's "fogvars"), see tr_fog.h. BSP-brush volumetric fog (underwater boxes) isn't ported.
+// tr_fog.c -- RTCW's global "wolf fog" (trigger_fog/target_fog/the sky shader's "fogvars") plus BSP fog brushes, see tr_fog.h.
 
 #include <string.h>
 
 #include "tr_local.h"
+#include "tr_bsp.h"
 #include "tr_fog.h"
 
 #define FOG_MODE_LINEAR 0
@@ -10,10 +11,33 @@
 
 static glfog_t s_fog[NUM_FOGS];
 static int s_frameTime;
+static int s_activeBSPFog;
 
 void R_InitFog( void ) {
 	memset( s_fog, 0, sizeof( s_fog ) );
 	s_frameTime = 0;
+	s_activeBSPFog = 0;
+}
+
+void R_SetBSPFogForPoint( const vec3_t point ) {
+	int i;
+
+	s_activeBSPFog = 0;
+	if ( !tr_world.loaded ) {
+		return;
+	}
+
+	for ( i = 1; i < tr_world.numFogs; i++ ) {
+		const bspFog_t *fog = &tr_world.fogs[i];
+		if ( !fog->active ) {
+			continue;
+		}
+		if ( point[0] < fog->mins[0] || point[0] > fog->maxs[0] ) continue;
+		if ( point[1] < fog->mins[1] || point[1] > fog->maxs[1] ) continue;
+		if ( point[2] < fog->mins[2] || point[2] > fog->maxs[2] ) continue;
+		s_activeBSPFog = i;
+		return;
+	}
 }
 
 void R_SetFogFrameTime( int time ) {
@@ -93,9 +117,19 @@ static qboolean ResolveCurrentFog( glfog_t *out ) {
 
 void R_GetFogPushConstants( const vec3_t camPos, float out[12] ) {
 	glfog_t current;
-	qboolean active = ResolveCurrentFog( &current );
+	qboolean active;
 
 	out[0] = camPos[0]; out[1] = camPos[1]; out[2] = camPos[2]; out[3] = 0.0f;
+
+	if ( s_activeBSPFog ) {
+		const bspFog_t *fog = &tr_world.fogs[s_activeBSPFog];
+		out[4] = fog->color[0]; out[5] = fog->color[1]; out[6] = fog->color[2]; out[7] = 0.0f;
+		out[8] = 0.0f; out[9] = ( fog->depthForOpaque > 0.0f ) ? fog->depthForOpaque : 512.0f; out[10] = 0.0f; // linear
+		out[11] = 1.0f;
+		return;
+	}
+
+	active = ResolveCurrentFog( &current );
 
 	if ( !active ) {
 		out[4] = out[5] = out[6] = out[7] = 0.0f;

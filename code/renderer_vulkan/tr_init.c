@@ -230,6 +230,7 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 
 	R_SetFogFrameTime( fd->time );
 	R_SetShaderTime( fd->time );
+	R_SetBSPFogForPoint( fd->vieworg );
 	R_GetFogPushConstants( fd->vieworg, fogPush );
 
 	R_SetupViewMatrix( fd, viewMatrix );

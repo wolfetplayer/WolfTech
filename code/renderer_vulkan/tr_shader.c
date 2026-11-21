@@ -440,8 +440,19 @@ static qboolean ParseShader( const char *name, char **text ) {
 				}
 			}
 			SkipRestOfLine( text );
+		} else if ( !Q_stricmp( token, "fogParms" ) ) {
+			int i;
+			token = COM_ParseExt( text, qfalse ); // opening '('
+			for ( i = 0; i < 3; i++ ) {
+				token = COM_ParseExt( text, qfalse );
+				tempShader.fogParms.color[i] = (float)atof( token );
+			}
+			token = COM_ParseExt( text, qfalse ); // closing ')'
+			token = COM_ParseExt( text, qfalse );
+			tempShader.fogParms.depthForOpaque = (float)atof( token );
+			SkipRestOfLine( text ); // old gradient-direction parm, unused since RTCW
 		} else {
-			// fogParms, etc. -- parsed-and-discarded.
+			// other unhandled keywords -- parsed-and-discarded.
 			SkipRestOfLine( text );
 		}
 	}

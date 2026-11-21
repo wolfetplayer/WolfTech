@@ -147,6 +147,59 @@ static void R_LoadSurfaces( const lump_t *l ) {
 		out->patchWidth = LittleLong( in->patchWidth );
 		out->patchHeight = LittleLong( in->patchHeight );
 		out->lightmapNum = LittleLong( in->lightmapNum );
+		out->fogIndex = LittleLong( in->fogNum ) + 1;
+	}
+}
+
+static void R_LoadFogs( const lump_t *fogsLump, const lump_t *brushesLump, const lump_t *sidesLump ) {
+	int i, count, brushesCount, sidesCount;
+	const dfog_t *in;
+	const dbrush_t *brushes;
+	const dbrushside_t *sides;
+	bspFog_t *out;
+
+	in = (const void *)( fileBase + fogsLump->fileofs );
+	count = fogsLump->filelen / sizeof( *in );
+
+	tr_world.numFogs = count + 1; // index 0 is the reserved "no fog" entry
+	tr_world.fogs = ri.Hunk_Alloc( tr_world.numFogs * sizeof( bspFog_t ), h_low );
+	memset( tr_world.fogs, 0, tr_world.numFogs * sizeof( bspFog_t ) );
+
+	if ( !count ) {
+		return;
+	}
+
+	brushes = (const void *)( fileBase + brushesLump->fileofs );
+	brushesCount = brushesLump->filelen / sizeof( *brushes );
+	sides = (const void *)( fileBase + sidesLump->fileofs );
+	sidesCount = sidesLump->filelen / sizeof( *sides );
+
+	out = tr_world.fogs + 1;
+	for ( i = 0; i < count; i++, in++, out++ ) {
+		int brushNum = LittleLong( in->brushNum );
+		int firstSide, axis;
+		shader_t *shader;
+
+		if ( (unsigned)brushNum >= (unsigned)brushesCount ) {
+			continue; // leave this slot inactive
+		}
+		firstSide = LittleLong( brushes[brushNum].firstSide );
+		if ( firstSide < 0 || firstSide + 6 > sidesCount ) {
+			continue;
+		}
+
+		// Fog brushes are always compiled with their 6 axial sides first: -X,+X,-Y,+Y,-Z,+Z.
+		for ( axis = 0; axis < 3; axis++ ) {
+			int negPlane = LittleLong( sides[firstSide + axis * 2 + 0].planeNum );
+			int posPlane = LittleLong( sides[firstSide + axis * 2 + 1].planeNum );
+			out->mins[axis] = -tr_world.planes[negPlane].dist;
+			out->maxs[axis] = tr_world.planes[posPlane].dist;
+		}
+
+		shader = R_GetShaderByHandle( RE_RegisterShaderInternal( in->shader, qfalse ) );
+		VectorCopy( shader->fogParms.color, out->color );
+		out->depthForOpaque = shader->fogParms.depthForOpaque;
+		out->active = qtrue;
 	}
 }
 
@@ -383,6 +436,8 @@ void RE_LoadWorldMap( const char *name ) {
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: drawindexes (%d)\n", tr_world.numDrawIndexes );
 	R_LoadSurfaces( &header->lumps[LUMP_SURFACES] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: surfaces (%d)\n", tr_world.numSurfaces );
+	R_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
+	ri.Printf( PRINT_ALL, "...bsp checkpoint: fog volumes (%d)\n", tr_world.numFogs - 1 );
 	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: lightmaps (%d)\n", tr_world.numLightmaps );
 	R_LoadLeafSurfaces( &header->lumps[LUMP_LEAFSURFACES] );
