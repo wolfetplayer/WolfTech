@@ -179,12 +179,29 @@ it once, make world/entity/poly submission all go through it.
       `code/renderer`. Applied at BSP load time to: vertex colors (`tr_bsp.c`'s `R_LoadDrawVerts`),
       light-grid ambient+directed samples (`tr_bsp.c`'s `R_LoadLightGrid`), and lightmap texels
       (`vk_world.c`'s `BuildLightmapTexture`) — the same three places the reference engine shifts.
-- [ ] `deformVertexes` — **investigated, mostly blocked, not faked**:
-      - `wave`/`bulge`/`normal` all displace a vertex along its own normal
-        (`xyz[i] += normal[i] * scale` in `code/renderer/tr_shade_calc.c`'s
-        `RB_CalcDeformVertexes`/`RB_CalcBulgeVertexes`/`RB_CalcDeformNormals`) — blocked on the same
-        missing per-vertex normal data as `r_shownormals` (Phase 0) and dynamic lighting (below).
-        Don't implement until Phase 4's vertex-format work lands.
+- [ ] `deformVertexes` — **investigated, partially implemented, not faked**:
+      - [x] `wave`/`bulge` for **world surfaces** (static BSP, patches, and brush-model entities):
+            implemented 2026-11-22 now that real per-vertex normal data exists (Phase 4 Stage 1).
+            `R_DeformPosition` (`tr_shade_calc.c`) now evaluates `DEFORM_WAVE`/`DEFORM_BULGE` for
+            real (matching `code/renderer`'s `RB_CalcDeformVertexes`/`RB_CalcBulgeVertexes`, minus
+            the RTCW-specific Ridah fire-rise negative-frequency hack, which needs an entity
+            `fireRiseDir` this renderer has no equivalent for) whenever it's given a real normal;
+            `vk_world.c`'s per-frame expansion functions now pass one (unpacked from
+            `vkWorldVertex_t`'s snorm16 `normal` for static world, or straight from `brushVert_t`
+            for brush entities, which already kept a float normal). Entity/poly call sites still
+            pass `NULL` (unchanged behavior, see below).
+      - [ ] `wave`/`bulge` for **entities** (MD3/MDC/MDS/MDM): genuinely harder than before Phase 4,
+            not just still-blocked — Stage 2/3 moved the actual rendered position onto the GPU
+            (vertex-lerp/bone-skin shaders), so a CPU-side deform (even with normal data available)
+            wouldn't affect what's drawn. Would need to move into `entity_lerp.vert`/
+            `entity_skin.vert` instead, using the normal data already sitting in their vertex
+            buffers unused.
+      - [ ] `normal` (wiggles the normal itself for wavy env-mapping sparkle, not the position) is
+            not implemented: it fundamentally needs 3D Perlin noise (`R_NoiseGet4f` in the
+            reference), and this renderer has no noise subsystem at all (`GF_NOISE` waveforms are
+            already a documented sine stand-in for the same reason). Also low-value right now since
+            nothing consumes per-vertex normal for lighting yet, so it'd have zero visible effect
+            until real per-pixel lighting lands later in Phase 4.
       - `autosprite`/`autosprite2` billboard a whole **quad** (both triangles, 4 shared corners) to
         face the camera — they need the primitive's other 3 corners and their shared-edge topology,
         not just one vertex. `R_DeformPosition`'s signature (`shader, basePos[3] → outPos[3]`) is
@@ -1234,3 +1251,28 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   entities still bone-animate and skin correctly, multi-stage/multitex entity shaders still layer
   right, and weapon/attachment tags still line up (tag resolution never touched per-vertex skinned
   data, so this is expected to be unaffected, but worth eyeballing given the scope of this change).
+- **2026-11-22** — User confirmed Stage 2b/3b (and the whole Phase 4 vertex-format item) tested fine
+  after compiling the 4 new shaders by hand, and asked to use the now-unblocked normal data for
+  Phase 1's leftover `deformVertexes` item. Implemented `wave`/`bulge` for world surfaces (see
+  Phase 1's checkmark above). `R_DeformPosition`'s signature (`tr_shade_calc.c`/`.h`) grew a
+  `normal[3]`/`texS` pair — `normal` may be `NULL`, which skips `DEFORM_WAVE`/`DEFORM_BULGE` exactly
+  like before (every current entity/poly call site passes `NULL`, since neither has real per-vertex
+  normal data in its per-frame CPU path today). `vk_world.c` gained an `unpack_snorm16_3` (inverse
+  of the existing `pack_snorm16_3`) to recover a float normal from `vkWorldVertex_t`'s packed
+  snorm16 field for the static-world expansion functions (`ExpandAndDrawStage0`/
+  `ExpandAndDrawExtraStage`/`ExpandAndDrawWorldDlights`, all of which now take the owning `shader_t*`
+  too); brush-entity surfaces (`DrawBrushSurfaceStage0`/`DrawBrushSurfaceExtraStage`) already kept a
+  float normal in `brushVert_t` for the entity-axis rotation, so those needed no unpack. Ported the
+  reference engine's actual `RB_CalcDeformVertexes`/`RB_CalcBulgeVertexes` math from
+  `code/renderer/tr_shade_calc.c` directly, **except** the RTCW-specific "Ridah fire-rise" hack
+  (`deformationWave.frequency < 0`), which needs an entity's `fireRiseDir` — no equivalent exists
+  here, and it's a rare enough effect not to be worth inventing one for. Also investigated
+  `deformVertexes normal` (wiggles the normal itself, for wavy env-map sparkle — distinct from
+  `wave`/`normal` as the roadmap bullet's old wording implied, it never touches position) and left
+  it unimplemented: it needs real 3D Perlin noise, which this renderer has never had (`GF_NOISE`
+  waveforms already stand in with sine for the same reason), and would have zero visible effect
+  today regardless since nothing consumes per-vertex normal for lighting yet. Not self-built or
+  tested (standing instruction) — this needs no shader recompile (it's pure CPU-side math feeding
+  the existing dynamic vertex buffers), just a normal rebuild. In-game check: a shader using
+  `deformVertexes wave`/`bulge` on world geometry (or a func_door/func_rotating using one) should
+  now visibly ripple/bulge instead of sitting rigid.

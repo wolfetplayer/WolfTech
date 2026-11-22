@@ -138,7 +138,7 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 
 		// deformVertexes is shader-level: computed once, shared by every stage below.
 		for ( v = 0; v < poly->numVerts; v++ ) {
-			R_DeformPosition( shader, polyVerts[poly->firstVert + v].xyz, deformedPos[v] );
+			R_DeformPosition( shader, polyVerts[poly->firstVert + v].xyz, NULL, 0.0f, deformedPos[v] ); // scene polys carry no per-vertex normal -- wave/bulge pass through, same as before
 		}
 
 		if ( vk_canCollapseMultiTex( shader, &combineMode ) ) {

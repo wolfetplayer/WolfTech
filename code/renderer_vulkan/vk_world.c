@@ -241,6 +241,13 @@ static void pack_snorm16_3( const vec3_t in, int16_t out[4] ) {
 	out[3] = 0;
 }
 
+// Inverse of pack_snorm16_3 -- needed to get a real float normal back out of s_cachedVerts for CPU-side deformVertexes wave/bulge (see R_DeformPosition).
+static void unpack_snorm16_3( const int16_t in[4], vec3_t out ) {
+	out[0] = in[0] * ( 1.0f / 32767.0f );
+	out[1] = in[1] * ( 1.0f / 32767.0f );
+	out[2] = in[2] * ( 1.0f / 32767.0f );
+}
+
 // Raw BSP vertex color (already overbright-shifted by R_LoadDrawVerts) -- not stage-baked.
 static void CopyVertex( vkWorldVertex_t *out, const drawVert_t *in ) {
 	out->pos[0] = in->xyz[0];
@@ -549,7 +556,8 @@ void vk_world_build( void ) {
 
 // Expands refs[0..numRefs)'s visible surfaces into s_dynLMMapped with stage's real per-frame
 // rgbGen/tcMod, merging contiguous visible writes into one draw call per run.
-static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const shaderStage_t *stage0 ) {
+static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const shader_t *shader ) {
+	const shaderStage_t *stage0 = &shader->stages[0];
 	qboolean runOpen = qfalse;
 	uint32_t runStart = 0;
 	int j;
@@ -586,13 +594,17 @@ static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const 
 		for ( k = 0; k < ref->indexCount; k++ ) {
 			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
 			vkWorldVertex_t *dst = &s_dynLMMapped[s_dynLMRegionBase + s_dynLMWriteOffset++];
+			vec3_t normal;
+			float deformed[3];
 			byte color[4];
 			float uv[2];
 
+			unpack_snorm16_3( src->normal, normal );
+			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
 			R_CalcStageColorAlpha( stage0, NULL, NULL, src->color, color );
-			R_CalcStageTexCoord( stage0, src->uv[0], src->uv[1], src->pos, NULL, uv );
+			R_CalcStageTexCoord( stage0, src->uv[0], src->uv[1], deformed, NULL, uv );
 
-			dst->pos[0] = src->pos[0]; dst->pos[1] = src->pos[1]; dst->pos[2] = src->pos[2];
+			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
 			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
 			dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
 			dst->lmUv[0] = src->lmUv[0]; dst->lmUv[1] = src->lmUv[1];
@@ -608,7 +620,7 @@ static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const 
 }
 
 // Same as above but for stages 1+: no lightmap UV, writes vk2d_vertex_t into s_dyn2DMapped.
-static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, const shaderStage_t *stage ) {
+static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, const shader_t *shader, const shaderStage_t *stage ) {
 	qboolean runOpen = qfalse;
 	uint32_t runStart = 0;
 	int j;
@@ -645,13 +657,17 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 		for ( k = 0; k < ref->indexCount; k++ ) {
 			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
 			vk2d_vertex_t *dst = &s_dyn2DMapped[s_dyn2DRegionBase + s_dyn2DWriteOffset++];
+			vec3_t normal;
+			float deformed[3];
 			byte color[4];
 			float uv[2];
 
+			unpack_snorm16_3( src->normal, normal );
+			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
 			R_CalcStageColorAlpha( stage, NULL, NULL, src->color, color );
-			R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], src->pos, NULL, uv );
+			R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], deformed, NULL, uv );
 
-			dst->pos[0] = src->pos[0]; dst->pos[1] = src->pos[1]; dst->pos[2] = src->pos[2];
+			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
 			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
 			dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
 		}
@@ -667,7 +683,7 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 // before this; this is a per-vertex distance falloff (same shape as vk_entity.c's ComputeEntityTint),
 // not true projected-texture dlights like vkQuake3's ProjectDlightTexture -- a scoped simplification,
 // not a faked feature: it's real per-vertex light falloff, just not a radial-blob projection.
-static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, const dlight_t *dlights, int numDlights ) {
+static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, const shader_t *shader, const dlight_t *dlights, int numDlights ) {
 	qboolean runOpen = qfalse;
 	uint32_t runStart = 0;
 	int j;
@@ -704,14 +720,19 @@ static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, 
 		for ( k = 0; k < ref->indexCount; k++ ) {
 			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
 			vk2d_vertex_t *dst = &s_dynDlightMapped[s_dynDlightRegionBase + s_dynDlightWriteOffset++];
+			vec3_t normal;
+			float deformed[3];
 			vec3_t sum = { 0.0f, 0.0f, 0.0f };
 			int lightIdx, r, g, b;
+
+			unpack_snorm16_3( src->normal, normal );
+			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
 
 			for ( lightIdx = 0; lightIdx < numDlights; lightIdx++ ) {
 				vec3_t dir;
 				float dist, power, d;
 
-				VectorSubtract( dlights[lightIdx].origin, src->pos, dir );
+				VectorSubtract( dlights[lightIdx].origin, deformed, dir );
 				dist = VectorNormalize( dir );
 				power = DLIGHT_AT_RADIUS * ( dlights[lightIdx].radius * dlights[lightIdx].radius );
 				if ( dist < DLIGHT_MINIMUM_RADIUS ) {
@@ -722,7 +743,7 @@ static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, 
 			}
 
 			r = (int)sum[0]; g = (int)sum[1]; b = (int)sum[2];
-			dst->pos[0] = src->pos[0]; dst->pos[1] = src->pos[1]; dst->pos[2] = src->pos[2];
+			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
 			dst->color[0] = (byte)( r < 0 ? 0 : ( r > 255 ? 255 : r ) );
 			dst->color[1] = (byte)( g < 0 ? 0 : ( g > 255 ? 255 : g ) );
 			dst->color[2] = (byte)( b < 0 ? 0 : ( b > 255 ? 255 : b ) );
@@ -845,13 +866,15 @@ static void DrawBrushSurfaceStage0( const bspSurface_t *surf, const shader_t *sh
 	for ( k = 0; k < numIndexes; k++ ) {
 		const brushVert_t *src = &verts[indexes[k]];
 		vkWorldVertex_t *dst = &s_dynBrushLMMapped[s_dynBrushLMRegionBase + s_dynBrushLMWriteOffset++];
+		float deformed[3];
 		byte color[4];
 		float uv[2];
 
+		R_DeformPosition( shader, src->pos, src->normal, src->uv[0], deformed );
 		R_CalcStageColorAlpha( stage0, entityColor, NULL, src->color, color );
-		R_CalcStageTexCoord( stage0, src->uv[0], src->uv[1], src->pos, entityTranslate, uv );
+		R_CalcStageTexCoord( stage0, src->uv[0], src->uv[1], deformed, entityTranslate, uv );
 
-		dst->pos[0] = src->pos[0]; dst->pos[1] = src->pos[1]; dst->pos[2] = src->pos[2];
+		dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
 		dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
 		dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
 		dst->lmUv[0] = src->lmUv[0]; dst->lmUv[1] = src->lmUv[1];
@@ -893,13 +916,15 @@ static void DrawBrushSurfaceExtraStage( const shader_t *shader, int stageIdx, co
 	for ( k = 0; k < numIndexes; k++ ) {
 		const brushVert_t *src = &verts[indexes[k]];
 		vk2d_vertex_t *dst = &s_dynBrushExtraMapped[s_dynBrushExtraRegionBase + s_dynBrushExtraWriteOffset++];
+		float deformed[3];
 		byte color[4];
 		float uv[2];
 
+		R_DeformPosition( shader, src->pos, src->normal, src->uv[0], deformed );
 		R_CalcStageColorAlpha( stage, entityColor, NULL, src->color, color );
-		R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], src->pos, entityTranslate, uv );
+		R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], deformed, entityTranslate, uv );
 
-		dst->pos[0] = src->pos[0]; dst->pos[1] = src->pos[1]; dst->pos[2] = src->pos[2];
+		dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
 		dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
 		dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
 	}
@@ -1054,7 +1079,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
 			0, 1, &batch->descriptor, 0, NULL );
 
-		ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, &shader->stages[0] );
+		ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader );
 
 		// Stages 1+ get their own real per-frame rgbGen/tcMod now, sharing no state with stage 0.
 		// vk.pipeline_layout and vk.lightmap_pipeline_layout declare identical push constant ranges,
@@ -1081,7 +1106,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
 				0, 1, &stageImage->vk_descriptor, 0, NULL );
 
-			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, stage );
+			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, stage );
 		}
 	}
 
@@ -1119,7 +1144,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
 					0, 1, &diffuse->vk_descriptor, 0, NULL );
 
-				ExpandAndDrawWorldDlights( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, dlights, numDlights );
+				ExpandAndDrawWorldDlights( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, dlights, numDlights );
 			}
 		}
 	}
@@ -1143,7 +1168,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			shader = R_GetShaderByHandle( batch->shader );
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
 				0, 1, &batch->descriptor, 0, NULL );
-			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, &shader->stages[0] );
+			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader );
 		}
 	}
 

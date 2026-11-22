@@ -21,7 +21,7 @@ void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, const float worldPos[3],
 						   const float entityTranslate[2], float outST[2] );
 
-// Only deformVertexes move is a real deformation; every other type passes basePos through unchanged.
-void R_DeformPosition( const shader_t *shader, const float basePos[3], float outPos[3] );
+
+void R_DeformPosition( const shader_t *shader, const float basePos[3], const float normal[3], float texS, float outPos[3] );
 
 #endif // TR_SHADE_CALC_H_

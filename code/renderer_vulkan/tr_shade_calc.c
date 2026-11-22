@@ -238,7 +238,7 @@ void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, 
 	outST[0] = s; outST[1] = t;
 }
 
-void R_DeformPosition( const shader_t *shader, const float basePos[3], float outPos[3] ) {
+void R_DeformPosition( const shader_t *shader, const float basePos[3], const float normal[3], float texS, float outPos[3] ) {
 	int i;
 
 	outPos[0] = basePos[0]; outPos[1] = basePos[1]; outPos[2] = basePos[2];
@@ -246,12 +246,49 @@ void R_DeformPosition( const shader_t *shader, const float basePos[3], float out
 	for ( i = 0; i < shader->numDeforms; i++ ) {
 		const deformStage_t *ds = &shader->deforms[i];
 
-		if ( ds->deformation == DEFORM_MOVE ) {
+		switch ( ds->deformation ) {
+		case DEFORM_MOVE: {
 			float scale = EvalWaveForm( &ds->deformationWave );
 			outPos[0] += ds->moveVector[0] * scale;
 			outPos[1] += ds->moveVector[1] * scale;
 			outPos[2] += ds->moveVector[2] * scale;
+			break;
 		}
-		// every other deform type passes the position through unchanged, see tr_shade_calc.h
+
+		case DEFORM_WAVE: {
+			// Matches code/renderer's RB_CalcDeformVertexes, minus the Ridah fire-rise (negative-frequency) hack, which needs an entity fireRiseDir this renderer has no equivalent for.
+			float scale;
+			if ( !normal ) break;
+			if ( ds->deformationWave.frequency == 0.0f ) {
+				scale = EvalWaveForm( &ds->deformationWave ); // same for every vertex -- no spatial spread when freq is 0
+			} else {
+				waveForm_t wf = ds->deformationWave;
+				wf.phase += ( outPos[0] + outPos[1] + outPos[2] ) * ds->deformationSpread;
+				scale = EvalWaveForm( &wf );
+			}
+			outPos[0] += normal[0] * scale;
+			outPos[1] += normal[1] * scale;
+			outPos[2] += normal[2] * scale;
+			break;
+		}
+
+		case DEFORM_BULGE: {
+			// Matches code/renderer's RB_CalcBulgeVertexes: a traveling ripple along S, keyed off time.
+			float now, scale;
+			int64_t off;
+			if ( !normal ) break;
+			now = s_shaderTime * ds->bulgeSpeed;
+			off = (int64_t)( ( (float)FUNCTABLE_SIZE / ( (float)M_PI * 2.0f ) ) * ( texS * ds->bulgeWidth + now ) );
+			scale = s_sinTable[ off & FUNCTABLE_MASK ] * ds->bulgeHeight;
+			outPos[0] += normal[0] * scale;
+			outPos[1] += normal[1] * scale;
+			outPos[2] += normal[2] * scale;
+			break;
+		}
+
+		default:
+			// every other deform type passes outPos through unchanged, see tr_shade_calc.h
+			break;
+		}
 	}
 }

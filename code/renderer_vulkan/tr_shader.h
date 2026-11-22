@@ -83,7 +83,7 @@ typedef struct {
 	float rotateSpeed;	// TMOD_ROTATE
 } texModInfo_t;
 
-// Matches vkQuake3's deform_t; only DEFORM_MOVE is evaluated, see tr_shade_calc.c. TEXT0-7 collapse to one value.
+// Matches vkQuake3's deform_t; MOVE/WAVE/BULGE are evaluated (WAVE/BULGE only where a per-vertex normal is available -- see R_DeformPosition), the rest pass through. TEXT0-7 collapse to one value.
 typedef enum {
 	DEFORM_NONE,
 	DEFORM_WAVE,

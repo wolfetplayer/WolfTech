@@ -875,7 +875,7 @@ static void WriteLerpStageVertices( const shader_t *shader, const byte *entityCo
 
 	for ( v = 0; v < numVerts; v++ ) {
 		float deformed[3];
-		R_DeformPosition( shader, base[v].pos, deformed );
+		R_DeformPosition( shader, base[v].pos, NULL, 0.0f, deformed ); // no per-vertex normal here -- wave/bulge pass through, same as before
 
 		for ( s = 0; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
@@ -904,7 +904,7 @@ static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entit
 		byte color[4];
 		float st0[2], st1[2];
 
-		R_DeformPosition( shader, base[v].pos, deformed );
+		R_DeformPosition( shader, base[v].pos, NULL, 0.0f, deformed ); // no per-vertex normal here -- wave/bulge pass through, same as before
 		R_CalcStageColorAlpha( stage0, entityColor, lightingTint, baseColor, color );
 		R_CalcStageTexCoord( stage0, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st0 );
 		R_CalcStageTexCoord( stage1, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st1 );
