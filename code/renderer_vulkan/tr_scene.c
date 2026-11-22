@@ -138,18 +138,26 @@ const sceneCorona_t *R_GetSceneCoronas( int *outCount ) {
 	return &s_coronas[s_firstSceneCorona];
 }
 
-static qboolean s_skyboxPortalActive = qfalse;
+static qboolean s_portalRenderedThisFrame;
+static qboolean s_mainRenderedThisFrame;
 
-void R_ResetSkyboxPortal( void ) {
-	s_skyboxPortalActive = qfalse;
+void R_BeginFrameSkyboxOrder( void ) {
+	s_portalRenderedThisFrame = qfalse;
+	s_mainRenderedThisFrame = qfalse;
 }
 
-void R_NoteSkyboxPortalScene( int rdflags ) {
-	if ( ( rdflags & RDF_SKYBOXPORTAL ) && ( rdflags & RDF_DRAWSKYBOX ) ) {
-		s_skyboxPortalActive = qtrue;
-	}
+qboolean R_PortalSceneRenderedThisFrame( void ) {
+	return s_portalRenderedThisFrame;
 }
 
-qboolean R_SkyboxPortalActive( void ) {
-	return s_skyboxPortalActive;
+qboolean R_MainSceneRenderedThisFrame( void ) {
+	return s_mainRenderedThisFrame;
+}
+
+void R_NotePortalSceneRendered( void ) {
+	s_portalRenderedThisFrame = qtrue;
+}
+
+void R_NoteMainSceneRendered( void ) {
+	s_mainRenderedThisFrame = qtrue;
 }

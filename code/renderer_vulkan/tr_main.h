@@ -9,6 +9,9 @@ void R_InitMain( void );
 void R_SetupViewMatrix( const refdef_t *fd, float viewMatrix[16] );
 void R_SetupProjectionMatrix( const refdef_t *fd, float projMatrix[16] );
 
+// Same zFar R_SetupProjectionMatrix uses; exposed so vk_sky.c can size its box to always stay within it.
+float R_ComputeZFar( const refdef_t *fd );
+
 // out = a * b (column-major, i.e. out*v == a*(b*v)).
 void R_MultMatrix( const float a[16], const float b[16], float out[16] );
 

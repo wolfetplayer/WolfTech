@@ -13,7 +13,7 @@ static cvar_t *r_znear;
 #define TR_MAIN_ZFAR_NOWORLD 2048.0f
 
 // Farthest corner of the loaded world's bounds from the camera, so distant geometry isn't clipped.
-static float R_ComputeZFar( const refdef_t *fd ) {
+float R_ComputeZFar( const refdef_t *fd ) {
 	const float *mins, *maxs;
 	float farthestSq = 0.0f;
 	int i;

@@ -52,9 +52,11 @@ const polyVert_t *R_GetScenePolyVerts( void );
 // Windows off entities/dlights/polys/coronas added since the last call, for a frame with multiple RE_RenderScene calls (sky-portal, main, view-weapon). Call right after each one returns.
 void R_AdvanceSceneWindow( void );
 
-// Sky-portal (RDF_SKYBOXPORTAL/RDF_DRAWSKYBOX) tracking -- separate from tr_portal.h's mirror/portal surfaces; see tr_init.c's R_RenderViewInternal.
-void R_ResetSkyboxPortal( void ); // call once per RE_LoadWorldMap -- otherwise sticky for the rest of the map
-void R_NoteSkyboxPortalScene( int rdflags ); // call once per RE_RenderScene(fd), with fd->rdflags
-qboolean R_SkyboxPortalActive( void ); // qtrue once a scene this map has set both RDF_SKYBOXPORTAL and RDF_DRAWSKYBOX
+// Per-frame tracking of which of the sky-portal (RDF_SKYBOXPORTAL/RDF_DRAWSKYBOX) and real scenes rendered first this frame -- some cgame builds call them in either order; see tr_init.c's R_RenderViewInternal.
+void R_BeginFrameSkyboxOrder( void ); // call once per real frame, before any RE_RenderScene call
+qboolean R_PortalSceneRenderedThisFrame( void );
+qboolean R_MainSceneRenderedThisFrame( void );
+void R_NotePortalSceneRendered( void );
+void R_NoteMainSceneRendered( void );
 
 #endif // TR_SCENE_H_

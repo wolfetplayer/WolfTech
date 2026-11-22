@@ -42,15 +42,11 @@ static qboolean R_ClusterIsVisible( int camCluster, int cluster ) {
 	return ( row[cluster >> 3] & ( 1 << ( cluster & 7 ) ) ) != 0;
 }
 
-// Temporary diagnostic for the sky-portal black-screen report: set r_vk_debugSky 1 and check rtcwconsole.log. Remove once root-caused.
-static cvar_t *r_vk_debugSky;
-
 // Scans every leaf rather than descending the node tree -- a few thousand checks a frame is cheap.
 void R_MarkVisibleSurfaces( const refdef_t *fd ) {
 	cullPlane_t frustum[NUM_FRUSTUM_PLANES];
 	int camLeaf, camCluster;
 	int i, j;
-	int numVisible;
 
 	if ( !tr_world.loaded || tr_world.numSurfaces == 0 ) {
 		return;
@@ -89,18 +85,6 @@ void R_MarkVisibleSurfaces( const refdef_t *fd ) {
 				s_visibleSurfaces[surfIdx] = qtrue;
 			}
 		}
-	}
-
-	if ( !r_vk_debugSky ) {
-		r_vk_debugSky = ri.Cvar_Get( "r_vk_debugSky", "0", 0 );
-	}
-	if ( r_vk_debugSky->integer ) {
-		numVisible = 0;
-		for ( i = 0; i < s_numAllocated; i++ ) {
-			if ( s_visibleSurfaces[i] ) { numVisible++; }
-		}
-		ri.Printf( PRINT_ALL, "vk_sky dbg: R_MarkVisibleSurfaces rdflags=%d vieworg=(%.1f %.1f %.1f) camLeaf=%d camCluster=%d numLeafs=%d numVisibleSurfaces=%d\n",
-			fd->rdflags, fd->vieworg[0], fd->vieworg[1], fd->vieworg[2], camLeaf, camCluster, tr_world.numLeafs, numVisible );
 	}
 }
 

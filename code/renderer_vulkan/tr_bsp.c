@@ -413,7 +413,6 @@ void RE_LoadWorldMap( const char *name ) {
 	memset( &tr_world, 0, sizeof( tr_world ) );
 	Q_strncpyz( tr_world.name, name, sizeof( tr_world.name ) );
 	R_InitFog(); // clear any trigger_fog left active from the previous map
-	R_ResetSkyboxPortal(); // ditto for the sticky sky-portal flag -- see tr_scene.h
 	vk_flares_clear(); // ditto for persistent corona fade/occlusion state -- ids are entity numbers, reused across maps
 
 	header = (dheader_t *)buffer;

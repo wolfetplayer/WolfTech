@@ -10,7 +10,7 @@
 #include "vk_sky.h"
 
 #define SKY_VERTS 36 // 6 faces * 2 triangles * 3 verts, non-indexed
-#define SKY_HALF_SIZE 4096.0f
+#define SKY_ZFAR_SCALE ( 1.0f / 1.75f ) // matches code/renderer/tr_sky.c's MakeSkyVec: keeps the box's farthest corner inside zFar
 
 static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
@@ -64,54 +64,59 @@ static void set_sky_vert( vk2d_vertex_t *v, const vec3_t camPos, float ox, float
 	v->uv[1] = vcoord;
 }
 
-// Face order matches ParseSkyParms' suf[] (rt, lf, bk, ft, up, dn); UV orientation is a best-effort pick, unverified against the reference's exact texgen.
-static void build_sky_box( vk2d_vertex_t *out, const vec3_t camPos, float s ) {
-	int i = 0;
+// Matches code/renderer/tr_sky.c's MakeSkyVec exactly (face axis order rt/lf/bk/ft/up/dn) -- the old hand-picked corners/UVs here didn't, which mirrored/misplaced at least the rt face.
+static const int sky_st_to_vec[6][3] = {
+	{  3, -1,  2 }, // rt
+	{ -3,  1,  2 }, // lf
+	{  1,  3,  2 }, // bk
+	{ -1, -3,  2 }, // ft
+	{ -2, -1,  3 }, // up
+	{  2, -1, -3 }, // dn
+};
 
-	set_sky_vert( &out[i++], camPos, s, -s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, s, -s, 1, 0 ); set_sky_vert( &out[i++], camPos, s, s, s, 1, 1 );
-	set_sky_vert( &out[i++], camPos, s, -s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, s, s, 1, 1 ); set_sky_vert( &out[i++], camPos, s, -s, s, 0, 1 );
-
-	set_sky_vert( &out[i++], camPos, -s, s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, -s, -s, -s, 1, 0 ); set_sky_vert( &out[i++], camPos, -s, -s, s, 1, 1 );
-	set_sky_vert( &out[i++], camPos, -s, s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, -s, -s, s, 1, 1 ); set_sky_vert( &out[i++], camPos, -s, s, s, 0, 1 );
-
-	set_sky_vert( &out[i++], camPos, s, s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, -s, s, -s, 1, 0 ); set_sky_vert( &out[i++], camPos, -s, s, s, 1, 1 );
-	set_sky_vert( &out[i++], camPos, s, s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, -s, s, s, 1, 1 ); set_sky_vert( &out[i++], camPos, s, s, s, 0, 1 );
-
-	set_sky_vert( &out[i++], camPos, -s, -s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, -s, -s, 1, 0 ); set_sky_vert( &out[i++], camPos, s, -s, s, 1, 1 );
-	set_sky_vert( &out[i++], camPos, -s, -s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, -s, s, 1, 1 ); set_sky_vert( &out[i++], camPos, -s, -s, s, 0, 1 );
-
-	set_sky_vert( &out[i++], camPos, -s, -s, s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, -s, s, 1, 0 ); set_sky_vert( &out[i++], camPos, s, s, s, 1, 1 );
-	set_sky_vert( &out[i++], camPos, -s, -s, s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, s, s, 1, 1 ); set_sky_vert( &out[i++], camPos, -s, s, s, 0, 1 );
-
-	set_sky_vert( &out[i++], camPos, -s, s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, s, -s, 1, 0 ); set_sky_vert( &out[i++], camPos, s, -s, -s, 1, 1 );
-	set_sky_vert( &out[i++], camPos, -s, s, -s, 0, 0 ); set_sky_vert( &out[i++], camPos, s, -s, -s, 1, 1 ); set_sky_vert( &out[i++], camPos, -s, -s, -s, 0, 1 );
+static void sky_vec( float s, float t, int face, float size, vec3_t outOffset ) {
+	float b[3] = { s * size, t * size, size };
+	int j;
+	for ( j = 0; j < 3; j++ ) {
+		int k = sky_st_to_vec[face][j];
+		outOffset[j] = ( k < 0 ) ? -b[-k - 1] : b[k - 1];
+	}
 }
 
-// Same r_vk_debugSky cvar as tr_world.c's R_MarkVisibleSurfaces (own cvar_t pointer, registered here too). Remove once root-caused.
-static cvar_t *r_vk_debugSky_sky;
+static void build_sky_box( vk2d_vertex_t *out, const vec3_t camPos, float size ) {
+	static const float stCorner[4][2] = { { -1, -1 }, { 1, -1 }, { 1, 1 }, { -1, 1 } };
+	static const int order[6] = { 0, 1, 2, 0, 2, 3 };
+	int face, i = 0;
 
-void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[12] ) {
+	for ( face = 0; face < 6; face++ ) {
+		vec3_t offset[4];
+		float uv[4][2];
+		int c;
+
+		for ( c = 0; c < 4; c++ ) {
+			float s = stCorner[c][0], t = stCorner[c][1];
+			sky_vec( s, t, face, size, offset[c] );
+			uv[c][0] = ( s + 1.0f ) * 0.5f;
+			uv[c][1] = 1.0f - ( t + 1.0f ) * 0.5f; // matches MakeSkyVec's own t = 1 - t flip
+		}
+
+		for ( c = 0; c < 6; c++ ) {
+			int k = order[c];
+			set_sky_vert( &out[i++], camPos, offset[k][0], offset[k][1], offset[k][2], uv[k][0], uv[k][1] );
+		}
+	}
+}
+
+void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[12], float zFar ) {
 	float push_data[32];
 	VkDeviceSize vb_offset = 0;
 	int face;
-
-	if ( !r_vk_debugSky_sky ) {
-		r_vk_debugSky_sky = ri.Cvar_Get( "r_vk_debugSky", "0", 0 );
-	}
-	if ( r_vk_debugSky_sky->integer ) {
-		int validFaces = 0;
-		for ( face = 0; face < 6; face++ ) {
-			if ( tr_world.skyOuterBox[face] && tr_world.skyOuterBox[face]->vk_descriptor != VK_NULL_HANDLE ) { validFaces++; }
-		}
-		ri.Printf( PRINT_ALL, "vk_sky dbg: vk_sky_draw hasSky=%d camPos=(%.1f %.1f %.1f) validFaces=%d/6\n",
-			tr_world.hasSky, camPos[0], camPos[1], camPos[2], validFaces );
-	}
 
 	if ( !tr_world.hasSky || !s_mapped ) {
 		return;
 	}
 
-	build_sky_box( s_mapped, camPos, SKY_HALF_SIZE );
+	build_sky_box( s_mapped, camPos, zFar * SKY_ZFAR_SCALE );
 
 	memset( push_data, 0, sizeof( push_data ) );
 	memcpy( push_data, mvp, 16 * sizeof( float ) );

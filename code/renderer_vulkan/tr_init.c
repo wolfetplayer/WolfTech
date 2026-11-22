@@ -227,8 +227,6 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 	float viewMatrix[16], projMatrix[16], viewProj[16], fogPush[12];
 	qboolean isSkyboxPortalScene = ( fd->rdflags & RDF_SKYBOXPORTAL ) != 0;
 
-	R_NoteSkyboxPortalScene( fd->rdflags ); // must run before the "skip this scene's sky" check below
-
 	R_SetFogFrameTime( fd->time );
 	R_SetShaderTime( fd->time );
 	R_SetBSPFogForPoint( fd->vieworg );
@@ -239,19 +237,29 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 	R_MultMatrix( projMatrix, viewMatrix, viewProj );
 
 	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+		// Some cgame builds call the portal scene after the real scene, not before -- track actual per-frame arrival order instead of assuming it (see tr_scene.h).
+		if ( isSkyboxPortalScene && R_MainSceneRenderedThisFrame() ) {
+			return; // real scene already drew its own sky below -- this would only stamp the wrong camera over it
+		}
+
 		R_MarkVisibleSurfaces( fd );
 		if ( R_TryRenderPortalView( fd ) ) {
 			R_MarkVisibleSurfaces( fd ); // the recursive call above overwrote tr_world.c's shared visibility buffer
 		}
 
-		if ( R_SkyboxPortalActive() && !isSkyboxPortalScene ) {
+		if ( isSkyboxPortalScene ) {
+			vk_sky_draw( fd->vieworg, viewProj, fogPush, R_ComputeZFar( fd ) );
+			R_NotePortalSceneRendered();
+		} else if ( R_PortalSceneRenderedThisFrame() ) {
 			vk_clear_depth_only(); // reset depth for the real scene, but leave color so the sky room's background survives
-		}
-
-		if ( isSkyboxPortalScene || !R_SkyboxPortalActive() ) {
-			vk_sky_draw( fd->vieworg, viewProj, fogPush );
+		} else {
+			vk_sky_draw( fd->vieworg, viewProj, fogPush, R_ComputeZFar( fd ) ); // portal hasn't rendered yet this frame (or this map has none)
 		}
 		vk_world_draw( viewProj, fogPush );
+
+		if ( !isSkyboxPortalScene ) {
+			R_NoteMainSceneRendered();
+		}
 	}
 
 	vk_draw3d_test_cube( s_testCubeOrigin, 40.0f, viewProj, fogPush );
@@ -379,6 +387,7 @@ static void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	vk_entity_begin_frame();
 	vk_poly_begin_frame();
 	vk_shadows_begin_frame();
+	R_BeginFrameSkyboxOrder();
 }
 
 static void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {

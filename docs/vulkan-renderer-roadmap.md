@@ -39,19 +39,10 @@ It's still well behind both reference points on everything not yet checked off b
   flat RGBA tint for the whole model, world gets baked lightmap only), no tangent/normal data in
   the vertex formats at all, no HDR/bloom/tonemap, no SSAO/FXAA/DOF, no cubemap reflection probes,
   no shadow mapping.
-- **Open/unverified from the most recent session**: the "shattered" view-weapon/held-item geometry
-  report has two fixes built now (shared-buffer-cursor persistence, then per-scene entity/dlight/poly
-  windowing — see Changelog below); retesting after the first fix alone surfaced some weapons
-  rendering invisible (FG42 body, scope still visible), which the second fix addresses, but neither
-  has been confirmed in-game yet. Separately, the user reports the skybox portal itself renders
-  nothing (pitch black plus the raw render-pass clear color showing through where sky should be) —
-  not yet root-caused; `r_vk_debugSky` diagnostic logging (`tr_world.c`'s `R_MarkVisibleSurfaces`,
-  `vk_sky.c`'s `vk_sky_draw`) was added to investigate it, pending a log capture. A
-  `r_vk_disableMultiTex` bisection cvar from an earlier (inconclusive) attempt at the shattered-weapon
-  bug is still sitting in `vk_pipelines.c`, undocumented until now — safe to leave (off by default,
-  no `sv_cheats` requirement) but should be removed once that investigation is fully closed out. The
-  `r_vk_debugWeapon` and `r_vk_debugSky` diagnostic cvars/logging should be removed once their
-  respective reports are confirmed fixed.
+- **Open/unverified**: a `r_vk_disableMultiTex` bisection cvar from an earlier (inconclusive) attempt
+  at the (since-fixed) shattered-weapon bug is still sitting in `vk_pipelines.c`, undocumented until
+  now — safe to leave (off by default, no `sv_cheats` requirement) but should be removed as cleanup.
+  Same for `r_vk_debugWeapon` (`vk_entity.c`), left over from that same investigation.
 
 Full raw findings from the original audit are folded into the phases below; this doc is the actionable
 version, not a dump of the investigation.
@@ -305,23 +296,21 @@ it once, make world/entity/poly submission all go through it.
       wrong half of the scene (or none of it), the fix is a one-line sign flip in
       `R_TryRenderPortalView`'s `s_portalNormal`/`s_portalDist` setup (`tr_portal.c`). Compiles clean;
       not yet tested against a real mirror/portal shader in a map.
-- [x] Sky-portal (`RDF_SKYBOXPORTAL`/`RDF_DRAWSKYBOX`, the `_skyboxOrigin` worldspawn key's distant
-      "sky room") — **a completely different mechanism from the mirror/portal surfaces above**,
-      flagged by the user as something they rely on for their skybox and folded into this pass once
-      confirmed unrelated to (and much smaller than) the clip-plane work. It's just two
-      back-to-back `RE_RenderScene` calls per frame from cgame's `CG_DrawSkyBoxPortal`: a small
-      "sky room" scene first, then the real scene on top *without re-clearing color* so the sky
-      room's painted background survives wherever the real scene draws nothing. Added: a sticky
-      `R_SkyboxPortalActive()` flag (`tr_scene.c`, reset per `RE_LoadWorldMap`) set once a scene has
-      both `RDF_SKYBOXPORTAL` and `RDF_DRAWSKYBOX`; `R_RenderViewInternal` then skips the real
-      scene's own sky draw (the sky room already painted it) and does a mid-render-pass
-      `vkCmdClearAttachments` depth-only clear (new `vk_clear_depth_only`, `vk_frame.c` — our render
-      pass only clears at load, once per frame, unlike classic GL's per-call `glClear`) before the
-      real scene's own draws. Deliberately conservative: the sticky flag requires *both* flags (not
-      just `RDF_SKYBOXPORTAL` alone) specifically so a map with a `_skyboxOrigin` key but
-      `cg_skybox 0` can't accidentally suppress its own normal sky — unverified against upstream's
-      exact behavior in that edge case, but safe by construction. Compiles clean; not yet tested
-      against a map that actually sets `_skyboxOrigin`.
+- [x] Sky-portal (`RDF_SKYBOXPORTAL`/`RDF_DRAWSKYBOX`, cgame's `CG_DrawSkyBoxPortal`/`CS_SKYBOXORG`
+      distant "sky room") — **a completely different mechanism from the mirror/portal surfaces
+      above**, flagged by the user as something they rely on for their skybox and folded into this
+      pass once confirmed unrelated to (and much smaller than) the clip-plane work. Two back-to-back
+      `RE_RenderScene` calls per frame: a small "sky room" scene, then the real scene on top
+      *without re-clearing color* so the sky room's painted background survives wherever the real
+      scene draws nothing (`vk_clear_depth_only`, `vk_frame.c` — our render pass only clears at
+      load, once per frame, unlike classic GL's per-call `glClear`). `tr_scene.c`/`.h` track, per
+      frame (not stickily across the map's lifetime — the first design's mistake, see the
+      2026-11-22 changelog entry), which of the two scenes rendered first, since this build's cgame
+      doesn't always call them in the "expected" order. **Two real bugs found and fixed after the
+      user reported visual artifacts here** (first a black sky, later a solid-color wedge cutting
+      into the starfield): the scene-order assumption above, and a fixed-size sky-box cube getting
+      clipped by a per-scene-dynamic far plane — see the 2026-11-22 changelog entry for the full
+      investigation. **User confirmed fixed in-game.**
 
 - [x] Brush-model entities (func_door/func_rotating/func_plat/func_train/etc.): **found by the user as
       "doors are invisible," root cause was a complete gap this audit missed entirely, not a rendering
@@ -865,4 +854,32 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   every model defines, and just skips the effect) — not a bug, just logging that should never have
   stayed in. Removed both prints.
 - **2026-11-21** — Implemented the "2D completeness" item (`RE_RotatedPic`/`RE_StretchPicGradient`,
-  see its checkmark above for the full design). Not yet built or tested in-game.
+  see its checkmark above for the full design). **User confirmed working in-game.**
+- **2026-11-22** — Root-caused and fixed the long-standing skybox-portal visual bug (previously
+  described as "pitch black," this session it showed as a solid-color wedge cutting into an
+  otherwise-correct starfield). User correctly pushed back twice on dead-end theories ("not an asset
+  issue," confirmed by GL1 rendering the same map fine; "maybe something wrong [with the] sky
+  portal," which turned out right). Ruled out, in order: asset content (extracted and sampled the
+  actual TGA face textures directly), a `_skyboxOrigin` worldspawn-key sky portal (this map uses the
+  configstring-based `CG_DrawSkyBoxPortal` mechanism instead — different code path, same symptom
+  category), the cube face UV/orientation math (real bug found and fixed against
+  `code/renderer/tr_sky.c`'s `MakeSkyVec` formula, but didn't explain this symptom), scene-arrival
+  order (also a real bug — this build's cgame renders the portal scene *after* the real scene, not
+  before as `tr_init.c` assumed; added per-frame, not sticky, order tracking in `tr_scene.c`/`.h` so
+  either order composites correctly), and `FOG_PORTALVIEW` fog (confirmed via a diagnostic print that
+  fog is disabled for every scene in this map). The actual cause: `vk_sky.c`'s camera-centered cube
+  used a fixed `SKY_HALF_SIZE` (4096), but the reference engine sizes its sky box dynamically from
+  the *current scene's* far clip plane (`boxSize = zFar / 1.75`) specifically so it's never clipped —
+  and this renderer's zFar is computed from the loaded world's bounds relative to the camera
+  (`tr_main.c`'s `R_ComputeZFar`), which can come out much smaller for a tiny sky-portal scene (a
+  diagnostic print showed 4825.9 for the portal scene here) than the cube's fixed-size farthest
+  corner (4096×√3 ≈ 7094) — clipping away whatever chunk of the cube fell past that distance, and
+  the render pass's own clear color showed through the gap. Confirmed via two isolation tests before
+  landing on this: disabling the cube entirely made the *whole* sky the wedge's color (proving it was
+  the render-pass clear color, not an asset or world-geometry issue), and disabling just the portal's
+  own world geometry left the wedge untouched (ruling that out too). Fixed by exposing
+  `R_ComputeZFar` (`tr_main.h`) and sizing `vk_sky_draw`'s box from it, matching the reference's
+  formula exactly. **User confirmed fixed in-game.** All temporary diagnostics added during this
+  investigation (`r_vk_debugSky` and its three call sites, a `r_vk_debugSkyFaces` face-tint test, a
+  `r_vk_debugSkyOff` cube/world isolation toggle, a fog-state print) have been removed now that it's
+  resolved.
