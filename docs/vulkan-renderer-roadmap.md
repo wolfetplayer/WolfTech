@@ -104,7 +104,9 @@ first; several later phases are hard to validate without it.
       creation code in `vk_instance.c` enables every supported feature, not none); the sampler just
       wasn't using it — now `anisotropyEnable`/`maxAnisotropy` come from `vk.features.samplerAnisotropy`
       and the newly-queried `vk.deviceProperties.limits.maxSamplerAnisotropy`. Went straight to the
-      GPU blit approach rather than a CPU box-filter stopgap.
+      GPU blit approach rather than a CPU box-filter stopgap -- a since-removed Phase 3 item asked
+      for this same `vkCmdBlitImage` chain "to replace the Phase 0 CPU box-filter stopgap," but that
+      stopgap was never actually built; this is already done.
 - [x] Fixed `animmap`: `tr_shader.c` now parses and stores every frame
       (`shaderStage_t.animImages[]`/`numAnimImages`/`animFrequency`, capped at `MAX_IMAGE_ANIMATIONS`
       16, matching `code/renderer`), and a new `R_GetStageImage()` in `tr_shade_calc.c` resolves the
@@ -982,3 +984,10 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   is unlikely to be worth the added complexity speculatively. Not self-built or tested; next step is
   a real build and confirming in a busy level that the `MAX_CACHED_3D_PIPELINES hit` warning print
   never fires.
+- **2026-11-22** — Removed the Phase 3 "GPU mip generation to replace the Phase 0 CPU box-filter
+  stopgap" item: checked `vk_image.c` and found it already generates every mip level via a
+  `vkCmdBlitImage` chain (the CPU only ever uploads level 0) — this was done directly in Phase 0's
+  mipmapping item, which already noted "went straight to the GPU blit approach rather than a CPU
+  box-filter stopgap." The CPU stopgap this item described replacing was never actually built, so
+  the item was stale rather than open work; cross-referenced from Phase 0's checkmark instead of
+  silently dropping it. No code changes.
