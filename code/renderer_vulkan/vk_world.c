@@ -601,7 +601,7 @@ static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const 
 
 			unpack_snorm16_3( src->normal, normal );
 			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
-			R_CalcStageColorAlpha( stage0, NULL, NULL, src->color, color );
+			R_CalcStageColorAlpha( stage0, NULL, src->color, color );
 			R_CalcStageTexCoord( stage0, src->uv[0], src->uv[1], deformed, NULL, uv );
 
 			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
@@ -664,7 +664,7 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 
 			unpack_snorm16_3( src->normal, normal );
 			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
-			R_CalcStageColorAlpha( stage, NULL, NULL, src->color, color );
+			R_CalcStageColorAlpha( stage, NULL, src->color, color );
 			R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], deformed, NULL, uv );
 
 			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
@@ -871,7 +871,7 @@ static void DrawBrushSurfaceStage0( const bspSurface_t *surf, const shader_t *sh
 		float uv[2];
 
 		R_DeformPosition( shader, src->pos, src->normal, src->uv[0], deformed );
-		R_CalcStageColorAlpha( stage0, entityColor, NULL, src->color, color );
+		R_CalcStageColorAlpha( stage0, entityColor, src->color, color );
 		R_CalcStageTexCoord( stage0, src->uv[0], src->uv[1], deformed, entityTranslate, uv );
 
 		dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
@@ -921,7 +921,7 @@ static void DrawBrushSurfaceExtraStage( const shader_t *shader, int stageIdx, co
 		float uv[2];
 
 		R_DeformPosition( shader, src->pos, src->normal, src->uv[0], deformed );
-		R_CalcStageColorAlpha( stage, entityColor, NULL, src->color, color );
+		R_CalcStageColorAlpha( stage, entityColor, src->color, color );
 		R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], deformed, entityTranslate, uv );
 
 		dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];

@@ -90,7 +90,7 @@ static byte ByteFromUnit( float v ) {
 	return (byte)( v * 255.0f );
 }
 
-void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor, const byte *lightingTint,
+void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 							 const byte baseColor[4], byte outColor[4] ) {
 	byte rgb[3];
 	byte alpha;
@@ -100,12 +100,8 @@ void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 	case CGEN_IDENTITY_LIGHTING: // tr.identityLight -- a global brightness scalar (always 1.0 here), not per-entity lighting
 	case CGEN_IDENTITY:
 	case CGEN_FOG: // fallback -- no fog-volume integration here
+	case CGEN_LIGHTING_DIFFUSE: // real per-vertex diffuse lighting is a GPU-side entity shader job now (vk_entity.c's ComputeEntityLighting); this CPU color stays flat white so the GPU's own multiply isn't double-applied
 		rgb[0] = rgb[1] = rgb[2] = 255;
-		break;
-	case CGEN_LIGHTING_DIFFUSE:
-		// Real version needs a per-vertex normal; lightingTint stands in.
-		if ( lightingTint ) { rgb[0] = lightingTint[0]; rgb[1] = lightingTint[1]; rgb[2] = lightingTint[2]; }
-		else { rgb[0] = rgb[1] = rgb[2] = 255; }
 		break;
 	case CGEN_ENTITY:
 		if ( entityColor ) { rgb[0] = entityColor[0]; rgb[1] = entityColor[1]; rgb[2] = entityColor[2]; }

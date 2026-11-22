@@ -268,7 +268,7 @@ static void DrawBillboard( const flare_t *f, const vec3_t right, const vec3_t up
 		}
 
 		for ( c = 0; c < 4; c++ ) {
-			R_CalcStageColorAlpha( stage, NULL, NULL, baseColor, stageColors[c] );
+			R_CalcStageColorAlpha( stage, NULL, baseColor, stageColors[c] );
 			R_CalcStageTexCoord( stage, baseUV[c][0], baseUV[c][1], corners[c], NULL, stageUVs[c] );
 		}
 

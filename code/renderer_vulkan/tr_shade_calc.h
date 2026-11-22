@@ -11,8 +11,10 @@ void R_SetShaderTime( int timeMs );
 // Resolves animmap's current frame from shaderTime; returns stage->image unchanged for non-animated stages.
 image_t *R_GetStageImage( const shaderStage_t *stage );
 
-// entityColor: ent->shaderRGBA or NULL. lightingTint: CGEN_LIGHTING_DIFFUSE substitute or NULL. baseColor: the mesh's own vertex color.
-void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor, const byte *lightingTint,
+// entityColor: ent->shaderRGBA or NULL. baseColor: the mesh's own vertex color. CGEN_LIGHTING_DIFFUSE
+// resolves to flat white here -- entities needing real per-vertex diffuse lighting get it from the
+// GPU instead (entity_lerp.vert/entity_skin.vert), see vk_entity.c's ComputeEntityLighting.
+void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 							 const byte baseColor[4], byte outColor[4] );
 
 // worldPos is the vertex's world-space xyz (TMOD_TURBULENT wiggles by position, not just by UV).

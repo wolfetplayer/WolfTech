@@ -34,11 +34,11 @@ It's still well behind both reference points on everything not yet checked off b
 - **vs. vkQuake3**: no cinematics, and `deformVertexes` beyond `move`
   is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
   draw unclipped inside a mirror) and hasn't been visually confirmed in-game yet.
-- **vs. rend2**: no normal/specular/parallax/deluxe maps, no per-pixel lighting (entities get one
-  flat RGBA tint for the whole model, world gets baked lightmap only) — world and entity vertex
-  formats now carry real normal/tangent data (Phase 4's vertex-format item, done 2026-11-22) but
-  nothing consumes it for lighting yet, no HDR/bloom/tonemap, no SSAO/FXAA/DOF, no cubemap
-  reflection probes, no shadow mapping.
+- **vs. rend2**: no normal/specular/parallax/deluxe maps, no real per-pixel lighting (world still
+  gets baked lightmap only; entities with `rgbGen lightingDiffuse` now get real per-**vertex**
+  ambient+directed diffuse lighting from the light grid, done 2026-11-22, but no specular/normal
+  maps yet — see Phase 4's vertex-format item and the lighting changelog entry), no HDR/bloom/
+  tonemap, no SSAO/FXAA/DOF, no cubemap reflection probes, no shadow mapping.
 - **Open/unverified**: a `r_vk_disableMultiTex` bisection cvar from an earlier (inconclusive) attempt
   at the (since-fixed) shattered-weapon bug is still sitting in `vk_pipelines.c`, undocumented until
   now — safe to leave (off by default, no `sv_cheats` requirement) but should be removed as cleanup.
@@ -592,11 +592,20 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
       patches, and models — mirrors rend2's `R_CalcTangentVectors`.
 - [ ] Normal map / specular map / parallax(relief) map / deluxe map support in a new uber-fragment-
       shader, following architecture decision #1 above (flag-driven, not permutation-exploded).
+- [x] Entity per-**vertex** diffuse lighting (stepping stone toward the full item below, done
+      2026-11-22): `CGEN_LIGHTING_DIFFUSE` entity stages now compute `ambient + max(dot(normal,
+      lightDir),0)*directed` for real in `entity_lerp.vert`/`entity_skin.vert`, using the Phase 4
+      normal data and the light grid's real ambient/directed/direction (`R_LightForPoint`) instead
+      of one flat `ambient+directed` color baked the same for every vertex regardless of facing.
+      See the matching changelog entry for the full design (push-constant packing scheme, the new
+      `shader_t`-level `lighting_diffuse` pipeline-cache/spec-constant axis, skinned-normal
+      transform). Still flat per-**vertex** (Gouraud), not per-pixel — no specular, no normal maps.
 - [ ] Real per-pixel Blinn-Phong lighting (rend2 is not PBR — don't build a metal/roughness
-      pipeline that doesn't exist upstream) replacing the Phase-1-era flat tint, now with real
-      normals to work from.
+      pipeline that doesn't exist upstream) replacing the per-vertex diffuse above, adding specular
+      and normal-map-driven detail per pixel instead of per vertex.
 - [ ] Port light-grid ambient+directed+direction sampling (`tr_light.c` logic already partially
-      present) into per-draw UBO/push-constant feed for the new lighting model.
+      present, now also feeding the per-vertex diffuse item above) into a per-draw UBO/push-constant
+      feed for the new per-pixel lighting model.
 - [ ] Precompiled lighting-path permutation table per architecture decision #2 above.
 
 ## Phase 5 — rend2 parity: advanced rendering tier
@@ -1346,3 +1355,48 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   same `glslangValidator` + `gen_spv_c.py` step as before) before the next build will show the fix.
   In-game check: `mesh_c02` (and any other lightmapped world/brush surface using `alphaFunc`) should
   now show real cutout holes instead of a solid textured quad.
+- **2026-11-22** — User reported most `misc_model`-style entities looked either overbright or
+  flatly dark, while world geometry looked fine. Root cause: entities draw through
+  `ComputeEntityTint`, a single flat `ambient + directed` color baked the same for *every* vertex
+  of the whole model regardless of which way it faces the light — effectively always assuming the
+  best-case "directly facing the light" result (confirmed against `code/renderer`'s real per-vertex
+  formula, `RB_CalcDiffuseColor`: `ambient + max(dot(normal,lightDir),0) * directed`), so areas that
+  should shade dark side-to-side didn't, and the flat value itself swings from near-255 in bright
+  spots to genuinely low in dim ones with no gradient to soften either case. Implemented the
+  smaller, scoped fix discussed with the user (the full per-pixel Blinn-Phong item is much larger
+  and listed separately above): real **per-vertex** diffuse lighting on the GPU, reusing the real
+  normal data Phase 4 already put in the entity vertex buffers.
+  `ComputeEntityTint` (`vk_entity.c`) became `ComputeEntityLighting`, returning raw
+  ambient/directed/light-direction vectors instead of one pre-combined, pre-clamped byte tint.
+  `R_CalcStageColorAlpha`'s now-fully-dead `lightingTint` parameter was removed entirely (every
+  caller across the codebase already passed `NULL` for it except `vk_entity.c`'s own two, which
+  only ever used it for `CGEN_LIGHTING_DIFFUSE`) and that rgbGen case folded into the same flat-255
+  branch as `CGEN_IDENTITY` — the real lighting math moved to the GPU, so the CPU-baked vertex color
+  for those stages is now just a neutral 1.0 the GPU's own multiply doesn't double-apply.
+  `BuildLerpPushConstants` squeezes the new per-entity light data into push-constant bytes that were
+  already being sent but genuinely unused (`camPos.w`, `fogColor.a`, `clipPlane.y/z` — confirmed by
+  reading what `entity_lerp.vert`/`entity_skin.vert` actually consumed): ambient and directed each
+  pack into one `unorm4x8` bit pattern (`floatBitsToUint`/`unpackUnorm4x8` round-trip), and the
+  light direction (rotated into the entity's local space first, same trick already used for
+  `camPos`) encodes as a `(lat, long)` radian pair, mirroring `tr_light.c`'s own lat/long normal
+  packing. No push-constant size growth — still the same 128-byte range every entity pipeline
+  layout already declares.
+  A new `lighting_diffuse` spec constant (gated per draw on `stage->rgbGen == CGEN_LIGHTING_DIFFUSE`)
+  was added to all 4 entity pipeline variants (`vk_getPipelineEntityLerp`/`...LerpMultiTex`/
+  `...Skin`/`...SkinMultiTex`, `vk_pipelines.c`/`.h`), each gaining a `lightingDiffuse` parameter in
+  its cache key; new dedicated `entityLitSpecData_t`/`entityLitMultiTexSpecData_t` structs keep this
+  off the shared `vk2d_spec_data_t`/`multiTexSpecData_t` used by unrelated 2D/sky/world/poly
+  pipelines. Each variant also gained a real `in_normal` vertex attribute (previously present in the
+  buffer but never declared, per Phase 4's "minimal wiring" precedent) — for MD3/MDC, the *current*
+  frame's normal only (not blended with oldframe's, a deliberate simplification); for MDS/MDM, the
+  bind-pose normal is skinned by the *same* per-weight-slot rotation (`mat3(boneMatrix)`, no
+  translation) already computed for position, so it rotates correctly with the animated pose rather
+  than staying frozen in bind pose. `entity_lerp.vert`/`entity_skin.vert`/`entity_skin_multitex.vert`
+  all needed their push-constant struct's trailing `vec4` (previously named `clipPlane` and partly
+  or fully unused) extended to carry the new fields — safe because the CPU already pushes the full
+  128 bytes regardless of what each shader's own struct names; `entity_lerp_multitex.vert` already
+  declared that slot (as `lerpSlot`) so no change was needed there beyond adding the new fields to it.
+  Not self-built or tested. **Needs a shader recompile** (all 4 entity `.vert` files changed) before
+  the next build will show the fix. In-game check: `misc_model`s using `rgbGen lightingDiffuse`
+  should now visibly shade darker on their away-from-the-light side instead of being flatly tinted
+  all over, and the overall brightness swing between bright/dim areas should be less extreme.

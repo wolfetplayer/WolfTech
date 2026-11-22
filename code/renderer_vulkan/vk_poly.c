@@ -159,7 +159,7 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 
 			for ( v = 0; v < poly->numVerts; v++ ) {
 				const polyVert_t *srcVert = &polyVerts[poly->firstVert + v];
-				R_CalcStageColorAlpha( stage0, NULL, NULL, srcVert->modulate, stageColor[v] );
+				R_CalcStageColorAlpha( stage0, NULL, srcVert->modulate, stageColor[v] );
 				R_CalcStageTexCoord( stage0, srcVert->st[0], srcVert->st[1], deformedPos[v], NULL, uv0[v] );
 				R_CalcStageTexCoord( stage1, srcVert->st[0], srcVert->st[1], deformedPos[v], NULL, uv1[v] );
 			}
@@ -206,7 +206,7 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 
 			for ( v = 0; v < poly->numVerts; v++ ) {
 				const polyVert_t *srcVert = &polyVerts[poly->firstVert + v];
-				R_CalcStageColorAlpha( stage, NULL, NULL /* no entity/lighting context for scene polys */, srcVert->modulate, stageColor[v] );
+				R_CalcStageColorAlpha( stage, NULL /* no entity context for scene polys */, srcVert->modulate, stageColor[v] );
 				R_CalcStageTexCoord( stage, srcVert->st[0], srcVert->st[1], deformedPos[v], NULL, stageUV[v] );
 			}
 

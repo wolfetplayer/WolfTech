@@ -1,13 +1,15 @@
 #version 450
 
-// GPU bone skinning for MDS/MDM entities (vk_entity.c's static per-model buffers, see vkEntitySkinnedVert_t). Pairs with single_texture.frag unchanged, reusing its 128-byte push-constant layout as-is: camPos is repurposed to the entity-local-space camera position (same trick as entity_lerp.vert), clipPlane stays unused/zero (no backlerp needed here).
+// GPU bone skinning for MDS/MDM entities (vk_entity.c's static per-model buffers, see vkEntitySkinnedVert_t). Pairs with single_texture.frag unchanged, reusing its 128-byte push-constant layout as-is: camPos.xyz is the entity-local-space camera position (same trick as entity_lerp.vert); camPos.w/fogColor.a/clipPlane.yz carry CGEN_LIGHTING_DIFFUSE's packed ambient/directed/light-direction (see vk_entity.c's BuildLerpPushConstants/ComputeEntityLighting); clipPlane.x/w unused (no backlerp needed here).
 layout(push_constant) uniform Transform {
     mat4 mvp;        // combined camera view-projection * entity model matrix
-    vec4 camPos;     // xyz = camera position in this entity's local space
-    vec4 fogColor;
+    vec4 camPos;     // xyz = camera position in this entity's local space; w = packed ambient color (unorm4x8 bits)
+    vec4 fogColor;   // a = packed directed color (unorm4x8 bits)
     vec4 fogParams;
-    vec4 clipPlane;  // unused
+    vec4 clipPlane;  // y/z = light direction as (lat, long) radians, entity-local space; x/w unused
 };
+
+layout (constant_id = 4) const int lighting_diffuse = 0;
 
 layout(set = 1, binding = 0) uniform BoneMatrices {
     mat4 u_BoneMatrix[128];
@@ -20,8 +22,9 @@ layout(location = 2) in vec3 in_offset2;
 layout(location = 3) in vec3 in_offset3;
 layout(location = 4) in uvec4 in_boneIndex;
 layout(location = 5) in vec4 in_boneWeight;
-layout(location = 6) in vec4 in_color;
-layout(location = 7) in vec2 in_tex_coord;
+layout(location = 6) in vec3 in_normal; // bind-pose normal, skinned below the same weighted way as the offsets
+layout(location = 7) in vec4 in_color;
+layout(location = 8) in vec2 in_tex_coord;
 
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) out vec2 frag_tex_coord;
@@ -47,6 +50,20 @@ void main() {
     gl_Position = mvp * vec4(position, 1.0);
     frag_color = in_color;
     frag_tex_coord = in_tex_coord;
+
+    if (lighting_diffuse != 0) {
+        vec3 normal = normalize(
+            in_boneWeight.x * (mat3(m0) * in_normal) +
+            in_boneWeight.y * (mat3(m1) * in_normal) +
+            in_boneWeight.z * (mat3(m2) * in_normal) +
+            in_boneWeight.w * (mat3(m3) * in_normal));
+        vec3 ambient = unpackUnorm4x8(floatBitsToUint(camPos.w)).rgb * 255.0;
+        vec3 directed = unpackUnorm4x8(floatBitsToUint(fogColor.a)).rgb * 255.0;
+        vec3 lightDir = vec3(cos(clipPlane.y) * sin(clipPlane.z), sin(clipPlane.y) * sin(clipPlane.z), cos(clipPlane.z));
+        float incoming = max(dot(normal, lightDir), 0.0);
+        vec3 diffuse = clamp(ambient + incoming * directed, 0.0, 255.0) * (1.0 / 255.0);
+        frag_color.rgb *= diffuse;
+    }
 
     if (fogParams.w != 0.0) {
         float dist = distance(position, camPos.xyz);

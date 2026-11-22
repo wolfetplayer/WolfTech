@@ -91,19 +91,21 @@ VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType, int32_t alphaTestFu
 // Lazily creates/caches a multi_texture pipeline (two samplers combined in one pass, always opaque); combineMode: 0 = modulate, 1 = add.
 VkPipeline vk_getPipelineMultiTexture( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc );
 
-// Lazily creates/caches the GPU vertex-lerp pipeline for MD3/MDC entities (vk_entity.c): 3 vertex bindings -- the model's static per-surface buffer bound twice (current/old frame) plus this frame's dynamic color/uv. No clipPlane/mirror axis -- entities never use either.
+// Lazily creates/caches the GPU vertex-lerp pipeline for MD3/MDC entities (vk_entity.c): 3 vertex bindings -- the model's static per-surface buffer bound twice (current/old frame) plus this frame's dynamic color/uv. No clipPlane/mirror axis -- entities never use either. lightingDiffuse should be (stage->rgbGen == CGEN_LIGHTING_DIFFUSE): enables the real per-vertex ambient+dot(normal,lightDir)*directed computation in entity_lerp.vert, fed via BuildLerpPushConstants (see vk_entity.c's ComputeEntityLighting).
 VkPipeline vk_getPipelineEntityLerp( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-									   VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 polygonOffset );
+									   VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 polygonOffset,
+									   VkBool32 lightingDiffuse );
 
-// Multitex twin of the above, mirroring vk_getPipelineMultiTexture's (combine, cull, alphaTest) key.
-VkPipeline vk_getPipelineEntityLerpMultiTex( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc );
+// Multitex twin of the above, mirroring vk_getPipelineMultiTexture's (combine, cull, alphaTest) key plus lightingDiffuse.
+VkPipeline vk_getPipelineEntityLerpMultiTex( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 lightingDiffuse );
 
-// Lazily creates/caches the GPU bone-skinning pipeline for MDS/MDM entities (vk_entity.c): 2 vertex bindings -- the model's static bind-pose buffer plus this frame's dynamic color/uv. Uses vk.skin_pipeline_layout (set 1 = the bone-matrix UBO vk_entity.c owns).
+// Lazily creates/caches the GPU bone-skinning pipeline for MDS/MDM entities (vk_entity.c): 2 vertex bindings -- the model's static bind-pose buffer plus this frame's dynamic color/uv. Uses vk.skin_pipeline_layout (set 1 = the bone-matrix UBO vk_entity.c owns). lightingDiffuse: see vk_getPipelineEntityLerp.
 VkPipeline vk_getPipelineEntitySkin( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-									   VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 polygonOffset );
+									   VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 polygonOffset,
+									   VkBool32 lightingDiffuse );
 
-// Multitex twin of the above, mirroring vk_getPipelineMultiTexture's (combine, cull, alphaTest) key.
-VkPipeline vk_getPipelineEntitySkinMultiTex( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc );
+// Multitex twin of the above, mirroring vk_getPipelineMultiTexture's (combine, cull, alphaTest) key plus lightingDiffuse.
+VkPipeline vk_getPipelineEntitySkinMultiTex( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 lightingDiffuse );
 
 // True if shader's exactly-two stages are an opaque stage 0 plus a trivially-tinted modulate/add stage 1, i.e. collapsible into one vk_getPipelineMultiTexture draw; sets *outCombineMode when true.
 qboolean vk_canCollapseMultiTex( const shader_t *shader, int *outCombineMode );

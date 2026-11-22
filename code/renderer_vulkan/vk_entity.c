@@ -790,12 +790,12 @@ static void LerpMDMSurfaceVerts( const refEntity_t *ent, const mdmSurface_t *sur
 	}
 }
 
-// Flat per-entity tint from the light grid plus dynamic lights -- stands in for real per-vertex lighting.
-static void ComputeEntityTint( const refEntity_t *ent, byte outColor[4] ) {
-	vec3_t origin, ambient, directed, lightDir;
+// Per-entity ambient/directed light + direction from the light grid plus dynamic lights, for the GPU per-vertex diffuse lighting CGEN_LIGHTING_DIFFUSE stages now use (entity_lerp.vert/entity_skin.vert compute ambient + max(dot(normal,lightDir),0)*directed, matching code/renderer's RB_CalcDiffuseColor) -- replaces the old flat "same tint for every vertex" approximation. Values are 0-255-ish scale, not pre-clamped; lightDir is world-space, normalized.
+static void ComputeEntityLighting( const refEntity_t *ent, vec3_t outAmbient, vec3_t outDirected, vec3_t outLightDir ) {
+	vec3_t origin;
 	qboolean hasGrid;
 	const dlight_t *dlights;
-	int numDlights, i, r, g, b;
+	int numDlights, i;
 
 	if ( ent->renderfx & RF_LIGHTING_ORIGIN ) {
 		VectorCopy( ent->lightingOrigin, origin );
@@ -803,11 +803,12 @@ static void ComputeEntityTint( const refEntity_t *ent, byte outColor[4] ) {
 		VectorCopy( ent->origin, origin );
 	}
 
-	hasGrid = R_LightForPoint( origin, ambient, directed, lightDir );
+	hasGrid = R_LightForPoint( origin, outAmbient, outDirected, outLightDir );
 	dlights = R_GetSceneDlights( &numDlights );
 
 	if ( !hasGrid && numDlights == 0 ) {
-		outColor[0] = outColor[1] = outColor[2] = outColor[3] = 255;
+		VectorSet( outAmbient, 255.0f, 255.0f, 255.0f );
+		VectorClear( outDirected );
 		return;
 	}
 
@@ -822,17 +823,8 @@ static void ComputeEntityTint( const refEntity_t *ent, byte outColor[4] ) {
 			dist = DLIGHT_MINIMUM_RADIUS;
 		}
 		d = power / ( dist * dist );
-		VectorMA( directed, d, dlights[i].color, directed );
+		VectorMA( outDirected, d, dlights[i].color, outDirected );
 	}
-
-	r = (int)( ambient[0] + directed[0] );
-	g = (int)( ambient[1] + directed[1] );
-	b = (int)( ambient[2] + directed[2] );
-
-	outColor[0] = (byte)( r < 0 ? 0 : ( r > 255 ? 255 : r ) );
-	outColor[1] = (byte)( g < 0 ? 0 : ( g > 255 ? 255 : g ) );
-	outColor[2] = (byte)( b < 0 ? 0 : ( b > 255 ? 255 : b ) );
-	outColor[3] = 255;
 }
 
 // customShader overrides every surface; customSkin looks the surface name up in a .skin file; otherwise each surface uses its own baked-in shader.
@@ -868,7 +860,7 @@ static qboolean ReserveLerpSurface( int numVerts, int numStages, int numTriangle
 		   idxWrite + (uint32_t)numTriangles * 3 <= ENTITY_MAX_INDEXES;
 }
 
-static void WriteLerpStageVertices( const shader_t *shader, const byte *entityColor, const byte *lightingTint,
+static void WriteLerpStageVertices( const shader_t *shader, const byte *entityColor,
 									  const float *shaderTexCoord, int numVerts, const entityBaseVert_t *base, vkEntityDynamicVert_t *out ) {
 	int v, s;
 	static const byte baseColor[4] = { 255, 255, 255, 255 };
@@ -883,7 +875,7 @@ static void WriteLerpStageVertices( const shader_t *shader, const byte *entityCo
 			byte color[4];
 			float st[2];
 
-			R_CalcStageColorAlpha( stage, entityColor, lightingTint, baseColor, color );
+			R_CalcStageColorAlpha( stage, entityColor, baseColor, color );
 			R_CalcStageTexCoord( stage, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st );
 
 			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
@@ -892,7 +884,7 @@ static void WriteLerpStageVertices( const shader_t *shader, const byte *entityCo
 	}
 }
 
-static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entityColor, const byte *lightingTint,
+static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entityColor,
 										 const float *shaderTexCoord, int numVerts, const entityBaseVert_t *base, vkEntityDynamicMTVert_t *out ) {
 	const shaderStage_t *stage0 = &shader->stages[0];
 	const shaderStage_t *stage1 = &shader->stages[1];
@@ -905,7 +897,7 @@ static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entit
 		float st0[2], st1[2];
 
 		R_DeformPosition( shader, base[v].pos, NULL, 0.0f, deformed ); // no per-vertex normal here -- wave/bulge pass through, same as before
-		R_CalcStageColorAlpha( stage0, entityColor, lightingTint, baseColor, color );
+		R_CalcStageColorAlpha( stage0, entityColor, baseColor, color );
 		R_CalcStageTexCoord( stage0, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st0 );
 		R_CalcStageTexCoord( stage1, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st1 );
 
@@ -915,10 +907,29 @@ static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entit
 	}
 }
 
-// Combines the camera VP with this entity's model transform (cameraMVP * entityModel) and transforms the camera into the entity's local space (exact for a rigid axis/origin transform -- same world-space distance) so entity_lerp.vert/.frag can reuse single_texture.vert/.frag's existing 128-byte push-constant layout unchanged: camPos becomes the local-space camera, and the otherwise-always-zero clipPlane slot (entities never clip) carries backlerp in its x component. Valid for both the single-tex and multitex pipelines -- they read the same pushed bytes, just declare the trailing field under a different name (see entity_lerp.vert/entity_lerp_multitex.vert).
-static void BuildLerpPushConstants( const refEntity_t *ent, const float cameraMvp[16], const float fogPush[12], float out[32] ) {
+// rgb (0-255-ish, not yet clamped) -> unorm4x8 bit pattern matching GLSL's unpackUnorm4x8 byte order (byte0=r..byte3=a).
+static uint32_t PackColorUnorm4x8( const vec3_t color ) {
+	int r = (int)color[0], g = (int)color[1], b = (int)color[2];
+	r = r < 0 ? 0 : ( r > 255 ? 255 : r );
+	g = g < 0 ? 0 : ( g > 255 ? 255 : g );
+	b = b < 0 ? 0 : ( b > 255 ? 255 : b );
+	return (uint32_t)r | ( (uint32_t)g << 8 ) | ( (uint32_t)b << 16 ) | ( 255u << 24 );
+}
+
+// Unit direction -> the (lat, long) radian pair entity_lerp.vert/entity_skin.vert decode back via vec3(cos(lat)*sin(lng), sin(lat)*sin(lng), cos(lng)) -- the inverse of tr_light.c's LatLongToNormal.
+static void EncodeDirectionRadians( const vec3_t dir, float *outLat, float *outLng ) {
+	float z = dir[2] < -1.0f ? -1.0f : ( dir[2] > 1.0f ? 1.0f : dir[2] );
+	*outLng = acosf( z );
+	*outLat = atan2f( dir[1], dir[0] );
+}
+
+// Combines the camera VP with this entity's model transform (cameraMVP * entityModel) and transforms the camera into the entity's local space (exact for a rigid axis/origin transform -- same world-space distance) so entity_lerp.vert/.frag can reuse single_texture.vert/.frag's existing 128-byte push-constant layout unchanged: camPos.xyz becomes the local-space camera, and the otherwise-unused camPos.w/fogColor.a/clipPlane.yzw slots carry the CGEN_LIGHTING_DIFFUSE data (ambient/directed packed unorm4x8, light direction as entity-local-space lat/long radians) the GPU needs for real per-vertex diffuse lighting -- see ComputeEntityLighting. clipPlane.x still carries backlerp (entities never clip). Valid for both the single-tex and multitex pipelines -- they read the same pushed bytes, just declare the trailing fields under different names (see entity_lerp.vert/entity_lerp_multitex.vert).
+static void BuildLerpPushConstants( const refEntity_t *ent, const float cameraMvp[16], const float fogPush[12],
+									  const vec3_t ambient, const vec3_t directed, const vec3_t lightDirWorld, float out[32] ) {
 	float entityModel[16];
-	vec3_t delta;
+	vec3_t delta, lightDirLocal;
+	uint32_t ambientPacked, directedPacked;
+	float lat, lng;
 
 	entityModel[0] = ent->axis[0][0]; entityModel[1] = ent->axis[0][1]; entityModel[2] = ent->axis[0][2]; entityModel[3] = 0.0f;
 	entityModel[4] = ent->axis[1][0]; entityModel[5] = ent->axis[1][1]; entityModel[6] = ent->axis[1][2]; entityModel[7] = 0.0f;
@@ -933,17 +944,26 @@ static void BuildLerpPushConstants( const refEntity_t *ent, const float cameraMv
 	out[16] = DotProduct( ent->axis[0], delta );
 	out[17] = DotProduct( ent->axis[1], delta );
 	out[18] = DotProduct( ent->axis[2], delta );
-	out[19] = fogPush[3];
 
-	out[20] = fogPush[4]; out[21] = fogPush[5]; out[22] = fogPush[6]; out[23] = fogPush[7];
+	ambientPacked = PackColorUnorm4x8( ambient );
+	memcpy( &out[19], &ambientPacked, sizeof( float ) );
+
+	out[20] = fogPush[4]; out[21] = fogPush[5]; out[22] = fogPush[6];
+	directedPacked = PackColorUnorm4x8( directed );
+	memcpy( &out[23], &directedPacked, sizeof( float ) );
+
 	out[24] = fogPush[8]; out[25] = fogPush[9]; out[26] = fogPush[10]; out[27] = fogPush[11];
 
 	out[28] = ent->backlerp;
-	out[29] = out[30] = out[31] = 0.0f;
+	lightDirLocal[0] = DotProduct( ent->axis[0], lightDirWorld );
+	lightDirLocal[1] = DotProduct( ent->axis[1], lightDirWorld );
+	lightDirLocal[2] = DotProduct( ent->axis[2], lightDirWorld );
+	EncodeDirectionRadians( lightDirLocal, &lat, &lng );
+	out[29] = lat; out[30] = lng; out[31] = 0.0f;
 }
 
 // Issues this surface's draw(s) immediately: binding 0/1 are the model's static per-surface buffer at frame/oldframe's byte offsets (position only -- see vkEntityFrameVert_t), binding 2 is this frame's freshly-evaluated color/uv. A shared vertexOffset can't give bindings 0/1 and binding 2 different per-stage offsets at once, so binding 2 gets rebound between stages instead, with vertexOffset left at 0 throughout. push_data must already hold this entity's combined mvp/localCamPos/backlerp (see BuildLerpPushConstants) and gets pushed once per surface since it's shared across the surface's multitex-or-per-stage draws; curDepthHack is shared with the deferred draw phase at the bottom of vk_entity_draw_all so the view-weapon depth hack doesn't go stale crossing between the two phases.
-static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent, const byte *tint,
+static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 							   int numVerts, int numTriangles, const void *trianglesPtr, const entityBaseVert_t *baseVerts,
 							   const entitySurfAnimBuffer_t *animBuf, VkDeviceSize frameOffset, VkDeviceSize oldframeOffset,
 							   const float push_data[32], qboolean *curDepthHack ) {
@@ -985,13 +1005,14 @@ static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent, 
 			return;
 		}
 
-		WriteLerpMultiTexVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts,
+		WriteLerpMultiTexVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, numVerts, baseVerts,
 			&s_lerpMtVertexMapped[s_lerpMtVertRegionBase + s_lerpMtVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + s_idxWrite );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + s_idxWrite ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
 
 		dynOffset = (VkDeviceSize)( s_lerpMtVertRegionBase + s_lerpMtVertWrite ) * sizeof( vkEntityDynamicMTVert_t );
-		pipeline = vk_getPipelineEntityLerpMultiTex( combineMode, vk_cullModeForShader( shaderPtr->cullType ), shaderPtr->stages[0].alphaTestFunc );
+		pipeline = vk_getPipelineEntityLerpMultiTex( combineMode, vk_cullModeForShader( shaderPtr->cullType ), shaderPtr->stages[0].alphaTestFunc,
+			shaderPtr->stages[0].rgbGen == CGEN_LIGHTING_DIFFUSE );
 		descSet = vk_getMultiTextureDescriptor( image0, image1 );
 
 		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
@@ -1017,7 +1038,7 @@ static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent, 
 		int s;
 		uint32_t idxBase = s_idxWrite;
 
-		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts,
+		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, numVerts, baseVerts,
 			&s_lerpVertexMapped[s_lerpVertRegionBase + s_lerpVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + idxBase );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + idxBase ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
@@ -1034,7 +1055,8 @@ static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent, 
 
 			dynOffset = (VkDeviceSize)( s_lerpVertRegionBase + s_lerpVertWrite + (uint32_t)s * (uint32_t)numVerts ) * sizeof( vkEntityDynamicVert_t );
 			pipeline = vk_getPipelineEntityLerp( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-				vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc, shaderPtr->polygonOffset );
+				vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc, shaderPtr->polygonOffset,
+				stage->rgbGen == CGEN_LIGHTING_DIFFUSE );
 
 			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 			qvkCmdBindVertexBuffers( vk.command_buffer, 2, 1, &s_lerpVertexBuffer, &dynOffset );
@@ -1105,7 +1127,7 @@ static qboolean WriteBoneMatricesMDM( const refEntity_t *ent, uint32_t *outDynOf
 // (shared buffers/cursors with the lerp path -- it's the same generic rgbGen/alphaGen/tcMod data
 // either way), and set 1 is the bone-matrix UBO at boneUboDynOffset (shared across this entity's
 // surfaces, written once by WriteBoneMatricesMDS/MDM before the surface loop starts).
-static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent, const byte *tint,
+static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 							   int numVerts, int numTriangles, const void *trianglesPtr, const entityBaseVert_t *baseVerts,
 							   const entitySurfAnimBuffer_t *skinBuf, const float push_data[32],
 							   uint32_t boneUboDynOffset, qboolean *curDepthHack ) {
@@ -1145,13 +1167,14 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent, 
 			return;
 		}
 
-		WriteLerpMultiTexVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts,
+		WriteLerpMultiTexVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, numVerts, baseVerts,
 			&s_lerpMtVertexMapped[s_lerpMtVertRegionBase + s_lerpMtVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + s_idxWrite );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + s_idxWrite ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
 
 		dynOffset = (VkDeviceSize)( s_lerpMtVertRegionBase + s_lerpMtVertWrite ) * sizeof( vkEntityDynamicMTVert_t );
-		pipeline = vk_getPipelineEntitySkinMultiTex( combineMode, vk_cullModeForShader( shaderPtr->cullType ), shaderPtr->stages[0].alphaTestFunc );
+		pipeline = vk_getPipelineEntitySkinMultiTex( combineMode, vk_cullModeForShader( shaderPtr->cullType ), shaderPtr->stages[0].alphaTestFunc,
+			shaderPtr->stages[0].rgbGen == CGEN_LIGHTING_DIFFUSE );
 		texDescSet = vk_getMultiTextureDescriptor( image0, image1 );
 
 		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
@@ -1178,7 +1201,7 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent, 
 		int s;
 		uint32_t idxBase = s_idxWrite;
 
-		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts,
+		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, numVerts, baseVerts,
 			&s_lerpVertexMapped[s_lerpVertRegionBase + s_lerpVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + idxBase );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + idxBase ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
@@ -1195,7 +1218,8 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent, 
 
 			dynOffset = (VkDeviceSize)( s_lerpVertRegionBase + s_lerpVertWrite + (uint32_t)s * (uint32_t)numVerts ) * sizeof( vkEntityDynamicVert_t );
 			pipeline = vk_getPipelineEntitySkin( stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-				vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc, shaderPtr->polygonOffset );
+				vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc, shaderPtr->polygonOffset,
+				stage->rgbGen == CGEN_LIGHTING_DIFFUSE );
 
 			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 			qvkCmdBindVertexBuffers( vk.command_buffer, 1, 1, &s_lerpVertexBuffer, &dynOffset );
@@ -1228,14 +1252,14 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 	for ( e = 0; e < numEntities; e++ ) {
 		const refEntity_t *ent = &entities[e];
 		model_t *model = R_GetModelByHandle( ent->hModel );
-		byte tint[4];
+		vec3_t ambient, directed, lightDirWorld;
 		qboolean dbgWeapon = dbgFrame; // logs every entity, not just RF_DEPTHHACK ones -- held items like mines don't all set it
 		qboolean castsShadow;
 
 		if ( !model ) {
 			continue;
 		}
-		ComputeEntityTint( ent, tint );
+		ComputeEntityLighting( ent, ambient, directed, lightDirWorld );
 
 		castsShadow = vk_shadows_entity_casts( ent );
 		if ( castsShadow ) {
@@ -1256,7 +1280,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			if ( frame < 0 || frame >= model->md3->numFrames ) frame = 0;
 			if ( oldframe < 0 || oldframe >= model->md3->numFrames ) oldframe = 0;
 			if ( animData ) {
-				BuildLerpPushConstants( ent, mvp, fogPush, push_data );
+				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
 			}
 
 			for ( s = 0; s < model->md3->numSurfaces; s++ ) {
@@ -1284,7 +1308,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 					const entitySurfAnimBuffer_t *animBuf = &animData->surfaces[s];
 					VkDeviceSize frameOffset = (VkDeviceSize)frame * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
 					VkDeviceSize oldframeOffset = (VkDeviceSize)oldframe * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
-					DrawLerpSurface( shaderPtr, ent, tint, surf->numVerts, surf->numTriangles,
+					DrawLerpSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, animBuf, frameOffset, oldframeOffset,
 						push_data, &curDepthHack );
 				}
@@ -1304,7 +1328,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			if ( frame < 0 || frame >= model->mdc->numFrames ) frame = 0;
 			if ( oldframe < 0 || oldframe >= model->mdc->numFrames ) oldframe = 0;
 			if ( animData ) {
-				BuildLerpPushConstants( ent, mvp, fogPush, push_data );
+				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
 			}
 
 			for ( s = 0; s < model->mdc->numSurfaces; s++ ) {
@@ -1331,7 +1355,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 					const entitySurfAnimBuffer_t *animBuf = &animData->surfaces[s];
 					VkDeviceSize frameOffset = (VkDeviceSize)frame * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
 					VkDeviceSize oldframeOffset = (VkDeviceSize)oldframe * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
-					DrawLerpSurface( shaderPtr, ent, tint, surf->numVerts, surf->numTriangles,
+					DrawLerpSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, animBuf, frameOffset, oldframeOffset,
 						push_data, &curDepthHack );
 				}
@@ -1351,7 +1375,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			qboolean haveBones = qfalse;
 
 			if ( animData ) {
-				BuildLerpPushConstants( ent, mvp, fogPush, push_data ); // backlerp (push_data[28]) is unused by entity_skin.vert, harmless
+				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data ); // backlerp (push_data[28]) is unused by entity_skin.vert, harmless
 				haveBones = WriteBoneMatricesMDS( model->mds, ent, &boneUboDynOffset );
 			}
 
@@ -1376,7 +1400,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
 
 				if ( haveBones && s < animData->numSurfaces ) {
-					DrawSkinSurface( shaderPtr, ent, tint, surf->numVerts, surf->numTriangles,
+					DrawSkinSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &animData->surfaces[s],
 						push_data, boneUboDynOffset, &curDepthHack );
 				}
@@ -1396,7 +1420,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			qboolean haveBones = qfalse;
 
 			if ( animData ) {
-				BuildLerpPushConstants( ent, mvp, fogPush, push_data );
+				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
 				haveBones = WriteBoneMatricesMDM( ent, &boneUboDynOffset ); // identity bones (bind pose) if no MDX skeleton is linked yet -- see WriteBoneMatricesMDM
 			}
 
@@ -1420,7 +1444,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				LerpMDMSurfaceVerts( ent, surf, s_baseScratch ); // see the MDS branch's comment above
 
 				if ( haveBones && s < animData->numSurfaces ) {
-					DrawSkinSurface( shaderPtr, ent, tint, surf->numVerts, surf->numTriangles,
+					DrawSkinSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &animData->surfaces[s],
 						push_data, boneUboDynOffset, &curDepthHack );
 				}

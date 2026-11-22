@@ -917,6 +917,7 @@ typedef struct {
 	VkCullModeFlags cullMode;
 	int32_t alphaTestFunc;
 	VkBool32 polygonOffset;
+	VkBool32 lightingDiffuse;
 } cachedEntityLerpKey_t;
 
 #define MAX_CACHED_ENTITY_LERP_PIPELINES 32
@@ -936,7 +937,46 @@ static void vk_destroyEntityLerpPipelineCache( void ) {
 	s_numCachedEntityLerpPipelines = 0;
 }
 
-static void GetEntityLerpAttribs( VkVertexInputBindingDescription bindings[3], VkVertexInputAttributeDescription attribs[4] ) {
+// Entity-lerp/entity-skin single-tex pipelines' own spec constants -- the same 4 single_texture.frag already has (alpha_test_func/color_op/clip_plane/fog_enabled) plus lighting_diffuse (constant_id 4), read only by entity_lerp.vert/entity_skin.vert; kept separate from vk2d_spec_data_t/GetSpecInfo so this field doesn't ripple into every other consumer of that shared struct (2D, sky, world debug 3D, etc.).
+typedef struct {
+	int32_t alpha_test_func;
+	int32_t color_op;
+	int32_t clip_plane;
+	int32_t fog_enabled;
+	int32_t lighting_diffuse;
+} entityLitSpecData_t;
+
+static void GetEntityLitSpecInfo( entityLitSpecData_t *spec_data, VkSpecializationMapEntry spec_entries[5],
+								   VkSpecializationInfo *specInfo, int32_t alphaTestFunc, VkBool32 lightingDiffuse ) {
+	spec_data->alpha_test_func = alphaTestFunc;
+	spec_data->color_op = 0;
+	spec_data->clip_plane = 0; // entities never clip
+	spec_data->fog_enabled = 1; // entities always want fog support
+	spec_data->lighting_diffuse = lightingDiffuse ? 1 : 0;
+
+	spec_entries[0].constantID = 0;
+	spec_entries[0].offset = offsetof( entityLitSpecData_t, alpha_test_func );
+	spec_entries[0].size = sizeof( int32_t );
+	spec_entries[1].constantID = 1;
+	spec_entries[1].offset = offsetof( entityLitSpecData_t, color_op );
+	spec_entries[1].size = sizeof( int32_t );
+	spec_entries[2].constantID = 2;
+	spec_entries[2].offset = offsetof( entityLitSpecData_t, clip_plane );
+	spec_entries[2].size = sizeof( int32_t );
+	spec_entries[3].constantID = 3;
+	spec_entries[3].offset = offsetof( entityLitSpecData_t, fog_enabled );
+	spec_entries[3].size = sizeof( int32_t );
+	spec_entries[4].constantID = 4;
+	spec_entries[4].offset = offsetof( entityLitSpecData_t, lighting_diffuse );
+	spec_entries[4].size = sizeof( int32_t );
+
+	specInfo->mapEntryCount = 5;
+	specInfo->pMapEntries = spec_entries;
+	specInfo->dataSize = sizeof( *spec_data );
+	specInfo->pData = spec_data;
+}
+
+static void GetEntityLerpAttribs( VkVertexInputBindingDescription bindings[3], VkVertexInputAttributeDescription attribs[5] ) {
 	bindings[0].binding = 0;
 	bindings[0].stride = sizeof( vkEntityFrameVert_t );
 	bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -950,21 +990,25 @@ static void GetEntityLerpAttribs( VkVertexInputBindingDescription bindings[3], V
 	attribs[1].location = 1; attribs[1].binding = 1; attribs[1].format = VK_FORMAT_R32G32B32_SFLOAT; attribs[1].offset = offsetof( vkEntityFrameVert_t, pos );
 	attribs[2].location = 2; attribs[2].binding = 2; attribs[2].format = VK_FORMAT_R8G8B8A8_UNORM; attribs[2].offset = offsetof( vkEntityDynamicVert_t, color );
 	attribs[3].location = 3; attribs[3].binding = 2; attribs[3].format = VK_FORMAT_R32G32_SFLOAT; attribs[3].offset = offsetof( vkEntityDynamicVert_t, uv );
+	// Current frame's normal only (binding 0) -- not blended with oldframe's, a deliberate simplification for real-but-not-frame-blended lighting; see entity_lerp.vert.
+	attribs[4].location = 4; attribs[4].binding = 0; attribs[4].format = VK_FORMAT_R16G16B16A16_SNORM; attribs[4].offset = offsetof( vkEntityFrameVert_t, normal );
 }
 
 VkPipeline vk_getPipelineEntityLerp( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-									   VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 polygonOffset ) {
+									   VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 polygonOffset,
+									   VkBool32 lightingDiffuse ) {
 	VkVertexInputBindingDescription bindings[3];
-	VkVertexInputAttributeDescription attribs[4];
-	vk2d_spec_data_t spec_data;
-	VkSpecializationMapEntry spec_entries[4];
+	VkVertexInputAttributeDescription attribs[5];
+	entityLitSpecData_t spec_data;
+	VkSpecializationMapEntry spec_entries[5];
 	VkSpecializationInfo specInfo;
 	int i;
 
 	for ( i = 0; i < s_numCachedEntityLerpPipelines; i++ ) {
 		const cachedEntityLerpKey_t *key = &s_cachedEntityLerpKeys[i];
 		if ( key->blendEnable == blendEnable && key->srcBlend == srcBlend && key->dstBlend == dstBlend &&
-			 key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc && key->polygonOffset == polygonOffset ) {
+			 key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc && key->polygonOffset == polygonOffset &&
+			 key->lightingDiffuse == lightingDiffuse ) {
 			return s_cachedEntityLerpPipelines[i];
 		}
 	}
@@ -975,16 +1019,17 @@ VkPipeline vk_getPipelineEntityLerp( VkBool32 blendEnable, VkBlendFactor srcBlen
 	}
 
 	GetEntityLerpAttribs( bindings, attribs );
-	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue, alphaTestFunc, qfalse ); // clip_plane always off -- entities never clip
+	GetEntityLitSpecInfo( &spec_data, spec_entries, &specInfo, alphaTestFunc, lightingDiffuse );
 
 	s_cachedEntityLerpKeys[s_numCachedEntityLerpPipelines].blendEnable = blendEnable;
 	s_cachedEntityLerpKeys[s_numCachedEntityLerpPipelines].srcBlend = srcBlend;
 	s_cachedEntityLerpKeys[s_numCachedEntityLerpPipelines].dstBlend = dstBlend;
 	s_cachedEntityLerpKeys[s_numCachedEntityLerpPipelines].cullMode = cullMode;
+	s_cachedEntityLerpKeys[s_numCachedEntityLerpPipelines].lightingDiffuse = lightingDiffuse;
 	s_cachedEntityLerpKeys[s_numCachedEntityLerpPipelines].alphaTestFunc = alphaTestFunc;
 	s_cachedEntityLerpKeys[s_numCachedEntityLerpPipelines].polygonOffset = polygonOffset;
 	s_cachedEntityLerpPipelines[s_numCachedEntityLerpPipelines] = create_pipeline_ex( vk_entity_lerp_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
-		bindings, 3, attribs, 4, blendEnable, srcBlend, dstBlend, VK_TRUE, cullMode,
+		bindings, 3, attribs, 5, blendEnable, srcBlend, dstBlend, VK_TRUE, cullMode,
 		VK_POLYGON_MODE_FILL, polygonOffset, VK_TRUE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
@@ -997,7 +1042,15 @@ typedef struct {
 	int32_t combineMode;
 	VkCullModeFlags cullMode;
 	int32_t alphaTestFunc;
+	VkBool32 lightingDiffuse;
 } cachedEntityLerpMTKey_t;
+
+// Entity multitex pipelines' own (combine, alphaTest, lighting_diffuse) spec constants -- kept separate from the shared multiTexSpecData_t (world/poly multitex) for the same reason entityLitSpecData_t is separate from vk2d_spec_data_t.
+typedef struct {
+	int32_t combine_mode;
+	int32_t alpha_test_func;
+	int32_t lighting_diffuse;
+} entityLitMultiTexSpecData_t;
 
 #define MAX_CACHED_ENTITY_LERP_MT_PIPELINES 16
 static cachedEntityLerpMTKey_t s_cachedEntityLerpMTKeys[MAX_CACHED_ENTITY_LERP_MT_PIPELINES];
@@ -1016,7 +1069,7 @@ static void vk_destroyEntityLerpMTPipelineCache( void ) {
 	s_numCachedEntityLerpMTPipelines = 0;
 }
 
-static void GetEntityLerpMultiTexAttribs( VkVertexInputBindingDescription bindings[3], VkVertexInputAttributeDescription attribs[5] ) {
+static void GetEntityLerpMultiTexAttribs( VkVertexInputBindingDescription bindings[3], VkVertexInputAttributeDescription attribs[6] ) {
 	bindings[0].binding = 0;
 	bindings[0].stride = sizeof( vkEntityFrameVert_t );
 	bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -1031,19 +1084,21 @@ static void GetEntityLerpMultiTexAttribs( VkVertexInputBindingDescription bindin
 	attribs[2].location = 2; attribs[2].binding = 2; attribs[2].format = VK_FORMAT_R8G8B8A8_UNORM; attribs[2].offset = offsetof( vkEntityDynamicMTVert_t, color );
 	attribs[3].location = 3; attribs[3].binding = 2; attribs[3].format = VK_FORMAT_R32G32_SFLOAT; attribs[3].offset = offsetof( vkEntityDynamicMTVert_t, uv0 );
 	attribs[4].location = 4; attribs[4].binding = 2; attribs[4].format = VK_FORMAT_R32G32_SFLOAT; attribs[4].offset = offsetof( vkEntityDynamicMTVert_t, uv1 );
+	attribs[5].location = 5; attribs[5].binding = 0; attribs[5].format = VK_FORMAT_R16G16B16A16_SNORM; attribs[5].offset = offsetof( vkEntityFrameVert_t, normal );
 }
 
-VkPipeline vk_getPipelineEntityLerpMultiTex( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc ) {
+VkPipeline vk_getPipelineEntityLerpMultiTex( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 lightingDiffuse ) {
 	VkVertexInputBindingDescription bindings[3];
-	VkVertexInputAttributeDescription attribs[5];
-	multiTexSpecData_t spec_data;
-	VkSpecializationMapEntry spec_entries[2];
+	VkVertexInputAttributeDescription attribs[6];
+	entityLitMultiTexSpecData_t spec_data;
+	VkSpecializationMapEntry spec_entries[3];
 	VkSpecializationInfo specInfo;
 	int i;
 
 	for ( i = 0; i < s_numCachedEntityLerpMTPipelines; i++ ) {
 		const cachedEntityLerpMTKey_t *key = &s_cachedEntityLerpMTKeys[i];
-		if ( key->combineMode == combineMode && key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc ) {
+		if ( key->combineMode == combineMode && key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc &&
+			 key->lightingDiffuse == lightingDiffuse ) {
 			return s_cachedEntityLerpMTPipelines[i];
 		}
 	}
@@ -1057,13 +1112,17 @@ VkPipeline vk_getPipelineEntityLerpMultiTex( int combineMode, VkCullModeFlags cu
 
 	spec_data.combine_mode = combineMode;
 	spec_data.alpha_test_func = alphaTestFunc;
+	spec_data.lighting_diffuse = lightingDiffuse ? 1 : 0;
 	spec_entries[0].constantID = 0;
-	spec_entries[0].offset = offsetof( multiTexSpecData_t, combine_mode );
+	spec_entries[0].offset = offsetof( entityLitMultiTexSpecData_t, combine_mode );
 	spec_entries[0].size = sizeof( int32_t );
 	spec_entries[1].constantID = 1;
-	spec_entries[1].offset = offsetof( multiTexSpecData_t, alpha_test_func );
+	spec_entries[1].offset = offsetof( entityLitMultiTexSpecData_t, alpha_test_func );
 	spec_entries[1].size = sizeof( int32_t );
-	specInfo.mapEntryCount = 2;
+	spec_entries[2].constantID = 2;
+	spec_entries[2].offset = offsetof( entityLitMultiTexSpecData_t, lighting_diffuse );
+	spec_entries[2].size = sizeof( int32_t );
+	specInfo.mapEntryCount = 3;
 	specInfo.pMapEntries = spec_entries;
 	specInfo.dataSize = sizeof( spec_data );
 	specInfo.pData = &spec_data;
@@ -1071,8 +1130,9 @@ VkPipeline vk_getPipelineEntityLerpMultiTex( int combineMode, VkCullModeFlags cu
 	s_cachedEntityLerpMTKeys[s_numCachedEntityLerpMTPipelines].combineMode = combineMode;
 	s_cachedEntityLerpMTKeys[s_numCachedEntityLerpMTPipelines].cullMode = cullMode;
 	s_cachedEntityLerpMTKeys[s_numCachedEntityLerpMTPipelines].alphaTestFunc = alphaTestFunc;
+	s_cachedEntityLerpMTKeys[s_numCachedEntityLerpMTPipelines].lightingDiffuse = lightingDiffuse;
 	s_cachedEntityLerpMTPipelines[s_numCachedEntityLerpMTPipelines] = create_pipeline_ex( vk_entity_lerp_multitex_vs, vk_multi_texture_fs,
-		vk.lightmap_pipeline_layout, &specInfo, bindings, 3, attribs, 5, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
+		vk.lightmap_pipeline_layout, &specInfo, bindings, 3, attribs, 6, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 		VK_TRUE, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE, VK_TRUE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
@@ -1088,6 +1148,7 @@ typedef struct {
 	VkCullModeFlags cullMode;
 	int32_t alphaTestFunc;
 	VkBool32 polygonOffset;
+	VkBool32 lightingDiffuse;
 } cachedEntitySkinKey_t;
 
 #define MAX_CACHED_ENTITY_SKIN_PIPELINES 32
@@ -1107,7 +1168,7 @@ static void vk_destroyEntitySkinPipelineCache( void ) {
 	s_numCachedEntitySkinPipelines = 0;
 }
 
-static void GetEntitySkinAttribs( VkVertexInputBindingDescription bindings[2], VkVertexInputAttributeDescription attribs[6] ) {
+static void GetEntitySkinAttribs( VkVertexInputBindingDescription bindings[2], VkVertexInputAttributeDescription attribs[7] ) {
 	bindings[0].binding = 0;
 	bindings[0].stride = sizeof( vkEntitySkinnedVert_t );
 	bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -1121,22 +1182,26 @@ static void GetEntitySkinAttribs( VkVertexInputBindingDescription bindings[2], V
 	attribs[3].location = 3; attribs[3].binding = 0; attribs[3].format = VK_FORMAT_R32G32B32_SFLOAT; attribs[3].offset = offsetof( vkEntitySkinnedVert_t, offset[3] );
 	attribs[4].location = 4; attribs[4].binding = 0; attribs[4].format = VK_FORMAT_R8G8B8A8_UINT; attribs[4].offset = offsetof( vkEntitySkinnedVert_t, boneIndex );
 	attribs[5].location = 5; attribs[5].binding = 0; attribs[5].format = VK_FORMAT_R8G8B8A8_UNORM; attribs[5].offset = offsetof( vkEntitySkinnedVert_t, boneWeight );
+	// Bind-pose normal -- skinned the same weighted-sum way as offset[0..3] in the shader so it rotates with the animated pose; see entity_skin.vert.
+	attribs[6].location = 6; attribs[6].binding = 0; attribs[6].format = VK_FORMAT_R16G16B16A16_SNORM; attribs[6].offset = offsetof( vkEntitySkinnedVert_t, normal );
 }
 
 VkPipeline vk_getPipelineEntitySkin( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
-									   VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 polygonOffset ) {
+									   VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 polygonOffset,
+									   VkBool32 lightingDiffuse ) {
 	VkVertexInputBindingDescription bindings[2];
-	VkVertexInputAttributeDescription skinAttribs[6];
-	VkVertexInputAttributeDescription attribs[8];
-	vk2d_spec_data_t spec_data;
-	VkSpecializationMapEntry spec_entries[4];
+	VkVertexInputAttributeDescription skinAttribs[7];
+	VkVertexInputAttributeDescription attribs[9];
+	entityLitSpecData_t spec_data;
+	VkSpecializationMapEntry spec_entries[5];
 	VkSpecializationInfo specInfo;
 	int i;
 
 	for ( i = 0; i < s_numCachedEntitySkinPipelines; i++ ) {
 		const cachedEntitySkinKey_t *key = &s_cachedEntitySkinKeys[i];
 		if ( key->blendEnable == blendEnable && key->srcBlend == srcBlend && key->dstBlend == dstBlend &&
-			 key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc && key->polygonOffset == polygonOffset ) {
+			 key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc && key->polygonOffset == polygonOffset &&
+			 key->lightingDiffuse == lightingDiffuse ) {
 			return s_cachedEntitySkinPipelines[i];
 		}
 	}
@@ -1148,10 +1213,10 @@ VkPipeline vk_getPipelineEntitySkin( VkBool32 blendEnable, VkBlendFactor srcBlen
 
 	GetEntitySkinAttribs( bindings, skinAttribs );
 	memcpy( attribs, skinAttribs, sizeof( skinAttribs ) );
-	attribs[6].location = 6; attribs[6].binding = 1; attribs[6].format = VK_FORMAT_R8G8B8A8_UNORM; attribs[6].offset = offsetof( vkEntityDynamicVert_t, color );
-	attribs[7].location = 7; attribs[7].binding = 1; attribs[7].format = VK_FORMAT_R32G32_SFLOAT; attribs[7].offset = offsetof( vkEntityDynamicVert_t, uv );
+	attribs[7].location = 7; attribs[7].binding = 1; attribs[7].format = VK_FORMAT_R8G8B8A8_UNORM; attribs[7].offset = offsetof( vkEntityDynamicVert_t, color );
+	attribs[8].location = 8; attribs[8].binding = 1; attribs[8].format = VK_FORMAT_R32G32_SFLOAT; attribs[8].offset = offsetof( vkEntityDynamicVert_t, uv );
 
-	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue, alphaTestFunc, qfalse ); // clip_plane always off -- entities never clip
+	GetEntityLitSpecInfo( &spec_data, spec_entries, &specInfo, alphaTestFunc, lightingDiffuse );
 
 	s_cachedEntitySkinKeys[s_numCachedEntitySkinPipelines].blendEnable = blendEnable;
 	s_cachedEntitySkinKeys[s_numCachedEntitySkinPipelines].srcBlend = srcBlend;
@@ -1159,8 +1224,9 @@ VkPipeline vk_getPipelineEntitySkin( VkBool32 blendEnable, VkBlendFactor srcBlen
 	s_cachedEntitySkinKeys[s_numCachedEntitySkinPipelines].cullMode = cullMode;
 	s_cachedEntitySkinKeys[s_numCachedEntitySkinPipelines].alphaTestFunc = alphaTestFunc;
 	s_cachedEntitySkinKeys[s_numCachedEntitySkinPipelines].polygonOffset = polygonOffset;
+	s_cachedEntitySkinKeys[s_numCachedEntitySkinPipelines].lightingDiffuse = lightingDiffuse;
 	s_cachedEntitySkinPipelines[s_numCachedEntitySkinPipelines] = create_pipeline_ex( vk_entity_skin_vs, vk_single_texture_fs, vk.skin_pipeline_layout, &specInfo,
-		bindings, 2, attribs, 8, blendEnable, srcBlend, dstBlend, VK_TRUE, cullMode,
+		bindings, 2, attribs, 9, blendEnable, srcBlend, dstBlend, VK_TRUE, cullMode,
 		VK_POLYGON_MODE_FILL, polygonOffset, VK_TRUE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
@@ -1173,6 +1239,7 @@ typedef struct {
 	int32_t combineMode;
 	VkCullModeFlags cullMode;
 	int32_t alphaTestFunc;
+	VkBool32 lightingDiffuse;
 } cachedEntitySkinMTKey_t;
 
 #define MAX_CACHED_ENTITY_SKIN_MT_PIPELINES 16
@@ -1192,18 +1259,19 @@ static void vk_destroyEntitySkinMTPipelineCache( void ) {
 	s_numCachedEntitySkinMTPipelines = 0;
 }
 
-VkPipeline vk_getPipelineEntitySkinMultiTex( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc ) {
+VkPipeline vk_getPipelineEntitySkinMultiTex( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 lightingDiffuse ) {
 	VkVertexInputBindingDescription bindings[2];
-	VkVertexInputAttributeDescription skinAttribs[6];
-	VkVertexInputAttributeDescription attribs[9];
-	multiTexSpecData_t spec_data;
-	VkSpecializationMapEntry spec_entries[2];
+	VkVertexInputAttributeDescription skinAttribs[7];
+	VkVertexInputAttributeDescription attribs[10];
+	entityLitMultiTexSpecData_t spec_data;
+	VkSpecializationMapEntry spec_entries[3];
 	VkSpecializationInfo specInfo;
 	int i;
 
 	for ( i = 0; i < s_numCachedEntitySkinMTPipelines; i++ ) {
 		const cachedEntitySkinMTKey_t *key = &s_cachedEntitySkinMTKeys[i];
-		if ( key->combineMode == combineMode && key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc ) {
+		if ( key->combineMode == combineMode && key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc &&
+			 key->lightingDiffuse == lightingDiffuse ) {
 			return s_cachedEntitySkinMTPipelines[i];
 		}
 	}
@@ -1216,19 +1284,23 @@ VkPipeline vk_getPipelineEntitySkinMultiTex( int combineMode, VkCullModeFlags cu
 	GetEntitySkinAttribs( bindings, skinAttribs );
 	bindings[1].stride = sizeof( vkEntityDynamicMTVert_t );
 	memcpy( attribs, skinAttribs, sizeof( skinAttribs ) );
-	attribs[6].location = 6; attribs[6].binding = 1; attribs[6].format = VK_FORMAT_R8G8B8A8_UNORM; attribs[6].offset = offsetof( vkEntityDynamicMTVert_t, color );
-	attribs[7].location = 7; attribs[7].binding = 1; attribs[7].format = VK_FORMAT_R32G32_SFLOAT; attribs[7].offset = offsetof( vkEntityDynamicMTVert_t, uv0 );
-	attribs[8].location = 8; attribs[8].binding = 1; attribs[8].format = VK_FORMAT_R32G32_SFLOAT; attribs[8].offset = offsetof( vkEntityDynamicMTVert_t, uv1 );
+	attribs[7].location = 7; attribs[7].binding = 1; attribs[7].format = VK_FORMAT_R8G8B8A8_UNORM; attribs[7].offset = offsetof( vkEntityDynamicMTVert_t, color );
+	attribs[8].location = 8; attribs[8].binding = 1; attribs[8].format = VK_FORMAT_R32G32_SFLOAT; attribs[8].offset = offsetof( vkEntityDynamicMTVert_t, uv0 );
+	attribs[9].location = 9; attribs[9].binding = 1; attribs[9].format = VK_FORMAT_R32G32_SFLOAT; attribs[9].offset = offsetof( vkEntityDynamicMTVert_t, uv1 );
 
 	spec_data.combine_mode = combineMode;
 	spec_data.alpha_test_func = alphaTestFunc;
+	spec_data.lighting_diffuse = lightingDiffuse ? 1 : 0;
 	spec_entries[0].constantID = 0;
-	spec_entries[0].offset = offsetof( multiTexSpecData_t, combine_mode );
+	spec_entries[0].offset = offsetof( entityLitMultiTexSpecData_t, combine_mode );
 	spec_entries[0].size = sizeof( int32_t );
 	spec_entries[1].constantID = 1;
-	spec_entries[1].offset = offsetof( multiTexSpecData_t, alpha_test_func );
+	spec_entries[1].offset = offsetof( entityLitMultiTexSpecData_t, alpha_test_func );
 	spec_entries[1].size = sizeof( int32_t );
-	specInfo.mapEntryCount = 2;
+	spec_entries[2].constantID = 2;
+	spec_entries[2].offset = offsetof( entityLitMultiTexSpecData_t, lighting_diffuse );
+	spec_entries[2].size = sizeof( int32_t );
+	specInfo.mapEntryCount = 3;
 	specInfo.pMapEntries = spec_entries;
 	specInfo.dataSize = sizeof( spec_data );
 	specInfo.pData = &spec_data;
@@ -1236,8 +1308,9 @@ VkPipeline vk_getPipelineEntitySkinMultiTex( int combineMode, VkCullModeFlags cu
 	s_cachedEntitySkinMTKeys[s_numCachedEntitySkinMTPipelines].combineMode = combineMode;
 	s_cachedEntitySkinMTKeys[s_numCachedEntitySkinMTPipelines].cullMode = cullMode;
 	s_cachedEntitySkinMTKeys[s_numCachedEntitySkinMTPipelines].alphaTestFunc = alphaTestFunc;
+	s_cachedEntitySkinMTKeys[s_numCachedEntitySkinMTPipelines].lightingDiffuse = lightingDiffuse;
 	s_cachedEntitySkinMTPipelines[s_numCachedEntitySkinMTPipelines] = create_pipeline_ex( vk_entity_skin_multitex_vs, vk_multi_texture_fs,
-		vk.skin_lightmap_pipeline_layout, &specInfo, bindings, 2, attribs, 9, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
+		vk.skin_lightmap_pipeline_layout, &specInfo, bindings, 2, attribs, 10, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 		VK_TRUE, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE, VK_TRUE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
