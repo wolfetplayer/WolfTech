@@ -468,10 +468,17 @@ it once, make world/entity/poly submission all go through it.
       New `vk_draw2d_quad_rotated`/`vk_draw2d_quad_gradient` in `vk_draw2d.c`, reusing the existing
       `vk_draw2d_quad_generic`/`vk_draw2d_record_tris` plumbing (rotated) or a small dedicated
       per-corner-color variant (gradient, since the generic path hardcodes one uniform color for all
-      4 corners). Not yet built or tested in-game.
-- [ ] Sweep remaining stubs for actual usage before investing further: `RE_RenderToTexture`,
-      `R_GetTextureId`, `RE_TakeVideoFrame`, `RE_SetWorldVisData` — confirm whether game/cgame code
-      paths this project actually exercises call these; implement only what's load-bearing.
+      4 corners). **User confirmed working in-game.**
+- [x] Swept `RE_RenderToTexture`/`R_GetTextureId`/`RE_TakeVideoFrame`/`RE_SetWorldVisData` for actual
+      callers before investing further. `RE_SetWorldVisData` has zero callers anywhere in this
+      codebase (not even wired up engine-side) -- dead, not worth touching. `RE_TakeVideoFrame` is
+      only reached by `cl_main.c`'s AVI video-capture path (the `video` console command), a dev/
+      content-creation tool never hit during normal play. `RE_RenderToTexture` + `R_GetTextureId` are
+      used together in exactly one place, `cg_draw.c`'s death/limbo/frozen freeze-frame blur effect
+      -- real, but gated behind `cg_fancyfx`, which defaults to `"0"` (the code comment: "off by
+      default so older machines dont just crash"). None are load-bearing under default settings;
+      user chose to leave all four stubbed rather than build real render-to-texture support for an
+      opt-in cosmetic effect.
 
 ## Phase 3 — Frame pipelining & throughput
 
