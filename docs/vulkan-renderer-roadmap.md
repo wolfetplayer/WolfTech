@@ -241,6 +241,10 @@ it once, make world/entity/poly submission all go through it.
       for shaders that actually have animating `tcMod`/non-identity `rgbGen`).
       `deformVertexes` was *not* added to world surfaces in this pass (world never called
       `R_DeformPosition` before; out of scope here, tracked separately above).
+      **Bug found and fixed 2026-11-22**: stage 0 was always routed through the fixed, hardcoded-opaque
+      `vk.pipeline_3d_lightmap` pipeline regardless of the shader's own stage 0 blend state — any
+      "trans"-style world/brush-model shader with a real `blendFunc` on stage 0 (and no lightmap use)
+      rendered that stage fully opaque. See the matching changelog entry for the fix.
 - [x] Real multitexture pipelines for entities/polys: new `multi_texture.vert`/`.frag` shader pair
       (`layout(constant_id=0) combine_mode`: 0=modulate/"filter" `GL_DST_COLOR,GL_ZERO`, 1=add
       `GL_ONE,GL_ONE`; `constant_id=1` carries stage 0's `alphaTestFunc`) plus `vk_getPipelineMultiTexture`/
@@ -1276,3 +1280,44 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   the existing dynamic vertex buffers), just a normal rebuild. In-game check: a shader using
   `deformVertexes wave`/`bulge` on world geometry (or a func_door/func_rotating using one) should
   now visibly ripple/bulge instead of sitting rigid.
+- **2026-11-22** — User reported a visual bug: a custom shader (`textures/realm_tda/dqn_tongue`,
+  `surfaceparm trans`/`nolightmap`, stage 0 `blendFunc GL_SRC_ALPHA GL_ONE`, stage 1 an additive glow
+  layer) wasn't transparent in game — it rendered as a solid-looking surface with a glow on top.
+  Root cause: `vk_world.c`'s per-batch draw loop (`vk_world_draw`) and the brush-model-entity draw
+  path (`vk_world_draw_brushmodel`) both unconditionally route a shader's **stage 0** through a
+  fixed, eagerly-created pipeline (`vk.pipeline_3d_lightmap[cullType]`, built with
+  `blendEnable = VK_FALSE` hardcoded) on the assumption that stage 0 is always the ordinary opaque
+  diffuse×lightmap base layer. That assumption breaks for any shader whose own stage 0 declares a
+  real `blendFunc` with no lightmap stage (common for "trans"/glow/energy effect shaders) — its
+  requested blend state was silently discarded and it drew fully opaque, while stage 1+ (already
+  routed through the real per-stage `vk_getPipeline3D` blend path) blended correctly on top, giving
+  exactly this "opaque base + translucent glow" look. Fixed in both draw paths: when
+  `shader->stages[0].blendEnabled`, skip the fixed-opaque stage-0 pass entirely and let the existing
+  per-stage loop (which already handles stages 1+ with real blend state) start at stage 0 instead of
+  stage 1, using `R_GetStageImage`/`vk_getPipeline3D` like any other blended stage. Ordinary shaders
+  (stage 0 opaque, the overwhelming majority) are completely unaffected — same lightmap pipeline,
+  same code path as before. Not self-built or tested; needs no shader recompile (pure draw-dispatch
+  logic, same shaders/pipelines already existed). In-game check: `dqn_tongue` (and any other
+  world/brush-entity shader with a blended, non-lightmapped stage 0) should now show background
+  through it instead of a solid base layer. The cheat-gated `r_showtris` wireframe overlay was left
+  calling the old always-opaque path unconditionally — it's a debug visualization, not meant to
+  represent real blending anyway, so this doesn't affect it.
+- **2026-11-22** — User tested the fix above: `dqn_tongue` was transparent, but now the *entire map*
+  looked overlit/washed out, like lightmaps had stopped applying almost everywhere. Root cause: the
+  `blendEnabled` check alone wasn't a safe signal. Two implicit shader-creation paths in
+  `tr_shader.c` — `R_InitShaders`'s `*default` shader and `R_CreateSingleStageShader` (used for
+  *any* texture referenced directly with no matching `.shader` script, which in practice is most
+  ordinary world wall/floor textures in a typical map) — both set `stages[0].blendEnabled = qtrue`
+  unconditionally by design (to let a texture's own alpha channel "just work" without a script, same
+  as `*white`). Before the previous fix, that flag was simply never read for stage 0's draw routing,
+  so it was harmless; the previous fix started reading it, so every one of those plain-texture world
+  surfaces got wrongly rerouted away from their lightmap entirely. Fixed by adding a new
+  `shader_t.explicitlyDefined` field (`tr_shader.h`), set `qtrue` only inside `ParseShader` (a real
+  `name { ... }` block parsed from a `.shader` file) and left `qfalse` (its zero-init default) for
+  both implicit paths. Both `vk_world.c` fix sites now require
+  `stages[0].blendEnabled && explicitlyDefined` together, so only a real authored shader that chose
+  its own stage 0 blend state (like `dqn_tongue`) takes the real-blend path — ordinary world textures
+  with no `.shader` script keep their normal opaque lightmap rendering regardless of the implicit
+  shaders' blend flag. Not self-built or tested. In-game check: the previous fix's check
+  (`dqn_tongue` now transparent) should still hold, *and* ordinary lit world geometry should look
+  normal again (lightmap shading/contrast restored, not flat/washed out).

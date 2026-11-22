@@ -387,6 +387,7 @@ static qboolean ParseShader( const char *name, char **text ) {
 
 	memset( &tempShader, 0, sizeof( tempShader ) );
 	Q_strncpyz( tempShader.name, name, sizeof( tempShader.name ) );
+	tempShader.explicitlyDefined = qtrue;
 
 	while ( 1 ) {
 		token = COM_ParseExt( text, qtrue );

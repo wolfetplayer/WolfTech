@@ -139,6 +139,7 @@ typedef struct shader_s {
 
 	qboolean noMipMaps;
 	qboolean noPicMip;
+	qboolean explicitlyDefined;
 	cullType_t cullType;
 	qboolean polygonOffset; // decal shaders set this to avoid z-fighting with coplanar world geometry; see vk_getPipeline3D
 

@@ -997,8 +997,10 @@ void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const fl
 
 		TransformBrushVerts( ent, rawVerts, numVerts, s_brushVertScratch );
 
-		DrawBrushSurfaceStage0( surf, shader, s_brushVertScratch, indexes, numIndexes, ent->shaderRGBA, ent->shaderTexCoord );
-		for ( s = 1; s < shader->numStages; s++ ) {
+		if ( !( shader->stages[0].blendEnabled && shader->explicitlyDefined ) ) {
+			DrawBrushSurfaceStage0( surf, shader, s_brushVertScratch, indexes, numIndexes, ent->shaderRGBA, ent->shaderTexCoord );
+		}
+		for ( s = ( shader->stages[0].blendEnabled && shader->explicitlyDefined ) ? 0 : 1; s < shader->numStages; s++ ) {
 			DrawBrushSurfaceExtraStage( shader, s, s_brushVertScratch, indexes, numIndexes, ent->shaderRGBA, ent->shaderTexCoord );
 		}
 
@@ -1065,26 +1067,25 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			continue;
 		}
 
-		// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
-		pipeline = vk_getWorldLightmapPipeline( shader->cullType );
-		if ( pipeline != boundPipeline ) {
-			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-			boundPipeline = pipeline;
+		if ( !( shader->stages[0].blendEnabled && shader->explicitlyDefined ) ) {
+			// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
+			pipeline = vk_getWorldLightmapPipeline( shader->cullType );
+			if ( pipeline != boundPipeline ) {
+				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+				boundPipeline = pipeline;
+			}
+			if ( !lmBufferBound ) {
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
+				lmBufferBound = qtrue; bound2DBuffer = qfalse;
+			}
+
+			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
+				0, 1, &batch->descriptor, 0, NULL );
+
+			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader );
 		}
-		if ( !lmBufferBound ) {
-			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
-			lmBufferBound = qtrue; bound2DBuffer = qfalse;
-		}
 
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
-			0, 1, &batch->descriptor, 0, NULL );
-
-		ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader );
-
-		// Stages 1+ get their own real per-frame rgbGen/tcMod now, sharing no state with stage 0.
-		// vk.pipeline_layout and vk.lightmap_pipeline_layout declare identical push constant ranges,
-		// so the mvp/fog push above still applies -- no need to push it again here.
-		for ( s = 1; s < shader->numStages; s++ ) {
+		for ( s = ( shader->stages[0].blendEnabled && shader->explicitlyDefined ) ? 0 : 1; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
 			image_t *stageImage = R_GetStageImage( stage );
 
