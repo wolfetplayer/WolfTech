@@ -524,8 +524,6 @@ it once, make world/entity/poly submission all go through it.
       been met. Not self-built or tested; next step is a real build plus checking the new cap is
       never hit in a real level (the existing `MAX_CACHED_3D_PIPELINES hit` warning print will say
       so if it still is).
-- [ ] GPU mip generation (`vkCmdBlitImage` chain) to replace the Phase 0 CPU box-filter stopgap, if
-      load-time cost becomes a problem.
 
 ## Phase 4 — rend2 parity: material & lighting tier
 
