@@ -1321,3 +1321,28 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   shaders' blend flag. Not self-built or tested. In-game check: the previous fix's check
   (`dqn_tongue` now transparent) should still hold, *and* ordinary lit world geometry should look
   normal again (lightmap shading/contrast restored, not flat/washed out).
+- **2026-11-22** — User reported a third, related bug: `textures/wt_alpha/mesh_c02` (`alphaFunc GE128`,
+  no `blendFunc` at all — an alpha-tested cutout mesh/fence texture, not a blended one) didn't cut
+  out. This is a different gap than the two fixes above: since it has no `blendFunc`,
+  `stages[0].blendEnabled` is false, so it was never affected by either previous fix and always kept
+  going through the fixed `vk.pipeline_3d_lightmap` pipeline — which turned out to have **no alpha
+  test support at all**: `world_lightmap.frag`/`GetWorldLightmapSpecInfo` only ever had a `clip_plane`
+  spec constant, never an `alpha_test_func` one (unlike `single_texture.frag`, which already has
+  real alpha-test support for entities/polys/extra world stages). Any world or brush-entity surface
+  whose stage 0 uses `alphaFunc` (a very common technique for lightmapped fences/grates/foliage/
+  chain-link) silently lost its cutout and rendered as a solid quad. Fixed properly rather than
+  routing around the lightmap pass (which would have thrown away real lightmap shading for exactly
+  the content type — lit alpha-cutout meshes — that most needs it): added `alpha_test_func` as a
+  second spec constant (constant_id 1) to `world_lightmap.frag`, with the same 4-way discard logic
+  `single_texture.frag` already uses, tested against `diffuse.a` (the texture×vertex alpha before the
+  lightmap multiply — equivalent to testing the final output alpha, since the lightmap never touches
+  alpha). `vk.pipeline_3d_lightmap`/`_portal`/`_mirror` (`vk_instance.h`) grew from `[cullType_t]` (3
+  entries) to `[cullType_t][alphaTestFunc]` (3×4 = 12 entries each, eagerly created at startup like
+  every other axis this trio already has — bounded and cheap, matching this file's existing
+  precedent rather than converting to a lazy cache for just one more small, bounded axis).
+  `vk_getWorldLightmapPipeline` (`vk_pipelines.h`/`.c`) takes `alphaTestFunc` now; both call sites in
+  `vk_world.c` (the main batch loop and `DrawBrushSurfaceStage0`) pass `stages[0].alphaTestFunc`
+  through. Not self-built or tested. **Needs a shader recompile** (`world_lightmap.frag` changed,
+  same `glslangValidator` + `gen_spv_c.py` step as before) before the next build will show the fix.
+  In-game check: `mesh_c02` (and any other lightmapped world/brush surface using `alphaFunc`) should
+  now show real cutout holes instead of a solid textured quad.

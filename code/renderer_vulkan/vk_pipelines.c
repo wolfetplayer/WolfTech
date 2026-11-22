@@ -602,18 +602,23 @@ static void vk_destroyEntitySkinPipelineCache( void );
 static void vk_resetEntitySkinMTPipelineCache( void );
 static void vk_destroyEntitySkinMTPipelineCache( void );
 
-// world_lightmap.vert/.frag's only spec constant (its clip_plane is constant_id 0, not single_texture's 2).
+// world_lightmap.vert/.frag's spec constants: clip_plane is constant_id 0 (not single_texture's 2), alpha_test_func is constant_id 1.
 typedef struct {
 	int32_t clip_plane;
+	int32_t alpha_test_func;
 } worldLightmapSpecData_t;
 
-static void GetWorldLightmapSpecInfo( worldLightmapSpecData_t *spec_data, VkSpecializationMapEntry spec_entries[1],
-									   VkSpecializationInfo *specInfo, qboolean clipPlaneEnabled ) {
+static void GetWorldLightmapSpecInfo( worldLightmapSpecData_t *spec_data, VkSpecializationMapEntry spec_entries[2],
+									   VkSpecializationInfo *specInfo, qboolean clipPlaneEnabled, int32_t alphaTestFunc ) {
 	spec_data->clip_plane = clipPlaneEnabled ? 1 : 0;
+	spec_data->alpha_test_func = alphaTestFunc;
 	spec_entries[0].constantID = 0;
 	spec_entries[0].offset = offsetof( worldLightmapSpecData_t, clip_plane );
 	spec_entries[0].size = sizeof( int32_t );
-	specInfo->mapEntryCount = 1;
+	spec_entries[1].constantID = 1;
+	spec_entries[1].offset = offsetof( worldLightmapSpecData_t, alpha_test_func );
+	spec_entries[1].size = sizeof( int32_t );
+	specInfo->mapEntryCount = 2;
 	specInfo->pMapEntries = spec_entries;
 	specInfo->dataSize = sizeof( *spec_data );
 	specInfo->pData = spec_data;
@@ -628,12 +633,9 @@ void vk_create3DPipelines( void ) {
 	vk2d_spec_data_t spec_data, sky_spec_data;
 	VkSpecializationMapEntry spec_entries[4], sky_spec_entries[4];
 	VkSpecializationInfo specInfo, skySpecInfo;
-	worldLightmapSpecData_t lm_spec_data, lm_portal_spec_data;
-	VkSpecializationMapEntry lm_spec_entries[1], lm_portal_spec_entries[1];
-	VkSpecializationInfo lmSpecInfo, lmPortalSpecInfo;
 	VkBool32 hwClip = vk.features.shaderClipDistance;
 	VkShaderModule worldPortalVs = hwClip ? vk_world_lightmap_clip_vs : vk_world_lightmap_vs;
-	int ct;
+	int ct, at;
 
 	r_offsetFactor = ri.Cvar_Get( "r_offsetfactor", "-1", CVAR_CHEAT );
 	r_offsetUnits = ri.Cvar_Get( "r_offsetunits", "-2", CVAR_CHEAT );
@@ -675,8 +677,6 @@ void vk_create3DPipelines( void ) {
 
 	GetSpecInfo( &spec_data, spec_entries, &specInfo, qtrue, 0, qfalse );
 	GetSpecInfo( &sky_spec_data, sky_spec_entries, &skySpecInfo, qfalse, 0, qfalse );
-	GetWorldLightmapSpecInfo( &lm_spec_data, lm_spec_entries, &lmSpecInfo, qfalse );
-	GetWorldLightmapSpecInfo( &lm_portal_spec_data, lm_portal_spec_entries, &lmPortalSpecInfo, !hwClip ); // off when hwClip's vk_world_lightmap_clip_vs handles it instead
 
 	vk.pipeline_3d_opaque = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, VK_CULL_MODE_NONE );
@@ -685,13 +685,22 @@ void vk_create3DPipelines( void ) {
 	for ( ct = CT_FRONT_SIDED; ct <= CT_TWO_SIDED; ct++ ) {
 		VkCullModeFlags cull = vk_cullModeForShader( (cullType_t)ct );
 
-		vk.pipeline_3d_lightmap[ct] = create_pipeline( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, &lmSpecInfo,
-			&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, cull );
-		// Portal/mirror variants: clip plane active, mirror also flips cull mode (tr_portal.h).
-		vk.pipeline_3d_lightmap_portal[ct] = create_pipeline( worldPortalVs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, &lmPortalSpecInfo,
-			&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, cull );
-		vk.pipeline_3d_lightmap_mirror[ct] = create_pipeline( worldPortalVs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, &lmPortalSpecInfo,
-			&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, vk_flipCullMode( cull ) );
+		for ( at = 0; at < 4; at++ ) {
+			worldLightmapSpecData_t lm_spec_data, lm_portal_spec_data;
+			VkSpecializationMapEntry lm_spec_entries[2], lm_portal_spec_entries[2];
+			VkSpecializationInfo lmSpecInfo, lmPortalSpecInfo;
+
+			GetWorldLightmapSpecInfo( &lm_spec_data, lm_spec_entries, &lmSpecInfo, qfalse, at );
+			GetWorldLightmapSpecInfo( &lm_portal_spec_data, lm_portal_spec_entries, &lmPortalSpecInfo, !hwClip, at ); // clip off when hwClip's vk_world_lightmap_clip_vs handles it instead
+
+			vk.pipeline_3d_lightmap[ct][at] = create_pipeline( vk_world_lightmap_vs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, &lmSpecInfo,
+				&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, cull );
+			// Portal/mirror variants: clip plane active, mirror also flips cull mode (tr_portal.h).
+			vk.pipeline_3d_lightmap_portal[ct][at] = create_pipeline( worldPortalVs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, &lmPortalSpecInfo,
+				&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, cull );
+			vk.pipeline_3d_lightmap_mirror[ct][at] = create_pipeline( worldPortalVs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, &lmPortalSpecInfo,
+				&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, vk_flipCullMode( cull ) );
+		}
 	}
 	// Depth test/write off so draw order alone keeps the sky behind everything -- see vk_sky.c.
 	vk.pipeline_sky = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &skySpecInfo,
@@ -734,7 +743,7 @@ void vk_create3DPipelines( void ) {
 }
 
 void vk_destroy3DPipelines( void ) {
-	int ct;
+	int ct, at;
 
 	vk_destroyPipelineCache3D();
 	vk_destroyEntityLerpPipelineCache();
@@ -745,9 +754,11 @@ void vk_destroy3DPipelines( void ) {
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_opaque, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_3d_blend, NULL );
 	for ( ct = CT_FRONT_SIDED; ct <= CT_TWO_SIDED; ct++ ) {
-		qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap[ct], NULL );
-		qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap_portal[ct], NULL );
-		qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap_mirror[ct], NULL );
+		for ( at = 0; at < 4; at++ ) {
+			qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap[ct][at], NULL );
+			qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap_portal[ct][at], NULL );
+			qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap_mirror[ct][at], NULL );
+		}
 	}
 	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_world_wireframe, NULL );
@@ -759,15 +770,15 @@ void vk_destroy3DPipelines( void ) {
 	vk_destroyMultiTexPipelineCache();
 }
 
-// Stage-0 world+lightmap pipeline for cullType, auto-switched to the clip-plane/mirror variant while tr_portal.c is recursing.
-VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType ) {
+// Stage-0 world+lightmap pipeline for (cullType, alphaTestFunc), auto-switched to the clip-plane/mirror variant while tr_portal.c is recursing.
+VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType, int32_t alphaTestFunc ) {
 	if ( R_InMirrorView() ) {
-		return vk.pipeline_3d_lightmap_mirror[cullType];
+		return vk.pipeline_3d_lightmap_mirror[cullType][alphaTestFunc];
 	}
 	if ( R_InPortalView() ) {
-		return vk.pipeline_3d_lightmap_portal[cullType];
+		return vk.pipeline_3d_lightmap_portal[cullType][alphaTestFunc];
 	}
-	return vk.pipeline_3d_lightmap[cullType];
+	return vk.pipeline_3d_lightmap[cullType][alphaTestFunc];
 }
 
 // vkMultiTexVertex_t attribs -- byte-identical layout to vkWorldVertex_t, described independently since the types aren't otherwise related.

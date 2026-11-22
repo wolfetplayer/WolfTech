@@ -857,7 +857,7 @@ static void DrawBrushSurfaceStage0( const bspSurface_t *surf, const shader_t *sh
 	}
 
 	descriptor = GetBrushLightmapDescriptor( tr_world.shaders[surf->shaderNum].shader, lightmapIdx );
-	pipeline = vk_getWorldLightmapPipeline( shader->cullType );
+	pipeline = vk_getWorldLightmapPipeline( shader->cullType, stage0->alphaTestFunc );
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynBrushLMBuffer, &vb_offset );
 	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout, 0, 1, &descriptor, 0, NULL );
@@ -1069,7 +1069,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 
 		if ( !( shader->stages[0].blendEnabled && shader->explicitlyDefined ) ) {
 			// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
-			pipeline = vk_getWorldLightmapPipeline( shader->cullType );
+			pipeline = vk_getWorldLightmapPipeline( shader->cullType, shader->stages[0].alphaTestFunc );
 			if ( pipeline != boundPipeline ) {
 				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 				boundPipeline = pipeline;

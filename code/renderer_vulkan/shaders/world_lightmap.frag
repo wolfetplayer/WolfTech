@@ -21,11 +21,21 @@ layout(location = 4) in float frag_clip_dist;
 layout(location = 0) out vec4 out_color;
 
 layout (constant_id = 0) const int clip_plane = 0;
+layout (constant_id = 1) const int alpha_test_func = 0;
 
 void main() {
     if (clip_plane != 0 && frag_clip_dist < 0.0) discard;
 
     vec4 diffuse = frag_color * texture(diffuseMap, frag_tex_coord);
+
+    if (alpha_test_func == 1) {
+        if (diffuse.a == 0.0f) discard;
+    } else if (alpha_test_func == 2) {
+        if (diffuse.a >= 0.5f) discard;
+    } else if (alpha_test_func == 3) {
+        if (diffuse.a < 0.5f) discard;
+    }
+
     vec3 light = texture(lightMap, frag_lightmap_coord).rgb;
     vec3 lit = diffuse.rgb * light;
     out_color = vec4(mix(fogColor.rgb, lit, frag_fogFactor), diffuse.a);

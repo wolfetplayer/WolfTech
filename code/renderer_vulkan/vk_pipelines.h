@@ -85,8 +85,8 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 							  VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 clipPlane, VkBool32 mirror,
 							  VkBool32 polygonOffset );
 
-// vk.pipeline_3d_lightmap[cullType], auto-swapped for the clip-plane/mirror variant while tr_portal.c is recursing.
-VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType );
+// vk.pipeline_3d_lightmap[cullType][alphaTestFunc], auto-swapped for the clip-plane/mirror variant while tr_portal.c is recursing.
+VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType, int32_t alphaTestFunc );
 
 // Lazily creates/caches a multi_texture pipeline (two samplers combined in one pass, always opaque); combineMode: 0 = modulate, 1 = add.
 VkPipeline vk_getPipelineMultiTexture( int combineMode, VkCullModeFlags cullMode, int32_t alphaTestFunc );
