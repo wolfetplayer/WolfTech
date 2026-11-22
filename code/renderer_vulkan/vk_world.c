@@ -132,6 +132,7 @@ typedef struct {
 	byte color[4];
 	float uv[2];
 	float lmUv[2];
+	vec3_t normal; // world-space, rotated by the entity's axis in TransformBrushVerts -- packed to snorm16 only at the final vkWorldVertex_t write
 } brushVert_t;
 static brushVert_t s_brushVertScratch[BRUSH_SURF_MAX_VERTS];
 
@@ -228,6 +229,18 @@ void vk_world_shutdown( void ) {
 	vk_world_clear();
 }
 
+// float[3] in [-1,1] -> snorm int16[4], w left 0; see vkWorldVertex_t's packing comment.
+static void pack_snorm16_3( const vec3_t in, int16_t out[4] ) {
+	int i;
+	for ( i = 0; i < 3; i++ ) {
+		float v = in[i];
+		if ( v < -1.0f ) v = -1.0f;
+		if ( v > 1.0f ) v = 1.0f;
+		out[i] = (int16_t)( v * 32767.0f );
+	}
+	out[3] = 0;
+}
+
 // Raw BSP vertex color (already overbright-shifted by R_LoadDrawVerts) -- not stage-baked.
 static void CopyVertex( vkWorldVertex_t *out, const drawVert_t *in ) {
 	out->pos[0] = in->xyz[0];
@@ -241,6 +254,9 @@ static void CopyVertex( vkWorldVertex_t *out, const drawVert_t *in ) {
 	out->uv[1] = in->st[1];
 	out->lmUv[0] = in->lightmap[0];
 	out->lmUv[1] = in->lightmap[1];
+	pack_snorm16_3( in->normal, out->normal );
+	out->tangent[0] = out->tangent[1] = out->tangent[2] = out->tangent[3] = 0;
+	out->lightdir[0] = out->lightdir[1] = out->lightdir[2] = out->lightdir[3] = 0;
 }
 
 // Appends one surface's triangles into verts/indexes, tessellating patches on the fly; returns its index range.
@@ -580,6 +596,9 @@ static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const 
 			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
 			dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
 			dst->lmUv[0] = src->lmUv[0]; dst->lmUv[1] = src->lmUv[1];
+			memcpy( dst->normal, src->normal, sizeof( dst->normal ) );
+			memcpy( dst->tangent, src->tangent, sizeof( dst->tangent ) );
+			memcpy( dst->lightdir, src->lightdir, sizeof( dst->lightdir ) );
 		}
 	}
 
@@ -729,6 +748,12 @@ static void TransformBrushVerts( const refEntity_t *ent, const drawVert_t *src, 
 		out[i].color[2] = src[i].color[2]; out[i].color[3] = src[i].color[3];
 		out[i].uv[0] = src[i].st[0]; out[i].uv[1] = src[i].st[1];
 		out[i].lmUv[0] = src[i].lightmap[0]; out[i].lmUv[1] = src[i].lightmap[1];
+		{
+			const float *n = src[i].normal;
+			out[i].normal[0] = n[0] * ent->axis[0][0] + n[1] * ent->axis[1][0] + n[2] * ent->axis[2][0];
+			out[i].normal[1] = n[0] * ent->axis[0][1] + n[1] * ent->axis[1][1] + n[2] * ent->axis[2][1];
+			out[i].normal[2] = n[0] * ent->axis[0][2] + n[1] * ent->axis[1][2] + n[2] * ent->axis[2][2];
+		}
 	}
 }
 
@@ -830,6 +855,9 @@ static void DrawBrushSurfaceStage0( const bspSurface_t *surf, const shader_t *sh
 		dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
 		dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
 		dst->lmUv[0] = src->lmUv[0]; dst->lmUv[1] = src->lmUv[1];
+		pack_snorm16_3( src->normal, dst->normal );
+		dst->tangent[0] = dst->tangent[1] = dst->tangent[2] = dst->tangent[3] = 0;
+		dst->lightdir[0] = dst->lightdir[1] = dst->lightdir[2] = dst->lightdir[3] = 0;
 	}
 	qvkCmdDraw( vk.command_buffer, (uint32_t)numIndexes, 1, base, 0 );
 }

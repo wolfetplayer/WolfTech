@@ -2012,6 +2012,10 @@ Q3RVOBJ = \
   $(B)/renderer_vulkan/shaders/Compiled/world_lightmap_clip_vert.o \
   $(B)/renderer_vulkan/shaders/Compiled/multi_texture_vert.o \
   $(B)/renderer_vulkan/shaders/Compiled/multi_texture_frag.o \
+  $(B)/renderer_vulkan/shaders/Compiled/entity_lerp_vert.o \
+  $(B)/renderer_vulkan/shaders/Compiled/entity_lerp_multitex_vert.o \
+  $(B)/renderer_vulkan/shaders/Compiled/entity_skin_vert.o \
+  $(B)/renderer_vulkan/shaders/Compiled/entity_skin_multitex_vert.o \
 
 Q3ROBJ = \
   $(B)/renderer/tr_altivec.o \

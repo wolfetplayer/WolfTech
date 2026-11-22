@@ -184,6 +184,11 @@ struct Vk_Instance {
 	VkDescriptorSetLayout lightmap_set_layout;
 	VkPipelineLayout lightmap_pipeline_layout;
 
+	// Set 1 (one UNIFORM_BUFFER_DYNAMIC binding, vertex stage) for the MDS/MDM GPU bone-skinning path's bone-matrix UBO; the buffer/pool/descriptor set themselves are vk_entity.c's own, same precedent as vk_world.c/vk_flares.c owning pools against a layout declared here.
+	VkDescriptorSetLayout skin_set_layout;
+	VkPipelineLayout skin_pipeline_layout; // set0 = set_layout, set1 = skin_set_layout
+	VkPipelineLayout skin_lightmap_pipeline_layout; // set0 = lightmap_set_layout, set1 = skin_set_layout
+
 	VkPipeline pipeline_2d_opaque;
 	VkPipeline pipeline_2d_blend;
 	VkPipeline pipeline_3d_opaque; // fallback only; see vk_getPipeline3D

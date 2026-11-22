@@ -19,4 +19,12 @@ extern VkShaderModule vk_multi_texture_fs;
 extern VkShaderModule vk_single_texture_clip_vs;
 extern VkShaderModule vk_world_lightmap_clip_vs;
 
+// Entity GPU vertex-lerp (MD3/MDC); pair with single_texture_fs/multi_texture_fs, no fragment-shader change needed. See vk_getPipelineEntityLerp/vk_getPipelineEntityLerpMultiTex.
+extern VkShaderModule vk_entity_lerp_vs;
+extern VkShaderModule vk_entity_lerp_multitex_vs;
+
+// Entity GPU bone-skinning (MDS/MDM); same fragment-shader reuse. See vk_getPipelineEntitySkin/vk_getPipelineEntitySkinMultiTex.
+extern VkShaderModule vk_entity_skin_vs;
+extern VkShaderModule vk_entity_skin_multitex_vs;
+
 #endif // VK_SHADERS_H_

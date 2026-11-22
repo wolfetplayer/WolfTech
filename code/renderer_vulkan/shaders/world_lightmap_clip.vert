@@ -13,6 +13,10 @@ layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec4 in_color;
 layout(location = 2) in vec2 in_tex_coord;
 layout(location = 3) in vec2 in_lightmap_coord;
+// Not consumed yet -- see world_lightmap.vert's matching comment.
+layout(location = 4) in vec4 in_normal;
+layout(location = 5) in vec4 in_tangent;
+layout(location = 6) in vec4 in_lightdir;
 
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) out vec2 frag_tex_coord;

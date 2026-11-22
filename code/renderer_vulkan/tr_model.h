@@ -23,11 +23,15 @@ typedef struct {
 	mdmHeader_t *mdm;
 	mdxHeader_t *mdx;
 	int bmodelIndex; // MOD_BRUSH only: index into tr_world.submodels
+	void *vkAnimData; // MD3/MDC/MDS/MDM only: opaque to this file, owned/freed by vk_entity.c (see vk_entity_register_model)
 } model_t;
 
 void R_InitModels( void );
 
 qhandle_t RE_RegisterModel( const char *name );
 model_t *R_GetModelByHandle( qhandle_t hModel );
+
+// Handles are 1..R_GetNumModels()-1 -- lets vk_entity_shutdown free every model's vkAnimData without this file knowing about Vulkan.
+int R_GetNumModels( void );
 
 #endif // TR_MODEL_H_

@@ -799,6 +799,52 @@ int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNam
 	return -1; // not an MD3/MDC/MDS/MDM, or tag support for this model type isn't implemented yet
 }
 
+// bones[i].matrix[row][col]/.translation (see R_SkinMDSSurface's own LocalAddScaledMatrixTransformVectorTranslate use) -> a column-major mat4 ready for a GLSL uniform, bottom row implicit [0,0,0,1].
+static void PackBoneMatrix( const mdxBoneFrame_t *bone, float out[16] ) {
+	out[0] = bone->matrix[0][0]; out[1] = bone->matrix[1][0]; out[2] = bone->matrix[2][0]; out[3] = 0.0f;
+	out[4] = bone->matrix[0][1]; out[5] = bone->matrix[1][1]; out[6] = bone->matrix[2][1]; out[7] = 0.0f;
+	out[8] = bone->matrix[0][2]; out[9] = bone->matrix[1][2]; out[10] = bone->matrix[2][2]; out[11] = 0.0f;
+	out[12] = bone->translation[0]; out[13] = bone->translation[1]; out[14] = bone->translation[2]; out[15] = 1.0f;
+}
+
+// Computes every one of refent's MDS bones (not just one surface's referenced subset, since GPU skinning needs the full set the model's vertices index into) and packs each as a GLSL-ready mat4, for vk_entity.c's GPU bone-skinning path. R_CalcBones resolves missing parents on its own (see its boneInfo[*boneRefs].parent checks), so passing every bone index in plain 0..numBones-1 order is safe regardless of the file's actual hierarchy order.
+void R_CalcAllBoneMatricesMDS( const mdsHeader_t *mds, const refEntity_t *refent, float outMat4[MDX_MAX_BONES][16] ) {
+	int boneList[MDX_MAX_BONES];
+	int i, numBones = mds->numBones;
+
+	for ( i = 0; i < numBones; i++ ) {
+		boneList[i] = i;
+	}
+	R_CalcBones( (mdsHeader_t *)mds, refent, boneList, numBones );
+
+	for ( i = 0; i < numBones; i++ ) {
+		PackBoneMatrix( &bones[i], outMat4[i] );
+	}
+}
+
+// Same as R_CalcAllBoneMatricesMDS but for an MDM's linked MDX skeleton; qfalse (same meaning as R_MDM_CalcBones') if none is linked yet.
+qboolean R_CalcAllBoneMatricesMDM( const refEntity_t *refent, float outMat4[MDX_MAX_BONES][16] ) {
+	int boneList[MDX_MAX_BONES];
+	mdxHeader_t *legsHeader;
+	int i, numBones;
+
+	if ( !R_MDM_ResolveSkeleton( refent->frameModel, &legsHeader ) ) {
+		return qfalse;
+	}
+	numBones = legsHeader->numBones;
+	for ( i = 0; i < numBones; i++ ) {
+		boneList[i] = i;
+	}
+	if ( !R_MDM_CalcBones( refent, boneList, numBones ) ) {
+		return qfalse;
+	}
+
+	for ( i = 0; i < numBones; i++ ) {
+		PackBoneMatrix( &bones[i], outMat4[i] );
+	}
+	return qtrue;
+}
+
 void R_SkinMDSSurface( const mdsHeader_t *mds, const mdsSurface_t *surf, const refEntity_t *refent, vec3_t *outPos ) {
 	const int *boneRefs = (const int *)( (const byte *)surf + surf->ofsBoneReferences );
 	const mdsVertex_t *v = (const mdsVertex_t *)( (const byte *)surf + surf->ofsVerts );

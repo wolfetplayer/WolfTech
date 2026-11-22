@@ -16,6 +16,12 @@ VkShaderModule vk_multi_texture_fs;
 VkShaderModule vk_single_texture_clip_vs;
 VkShaderModule vk_world_lightmap_clip_vs;
 
+VkShaderModule vk_entity_lerp_vs;
+VkShaderModule vk_entity_lerp_multitex_vs;
+
+VkShaderModule vk_entity_skin_vs;
+VkShaderModule vk_entity_skin_multitex_vs;
+
 static void create_shader_module( const unsigned char *bytes, int count, VkShaderModule *pModule ) {
 	VkShaderModuleCreateInfo desc;
 	desc.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -43,6 +49,14 @@ void vk_loadShaderModules( void ) {
 	extern int single_texture_clip_vert_spv_size;
 	extern unsigned char world_lightmap_clip_vert_spv[];
 	extern int world_lightmap_clip_vert_spv_size;
+	extern unsigned char entity_lerp_vert_spv[];
+	extern int entity_lerp_vert_spv_size;
+	extern unsigned char entity_lerp_multitex_vert_spv[];
+	extern int entity_lerp_multitex_vert_spv_size;
+	extern unsigned char entity_skin_vert_spv[];
+	extern int entity_skin_vert_spv_size;
+	extern unsigned char entity_skin_multitex_vert_spv[];
+	extern int entity_skin_multitex_vert_spv_size;
 
 	create_shader_module( single_texture_vert_spv, single_texture_vert_spv_size, &vk_single_texture_vs );
 	create_shader_module( single_texture_frag_spv, single_texture_frag_spv_size, &vk_single_texture_fs );
@@ -52,6 +66,10 @@ void vk_loadShaderModules( void ) {
 	create_shader_module( multi_texture_frag_spv, multi_texture_frag_spv_size, &vk_multi_texture_fs );
 	create_shader_module( single_texture_clip_vert_spv, single_texture_clip_vert_spv_size, &vk_single_texture_clip_vs );
 	create_shader_module( world_lightmap_clip_vert_spv, world_lightmap_clip_vert_spv_size, &vk_world_lightmap_clip_vs );
+	create_shader_module( entity_lerp_vert_spv, entity_lerp_vert_spv_size, &vk_entity_lerp_vs );
+	create_shader_module( entity_lerp_multitex_vert_spv, entity_lerp_multitex_vert_spv_size, &vk_entity_lerp_multitex_vs );
+	create_shader_module( entity_skin_vert_spv, entity_skin_vert_spv_size, &vk_entity_skin_vs );
+	create_shader_module( entity_skin_multitex_vert_spv, entity_skin_multitex_vert_spv_size, &vk_entity_skin_multitex_vs );
 }
 
 void vk_destroyShaderModules( void ) {
@@ -63,4 +81,8 @@ void vk_destroyShaderModules( void ) {
 	qvkDestroyShaderModule( vk.device, vk_multi_texture_fs, NULL );
 	qvkDestroyShaderModule( vk.device, vk_single_texture_clip_vs, NULL );
 	qvkDestroyShaderModule( vk.device, vk_world_lightmap_clip_vs, NULL );
+	qvkDestroyShaderModule( vk.device, vk_entity_lerp_vs, NULL );
+	qvkDestroyShaderModule( vk.device, vk_entity_lerp_multitex_vs, NULL );
+	qvkDestroyShaderModule( vk.device, vk_entity_skin_vs, NULL );
+	qvkDestroyShaderModule( vk.device, vk_entity_skin_multitex_vs, NULL );
 }

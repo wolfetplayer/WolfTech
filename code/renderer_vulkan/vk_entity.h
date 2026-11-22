@@ -3,8 +3,13 @@
 #ifndef VK_ENTITY_H_
 #define VK_ENTITY_H_
 
+#include "tr_model.h" // model_t
+
 void vk_entity_init( void );
 void vk_entity_shutdown( void );
+
+// Builds this model's static per-surface GPU vertex-animation buffer(s) (MD3/MDC vertex-lerp frames, or MDS/MDM bind pose -- stage 3) right after tr_model.c finishes parsing it; stores the result in model->vkAnimData. No-op for model types this doesn't apply to.
+void vk_entity_register_model( model_t *mod );
 
 // Resets the shared vertex/index write cursors; call once per real frame (vk_entity_draw_all can run more than once per frame).
 void vk_entity_begin_frame( void );

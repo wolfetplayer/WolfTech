@@ -8,6 +8,7 @@
 #include "tr_shader.h"
 #include "tr_model.h"
 #include "tr_bsp.h"
+#include "vk_entity.h"
 
 #define MAX_MOD_KNOWN 1024
 static model_t models[MAX_MOD_KNOWN];
@@ -23,6 +24,10 @@ model_t *R_GetModelByHandle( qhandle_t hModel ) {
 		return NULL;
 	}
 	return &models[hModel];
+}
+
+int R_GetNumModels( void ) {
+	return numModels;
 }
 
 // Base frames plus optional per-model-frame compressed deltas against the nearest one -- vk_entity.c decodes them at draw time.
@@ -142,6 +147,7 @@ static qboolean R_LoadMDC( model_t *mod, void *buffer, const char *name ) {
 	}
 
 	mod->type = MOD_MDC;
+	vk_entity_register_model( mod );
 	return qtrue;
 }
 
@@ -248,6 +254,7 @@ static qboolean R_LoadMD3( model_t *mod, void *buffer, const char *name ) {
 	}
 
 	mod->type = MOD_MD3;
+	vk_entity_register_model( mod );
 	return qtrue;
 }
 
@@ -375,6 +382,7 @@ static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *name ) {
 	}
 
 	mod->type = MOD_MDS;
+	vk_entity_register_model( mod );
 	return qtrue;
 }
 
@@ -544,6 +552,7 @@ static qboolean R_LoadMDM( model_t *mod, void *buffer, const char *name ) {
 	}
 
 	mod->type = MOD_MDM;
+	vk_entity_register_model( mod );
 	return qtrue;
 }
 

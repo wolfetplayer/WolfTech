@@ -13,6 +13,10 @@ layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec4 in_color;
 layout(location = 2) in vec2 in_tex_coord;
 layout(location = 3) in vec2 in_lightmap_coord;
+// Not consumed yet -- normal is real (vk_world.c), tangent/lightdir are zeroed until their own later roadmap items populate them. See vkWorldVertex_t.
+layout(location = 4) in vec4 in_normal;
+layout(location = 5) in vec4 in_tangent;
+layout(location = 6) in vec4 in_lightdir;
 
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) out vec2 frag_tex_coord;

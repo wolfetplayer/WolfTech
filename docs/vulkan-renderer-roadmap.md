@@ -35,9 +35,10 @@ It's still well behind both reference points on everything not yet checked off b
   is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
   draw unclipped inside a mirror) and hasn't been visually confirmed in-game yet.
 - **vs. rend2**: no normal/specular/parallax/deluxe maps, no per-pixel lighting (entities get one
-  flat RGBA tint for the whole model, world gets baked lightmap only), no tangent/normal data in
-  the vertex formats at all, no HDR/bloom/tonemap, no SSAO/FXAA/DOF, no cubemap reflection probes,
-  no shadow mapping.
+  flat RGBA tint for the whole model, world gets baked lightmap only) — world and entity vertex
+  formats now carry real normal/tangent data (Phase 4's vertex-format item, done 2026-11-22) but
+  nothing consumes it for lighting yet, no HDR/bloom/tonemap, no SSAO/FXAA/DOF, no cubemap
+  reflection probes, no shadow mapping.
 - **Open/unverified**: a `r_vk_disableMultiTex` bisection cvar from an earlier (inconclusive) attempt
   at the (since-fixed) shattered-weapon bug is still sitting in `vk_pipelines.c`, undocumented until
   now — safe to leave (off by default, no `sv_cheats` requirement) but should be removed as cleanup.
@@ -531,9 +532,41 @@ it once, make world/entity/poly submission all go through it.
 
 This is the first tier that goes beyond vkQuake3. Foundational — gates everything in Phase 5.
 
-- [ ] Extend vertex formats (world *and* entity — entity vertex format today is position+UV only,
+- [x] Extend vertex formats (world *and* entity — entity vertex format today is position+UV only,
       no normals at all): add tangent, normal, lightdirection, bone-index/weight attributes, and a
-      second position/normal/tangent frame for vertex-lerp animation blending.
+      second position/normal/tangent frame for vertex-lerp animation blending. Staged into 3 parts
+      (see the 2026-11-22 changelog entries for the full design/research):
+      - [x] Stage 1 — world (`vkWorldVertex_t`): added packed snorm16 `normal`/`tangent`/`lightdir`.
+            `normal` is real, threaded from BSP/patch/brush-entity data that was already being
+            loaded and discarded; `tangent`/`lightdir` are zeroed, populated by their own later
+            items (tangent precompute, light-grid sampling) rather than here.
+      - [x] Stage 2 — entity GPU vertex-lerp blending (MD3/MDC): static per-model buffers built
+            once at load, `mix()`-blended in the vertex shader (see the two 2026-11-22 changelog
+            entries for the full design). New `vkEntityFrameVert_t` (pos+normal+tangent) buffers
+            built at MD3/MDC load time (lat/long + MDC-delta normal decode, Lengyel tangent
+            compute, uploaded once via `vk_create_device_local_buffer`); new `entity_lerp.vert`/
+            `entity_lerp_multitex.vert` + pipeline cache; `vk_entity_draw_all` now draws these
+            surfaces immediately with a per-entity combined `cameraMVP * entityModel` push
+            constant (reusing `single_texture.vert/.frag`'s existing 128-byte layout unchanged —
+            `camPos` repurposed to the entity-local-space camera, the always-zero `clipPlane` slot
+            to `backlerp`) instead of the old shared-camera-only-mvp deferred batch. MDS/MDM keep
+            the old CPU-skinned deferred path untouched (Stage 3).
+      - [x] Stage 3 — entity GPU bone skinning (MDS/MDM): bind-pose buffers + top-4 bone
+            index/weight per vertex, skinned in the vertex shader; CPU keeps computing bone
+            *matrices* (tags need them too) but stops doing the per-vertex skin loop itself. Split
+            into 3a/3b like Stage 2 (see the 2026-11-22 changelog entries for the full design).
+            Found along the way that this format stores a *separate* offset vector per bone
+            influence (not one shared bind-pose position an IQM-style blended matrix could
+            transform), confirmed with the user before implementing the correct, heavier version
+            (`vkEntitySkinnedVert_t.offset[4][3]`, 4 real per-vertex matrix transforms, not
+            `mix()`) rather than the originally-planned single-position design. Stage 3b added the
+            bone-matrix UBO descriptor infrastructure, `entity_skin.vert`/`entity_skin_multitex.vert`,
+            and the immediate-draw path rewrite (MDS/MDM now draw like MD3/MDC, replacing the old
+            deferred batch path) — in the course of which a real correctness bug was found and
+            fixed: once all 4 model types drew immediately, the now-fully-dead deferred-draw tail
+            code was still stomping the live shared index-write cursor every call. All 4 entity
+            model types now draw immediately on the GPU; all of Phase 4's vertex-format item is
+            done.
 - [ ] Tangent/bitangent precompute at load time (one-time cost, not per-frame) for BSP surfaces,
       patches, and models — mirrors rend2's `R_CalcTangentVectors`.
 - [ ] Normal map / specular map / parallax(relief) map / deluxe map support in a new uber-fragment-
@@ -991,3 +1024,213 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   box-filter stopgap." The CPU stopgap this item described replacing was never actually built, so
   the item was stale rather than open work; cross-referenced from Phase 0's checkmark instead of
   silently dropping it. No code changes.
+- **2026-11-22** — Started Phase 4's vertex-format item (see its checkmark above). Research first
+  (3 parallel passes + 1 follow-up) found: `vkWorldVertex_t` has no normal despite BSP drawverts
+  (`tr_bsp.c`) and tessellated patches (`tr_patch.c`) already loading/computing real per-vertex
+  normals that `vk_world.c`'s `CopyVertex` just discards; there's no dedicated entity vertex
+  type — `vk2d_vertex_t` is shared by the *entire* renderer (2D/poly/sky/flares/shadows/
+  world-dynamic, not just entities), so it can't be extended for entity-only needs; all 4 model
+  formats' file structures already carry a per-vertex normal that's loaded/byteswapped and
+  discarded; MDS/MDM skinning is already genuine multi-bone-weighted (arbitrary `numWeights`);
+  rend2 packs normal/tangent/lightdir as snorm `int16_t[4]` and does vertex-lerp blending via one
+  VBO with two attribute bindings at different offsets (not two buffers), but **never does GPU
+  bone skinning for MDS/MDM** (CPU-only there permanently — only its IQM path gets real GPU
+  skinning), so "bone-index/weight for rend2 parity" wasn't quite accurate; and tag/attachment
+  resolution (`R_LerpTag` → `R_GetBoneTag`/`R_MDM_GetTag`, `tr_bones.c`) depends only on
+  `R_CalcBones`/`R_MDM_CalcBones`'s bone-matrix output, never on per-vertex skinned positions, so
+  moving per-vertex skinning to the GPU can't break weapon/attachment placement. Asked the user
+  how far to take the entity half given rend2 has no real MDS/MDM GPU-skinning reference to mirror;
+  they chose the full migration over reserved-but-unused fields. Found a real architectural
+  conflict before writing any code: per-stage `rgbGen`/`alphaGen`/`tcMod` are re-evaluated on the
+  CPU every frame and baked into the same vertex that carries position (a real, already-shipped
+  feature) — if position/normal/tangent move to a *static* per-model GPU buffer, the CPU can't
+  bake per-frame color/uv into those vertices anymore. Resolved by splitting each entity draw into
+  two vertex bindings: a new static per-model buffer (pos/normal/tangent) plus a dynamic per-frame
+  buffer (just color/uv, same role as today's but smaller) — preserves every existing shader-script
+  effect while genuinely moving the vertex deformation itself to the GPU. Staged into 3 parts
+  (world now; entity GPU vertex-lerp and entity GPU bone-skinning as separate follow-ups) since this
+  is too large for one pass — plan written to
+  `C:\Users\wolfetplayer\.claude\plans\lazy-swinging-noodle.md`.
+  **Stage 1 (world) implemented**: added `normal`/`tangent`/`lightdir` as packed `int16_t[4]`
+  (snorm) fields to `vkWorldVertex_t` (`vk_pipelines.h`) — Vulkan's `VK_FORMAT_R16G16B16A16_SNORM`
+  vertex format auto-converts to float in the shader, so no manual unpack code is needed (simpler
+  than rend2's GL path). Threaded real normals through `vk_world.c`: a new `pack_snorm16_3` helper,
+  `CopyVertex` (reads `drawVert_t.normal`, covers both the main BSP-drawvert loop and the
+  patch-tessellation copy path since both already funnel through it), `brushVert_t` (gained a
+  plain-float `normal` field) + `TransformBrushVerts` (rotates it by `ent->axis`, same as position)
+  + `DrawBrushSurfaceStage0` (packs it on the final write), and `ExpandAndDrawStage0` (straight
+  memcpy-through of the already-packed fields, no per-frame recomputation needed since world
+  normals don't change frame to frame). `ExpandAndDrawExtraStage`/`ExpandAndDrawWorldDlights`/
+  `DrawBrushSurfaceExtraStage` write `vk2d_vertex_t`, not `vkWorldVertex_t`, so correctly left
+  untouched. `tangent`/`lightdir` stay zeroed — each is its own already-separate, already-scoped
+  roadmap item (tangent precompute, light-grid sampling), and this stage only had to make room for
+  them once rather than bumping the format again later. Updated `vk_pipelines.c`'s `lightmapAttribs`
+  (3 new `VK_FORMAT_R16G16B16A16_SNORM` entries, array grew from 4 to 7, every `create_pipeline*`
+  call site using it updated) and both `world_lightmap.vert`/`world_lightmap_clip.vert` (3 new
+  `layout(location = 4/5/6) in` declarations, not consumed by `main()` yet). **Needs a shader
+  recompile** (new vertex inputs) before the next build — this renderer has no runtime shader
+  compiler, `vk_shaders.c` loads precompiled SPIR-V byte arrays from `shaders/Compiled/*.c`, so the
+  usual `shaders/gen_spv_c.py` step has to run first. Not self-built or tested. `r_shownormals`
+  (Phase 0, deliberately left unimplemented for exactly this reason) is now unblocked as a trivial
+  fragment-shader follow-up, but not done in this stage.
+- **2026-11-22** — Started Stage 2 (entity GPU vertex-lerp, see its checkmark above), split into
+  2a/2b once implementation-level reading surfaced two things the original bullet didn't account
+  for. (1) `tr_shade_calc.c`'s `R_CalcStageTexCoord` needs the real per-vertex world-space position
+  for `TMOD_TURBULENT`'s UV wobble — if the CPU stopped computing entity position entirely, any
+  entity shader using `tcMod turb` would break. Fix: `LerpSurfaceVerts`/`LerpMDCSurfaceVerts` are
+  *not* deleted after all; the CPU keeps computing the same interpolated position every frame,
+  transiently, just to feed `R_DeformPosition`/`R_CalcStageTexCoord` — it only stops writing that
+  position into the uploaded vertex. The real win here is narrower than first scoped: real
+  GPU-computed normal/tangent for entities (didn't exist at all before) and removing position from
+  the *dynamic* per-stage vertex (today's `WriteStageVertices` redundantly writes identical
+  position once per shader stage), not a CPU math reduction for position itself. (2) Since the
+  static per-model buffers hold model-local-space data, the GPU now also has to apply the entity's
+  `axis`/`origin` after blending — meaning the single shared camera-only `mvp` push-constant
+  `vk_entity_draw_all` currently pushes once per batch has to become a per-entity
+  `cameraMVP * entityModelMatrix` instead (reuses the existing 64-byte slot, no size growth, but
+  means the current "collect everything then draw in two tight loops" structure has to interleave a
+  push-constant update per entity — `vk_shadows.c`'s `vk_shadows_finish_entity` already does
+  exactly this per-entity-push pattern, so there's in-repo precedent). **Stage 2a (data prep)
+  implemented**: `vkEntityFrameVert_t` (`pos` + packed snorm16 `normal`/`tangent`) and dynamic
+  `vkEntityDynamicVert_t`/`vkEntityDynamicMTVert_t` (`color`/`uv` only) added to `vk_pipelines.h`.
+  `model_t` (`tr_model.h`) gained an opaque `void *vkAnimData` (owned by `vk_entity.c`, unknown to
+  `tr_model.h`) plus a new `R_GetNumModels()` accessor. New `vk_entity_register_model()`
+  (`vk_entity.c`), called from `R_LoadMD3`/`R_LoadMDC` (`tr_model.c`) right after parsing: decodes
+  every frame's position (MD3 direct; MDC base + optional compressed delta, reusing the existing
+  `DecodeMDCVertex`) and normal (MD3/MDC-base: lat/long decode — same formula as `tr_light.c`'s
+  private `LatLongToNormal`, just never applied to model data before; MDC compressed-delta frames:
+  `ByteToDir` on `ofsVec`'s top byte, a different, coarser packing this engine had never decoded at
+  all), computes a per-frame tangent (standard Lengyel per-triangle accumulation + Gram-Schmidt
+  orthogonalization, handedness sign matching rend2's convention), packs normal/tangent to snorm16,
+  and uploads one static per-surface `VkBuffer` via `vk_create_device_local_buffer`
+  (`vk_image.c`) — already existing, already correct, and until now never actually called from
+  anywhere. Freed in `vk_entity_shutdown` by iterating every registered model via the new
+  `R_GetNumModels()` before `R_InitModels` would otherwise drop the only pointers to them. Full
+  research/design notes in `C:\Users\wolfetplayer\.claude\plans\lazy-swinging-noodle.md`. Not
+  self-built or tested.
+- **2026-11-22** — Implemented Stage 2b (see Phase 4's checkmark above for the final design),
+  finishing the entity GPU vertex-lerp item. `create_pipeline_ex`/`create_pipeline` (`vk_pipelines.c`)
+  gained a `numBindings` parameter — the old code hardcoded a single `VkVertexInputBindingDescription`
+  — with every existing direct call site updated to pass `1` explicitly; `create_pipeline`'s own
+  signature stayed unchanged so its many callers needed no edits. New
+  `vk_getPipelineEntityLerp`/`vk_getPipelineEntityLerpMultiTex` cache functions use this for a
+  3-binding vertex input: the model's static per-surface buffer (Stage 2a) bound twice at
+  frame/oldframe byte offsets, plus a new dynamic color/uv-only binding. New
+  `entity_lerp.vert`/`entity_lerp_multitex.vert` reuse `single_texture.frag`/`multi_texture.frag`
+  unchanged, and reuse those shaders' existing 128-byte push-constant layout outright rather than
+  growing it: `camPos` is repurposed to the camera position transformed into the entity's *local*
+  space (one dot product per axis on the CPU — exact for a rigid axis/origin transform, same
+  world-space distance a real `camPos` would give), and the otherwise-always-zero trailing slot
+  (`clipPlane` in the single-tex shader, since entities never clip; an added field at the same
+  offset in the multitex one, since `multi_texture.vert`'s original layout had no such slot at all)
+  carries `backlerp`. This fully solved the "per-entity MVP" problem flagged in the previous entry:
+  the fix was reusing the *existing* `mvp` slot for a combined `cameraMVP * entityModel` matrix (one
+  `R_MultMatrix` call per entity — already existed in `tr_main.c`, used for the camera VP itself) —
+  no push-constant size growth needed at all. `vk_entity_draw_all` (`vk_entity.c`) now draws MD3/MDC
+  surfaces immediately (bind static buffer + push constants once per surface, then rebind just the
+  dynamic binding between shader stages, since a shared `vertexOffset` can't give the static and
+  dynamic bindings different per-stage offsets at once) instead of deferring them into
+  `s_draws[]`/`s_mtDraws[]` like MDS/MDM still are. `curDepthHack` (the view-weapon depth-range
+  hack) became a single variable shared across both the immediate and deferred phases — caught and
+  fixed a real bug here in the process: the early-return path for "zero deferred draws left" didn't
+  reset the viewport if an immediate MD3/MDC draw had left it in the weapon-hack range, which would
+  have left the HUD/2D pass rendered through the wrong depth range on any frame with only a
+  view-weapon and no other deferred-path entity. `LerpSurfaceVerts`/`LerpMDCSurfaceVerts` are
+  unchanged and still called every frame — their output now only feeds
+  `R_DeformPosition`/`R_CalcStageTexCoord` (`tcMod turb`) and shadow volumes, never the GPU draw
+  itself; new `WriteLerpStageVertices`/`WriteLerpMultiTexVertices` mirror
+  `WriteStageVertices`/`WriteMultiTexVertices` exactly, minus the `pos` field. Added
+  `entity_lerp_vert.o`/`entity_lerp_multitex_vert.o` to the Makefile's `Q3RVOBJ` list (missed this
+  once before for `vk_flares.o`; remembered this time). Both stages of the vertex-lerp item are
+  implemented now. Needs a shader recompile (2 new `.vert` files, `shaders/gen_spv_c.py`) and a real
+  build before anything can be tested; per the user's standing instruction, not attempted here. Next
+  in-game check: an MD3/MDC-animated entity (most enemy/weapon models) still animates correctly,
+  multi-stage/multitex shaders on those models still layer correctly, and weapon/flashlight tag
+  attachments still line up (per the Stage 2a research, tags never read skinned vertex data, so
+  this *should* be unaffected, but it's the one thing worth deliberately eyeballing given the scope
+  of this change).
+- **2026-11-22** — Started Stage 3 (MDS/MDM GPU bone skinning, see its checkmark above) and found a
+  design problem mid-implementation: `mdsWeight_t`/`mdmWeight_t` store a *separate* `offset` vector
+  per bone influence — the vertex's position already expressed in that bone's own bind-pose-relative
+  local frame — not one shared bind-pose position an IQM-style blended bone matrix could transform.
+  Confirmed via the already-working CPU code itself: `R_SkinMDSSurface`'s
+  `LocalAddScaledMatrixTransformVectorTranslate` does `outPos = sum_k weight_k *
+  (boneMatrix[idx_k] * offset_k + translation[idx_k])` — each weight's own offset gets its own full
+  transform, they're not interchangeable with a single shared position. This is very likely
+  *exactly* why rend2 never finishes this migration for MDS/MDM in the first place: the format
+  doesn't fit the simple model its own IQM path uses. Asked the user whether to implement this
+  correctly (4 offset vectors per vertex, 4 real per-vertex matrix-vector transforms in the shader,
+  heavier than Stage 2's `mix()`) or stop at Stage 2 and leave MDS/MDM on CPU like rend2 does; they
+  chose the correct version. Also resolved a real discrepancy in the file format headers along the
+  way: `mdsWeight_t`/`mdmWeight_t.boneIndex`'s own comment claims it indexes the surface's compact
+  `boneReferences` list, but the already-working skinning code indexes the model's *global* `bones[]`
+  array with it directly — trusted the working, presumably-tested code over what looks like a stale
+  comment inherited from the original id-software source, and mirrored that same interpretation for
+  the GPU path. **Stage 3a (data prep) implemented**: `vkEntitySkinnedVert_t` (`vk_pipelines.h`) uses
+  `offset[4][3]` instead of a single `pos`, plus packed snorm16 `normal`/`tangent` and
+  `boneIndex[4]`/`boneWeight[4]` (unorm8, renormalized to sum 255). New
+  `R_CalcAllBoneMatricesMDS`/`R_CalcAllBoneMatricesMDM` (`tr_bones.c`/`.h`) compute every one of an
+  entity's bones (not one surface's referenced subset — any vertex might index any of them) and pack
+  each as a GLSL-ready column-major mat4; verified `R_CalcBones`/`R_MDM_CalcBones` already resolve
+  missing parent bones on their own, so passing bones in plain `0..numBones-1` order needs no
+  topological sort. New `ReduceBoneWeights`/`BuildMDSSurfaceSkinBuffer`/`BuildMDMSurfaceSkinBuffer`
+  (`vk_entity.c`) reduce each vertex's real (possibly >4) weight list to the top 4 by magnitude,
+  decode the per-vertex normal (a real float3 in this format already, no lat/long unpacking needed),
+  and compute a bind-pose tangent via the existing `ComputeFrameTangents`, fed the same
+  `weight*offset` sum `R_SkinMDMSurface`'s own "no skeleton linked yet" fallback already treats as
+  this format's bind pose — a reasonable geometric stand-in for tangent purposes even though it's not
+  what actually gets uploaded per vertex. Hooked into `R_LoadMDS`/`R_LoadMDM` via the same
+  `vk_entity_register_model` entry point Stage 2a added. MDM's buffer builds fine with no skeleton
+  linked yet, since it only reads raw per-vertex file data — the skeleton is only needed later, at
+  draw time, for the bone matrices themselves. **Stage 3b (the UBO descriptor infrastructure this
+  needs, new `entity_skin.vert`/`entity_skin_multitex.vert` shaders doing the real per-weight
+  transforms, and the matching draw-path rewrite) is not started** — full design notes in
+  `C:\Users\wolfetplayer\.claude\plans\lazy-swinging-noodle.md`. Not self-built or tested.
+- **2026-11-22** — Implemented Stage 3b, completing Phase 4's vertex-format item (all 3 stages now
+  done). New descriptor infrastructure (`vk_pipelines.c`/`vk_instance.h`): `vk.skin_set_layout` (one
+  `UNIFORM_BUFFER_DYNAMIC` binding, vertex stage) plus `vk.skin_pipeline_layout`/
+  `skin_lightmap_pipeline_layout` (set0 = the existing sampler layout, set1 = the new skin layout,
+  same 128-byte push-constant range reused — no size growth). `vk_entity.c` owns the actual bone-
+  matrix UBO: one `MDX_MAX_BONES`-sized mat4 array per skinned entity drawn this frame, in a buffer
+  sized `MAX_SKINNED_ENTITY_DRAWS (256) * VK_FRAMES_IN_FLIGHT * stride` (stride rounded up to
+  `minUniformBufferOffsetAlignment`), with one persistent descriptor set rebound at a different
+  dynamic offset per entity instead of allocating a set per entity per frame. New
+  `WriteBoneMatricesMDS`/`WriteBoneMatricesMDM` write one entity's full bone-matrix set into the
+  next UBO slot (shared across all of that entity's surfaces, since bones don't vary per surface);
+  MDM falls back to an identity-matrix set when `R_CalcAllBoneMatricesMDM` reports no skeleton
+  linked yet, so the shader's weighted sum naturally reduces to the same bind-pose sum
+  `R_SkinMDMSurface`'s own CPU fallback already uses. New `entity_skin.vert`/
+  `entity_skin_multitex.vert` do 4 real `mat3(boneMatrix[idx_k]) * offset_k + boneMatrix[idx_k][3]`
+  transforms weighted-summed (matching `R_SkinMDSSurface`'s math exactly, not a `mix()` blend), reuse
+  `single_texture.frag`/`multi_texture.frag` unchanged, and reuse the same local-space-camPos fog
+  trick Stage 2b's lerp shaders use. New `DrawSkinSurface` (`vk_entity.c`) mirrors `DrawLerpSurface`:
+  binds the model's static bind-pose buffer once, pushes this entity's transform once, binds the
+  bone UBO at set 1 with the per-entity dynamic offset, and draws immediately per surface/stage —
+  replacing the old deferred `s_draws[]`/`s_mtDraws[]` collection the MDS/MDM branches still used
+  after Stage 2b. `LerpMDSSurfaceVerts`/`LerpMDMSurfaceVerts` (and the `R_SkinMDSSurface`/
+  `R_SkinMDMSurface` they call) are kept, unchanged — same reasoning as Stage 2b's finding #1, their
+  output still feeds `tcMod turb`/shadow volumes, never the GPU draw itself.
+  **Real correctness bug found and fixed along the way, not just new code**: once all 4 entity model
+  types (MD3/MDC via Stage 2b, MDS/MDM via this stage) drew immediately, nothing called the old
+  per-surface `ProcessSurface` anymore, so the deferred path's `numDraws`/`numMTDraws` were
+  permanently 0 — but its tail code still ran `s_idxWrite = idxWrite;`, which stomped the *live*,
+  actively-incremented global index-write cursor back to its stale function-entry value every single
+  call, corrupting the shared index buffer's write position across calls/frames (wrong/stale indices
+  reused). Fixed by recognizing the entire deferred-draw path (`s_draws[]`/`s_mtDraws[]`,
+  `entityDrawCall_t`/`entityMTDrawCall_t`, the old static `s_vertexBuffer`/`s_mtVertexBuffer`,
+  `ReserveSurface`/`WriteStageVertices`/`CommitSurface`/`WriteMultiTexVertices`/
+  `CommitMultiTexSurface`/`ProcessSurface`) was now fully dead and removing it outright rather than
+  patching around the bug — `vk_entity_draw_all`'s tail is now just the final `curDepthHack` viewport
+  reset. Added `entity_skin_vert.o`/`entity_skin_multitex_vert.o` to the Makefile's `Q3RVOBJ` list
+  (this exact omission bit `vk_flares.o` and `vk_shadows.o` earlier in this project — checked
+  explicitly this time). Carefully re-verified the whole skin path end-to-end afterward (pipeline/
+  layout creation and teardown order, the UBO stride/alignment math, `WriteBoneMatricesMDS/MDM`,
+  `DrawSkinSurface`'s bindings, `ReduceBoneWeights`'s top-4 reduction, and
+  `BuildMDSSurfaceSkinBuffer`/`BuildMDMSurfaceSkinBuffer`'s packing) — no further issues found. Not
+  self-built or tested (standing instruction). **Needs a shader recompile** before the next build
+  links: 4 new `.vert` files across Stages 2b/3b (`entity_lerp.vert`, `entity_lerp_multitex.vert`,
+  `entity_skin.vert`, `entity_skin_multitex.vert`) need to go through `shaders/gen_spv_c.py` first.
+  In-game checks worth doing once built: MD3/MDC entities still frame-blend correctly, MDS/MDM
+  entities still bone-animate and skin correctly, multi-stage/multitex entity shaders still layer
+  right, and weapon/attachment tags still line up (tag resolution never touched per-vertex skinned
+  data, so this is expected to be unaffected, but worth eyeballing given the scope of this change).
