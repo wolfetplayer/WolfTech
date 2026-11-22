@@ -6,6 +6,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "vk_frame.h"
 #include "glConfig.h"
 #include "tr_shade_calc.h"
 #include "vk_draw2d.h"
@@ -17,6 +18,7 @@ static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
 static vk2d_vertex_t *s_mapped;
 static uint32_t s_writeIndex;
+static uint32_t s_regionBase; // vk_current_frame_slot() * VK2D_MAX_VERTS -- see vk_draw2d_begin_frame
 
 static float s_color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -27,7 +29,7 @@ void vk_draw2d_init( void ) {
 	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	buf_desc.pNext = NULL;
 	buf_desc.flags = 0;
-	buf_desc.size = VK2D_VERTEX_BUFFER_BYTES;
+	buf_desc.size = (VkDeviceSize)VK2D_VERTEX_BUFFER_BYTES * VK_FRAMES_IN_FLIGHT;
 	buf_desc.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	buf_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	buf_desc.queueFamilyIndexCount = 0;
@@ -65,6 +67,7 @@ void vk_draw2d_begin_frame( void ) {
 	R_GetWinResolution( &width, &height );
 
 	s_writeIndex = 0;
+	s_regionBase = vk_current_frame_slot() * (uint32_t)VK2D_MAX_VERTS;
 
 	VkViewport viewport;
 	viewport.x = 0.0f;
@@ -121,8 +124,8 @@ static void vk_draw2d_record_tris( const vk2d_vertex_t *verts, int count, shader
 		return; // out of room this frame, drop rather than overrun
 	}
 
-	vb_offset = (VkDeviceSize)s_writeIndex * sizeof( vk2d_vertex_t );
-	memcpy( &s_mapped[s_writeIndex], verts, (size_t)count * sizeof( vk2d_vertex_t ) );
+	vb_offset = (VkDeviceSize)( s_regionBase + s_writeIndex ) * sizeof( vk2d_vertex_t );
+	memcpy( &s_mapped[s_regionBase + s_writeIndex], verts, (size_t)count * sizeof( vk2d_vertex_t ) );
 	s_writeIndex += (uint32_t)count;
 
 	R_GetWinResolution( &width, &height );
@@ -394,8 +397,8 @@ void vk_draw2d_raw_image( float x, float y, float w, float h, image_t *image ) {
 		verts[i].color[0] = verts[i].color[1] = verts[i].color[2] = verts[i].color[3] = 255;
 	}
 
-	vb_offset = (VkDeviceSize)s_writeIndex * sizeof( vk2d_vertex_t );
-	memcpy( &s_mapped[s_writeIndex], verts, sizeof( verts ) );
+	vb_offset = (VkDeviceSize)( s_regionBase + s_writeIndex ) * sizeof( vk2d_vertex_t );
+	memcpy( &s_mapped[s_regionBase + s_writeIndex], verts, sizeof( verts ) );
 	s_writeIndex += 6;
 
 	R_GetWinResolution( &width, &height );

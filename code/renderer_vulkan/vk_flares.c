@@ -1,18 +1,6 @@
 // vk_flares.c -- coronas (RE_AddCoronaToScene). See vk_flares.h.
-//
-// Visibility comes from a 1-sample occlusion query per corona instead of the classic GL1 renderer's
-// glReadPixels-the-depth-buffer trick (code/renderer/tr_flares.c's RB_TestFlare): a tiny depth-tested,
-// color/depth-write-disabled quad is drawn at the corona's position wrapped in vkCmdBeginQuery/EndQuery, and the
-// *previous* frame's result is read back with vkGetQueryPoolResults. That read never blocks: vk_begin_frame()
-// already waits on the previous frame's fence before this frame starts recording, so by the time a query is
-// read here the GPU work that wrote it has long since finished. Visible/hidden transitions fade linearly over
-// FLARE_FADE_MS rather than popping, same intent as the reference's drawIntensity.
-//
-// The billboard itself is a camera-facing world-space quad drawn through flareShader's real stages (so blend/
-// cull/alphaTest/tcMod come from the actual shader script), projected by the GPU like any other world-space
-// sprite in this renderer -- not a dedicated screen-space pixel-constant-size overlay pass like the reference.
-// That's a deliberate scope cut: it shrinks with distance like every other scene effect here, instead of RTCW's
-// distance-independent flareCoeff intensity curve.
+// Visibility is a 1-sample occlusion query per corona (unlike the classic GL1 glReadPixels trick in code/renderer/tr_flares.c): a depth-tested, color/depth-write-disabled quad is drawn at the corona's position, and the query issued VK_FRAMES_IN_FLIGHT frames ago for this same frame slot is read back -- that never blocks, since vk_begin_frame's fence wait already guarantees that slot's prior GPU work is done. Visible/hidden transitions fade linearly over FLARE_FADE_MS instead of popping.
+// The billboard is a camera-facing world-space quad drawn through flareShader's real stages (blend/cull/alphaTest/tcMod from the actual shader script), projected by the GPU like any other world-space sprite here -- not a dedicated screen-space pixel-constant-size overlay pass like the reference, so it shrinks with distance instead of using RTCW's flareCoeff curve.
 
 #include <string.h>
 #include <math.h>
@@ -20,6 +8,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "vk_frame.h"
 #include "tr_shader.h"
 #include "tr_shade_calc.h"
 #include "tr_scene.h"
@@ -50,11 +39,13 @@ static int s_flareFrame;
 
 static VkQueryPool s_queryPool;
 static qboolean s_queryPoolReady;
+static uint32_t s_queryRegionBase; // this frame's slot * MAX_FLARES -- see vk_flares_begin_frame
 
 static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
 static vk2d_vertex_t *s_mapped;
-static uint32_t s_writeOffset;
+static uint32_t s_writeOffset; // absolute index into s_mapped -- starts each frame at its slot's region base, not 0
+static uint32_t s_writeRegionEnd; // s_writeOffset must stay below this (one past this frame's region)
 
 static cvar_t *r_flares;
 
@@ -74,14 +65,14 @@ void vk_flares_init( void ) {
 	memset( &pool_desc, 0, sizeof( pool_desc ) );
 	pool_desc.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
 	pool_desc.queryType = VK_QUERY_TYPE_OCCLUSION;
-	pool_desc.queryCount = MAX_FLARES;
+	pool_desc.queryCount = MAX_FLARES * VK_FRAMES_IN_FLIGHT; // one region per frame slot -- see vk_flares_begin_frame
 	VK_CHECK( qvkCreateQueryPool( vk.device, &pool_desc, NULL, &s_queryPool ) );
 	s_queryPoolReady = qtrue;
 
 	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	buf_desc.pNext = NULL;
 	buf_desc.flags = 0;
-	buf_desc.size = FLARE_SCRATCH_VERTS * sizeof( vk2d_vertex_t );
+	buf_desc.size = (VkDeviceSize)FLARE_SCRATCH_VERTS * VK_FRAMES_IN_FLIGHT * sizeof( vk2d_vertex_t );
 	buf_desc.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	buf_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	buf_desc.queueFamilyIndexCount = 0;
@@ -121,11 +112,17 @@ void vk_flares_clear( void ) {
 }
 
 void vk_flares_begin_frame( void ) {
-	s_writeOffset = 0;
+	uint32_t slot = vk_current_frame_slot();
+
+	s_writeOffset = (uint32_t)FLARE_SCRATCH_VERTS * slot;
+	s_writeRegionEnd = s_writeOffset + (uint32_t)FLARE_SCRATCH_VERTS;
+	s_queryRegionBase = (uint32_t)MAX_FLARES * slot;
+
 	if ( !s_queryPoolReady ) {
 		return;
 	}
-	qvkCmdResetQueryPool( vk.command_buffer, s_queryPool, 0, MAX_FLARES );
+	// Only this slot's own queries -- the other slot's may still be executing from a frame that hasn't finished yet.
+	qvkCmdResetQueryPool( vk.command_buffer, s_queryPool, s_queryRegionBase, MAX_FLARES );
 }
 
 static flare_t *FindOrAllocFlare( int id ) {
@@ -197,7 +194,7 @@ static void IssueOcclusionProbe( const vec3_t origin, const vec3_t right, const 
 	if ( halfSize < FLARE_PROBE_MIN_HALF_SIZE ) {
 		halfSize = FLARE_PROBE_MIN_HALF_SIZE;
 	}
-	if ( s_writeOffset + 6 > FLARE_SCRATCH_VERTS ) {
+	if ( s_writeOffset + 6 > s_writeRegionEnd ) {
 		return;
 	}
 
@@ -266,7 +263,7 @@ static void DrawBillboard( const flare_t *f, const vec3_t right, const vec3_t up
 		float stageUVs[4][2];
 		VkPipeline pipeline;
 
-		if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE || s_writeOffset + 6 > FLARE_SCRATCH_VERTS ) {
+		if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE || s_writeOffset + 6 > s_writeRegionEnd ) {
 			continue;
 		}
 
@@ -327,7 +324,7 @@ void vk_flares_draw( const refdef_t *fd, const float viewProj[16], const float f
 		vec3_t toFlare;
 		float distance;
 		qboolean inFront, callerVisible, nowVisible;
-		uint32_t queryIndex = (uint32_t)( f - s_flares );
+		uint32_t queryIndex = s_queryRegionBase + (uint32_t)( f - s_flares );
 
 		VectorSubtract( src->origin, fd->vieworg, toFlare );
 		distance = VectorLength( toFlare );

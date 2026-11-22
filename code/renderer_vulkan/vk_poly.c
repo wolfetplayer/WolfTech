@@ -5,6 +5,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "vk_frame.h"
 #include "tr_shader.h"
 #include "tr_shade_calc.h"
 #include "tr_scene.h"
@@ -28,9 +29,15 @@ static vkMultiTexVertex_t *s_mtMapped;
 static uint32_t s_writeOffset;
 static uint32_t s_mtWriteOffset;
 
+// This frame's region within each (now VK_FRAMES_IN_FLIGHT-sized) buffer; s_writeOffset/s_mtWriteOffset stay region-relative, added in at bind/write time.
+static uint32_t s_regionBase;
+static uint32_t s_mtRegionBase;
+
 void vk_poly_begin_frame( void ) {
 	s_writeOffset = 0;
 	s_mtWriteOffset = 0;
+	s_regionBase = vk_current_frame_slot() * (uint32_t)POLY_SCRATCH_VERTS;
+	s_mtRegionBase = vk_current_frame_slot() * (uint32_t)POLY_SCRATCH_VERTS;
 }
 
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
@@ -72,8 +79,8 @@ static void destroy_mapped_buffer( VkBuffer buffer, VkDeviceMemory memory, void 
 }
 
 void vk_poly_init( void ) {
-	create_mapped_buffer( POLY_SCRATCH_VERTS * sizeof( vk2d_vertex_t ), &s_vertexBuffer, &s_vertexMemory, (void **)&s_mapped );
-	create_mapped_buffer( POLY_SCRATCH_VERTS * sizeof( vkMultiTexVertex_t ), &s_mtVertexBuffer, &s_mtVertexMemory, (void **)&s_mtMapped );
+	create_mapped_buffer( (VkDeviceSize)POLY_SCRATCH_VERTS * VK_FRAMES_IN_FLIGHT * sizeof( vk2d_vertex_t ), &s_vertexBuffer, &s_vertexMemory, (void **)&s_mapped );
+	create_mapped_buffer( (VkDeviceSize)POLY_SCRATCH_VERTS * VK_FRAMES_IN_FLIGHT * sizeof( vkMultiTexVertex_t ), &s_mtVertexBuffer, &s_mtVertexMemory, (void **)&s_mtMapped );
 }
 
 void vk_poly_shutdown( void ) {
@@ -98,7 +105,8 @@ static void write_scratch_vert_mt( vkMultiTexVertex_t *out, const float pos[3], 
 
 void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 	float push_data[32];
-	VkDeviceSize vb_offset = 0;
+	VkDeviceSize vb_offset = (VkDeviceSize)s_regionBase * sizeof( vk2d_vertex_t );
+	VkDeviceSize mtVbOffset = (VkDeviceSize)s_mtRegionBase * sizeof( vkMultiTexVertex_t );
 	int numPolys, i;
 	const scenePoly_t *polys = R_GetScenePolys( &numPolys );
 	const polyVert_t *polyVerts = R_GetScenePolyVerts();
@@ -157,15 +165,15 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 			}
 
 			for ( v = 0; v < poly->numVerts - 2; v++ ) {
-				write_scratch_vert_mt( &s_mtMapped[mtWriteOffset + 0], deformedPos[0], stageColor[0], uv0[0], uv1[0] );
-				write_scratch_vert_mt( &s_mtMapped[mtWriteOffset + 1], deformedPos[v + 1], stageColor[v + 1], uv0[v + 1], uv1[v + 1] );
-				write_scratch_vert_mt( &s_mtMapped[mtWriteOffset + 2], deformedPos[v + 2], stageColor[v + 2], uv0[v + 2], uv1[v + 2] );
+				write_scratch_vert_mt( &s_mtMapped[s_mtRegionBase + mtWriteOffset + 0], deformedPos[0], stageColor[0], uv0[0], uv1[0] );
+				write_scratch_vert_mt( &s_mtMapped[s_mtRegionBase + mtWriteOffset + 1], deformedPos[v + 1], stageColor[v + 1], uv0[v + 1], uv1[v + 1] );
+				write_scratch_vert_mt( &s_mtMapped[s_mtRegionBase + mtWriteOffset + 2], deformedPos[v + 2], stageColor[v + 2], uv0[v + 2], uv1[v + 2] );
 				mtWriteOffset += 3;
 			}
 			vertCount = mtWriteOffset - firstVert;
 
 			if ( boundVertexBuffer != s_mtVertexBuffer ) {
-				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_mtVertexBuffer, &vb_offset );
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_mtVertexBuffer, &mtVbOffset );
 				boundVertexBuffer = s_mtVertexBuffer;
 			}
 
@@ -203,9 +211,9 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 			}
 
 			for ( v = 0; v < poly->numVerts - 2; v++ ) {
-				write_scratch_vert( &s_mapped[writeOffset + 0], deformedPos[0], stageColor[0], stageUV[0] );
-				write_scratch_vert( &s_mapped[writeOffset + 1], deformedPos[v + 1], stageColor[v + 1], stageUV[v + 1] );
-				write_scratch_vert( &s_mapped[writeOffset + 2], deformedPos[v + 2], stageColor[v + 2], stageUV[v + 2] );
+				write_scratch_vert( &s_mapped[s_regionBase + writeOffset + 0], deformedPos[0], stageColor[0], stageUV[0] );
+				write_scratch_vert( &s_mapped[s_regionBase + writeOffset + 1], deformedPos[v + 1], stageColor[v + 1], stageUV[v + 1] );
+				write_scratch_vert( &s_mapped[s_regionBase + writeOffset + 2], deformedPos[v + 2], stageColor[v + 2], stageUV[v + 2] );
 				writeOffset += 3;
 			}
 			vertCount = writeOffset - firstVert;

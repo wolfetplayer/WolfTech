@@ -6,6 +6,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "vk_frame.h"
 #include "vk_image.h"
 #include "tr_local.h"
 #include "tr_shader.h"
@@ -72,8 +73,9 @@ static cvar_t *r_showtris;
 static VkBuffer s_dynLMBuffer;
 static VkDeviceMemory s_dynLMMemory;
 static vkWorldVertex_t *s_dynLMMapped;
-static uint32_t s_dynLMCapacity;
+static uint32_t s_dynLMCapacity; // size of one frame-in-flight's region, not the whole (now VK_FRAMES_IN_FLIGHT-sized) buffer
 static uint32_t s_dynLMWriteOffset;
+static uint32_t s_dynLMRegionBase; // this frame's region, set in vk_world_begin_frame
 static qboolean s_dynLMOverflowWarned;
 
 static VkBuffer s_dyn2DBuffer;
@@ -81,6 +83,7 @@ static VkDeviceMemory s_dyn2DMemory;
 static vk2d_vertex_t *s_dyn2DMapped;
 static uint32_t s_dyn2DCapacity;
 static uint32_t s_dyn2DWriteOffset;
+static uint32_t s_dyn2DRegionBase;
 static qboolean s_dyn2DOverflowWarned;
 
 // Dynamic lights are a separate additive pass over world geometry (previously they had zero effect
@@ -90,6 +93,7 @@ static VkDeviceMemory s_dynDlightMemory;
 static vk2d_vertex_t *s_dynDlightMapped;
 static uint32_t s_dynDlightCapacity;
 static uint32_t s_dynDlightWriteOffset;
+static uint32_t s_dynDlightRegionBase;
 static qboolean s_dynDlightOverflowWarned;
 
 // Brush-entity (func_door/etc.) geometry: positions move every frame, so no load-time cache -- shaded straight from tr_world.drawVerts at draw time.
@@ -98,12 +102,14 @@ static VkBuffer s_dynBrushLMBuffer;
 static VkDeviceMemory s_dynBrushLMMemory;
 static vkWorldVertex_t *s_dynBrushLMMapped;
 static uint32_t s_dynBrushLMWriteOffset;
+static uint32_t s_dynBrushLMRegionBase;
 static qboolean s_dynBrushLMOverflowWarned;
 
 static VkBuffer s_dynBrushExtraBuffer;
 static VkDeviceMemory s_dynBrushExtraMemory;
 static vk2d_vertex_t *s_dynBrushExtraMapped;
 static uint32_t s_dynBrushExtraWriteOffset;
+static uint32_t s_dynBrushExtraRegionBase;
 static qboolean s_dynBrushExtraOverflowWarned;
 
 static int s_whiteLightmapIdx;
@@ -479,26 +485,25 @@ void vk_world_build( void ) {
 	s_cachedIndices = indexes;
 	s_numCachedIndices = writeOffset;
 
-	// *2: one full pass for real rendering, a second full pass' worth of headroom for a same-frame
-	// r_showtris re-expansion (see the wireframe block in vk_world_draw).
+	// *2: one full pass plus a same-frame r_showtris re-expansion's worth of headroom; each capacity below is ONE frame-in-flight region, VK_FRAMES_IN_FLIGHT of them back to back in the actual buffer (see vk_world_begin_frame).
 	s_dynLMCapacity = writeOffset * 2;
-	create_dynamic_vertex_buffer( (VkDeviceSize)s_dynLMCapacity * sizeof( vkWorldVertex_t ),
+	create_dynamic_vertex_buffer( (VkDeviceSize)s_dynLMCapacity * VK_FRAMES_IN_FLIGHT * sizeof( vkWorldVertex_t ),
 		&s_dynLMBuffer, &s_dynLMMemory, (void **)&s_dynLMMapped );
 
 	// Headroom for a couple of extra-stage passes across the whole visible world within one frame.
 	s_dyn2DCapacity = writeOffset * 2;
-	create_dynamic_vertex_buffer( (VkDeviceSize)s_dyn2DCapacity * sizeof( vk2d_vertex_t ),
+	create_dynamic_vertex_buffer( (VkDeviceSize)s_dyn2DCapacity * VK_FRAMES_IN_FLIGHT * sizeof( vk2d_vertex_t ),
 		&s_dyn2DBuffer, &s_dyn2DMemory, (void **)&s_dyn2DMapped );
 
 	// One full visible-world's worth; dlights are rare/bounded so no extra headroom needed here.
 	s_dynDlightCapacity = writeOffset;
-	create_dynamic_vertex_buffer( (VkDeviceSize)s_dynDlightCapacity * sizeof( vk2d_vertex_t ),
+	create_dynamic_vertex_buffer( (VkDeviceSize)s_dynDlightCapacity * VK_FRAMES_IN_FLIGHT * sizeof( vk2d_vertex_t ),
 		&s_dynDlightBuffer, &s_dynDlightMemory, (void **)&s_dynDlightMapped );
 
 	// Brush-entity (func_door/etc.) buffers: fixed capacity, independent of map size -- see their declaration.
-	create_dynamic_vertex_buffer( (VkDeviceSize)BRUSH_DYN_CAPACITY * sizeof( vkWorldVertex_t ),
+	create_dynamic_vertex_buffer( (VkDeviceSize)BRUSH_DYN_CAPACITY * VK_FRAMES_IN_FLIGHT * sizeof( vkWorldVertex_t ),
 		&s_dynBrushLMBuffer, &s_dynBrushLMMemory, (void **)&s_dynBrushLMMapped );
-	create_dynamic_vertex_buffer( (VkDeviceSize)BRUSH_DYN_CAPACITY * sizeof( vk2d_vertex_t ),
+	create_dynamic_vertex_buffer( (VkDeviceSize)BRUSH_DYN_CAPACITY * VK_FRAMES_IN_FLIGHT * sizeof( vk2d_vertex_t ),
 		&s_dynBrushExtraBuffer, &s_dynBrushExtraMemory, (void **)&s_dynBrushExtraMapped );
 	{
 		VkDescriptorPoolSize poolSize;
@@ -564,7 +569,7 @@ static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const 
 
 		for ( k = 0; k < ref->indexCount; k++ ) {
 			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
-			vkWorldVertex_t *dst = &s_dynLMMapped[s_dynLMWriteOffset++];
+			vkWorldVertex_t *dst = &s_dynLMMapped[s_dynLMRegionBase + s_dynLMWriteOffset++];
 			byte color[4];
 			float uv[2];
 
@@ -620,7 +625,7 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 
 		for ( k = 0; k < ref->indexCount; k++ ) {
 			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
-			vk2d_vertex_t *dst = &s_dyn2DMapped[s_dyn2DWriteOffset++];
+			vk2d_vertex_t *dst = &s_dyn2DMapped[s_dyn2DRegionBase + s_dyn2DWriteOffset++];
 			byte color[4];
 			float uv[2];
 
@@ -679,7 +684,7 @@ static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, 
 
 		for ( k = 0; k < ref->indexCount; k++ ) {
 			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
-			vk2d_vertex_t *dst = &s_dynDlightMapped[s_dynDlightWriteOffset++];
+			vk2d_vertex_t *dst = &s_dynDlightMapped[s_dynDlightRegionBase + s_dynDlightWriteOffset++];
 			vec3_t sum = { 0.0f, 0.0f, 0.0f };
 			int lightIdx, r, g, b;
 
@@ -793,7 +798,7 @@ static void DrawBrushSurfaceStage0( const bspSurface_t *surf, const shader_t *sh
 	int lightmapIdx = ( surf->lightmapNum >= 0 && surf->lightmapNum < tr_world.numLightmaps ) ? surf->lightmapNum : s_whiteLightmapIdx;
 	VkDescriptorSet descriptor;
 	VkPipeline pipeline;
-	VkDeviceSize vb_offset = 0;
+	VkDeviceSize vb_offset = (VkDeviceSize)s_dynBrushLMRegionBase * sizeof( vkWorldVertex_t );
 	uint32_t base;
 	int k;
 
@@ -814,7 +819,7 @@ static void DrawBrushSurfaceStage0( const bspSurface_t *surf, const shader_t *sh
 	base = s_dynBrushLMWriteOffset;
 	for ( k = 0; k < numIndexes; k++ ) {
 		const brushVert_t *src = &verts[indexes[k]];
-		vkWorldVertex_t *dst = &s_dynBrushLMMapped[s_dynBrushLMWriteOffset++];
+		vkWorldVertex_t *dst = &s_dynBrushLMMapped[s_dynBrushLMRegionBase + s_dynBrushLMWriteOffset++];
 		byte color[4];
 		float uv[2];
 
@@ -835,7 +840,7 @@ static void DrawBrushSurfaceExtraStage( const shader_t *shader, int stageIdx, co
 	const shaderStage_t *stage = &shader->stages[stageIdx];
 	image_t *stageImage = R_GetStageImage( stage );
 	VkPipeline pipeline;
-	VkDeviceSize vb_offset = 0;
+	VkDeviceSize vb_offset = (VkDeviceSize)s_dynBrushExtraRegionBase * sizeof( vk2d_vertex_t );
 	uint32_t base;
 	int k;
 
@@ -859,7 +864,7 @@ static void DrawBrushSurfaceExtraStage( const shader_t *shader, int stageIdx, co
 	base = s_dynBrushExtraWriteOffset;
 	for ( k = 0; k < numIndexes; k++ ) {
 		const brushVert_t *src = &verts[indexes[k]];
-		vk2d_vertex_t *dst = &s_dynBrushExtraMapped[s_dynBrushExtraWriteOffset++];
+		vk2d_vertex_t *dst = &s_dynBrushExtraMapped[s_dynBrushExtraRegionBase + s_dynBrushExtraWriteOffset++];
 		byte color[4];
 		float uv[2];
 
@@ -951,16 +956,26 @@ void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const fl
 
 // Resets the shared dynamic-buffer write cursors; call once per real frame (vk_world_draw can run more than once per frame -- resetting inside it, as before, let one scene's reset clobber another's).
 void vk_world_begin_frame( void ) {
+	uint32_t slot = vk_current_frame_slot();
+
 	s_dynLMWriteOffset = 0;
 	s_dyn2DWriteOffset = 0;
 	s_dynBrushLMWriteOffset = 0;
 	s_dynBrushExtraWriteOffset = 0;
 	s_dynDlightWriteOffset = 0;
+
+	s_dynLMRegionBase = slot * s_dynLMCapacity;
+	s_dyn2DRegionBase = slot * s_dyn2DCapacity;
+	s_dynDlightRegionBase = slot * s_dynDlightCapacity;
+	s_dynBrushLMRegionBase = slot * (uint32_t)BRUSH_DYN_CAPACITY;
+	s_dynBrushExtraRegionBase = slot * (uint32_t)BRUSH_DYN_CAPACITY;
 }
 
 void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	float push_data[32];
-	VkDeviceSize vb_offset = 0;
+	VkDeviceSize lmVbOffset = (VkDeviceSize)s_dynLMRegionBase * sizeof( vkWorldVertex_t );
+	VkDeviceSize vb2dOffset = (VkDeviceSize)s_dyn2DRegionBase * sizeof( vk2d_vertex_t );
+	VkDeviceSize dlightVbOffset = (VkDeviceSize)s_dynDlightRegionBase * sizeof( vk2d_vertex_t );
 	int i;
 	VkPipeline boundPipeline = VK_NULL_HANDLE;
 	qboolean lmBufferBound = qfalse, bound2DBuffer = qfalse;
@@ -1004,7 +1019,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			boundPipeline = pipeline;
 		}
 		if ( !lmBufferBound ) {
-			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &vb_offset );
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
 			lmBufferBound = qtrue; bound2DBuffer = qfalse;
 		}
 
@@ -1031,7 +1046,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 				boundPipeline = pipeline;
 			}
 			if ( !bound2DBuffer ) {
-				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dyn2DBuffer, &vb_offset );
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dyn2DBuffer, &vb2dOffset );
 				bound2DBuffer = qtrue; lmBufferBound = qfalse;
 			}
 
@@ -1047,7 +1062,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		const dlight_t *dlights = R_GetSceneDlights( &numDlights );
 
 		if ( numDlights > 0 ) {
-			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynDlightBuffer, &vb_offset );
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynDlightBuffer, &dlightVbOffset );
 			lmBufferBound = qfalse; bound2DBuffer = qfalse;
 			boundPipeline = VK_NULL_HANDLE;
 
@@ -1087,7 +1102,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	if ( r_showtris->integer && vk.pipeline_world_wireframe != VK_NULL_HANDLE ) {
 		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_world_wireframe );
 		if ( !lmBufferBound ) {
-			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &vb_offset );
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
 			lmBufferBound = qtrue; bound2DBuffer = qfalse;
 		}
 		for ( i = 0; i < s_numBatches; i++ ) {

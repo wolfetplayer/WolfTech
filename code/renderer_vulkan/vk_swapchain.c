@@ -4,20 +4,43 @@
 
 #include "VKimpl.h"
 #include "vk_instance.h"
+#include "vk_frame.h"
+#include "vk_depth.h"
+#include "vk_pipelines.h"
+#include "glConfig.h"
 #include "vk_swapchain.h"
 
 extern cvar_t *r_fullscreen;
 
+// Rebuilds everything that depends on the surface's actual size (swapchain, its per-image semaphores, depth buffer, framebuffers) -- pipelines/shaders/descriptor pools/per-subsystem buffers don't depend on it (pipelines already use dynamic viewport/scissor state) and are left alone. Both callers already call qvkDeviceWaitIdle first, so nothing below races in-flight GPU work.
 void vk_recreateSwapChain( void ) {
-	ri.Printf( PRINT_ALL, " Recreate swap chain \n" );
-
 	if ( r_fullscreen->integer ) {
 		ri.Cvar_Set( "r_fullscreen", "0" );
 		r_fullscreen->modified = qtrue;
 	}
 
-	// no in-place recreation yet, just restart like a resolution change
-	ri.Cmd_ExecuteText( EXEC_NOW, "vid_restart\n" );
+	// vk.swapchain is already VK_NULL_HANDLE when a previous call bailed out below (zero-sized/minimized window) -- vk_begin_frame calls this again every frame in that state, so skip re-destroying what's already gone and just recheck the surface size.
+	if ( vk.swapchain != VK_NULL_HANDLE ) {
+		ri.Printf( PRINT_ALL, " Recreate swap chain \n" );
+		vk_destroyFrameBuffers();
+		vk_destroyDepthResources();
+		vk_destroy_sync_primitives();
+		vk_destroySwapChain(); // leaves vk.swapchain == VK_NULL_HANDLE
+	}
+
+	VK_CHECK( qvkGetPhysicalDeviceSurfaceCapabilitiesKHR( vk.physical_device, vk.surface, &vk.surface_caps ) );
+
+	if ( vk.surface_caps.currentExtent.width == 0 || vk.surface_caps.currentExtent.height == 0 ) {
+		return; // still zero-sized -- vk_begin_frame retries this next frame
+	}
+
+	vk_createSwapChain( vk.device, vk.surface, vk.surface_format );
+	vk_create_sync_primitives(); // swapchain image count can change across a recreate; rebuild all of it to stay in sync, not just the frame-slot-indexed primitives
+
+	R_SetWinResolution( (int)vk.swapchain_extent.width, (int)vk.swapchain_extent.height );
+
+	vk_createDepthResources( vk.swapchain_extent.width, vk.swapchain_extent.height );
+	vk_createFrameBuffers( vk.swapchain_extent.width, vk.swapchain_extent.height );
 }
 
 void vk_createSwapChain( VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatKHR surface_format ) {
@@ -75,6 +98,7 @@ void vk_createSwapChain( VkDevice device, VkSurfaceKHR surface, VkSurfaceFormatK
 		}
 
 		ri.Printf( PRINT_ALL, " Swapchain extent: %d x %d\n", image_extent.width, image_extent.height );
+		vk.swapchain_extent = image_extent;
 
 		VkSwapchainCreateInfoKHR desc;
 		desc.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -140,4 +164,6 @@ void vk_destroySwapChain( void ) {
 		qvkDestroyImageView( vk.device, vk.swapchain_image_views[i], NULL );
 	}
 	qvkDestroySwapchainKHR( vk.device, vk.swapchain, NULL );
+	vk.swapchain = VK_NULL_HANDLE; // vk_begin_frame's "not ready yet" check while minimized -- see vk_recreateSwapChain
+	vk.swapchain_image_count = 0;
 }

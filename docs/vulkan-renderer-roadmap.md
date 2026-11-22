@@ -31,8 +31,7 @@ parser that didn't consume its own separator) were also found and fixed — both
 breaking enemy character models/skins regardless of which later phase landed.
 
 It's still well behind both reference points on everything not yet checked off below:
-- **vs. vkQuake3**: no cinematics, frame pacing is single-buffered (no frames-in-flight), resize does
-  a full `vid_restart` instead of an in-place swapchain rebuild, and `deformVertexes` beyond `move`
+- **vs. vkQuake3**: no cinematics, and `deformVertexes` beyond `move`
   is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
   draw unclipped inside a mirror) and hasn't been visually confirmed in-game yet.
 - **vs. rend2**: no normal/specular/parallax/deluxe maps, no per-pixel lighting (entities get one
@@ -482,13 +481,49 @@ it once, make world/entity/poly submission all go through it.
 
 ## Phase 3 — Frame pipelining & throughput
 
-- [ ] Real frames-in-flight (≥2 command buffers/fences/semaphores) instead of the current single
-      command buffer + single fence that fully serializes CPU and GPU per frame.
-- [ ] In-place swapchain resize instead of the current full `vid_restart` on every resize or
-      `VK_ERROR_OUT_OF_DATE_KHR`/suboptimal result.
-- [ ] Revisit the pipeline cache once Phase 1/2 grow the pipeline count: current cache is a
-      64-entry linear scan; vkQuake3-scale content hits 60-100+ live pipelines. Hash-based lookup
-      if the linear scan starts showing up in profiles.
+- [x] Real frames-in-flight (`VK_FRAMES_IN_FLIGHT = 2`): `vk_frame.c` now cycles `VK_FRAMES_IN_FLIGHT`
+      command buffers/fences and per-frame-slot image-available semaphores (render-finished semaphores
+      stay indexed by swapchain image, since present/acquire order isn't guaranteed to track submission
+      order); `vk_current_frame_slot()` exposes the active slot. Every per-frame CPU-written, GPU-read
+      dynamic buffer across the renderer (draw2d, draw3d, poly, entity, world incl. brush models,
+      flares, shadows) now has one region per slot, selected the same way `vk_begin_frame`'s fence wait
+      already made slot reuse safe — generalized from "1 frame ago" to "N frames ago". Flares'
+      occlusion query pool is likewise split per slot, resetting only the current slot's queries each
+      frame. Swapchain recreation was a full `vid_restart` as of this item landing; see the in-place
+      resize item below for what replaced it (frame-slot-indexed primitives are unaffected either way).
+- [x] In-place swapchain resize instead of a full `vid_restart` on `VK_ERROR_OUT_OF_DATE_KHR`/
+      `VK_ERROR_SURFACE_LOST_KHR`: `vk_recreateSwapChain` now destroys and rebuilds only what the
+      surface's actual size touches (swapchain + its image views, the per-swapchain-image
+      `sema_renderFinished` semaphores, depth buffer, framebuffers), re-querying
+      `vk.surface_caps` first to pick up the new extent. Pipelines/render pass/shader modules/
+      descriptor pools/every per-subsystem dynamic buffer are untouched -- pipelines already use
+      dynamic viewport/scissor state, and none of the rest depends on resolution. A zero-sized
+      surface (minimized window) is handled by bailing out with `vk.swapchain` left
+      `VK_NULL_HANDLE`; `vk_begin_frame` sees that and retries the recreate every frame without
+      touching any (already-destroyed) sync primitive, until a real size reappears. The engine's
+      nominal resolution (`glConfig.vidWidth/vidHeight`, read by the rest of the renderer and
+      cgame's UI scaling via `R_GetWinResolution`) is kept in sync through a new
+      `R_SetWinResolution` setter, called with the swapchain's actual new extent. `r_mode`-driven
+      resolution changes still go through `vid_restart` as before -- this only replaces the
+      resize/`OUT_OF_DATE`/surface-lost recovery path. `VK_SUBOPTIMAL_KHR` is deliberately left
+      as before (tolerated, not a recreate trigger): some drivers report it persistently for benign
+      reasons, and treating it as fatal risks a per-frame recreate loop that can't be verified
+      without hardware this session doesn't have.
+- [x] Revisited the pipeline cache (`vk_pipelines.c`). `vk_getPipeline3D`'s key has more axes than
+      vkQuake3's own (clipPlane/mirror/polygonOffset, on top of blend/cull/alphaTest) and
+      `vertexStride` never actually varies across any of its 6 call sites (always
+      `sizeof(vk2d_vertex_t)`), so the real combinatorial driver is purely how many distinct
+      `srcBlend`/`dstBlend` pairs this mod's shaders use times cull(3) x alphaTest(4) x clip(2) x
+      mirror(2) x polygonOffset(2) -- on a strictly smaller key, vkQuake3-scale content already
+      hits 60-100+, so the old 64-entry cap was already undersized; raised to 128 for headroom.
+      Checked the sibling multi-tex pipeline cache's cap (32) too: its key space is bounded
+      (combine x cull x alphaTest = 2x3x4 = 24), comfortably under 32, so left alone. Hash-based
+      lookup is deliberately *not* implemented: there's no profiling data (this session can't run
+      the game) showing the linear scan is ever hot, and at ~128 small-struct entries it's unlikely
+      to be -- matches the item's own "if it starts showing up in profiles" condition, which hasn't
+      been met. Not self-built or tested; next step is a real build plus checking the new cap is
+      never hit in a real level (the existing `MAX_CACHED_3D_PIPELINES hit` warning print will say
+      so if it still is).
 - [ ] GPU mip generation (`vkCmdBlitImage` chain) to replace the Phase 0 CPU box-filter stopgap, if
       load-time cost becomes a problem.
 
@@ -890,3 +925,62 @@ This is the first tier that goes beyond vkQuake3. Foundational — gates everyth
   investigation (`r_vk_debugSky` and its three call sites, a `r_vk_debugSkyFaces` face-tint test, a
   `r_vk_debugSkyOff` cube/world isolation toggle, a fog-state print) have been removed now that it's
   resolved.
+- **2026-11-22** — Swept the four remaining stubs (`RE_SetWorldVisData`, `RE_RenderToTexture`,
+  `R_GetTextureId`, `RE_TakeVideoFrame`) for real callers before investing further. `RE_SetWorldVisData`
+  has none anywhere in the tree. `RE_TakeVideoFrame` is only reached via `cl_main.c`'s AVI
+  video-capture dev path. `RE_RenderToTexture`/`R_GetTextureId` are used together in exactly one place
+  — `cg_draw.c`'s death/limbo/frozen screen effect — gated behind `cg_fancyfx`, which defaults to `"0"`
+  ("off by default so older machines dont just crash"). None load-bearing under default settings;
+  user chose to leave all four stubbed rather than build real render-to-texture support for an opt-in
+  cosmetic effect.
+- **2026-11-22** — Implemented real frames-in-flight (see Phase 3's checkmark above for the full
+  design). Core sync pipelining: `vk_frame.c` now owns `VK_FRAMES_IN_FLIGHT` (2) command
+  buffers/fences and per-slot image-available semaphores, plus `vk_current_frame_slot()` for every
+  other subsystem to key off of. The harder part was threading that slot through every per-frame
+  CPU-written, GPU-read dynamic buffer in the renderer so CPU recording of frame N+1 can't clobber
+  data the GPU is still reading for frame N: doubled and region-based `draw2d`/`draw3d`/`poly`/
+  `entity`/`world` (incl. brush models)/`flares`/`shadows`, each keyed by the same
+  `vk_current_frame_slot()` value — the same fence-wait guarantee that made the old single-buffered
+  design safe generalizes directly from "1 frame ago" to "N frames ago" once every region is indexed
+  that way. Flares' occlusion `VkQueryPool` got the same treatment (split per slot, resetting only the
+  current slot's queries each frame, since the other slot's may still be executing). Swapchain
+  recreation was still a full `vid_restart` as of this entry, so it tore down and rebuilt all of this
+  from scratch on resize; see the next entry for what replaced that. Per user's standing instruction,
+  not self-built or tested this session — needs a real build and in-game check.
+- **2026-11-22** — Implemented the in-place swapchain resize item (see Phase 3's checkmark above for
+  the full design). `vk_recreateSwapChain` (`vk_swapchain.c`) now tears down and rebuilds only the
+  swapchain, its image views, the per-swapchain-image `sema_renderFinished` semaphores, the depth
+  buffer, and the framebuffers — re-querying `vk.surface_caps` first so it picks up the surface's
+  actual new extent — instead of calling `vid_restart`. Everything else (pipelines, render pass,
+  shader modules, descriptor pools, every per-subsystem dynamic buffer from the frames-in-flight work
+  above) is untouched, since none of it depends on resolution and pipelines already use dynamic
+  viewport/scissor state. Added `vk.swapchain_extent` (what `vk_createSwapChain` actually picked,
+  distinct from the raw `surface_caps.currentExtent` it derives from) and a new `R_SetWinResolution`
+  setter in `glConfig.c`/`.h` so the engine's nominal resolution — read everywhere else via
+  `R_GetWinResolution`, including cgame's UI scaling — stays in sync with the real swapchain size
+  after a resize; `r_mode`-driven changes still go through `vid_restart` as before, this only
+  replaces the resize/`OUT_OF_DATE`/surface-lost recovery path. A zero-sized surface (window
+  minimized) is handled by leaving `vk.swapchain` as `VK_NULL_HANDLE` after tearing down; both
+  `vk_recreateSwapChain` (skips re-destroying what's already gone) and `vk_begin_frame` (retries the
+  recreate every frame, before touching any sync primitive, instead of calling
+  `qvkAcquireNextImageKHR` on a stale handle) check for that. Deliberately left `VK_SUBOPTIMAL_KHR`
+  exactly as it already was (tolerated, not a recreate trigger) rather than folding it in to match
+  the roadmap wording more literally: some drivers report it persistently for reasons unrelated to
+  an actual resize, and treating it as fatal risks a per-frame recreate loop on hardware this session
+  has no way to test against. Per user's standing instruction, not self-built or tested — needs a
+  real build, and ideally a test with `r_allowResize 1` plus an actual window drag, not just
+  alt-tab/minimize, since that's the one path this change can't be sanity-checked against at all
+  without running it.
+- **2026-11-22** — Revisited the pipeline cache item (see Phase 3's checkmark above for the full
+  design). `vk_getPipeline3D`'s cache (`vk_pipelines.c`) had more key axes than vkQuake3's own
+  (clipPlane/mirror/polygonOffset on top of blend/cull/alphaTest), and vkQuake3-scale content was
+  already quoted as hitting 60-100+ live pipelines on that smaller key, so the existing 64-entry cap
+  was already undersized for this renderer specifically — raised `MAX_CACHED_3D_PIPELINES` to 128.
+  Also checked the sibling multi-tex pipeline cache's cap (32): its key space is genuinely bounded
+  (combine x cull x alphaTest = 2x3x4 = 24 max), comfortably under 32, so left that one alone rather
+  than bumping it without reason. Did not implement hash-based lookup, per the item's own
+  conditional wording ("if the linear scan starts showing up in profiles") — there's no profiling
+  data from this session (can't run the game) showing it ever is, and ~128 small-struct comparisons
+  is unlikely to be worth the added complexity speculatively. Not self-built or tested; next step is
+  a real build and confirming in a busy level that the `MAX_CACHED_3D_PIPELINES hit` warning print
+  never fires.

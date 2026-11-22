@@ -4,7 +4,7 @@
 #define VK_CMD_H_
 
 void vk_create_command_pool( VkCommandPool *pPool );
-void vk_create_command_buffer( VkCommandPool pool, VkCommandBuffer *pBuf );
+void vk_create_command_buffers( VkCommandPool pool, VkCommandBuffer *pBufs, uint32_t count );
 void vk_destroy_commands( void );
 
 void record_image_layout_transition(

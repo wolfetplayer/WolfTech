@@ -14,19 +14,19 @@ void vk_create_command_pool( VkCommandPool *pPool ) {
 	VK_CHECK( qvkCreateCommandPool( vk.device, &desc, NULL, pPool ) );
 }
 
-void vk_create_command_buffer( VkCommandPool pool, VkCommandBuffer *pBuf ) {
+void vk_create_command_buffers( VkCommandPool pool, VkCommandBuffer *pBufs, uint32_t count ) {
 	VkCommandBufferAllocateInfo alloc_info;
 	alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	alloc_info.pNext = NULL;
 	alloc_info.commandPool = pool;
 	alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	alloc_info.commandBufferCount = 1;
-	VK_CHECK( qvkAllocateCommandBuffers( vk.device, &alloc_info, pBuf ) );
+	alloc_info.commandBufferCount = count;
+	VK_CHECK( qvkAllocateCommandBuffers( vk.device, &alloc_info, pBufs ) );
 }
 
 void vk_destroy_commands( void ) {
-	ri.Printf( PRINT_ALL, " Free command buffers: vk.command_buffer. \n" );
-	qvkFreeCommandBuffers( vk.device, vk.command_pool, 1, &vk.command_buffer );
+	ri.Printf( PRINT_ALL, " Free command buffers: vk.command_buffers. \n" );
+	qvkFreeCommandBuffers( vk.device, vk.command_pool, VK_FRAMES_IN_FLIGHT, vk.command_buffers );
 	ri.Printf( PRINT_ALL, " Destroy command pool: vk.command_pool. \n" );
 	qvkDestroyCommandPool( vk.device, vk.command_pool, NULL );
 }

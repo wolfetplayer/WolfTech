@@ -5,6 +5,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "vk_frame.h"
 #include "tr_image.h"
 #include "vk_entity.h"
 #include "vk_draw3d.h"
@@ -67,8 +68,8 @@ void vk_draw3d_init( void ) {
 	// Marker cube per entity lacking real mesh rendering. Off by default: a misplaced one (e.g. a bad tag attachment) can fill the whole view.
 	r_vk_showEntityMarkers = ri.Cvar_Get( "r_vk_showEntityMarkers", "0", CVAR_ARCHIVE );
 
-	create_mapped_vertex_buffer( VK3D_MAX_VERTS, &s_vertexBuffer, &s_vertexMemory, &s_mapped );
-	create_mapped_vertex_buffer( VK3D_MAX_MARKER_VERTS, &s_markerVertexBuffer, &s_markerVertexMemory, &s_markerMapped );
+	create_mapped_vertex_buffer( (VkDeviceSize)VK3D_MAX_VERTS * VK_FRAMES_IN_FLIGHT, &s_vertexBuffer, &s_vertexMemory, &s_mapped );
+	create_mapped_vertex_buffer( (VkDeviceSize)VK3D_MAX_MARKER_VERTS * VK_FRAMES_IN_FLIGHT, &s_markerVertexBuffer, &s_markerVertexMemory, &s_markerMapped );
 }
 
 void vk_draw3d_shutdown( void ) {
@@ -132,13 +133,16 @@ static void bind_opaque_3d_for_draw( const float mvp[16], const float fogPush[12
 }
 
 void vk_draw3d_test_cube( const vec3_t origin, float halfSize, const float mvp[16], const float fogPush[12] ) {
-	VkDeviceSize vb_offset = 0;
+	uint32_t regionBase;
+	VkDeviceSize vb_offset;
 
 	if ( !r_vk_test3d->integer ) {
 		return;
 	}
 
-	build_cube( s_mapped, origin, halfSize );
+	regionBase = vk_current_frame_slot() * (uint32_t)VK3D_MAX_VERTS;
+	vb_offset = (VkDeviceSize)regionBase * sizeof( vk2d_vertex_t );
+	build_cube( &s_mapped[regionBase], origin, halfSize );
 
 	bind_opaque_3d_for_draw( mvp, fogPush );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
@@ -147,7 +151,8 @@ void vk_draw3d_test_cube( const vec3_t origin, float halfSize, const float mvp[1
 
 // r_vk_showEntityMarkers-gated: one small cube per scene entity, standing in for real model rendering.
 void vk_draw3d_entity_markers( const refEntity_t *entities, int numEntities, float halfSize, const float mvp[16], const float fogPush[12] ) {
-	VkDeviceSize vb_offset = 0;
+	uint32_t regionBase;
+	VkDeviceSize vb_offset;
 	int i, written = 0;
 
 	if ( !r_vk_showEntityMarkers->integer || numEntities <= 0 ) {
@@ -157,11 +162,14 @@ void vk_draw3d_entity_markers( const refEntity_t *entities, int numEntities, flo
 		numEntities = MAX_REFENTITIES;
 	}
 
+	regionBase = vk_current_frame_slot() * (uint32_t)VK3D_MAX_MARKER_VERTS;
+	vb_offset = (VkDeviceSize)regionBase * sizeof( vk2d_vertex_t );
+
 	for ( i = 0; i < numEntities; i++ ) {
 		if ( vk_entity_has_mesh( &entities[i] ) ) {
 			continue; // drawn for real by vk_entity_draw_all instead
 		}
-		build_cube( &s_markerMapped[written * VERTS_PER_CUBE], entities[i].origin, halfSize );
+		build_cube( &s_markerMapped[regionBase + (uint32_t)written * VERTS_PER_CUBE], entities[i].origin, halfSize );
 		written++;
 	}
 

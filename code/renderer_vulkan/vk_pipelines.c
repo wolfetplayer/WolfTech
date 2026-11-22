@@ -480,8 +480,8 @@ static VkCullModeFlags vk_flipCullMode( VkCullModeFlags cullMode ) {
 	return cullMode;
 }
 
-// Cache of pipelines by (blend, cull, alphaTest, clipPlane, mirror, polygonOffset) state; linear-scanned, real shader sets stay small.
-#define MAX_CACHED_3D_PIPELINES 64
+// Cache of pipelines by (blend, cull, alphaTest, clipPlane, mirror, polygonOffset) state, linear-scanned: vkQuake3-scale content alone hits 60-100+ live pipelines on a smaller key (no clipPlane/mirror/polygonOffset axis), so 64 was already tight -- raised for headroom; hash-based lookup deliberately skipped with no profiling evidence the scan is ever hot.
+#define MAX_CACHED_3D_PIPELINES 128
 
 typedef struct {
 	VkDeviceSize vertexStride;
@@ -772,7 +772,7 @@ typedef struct {
 	int32_t alpha_test_func;
 } multiTexSpecData_t;
 
-// Cache of multi_texture pipelines by (combine, cull, alphaTest); linear-scanned like vk_getPipeline3D's.
+// Cache of multi_texture pipelines by (combine, cull, alphaTest); linear-scanned like vk_getPipeline3D's. Key space here is bounded (combine x cull x alphaTest = 2x3x4 = 24), comfortably under this cap -- no change needed when vk_getPipeline3D's cap was raised.
 #define MAX_CACHED_MULTITEX_PIPELINES 32
 
 typedef struct {

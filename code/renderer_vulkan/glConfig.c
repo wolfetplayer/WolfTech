@@ -65,6 +65,12 @@ void R_GetWinResolution( int *w, int *h ) {
 	*h = glConfig.vidHeight;
 }
 
+void R_SetWinResolution( int w, int h ) {
+	glConfig.vidWidth = w;
+	glConfig.vidHeight = h;
+	glConfig.windowAspect = (float)w / (float)h;
+}
+
 void R_InitDisplayResolution( void ) {
 	r_customwidth = ri.Cvar_Get( "r_customwidth", "960", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customheight = ri.Cvar_Get( "r_customheight", "540", CVAR_ARCHIVE | CVAR_LATCH );

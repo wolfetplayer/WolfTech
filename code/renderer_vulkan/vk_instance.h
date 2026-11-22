@@ -137,6 +137,9 @@ const char *cvtResToStr( VkResult result );
 
 #define MAX_SWAPCHAIN_IMAGES    8
 
+// How many frames' worth of command buffers/fences/semaphores (and, per subsystem, dynamic-buffer regions) overlap in flight; see vk_frame.c.
+#define VK_FRAMES_IN_FLIGHT     2
+
 // Engine-wide Vulkan state, set up/torn down by vk_initialize/vk_shutdown.
 struct Vk_Instance {
 	VkInstance instance;
@@ -155,13 +158,15 @@ struct Vk_Instance {
 	VkQueue queue;
 
 	VkSwapchainKHR swapchain;
+	VkExtent2D swapchain_extent; // the actual extent vk_createSwapChain picked -- see vk_recreateSwapChain
 	uint32_t swapchain_image_count;
 	VkImage swapchain_images_array[MAX_SWAPCHAIN_IMAGES];
 	VkImageView swapchain_image_views[MAX_SWAPCHAIN_IMAGES];
 	uint32_t idx_swapchain_image;
 
 	VkCommandPool command_pool;
-	VkCommandBuffer command_buffer;
+	VkCommandBuffer command_buffers[VK_FRAMES_IN_FLIGHT]; // allocated once; vk_begin_frame selects one into command_buffer
+	VkCommandBuffer command_buffer; // the slot vk_current_frame_slot() owns this frame -- everything else in the renderer just uses this
 
 	VkFormat depth_format;
 	VkImage depth_image;

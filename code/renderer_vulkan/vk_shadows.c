@@ -6,6 +6,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "vk_frame.h"
 #include "tr_light.h"
 #include "tr_image.h"
 #include "vk_shadows.h"
@@ -39,6 +40,7 @@ static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
 static vk2d_vertex_t *s_mapped;
 static uint32_t s_writeOffset;
+static uint32_t s_regionBase; // vk_current_frame_slot() * SHADOW_SCRATCH_VERTS -- see vk_shadows_begin_frame
 
 static cvar_t *r_shadows;
 static qboolean s_anyStamped; // qtrue once any entity has stamped the stencil buffer this frame
@@ -55,7 +57,7 @@ void vk_shadows_init( void ) {
 	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	buf_desc.pNext = NULL;
 	buf_desc.flags = 0;
-	buf_desc.size = SHADOW_SCRATCH_VERTS * sizeof( vk2d_vertex_t );
+	buf_desc.size = (VkDeviceSize)SHADOW_SCRATCH_VERTS * VK_FRAMES_IN_FLIGHT * sizeof( vk2d_vertex_t );
 	buf_desc.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	buf_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	buf_desc.queueFamilyIndexCount = 0;
@@ -89,6 +91,7 @@ qboolean vk_shadows_entity_casts( const refEntity_t *ent ) {
 
 void vk_shadows_begin_frame( void ) {
 	s_anyStamped = qfalse;
+	s_regionBase = vk_current_frame_slot() * (uint32_t)SHADOW_SCRATCH_VERTS;
 }
 
 void vk_shadows_begin_entity( void ) {
@@ -137,7 +140,7 @@ static void EmitSilhouetteQuad( int i1, int i2 ) {
 	if ( s_writeOffset + 6 > SHADOW_SCRATCH_VERTS ) {
 		return;
 	}
-	out = &s_mapped[s_writeOffset];
+	out = &s_mapped[s_regionBase + s_writeOffset];
 
 	// GL_TRIANGLE_STRIP(near1, far1, near2, far2) converted to a triangle list.
 	VectorCopy( s_nearXyz[i1], out[0].pos );
@@ -171,7 +174,7 @@ static void PushTransform( const float viewProj[16], const float fogPush[12] ) {
 
 void vk_shadows_finish_entity( const refEntity_t *ent, const float viewProj[16], const float fogPush[12] ) {
 	vec3_t origin, ambient, directed, lightDir;
-	VkDeviceSize vb_offset = 0;
+	VkDeviceSize vb_offset = (VkDeviceSize)s_regionBase * sizeof( vk2d_vertex_t );
 	int i;
 
 	if ( s_numVerts == 0 || s_numTris == 0 ) {
@@ -252,7 +255,7 @@ void vk_shadows_finish_entity( const refEntity_t *ent, const float viewProj[16],
 
 void vk_shadows_draw_darken( const float viewProj[16], const float fogPush[12] ) {
 	float identity[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
-	VkDeviceSize vb_offset = 0;
+	VkDeviceSize vb_offset = (VkDeviceSize)s_regionBase * sizeof( vk2d_vertex_t );
 	vk2d_vertex_t quad[6];
 	static const float z = 0.0f;
 	int i;
@@ -277,7 +280,7 @@ void vk_shadows_draw_darken( const float viewProj[16], const float fogPush[12] )
 	if ( SHADOW_SCRATCH_VERTS < 6 ) {
 		return; // never true -- keeps the memcpy below obviously in-bounds
 	}
-	memcpy( s_mapped, quad, sizeof( quad ) );
+	memcpy( &s_mapped[s_regionBase], quad, sizeof( quad ) );
 
 	PushTransform( identity, fogPush );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );

@@ -5,6 +5,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "vk_frame.h"
 #include "glConfig.h"
 #include "tr_image.h"
 #include "tr_shader.h"
@@ -98,10 +99,18 @@ static uint32_t s_vertWrite;
 static uint32_t s_idxWrite;
 static uint32_t s_mtVertWrite;
 
+// This frame's region within each (now VK_FRAMES_IN_FLIGHT-sized) buffer; the write cursors above stay region-relative, added in at write/bind time.
+static uint32_t s_vertRegionBase;
+static uint32_t s_mtVertRegionBase;
+static uint32_t s_idxRegionBase;
+
 void vk_entity_begin_frame( void ) {
 	s_vertWrite = 0;
 	s_idxWrite = 0;
 	s_mtVertWrite = 0;
+	s_vertRegionBase = vk_current_frame_slot() * (uint32_t)ENTITY_MAX_VERTS;
+	s_mtVertRegionBase = vk_current_frame_slot() * (uint32_t)ENTITY_MAX_VERTS;
+	s_idxRegionBase = vk_current_frame_slot() * (uint32_t)ENTITY_MAX_INDEXES;
 }
 
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
@@ -142,11 +151,11 @@ static void destroy_mapped_buffer( VkBuffer buffer, VkDeviceMemory memory, void 
 }
 
 void vk_entity_init( void ) {
-	create_mapped_buffer( ENTITY_MAX_VERTS * sizeof( vk2d_vertex_t ), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+	create_mapped_buffer( (VkDeviceSize)ENTITY_MAX_VERTS * VK_FRAMES_IN_FLIGHT * sizeof( vk2d_vertex_t ), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		&s_vertexBuffer, &s_vertexMemory, (void **)&s_vertexMapped );
-	create_mapped_buffer( ENTITY_MAX_VERTS * sizeof( vkMultiTexVertex_t ), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+	create_mapped_buffer( (VkDeviceSize)ENTITY_MAX_VERTS * VK_FRAMES_IN_FLIGHT * sizeof( vkMultiTexVertex_t ), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		&s_mtVertexBuffer, &s_mtVertexMemory, (void **)&s_mtVertexMapped );
-	create_mapped_buffer( ENTITY_MAX_INDEXES * sizeof( uint32_t ), VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+	create_mapped_buffer( (VkDeviceSize)ENTITY_MAX_INDEXES * VK_FRAMES_IN_FLIGHT * sizeof( uint32_t ), VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		&s_indexBuffer, &s_indexMemory, (void **)&s_indexMapped );
 }
 
@@ -390,7 +399,7 @@ static void WriteIndices( int numTriangles, const void *trianglesPtr, uint32_t i
 // Copies triangle indices once (shared by every stage via vertexOffset at draw time) and records the draw call.
 static void CommitSurface( int numVerts, int numStages, int numTriangles, const void *trianglesPtr, qhandle_t shader,
 							qboolean depthHack, uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
-	WriteIndices( numTriangles, trianglesPtr, *idxWrite );
+	WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + *idxWrite );
 
 	s_draws[*numDraws].vertBase = *vertWrite;
 	s_draws[*numDraws].numVerts = (uint32_t)numVerts;
@@ -433,7 +442,7 @@ static void CommitMultiTexSurface( const shader_t *shader, int combineMode, int 
 									qboolean depthHack, uint32_t *vertWrite, uint32_t *idxWrite, int *numDraws ) {
 	const shaderStage_t *stage0 = &shader->stages[0];
 
-	WriteIndices( numTriangles, trianglesPtr, *idxWrite );
+	WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + *idxWrite );
 
 	s_mtDraws[*numDraws].vertBase = *vertWrite;
 	s_mtDraws[*numDraws].numVerts = (uint32_t)numVerts;
@@ -467,7 +476,7 @@ static qboolean ProcessSurface( const shader_t *shaderPtr, qhandle_t shaderHandl
 		if ( !ReserveSurface( numVerts, 1, numTriangles, *mtVertWrite, *idxWrite, *numMTDraws ) ) {
 			return qfalse;
 		}
-		WriteMultiTexVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts, &s_mtVertexMapped[*mtVertWrite] );
+		WriteMultiTexVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts, &s_mtVertexMapped[s_mtVertRegionBase + *mtVertWrite] );
 		CommitMultiTexSurface( shaderPtr, combineMode, numVerts, numTriangles, trianglesPtr, depthHack, mtVertWrite, idxWrite, numMTDraws );
 		return qtrue;
 	}
@@ -475,7 +484,7 @@ static qboolean ProcessSurface( const shader_t *shaderPtr, qhandle_t shaderHandl
 	if ( !ReserveSurface( numVerts, shaderPtr->numStages, numTriangles, *vertWrite, *idxWrite, *numDraws ) ) {
 		return qfalse;
 	}
-	WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts, &s_vertexMapped[*vertWrite] );
+	WriteStageVertices( shaderPtr, ent->shaderRGBA, tint, ent->shaderTexCoord, numVerts, baseVerts, &s_vertexMapped[s_vertRegionBase + *vertWrite] );
 	CommitSurface( numVerts, shaderPtr->numStages, numTriangles, trianglesPtr, shaderHandle, depthHack, vertWrite, idxWrite, numDraws );
 	return qtrue;
 }
@@ -691,7 +700,9 @@ doneCollecting:
 
 	{
 		float push_data[32];
-		VkDeviceSize vb_offset = 0;
+		VkDeviceSize vb_offset = (VkDeviceSize)s_vertRegionBase * sizeof( vk2d_vertex_t );
+		VkDeviceSize mtVbOffset = (VkDeviceSize)s_mtVertRegionBase * sizeof( vkMultiTexVertex_t );
+		VkDeviceSize ibOffset = (VkDeviceSize)s_idxRegionBase * sizeof( uint32_t );
 		VkPipeline boundPipeline = VK_NULL_HANDLE;
 		qboolean curDepthHack = qfalse;
 
@@ -701,7 +712,7 @@ doneCollecting:
 		qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 			0, sizeof( push_data ), push_data );
 
-		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
+		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, ibOffset, VK_INDEX_TYPE_UINT32 );
 
 		if ( numDraws > 0 ) {
 			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
@@ -745,7 +756,7 @@ doneCollecting:
 		}
 
 		if ( numMTDraws > 0 ) {
-			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_mtVertexBuffer, &vb_offset );
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_mtVertexBuffer, &mtVbOffset );
 			boundPipeline = VK_NULL_HANDLE;
 
 			for ( i = 0; i < numMTDraws; i++ ) {

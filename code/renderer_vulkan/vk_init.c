@@ -35,8 +35,8 @@ void vk_initialize( void ) {
 	ri.Printf( PRINT_ALL, " Create command pool: vk.command_pool \n" );
 	vk_create_command_pool( &vk.command_pool );
 
-	ri.Printf( PRINT_ALL, " Create command buffer: vk.command_buffer \n" );
-	vk_create_command_buffer( vk.command_pool, &vk.command_buffer );
+	ri.Printf( PRINT_ALL, " Create command buffers: vk.command_buffers \n" );
+	vk_create_command_buffers( vk.command_pool, vk.command_buffers, VK_FRAMES_IN_FLIGHT );
 
 	R_GetWinResolution( &width, &height );
 	vk_createDepthResources( (uint32_t)width, (uint32_t)height );
