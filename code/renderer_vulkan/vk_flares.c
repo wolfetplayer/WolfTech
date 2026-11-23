@@ -104,6 +104,9 @@ void vk_flares_shutdown( void ) {
 	}
 	qvkDestroyBuffer( vk.device, s_vertexBuffer, NULL );
 	qvkFreeMemory( vk.device, s_vertexMemory, NULL );
+
+	s_flareShaderHandle = 0;
+	s_flareShaderLooked = qfalse;
 }
 
 void vk_flares_clear( void ) {

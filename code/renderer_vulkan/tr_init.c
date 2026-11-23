@@ -120,6 +120,8 @@ static void RE_Shutdown( qboolean destroyWindow ) {
 
 		vk_shutdown();
 
+		tr_world.loaded = qfalse;
+
 		if ( destroyWindow ) {
 			vk_destroyWindow();
 		}
