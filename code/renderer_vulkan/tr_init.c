@@ -379,7 +379,7 @@ static void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 
 	vk_flares_begin_frame(); // resets this frame's occlusion queries -- vkCmdResetQueryPool needs to run outside the render pass
 
-	vk_begin_render_pass( 0.0f, 0.2f, 0.4f, 1.0f );
+	vk_begin_render_pass( 0.0f, 0.0f, 0.0f, 1.0f );
 	vk_draw2d_begin_frame();
 
 	// reset once per real frame, not per scene -- see e.g. vk_entity_begin_frame's comment
