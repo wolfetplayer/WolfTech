@@ -1,5 +1,6 @@
 // vk_sky.c -- static, camera-centered sky box, see vk_sky.h. No per-triangle visibility clipping or portal sky; relies on pipeline_sky's depth test/write being off to stay behind everything.
 
+#include <math.h>
 #include <string.h>
 
 #include "VKimpl.h"
@@ -7,10 +8,12 @@
 #include "vk_pipelines.h"
 #include "tr_image.h"
 #include "tr_bsp.h"
+#include "tr_shade_calc.h"
 #include "vk_sky.h"
 
 #define SKY_VERTS 36 // 6 faces * 2 triangles * 3 verts, non-indexed
 #define SKY_ZFAR_SCALE ( 1.0f / 1.75f ) // matches code/renderer/tr_sky.c's MakeSkyVec: keeps the box's farthest corner inside zFar
+#define SKY_CLOUD_MAX_LAYERS MAX_SHADER_STAGES // one vertex block per potential cloud-layer stage, after the outer box's own block
 
 static VkBuffer s_vertexBuffer;
 static VkDeviceMemory s_vertexMemory;
@@ -26,7 +29,7 @@ void vk_sky_init( void ) {
 	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	buf_desc.pNext = NULL;
 	buf_desc.flags = 0;
-	buf_desc.size = SKY_VERTS * sizeof( vk2d_vertex_t );
+	buf_desc.size = SKY_VERTS * ( 1 + SKY_CLOUD_MAX_LAYERS ) * sizeof( vk2d_vertex_t );
 	buf_desc.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	buf_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	buf_desc.queueFamilyIndexCount = 0;
@@ -107,16 +110,87 @@ static void build_sky_box( vk2d_vertex_t *out, const vec3_t camPos, float size )
 	}
 }
 
+#define SQR( a ) ( ( a ) * ( a ) )
+#define SKY_CLOUD_RADIUS_WORLD 4096.0f // matches code/renderer/tr_sky.c's R_InitSkyTexCoords
+
+static void cloud_dir_to_uv( const vec3_t dir, float heightCloud, float outST[2] ) {
+	float dd = DotProduct( dir, dir );
+	float p, v[3];
+
+	if ( dd < 0.000001f ) {
+		outST[0] = outST[1] = 0.0f;
+		return;
+	}
+
+	p = ( 1.0f / ( 2.0f * dd ) ) *
+		( -2.0f * dir[2] * SKY_CLOUD_RADIUS_WORLD +
+		  2.0f * sqrtf( SQR( dir[2] ) * SQR( SKY_CLOUD_RADIUS_WORLD ) +
+						2.0f * SQR( dir[0] ) * SKY_CLOUD_RADIUS_WORLD * heightCloud +
+						SQR( dir[0] ) * SQR( heightCloud ) +
+						2.0f * SQR( dir[1] ) * SKY_CLOUD_RADIUS_WORLD * heightCloud +
+						SQR( dir[1] ) * SQR( heightCloud ) +
+						2.0f * SQR( dir[2] ) * SKY_CLOUD_RADIUS_WORLD * heightCloud +
+						SQR( dir[2] ) * SQR( heightCloud ) ) );
+
+	VectorScale( dir, p, v );
+	v[2] += SKY_CLOUD_RADIUS_WORLD;
+	VectorNormalize( v );
+
+	outST[0] = acosf( ( v[0] < -1.0f ) ? -1.0f : ( v[0] > 1.0f ) ? 1.0f : v[0] );
+	outST[1] = acosf( ( v[1] < -1.0f ) ? -1.0f : ( v[1] > 1.0f ) ? 1.0f : v[1] );
+}
+
+// base is the already-built outer-box block (only its positions are reused; UV is recomputed per cloud_dir_to_uv above).
+static void write_cloud_layer( vk2d_vertex_t *out, const vk2d_vertex_t *base, const vec3_t camPos, float cloudHeight, const shaderStage_t *stage ) {
+	static const byte whiteBase[4] = { 255, 255, 255, 255 };
+	int i;
+
+	for ( i = 0; i < SKY_VERTS; i++ ) {
+		vec3_t dir;
+		float baseST[2], st[2];
+		byte color[4];
+
+		out[i].pos[0] = base[i].pos[0];
+		out[i].pos[1] = base[i].pos[1];
+		out[i].pos[2] = base[i].pos[2];
+
+		VectorSubtract( base[i].pos, camPos, dir );
+		cloud_dir_to_uv( dir, cloudHeight, baseST );
+		R_CalcStageTexCoord( stage, baseST[0], baseST[1], base[i].pos, NULL, st );
+		out[i].uv[0] = st[0];
+		out[i].uv[1] = st[1];
+
+		R_CalcStageColorAlpha( stage, NULL, whiteBase, color );
+		out[i].color[0] = color[0];
+		out[i].color[1] = color[1];
+		out[i].color[2] = color[2];
+		out[i].color[3] = color[3];
+	}
+}
+
 void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[12], float zFar ) {
 	float push_data[32];
 	VkDeviceSize vb_offset = 0;
-	int face;
+	int face, i, numCloudLayers;
+	shader_t *skyShader;
 
 	if ( !tr_world.hasSky || !s_mapped ) {
 		return;
 	}
 
 	build_sky_box( s_mapped, camPos, zFar * SKY_ZFAR_SCALE );
+
+	skyShader = tr_world.skyShader;
+	numCloudLayers = 0;
+	if ( skyShader && skyShader->skyCloudHeight > 0.0f ) { // matches reference R_BuildCloudData's "if (shader->sky.cloudHeight)" gate
+		numCloudLayers = skyShader->numStages;
+		if ( numCloudLayers > SKY_CLOUD_MAX_LAYERS ) {
+			numCloudLayers = SKY_CLOUD_MAX_LAYERS;
+		}
+		for ( i = 0; i < numCloudLayers; i++ ) {
+			write_cloud_layer( s_mapped + SKY_VERTS * ( 1 + i ), s_mapped, camPos, skyShader->skyCloudHeight, &skyShader->stages[i] );
+		}
+	}
 
 	memset( push_data, 0, sizeof( push_data ) );
 	memcpy( push_data, mvp, 16 * sizeof( float ) );
@@ -135,5 +209,23 @@ void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[
 		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
 			0, 1, &img->vk_descriptor, 0, NULL );
 		qvkCmdDraw( vk.command_buffer, 6, 1, (uint32_t)face * 6, 0 );
+	}
+
+	for ( i = 0; i < numCloudLayers; i++ ) {
+		const shaderStage_t *stage = &skyShader->stages[i];
+		image_t *img = R_GetStageImage( stage );
+		VkPipeline pipeline;
+
+		if ( !img || img->vk_descriptor == VK_NULL_HANDLE ) {
+			continue;
+		}
+
+		pipeline = stage->blendEnabled ?
+			vk_getPipelineSkyCloud( stage->srcBlend, stage->dstBlend ) :
+			vk_getPipelineSkyCloud( VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO );
+		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+			0, 1, &img->vk_descriptor, 0, NULL );
+		qvkCmdDraw( vk.command_buffer, SKY_VERTS, 1, (uint32_t)SKY_VERTS * ( 1 + i ), 0 );
 	}
 }

@@ -592,6 +592,58 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 	return s_cachedPipelines[s_numCachedPipelines++];
 }
 
+// Key space is tiny in practice (almost always one blend mode per sky shader) -- a linear-scanned cache like vk_getPipeline3D's, just much smaller.
+#define MAX_CACHED_SKY_CLOUD_PIPELINES 8
+static VkBlendFactor s_skyCloudSrc[MAX_CACHED_SKY_CLOUD_PIPELINES];
+static VkBlendFactor s_skyCloudDst[MAX_CACHED_SKY_CLOUD_PIPELINES];
+static VkPipeline s_skyCloudPipelines[MAX_CACHED_SKY_CLOUD_PIPELINES];
+static int s_numSkyCloudPipelines;
+
+static void vk_resetPipelineCacheSkyCloud( void ) {
+	s_numSkyCloudPipelines = 0;
+}
+
+static void vk_destroyPipelineCacheSkyCloud( void ) {
+	int i;
+	for ( i = 0; i < s_numSkyCloudPipelines; i++ ) {
+		qvkDestroyPipeline( vk.device, s_skyCloudPipelines[i], NULL );
+	}
+	s_numSkyCloudPipelines = 0;
+}
+
+VkPipeline vk_getPipelineSkyCloud( VkBlendFactor srcBlend, VkBlendFactor dstBlend ) {
+	VkVertexInputBindingDescription binding2d;
+	VkVertexInputAttributeDescription attribs2d[3];
+	vk2d_spec_data_t spec_data;
+	VkSpecializationMapEntry spec_entries[4];
+	VkSpecializationInfo specInfo;
+	int i;
+
+	for ( i = 0; i < s_numSkyCloudPipelines; i++ ) {
+		if ( s_skyCloudSrc[i] == srcBlend && s_skyCloudDst[i] == dstBlend ) {
+			return s_skyCloudPipelines[i];
+		}
+	}
+
+	if ( s_numSkyCloudPipelines >= MAX_CACHED_SKY_CLOUD_PIPELINES ) {
+		ri.Printf( PRINT_WARNING, "MAX_CACHED_SKY_CLOUD_PIPELINES hit, falling back to vk.pipeline_sky\n" );
+		return vk.pipeline_sky;
+	}
+
+	Get2DAttribs( &binding2d, attribs2d );
+	GetSpecInfo( &spec_data, spec_entries, &specInfo, qfalse, 0, qfalse ); // fog off, like vk.pipeline_sky
+
+	s_skyCloudSrc[s_numSkyCloudPipelines] = srcBlend;
+	s_skyCloudDst[s_numSkyCloudPipelines] = dstBlend;
+	s_skyCloudPipelines[s_numSkyCloudPipelines] = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding2d, 1, attribs2d, 3, VK_TRUE, srcBlend, dstBlend, VK_FALSE, VK_CULL_MODE_NONE,
+		VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE,
+		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+
+	return s_skyCloudPipelines[s_numSkyCloudPipelines++];
+}
+
 static void vk_destroyMultiTexPipelineCache( void );
 static void vk_resetEntityLerpPipelineCache( void );
 static void vk_destroyEntityLerpPipelineCache( void );
@@ -736,6 +788,7 @@ void vk_create3DPipelines( void ) {
 		VK_TRUE, VK_COMPARE_OP_NOT_EQUAL, VK_STENCIL_OP_KEEP );
 
 	vk_resetPipelineCache3D();
+	vk_resetPipelineCacheSkyCloud();
 	vk_resetEntityLerpPipelineCache();
 	vk_resetEntityLerpMTPipelineCache();
 	vk_resetEntitySkinPipelineCache();
@@ -746,6 +799,7 @@ void vk_destroy3DPipelines( void ) {
 	int ct, at;
 
 	vk_destroyPipelineCache3D();
+	vk_destroyPipelineCacheSkyCloud();
 	vk_destroyEntityLerpPipelineCache();
 	vk_destroyEntityLerpMTPipelineCache();
 	vk_destroyEntitySkinPipelineCache();

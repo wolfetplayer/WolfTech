@@ -355,6 +355,7 @@ void vk_world_build( void ) {
 	sortedSurfs = malloc( tr_world.numSurfaces * sizeof( int ) );
 
 	tr_world.hasSky = qfalse;
+	tr_world.skyShader = NULL;
 
 	for ( surfIdx = firstWorldSurf; surfIdx < firstWorldSurf + numWorldSurfs; surfIdx++ ) {
 		const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
@@ -364,6 +365,7 @@ void vk_world_build( void ) {
 			// Sky-shaded surfaces aren't batched/drawn here -- vk_sky.c paints the whole box every frame instead.
 			if ( !tr_world.hasSky ) {
 				memcpy( tr_world.skyOuterBox, surfShader->skyOuterBox, sizeof( tr_world.skyOuterBox ) );
+				tr_world.skyShader = surfShader;
 				tr_world.hasSky = qtrue;
 			}
 			continue;

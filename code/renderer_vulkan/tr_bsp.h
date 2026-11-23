@@ -85,6 +85,7 @@ typedef struct {
 	// First sky-shaded surface's outer box faces, found while vk_world_build sorts drawable surfaces.
 	qboolean hasSky;
 	struct image_s *skyOuterBox[6]; // rt, lf, bk, ft, up, dn
+	struct shader_s *skyShader; // same surface's shader -- its non-skyparms stages are cloud layers, see vk_sky.c
 
 	qboolean loaded;
 } bspWorld_t;

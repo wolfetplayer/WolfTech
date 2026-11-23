@@ -303,7 +303,6 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	}
 }
 
-// skyParms <outerbox> <cloudheight> <innerbox> -- only outerbox is ported (innerbox/cloud layers aren't).
 static void ParseSkyParms( shader_t *shader, char **text ) {
 	static const char *suf[6] = { "rt", "lf", "bk", "ft", "up", "dn" };
 	char pathBase[MAX_QPATH];
@@ -324,7 +323,12 @@ static void ParseSkyParms( shader_t *shader, char **text ) {
 		shader->isSky = qtrue;
 	}
 
-	SkipRestOfLine( text ); // cloudheight, innerbox
+	token = COM_ParseExt( text, qfalse ); // cloudheight
+	if ( token[0] && Q_stricmp( token, "-" ) ) {
+		shader->skyCloudHeight = (float)atof( token );
+	}
+
+	SkipRestOfLine( text ); // innerbox
 }
 
 // deformVertexes wave|normal|bulge|move|autosprite|autosprite2|projectionShadow|text[0-7]; appends to shader->deforms.
