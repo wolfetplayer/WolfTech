@@ -1,1402 +1,454 @@
 # Vulkan Renderer Roadmap
 
 Living tracking doc for bringing `code/renderer_vulkan` up to, and then past, vkQuake3-level
-parity, with the end goal of matching `code/rend2`'s visual feature set. Update this file
-every session that touches the Vulkan renderer: check off finished items, add new findings,
-and append a dated entry to the Changelog at the bottom. Don't let this doc drift from the code.
+parity, with the end goal of matching `code/rend2`'s visual feature set. Update this file every
+session that touches the Vulkan renderer: check off finished items, add new findings, and append
+a dated entry to the Changelog. Don't let this doc drift from the code.
 
-Reference implementations used for this plan:
-- `vkQuake3-master` (external reference checkout) — baseline "classic id-tech-3 in Vulkan" target.
-- `code/rend2` (this repo) — the OpenGL2 advanced renderer; the "beyond vkQuake3" target.
-- `code/renderer` (this repo) — classic OpenGL1 renderer; shares shader-script semantics with
-  the Vulkan renderer and is the easiest cross-check for "does this shader keyword do anything."
+Reference implementations:
+- `vkQuake3-master` (external checkout) — baseline "classic id-tech-3 in Vulkan" target.
+- `code/rend2` (this repo) — OpenGL2 advanced renderer, the "beyond vkQuake3" target.
+- `code/renderer` (this repo) — classic OpenGL1 renderer; shares shader-script semantics with the
+  Vulkan renderer and is the fastest cross-check for "does this shader keyword do anything."
 
-## Current state (last updated 2026-11-20 — Phase 0 complete, most of Phase 1 + first Phase 2 item done)
+## Current state (last updated 2026-11-23)
 
-The Vulkan renderer is **real and live**, not a dead stub: `cl_renderer` (`code/client/cl_main.c`)
-dynamically loads `renderer_vulkan_<arch>.<dll|so>`, it builds by default
-(`BUILD_RENDERER_VULKAN` in the `Makefile` defaults to building), and selecting
-`cl_renderer vulkan` + restart actually renders the game today. Beyond Phase 0's baseline (world
-geometry with lightmaps, frustum/PVS culling, curved patches, MD3/MDC/MDS/MDM model loading + CPU
-skinning, tags/attachments, `.skins` files, ambient light-grid sampling, mipmapping + anisotropic
-filtering, gamma correction, screenshot capture, `r_showtris`/`r_showImages` debug overlays,
-view-weapon `RF_DEPTHHACK` depth-range compression), it now also has: real per-frame `rgbGen`/
-`tcMod` on every world stage (no more baked stage-0-only animation), overbright bits, multitexture
-collapse pipelines for entities/polys, dynamic lights as a real additive world pass, mirror/portal
-clip-plane rendering (world surfaces only) and sky-portal (`_skyboxOrigin`) support, brush-model
-entities (func_door/func_rotating/func_plat/etc. — previously invisible), and decals (bullet
-holes/blood, with `polygonOffset` support to stop them z-fighting). Two load-bearing but easy-to-miss
-model/skin-loading bugs (missing cross-extension fallback in `RE_RegisterModel`, a skin-file comma
-parser that didn't consume its own separator) were also found and fixed — both were silently
-breaking enemy character models/skins regardless of which later phase landed.
+The Vulkan renderer is real and live, not a stub: `cl_renderer vulkan` + restart renders the game
+today (`code/client/cl_main.c` dynamically loads it; builds by default). Phase 0 is complete, and
+Phase 1/2/3 are essentially done; Phase 4 is in progress (vertex-format work complete, lighting
+work partially done).
 
-It's still well behind both reference points on everything not yet checked off below:
-- **vs. vkQuake3**: no cinematics, and `deformVertexes` beyond `move`
-  is blocked on Phase 4's vertex-normal work. Mirror/portal rendering is world-geometry-only (entities/polys/sky
-  draw unclipped inside a mirror) and hasn't been visually confirmed in-game yet.
-- **vs. rend2**: no normal/specular/parallax/deluxe maps, no real per-pixel lighting (world still
-  gets baked lightmap only; entities with `rgbGen lightingDiffuse` now get real per-**vertex**
-  ambient+directed diffuse lighting from the light grid, done 2026-11-22, but no specular/normal
-  maps yet — see Phase 4's vertex-format item and the lighting changelog entry), no HDR/bloom/
-  tonemap, no SSAO/FXAA/DOF, no cubemap reflection probes, no shadow mapping.
-- **Open/unverified**: a `r_vk_disableMultiTex` bisection cvar from an earlier (inconclusive) attempt
-  at the (since-fixed) shattered-weapon bug is still sitting in `vk_pipelines.c`, undocumented until
-  now — safe to leave (off by default, no `sv_cheats` requirement) but should be removed as cleanup.
-  Same for `r_vk_debugWeapon` (`vk_entity.c`), left over from that same investigation.
+Still behind the reference points on everything not checked off below. Notably:
+- **vs. vkQuake3**: no cinematics; `deformVertexes` beyond `move`/`wave`/`bulge` (and those two only
+  for world geometry, not entities) is incomplete. Mirror/portal clipping is world-geometry-only.
+- **vs. rend2**: no normal/specular/parallax/deluxe maps, no per-pixel lighting (world = baked
+  lightmap only; entities with `rgbGen lightingDiffuse` get real per-**vertex** diffuse lighting as
+  of 2026-11-22, nothing per-pixel yet). No HDR/bloom/tonemap/SSAO/FXAA/DOF/cubemap probes/shadow
+  mapping.
+- **Open/unverified**: `r_vk_disableMultiTex` (`vk_pipelines.c`) and `r_vk_debugWeapon`
+  (`vk_entity.c`) are leftover bisection/debug cvars from earlier investigations — harmless (off by
+  default) but should be removed as cleanup. A temporary diagnostic block in `vk_world_build`
+  (`vk_world.c`, logs vertex-lit/CGEN_VERTEX surfaces) is still in place from the 2026-11-23
+  barrel-darkness investigation below and should be removed once that's resolved.
+- **Known real bug, root cause still unconfirmed**: static map decorations that bake lighting into
+  vertex color (`rgbGen vertex` + a second `map $lightmap`/`blendFunc filter` stage, e.g.
+  q3map2-merged `misc_model` props) render darker than the reference engine. See the last two
+  Changelog entries — the "overbright is only half-implemented" theory was investigated and then
+  *ruled out* (the reference engine's overbright compensation is a whole-frame post-process, not a
+  per-blend-pass multiplier, so it can't explain a per-object brightness difference). Real cause
+  still open as of 2026-11-23.
 
-Full raw findings from the original audit are folded into the phases below; this doc is the actionable
-version, not a dump of the investigation.
+## Architecture decisions (don't let these happen by accident)
 
-## Architecture decisions to make explicitly (don't let these happen by accident)
-
-1. **Optional material features (normal/spec/parallax/deluxe maps) → uber-shader + UBO/push-constant
-   flags**, not a pipeline permutation per combination. rend2 proves this is viable on the GL side
-   via `u_EnableTextures`-style bitmasks; Vulkan should bind dummy/white fallback textures to
-   unused descriptor slots and branch in-shader. Reserve pipeline permutations for things that
-   actually change fixed-function state (blend mode, cull, depth, stencil, major lighting *path*).
-2. **Major lighting-path selection (lightmap vs. light-vector vs. vertex-lit, × vertex-lerp anim, ×
-   shadow-receive) → precompiled SPIR-V permutation table**, mirroring rend2's 128-permutation
-   `LIGHTDEF_*` GLSL approach almost directly, with lazy `VkPipeline` creation cached by bitmask
-   (don't compile all 128 up front). This is a direct, low-risk translation of a design already
-   proven to work for this exact feature set — don't invent a new dynamic-branching scheme here.
-3. **CPU skinning now, GPU skinning later, batched with the rend2 vertex-format work.** The
-   current CPU skinning (MD3/MDC/MDS/MDM) works and should not be touched until Phase 4, where
-   bone-index/weight vertex attributes are being added anyway for rend2 parity — do the GPU-skinning
-   migration once, not twice.
-4. **Stencil shadow volumes (Phase 2, vkQuake3-style) vs. pshadows (Phase 5, rend2-style) are two
-   different features, not sequential replacements** — rend2 uses projected per-entity shadow
-   blobs sampled from an offscreen target, *not* cascaded sun shadow maps and *not* stencil
-   volumes. Decide once Phase 5 is reached whether to keep both behind `r_shadows` modes (matching
-   upstream cvar semantics) or drop stencil shadows in favor of pshadows for the final build.
-5. **Verify the frontend/backend split before Phase 1 gets large.** vkQuake3 and the classic
-   renderer funnel all drawing through a typed render-command buffer
-   (`SET_COLOR`/`STRETCH_PIC`/`DRAW_SURFS`/`SWAP_BUFFERS`, built in `tr_cmds.c`/`render_export.c`)
-   so the frontend never touches the graphics API directly. Confirm `renderer_vulkan`'s
-   `tr_scene.c`/`tr_main.c` follow the same contract (it should, since it shares `tr_public.h` with
-   `code/renderer`) rather than calling `vk*` functions straight from frontend code — if it
-   diverges, fix it before building more on top, since it'll make threaded frontend/backend
-   execution and multi-scene-per-frame cases much harder to retrofit later.
+1. **Material flags (normal/spec/parallax/deluxe maps) → uber-shader + push-constant/UBO flags**,
+   not a pipeline permutation per combination (rend2's `u_EnableTextures` approach). Bind
+   dummy/white fallback textures to unused slots and branch in-shader. Reserve pipeline variants
+   for actual fixed-function state changes (blend/cull/depth/stencil/major lighting path).
+2. **Lighting-path selection → precompiled SPIR-V permutation table**, mirroring rend2's 128-way
+   `LIGHTDEF_*` scheme, lazily cached by bitmask. Direct low-risk translation — don't invent a new
+   dynamic-branching scheme.
+3. ~~CPU skinning now, GPU skinning batched with the vertex-format work~~ — done, see Phase 4.
+4. **Stencil shadow volumes (Phase 2) vs. pshadows (Phase 5) are different features**, not
+   sequential replacements — rend2 uses offscreen per-entity shadow blobs, not cascaded maps or
+   stencil volumes. Decide at Phase 5 whether to keep both behind `r_shadows` modes or drop stencil
+   shadows for the final build.
+5. **Keep the frontend/backend split intact.** `tr_scene.c`/`tr_main.c` should never call `vk*`
+   functions directly from frontend code (matches `code/renderer`'s typed-command-buffer contract
+   via shared `tr_public.h`) — verified true so far; re-check if anything starts diverging, since it
+   matters for future threaded frontend/backend work.
 
 ## Phase 0 — Correctness & verification groundwork
 
-Quick, high-value fixes and the tooling needed to visually verify every later phase. Do this
-first; several later phases are hard to validate without it.
-
-- [x] ~~Remove or `cvar`-gate the hardcoded debug test cube and entity-origin markers~~ — re-checked
-      `vk_draw3d.c`: both `r_vk_test3d` and `r_vk_showEntityMarkers` already default to `"0"` and the
-      draw calls bail out early when unset. The original audit was wrong on this one; no change needed.
-- [x] Implemented screenshot capture (`screenshot`/`screenshotJPEG`): new `vk_screenshot.c` copies the
-      just-presented swapchain image back via a one-shot staging buffer (added `VK_IMAGE_USAGE_TRANSFER_SRC_BIT`
-      to the swapchain in `vk_swapchain.c`) and writes TGA or JPEG (reusing `tr_image_jpg.c`'s existing
-      `RE_SaveJPG` encoder). Runs after `vk_end_frame()`, not inside the frame's own command buffer.
-- [x] Implemented wireframe overlay (`r_showtris`) and texture-atlas dump (`r_showImages`).
-      `r_showtris` covers **world geometry only** (a new `vk.pipeline_world_wireframe`,
-      `VK_POLYGON_MODE_LINE`, gated on `vk.features.fillModeNonSolid`) — entity wireframe is a
-      follow-up, not done here. `r_showImages` replaces the scene with a 40-column grid of every
-      loaded texture (`vk_draw2d_raw_image`, bypassing the shader system).
-      **`r_shownormals` is deliberately not implemented**: it needs per-vertex normals, and neither
-      the world (`vkWorldVertex_t`) nor entity (`entityBaseVert_t`) vertex formats carry any today —
-      that's Phase 4's vertex-format work. Implementing it now would mean faking data; skip it until
-      real normals exist.
-- [x] Mipmapping + anisotropic filtering: `vk_image.c` now generates a full mip chain via
-      `vkCmdBlitImage` at upload time (skipped when `IMGFLAG_NOMIPMAP` is set — already wired through
-      from `RE_RegisterShaderNoMip`) and the sampler uses `mipmapMode = LINEAR` with
-      `maxLod = mipLevels-1`. Anisotropy turned out to already be *enabled on the device* (the device
-      creation code in `vk_instance.c` enables every supported feature, not none); the sampler just
-      wasn't using it — now `anisotropyEnable`/`maxAnisotropy` come from `vk.features.samplerAnisotropy`
-      and the newly-queried `vk.deviceProperties.limits.maxSamplerAnisotropy`. Went straight to the
-      GPU blit approach rather than a CPU box-filter stopgap -- a since-removed Phase 3 item asked
-      for this same `vkCmdBlitImage` chain "to replace the Phase 0 CPU box-filter stopgap," but that
-      stopgap was never actually built; this is already done.
-- [x] Fixed `animmap`: `tr_shader.c` now parses and stores every frame
-      (`shaderStage_t.animImages[]`/`numAnimImages`/`animFrequency`, capped at `MAX_IMAGE_ANIMATIONS`
-      16, matching `code/renderer`), and a new `R_GetStageImage()` in `tr_shade_calc.c` resolves the
-      current frame from shader time. Wired into entities, scene polys, and 2D pics (`vk_entity.c`,
-      `vk_poly.c`, `vk_draw2d.c`). **World surfaces still only show frame 0** — their descriptor sets
-      are built once at level-load time (see the multi-stage fix below), so per-frame animated world
-      textures are still blocked on that static-descriptor architecture.
-- [x] Fixed `R_ModelBounds`: returns frame-0 local-space bounds for MD3/MDC/MDS/MDX (same semantics as
-      `code/renderer`/`code/rend2`). MDM has no bounds data of its own (mesh+tags only, no frames —
-      bounds live on its separate MDX skeleton) and still returns zero; that's an honest gap, not a bug.
-- [x] Baseline gamma/brightness correction: added `r_gamma` (`"1.4"`, `CVAR_ARCHIVE | CVAR_LATCH`,
-      matching `code/renderer`/`code/rend2`'s default) and a CPU gamma table applied to every texture's
-      pixels at upload time in `vk_image.c` (one choke point: both `R_CreateImage` and `vk_world.c`'s
-      direct lightmap uploads funnel through `vk_create_texture_image`, so this covers regular
-      textures, fonts, *and* lightmaps uniformly). `CVAR_LATCH` because a changed value only affects
-      textures loaded afterward — there's no live postprocess pass yet, as planned. Phase 5's final
-      pass still supersedes this later.
-      **Correctness trap hit and fixed here, worth remembering for any future per-pixel work on
-      upload buffers**: the first version ran the gamma lookup *in place* on the staging buffer's
-      mapped pointer — `HOST_VISIBLE` GPU-upload memory, which is commonly write-combined/uncached.
-      That's fine for the plain sequential `memcpy()` this code used to do, but the lookup
-      (`pixels[i] = table[pixels[i]]`) requires *reading* that memory back first, and reads from
-      write-combined memory can be dramatically slower than normal RAM — this alone turned into a
-      ~50ms-per-texture regression (×hundreds/thousands of textures = the "way slower after Phase 0"
-      report), independent of mipmapping, descriptor allocation, or sync, all of which were red
-      herrings chased before isolating this with per-sub-phase timing. Fixed by gamma-correcting
-      *while copying* from the normal-RAM source into the staging buffer (`R_CopyWithGammaCorrection`
-      in `vk_image.c`), so the GPU-visible memory is only ever written, never read. **Rule for later
-      phases**: any future per-pixel transform on upload data (color-space conversion, compression,
-      etc.) must read from the CPU-side source and write to the mapped GPU buffer in one pass — never
-      read-modify-write in place on the mapped pointer.
-- [x] Fixed the world-surface multi-stage bug: `vk_world_draw` now loops a shader's stages 1..N after
-      drawing stage 0's baked diffuse×lightmap pass, drawing each extra stage with its own blend
-      state/texture via a generalized `vk_getPipeline3D` (now takes a `vertexStride` so it can target
-      either `vk2d_vertex_t` or `vkWorldVertex_t`). Known limitation carried over, not fixed here:
-      extra stages share stage 0's baked vertex color (correct for the common `rgbGen identity`
-      case, wrong for a stage with its own distinct `rgbGen`) and reuse stage 0's static UVs (no
-      per-frame `tcMod` on extra stages) — both are explicitly Phase 1's job (the generic multi-stage
-      iterator), not re-solved here.
-- [x] View-weapon depth hack (`RF_DEPTHHACK`, flagged by the user: "my gun drowns in walls, never
-      happens in OpenGL1"): this renderer had *zero* handling of the flag at all. code/renderer
-      compresses the depth range to `glDepthRange(0, 0.3)` for depth-hacked entities so the weapon
-      always wins the depth test against nearby geometry; ported as a per-draw-call
-      `vkCmdSetViewport` switch in `vk_entity.c` (`SetDepthRange`), threaded through the existing
-      vertex/index batching (`entityDrawCall_t`/`entityMTDrawCall_t` now carry a `depthHack` flag
-      set from `ent->renderfx` at commit time, since draws are batched across entities and emitted
-      later, not issued per-entity) with change-tracking so the viewport only gets reset when the
-      flag actually flips, and restored to normal before returning so polys/2D HUD aren't affected.
-      **Not ported**: code/renderer also swaps to a flatter projection matrix for depth-hacked draws
-      (reduces visual distortion on the weapon model specifically) — a separate, more cosmetic
-      concern from the reported bug (geometry disappearing into walls), left as a follow-up. Not yet
-      confirmed in-game.
+- [x] Debug test cube / entity-origin markers: already cvar-gated and off by default — no change
+      needed, original audit was wrong about this.
+- [x] Screenshot capture (`screenshot`/`screenshotJPEG`): `vk_screenshot.c`, copies the
+      just-presented swapchain image via a staging buffer, writes TGA/JPEG.
+- [x] `r_showtris` (world geometry only — a line-mode pipeline, gated on `fillModeNonSolid`; entity
+      wireframe not implemented) and `r_showImages` (40-column texture-atlas grid dump).
+      `r_shownormals` deliberately *not* implemented here — no vertex normals existed yet
+      (Phase 4 unblocked this but it's still not wired up as of this writing).
+- [x] Mipmapping + anisotropic filtering: `vk_image.c` generates mips via `vkCmdBlitImage` at
+      upload; anisotropy was already device-enabled, just not used by the sampler — fixed.
+- [x] `animmap`: frame list/frequency parsed and stored (`shaderStage_t`), resolved per-frame in
+      `R_GetStageImage`. Wired into entities/polys/2D pics. World surfaces still only show frame 0
+      (their descriptors are built once at load, a separate limitation).
+- [x] `R_ModelBounds`: frame-0 local bounds for MD3/MDC/MDS/MDX. MDM has none of its own (bounds
+      live on its MDX skeleton) — returns zero, an honest gap not a bug.
+- [x] Baseline gamma: `r_gamma` + a CPU gamma table applied at texture-upload time
+      (`vk_image.c`), covering regular textures/fonts/lightmaps through one choke point
+      (`vk_create_texture_image`). **Gotcha worth remembering**: an early version ran the gamma
+      lookup *in place* on the mapped (write-combined) staging buffer — reads from write-combined
+      GPU-upload memory are drastically slow, causing a ~50ms/texture load-time regression that took
+      real sub-phase timing to isolate (three other plausible theories were wrong first). Fixed by
+      gamma-correcting while copying from the CPU source into the staging buffer, never reading the
+      mapped pointer back. **Rule for later per-pixel upload-time work**: always read-from-source/
+      write-to-mapped-buffer in one pass, never read-modify-write the mapped pointer.
+- [x] World multi-stage bug: `vk_world_draw` now loops stages 1..N after stage 0's lightmap pass,
+      each with its own blend/texture. (Superseded by Phase 1's full rewrite below; this was the
+      first, narrower fix.)
+- [x] View-weapon depth hack (`RF_DEPTHHACK`): ported `glDepthRange(0,0.3)`-equivalent as a
+      per-draw-call `vkCmdSetViewport` switch in `vk_entity.c`. Not ported: the reference's flatter
+      projection matrix for depth-hacked draws (cosmetic, separate from the reported bug).
 
 ## Phase 1 — Generic multi-stage shader/draw core
 
-The architectural centerpiece vkQuake3 calls `vk_shade_geometry.c` / `RB_StageIteratorGeneric`.
-WolfTech's Vulkan renderer currently has per-caller, ad hoc stage loops (world draws stage 0 only;
-entities/polys loop stages correctly but independently) instead of one shared generic path. Build
-it once, make world/entity/poly submission all go through it.
-
-- [x] Fixed `tcMod entityTranslate`: threaded `refEntity_t.shaderTexCoord` through
-      `R_CalcStageTexCoord` (new parameter, `NULL` for world/poly which have no entity context) and
-      into `vk_entity.c`'s `WriteStageVertices`. Scrolls correctly for entity surfaces now (e.g.
-      conveyor-belt-style shaders); world/poly shaders using `entityTranslate` still see no offset,
-      which matches upstream semantics (it's inherently an entity-only tcMod).
-- [x] Overbright bits: added `R_ShiftLightingBytes` (`tr_light.c`/`.h`), a direct port of
-      `code/renderer`'s `R_ColorShiftLightingBytes` minus the gamma call (gamma happens separately
-      at Vulkan texture-upload time, see Phase 0). `r_mapOverBrightBits` defaults to `"2"`, matching
-      `code/renderer`. Applied at BSP load time to: vertex colors (`tr_bsp.c`'s `R_LoadDrawVerts`),
-      light-grid ambient+directed samples (`tr_bsp.c`'s `R_LoadLightGrid`), and lightmap texels
-      (`vk_world.c`'s `BuildLightmapTexture`) — the same three places the reference engine shifts.
-- [ ] `deformVertexes` — **investigated, partially implemented, not faked**:
-      - [x] `wave`/`bulge` for **world surfaces** (static BSP, patches, and brush-model entities):
-            implemented 2026-11-22 now that real per-vertex normal data exists (Phase 4 Stage 1).
-            `R_DeformPosition` (`tr_shade_calc.c`) now evaluates `DEFORM_WAVE`/`DEFORM_BULGE` for
-            real (matching `code/renderer`'s `RB_CalcDeformVertexes`/`RB_CalcBulgeVertexes`, minus
-            the RTCW-specific Ridah fire-rise negative-frequency hack, which needs an entity
-            `fireRiseDir` this renderer has no equivalent for) whenever it's given a real normal;
-            `vk_world.c`'s per-frame expansion functions now pass one (unpacked from
-            `vkWorldVertex_t`'s snorm16 `normal` for static world, or straight from `brushVert_t`
-            for brush entities, which already kept a float normal). Entity/poly call sites still
-            pass `NULL` (unchanged behavior, see below).
-      - [ ] `wave`/`bulge` for **entities** (MD3/MDC/MDS/MDM): genuinely harder than before Phase 4,
-            not just still-blocked — Stage 2/3 moved the actual rendered position onto the GPU
-            (vertex-lerp/bone-skin shaders), so a CPU-side deform (even with normal data available)
-            wouldn't affect what's drawn. Would need to move into `entity_lerp.vert`/
-            `entity_skin.vert` instead, using the normal data already sitting in their vertex
-            buffers unused.
-      - [ ] `normal` (wiggles the normal itself for wavy env-mapping sparkle, not the position) is
-            not implemented: it fundamentally needs 3D Perlin noise (`R_NoiseGet4f` in the
-            reference), and this renderer has no noise subsystem at all (`GF_NOISE` waveforms are
-            already a documented sine stand-in for the same reason). Also low-value right now since
-            nothing consumes per-vertex normal for lighting yet, so it'd have zero visible effect
-            until real per-pixel lighting lands later in Phase 4.
-      - `autosprite`/`autosprite2` billboard a whole **quad** (both triangles, 4 shared corners) to
-        face the camera — they need the primitive's other 3 corners and their shared-edge topology,
-        not just one vertex. `R_DeformPosition`'s signature (`shader, basePos[3] → outPos[3]`) is
-        fundamentally per-vertex and can't express this; it needs a per-primitive calling
-        convention instead. That's exactly the kind of restructuring the "shared multi-stage
-        iterator" item below would naturally introduce — fold autosprite into that work rather than
-        bolting a separate quad-aware path onto the current per-vertex one.
-      - `projectionShadow` (cheap "blob" shadow, no stencil buffer needed) is feasible without
-        normals — it needs the entity's local axis, origin, `shadowPlane`, and a light direction
-        (`code/renderer/tr_shadows.c`'s `RB_ProjectionShadowDeform`) — but `R_DeformPosition` has no
-        entity context today, and the coordinate-space assumptions (what space `backEnd.or`/`tess.xyz`
-        are in relative to this renderer's model-local CPU-side vertices) need careful verification
-        this session couldn't do (no way to visually confirm a shadow lands in the right place).
-        Pair this with Phase 2's real stencil shadows so both get tested together.
-      - `text0`-`text7` (in-world floating text, e.g. killer-tomato-style effects) needs a
-        `refdef.text[]` data path this renderer doesn't have. Rare usage; lowest priority.
-- [x] Shared multi-stage iterator (world side): **rewrote `vk_world.c`**. World rendering no longer
-      bakes a static GPU vertex/index buffer at map load. `vk_world_build` now only sorts/batches
-      surfaces and caches tessellated (patch) geometry as plain CPU arrays (`s_cachedVerts`/
-      `s_cachedIndices` — load-time cost, unchanged). Every frame, `vk_world_draw` expands each
-      *visible* surface's cached geometry into a per-frame dynamic vertex buffer, calling the same
-      `R_CalcStageColorAlpha`/`R_CalcStageTexCoord` entities and polys already use, so `rgbGen`/
-      `tcMod` (scroll, rotate, turbulent, transform, stretch, `entityTranslate`) now animate on world
-      surfaces exactly like they do on entities. Two dynamic buffers: `s_dynLMBuffer`
-      (`vkWorldVertex_t`, stage 0's diffuse×lightmap pass) and `s_dyn2DBuffer` (`vk2d_vertex_t`,
-      stages 1+ — these now get their *own* independent `rgbGen`/`tcMod` instead of sharing stage
-      0's baked data, fixing the limitation noted in Phase 0). Both are sized from
-      `s_numCachedIndices` (a hard per-map upper bound, known at load time) with overflow protection
-      (warn-once-and-drop, matching this codebase's existing style) rather than an unbounded/dynamic
-      allocation. Contiguous-visible-surface draw-call merging is preserved (same technique as the
-      old `DrawSurfRefRun`, just merging dynamic-buffer *writes* instead of static index ranges), so
-      draw-call count shouldn't regress — only added CPU cost is the per-visible-vertex `rgbGen`/
-      `tcMod` evaluation itself. **Not yet performance-tested on a real map** — user explicitly
-      accepted this risk and will test frame time after. If it's too slow, the two likely fixes are
-      (a) skip recomputation for stages whose `rgbGen`/`tcMod` are provably static (identity/none)
-      and cache those like before, or (b) partially revert to static-with-exceptions (only dynamic
-      for shaders that actually have animating `tcMod`/non-identity `rgbGen`).
-      `deformVertexes` was *not* added to world surfaces in this pass (world never called
-      `R_DeformPosition` before; out of scope here, tracked separately above).
-      **Bug found and fixed 2026-11-22**: stage 0 was always routed through the fixed, hardcoded-opaque
-      `vk.pipeline_3d_lightmap` pipeline regardless of the shader's own stage 0 blend state — any
-      "trans"-style world/brush-model shader with a real `blendFunc` on stage 0 (and no lightmap use)
-      rendered that stage fully opaque. See the matching changelog entry for the fix.
-- [x] Real multitexture pipelines for entities/polys: new `multi_texture.vert`/`.frag` shader pair
-      (`layout(constant_id=0) combine_mode`: 0=modulate/"filter" `GL_DST_COLOR,GL_ZERO`, 1=add
-      `GL_ONE,GL_ONE`; `constant_id=1` carries stage 0's `alphaTestFunc`) plus `vk_getPipelineMultiTexture`/
-      `vk_getMultiTextureDescriptor` lazy caches in `vk_pipelines.c` (the latter allocates from its own
-      256-set pool, `vk.lightmap_set_layout` reused as-is: binding 0/1 = texture0/texture1). `vk_canCollapseMultiTex`
-      (`vk_pipelines.c`/`.h`) gates it: shader must have *exactly* 2 stages, stage 0 opaque, stage 1
-      blended with trivial (`CGEN_IDENTITY`) color and one of the two blend modes above — the collapsed
-      shader only ever samples stage 0's color (see `multi_texture.frag`), so this must stay false
-      whenever stage 1's own tint could actually show. `vk_entity.c` and `vk_poly.c` each got a second
-      vertex buffer (`vkMultiTexVertex_t`: pos/color/uv0/uv1) and branch per-surface/per-poly into the
-      collapsed single-draw path or the existing per-stage path. **Deliberately not touched: `vk_world.c`**
-      — piling more complexity onto the just-rewritten (Phase 1, static→dynamic) world path before it's
-      stabilized wasn't worth it; world stage 0+lightmap already gets one draw via `world_lightmap`
-      anyway, so the remaining win there (collapsing world stage 1+ pairs) is smaller. Compiles clean
-      debug+release; not yet visually confirmed in-game (look for a shader using a modulate/add filter
-      stage on a model or a scene decal/poly to verify combine_mode looks right).
-- [x] Dynamic lights as a real additive pass **for world geometry**: world surfaces had *zero*
-      dlight effect before (dlights only ever reached entities, via the flat-tint hack). Added
-      `ExpandAndDrawWorldDlights` in `vk_world.c` — a third dynamic buffer, drawn after the normal
-      per-batch loop only when `R_GetSceneDlights` returns `numDlights > 0` (no cost when nothing's
-      exploding/firing). Per-vertex falloff uses the exact same formula as `vk_entity.c`'s
-      `ComputeEntityTint` (not true projected-texture dlights like vkQuake3's `ProjectDlightTexture`
-      — a scoped simplification: real per-vertex distance falloff, diffuse-texture-modulated,
-      additively blended on top of the lit surface, just not a radial-blob projection). Entities
-      still use the pre-existing flat-tint hack (unchanged) — replacing that with its own real
-      additive pass is a separate, larger change (would need splitting `ComputeEntityTint`'s
-      ambient/directed base lighting from a per-dlight overlay with its own draw call) and is still
-      open below.
-      Dynamic lights as a real additive pass **for entities** (replacing the flat-tint-per-entity
-      hack) is still open — also depends on entities carrying normal data for a believable result
-      (tracked formally in Phase 4; a coarse per-face normal would be enough to unblock this).
-- [x] Real fog pass: port BSP-brush volumetric fog (e.g. underwater boxes), separate from the
-      already-ported `trigger_fog`/`target_fog` wolf-fog system. `fogParms` is now actually parsed
-      in `tr_shader.c` (was parsed-and-discarded) into a new `fogParms_t` on `shader_t`. `tr_bsp.c`
-      has a new `R_LoadFogs`, reading LUMP_FOGS + the referenced brush's 6 axial LUMP_BRUSHSIDES
-      planes to build each fog volume's world-space AABB (color/depthForOpaque come from the fog's
-      shader); each `bspSurface_t` gets a `fogIndex` from `dsurface_t.fogNum`. `tr_fog.c` adds
-      `R_SetBSPFogForPoint`, an AABB camera-containment check run once per view
-      (`R_RenderViewInternal` in `tr_init.c`) that, when inside a volume, overrides that frame's fog
-      push constants with the volume's color/depth. **Scoped simplification vs. the reference's real
-      per-surface distance gradient** (`RB_CalcFogTexCoords`): this reuses the existing wolf-fog
-      push-constant plumbing with a linear falloff instead of adding a new shader permutation or
-      per-batch gradient pass — matches the roadmap's own framing ("which fog volume the camera is
-      inside"), not a per-pixel depth-correct fog. Compiles clean; not yet visually confirmed
-      in-game (needs a map with a fog brush, e.g. an underwater area).
-- [x] Portal/mirror clip-plane pipeline variants, with the same graceful fallback vkQuake3 uses for
-      GPUs lacking `shaderClipDistance` (discard-in-fragment-shader via specialization constant).
-      **Turned out to need far more than a pipeline variant**: this renderer had *zero* mirror/portal
-      scaffolding going in (no shader `sort`/`isPortal` parsing, no `RT_PORTALSURFACE` handling, no
-      recursive view-render, no `viewParms_t` concept at all — `RE_RenderScene` was one flat
-      single-pass function). Built, in order: (1) `shader_t.isPortal`/`portalRange` + `portal`/`sort
-      portal` keyword parsing (`tr_shader.c`); (2) new `tr_portal.c`/`.h` — ports
-      `R_SetupPortalPlane`/`R_GetPortalOrientations` from vkQuake3/code/renderer (GPLv2-or-later),
-      trimmed to *world surfaces only* (an entity-attached portal surface, e.g. a handheld mirror,
-      isn't handled — see the file header); (3) `RE_RenderScene` split into a thin wrapper +
-      `R_RenderViewInternal` (`tr_main.h`), callable recursively so a found portal/mirror renders its
-      destination view into the same target before the real one; (4) `vk_world_findVisiblePortalSurface`
-      (`vk_world.c`) to locate a visible `isPortal` surface's plane from its cached first triangle;
-      (5) backend clip-plane support added to `single_texture`/`world_lightmap`'s shaders (a
-      `clipPlane` vec4 reusing 16 bytes of push-constant padding that were already zeroed, not a size
-      increase) plus new `*_clip.vert` hardware-`gl_ClipDistance` twins, selected by
-      `vk.features.shaderClipDistance` exactly like vkQuake3; (6) `vk.pipeline_3d_lightmap_portal/_mirror[cullType]`
-      eager variants (mirror also flips cull mode) plus `clipPlane`/`mirror` params on
-      `vk_getPipeline3D`, so world stage 1+/dlight draws and (if ever passed `qtrue`) entity/poly
-      draws can opt in. **Scoped out, documented, not a silent gap**: entities/polys/sky are drawn
-      unclipped inside a mirror view (only world geometry clips) — call sites in `vk_entity.c`/
-      `vk_poly.c` pass `VK_FALSE, VK_FALSE` explicitly; an entity-attached (moving) portal surface;
-      `deformVertexes projectionShadow`'s pairing with real shadows (unrelated, already tracked under
-      Phase 1's deform item). The world-space clip-plane math (test done directly in world space,
-      not vkQuake3's eye-space one — proven equivalent in a comment in `world_lightmap.vert`) and the
-      plane's sign/orientation are derived, not yet visually confirmed in-game — if a mirror shows the
-      wrong half of the scene (or none of it), the fix is a one-line sign flip in
-      `R_TryRenderPortalView`'s `s_portalNormal`/`s_portalDist` setup (`tr_portal.c`). Compiles clean;
-      not yet tested against a real mirror/portal shader in a map.
-- [x] Sky-portal (`RDF_SKYBOXPORTAL`/`RDF_DRAWSKYBOX`, cgame's `CG_DrawSkyBoxPortal`/`CS_SKYBOXORG`
-      distant "sky room") — **a completely different mechanism from the mirror/portal surfaces
-      above**, flagged by the user as something they rely on for their skybox and folded into this
-      pass once confirmed unrelated to (and much smaller than) the clip-plane work. Two back-to-back
-      `RE_RenderScene` calls per frame: a small "sky room" scene, then the real scene on top
-      *without re-clearing color* so the sky room's painted background survives wherever the real
-      scene draws nothing (`vk_clear_depth_only`, `vk_frame.c` — our render pass only clears at
-      load, once per frame, unlike classic GL's per-call `glClear`). `tr_scene.c`/`.h` track, per
-      frame (not stickily across the map's lifetime — the first design's mistake, see the
-      2026-11-22 changelog entry), which of the two scenes rendered first, since this build's cgame
-      doesn't always call them in the "expected" order. **Two real bugs found and fixed after the
-      user reported visual artifacts here** (first a black sky, later a solid-color wedge cutting
-      into the starfield): the scene-order assumption above, and a fixed-size sky-box cube getting
-      clipped by a per-scene-dynamic far plane — see the 2026-11-22 changelog entry for the full
-      investigation. **User confirmed fixed in-game.**
-
-- [x] Brush-model entities (func_door/func_rotating/func_plat/func_train/etc.): **found by the user as
-      "doors are invisible," root cause was a complete gap this audit missed entirely, not a rendering
-      bug** -- `tr_model.c`'s `RE_RegisterModel` had no case for inline-BSP-submodel names (`"*N"`), so
-      every brush entity registered as `MOD_OTHER` (empty placeholder). Even if it had, `tr_world.c`'s
-      `R_MarkVisibleSurfaces` only walks the static world's BSP leaf tree, which never references
-      brush-entity surfaces at all -- they'd be permanently marked invisible regardless. Fixed: added
-      `MOD_BRUSH` (`tr_model.h`/`.c`, stores a `tr_world.submodels[]` index) and a new
-      `vk_world_draw_brushmodel` (`vk_world.c`, dispatched from `vk_entity.c`'s `MOD_BRUSH` case) that
-      transforms each surface in the submodel's range by the entity's current origin/axis every frame
-      (own dynamic buffers + a lazy shader/lightmap descriptor cache, since a door's geometry changes
-      position every frame unlike the static world's load-time cache) and draws it through the same
-      lightmap/multi-stage machinery as static world surfaces -- brush entities keep their baked
-      lightmap/vertex color rather than sampling the light grid, which is real id-tech-3 behavior (bmodels
-      never queried the grid), not a shortcut. Also restricted `vk_world_build`'s static-world batching to
-      submodel 0's surface range only (it was previously scanning *all* surfaces including brush-entity
-      ones, harmlessly dead-batching them since they were never visible -- now moot, but correct either
-      way) and added the `MOD_BRUSH` case to `R_ModelBounds` (`tr_init.c`) for completeness. Compiled
-      clean (full `mingw32-make` release build under MSYS2 MINGW64, zero new warnings). **Not yet
-      confirmed in-game** -- next step is opening a map with a func_door and func_rotating and checking
-      both render and animate correctly; patches-on-brush-models are untested (rare in practice, most
-      door/plat brushes are planar).
+- [x] `tcMod entityTranslate`: threaded `refEntity_t.shaderTexCoord` through
+      `R_CalcStageTexCoord`/`WriteStageVertices` for entities (world/poly have no entity context,
+      pass `NULL`, matching upstream).
+- [x] Overbright bits — **only half-implemented, found 2026-11-23**: `R_ShiftLightingBytes`
+      (load-time byte-shift of vertex colors/light-grid samples/lightmap texels) is a faithful port
+      and *is* done. Missing: the reference engine's other half, a render-time multiplier applied at
+      the final post-process/gamma stage. Investigated whether this explains per-object brightness
+      differences (it initially looked like it might, via a per-blend-pass `GL_RGB_SCALE` theory) —
+      **ruled out**: `code/renderer` has zero `GL_RGB_SCALE` usage; the real mechanism is a
+      whole-frame post-process (hardware gamma ramp or an FBO gamma shader) that can't explain one
+      object being darker than another in the same frame. See the 2026-11-23 Changelog entries —
+      the actual cause of the vertex-lit-decoration darkness bug is still open.
+- [ ] `deformVertexes`:
+      - [x] `wave`/`bulge` for **world surfaces** (static BSP/patches/brush entities): implemented
+            2026-11-22 once real per-vertex normals existed (Phase 4). `R_DeformPosition`
+            (`tr_shade_calc.c`) ports the reference's `RB_CalcDeformVertexes`/`RB_CalcBulgeVertexes`
+            math directly, minus the RTCW "Ridah fire-rise" negative-frequency hack (needs an
+            entity `fireRiseDir` this renderer has no equivalent for). Entity/poly call sites still
+            pass `NULL` for normal (see below), unaffected.
+      - [ ] `wave`/`bulge` for **entities**: harder than before Phase 4, not just still-blocked —
+            Stage 2/3 moved rendered position onto the GPU, so a CPU-side deform wouldn't affect
+            what's drawn. Needs to move into `entity_lerp.vert`/`entity_skin.vert` instead.
+      - [ ] `normal` (wiggles the normal for wavy env-map sparkle, not position): needs 3D Perlin
+            noise this renderer has never had (`GF_NOISE` already stands in with sine for the same
+            reason); also zero visible effect today since nothing consumes normals for lighting
+            per-pixel yet.
+      - `autosprite`/`autosprite2`: needs a per-primitive (quad), not per-vertex, calling
+        convention — fold into the shared multi-stage iterator work below rather than bolting on a
+        separate path.
+      - `projectionShadow`: feasible without normals (needs entity axis/origin/light direction) but
+        `R_DeformPosition` has no entity context today and the coordinate-space assumptions need
+        verification; pair with Phase 2's stencil shadows when tackled.
+      - `text0`-`text7`: needs a `refdef.text[]` data path that doesn't exist. Rare; lowest priority.
+- [x] Shared multi-stage iterator (world side): rewrote `vk_world.c` — no more static GPU buffer at
+      load; `vk_world_build` sorts/batches + caches tessellated geometry as CPU arrays,
+      `vk_world_draw` expands visible surfaces into a per-frame dynamic buffer every frame using the
+      same `R_CalcStageColorAlpha`/`R_CalcStageTexCoord` entities/polys use, so `rgbGen`/`tcMod` now
+      animate on world surfaces too. Stages 1+ get their own independent `rgbGen`/`tcMod` (previously
+      shared stage 0's baked data). Performance: user tested, Castle/River Outpost held 150-250+ FPS,
+      no dramatic regression (re-test once more per-frame work lands on top).
+      **Bug found and fixed 2026-11-22**: stage 0 was always routed through a fixed opaque pipeline
+      regardless of the shader's own blend state — any "trans"-style shader with a real `blendFunc`
+      on stage 0 rendered fully opaque. Fixed by routing a shader through the real per-stage blend
+      path when `stages[0].blendEnabled && explicitlyDefined` (see below for why the second flag was
+      needed) is true, otherwise unchanged.
+      **Follow-up bug 2026-11-22**: the above fix's `blendEnabled` check alone wasn't safe — the two
+      *implicit* shader paths (`R_InitShaders`'s `*default`, and `R_CreateSingleStageShader`, used
+      for any bare-image-path texture with no `.shader` script — i.e. most ordinary world textures)
+      both set `blendEnabled = qtrue` unconditionally by design (so alpha channels "just work"
+      without a script). Reading that flag for routing wrongly rerouted ordinary textures away from
+      their lightmap, making the whole map look washed out. Fixed with a new
+      `shader_t.explicitlyDefined` field (`qtrue` only for a real parsed `.shader` block), required
+      alongside `blendEnabled` at both fix sites.
+      **Third bug 2026-11-22**: `textures/wt_alpha/mesh_c02`-style `alphaFunc`-cutout shaders (no
+      `blendFunc` at all, so unaffected by the above) silently lost their cutout — the fixed
+      lightmap pipeline had *no alpha-test support at all* (`world_lightmap.frag` only had a
+      `clip_plane` spec constant). Added `alpha_test_func` as a second spec constant, same 4-way
+      discard logic `single_texture.frag` already uses; `vk.pipeline_3d_lightmap*` grew from
+      `[cullType]` to `[cullType][alphaTestFunc]` (12 eager variants each).
+- [x] Real multitexture pipelines for entities/polys: `multi_texture.vert`/`.frag` (constant_id 0 =
+      combine mode: modulate or add), `vk_canCollapseMultiTex` gates it (exactly 2 stages, stage 0
+      opaque, stage 1 blended with `CGEN_IDENTITY`). World deliberately left alone (not worth the
+      complexity on the just-rewritten world path for a smaller win there).
+- [x] Dynamic lights as a real additive pass for **world geometry** (`ExpandAndDrawWorldDlights`,
+      same per-vertex falloff formula as entities' flat-tint hack). Entities still use the
+      pre-existing flat-tint hack for dlights — real additive pass for entities is still open.
+- [x] Real BSP-brush volumetric fog: `fogParms` now actually parsed (was discarded), `R_LoadFogs`
+      builds per-volume AABBs, camera-containment check overrides the frame's fog push constants.
+      Scoped simplification vs. the reference's true per-surface distance gradient (uses the
+      existing linear-falloff fog plumbing instead of a new permutation/pass).
+- [x] Portal/mirror clip-plane rendering: this renderer had zero mirror/portal scaffolding going in
+      (no `sort`/`isPortal` parsing, no recursive view-render). Built `tr_portal.c` (ported from
+      vkQuake3/code/renderer), split `RE_RenderScene` into a recursive-capable
+      `R_RenderViewInternal`, added clip-plane shader variants (`*_clip.vert` for hardware
+      `gl_ClipDistance`, spec-constant discard fallback otherwise). Scoped out: entities/polys/sky
+      draw unclipped inside a mirror (world-geometry-only); entity-attached portal surfaces. Plane
+      sign/orientation derived but not yet visually confirmed — if a mirror shows the wrong half of
+      the scene, check `tr_portal.c`'s `s_portalNormal`/`s_portalDist` setup first.
+- [x] Sky-portal (`RDF_SKYBOXPORTAL`, distant "sky room") — separate mechanism from mirror/portal
+      above. Two back-to-back `RE_RenderScene` calls per frame without re-clearing color. **Two real
+      bugs found and fixed** (see 2026-11-22 Changelog): a scene-order assumption that didn't match
+      this build's actual cgame call order, and a fixed-size sky cube getting clipped by a
+      per-scene-dynamic far plane (fixed by sizing the cube from `R_ComputeZFar`, matching the
+      reference's `zFar/1.75` formula). **User confirmed fixed in-game.**
+- [x] Brush-model entities (func_door/func_rotating/func_plat/etc.): found via user report ("doors
+      invisible") — `tr_model.c` had no case for inline-BSP-submodel names (`"*N"`), and even if it
+      had, visibility marking never walked brush-entity surfaces at all. Added `MOD_BRUSH` +
+      `vk_world_draw_brushmodel` (per-frame origin/axis transform, own dynamic buffers + lazy
+      descriptor cache — brush entities keep baked lightmap/vertex color, never sample the light
+      grid, matching real id-tech-3 behavior). **User confirmed working in-game.**
 
 ## Phase 2 — Classic feature parity (decals, flares, shadows, cinematics)
 
-- [x] Decals (`R_MarkFragments`, previously always returned 0): new `tr_marks.c`/`.h` ports
-      `R_ChopPolyBehindPlane` verbatim from code/renderer (GPLv2-or-later). Everything else is
-      simplified rather than ported 1:1, since `bspSurface_t` is already uniformly pre-triangulated
-      (no `SF_FACE`/`SF_GRID`/`SF_TRIANGLES` split to dispatch on) and surfaces aren't walkable via a
-      node tree the way classic `R_BoxSurfaces_r` needs: candidate surfaces are found with a flat
-      linear scan over `tr_world.surfaces` plus a per-surface AABB-vs-decal-bounds reject, and output
-      is always upstream's "old mapping" convention (raw xyz only, no fitted ST) — cgame's
-      `CG_ImpactMark` already computes a perfectly fine planar UV itself when a fragment's
-      `numPoints` comes back positive, so this isn't a hack, just always taking the simpler of
-      upstream's two legitimate modes. **Scoped out, not a silent gap**: `MST_PATCH` surfaces (curved
-      geometry) don't get decals — patches store raw control points here, not triangles, and
-      tessellating them too (like `vk_world.c` does for drawing) is a real follow-up, not done this
-      pass; the classic engine's per-node "recently rendered" leaf freshness filter and
-      `CONTENTS_TRANSLUCENT` leaf check are also dropped (the flat scan has no leaf context to check
-      either against) — worst case is a slightly wider candidate-surface set, not a correctness bug.
-      No new Vulkan draw code needed: decals submit through the existing `RE_AddPolyToScene`/poly
-      draw path once `R_MarkFragments` returns real fragments.
-      **In-game testing found two real bugs, both fixed**: (1) the 4 side-clip-plane normals came
-      out pointing outward instead of inward — the cross-product formula matches code/renderer's
-      literally, but something about how it transfers here flips the sign (not fully root-caused;
-      see the git history for the debug-logging session that caught it: every candidate triangle
-      was being clipped to zero points). Fixed by making the planes self-correcting: each one is
-      flipped if the quad's own center ends up on its wrong side, rather than trusting the
-      cross-product order. (2) Working decals then z-fought/flickered against the coplanar wall
-      underneath them, because this renderer had no `polygonOffset` support at all
-      (`VkPipelineRasterizationStateCreateInfo.depthBiasEnable` was hardcoded off everywhere). Added
-      `shader_t.polygonOffset` (parses the `polygonOffset` shader keyword) and a `depthBiasEnable`
-      pipeline-variant axis on `vk_getPipeline3D` (new `r_offsetfactor -1` / `r_offsetunits -2`
-      cvars, matching code/renderer's defaults) — entity/poly/world-stage1+ draws all pick it up for
-      free from their shader's own flag. Confirmed working in-game by the user (bullet holes and
-      blood decals both render); not yet re-confirmed that the polygon-offset fix fully eliminates
-      the flicker (added right after the report, not separately re-tested in isolation yet).
-- [x] Dynamic light coronas/flares (`RE_AddCoronaToScene`, was stubbed). Visibility comes from a
-      1-sample `VkQueryPool` occlusion query per corona (`vk_flares.c`, new) instead of the classic
-      GL1 renderer's `glReadPixels`-the-depth-buffer trick: a tiny depth-tested, color/depth-write-
-      disabled quad is drawn at the corona's position wrapped in `vkCmdBeginQuery`/`vkCmdEndQuery`,
-      and the *previous* frame's result is read back with `vkGetQueryPoolResults` -- that read never
-      blocks, since `vk_begin_frame()` already waits on the previous frame's fence before this frame
-      starts recording, so the GPU work that wrote it has long since finished (this renderer's
-      single-buffered frame pacing made the usual double-buffered ping-pong query trick, e.g.
-      rend2's own `tr_flares.c`, unnecessary -- one query per corona slot is enough). Visible/hidden
-      transitions fade linearly over 300ms instead of popping. The billboard itself is a camera-
-      facing world-space quad drawn through `flareShader`'s real stages (so blend/cull/alphaTest/
-      tcMod come from the actual shader script), projected by the GPU like any other world-space
-      sprite here -- not a dedicated screen-space pixel-constant-size overlay pass like the
-      reference engine. That's a deliberate scope cut: it shrinks with distance like every other
-      scene effect in this renderer, instead of RTCW's distance-independent `flareCoeff` intensity
-      curve. New scene storage (`tr_scene.c`'s `sceneCorona_t`/`R_GetSceneCoronas`) mirrors the
-      existing dlight/poly pattern; `vk_pipelines.c` gained a `depthWriteEnable`/`colorWriteMask`
-      parameter to its pipeline factory (previously tied to `depthTestEnable`) to build the probe's
-      depth-test-but-no-write-or-color pipeline without duplicating ~150 lines of pipeline-creation
-      boilerplate. Hit one build issue after the code was written: `vk_flares.c` was never added to
-      the Makefile's explicit `Q3RVOBJ` object list, so it compiled standalone but 5 symbols stayed
-      undefined at link time -- fixed by adding `vk_flares.o` there. **User confirmed working
-      in-game.**
-- [x] Stencil shadow volumes (`r_shadows 2`): same algorithm as `code/renderer/tr_shadows.c`'s classic
-      two-sided "z-pass" volumes -- extrude every vertex 512 units away from the entity's light
-      direction to build a far cap, find silhouette edges (front-facing-relative-to-the-light edges
-      with no matching back-facing reverse edge), and stamp each silhouette quad into the stencil
-      buffer twice (cull front faces + `INCREMENT`, cull back faces + `DECREMENT`), finishing with
-      one full-screen multiply-darken pass per view once every shadow-casting entity has been
-      stamped (so overlapping shadows from different entities/body parts don't double-darken, same
-      reason the reference delays it). New `vk_shadows.c`/`.h`. Geometry comes from `vk_entity.c`'s
-      existing per-surface world-space expansion (`entityBaseVert_t.pos` is already entity-origin/
-      axis-transformed) -- the accumulation call sits right alongside the normal draw at each of the
-      4 model-type loops' `ProcessSurface` calls, zero extra skinning cost, gated on an opacity proxy
-      (`!stage[0].blendEnabled`, since this trimmed `shader_t` has no `sort` field to check against
-      `SS_OPAQUE` directly) and `RF_NOSHADOW`/`RF_DEPTHHACK`.
-      **Found and fixed a real prerequisite bug while scoping this**: `vk_depth.c`'s depth-format
-      picker tried `VK_FORMAT_D32_SFLOAT` first, which has no stencil bits at all -- so this renderer
-      had effectively no usable stencil buffer on any GPU before now, despite the format list's name
-      suggesting otherwise. Reordered to the two stencil-bearing candidates only, and added
-      `VK_IMAGE_ASPECT_STENCIL_BIT` to the depth view and `stencilLoadOp = CLEAR` to the render pass's
-      depth attachment (both were silently depth-only before). `vk_pipelines.c`'s pipeline factory
-      gained `stencilTestEnable`/`stencilCompareOp`/`stencilPassOp` parameters (previously hardcoded
-      off) for the same reason the corona work added `depthWriteEnable`/`colorWriteMask` there --
-      avoids duplicating the ~150-line pipeline-creation function for 3 more one-off variants (the
-      two stamp passes plus the darken pass).
-      **Scoped out**: the `deformVertexes projectionShadow` blob fallback this item also listed.
-      Investigated it directly: `code/renderer/tr_shader.c`'s registration of
-      `tr.projectionShadowShader` is commented out in this codebase, so `r_shadows 3` is dead code
-      in the reference engine itself (`R_AddDrawSurf` is called with a shader pointer that's always
-      NULL) -- porting a mode that doesn't actually work in the reference either wasn't worth
-      chasing, and there'd be no working baseline to compare against even if I did.
-      Not yet confirmed compiling: hit the same background-build environment issue as the corona
-      work's first attempt (the Makefile's `git show` version-string subshell fails specifically
-      when `mingw32-make` is invoked from this session's background shell, reporting a bogus
-      "Nothing to be done"), and remembered to add `vk_shadows.o` to `Q3RVOBJ` this time but
-      couldn't self-verify the rest. Next step is a real build and an in-game test with `r_shadows 2`
-      set (look for a character casting a dark silhouette on the ground opposite a light source).
-- [x] Validated curved-patch (Bezier) tessellation and found a real bug, confirmed in-game by the
-      user: "arches that are supposed to be curved render triangular/faceted" — `r_subdivisions`
-      is `CVAR_ARCHIVE` in the reference renderer (`code/renderer/tr_init.c`), so it's saved in the
-      user's config from prior OpenGL1/rend2 play and shared across all three renderer DLLs. The
-      reference (`code/renderer/tr_curve.c`'s `R_SubdividePatchToGrid`) treats that value as a
-      **world-unit curvature error tolerance** — adaptively subdividing each patch until its actual
-      deviation from a flat chord is under that many units, so flat patches get collapsed to no
-      extra subdivision and sharply curved ones get many. `tr_patch.c` instead treated the same
-      number as a **literal fixed segment count**, identical for every patch regardless of
-      curvature — so a typical saved value like `"4"` (plenty smooth under the reference's
-      tolerance semantics, which could mean 8-16+ actual segments for a wide arch) produced exactly
-      4 straight segments no matter how sharply the patch curved, visibly faceting any wide/tight
-      arch. Fixed by porting the reference's actual curvature measurement (`Sagitta()`, the t=0.5
-      Bezier midpoint's perpendicular deviation from its chord — identical formula to
-      `tr_curve.c`'s midpoint check) into a new `R_ComputeAdaptiveSubdiv()`, which measures the
-      worst-case curvature anywhere in a patch's control grid and derives a subdivision level from
-      it (quadratic Bezier error roughly quarters per binary split, so `segments = 2^k` for the
-      smallest `k` keeping worst-case error under tolerance), clamped to the same `[1,16]` range
-      `r_subdivisions` was already clamped to. `R_PatchTessVertCount`/`R_PatchTessIndexCount` now
-      take the control-vert array too (not just the dimensions), so their vertex/index counts stay
-      consistent with what `R_TessellatePatch` actually emits — all three call sites (`vk_world.c`,
-      3 places: the static-world sizing pass, `EmitSurfaceGeometry`, and
-      `vk_world_draw_brushmodel`'s patch branch) updated to match. **Known gap, not fixed here**:
-      the subdivision level is now picked *per patch surface*, uniform within it (so internal biquad
-      edges still always match, same as before) — but two *different* adjacent patches can still
-      pick different levels from each other and crack at their shared edge, same risk the reference
-      solves with a load-time `R_StitchAllPatches` pass this port doesn't have. Not yet observed in
-      practice (most adjacent patches in typical maps share similar curvature); worth adding if a
-      visible seam turns up. Compiled clean (full `mingw32-make -j4 BUILD_RENDERER_VULKAN=1 release`
-      build, MSYS2 MINGW64, zero new warnings). Not yet re-confirmed in-game after the fix.
-- [ ] Cinematics/video playback (`RE_UploadCinematic`, `RE_StretchRaw`, both currently stubbed) —
-      RTCW SP uses in-engine cutscenes/briefing videos; this is gameplay-visible, not cosmetic.
-- [x] 2D completeness: `RE_RotatedPic`, `RE_StretchPicGradient` (were stubbed). Both ported from the
-      reference's own backend math (`code/renderer/tr_backend.c`'s `RB_RotatedPic`/
-      `RB_StretchPicGradient`): rotated pic inscribes the quad in a circle sized to the original
-      diagonal so every corner stays equidistant from center at any angle, then places 4 corners at
-      90°-apart angles; gradient fades the current 2D color (`vk_draw2d_set_color`) at the top edge
-      into `gradientColor` at the bottom, always top-to-bottom -- matches the reference exactly,
-      which ignores its own `gradientType` parameter too (`RB_StretchPicGradient` never reads it).
-      New `vk_draw2d_quad_rotated`/`vk_draw2d_quad_gradient` in `vk_draw2d.c`, reusing the existing
-      `vk_draw2d_quad_generic`/`vk_draw2d_record_tris` plumbing (rotated) or a small dedicated
-      per-corner-color variant (gradient, since the generic path hardcodes one uniform color for all
-      4 corners). **User confirmed working in-game.**
-- [x] Swept `RE_RenderToTexture`/`R_GetTextureId`/`RE_TakeVideoFrame`/`RE_SetWorldVisData` for actual
-      callers before investing further. `RE_SetWorldVisData` has zero callers anywhere in this
-      codebase (not even wired up engine-side) -- dead, not worth touching. `RE_TakeVideoFrame` is
-      only reached by `cl_main.c`'s AVI video-capture path (the `video` console command), a dev/
-      content-creation tool never hit during normal play. `RE_RenderToTexture` + `R_GetTextureId` are
-      used together in exactly one place, `cg_draw.c`'s death/limbo/frozen freeze-frame blur effect
-      -- real, but gated behind `cg_fancyfx`, which defaults to `"0"` (the code comment: "off by
-      default so older machines dont just crash"). None are load-bearing under default settings;
-      user chose to leave all four stubbed rather than build real render-to-texture support for an
-      opt-in cosmetic effect.
+- [x] Decals (`R_MarkFragments`): new `tr_marks.c` ports `R_ChopPolyBehindPlane` verbatim; candidate
+      surfaces found via flat linear scan + AABB reject (no BSP node walk). Scoped out: `MST_PATCH`
+      surfaces don't get decals (patches aren't pre-triangulated here). **Two real bugs found
+      in-game testing, both fixed**: inverted side-clip-plane normals (fixed by making planes
+      self-correcting against the quad's own center) and decal/wall z-fighting (added real
+      `polygonOffset` support, previously nonexistent — `shader_t.polygonOffset` +
+      `depthBiasEnable` pipeline axis). **User confirmed working.**
+- [x] Dynamic light coronas/flares (`vk_flares.c`, new): visibility via a 1-sample `VkQueryPool`
+      occlusion query per corona, reading back the *previous* frame's result (safe since
+      `vk_begin_frame` already fences on it — no double-buffered ping-pong needed here unlike
+      rend2). Billboard drawn through the real shader stages, not a dedicated screen-space pass
+      (scope cut: shrinks with distance like everything else here, not RTCW's distance-independent
+      curve). **User confirmed working.**
+- [x] Stencil shadow volumes (`r_shadows 2`): classic two-sided z-pass volumes, ported from
+      `code/renderer/tr_shadows.c`. **Found and fixed a real prerequisite bug**: the depth-format
+      picker tried `VK_FORMAT_D32_SFLOAT` first (no stencil bits) — this renderer had *no usable
+      stencil buffer on any GPU* before this. Reordered to stencil-bearing formats, fixed the depth
+      view's aspect mask and the render pass's `stencilLoadOp`. Scoped out `deformVertexes
+      projectionShadow`'s blob fallback: its registration is commented out in the reference engine
+      itself, so `r_shadows 3` is dead code there too — no working baseline to port against.
+- [x] Curved-patch (Bezier) tessellation: found and fixed a real bug from user report ("arches
+      render faceted") — `r_subdivisions` is a world-unit curvature *tolerance* in the reference
+      engine, but this port treated it as a literal fixed segment count. Ported the reference's real
+      `Sagitta()` curvature measurement into `R_ComputeAdaptiveSubdiv`. Known gap: per-patch
+      adaptive level can still crack at a shared edge between two differently-curved adjacent
+      patches (reference solves this with a load-time stitching pass this port lacks) — not
+      observed in practice yet.
+- [ ] Cinematics/video playback (`RE_UploadCinematic`/`RE_StretchRaw`, stubbed) — gameplay-visible.
+- [x] 2D completeness: `RE_RotatedPic`/`RE_StretchPicGradient` ported from the reference's backend
+      math. **User confirmed working.**
+- [x] Swept `RE_RenderToTexture`/`R_GetTextureId`/`RE_TakeVideoFrame`/`RE_SetWorldVisData` for real
+      callers: none load-bearing under default settings (one has zero callers at all; the others are
+      dev-tool or `cg_fancyfx`-gated cosmetic paths). Left all four stubbed per user's choice.
 
 ## Phase 3 — Frame pipelining & throughput
 
-- [x] Real frames-in-flight (`VK_FRAMES_IN_FLIGHT = 2`): `vk_frame.c` now cycles `VK_FRAMES_IN_FLIGHT`
-      command buffers/fences and per-frame-slot image-available semaphores (render-finished semaphores
-      stay indexed by swapchain image, since present/acquire order isn't guaranteed to track submission
-      order); `vk_current_frame_slot()` exposes the active slot. Every per-frame CPU-written, GPU-read
-      dynamic buffer across the renderer (draw2d, draw3d, poly, entity, world incl. brush models,
-      flares, shadows) now has one region per slot, selected the same way `vk_begin_frame`'s fence wait
-      already made slot reuse safe — generalized from "1 frame ago" to "N frames ago". Flares'
-      occlusion query pool is likewise split per slot, resetting only the current slot's queries each
-      frame. Swapchain recreation was a full `vid_restart` as of this item landing; see the in-place
-      resize item below for what replaced it (frame-slot-indexed primitives are unaffected either way).
-- [x] In-place swapchain resize instead of a full `vid_restart` on `VK_ERROR_OUT_OF_DATE_KHR`/
-      `VK_ERROR_SURFACE_LOST_KHR`: `vk_recreateSwapChain` now destroys and rebuilds only what the
-      surface's actual size touches (swapchain + its image views, the per-swapchain-image
-      `sema_renderFinished` semaphores, depth buffer, framebuffers), re-querying
-      `vk.surface_caps` first to pick up the new extent. Pipelines/render pass/shader modules/
-      descriptor pools/every per-subsystem dynamic buffer are untouched -- pipelines already use
-      dynamic viewport/scissor state, and none of the rest depends on resolution. A zero-sized
-      surface (minimized window) is handled by bailing out with `vk.swapchain` left
-      `VK_NULL_HANDLE`; `vk_begin_frame` sees that and retries the recreate every frame without
-      touching any (already-destroyed) sync primitive, until a real size reappears. The engine's
-      nominal resolution (`glConfig.vidWidth/vidHeight`, read by the rest of the renderer and
-      cgame's UI scaling via `R_GetWinResolution`) is kept in sync through a new
-      `R_SetWinResolution` setter, called with the swapchain's actual new extent. `r_mode`-driven
-      resolution changes still go through `vid_restart` as before -- this only replaces the
-      resize/`OUT_OF_DATE`/surface-lost recovery path. `VK_SUBOPTIMAL_KHR` is deliberately left
-      as before (tolerated, not a recreate trigger): some drivers report it persistently for benign
-      reasons, and treating it as fatal risks a per-frame recreate loop that can't be verified
-      without hardware this session doesn't have.
-- [x] Revisited the pipeline cache (`vk_pipelines.c`). `vk_getPipeline3D`'s key has more axes than
-      vkQuake3's own (clipPlane/mirror/polygonOffset, on top of blend/cull/alphaTest) and
-      `vertexStride` never actually varies across any of its 6 call sites (always
-      `sizeof(vk2d_vertex_t)`), so the real combinatorial driver is purely how many distinct
-      `srcBlend`/`dstBlend` pairs this mod's shaders use times cull(3) x alphaTest(4) x clip(2) x
-      mirror(2) x polygonOffset(2) -- on a strictly smaller key, vkQuake3-scale content already
-      hits 60-100+, so the old 64-entry cap was already undersized; raised to 128 for headroom.
-      Checked the sibling multi-tex pipeline cache's cap (32) too: its key space is bounded
-      (combine x cull x alphaTest = 2x3x4 = 24), comfortably under 32, so left alone. Hash-based
-      lookup is deliberately *not* implemented: there's no profiling data (this session can't run
-      the game) showing the linear scan is ever hot, and at ~128 small-struct entries it's unlikely
-      to be -- matches the item's own "if it starts showing up in profiles" condition, which hasn't
-      been met. Not self-built or tested; next step is a real build plus checking the new cap is
-      never hit in a real level (the existing `MAX_CACHED_3D_PIPELINES hit` warning print will say
-      so if it still is).
+- [x] Real frames-in-flight (`VK_FRAMES_IN_FLIGHT = 2`): every per-frame CPU-written/GPU-read
+      dynamic buffer across the renderer (draw2d/draw3d/poly/entity/world incl. brush
+      models/flares/shadows) now has one region per `vk_current_frame_slot()`, generalizing the
+      existing fence-wait safety from "1 frame ago" to "N frames ago."
+- [x] In-place swapchain resize (replaces full `vid_restart` on `OUT_OF_DATE`/surface-lost):
+      `vk_recreateSwapChain` rebuilds only the swapchain/views/semaphores/depth/framebuffers.
+      Zero-sized (minimized) surface handled by leaving `vk.swapchain` null and retrying each frame.
+      `r_mode`-driven resolution changes still go through `vid_restart`. `VK_SUBOPTIMAL_KHR` stays
+      tolerated, not a recreate trigger (some drivers report it persistently and harmlessly).
+- [x] Revisited the pipeline cache: `vk_getPipeline3D` has more key axes than vkQuake3's own and
+      vkQuake3-scale content already hit 60-100+ entries on a smaller key, so raised
+      `MAX_CACHED_3D_PIPELINES` 64→128. Multi-tex cache's cap (32) left alone — genuinely bounded at
+      24 max combinations. No hash-based lookup — no profiling data showing the linear scan is hot.
 
 ## Phase 4 — rend2 parity: material & lighting tier
 
-This is the first tier that goes beyond vkQuake3. Foundational — gates everything in Phase 5.
+This is the first tier beyond vkQuake3; gates everything in Phase 5.
 
-- [x] Extend vertex formats (world *and* entity — entity vertex format today is position+UV only,
-      no normals at all): add tangent, normal, lightdirection, bone-index/weight attributes, and a
-      second position/normal/tangent frame for vertex-lerp animation blending. Staged into 3 parts
-      (see the 2026-11-22 changelog entries for the full design/research):
-      - [x] Stage 1 — world (`vkWorldVertex_t`): added packed snorm16 `normal`/`tangent`/`lightdir`.
-            `normal` is real, threaded from BSP/patch/brush-entity data that was already being
-            loaded and discarded; `tangent`/`lightdir` are zeroed, populated by their own later
-            items (tangent precompute, light-grid sampling) rather than here.
-      - [x] Stage 2 — entity GPU vertex-lerp blending (MD3/MDC): static per-model buffers built
-            once at load, `mix()`-blended in the vertex shader (see the two 2026-11-22 changelog
-            entries for the full design). New `vkEntityFrameVert_t` (pos+normal+tangent) buffers
-            built at MD3/MDC load time (lat/long + MDC-delta normal decode, Lengyel tangent
-            compute, uploaded once via `vk_create_device_local_buffer`); new `entity_lerp.vert`/
-            `entity_lerp_multitex.vert` + pipeline cache; `vk_entity_draw_all` now draws these
-            surfaces immediately with a per-entity combined `cameraMVP * entityModel` push
-            constant (reusing `single_texture.vert/.frag`'s existing 128-byte layout unchanged —
-            `camPos` repurposed to the entity-local-space camera, the always-zero `clipPlane` slot
-            to `backlerp`) instead of the old shared-camera-only-mvp deferred batch. MDS/MDM keep
-            the old CPU-skinned deferred path untouched (Stage 3).
+- [x] Extend vertex formats (world + entity — entity format was position+UV only, no normals at
+      all): tangent/normal/lightdirection/bone-index/weight, plus a second frame for vertex-lerp
+      blending. Staged into 3 parts (full design in the 2026-11-22 Changelog entries):
+      - [x] Stage 1 — world (`vkWorldVertex_t`): packed snorm16 `normal`/`tangent`/`lightdir` added.
+            `normal` is real (threaded from already-loaded-and-discarded BSP/patch/brush-entity
+            data); `tangent`/`lightdir` stay zeroed for their own later items.
+      - [x] Stage 2 — entity GPU vertex-lerp (MD3/MDC): static per-model buffers built once at load
+            (decoded normal/tangent via Lengyel+Gram-Schmidt), blended with `mix()` in
+            `entity_lerp.vert`/`entity_lerp_multitex.vert`. Entities now draw immediately with a
+            per-entity `cameraMVP * entityModel` push constant (reuses the existing 128-byte
+            layout — `camPos` repurposed to entity-local-space camera, the always-zero trailing
+            slot carries `backlerp` — no size growth) instead of a shared-mvp deferred batch.
+            **Design finding**: CPU still computes per-frame interpolated position
+            (`LerpSurfaceVerts` etc., kept, unchanged) purely to feed `tcMod turb`/shadow volumes —
+            it just stops writing that position into the GPU-drawn vertex. MDS/MDM still used the
+            old CPU-skinned deferred path until Stage 3.
       - [x] Stage 3 — entity GPU bone skinning (MDS/MDM): bind-pose buffers + top-4 bone
-            index/weight per vertex, skinned in the vertex shader; CPU keeps computing bone
-            *matrices* (tags need them too) but stops doing the per-vertex skin loop itself. Split
-            into 3a/3b like Stage 2 (see the 2026-11-22 changelog entries for the full design).
-            Found along the way that this format stores a *separate* offset vector per bone
-            influence (not one shared bind-pose position an IQM-style blended matrix could
-            transform), confirmed with the user before implementing the correct, heavier version
-            (`vkEntitySkinnedVert_t.offset[4][3]`, 4 real per-vertex matrix transforms, not
-            `mix()`) rather than the originally-planned single-position design. Stage 3b added the
-            bone-matrix UBO descriptor infrastructure, `entity_skin.vert`/`entity_skin_multitex.vert`,
-            and the immediate-draw path rewrite (MDS/MDM now draw like MD3/MDC, replacing the old
-            deferred batch path) — in the course of which a real correctness bug was found and
-            fixed: once all 4 model types drew immediately, the now-fully-dead deferred-draw tail
-            code was still stomping the live shared index-write cursor every call. All 4 entity
-            model types now draw immediately on the GPU; all of Phase 4's vertex-format item is
-            done.
-- [ ] Tangent/bitangent precompute at load time (one-time cost, not per-frame) for BSP surfaces,
-      patches, and models — mirrors rend2's `R_CalcTangentVectors`.
-- [ ] Normal map / specular map / parallax(relief) map / deluxe map support in a new uber-fragment-
-      shader, following architecture decision #1 above (flag-driven, not permutation-exploded).
-- [x] Entity per-**vertex** diffuse lighting (stepping stone toward the full item below, done
-      2026-11-22): `CGEN_LIGHTING_DIFFUSE` entity stages now compute `ambient + max(dot(normal,
-      lightDir),0)*directed` for real in `entity_lerp.vert`/`entity_skin.vert`, using the Phase 4
-      normal data and the light grid's real ambient/directed/direction (`R_LightForPoint`) instead
-      of one flat `ambient+directed` color baked the same for every vertex regardless of facing.
-      See the matching changelog entry for the full design (push-constant packing scheme, the new
-      `shader_t`-level `lighting_diffuse` pipeline-cache/spec-constant axis, skinned-normal
-      transform). Still flat per-**vertex** (Gouraud), not per-pixel — no specular, no normal maps.
-- [ ] Real per-pixel Blinn-Phong lighting (rend2 is not PBR — don't build a metal/roughness
-      pipeline that doesn't exist upstream) replacing the per-vertex diffuse above, adding specular
-      and normal-map-driven detail per pixel instead of per vertex.
-- [ ] Port light-grid ambient+directed+direction sampling (`tr_light.c` logic already partially
-      present, now also feeding the per-vertex diffuse item above) into a per-draw UBO/push-constant
-      feed for the new per-pixel lighting model.
-- [ ] Precompiled lighting-path permutation table per architecture decision #2 above.
+            index/weight, skinned in `entity_skin.vert`/`entity_skin_multitex.vert`; CPU still
+            computes bone *matrices* (tags need them) but not the per-vertex skin loop.
+            **Format discovery**: `mdsWeight_t`/`mdmWeight_t` store a *separate* offset vector per
+            bone influence (not one shared bind-pose position an IQM-style blended matrix could
+            transform) — confirmed via the working CPU code's own math. User chose the correct,
+            heavier implementation (`offset[4][3]`, 4 real per-vertex matrix transforms, not
+            `mix()`) over stopping at Stage 2 like rend2 itself does for this format.
+            **Real correctness bug found and fixed**: once all 4 entity model types drew
+            immediately, the now-fully-dead deferred-draw tail code still ran
+            `s_idxWrite = idxWrite`, stomping the live shared index-write cursor back to a stale
+            value every call — would have corrupted the shared index buffer across frames. Fixed by
+            deleting the entire now-dead deferred-draw path rather than patching around it.
+- [ ] Tangent/bitangent precompute at load time for BSP surfaces/patches/models (rend2's
+      `R_CalcTangentVectors`).
+- [ ] Normal/specular/parallax/deluxe map support in a new uber-fragment-shader (decision #1).
+- [x] Entity per-**vertex** diffuse lighting (stepping stone toward full per-pixel lighting, done
+      2026-11-22): `CGEN_LIGHTING_DIFFUSE` stages now compute real
+      `ambient + max(dot(normal,lightDir),0)*directed` in `entity_lerp.vert`/`entity_skin.vert`
+      (using Phase 4's normal data + the light grid), replacing a flat same-for-every-vertex tint.
+      Full design (push-constant packing, new `lighting_diffuse` spec-constant/cache axis, skinned
+      normal transform) in the 2026-11-22 Changelog entry. Still Gouraud, not per-pixel — no
+      specular/normal maps.
+- [ ] Real per-pixel Blinn-Phong lighting (rend2 is not PBR — no metal/roughness pipeline),
+      replacing the per-vertex diffuse above with specular + normal-map detail per pixel.
+- [ ] Port light-grid ambient+directed+direction sampling into a per-draw UBO/push-constant feed
+      for the per-pixel model (partially present already, feeding the per-vertex item above).
+- [ ] Precompiled lighting-path permutation table (decision #2).
 
 ## Phase 5 — rend2 parity: advanced rendering tier
 
-- [ ] FBO/render-target chain as a sequence of Vulkan render passes with explicit barriers: depth
-      prepass → forward HDR color pass → (pshadow pass, if a shadow caster is visible) → SSAO →
-      bloom chain → tonemap/resolve → FXAA/color-grade/vignette/grain pass. This is a forward
-      renderer with bolted-on passes, not a deferred/G-buffer renderer — no MRT complexity needed.
+- [ ] FBO/render-pass chain: depth prepass → forward HDR color → pshadow pass → SSAO → bloom chain
+      → tonemap/resolve → FXAA/color-grade/vignette/grain. Forward renderer with bolted-on passes,
+      no deferred/G-buffer/MRT needed.
 - [ ] HDR render target (`R16G16B16A16_SFLOAT`) + auto-exposure tonemapping.
-- [ ] Bloom: build one reusable "fullscreen blit with a custom fragment shader" Vulkan primitive,
-      then reuse it for the bloom downsample/blur/upsample mip chain, SSAO, FXAA, tonemap, and
-      color-grade passes instead of one-off plumbing per effect.
-- [ ] SSAO, FXAA, depth-of-field/bokeh screen-space passes. (No SSR, no motion blur, no cascaded
-      sun shadow maps exist in rend2 — don't scope those in; they're not part of the parity target.)
-- [ ] Cubemap reflection probes: add `VkImageViewType_CUBE` support to the image/sampler layer
-      (currently 2D-only), bake probes at load time (6-face render reusing the main pipeline, not
-      per-frame), parallax-corrected sampling in the material shader, probe placement sanity
-      checks against the light grid (mirroring rend2's "probe outside lightgrid/inside wall"
-      warning).
-- [ ] pshadows: offscreen per-entity shadow-blob render target + sampling in the main pass, per
-      architecture decision #4.
-- [ ] Final postprocess pass: gamma correction + color-grading LUT + vignette + film grain +
-      chromatic aberration. In rend2 these are literally one shader (`gamma_fp.glsl`, folded into
-      `tonemap_fp.glsl` when HDR is active) — build it as one pass here too, and retire the Phase 0
-      CPU-baked-gamma-table stopgap once this lands (`u_InvGamma = 1.0 / r_gamma`).
+- [ ] Bloom: one reusable "fullscreen blit + custom fragment shader" primitive, reused for
+      bloom/SSAO/FXAA/tonemap/color-grade.
+- [ ] SSAO, FXAA, DOF/bokeh. (No SSR/motion blur/cascaded shadow maps — not part of rend2's parity
+      target, don't scope them in.)
+- [ ] Cubemap reflection probes: `VkImageViewType_CUBE` support, load-time baking, parallax-corrected
+      sampling.
+- [ ] pshadows: offscreen per-entity shadow-blob target + sampling in the main pass (decision #4).
+- [ ] Final postprocess pass: gamma + color-grade LUT + vignette + grain + chromatic aberration
+      (one shader in rend2, `gamma_fp.glsl`/`tonemap_fp.glsl`) — retires the Phase 0 CPU gamma-table
+      stopgap once this lands.
 
 ## Phase 6 — Polish, validation, rollout
 
-- [ ] Audit RTCW-SP-specific UI/gameplay rendering hooks (briefing-room cinematics, binoculars/
-      sniper-scope overlays, any other RTCW-unique HUD/UI draw path) against the Vulkan renderer
-      specifically, not just generic 2D pic drawing.
-- [ ] Map-by-map visual regression pass vs. OpenGL1 and rend2 output, using the Phase 0 screenshot
-      tooling.
-- [ ] Performance pass: frame-pacing measurement, GPU profiling, pipeline-cache live-count check,
-      clean run under `VK_LAYER_KHRONOS_validation` (zero errors/warnings).
-- [ ] Decide on promoting `vulkan` as a user-facing/default `cl_renderer` option once parity-plus
-      is reached.
+- [ ] Audit RTCW-SP-specific UI/gameplay rendering hooks (cinematics, binoculars/scope overlays)
+      against the Vulkan renderer specifically.
+- [ ] Map-by-map visual regression pass vs. OpenGL1/rend2 (Phase 0 screenshot tooling).
+- [ ] Performance pass: frame-pacing, GPU profiling, pipeline-cache live-count check, clean
+      `VK_LAYER_KHRONOS_validation` run.
+- [ ] Decide on promoting `vulkan` as a user-facing/default `cl_renderer` option.
 
 ## Changelog
 
-- **2026-11-18** — Initial audit and roadmap created. Surveyed current `renderer_vulkan` state
-  (live/selectable via `cl_renderer`, 17 commits over 2 days, world+entities+sky+fog+dlights+poly
-  all partially working), diffed against vkQuake3-master's full feature set, and catalogued
-  `code/rend2`'s advanced-renderer feature set as the "beyond vkQuake3" target. No code changes
-  made this session — analysis only.
-- **2026-11-18** — Added gamma/brightness/overbright coverage (flagged as missing by the user):
-  confirmed `renderer_vulkan` applies zero gamma correction and has no overbright-bits lightmap
-  scaling, vs. both `code/renderer` and `code/rend2` treating these as load-bearing. Added a
-  baseline gamma/brightness item to Phase 0 (CPU gamma-table stopgap, vkQuake3-style), an
-  overbright-bits item to Phase 1, and expanded Phase 5's postprocess bullet to fold gamma into the
-  same final pass as color-grade/vignette/grain, matching rend2's actual `gamma_fp.glsl` design.
-- **2026-11-18** — Implemented all of Phase 0 except overbright bits (that's a Phase 1 item, not
-  Phase 0): fixed `R_ModelBounds`, `animmap`, and the world multi-stage bug; added mipmapping +
-  anisotropic filtering, baseline gamma correction, screenshot capture, and `r_showtris`/`r_showImages`
-  debug overlays. `r_shownormals` deliberately skipped (needs vertex normals that don't exist until
-  Phase 4). The debug-test-cube item turned out to already be fixed (cvar-gated, defaults off) —
-  corrected the roadmap rather than redoing it. All changes compiled clean (MSYS2 MinGW64,
-  `BUILD_RENDERER_VULKAN=1` debug build) after each step; not yet runtime-tested in the actual game.
-  See each item's strikethrough/checkmark above for specifics and known carried-over limitations.
-- **2026-11-19** — Runtime-tested Phase 0 and found a severe real-world regression: menu load went
-  from fine to 30-60+ seconds. Chased three wrong theories first (per-texture `vkQueueWaitIdle`
-  sync overhead → added upload batching, no effect; font-atlas mip chains → `IMGFLAG_NOMIPMAP` fix,
-  no effect; a "fat" multi-stage shader pulling in many textures → added per-call diagnostics, found
-  none). Added real sub-phase timing to `vk_create_texture_image` and got a definitive answer: the
-  staging-buffer phase was 99% of the cost, and specifically the gamma-correction lookup running
-  **in place on the mapped (likely write-combined) GPU staging buffer** — reading that memory
-  back byte-by-byte is drastically slow, unrelated to mip count, image size, or allocation count.
-  Fixed by gamma-correcting while copying from the CPU-side source into the staging buffer instead
-  of after (`R_CopyWithGammaCorrection`), so the GPU-visible memory is only ever written. User
-  confirmed load time is back to normal. All temporary diagnostic instrumentation (the
-  `s_diag*`/`R_Print*Stats`/`vk_print_upload_*` additions across `vk_image.c/h`, `tr_image.c/h`,
-  `tr_shader.c/h`, `tr_init.c`) was then removed; only the real fixes (gamma-on-copy, upload
-  batching) remain. See the "Correctness trap" note under Phase 0's gamma item for the generalized
-  lesson. Lesson for *this* doc: when a regression is reported, get real timing data before
-  theorizing — three plausible-sounding mechanisms in a row were wrong.
-- **2026-11-19** — Started Phase 1. Shipped two clean, low-risk, verified-to-compile fixes:
-  `tcMod entityTranslate` and overbright bits (see checkmarks above for both). Investigated the
-  rest of Phase 1 in depth before touching more code and found real scope/risk issues the original
-  bullet list didn't capture: `deformVertexes`' remaining types split into "blocked on Phase 4
-  normals" (wave/bulge/normal), "needs a per-primitive not per-vertex calling convention"
-  (autosprite/autosprite2 — fold into the shared-iterator work), "feasible but needs paired testing
-  with Phase 2's real shadows" (projectionShadow), and "rare, lowest priority" (text0-7). The
-  "shared multi-stage iterator" item turns out to require converting world rendering from a static
-  load-time-baked vertex buffer to vkQuake3's per-frame-regenerated model (same as entities/polys
-  already do) to get real per-frame `tcMod` on world surfaces — a genuine performance-profile
-  change, not just a correctness fix, right after this session's long unverified-performance-
-  regression debugging arc. Flagged rather than assumed; see Phase 1's iterator bullet. "Real BSP
-  fog volumes" also turned out to be its own multi-part feature (shader `fogParms` parsing + BSP fog
-  lump + per-surface fog tagging + camera-in-fog-zone test), not a quick add. Multitexture pipelines
-  were scoped as independently doable (pure draw-count optimization, no static/dynamic question)
-  with `glslangValidator`/`glslc` confirmed available via MSYS2 for compiling new shaders.
-- **2026-11-19** — Asked the user directly about the world static-vs-dynamic performance tradeoff
-  rather than assuming; they said go ahead and accepted testing performance afterward. Rewrote
-  `vk_world.c` accordingly (see the iterator item's checkmark above for the full design). Compiled
-  clean in both debug and release. **User tested in-game**: Castle holds a constant 250 FPS, River
-  Outpost runs 150-250 FPS — no dramatic regression. Caveat (the user's own, worth keeping in mind):
-  most of the renderer's eventual workload (shadows, normal maps, real fog, etc.) still doesn't
-  exist, so this isn't a final verdict, just confirmation the per-frame world expansion itself isn't
-  immediately disqualifying. Re-test again once more Phase 1/4/5 per-frame work lands on top.
-- **2026-11-19** — Added dynamic lights as a real additive pass for world geometry (see checkmark
-  above) now that the world-expansion architecture makes it natural: a third dynamic buffer, same
-  per-vertex falloff formula as `vk_entity.c`, only costs anything when `numDlights > 0`. Compiled
-  clean in debug and release; not yet visually confirmed in-game (should show as muzzle
-  flashes/explosions lighting up nearby world surfaces, which they couldn't do at all before).
-  Entity dlights still use the older flat-tint approach — left as its own open item rather than
-  scope-creeping this change further.
-- **2026-11-19** — Implemented multitexture pipelines for entities/polys (see checkmark above):
-  new `multi_texture` shader pair + `vk_getPipelineMultiTexture`/`vk_getMultiTextureDescriptor`
-  lazy caches in `vk_pipelines.c`, gated by a shared `vk_canCollapseMultiTex` eligibility check, with
-  `vk_entity.c`/`vk_poly.c` each branching per-surface into a collapsed single-draw path. World
-  deliberately left alone (see the checkmark's note on why). Compiled clean in both debug and
-  release via direct `renderer_vulkan_x64.dll` make targets (the full `debug`/`release` meta-targets
-  hit an unrelated pre-existing `PRODUCT_VERSION` quoting failure in `common.c` under this session's
-  MSYS2 shell invocation — not caused by this change, and not worth chasing since it doesn't touch
-  anything `renderer_vulkan` depends on). Not yet visually confirmed in-game.
-- **2026-11-19** — Re-verified this doc against the code at the start of a new session (user asked
-  for a status check before continuing): confirmed every checkmark above still matches
-  `code/renderer_vulkan`, confirmed via a full `release` build (`BUILD_RENDERER_VULKAN=1`) that it
-  still compiles clean end to end. No code changes.
-- **2026-11-19** — Implemented Phase 1's portal/mirror clip-plane item, plus sky-portal support
-  (flagged by the user as a separate thing they rely on for their skybox, confirmed unrelated and
-  folded in alongside it) — see both items' checkmarks above for the full design and the known
-  gaps/risks (notably: the clip-plane's sign/orientation is derived, not yet visually confirmed).
-  Compiled clean (full `release` build, zero warnings in `renderer_vulkan`). Neither feature has
-  been tested in-game yet — next session should load a map with an actual mirror/portal shader
-  and, separately, one with a `_skyboxOrigin` key, before trusting either further.
-- **2026-11-19** — Implemented Phase 2's decals item (`R_MarkFragments`), jumping ahead of the rest
-  of Phase 1 at the user's request. New `tr_marks.c`/`.h`; see its checkmark above for the full
-  design and scoped-out gaps (no patch/curved-surface decals yet). Compiled clean. Not yet fired in
-  a real game session — next step is shooting a wall and confirming a decal actually shows up.
-- **2026-11-19** — User tested decals in-game (side-by-side against OpenGL1, which worked
-  "flawlessly") and found none appeared on Vulkan. Added temporary stage-counter diagnostic
-  logging to `tr_marks.c` rather than guess; the user's log showed candidate surfaces and triangles
-  were being found (`boundsOk=2 tris=74`) but 100% clipped away (`fragments=0`), pointing straight
-  at the clip-plane math. Fixed the side-plane sign bug (see the decal checkmark above) and removed
-  the diagnostic logging once confirmed. User then reported decals appearing but flickering; traced
-  to a second real gap (no `polygonOffset`/depth-bias support anywhere in this renderer) and fixed
-  that too (same checkmark). Both fixes compiled clean; decals confirmed showing up in-game, the
-  polygon-offset flicker fix itself not yet separately re-confirmed.
-- **2026-11-19** — User reported the view-weapon model sinking into walls at close range on
-  Vulkan, never on OpenGL1. Root cause: `RF_DEPTHHACK` (the view-weapon depth-range hack) was
-  completely unimplemented in `renderer_vulkan`. Ported it to `vk_entity.c` — see the new Phase 0
-  checkmark above for the design. Compiled clean; not yet confirmed in-game.
-- **2026-11-19** — User reported func_door and func_rotating being completely invisible
-  ("transparent") in-game. Root cause was not a rendering bug but a missing feature the original
-  audit never caught: brush-model entities (inline BSP submodels, name convention `"*N"`) had zero
-  support anywhere in `renderer_vulkan` — no `MOD_BRUSH` model type existed, so they registered as
-  empty placeholders, and even with geometry the static world's visibility marking never reaches
-  brush-entity surfaces (they're not in any BSP leaf's surface list). Added full brush-model entity
-  rendering: see the new Phase 1 checkmark above for the design (`MOD_BRUSH`, `vk_world_draw_brushmodel`,
-  the `vk_world_build` submodel-0 scoping fix, `R_ModelBounds` coverage). Compiled clean (full release
-  build, MSYS2 MINGW64, zero new warnings). **User confirmed working in-game** (doors and rotating
-  doors render and animate correctly).
-- **2026-11-20** — User reported weapon view-models looking "shattered"/misplaced/badly textured
-  (varying by weapon and location) and enemy characters rendering plain white with no heads.
-  Diagnosed from the user's console log plus direct inspection of the mod's pk3 content (not
-  guesswork): found two real, previously-unnoticed bugs, both pre-existing (not introduced this
-  session) and both outside `code/renderer_vulkan` proper but load-bearing for it.
-  **(1) `RE_RegisterModel` (`tr_model.c`) had no cross-extension fallback.** The reference engine
-  (`code/renderer/tr_model.c`) tries every supported model extension (iqm/mdr/mds/mdm/mdx/md3/mdc,
-  in that preference order) when the exact named file is missing — content routinely references one
-  extension (e.g. a `.skin`'s `md3_part` value, or a weapon's configured hand model) while only a
-  different one ships (confirmed directly: `models/players/officerss/head.mdc` exists in `pak0.pk3`
-  but every head skin's `md3_part` names `head.md3`, which doesn't; same pattern for several
-  weapons' `_hand` models, e.g. `v_luger_hand.md3` ships in `z_pack.pk3` but `.mdc` gets requested).
-  Without the fallback this renderer had been silently failing to load these models (`RE_RegisterModel`
-  returning 0), which cgame treats as "don't draw this part" — explaining the missing enemy heads
-  outright, and likely contributing to the weapon oddities. Ported the reference engine's fallback
-  logic (try the named extension first, then every other supported one) into `RE_RegisterModel`.
-  **(2) `CommaParse` (`tr_skin.c`) didn't consume the field separator.** Every `.skin` file is
-  `surfaceName,shaderPath` pairs; the parser's token-scanning loop stopped exactly *at* a comma
-  without advancing past it, so the *next* field always started with a leading `,` glued onto it.
-  Confirmed directly in the user's log: `R_LoadImage: no .tga/.jpg/.png found for
-  ',models/players/trench/t_legsordnungspolizei2.tga'` — a literal leading comma baked into the
-  path. This silently failed every second field of every skin file (shader/image names), explaining
-  the uniform white characters (texture lookups failing and falling back to the engine's 1x1 white
-  default image, `tr_image.c`'s `R_CreateDefaultImage`). Fixed by advancing past the comma once the
-  token loop stops on one.
-  Both fixes compiled clean (full `mingw32-make` release build, MSYS2 MINGW64, zero new warnings).
-  Not yet re-confirmed in-game by the user as of this entry — next step is relaunching and checking
-  both enemy heads and weapon appearance. The "shattered" weapon geometry specifically (as opposed to
-  missing/wrong-textured parts) is not fully explained by either fix and may need its own follow-up
-  if it persists.
-- **2026-11-20** — User asked for a repo audit + doc sync after work landed outside this session
-  (two commits: brush-model entities, then the model-extension-fallback/skin-comma fixes). Verified
-  both commits' existing roadmap entries directly against the code (`MOD_BRUSH`, the
-  `RE_RegisterModel` fallback loop, `tr_skin.c`'s `CommaParse` separator-consume) — all accurate, no
-  drift. Found one real gap: `vk_pipelines.c` has an undocumented `r_vk_disableMultiTex` bisection
-  cvar left over from the shattered-weapon investigation (ruled out, no effect, but never written up
-  — see the new "Open/unverified" bullet above). Refreshed the "Current state" summary at the top of
-  this doc, which neither of the last two commits had touched and which had drifted well behind the
-  Phase 1/2 checklists (still said "Phase 0 complete" and listed decals/overbright as missing, both
-  long since done). No code changes this session.
-- **2026-11-20** — Root-caused and fixed the "shattered weapon/held-item" report (streaked/exploded
-  geometry, wrong texture glued onto an unrelated held item, an MDS character's body disappearing
-  while its tag-attached head rendered fine, a world prop disappearing when a held item that uses
-  the same mechanism was equipped). Diagnostic logging (`r_vk_debugWeapon`, see "Open/unverified")
-  plus a user-provided `rtcwconsole.log` caught a real discrepancy: between two consecutive logged
-  entities in the same frame, `vertWrite`/`numDraws` had advanced by more than the entities actually
-  logged in between could account for. Tracing that against `tr_init.c`'s `R_RenderViewInternal`
-  confirmed the mechanism: this map uses a skybox portal (`RDF_SKYBOXPORTAL`), so cgame calls
-  `RE_RenderScene` (and therefore `R_RenderViewInternal`) **twice per real frame** — once for the
-  sky-room scene, once for the real scene (a mirror/portal destination view adds a third, recursive
-  call via `R_TryRenderPortalView`). `vk_world_draw`, `vk_entity_draw_all`, and `vk_poly_draw` each
-  reset their shared dynamic-buffer write cursors (`vertWrite`/`idxWrite`/`mtVertWrite` in
-  `vk_entity.c`, `writeOffset`/`mtWriteOffset` in `vk_poly.c`, `s_dynLMWriteOffset`/`s_dyn2DWriteOffset`/
-  `s_dynBrushLMWriteOffset`/`s_dynBrushExtraWriteOffset`/`s_dynDlightWriteOffset` in `vk_world.c`) to 0
-  on **every call**, but all three write into persistently-mapped GPU buffers that are only actually
-  read when the whole frame's command buffer is submitted — after *every* scene this frame has already
-  recorded its draw commands. So the second scene's reset-to-0 silently overwrote the first scene's
-  vertex/index data before the GPU ever read it, while the first scene's already-recorded draw calls
-  still pointed at those now-overwritten buffer offsets — exactly the "architecture decision #5"
-  multi-scene-per-frame risk this doc already flagged when sky-portal support was added, now confirmed
-  as the actual cause. Fixed by moving all these resets out of the per-scene draw functions into new
-  `vk_world_begin_frame()` / `vk_entity_begin_frame()` / `vk_poly_begin_frame()` calls, invoked once
-  per real frame from `RE_BeginFrame` (`tr_init.c`), so the cursors now correctly accumulate across
-  every scene rendered within one frame instead of restarting at 0. Compiled clean (full
-  `mingw32-make -j4 BUILD_RENDERER_VULKAN=1 release`, zero new warnings). Not yet re-confirmed in-game
-  by the user — next step is retesting the mine/Thompson/MDS-soldier repro, then removing the
-  `r_vk_debugWeapon` diagnostic logging and the unrelated `r_vk_disableMultiTex` bisection cvar.
-- **2026-11-20** — Retesting the fix above (same session) showed real improvement but surfaced a new
-  symptom: some weapons (FG42) render with their body invisible while an attached part (scope) still
-  renders. A second `rtcwconsole.log` traced this to a *different* bug the first fix's design exposed:
-  `tr_scene.c`'s `R_GetSceneEntities`/`R_GetSceneDlights`/`R_GetScenePolys` return the whole
-  accumulated-this-frame list on every call, with no per-scene windowing. Cross-checked against
-  `code/cgame/cg_view.c`'s `CG_DrawSkyBoxPortal` (called from `CG_DrawActiveFrame` right after
-  `trap_R_ClearScene()`, before any entities/polys/lights are added) and classic `code/renderer`'s
-  `tr_scene.c` (`r_firstSceneEntity`/`r_firstSceneDlight`/`r_firstScenePoly`, advanced after every
-  `RE_RenderScene` call): the intended behavior is that the skybox-portal scene sees an *empty* list
-  (cgame hasn't added anything yet) and the main scene afterward sees only what's added since —
-  never both scenes drawing the same full entity list. Without that windowing, every entity (the view
-  weapon included) was being fully processed twice per frame, eating roughly double the per-frame
-  vertex/index budget now that the first fix makes that budget shared across a frame's scenes — and a
-  real `scratch buffer full, dropping remaining entity surfaces this frame` overflow turned up later
-  in the same log, confirming the budget was in fact being exceeded. Fixed by giving `tr_scene.c` the
-  same sliding-window mechanism as the classic renderer (`s_firstSceneEntity`/`s_firstSceneDlight`/
-  `s_firstScenePoly`, reset in `R_ClearScene`, advanced by a new `R_AdvanceSceneWindow()` called from
-  `tr_init.c`'s `RE_RenderScene` right after `R_RenderViewInternal` returns). `R_GetScenePolyVerts`
-  needed no change (`scenePoly_t.firstVert` already indexes the poly-vert array absolutely). This is
-  additive to the first fix, not a replacement for it — the shared-buffer-cursor persistence is still
-  required so that whatever each windowed scene *does* draw doesn't overwrite another scene's data
-  before the GPU reads it. Compiled clean. Also added temporary `r_vk_debugSky` diagnostic logging
-  (`tr_world.c` / `vk_sky.c`) for a separately-reported, not-yet-root-caused issue: the skybox portal
-  itself renders nothing in-game (pitch black, with the render pass's raw clear color showing through
-  where sky should be) — unclear yet whether this is a pre-existing gap (sky-portal was never visually
-  confirmed before this session) or related to the entity-windowing change. Next step: retest with
-  this build, and if the sky issue persists, capture a log with `r_vk_debugSky 1` set.
-- **2026-11-20** — Retesting the windowing fix showed real improvement (most frames now correctly
-  start at `vertWrite=0`) but FG42/MP44 were still reported with their body invisible (scope/mag
-  visible), plus a new symptom: any weapon disappears after sustained firing and only reappears
-  10-15s later. A third `rtcwconsole.log`, read raw around the climbing `vertWrite` values, found the
-  real cause: `code/cgame/cg_weapons.c`'s `CG_RenderViewWeapon()` — "Renders the entities cached by
-  CG_AddViewWeapon ... in their own scene pass ... Must be called after the main world scene has been
-  rendered" — is a **third** `RE_RenderScene` call every frame (confirmed via `code/cgame/cg_draw.c`:
-  main scene render immediately followed by `CG_RenderViewWeapon()`), with its own
-  `trap_R_ClearScene()` right before it. So a frame is really sky-portal → main (NPCs, items, effects)
-  → view-weapon, not just two scenes, and the view weapon — drawn *last* — is the one whose entities
-  get silently dropped first once the frame's shared vertex/index budget (now correctly shared across
-  all three scenes by the first fix in this session) runs out. `ENTITY_MAX_VERTS`/`ENTITY_MAX_INDEXES`
-  in `vk_entity.c` were still sized for a single scene's worth of content (65536/262144) from before
-  that fix; a busy main scene alone during combat can approach that on its own, leaving the
-  view-weapon's few thousand verts no room, and a real `scratch buffer full` overflow in the log
-  confirmed the cap was in fact being hit. This also fully explains the FG42/MP44 symptom at the
-  per-surface level: the scope/mag belong to whichever of the weapon's several linked entities happens
-  to be processed before the cap is reached, the gun-body surface is whichever one hits it. Fixed by
-  giving `ENTITY_MAX_VERTS`/`ENTITY_MAX_INDEXES` real headroom for three scenes instead of one (4x,
-  to 262144/1048576 — trivial extra GPU memory, ~19MB total across both vertex buffers and the index
-  buffer). `vk_world.c`'s dynamic world buffers were checked too: already sized at `2x` the whole
-  map's total index count, comfortably covering "main pass + small sky-room pass" without a change.
-  `vk_poly.c`'s scratch capacity was left alone — no poly/world overflow warnings appeared in any of
-  the three logs collected so far, only the entity one. Compiled clean. Also chased, then ruled out, a
-  false lead here: raw `vk_sky dbg` lines briefly looked like the sky-portal and main scenes render in
-  the wrong order (main before sky), which would misexplain the still-open black-sky report — a wider
-  sample of the same log's `rdflags=` sequence showed the true, correctly-repeating order is sky (24)
-  then main (16), matching `cg_view.c`'s actual call order (`CG_DrawSkyBoxPortal()` then
-  `CG_DrawActive()`); the two-line excerpt that suggested otherwise just happened to span a frame
-  boundary. The black-sky report itself is still open and unexplained — not yet re-investigated this
-  round, since the user's latest report focused on the weapon disappearance instead.
-- **2026-11-21** — Three fixes. (1) Validated curved-patch tessellation (Phase 2 item) and confirmed
-  a real bug: `r_subdivisions` is a world-unit error tolerance in the reference engine, but a literal
-  fixed segment count here — made it adaptive per patch (`tr_patch.c`'s new `R_ComputeAdaptiveSubdiv`),
-  fixing user-reported faceted/triangular arches. (2) `make deploysteam` was missing the
-  `BUILD_RENDERER_VULKAN` copy block that `copyfiles` already had, so the vulkan DLL never reached the
-  user's Steam install — added it to `Makefile`. (3) `misc_mg42` wasn't rendering: its model
-  (`mg42a.mdc`) is actually raw MD3 data shipped under a `.mdc` name (confirmed by reading its header:
-  ident/version are MD3's, not MDC's). `RE_RegisterModel` dispatched by file extension, so it always
-  went through `R_LoadMDC` and failed the version check. Fixed to sniff the file's own ident and
-  dispatch to the matching loader, same as the reference engine's `R_RegisterMD3`. All three compiled
-  clean; none re-confirmed in-game yet.
-- **2026-11-21** — Follow-up: mg42a now partially rendered (mag visible, main body missing), same
-  symptom on mp44/fg42. Parsed `mg42a`'s real MD3 surfaces directly: its body surface
-  (`mg34_reference`) has 11582 verts, over both the format's documented 8192-per-surface max and this
-  renderer's `SKIN_SCRATCH_VERTS` scratch-buffer cap (`vk_entity.c`), so it silently hit the
-  `goto nextMD3` overflow guard every frame while the smaller mag surfaces didn't. Reference engine
-  uses `SHADER_MAX_VERTEXES` (40000) and doesn't enforce the format limit at all, which is why OpenGL1
-  renders this off-spec content fine. Bumped `SKIN_SCRATCH_VERTS` to match. Compiled clean.
-- **2026-11-21** — Follow-up: NPC heads showed a solid white mask over the eyes. Parsed
-  `officerss/head.mdc`'s surfaces directly: a 5th, 20-vert `h_blink` surface exists alongside
-  h_head/h_teethup/h_teethbot/h_mouthin. Reference engine (`tr_mesh.c`/`tr_cmesh.c`/`tr_animation.c`)
-  explicitly skips drawing any surface named `h_blink` unless `RF_BLINK` is set on the entity (cgame
-  only sets it for the brief blink animation) — this renderer had no such check, so the blink/closed-
-  eyelid texture rendered permanently on every head. Added the same name+flag check to all four
-  surface loops (MD3/MDC/MDS/MDM) in `vk_entity.c`. Compiled clean. **User confirmed major
-  improvement**: normal (non-blinking) eyes now render correctly. Residual, much smaller issue: during
-  the brief actual blink moment, `h_blink` itself still shows wrong/white instead of the correct brown
-  eyelid texture. Ruled out: texture content (brown/skin-toned even in "transparent" areas, not white
-  — a naive opaque render would show brown, not white), all 19 officerss head skins (identical
-  `h_blink` reference), and pk3 case-sensitivity (`FS_ReadFile` lowercases pk3 entries at load,
-  confirmed case-insensitive). Noted but not yet chased down: `h_blink` has 1 base frame + 17
-  compressed delta frames, i.e. it's a real animated sequence sharing `ent->frame`/`oldframe` with the
-  rest of the head, not a simple on/off overlay — a frame-indexing issue there is the next lead, not
-  yet confirmed. Deferred at user's request (minor/intermittent vs. the fixed permanent case).
-- **2026-11-21** — Implemented the "Real fog pass" item (BSP-brush volumetric fog, see its checkmark
-  above for the full design): `fogParms` shader-keyword parsing, `R_LoadFogs` in `tr_bsp.c`,
-  per-surface `fogIndex`, and a per-view camera-in-fog-volume AABB check feeding the existing wolf-fog
-  push-constant path. Deliberately scoped to camera-containment + the existing per-vertex fog
-  infrastructure rather than the reference's true per-surface distance gradient — matches how the
-  roadmap item itself was phrased, and avoids a new shader permutation/pass for this. Compiled clean
-  (full release build, zero new warnings). Not yet tested in-game — next step is finding a map with an
-  actual fog brush (e.g. an underwater area) and confirming the screen fogs on entry/exit.
-- **2026-11-21** — Implemented the coronas/flares item (see its checkmark above for the full design):
-  `vk_flares.c`/`.h` (new), a `VkQueryPool`-based occlusion-visibility test with multi-frame fade, and
-  a camera-facing world-space billboard drawn through `flareShader`'s real stages. New scene storage
-  in `tr_scene.c`/`.h`; `vk_pipelines.c`'s pipeline factory gained `depthWriteEnable`/`colorWriteMask`
-  parameters (previously `depthWriteEnable` was always tied to `depthTestEnable`) to build the probe's
-  depth-test-but-no-write-or-color pipeline without duplicating the ~150-line pipeline-creation
-  function. Hit a build issue after the code compiled standalone: `vk_flares.c` was missing from the
-  Makefile's explicit `Q3RVOBJ` object list, leaving 5 symbols undefined at link time — fixed by
-  adding `vk_flares.o` there. **User confirmed coronas working in-game.**
-- **2026-11-21** — Implemented stencil shadow volumes (see the item's checkmark above for the full
-  design). Found a real prerequisite bug while scoping it: `vk_depth.c` picked `VK_FORMAT_D32_SFLOAT`
-  first, which has no stencil bits, so this renderer never actually had a usable stencil buffer on
-  any GPU — fixed the format order, the depth view's aspect mask, and the render pass's
-  `stencilLoadOp`. New `vk_shadows.c`/`.h`; `vk_pipelines.c`'s pipeline factory gained
-  `stencilTestEnable`/`stencilCompareOp`/`stencilPassOp` parameters for the same reason the corona
-  work added two others there — one more one-off pipeline variant not worth a ~150-line duplicate.
-  Scoped out the `deformVertexes projectionShadow` fallback this item also listed: its registration
-  is commented out in `code/renderer/tr_shader.c`, so `r_shadows 3` is dead code in the reference
-  engine itself, not worth porting with no working baseline to match. Remembered to add
-  `vk_shadows.o` to the Makefile's `Q3RVOBJ` list this time (missed that for `vk_flares.o` last
-  entry). Not yet confirmed compiling — hit the same background-build environment issue as before
-  (the Makefile's `git show` version-string subshell fails when `mingw32-make` runs from this
-  session's background shell) and couldn't self-verify; next step is a real build plus an in-game
-  test with `r_shadows 2` set.
-- **2026-11-21** — Removed two leftover bring-up diagnostics in `tr_bones.c` (`R_GetBoneTag`/
-  `R_MDM_GetTag` both printed a line every time a requested tag wasn't found on a model). User
-  spotted the spam in-game (console full of `R_MDM_GetTag couldn't find tag 'TAG_FOOTLEFT'...`
-  repeating) and asked what it was: confirmed against the reference engine's own
-  `R_MDM_GetTag` (`code/renderer/tr_animation.c`) that a missing tag is a normal, silent miss there
-  (cgame routinely probes for optional tags like `tag_footleft`/`tag_footright`/`tag_torso` that not
-  every model defines, and just skips the effect) — not a bug, just logging that should never have
-  stayed in. Removed both prints.
-- **2026-11-21** — Implemented the "2D completeness" item (`RE_RotatedPic`/`RE_StretchPicGradient`,
-  see its checkmark above for the full design). **User confirmed working in-game.**
-- **2026-11-22** — Root-caused and fixed the long-standing skybox-portal visual bug (previously
-  described as "pitch black," this session it showed as a solid-color wedge cutting into an
-  otherwise-correct starfield). User correctly pushed back twice on dead-end theories ("not an asset
-  issue," confirmed by GL1 rendering the same map fine; "maybe something wrong [with the] sky
-  portal," which turned out right). Ruled out, in order: asset content (extracted and sampled the
-  actual TGA face textures directly), a `_skyboxOrigin` worldspawn-key sky portal (this map uses the
-  configstring-based `CG_DrawSkyBoxPortal` mechanism instead — different code path, same symptom
-  category), the cube face UV/orientation math (real bug found and fixed against
-  `code/renderer/tr_sky.c`'s `MakeSkyVec` formula, but didn't explain this symptom), scene-arrival
-  order (also a real bug — this build's cgame renders the portal scene *after* the real scene, not
-  before as `tr_init.c` assumed; added per-frame, not sticky, order tracking in `tr_scene.c`/`.h` so
-  either order composites correctly), and `FOG_PORTALVIEW` fog (confirmed via a diagnostic print that
-  fog is disabled for every scene in this map). The actual cause: `vk_sky.c`'s camera-centered cube
-  used a fixed `SKY_HALF_SIZE` (4096), but the reference engine sizes its sky box dynamically from
-  the *current scene's* far clip plane (`boxSize = zFar / 1.75`) specifically so it's never clipped —
-  and this renderer's zFar is computed from the loaded world's bounds relative to the camera
-  (`tr_main.c`'s `R_ComputeZFar`), which can come out much smaller for a tiny sky-portal scene (a
-  diagnostic print showed 4825.9 for the portal scene here) than the cube's fixed-size farthest
-  corner (4096×√3 ≈ 7094) — clipping away whatever chunk of the cube fell past that distance, and
-  the render pass's own clear color showed through the gap. Confirmed via two isolation tests before
-  landing on this: disabling the cube entirely made the *whole* sky the wedge's color (proving it was
-  the render-pass clear color, not an asset or world-geometry issue), and disabling just the portal's
-  own world geometry left the wedge untouched (ruling that out too). Fixed by exposing
-  `R_ComputeZFar` (`tr_main.h`) and sizing `vk_sky_draw`'s box from it, matching the reference's
-  formula exactly. **User confirmed fixed in-game.** All temporary diagnostics added during this
-  investigation (`r_vk_debugSky` and its three call sites, a `r_vk_debugSkyFaces` face-tint test, a
-  `r_vk_debugSkyOff` cube/world isolation toggle, a fog-state print) have been removed now that it's
-  resolved.
-- **2026-11-22** — Swept the four remaining stubs (`RE_SetWorldVisData`, `RE_RenderToTexture`,
-  `R_GetTextureId`, `RE_TakeVideoFrame`) for real callers before investing further. `RE_SetWorldVisData`
-  has none anywhere in the tree. `RE_TakeVideoFrame` is only reached via `cl_main.c`'s AVI
-  video-capture dev path. `RE_RenderToTexture`/`R_GetTextureId` are used together in exactly one place
-  — `cg_draw.c`'s death/limbo/frozen screen effect — gated behind `cg_fancyfx`, which defaults to `"0"`
-  ("off by default so older machines dont just crash"). None load-bearing under default settings;
-  user chose to leave all four stubbed rather than build real render-to-texture support for an opt-in
-  cosmetic effect.
-- **2026-11-22** — Implemented real frames-in-flight (see Phase 3's checkmark above for the full
-  design). Core sync pipelining: `vk_frame.c` now owns `VK_FRAMES_IN_FLIGHT` (2) command
-  buffers/fences and per-slot image-available semaphores, plus `vk_current_frame_slot()` for every
-  other subsystem to key off of. The harder part was threading that slot through every per-frame
-  CPU-written, GPU-read dynamic buffer in the renderer so CPU recording of frame N+1 can't clobber
-  data the GPU is still reading for frame N: doubled and region-based `draw2d`/`draw3d`/`poly`/
-  `entity`/`world` (incl. brush models)/`flares`/`shadows`, each keyed by the same
-  `vk_current_frame_slot()` value — the same fence-wait guarantee that made the old single-buffered
-  design safe generalizes directly from "1 frame ago" to "N frames ago" once every region is indexed
-  that way. Flares' occlusion `VkQueryPool` got the same treatment (split per slot, resetting only the
-  current slot's queries each frame, since the other slot's may still be executing). Swapchain
-  recreation was still a full `vid_restart` as of this entry, so it tore down and rebuilt all of this
-  from scratch on resize; see the next entry for what replaced that. Per user's standing instruction,
-  not self-built or tested this session — needs a real build and in-game check.
-- **2026-11-22** — Implemented the in-place swapchain resize item (see Phase 3's checkmark above for
-  the full design). `vk_recreateSwapChain` (`vk_swapchain.c`) now tears down and rebuilds only the
-  swapchain, its image views, the per-swapchain-image `sema_renderFinished` semaphores, the depth
-  buffer, and the framebuffers — re-querying `vk.surface_caps` first so it picks up the surface's
-  actual new extent — instead of calling `vid_restart`. Everything else (pipelines, render pass,
-  shader modules, descriptor pools, every per-subsystem dynamic buffer from the frames-in-flight work
-  above) is untouched, since none of it depends on resolution and pipelines already use dynamic
-  viewport/scissor state. Added `vk.swapchain_extent` (what `vk_createSwapChain` actually picked,
-  distinct from the raw `surface_caps.currentExtent` it derives from) and a new `R_SetWinResolution`
-  setter in `glConfig.c`/`.h` so the engine's nominal resolution — read everywhere else via
-  `R_GetWinResolution`, including cgame's UI scaling — stays in sync with the real swapchain size
-  after a resize; `r_mode`-driven changes still go through `vid_restart` as before, this only
-  replaces the resize/`OUT_OF_DATE`/surface-lost recovery path. A zero-sized surface (window
-  minimized) is handled by leaving `vk.swapchain` as `VK_NULL_HANDLE` after tearing down; both
-  `vk_recreateSwapChain` (skips re-destroying what's already gone) and `vk_begin_frame` (retries the
-  recreate every frame, before touching any sync primitive, instead of calling
-  `qvkAcquireNextImageKHR` on a stale handle) check for that. Deliberately left `VK_SUBOPTIMAL_KHR`
-  exactly as it already was (tolerated, not a recreate trigger) rather than folding it in to match
-  the roadmap wording more literally: some drivers report it persistently for reasons unrelated to
-  an actual resize, and treating it as fatal risks a per-frame recreate loop on hardware this session
-  has no way to test against. Per user's standing instruction, not self-built or tested — needs a
-  real build, and ideally a test with `r_allowResize 1` plus an actual window drag, not just
-  alt-tab/minimize, since that's the one path this change can't be sanity-checked against at all
-  without running it.
-- **2026-11-22** — Revisited the pipeline cache item (see Phase 3's checkmark above for the full
-  design). `vk_getPipeline3D`'s cache (`vk_pipelines.c`) had more key axes than vkQuake3's own
-  (clipPlane/mirror/polygonOffset on top of blend/cull/alphaTest), and vkQuake3-scale content was
-  already quoted as hitting 60-100+ live pipelines on that smaller key, so the existing 64-entry cap
-  was already undersized for this renderer specifically — raised `MAX_CACHED_3D_PIPELINES` to 128.
-  Also checked the sibling multi-tex pipeline cache's cap (32): its key space is genuinely bounded
-  (combine x cull x alphaTest = 2x3x4 = 24 max), comfortably under 32, so left that one alone rather
-  than bumping it without reason. Did not implement hash-based lookup, per the item's own
-  conditional wording ("if the linear scan starts showing up in profiles") — there's no profiling
-  data from this session (can't run the game) showing it ever is, and ~128 small-struct comparisons
-  is unlikely to be worth the added complexity speculatively. Not self-built or tested; next step is
-  a real build and confirming in a busy level that the `MAX_CACHED_3D_PIPELINES hit` warning print
-  never fires.
-- **2026-11-22** — Removed the Phase 3 "GPU mip generation to replace the Phase 0 CPU box-filter
-  stopgap" item: checked `vk_image.c` and found it already generates every mip level via a
-  `vkCmdBlitImage` chain (the CPU only ever uploads level 0) — this was done directly in Phase 0's
-  mipmapping item, which already noted "went straight to the GPU blit approach rather than a CPU
-  box-filter stopgap." The CPU stopgap this item described replacing was never actually built, so
-  the item was stale rather than open work; cross-referenced from Phase 0's checkmark instead of
-  silently dropping it. No code changes.
-- **2026-11-22** — Started Phase 4's vertex-format item (see its checkmark above). Research first
-  (3 parallel passes + 1 follow-up) found: `vkWorldVertex_t` has no normal despite BSP drawverts
-  (`tr_bsp.c`) and tessellated patches (`tr_patch.c`) already loading/computing real per-vertex
-  normals that `vk_world.c`'s `CopyVertex` just discards; there's no dedicated entity vertex
-  type — `vk2d_vertex_t` is shared by the *entire* renderer (2D/poly/sky/flares/shadows/
-  world-dynamic, not just entities), so it can't be extended for entity-only needs; all 4 model
-  formats' file structures already carry a per-vertex normal that's loaded/byteswapped and
-  discarded; MDS/MDM skinning is already genuine multi-bone-weighted (arbitrary `numWeights`);
-  rend2 packs normal/tangent/lightdir as snorm `int16_t[4]` and does vertex-lerp blending via one
-  VBO with two attribute bindings at different offsets (not two buffers), but **never does GPU
-  bone skinning for MDS/MDM** (CPU-only there permanently — only its IQM path gets real GPU
-  skinning), so "bone-index/weight for rend2 parity" wasn't quite accurate; and tag/attachment
-  resolution (`R_LerpTag` → `R_GetBoneTag`/`R_MDM_GetTag`, `tr_bones.c`) depends only on
-  `R_CalcBones`/`R_MDM_CalcBones`'s bone-matrix output, never on per-vertex skinned positions, so
-  moving per-vertex skinning to the GPU can't break weapon/attachment placement. Asked the user
-  how far to take the entity half given rend2 has no real MDS/MDM GPU-skinning reference to mirror;
-  they chose the full migration over reserved-but-unused fields. Found a real architectural
-  conflict before writing any code: per-stage `rgbGen`/`alphaGen`/`tcMod` are re-evaluated on the
-  CPU every frame and baked into the same vertex that carries position (a real, already-shipped
-  feature) — if position/normal/tangent move to a *static* per-model GPU buffer, the CPU can't
-  bake per-frame color/uv into those vertices anymore. Resolved by splitting each entity draw into
-  two vertex bindings: a new static per-model buffer (pos/normal/tangent) plus a dynamic per-frame
-  buffer (just color/uv, same role as today's but smaller) — preserves every existing shader-script
-  effect while genuinely moving the vertex deformation itself to the GPU. Staged into 3 parts
-  (world now; entity GPU vertex-lerp and entity GPU bone-skinning as separate follow-ups) since this
-  is too large for one pass — plan written to
-  `C:\Users\wolfetplayer\.claude\plans\lazy-swinging-noodle.md`.
-  **Stage 1 (world) implemented**: added `normal`/`tangent`/`lightdir` as packed `int16_t[4]`
-  (snorm) fields to `vkWorldVertex_t` (`vk_pipelines.h`) — Vulkan's `VK_FORMAT_R16G16B16A16_SNORM`
-  vertex format auto-converts to float in the shader, so no manual unpack code is needed (simpler
-  than rend2's GL path). Threaded real normals through `vk_world.c`: a new `pack_snorm16_3` helper,
-  `CopyVertex` (reads `drawVert_t.normal`, covers both the main BSP-drawvert loop and the
-  patch-tessellation copy path since both already funnel through it), `brushVert_t` (gained a
-  plain-float `normal` field) + `TransformBrushVerts` (rotates it by `ent->axis`, same as position)
-  + `DrawBrushSurfaceStage0` (packs it on the final write), and `ExpandAndDrawStage0` (straight
-  memcpy-through of the already-packed fields, no per-frame recomputation needed since world
-  normals don't change frame to frame). `ExpandAndDrawExtraStage`/`ExpandAndDrawWorldDlights`/
-  `DrawBrushSurfaceExtraStage` write `vk2d_vertex_t`, not `vkWorldVertex_t`, so correctly left
-  untouched. `tangent`/`lightdir` stay zeroed — each is its own already-separate, already-scoped
-  roadmap item (tangent precompute, light-grid sampling), and this stage only had to make room for
-  them once rather than bumping the format again later. Updated `vk_pipelines.c`'s `lightmapAttribs`
-  (3 new `VK_FORMAT_R16G16B16A16_SNORM` entries, array grew from 4 to 7, every `create_pipeline*`
-  call site using it updated) and both `world_lightmap.vert`/`world_lightmap_clip.vert` (3 new
-  `layout(location = 4/5/6) in` declarations, not consumed by `main()` yet). **Needs a shader
-  recompile** (new vertex inputs) before the next build — this renderer has no runtime shader
-  compiler, `vk_shaders.c` loads precompiled SPIR-V byte arrays from `shaders/Compiled/*.c`, so the
-  usual `shaders/gen_spv_c.py` step has to run first. Not self-built or tested. `r_shownormals`
-  (Phase 0, deliberately left unimplemented for exactly this reason) is now unblocked as a trivial
-  fragment-shader follow-up, but not done in this stage.
-- **2026-11-22** — Started Stage 2 (entity GPU vertex-lerp, see its checkmark above), split into
-  2a/2b once implementation-level reading surfaced two things the original bullet didn't account
-  for. (1) `tr_shade_calc.c`'s `R_CalcStageTexCoord` needs the real per-vertex world-space position
-  for `TMOD_TURBULENT`'s UV wobble — if the CPU stopped computing entity position entirely, any
-  entity shader using `tcMod turb` would break. Fix: `LerpSurfaceVerts`/`LerpMDCSurfaceVerts` are
-  *not* deleted after all; the CPU keeps computing the same interpolated position every frame,
-  transiently, just to feed `R_DeformPosition`/`R_CalcStageTexCoord` — it only stops writing that
-  position into the uploaded vertex. The real win here is narrower than first scoped: real
-  GPU-computed normal/tangent for entities (didn't exist at all before) and removing position from
-  the *dynamic* per-stage vertex (today's `WriteStageVertices` redundantly writes identical
-  position once per shader stage), not a CPU math reduction for position itself. (2) Since the
-  static per-model buffers hold model-local-space data, the GPU now also has to apply the entity's
-  `axis`/`origin` after blending — meaning the single shared camera-only `mvp` push-constant
-  `vk_entity_draw_all` currently pushes once per batch has to become a per-entity
-  `cameraMVP * entityModelMatrix` instead (reuses the existing 64-byte slot, no size growth, but
-  means the current "collect everything then draw in two tight loops" structure has to interleave a
-  push-constant update per entity — `vk_shadows.c`'s `vk_shadows_finish_entity` already does
-  exactly this per-entity-push pattern, so there's in-repo precedent). **Stage 2a (data prep)
-  implemented**: `vkEntityFrameVert_t` (`pos` + packed snorm16 `normal`/`tangent`) and dynamic
-  `vkEntityDynamicVert_t`/`vkEntityDynamicMTVert_t` (`color`/`uv` only) added to `vk_pipelines.h`.
-  `model_t` (`tr_model.h`) gained an opaque `void *vkAnimData` (owned by `vk_entity.c`, unknown to
-  `tr_model.h`) plus a new `R_GetNumModels()` accessor. New `vk_entity_register_model()`
-  (`vk_entity.c`), called from `R_LoadMD3`/`R_LoadMDC` (`tr_model.c`) right after parsing: decodes
-  every frame's position (MD3 direct; MDC base + optional compressed delta, reusing the existing
-  `DecodeMDCVertex`) and normal (MD3/MDC-base: lat/long decode — same formula as `tr_light.c`'s
-  private `LatLongToNormal`, just never applied to model data before; MDC compressed-delta frames:
-  `ByteToDir` on `ofsVec`'s top byte, a different, coarser packing this engine had never decoded at
-  all), computes a per-frame tangent (standard Lengyel per-triangle accumulation + Gram-Schmidt
-  orthogonalization, handedness sign matching rend2's convention), packs normal/tangent to snorm16,
-  and uploads one static per-surface `VkBuffer` via `vk_create_device_local_buffer`
-  (`vk_image.c`) — already existing, already correct, and until now never actually called from
-  anywhere. Freed in `vk_entity_shutdown` by iterating every registered model via the new
-  `R_GetNumModels()` before `R_InitModels` would otherwise drop the only pointers to them. Full
-  research/design notes in `C:\Users\wolfetplayer\.claude\plans\lazy-swinging-noodle.md`. Not
-  self-built or tested.
-- **2026-11-22** — Implemented Stage 2b (see Phase 4's checkmark above for the final design),
-  finishing the entity GPU vertex-lerp item. `create_pipeline_ex`/`create_pipeline` (`vk_pipelines.c`)
-  gained a `numBindings` parameter — the old code hardcoded a single `VkVertexInputBindingDescription`
-  — with every existing direct call site updated to pass `1` explicitly; `create_pipeline`'s own
-  signature stayed unchanged so its many callers needed no edits. New
-  `vk_getPipelineEntityLerp`/`vk_getPipelineEntityLerpMultiTex` cache functions use this for a
-  3-binding vertex input: the model's static per-surface buffer (Stage 2a) bound twice at
-  frame/oldframe byte offsets, plus a new dynamic color/uv-only binding. New
-  `entity_lerp.vert`/`entity_lerp_multitex.vert` reuse `single_texture.frag`/`multi_texture.frag`
-  unchanged, and reuse those shaders' existing 128-byte push-constant layout outright rather than
-  growing it: `camPos` is repurposed to the camera position transformed into the entity's *local*
-  space (one dot product per axis on the CPU — exact for a rigid axis/origin transform, same
-  world-space distance a real `camPos` would give), and the otherwise-always-zero trailing slot
-  (`clipPlane` in the single-tex shader, since entities never clip; an added field at the same
-  offset in the multitex one, since `multi_texture.vert`'s original layout had no such slot at all)
-  carries `backlerp`. This fully solved the "per-entity MVP" problem flagged in the previous entry:
-  the fix was reusing the *existing* `mvp` slot for a combined `cameraMVP * entityModel` matrix (one
-  `R_MultMatrix` call per entity — already existed in `tr_main.c`, used for the camera VP itself) —
-  no push-constant size growth needed at all. `vk_entity_draw_all` (`vk_entity.c`) now draws MD3/MDC
-  surfaces immediately (bind static buffer + push constants once per surface, then rebind just the
-  dynamic binding between shader stages, since a shared `vertexOffset` can't give the static and
-  dynamic bindings different per-stage offsets at once) instead of deferring them into
-  `s_draws[]`/`s_mtDraws[]` like MDS/MDM still are. `curDepthHack` (the view-weapon depth-range
-  hack) became a single variable shared across both the immediate and deferred phases — caught and
-  fixed a real bug here in the process: the early-return path for "zero deferred draws left" didn't
-  reset the viewport if an immediate MD3/MDC draw had left it in the weapon-hack range, which would
-  have left the HUD/2D pass rendered through the wrong depth range on any frame with only a
-  view-weapon and no other deferred-path entity. `LerpSurfaceVerts`/`LerpMDCSurfaceVerts` are
-  unchanged and still called every frame — their output now only feeds
-  `R_DeformPosition`/`R_CalcStageTexCoord` (`tcMod turb`) and shadow volumes, never the GPU draw
-  itself; new `WriteLerpStageVertices`/`WriteLerpMultiTexVertices` mirror
-  `WriteStageVertices`/`WriteMultiTexVertices` exactly, minus the `pos` field. Added
-  `entity_lerp_vert.o`/`entity_lerp_multitex_vert.o` to the Makefile's `Q3RVOBJ` list (missed this
-  once before for `vk_flares.o`; remembered this time). Both stages of the vertex-lerp item are
-  implemented now. Needs a shader recompile (2 new `.vert` files, `shaders/gen_spv_c.py`) and a real
-  build before anything can be tested; per the user's standing instruction, not attempted here. Next
-  in-game check: an MD3/MDC-animated entity (most enemy/weapon models) still animates correctly,
-  multi-stage/multitex shaders on those models still layer correctly, and weapon/flashlight tag
-  attachments still line up (per the Stage 2a research, tags never read skinned vertex data, so
-  this *should* be unaffected, but it's the one thing worth deliberately eyeballing given the scope
-  of this change).
-- **2026-11-22** — Started Stage 3 (MDS/MDM GPU bone skinning, see its checkmark above) and found a
-  design problem mid-implementation: `mdsWeight_t`/`mdmWeight_t` store a *separate* `offset` vector
-  per bone influence — the vertex's position already expressed in that bone's own bind-pose-relative
-  local frame — not one shared bind-pose position an IQM-style blended bone matrix could transform.
-  Confirmed via the already-working CPU code itself: `R_SkinMDSSurface`'s
-  `LocalAddScaledMatrixTransformVectorTranslate` does `outPos = sum_k weight_k *
-  (boneMatrix[idx_k] * offset_k + translation[idx_k])` — each weight's own offset gets its own full
-  transform, they're not interchangeable with a single shared position. This is very likely
-  *exactly* why rend2 never finishes this migration for MDS/MDM in the first place: the format
-  doesn't fit the simple model its own IQM path uses. Asked the user whether to implement this
-  correctly (4 offset vectors per vertex, 4 real per-vertex matrix-vector transforms in the shader,
-  heavier than Stage 2's `mix()`) or stop at Stage 2 and leave MDS/MDM on CPU like rend2 does; they
-  chose the correct version. Also resolved a real discrepancy in the file format headers along the
-  way: `mdsWeight_t`/`mdmWeight_t.boneIndex`'s own comment claims it indexes the surface's compact
-  `boneReferences` list, but the already-working skinning code indexes the model's *global* `bones[]`
-  array with it directly — trusted the working, presumably-tested code over what looks like a stale
-  comment inherited from the original id-software source, and mirrored that same interpretation for
-  the GPU path. **Stage 3a (data prep) implemented**: `vkEntitySkinnedVert_t` (`vk_pipelines.h`) uses
-  `offset[4][3]` instead of a single `pos`, plus packed snorm16 `normal`/`tangent` and
-  `boneIndex[4]`/`boneWeight[4]` (unorm8, renormalized to sum 255). New
-  `R_CalcAllBoneMatricesMDS`/`R_CalcAllBoneMatricesMDM` (`tr_bones.c`/`.h`) compute every one of an
-  entity's bones (not one surface's referenced subset — any vertex might index any of them) and pack
-  each as a GLSL-ready column-major mat4; verified `R_CalcBones`/`R_MDM_CalcBones` already resolve
-  missing parent bones on their own, so passing bones in plain `0..numBones-1` order needs no
-  topological sort. New `ReduceBoneWeights`/`BuildMDSSurfaceSkinBuffer`/`BuildMDMSurfaceSkinBuffer`
-  (`vk_entity.c`) reduce each vertex's real (possibly >4) weight list to the top 4 by magnitude,
-  decode the per-vertex normal (a real float3 in this format already, no lat/long unpacking needed),
-  and compute a bind-pose tangent via the existing `ComputeFrameTangents`, fed the same
-  `weight*offset` sum `R_SkinMDMSurface`'s own "no skeleton linked yet" fallback already treats as
-  this format's bind pose — a reasonable geometric stand-in for tangent purposes even though it's not
-  what actually gets uploaded per vertex. Hooked into `R_LoadMDS`/`R_LoadMDM` via the same
-  `vk_entity_register_model` entry point Stage 2a added. MDM's buffer builds fine with no skeleton
-  linked yet, since it only reads raw per-vertex file data — the skeleton is only needed later, at
-  draw time, for the bone matrices themselves. **Stage 3b (the UBO descriptor infrastructure this
-  needs, new `entity_skin.vert`/`entity_skin_multitex.vert` shaders doing the real per-weight
-  transforms, and the matching draw-path rewrite) is not started** — full design notes in
-  `C:\Users\wolfetplayer\.claude\plans\lazy-swinging-noodle.md`. Not self-built or tested.
-- **2026-11-22** — Implemented Stage 3b, completing Phase 4's vertex-format item (all 3 stages now
-  done). New descriptor infrastructure (`vk_pipelines.c`/`vk_instance.h`): `vk.skin_set_layout` (one
-  `UNIFORM_BUFFER_DYNAMIC` binding, vertex stage) plus `vk.skin_pipeline_layout`/
-  `skin_lightmap_pipeline_layout` (set0 = the existing sampler layout, set1 = the new skin layout,
-  same 128-byte push-constant range reused — no size growth). `vk_entity.c` owns the actual bone-
-  matrix UBO: one `MDX_MAX_BONES`-sized mat4 array per skinned entity drawn this frame, in a buffer
-  sized `MAX_SKINNED_ENTITY_DRAWS (256) * VK_FRAMES_IN_FLIGHT * stride` (stride rounded up to
-  `minUniformBufferOffsetAlignment`), with one persistent descriptor set rebound at a different
-  dynamic offset per entity instead of allocating a set per entity per frame. New
-  `WriteBoneMatricesMDS`/`WriteBoneMatricesMDM` write one entity's full bone-matrix set into the
-  next UBO slot (shared across all of that entity's surfaces, since bones don't vary per surface);
-  MDM falls back to an identity-matrix set when `R_CalcAllBoneMatricesMDM` reports no skeleton
-  linked yet, so the shader's weighted sum naturally reduces to the same bind-pose sum
-  `R_SkinMDMSurface`'s own CPU fallback already uses. New `entity_skin.vert`/
-  `entity_skin_multitex.vert` do 4 real `mat3(boneMatrix[idx_k]) * offset_k + boneMatrix[idx_k][3]`
-  transforms weighted-summed (matching `R_SkinMDSSurface`'s math exactly, not a `mix()` blend), reuse
-  `single_texture.frag`/`multi_texture.frag` unchanged, and reuse the same local-space-camPos fog
-  trick Stage 2b's lerp shaders use. New `DrawSkinSurface` (`vk_entity.c`) mirrors `DrawLerpSurface`:
-  binds the model's static bind-pose buffer once, pushes this entity's transform once, binds the
-  bone UBO at set 1 with the per-entity dynamic offset, and draws immediately per surface/stage —
-  replacing the old deferred `s_draws[]`/`s_mtDraws[]` collection the MDS/MDM branches still used
-  after Stage 2b. `LerpMDSSurfaceVerts`/`LerpMDMSurfaceVerts` (and the `R_SkinMDSSurface`/
-  `R_SkinMDMSurface` they call) are kept, unchanged — same reasoning as Stage 2b's finding #1, their
-  output still feeds `tcMod turb`/shadow volumes, never the GPU draw itself.
-  **Real correctness bug found and fixed along the way, not just new code**: once all 4 entity model
-  types (MD3/MDC via Stage 2b, MDS/MDM via this stage) drew immediately, nothing called the old
-  per-surface `ProcessSurface` anymore, so the deferred path's `numDraws`/`numMTDraws` were
-  permanently 0 — but its tail code still ran `s_idxWrite = idxWrite;`, which stomped the *live*,
-  actively-incremented global index-write cursor back to its stale function-entry value every single
-  call, corrupting the shared index buffer's write position across calls/frames (wrong/stale indices
-  reused). Fixed by recognizing the entire deferred-draw path (`s_draws[]`/`s_mtDraws[]`,
-  `entityDrawCall_t`/`entityMTDrawCall_t`, the old static `s_vertexBuffer`/`s_mtVertexBuffer`,
-  `ReserveSurface`/`WriteStageVertices`/`CommitSurface`/`WriteMultiTexVertices`/
-  `CommitMultiTexSurface`/`ProcessSurface`) was now fully dead and removing it outright rather than
-  patching around the bug — `vk_entity_draw_all`'s tail is now just the final `curDepthHack` viewport
-  reset. Added `entity_skin_vert.o`/`entity_skin_multitex_vert.o` to the Makefile's `Q3RVOBJ` list
-  (this exact omission bit `vk_flares.o` and `vk_shadows.o` earlier in this project — checked
-  explicitly this time). Carefully re-verified the whole skin path end-to-end afterward (pipeline/
-  layout creation and teardown order, the UBO stride/alignment math, `WriteBoneMatricesMDS/MDM`,
-  `DrawSkinSurface`'s bindings, `ReduceBoneWeights`'s top-4 reduction, and
-  `BuildMDSSurfaceSkinBuffer`/`BuildMDMSurfaceSkinBuffer`'s packing) — no further issues found. Not
-  self-built or tested (standing instruction). **Needs a shader recompile** before the next build
-  links: 4 new `.vert` files across Stages 2b/3b (`entity_lerp.vert`, `entity_lerp_multitex.vert`,
-  `entity_skin.vert`, `entity_skin_multitex.vert`) need to go through `shaders/gen_spv_c.py` first.
-  In-game checks worth doing once built: MD3/MDC entities still frame-blend correctly, MDS/MDM
-  entities still bone-animate and skin correctly, multi-stage/multitex entity shaders still layer
-  right, and weapon/attachment tags still line up (tag resolution never touched per-vertex skinned
-  data, so this is expected to be unaffected, but worth eyeballing given the scope of this change).
-- **2026-11-22** — User confirmed Stage 2b/3b (and the whole Phase 4 vertex-format item) tested fine
-  after compiling the 4 new shaders by hand, and asked to use the now-unblocked normal data for
-  Phase 1's leftover `deformVertexes` item. Implemented `wave`/`bulge` for world surfaces (see
-  Phase 1's checkmark above). `R_DeformPosition`'s signature (`tr_shade_calc.c`/`.h`) grew a
-  `normal[3]`/`texS` pair — `normal` may be `NULL`, which skips `DEFORM_WAVE`/`DEFORM_BULGE` exactly
-  like before (every current entity/poly call site passes `NULL`, since neither has real per-vertex
-  normal data in its per-frame CPU path today). `vk_world.c` gained an `unpack_snorm16_3` (inverse
-  of the existing `pack_snorm16_3`) to recover a float normal from `vkWorldVertex_t`'s packed
-  snorm16 field for the static-world expansion functions (`ExpandAndDrawStage0`/
-  `ExpandAndDrawExtraStage`/`ExpandAndDrawWorldDlights`, all of which now take the owning `shader_t*`
-  too); brush-entity surfaces (`DrawBrushSurfaceStage0`/`DrawBrushSurfaceExtraStage`) already kept a
-  float normal in `brushVert_t` for the entity-axis rotation, so those needed no unpack. Ported the
-  reference engine's actual `RB_CalcDeformVertexes`/`RB_CalcBulgeVertexes` math from
-  `code/renderer/tr_shade_calc.c` directly, **except** the RTCW-specific "Ridah fire-rise" hack
-  (`deformationWave.frequency < 0`), which needs an entity's `fireRiseDir` — no equivalent exists
-  here, and it's a rare enough effect not to be worth inventing one for. Also investigated
-  `deformVertexes normal` (wiggles the normal itself, for wavy env-map sparkle — distinct from
-  `wave`/`normal` as the roadmap bullet's old wording implied, it never touches position) and left
-  it unimplemented: it needs real 3D Perlin noise, which this renderer has never had (`GF_NOISE`
-  waveforms already stand in with sine for the same reason), and would have zero visible effect
-  today regardless since nothing consumes per-vertex normal for lighting yet. Not self-built or
-  tested (standing instruction) — this needs no shader recompile (it's pure CPU-side math feeding
-  the existing dynamic vertex buffers), just a normal rebuild. In-game check: a shader using
-  `deformVertexes wave`/`bulge` on world geometry (or a func_door/func_rotating using one) should
-  now visibly ripple/bulge instead of sitting rigid.
-- **2026-11-22** — User reported a visual bug: a custom shader (`textures/realm_tda/dqn_tongue`,
-  `surfaceparm trans`/`nolightmap`, stage 0 `blendFunc GL_SRC_ALPHA GL_ONE`, stage 1 an additive glow
-  layer) wasn't transparent in game — it rendered as a solid-looking surface with a glow on top.
-  Root cause: `vk_world.c`'s per-batch draw loop (`vk_world_draw`) and the brush-model-entity draw
-  path (`vk_world_draw_brushmodel`) both unconditionally route a shader's **stage 0** through a
-  fixed, eagerly-created pipeline (`vk.pipeline_3d_lightmap[cullType]`, built with
-  `blendEnable = VK_FALSE` hardcoded) on the assumption that stage 0 is always the ordinary opaque
-  diffuse×lightmap base layer. That assumption breaks for any shader whose own stage 0 declares a
-  real `blendFunc` with no lightmap stage (common for "trans"/glow/energy effect shaders) — its
-  requested blend state was silently discarded and it drew fully opaque, while stage 1+ (already
-  routed through the real per-stage `vk_getPipeline3D` blend path) blended correctly on top, giving
-  exactly this "opaque base + translucent glow" look. Fixed in both draw paths: when
-  `shader->stages[0].blendEnabled`, skip the fixed-opaque stage-0 pass entirely and let the existing
-  per-stage loop (which already handles stages 1+ with real blend state) start at stage 0 instead of
-  stage 1, using `R_GetStageImage`/`vk_getPipeline3D` like any other blended stage. Ordinary shaders
-  (stage 0 opaque, the overwhelming majority) are completely unaffected — same lightmap pipeline,
-  same code path as before. Not self-built or tested; needs no shader recompile (pure draw-dispatch
-  logic, same shaders/pipelines already existed). In-game check: `dqn_tongue` (and any other
-  world/brush-entity shader with a blended, non-lightmapped stage 0) should now show background
-  through it instead of a solid base layer. The cheat-gated `r_showtris` wireframe overlay was left
-  calling the old always-opaque path unconditionally — it's a debug visualization, not meant to
-  represent real blending anyway, so this doesn't affect it.
-- **2026-11-22** — User tested the fix above: `dqn_tongue` was transparent, but now the *entire map*
-  looked overlit/washed out, like lightmaps had stopped applying almost everywhere. Root cause: the
-  `blendEnabled` check alone wasn't a safe signal. Two implicit shader-creation paths in
-  `tr_shader.c` — `R_InitShaders`'s `*default` shader and `R_CreateSingleStageShader` (used for
-  *any* texture referenced directly with no matching `.shader` script, which in practice is most
-  ordinary world wall/floor textures in a typical map) — both set `stages[0].blendEnabled = qtrue`
-  unconditionally by design (to let a texture's own alpha channel "just work" without a script, same
-  as `*white`). Before the previous fix, that flag was simply never read for stage 0's draw routing,
-  so it was harmless; the previous fix started reading it, so every one of those plain-texture world
-  surfaces got wrongly rerouted away from their lightmap entirely. Fixed by adding a new
-  `shader_t.explicitlyDefined` field (`tr_shader.h`), set `qtrue` only inside `ParseShader` (a real
-  `name { ... }` block parsed from a `.shader` file) and left `qfalse` (its zero-init default) for
-  both implicit paths. Both `vk_world.c` fix sites now require
-  `stages[0].blendEnabled && explicitlyDefined` together, so only a real authored shader that chose
-  its own stage 0 blend state (like `dqn_tongue`) takes the real-blend path — ordinary world textures
-  with no `.shader` script keep their normal opaque lightmap rendering regardless of the implicit
-  shaders' blend flag. Not self-built or tested. In-game check: the previous fix's check
-  (`dqn_tongue` now transparent) should still hold, *and* ordinary lit world geometry should look
-  normal again (lightmap shading/contrast restored, not flat/washed out).
-- **2026-11-22** — User reported a third, related bug: `textures/wt_alpha/mesh_c02` (`alphaFunc GE128`,
-  no `blendFunc` at all — an alpha-tested cutout mesh/fence texture, not a blended one) didn't cut
-  out. This is a different gap than the two fixes above: since it has no `blendFunc`,
-  `stages[0].blendEnabled` is false, so it was never affected by either previous fix and always kept
-  going through the fixed `vk.pipeline_3d_lightmap` pipeline — which turned out to have **no alpha
-  test support at all**: `world_lightmap.frag`/`GetWorldLightmapSpecInfo` only ever had a `clip_plane`
-  spec constant, never an `alpha_test_func` one (unlike `single_texture.frag`, which already has
-  real alpha-test support for entities/polys/extra world stages). Any world or brush-entity surface
-  whose stage 0 uses `alphaFunc` (a very common technique for lightmapped fences/grates/foliage/
-  chain-link) silently lost its cutout and rendered as a solid quad. Fixed properly rather than
-  routing around the lightmap pass (which would have thrown away real lightmap shading for exactly
-  the content type — lit alpha-cutout meshes — that most needs it): added `alpha_test_func` as a
-  second spec constant (constant_id 1) to `world_lightmap.frag`, with the same 4-way discard logic
-  `single_texture.frag` already uses, tested against `diffuse.a` (the texture×vertex alpha before the
-  lightmap multiply — equivalent to testing the final output alpha, since the lightmap never touches
-  alpha). `vk.pipeline_3d_lightmap`/`_portal`/`_mirror` (`vk_instance.h`) grew from `[cullType_t]` (3
-  entries) to `[cullType_t][alphaTestFunc]` (3×4 = 12 entries each, eagerly created at startup like
-  every other axis this trio already has — bounded and cheap, matching this file's existing
-  precedent rather than converting to a lazy cache for just one more small, bounded axis).
-  `vk_getWorldLightmapPipeline` (`vk_pipelines.h`/`.c`) takes `alphaTestFunc` now; both call sites in
-  `vk_world.c` (the main batch loop and `DrawBrushSurfaceStage0`) pass `stages[0].alphaTestFunc`
-  through. Not self-built or tested. **Needs a shader recompile** (`world_lightmap.frag` changed,
-  same `glslangValidator` + `gen_spv_c.py` step as before) before the next build will show the fix.
-  In-game check: `mesh_c02` (and any other lightmapped world/brush surface using `alphaFunc`) should
-  now show real cutout holes instead of a solid textured quad.
-- **2026-11-22** — User reported most `misc_model`-style entities looked either overbright or
-  flatly dark, while world geometry looked fine. Root cause: entities draw through
-  `ComputeEntityTint`, a single flat `ambient + directed` color baked the same for *every* vertex
-  of the whole model regardless of which way it faces the light — effectively always assuming the
-  best-case "directly facing the light" result (confirmed against `code/renderer`'s real per-vertex
-  formula, `RB_CalcDiffuseColor`: `ambient + max(dot(normal,lightDir),0) * directed`), so areas that
-  should shade dark side-to-side didn't, and the flat value itself swings from near-255 in bright
-  spots to genuinely low in dim ones with no gradient to soften either case. Implemented the
-  smaller, scoped fix discussed with the user (the full per-pixel Blinn-Phong item is much larger
-  and listed separately above): real **per-vertex** diffuse lighting on the GPU, reusing the real
-  normal data Phase 4 already put in the entity vertex buffers.
-  `ComputeEntityTint` (`vk_entity.c`) became `ComputeEntityLighting`, returning raw
-  ambient/directed/light-direction vectors instead of one pre-combined, pre-clamped byte tint.
-  `R_CalcStageColorAlpha`'s now-fully-dead `lightingTint` parameter was removed entirely (every
-  caller across the codebase already passed `NULL` for it except `vk_entity.c`'s own two, which
-  only ever used it for `CGEN_LIGHTING_DIFFUSE`) and that rgbGen case folded into the same flat-255
-  branch as `CGEN_IDENTITY` — the real lighting math moved to the GPU, so the CPU-baked vertex color
-  for those stages is now just a neutral 1.0 the GPU's own multiply doesn't double-apply.
-  `BuildLerpPushConstants` squeezes the new per-entity light data into push-constant bytes that were
-  already being sent but genuinely unused (`camPos.w`, `fogColor.a`, `clipPlane.y/z` — confirmed by
-  reading what `entity_lerp.vert`/`entity_skin.vert` actually consumed): ambient and directed each
-  pack into one `unorm4x8` bit pattern (`floatBitsToUint`/`unpackUnorm4x8` round-trip), and the
-  light direction (rotated into the entity's local space first, same trick already used for
-  `camPos`) encodes as a `(lat, long)` radian pair, mirroring `tr_light.c`'s own lat/long normal
-  packing. No push-constant size growth — still the same 128-byte range every entity pipeline
-  layout already declares.
-  A new `lighting_diffuse` spec constant (gated per draw on `stage->rgbGen == CGEN_LIGHTING_DIFFUSE`)
-  was added to all 4 entity pipeline variants (`vk_getPipelineEntityLerp`/`...LerpMultiTex`/
-  `...Skin`/`...SkinMultiTex`, `vk_pipelines.c`/`.h`), each gaining a `lightingDiffuse` parameter in
-  its cache key; new dedicated `entityLitSpecData_t`/`entityLitMultiTexSpecData_t` structs keep this
-  off the shared `vk2d_spec_data_t`/`multiTexSpecData_t` used by unrelated 2D/sky/world/poly
-  pipelines. Each variant also gained a real `in_normal` vertex attribute (previously present in the
-  buffer but never declared, per Phase 4's "minimal wiring" precedent) — for MD3/MDC, the *current*
-  frame's normal only (not blended with oldframe's, a deliberate simplification); for MDS/MDM, the
-  bind-pose normal is skinned by the *same* per-weight-slot rotation (`mat3(boneMatrix)`, no
-  translation) already computed for position, so it rotates correctly with the animated pose rather
-  than staying frozen in bind pose. `entity_lerp.vert`/`entity_skin.vert`/`entity_skin_multitex.vert`
-  all needed their push-constant struct's trailing `vec4` (previously named `clipPlane` and partly
-  or fully unused) extended to carry the new fields — safe because the CPU already pushes the full
-  128 bytes regardless of what each shader's own struct names; `entity_lerp_multitex.vert` already
-  declared that slot (as `lerpSlot`) so no change was needed there beyond adding the new fields to it.
-  Not self-built or tested. **Needs a shader recompile** (all 4 entity `.vert` files changed) before
-  the next build will show the fix. In-game check: `misc_model`s using `rgbGen lightingDiffuse`
-  should now visibly shade darker on their away-from-the-light side instead of being flatly tinted
-  all over, and the overall brightness swing between bright/dim areas should be less extreme.
+- **2026-11-18** — Initial audit; roadmap created from a diff against vkQuake3/rend2. No code.
+- **2026-11-18** — Added gamma/overbright items to the roadmap (user-flagged gaps). No code.
+- **2026-11-18** — Implemented all of Phase 0 except overbright bits. Compiled clean; not yet
+  runtime-tested.
+- **2026-11-19** — Runtime-tested Phase 0: menu load regressed to 30-60s. Three wrong theories
+  chased (texture sync overhead, font mip chains, "fat" multi-stage shaders) before real sub-phase
+  timing found the actual cause (see Phase 0's gamma item — write-combined-memory read). Fixed;
+  user confirmed load time back to normal. **Lesson**: get real timing data before theorizing.
+- **2026-11-19** — Shipped `tcMod entityTranslate` + overbright bits (Phase 1). Scoped the rest of
+  Phase 1's risk/complexity in depth before touching more code (deformVertexes split four ways,
+  world iterator requires a static→dynamic architecture change, BSP fog is multi-part) — see Phase
+  1 items for outcomes.
+- **2026-11-19** — User approved the world static→dynamic rewrite's performance risk. Rewrote
+  `vk_world.c` (see Phase 1 checkmark). User tested: Castle 250 FPS, River Outpost 150-250 FPS, no
+  dramatic regression (caveat: most future per-frame workload doesn't exist yet).
+- **2026-11-19** — World dlights, multitexture pipelines, portal/mirror clip-plane + sky-portal,
+  decals, view-weapon depth hack, brush-model entities: all implemented this session, in that
+  order, largely from direct user bug reports. See each item's Phase 1/2 checkmark above for
+  design and the two real bugs found/fixed in decals (side-plane sign, missing polygonOffset) and
+  one in depth-hack porting. All compiled clean; brush-model entities **confirmed working
+  in-game**, others pending test at time of writing (later confirmed, see subsequent entries).
+- **2026-11-20** — Diagnosed "shattered"/missing-texture weapons and plain-white headless enemies
+  directly from logs + pk3 content (not guesswork): (1) `RE_RegisterModel` had no cross-extension
+  model fallback (reference tries iqm/mdr/mds/mdm/mdx/md3/mdc in order; content routinely
+  references an extension that isn't what's shipped) — ported the fallback. (2) `tr_skin.c`'s
+  `CommaParse` didn't consume its own separator, breaking every second field of every `.skin` file
+  — fixed. Both outside `code/renderer_vulkan` proper but load-bearing for it. Root cause of the
+  "shattered" geometry itself (as opposed to missing/wrong parts) remained open.
+- **2026-11-20** — Repo/doc audit after out-of-session commits; found one undocumented leftover
+  (`r_vk_disableMultiTex`). Refreshed the stale "Current state" summary. No code.
+- **2026-11-20** — Root-caused "shattered weapon" via diagnostic logging + user log: this map's
+  skybox portal makes `RE_RenderScene` run 2-3x per real frame (sky room, main scene, then cgame's
+  separate view-weapon scene), but every per-frame dynamic-buffer write cursor
+  (`vertWrite`/`idxWrite`/etc. across `vk_entity.c`/`vk_poly.c`/`vk_world.c`) reset to 0 on *every*
+  call instead of once per real frame — later scenes silently overwrote earlier scenes' already-
+  recorded GPU data before it was ever read. Fixed by moving all resets into new
+  `vk_*_begin_frame()` functions called once per frame from `RE_BeginFrame`.
+- **2026-11-20** — Follow-up: a second bug from the same root architecture — `tr_scene.c`'s
+  `R_GetSceneEntities`/etc. returned the *whole* frame's list on every call (no per-scene
+  windowing), so every entity was processed 2-3x per frame, eating the shared vertex/index budget
+  that the first fix now made shared. Added the reference engine's sliding-window mechanism
+  (`s_firstSceneEntity`/etc., advanced after each `RE_RenderScene`).
+- **2026-11-20** — Follow-up: found the real, final cause of the FG42/MP44 body-invisible symptom —
+  `CG_RenderViewWeapon` is a *third* scene per frame, drawn last, and `ENTITY_MAX_VERTS`/
+  `ENTITY_MAX_INDEXES` were still sized for one scene's worth of content, so the view-weapon (last
+  to be processed) silently overflowed and got dropped first. Bumped both caps 4x. Also chased and
+  ruled out a false lead (scene draw order looked wrong in a 2-line log excerpt; a wider sample
+  showed the real order was correct). The separately-reported black-sky-portal bug remained open.
+- **2026-11-21** — Three fixes: (1) Phase 2's curved-patch adaptive-subdivision bug (see its
+  checkmark). (2) `make deploysteam` was missing the Vulkan-DLL copy block `copyfiles` already had
+  — added to Makefile. (3) `misc_mg42`'s model is raw MD3 data shipped under a `.mdc` filename;
+  `RE_RegisterModel` dispatched by extension instead of sniffing the file's own ident — fixed to
+  sniff and dispatch to the matching loader.
+- **2026-11-21** — Follow-up: mg42a/mp44/fg42 bodies still partially missing — their largest
+  surface (11582 verts) exceeded this renderer's `SKIN_SCRATCH_VERTS` cap (silently hitting the
+  overflow guard), while the reference engine's much larger `SHADER_MAX_VERTEXES` (40000) doesn't.
+  Bumped the cap to match.
+- **2026-11-21** — Follow-up: NPC heads showed a solid white mask over the eyes — a 5th model
+  surface (`h_blink`) should only draw when `RF_BLINK` is set (reference engine skips it
+  otherwise); this renderer had no such check. Added it to all 4 model-type surface loops. **User
+  confirmed major improvement.** Residual, deferred-at-user's-request issue: during the actual
+  blink moment `h_blink` itself shows wrong/white instead of the correct eyelid texture — ruled out
+  texture content, all skin variants, and pk3 case-sensitivity; next lead (not yet chased) is that
+  `h_blink` has 17 real animated delta frames sharing `ent->frame`/`oldframe`, not a simple overlay.
+- **2026-11-21** — Implemented real BSP-brush volumetric fog (Phase 1 item) and dynamic light
+  coronas/flares (Phase 2 item) — see their checkmarks. Flares hit one build issue (`vk_flares.c`
+  missing from the Makefile's `Q3RVOBJ` list) — fixed. **User confirmed coronas working in-game.**
+- **2026-11-21** — Implemented stencil shadow volumes (Phase 2 item, see checkmark for the
+  stencil-buffer prerequisite bug found along the way). Remembered to add `vk_shadows.o` to the
+  Makefile this time (missed `vk_flares.o` in a prior entry). Not self-built this session
+  (background-shell `mingw32-make` environment issue, unrelated to the change).
+- **2026-11-21** — Removed two leftover debug prints in `tr_bones.c` (`R_GetBoneTag`/
+  `R_MDM_GetTag` logging every missing-tag lookup) — confirmed against the reference engine that a
+  missing optional tag is normal/silent, not a bug; the logging just should never have stayed in.
+- **2026-11-21** — Implemented `RE_RotatedPic`/`RE_StretchPicGradient` (Phase 2 item). **User
+  confirmed working.**
+- **2026-11-22** — Root-caused the long-standing skybox-portal visual bug (black sky → later a
+  solid-color wedge cutting into the starfield). Ruled out, in order: asset content, cube face
+  UV/orientation math (found and fixed a real bug here too, but it didn't explain this symptom),
+  scene-arrival order (also a real bug, fixed — this build's cgame renders portal-then-main, not
+  main-then-portal as assumed), and fog state. **Actual cause**: `vk_sky.c`'s sky cube used a fixed
+  half-size (4096), but the reference sizes it dynamically from the *current scene's* far clip
+  plane (`zFar/1.75`) specifically so it's never clipped — and this engine's zFar (computed from
+  world bounds relative to the camera) comes out much smaller for a tiny sky-portal scene than the
+  fixed cube's farthest corner, clipping part of it away and showing the render pass's clear color
+  through the gap. Fixed by exposing `R_ComputeZFar` and sizing the cube from it. **User confirmed
+  fixed.** All temporary diagnostics from this investigation removed.
+- **2026-11-22** — Swept the 4 remaining render-to-texture-family stubs for real callers; none
+  load-bearing under default settings. Left stubbed per user's choice (Phase 2 item).
+- **2026-11-22** — Implemented real frames-in-flight and in-place swapchain resize (Phase 3 items,
+  see checkmarks). Also revisited the pipeline cache (raised `MAX_CACHED_3D_PIPELINES` to 128) and
+  removed a stale Phase 3 item that turned out to already be done in Phase 0 (GPU mip generation).
+  Not self-built this session (standing instruction).
+- **2026-11-22** — Started and completed Phase 4's vertex-format item across the day in 3 staged
+  passes (world, then entity GPU vertex-lerp 2a/2b, then entity GPU bone-skinning 3a/3b) — see the
+  Phase 4 checkmark above for the consolidated design and the two real findings worth remembering
+  (the MDS/MDM per-weight-offset format, and the dead-deferred-draw-path index-cursor-stomp bug).
+  Full research/staging notes in `C:\Users\wolfetplayer\.claude\plans\lazy-swinging-noodle.md`.
+  Needed 4 shader recompiles (`shaders/gen_spv_c.py`) across the stages; not self-built. **User
+  later confirmed Stage 2b/3b tested fine** after compiling the shaders by hand.
+- **2026-11-22** — Implemented `deformVertexes wave`/`bulge` for world surfaces (Phase 1 item, see
+  checkmark) using the now-available normal data. No shader recompile needed (pure CPU-side math).
+- **2026-11-22** — User reported `textures/realm_tda/dqn_tongue` (a blended "trans" shader) wasn't
+  transparent; root-caused and fixed (see Phase 1's world-iterator checkmark, bug #1). User's
+  retest then surfaced bug #2 (ordinary world textures went dark/washed out — the
+  `explicitlyDefined` fix) and bug #3 (`alphaFunc`-cutout shaders not cutting out — the
+  `world_lightmap.frag` alpha-test gap), both also fixed same session. See the Phase 1 checkmark
+  for all three; each needed a `world_lightmap.frag` or draw-dispatch-only fix (last one needed a
+  shader recompile, the other two didn't).
+- **2026-11-22** — User reported `misc_model`s looking overbright or flatly dark. Implemented real
+  per-vertex diffuse lighting for `CGEN_LIGHTING_DIFFUSE` entities (Phase 4 item, see checkmark for
+  the full design: `ComputeEntityLighting` replacing `ComputeEntityTint`, push-constant packing of
+  ambient/directed/lightDir into previously-unused bytes, new `lighting_diffuse` pipeline axis,
+  skinned-normal transform for MDS/MDM). Needed 4 shader recompiles.
+- **2026-11-23** — User tested the above: no visible change anywhere, and flagged a *different*,
+  broader symptom — most/all static map decorations (not just `rgbGen lightingDiffuse` entities)
+  render darker than the reference engine, e.g. `models/mapobjects/malta/merch_barrel`
+  (`rgbGen vertex` + `map $lightmap, blendFunc filter`). Investigated at length; several theories
+  ruled out before landing on the current open question:
+  - Confirmed this shader has nothing to do with `CGEN_LIGHTING_DIFFUSE` — the per-vertex lighting
+    fix was never going to touch it.
+  - Confirmed (via `r_vk_debugWeapon`) the object is never processed as a runtime entity at all —
+    ruled out "no per-instance lightmap support for entities."
+  - User clarified `misc_model` (unlike `misc_gamemodel`) is baked into static BSP geometry by
+    q3map2 at compile time — confirmed this object is genuine `tr_world.surfaces[]` content
+    (`MST_TRIANGLE_SOUP`, 434 such surfaces present in the load log, all accounted for in
+    `vk_world_build`'s batch count), going through the same already-correct lightmap-fallback path
+    as ordinary walls.
+  - Chased an "overbright is only half-implemented" theory (a `GL_RGB_SCALE`-style per-blend-pass
+    render-time multiplier that this port never built) — this looked promising enough to update
+    Phase 1's checkmark, but further research **ruled it out**: the reference engine's actual
+    overbright compensation is a whole-frame post-process (gamma ramp or FBO gamma shader), which
+    can't explain one object being darker than another in the same frame.
+  - A temporary diagnostic (`vk_world_build`, logs shader name/lightmapNum/sample vertex color for
+    `CGEN_VERTEX` surfaces) confirmed real, moderate (not corrupted/near-zero) baked vertex-color
+    values for this shader family — not an obviously-broken data-loading bug either.
+  - **Root cause still open.** Next steps: compare `r_vertexLight`/`r_mapOverBrightBits`/`r_gamma`
+    cvar values between the user's OpenGL1 and Vulkan test sessions (differing cvars could fully
+    explain this with zero renderer bug involved); if they match, keep digging with the still-in-
+    place diagnostic. Remove the diagnostic once resolved.
