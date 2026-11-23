@@ -120,8 +120,9 @@ static void RE_Shutdown( qboolean destroyWindow ) {
 
 		vk_shutdown();
 
-		// no fast vid_restart path yet -- always recreate the window too
-		vk_destroyWindow();
+		if ( destroyWindow ) {
+			vk_destroyWindow();
+		}
 	}
 
 	R_glConfigClear();

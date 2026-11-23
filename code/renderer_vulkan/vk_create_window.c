@@ -69,13 +69,12 @@ static int VKimp_SetMode( int mode, qboolean fullscreen ) {
 
 	R_SetWinMode( mode, desktopMode.w, desktopMode.h, (unsigned int)desktopMode.refresh_rate );
 
-	if ( fullscreen ) {
-		flags |= SDL_WINDOW_FULLSCREEN;
+	if ( window_sdl != NULL ) {
+		return 0;
 	}
 
-	if ( window_sdl != NULL ) {
-		SDL_DestroyWindow( window_sdl );
-		window_sdl = NULL;
+	if ( fullscreen ) {
+		flags |= SDL_WINDOW_FULLSCREEN;
 	}
 
 	int width, height;
