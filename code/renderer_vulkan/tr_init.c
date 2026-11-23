@@ -274,6 +274,10 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj, fogPush );
 	}
 
+	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+		vk_world_draw_transparent( viewProj, fogPush );
+	}
+
 	// One-shot per real frame: only draws if some entity above actually stamped the stencil buffer.
 	vk_shadows_draw_darken( viewProj, fogPush );
 

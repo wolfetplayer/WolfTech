@@ -665,7 +665,6 @@ qhandle_t RE_RegisterShaderInternal( const char *name, qboolean noMip ) {
 	return R_CreateSingleStageShader( name, image );
 }
 
-// Plain alpha-blended single-stage shader wrapping an image_t.
 static qhandle_t R_CreateSingleStageShader( const char *name, image_t *image ) {
 	shader_t *s;
 
@@ -682,6 +681,7 @@ static qhandle_t R_CreateSingleStageShader( const char *name, image_t *image ) {
 	s->stages[0].blendEnabled = qtrue;
 	s->stages[0].srcBlend = VK_BLEND_FACTOR_SRC_ALPHA;
 	s->stages[0].dstBlend = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	s->stages[0].rgbGen = CGEN_LIGHTING_DIFFUSE;
 	numShaders++;
 
 	return s->index;

@@ -556,13 +556,18 @@ void vk_world_build( void ) {
 			   (int)nextVertSlot, (int)writeOffset, numBatches, tr_world.numLightmaps );
 }
 
-// Expands refs[0..numRefs)'s visible surfaces into s_dynLMMapped with stage's real per-frame
-// rgbGen/tcMod, merging contiguous visible writes into one draw call per run.
-static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const shader_t *shader ) {
+static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const shader_t *shader, qboolean useBakedVertexColor ) {
+	shaderStage_t stage0Local;
 	const shaderStage_t *stage0 = &shader->stages[0];
 	qboolean runOpen = qfalse;
 	uint32_t runStart = 0;
 	int j;
+
+	if ( useBakedVertexColor && !shader->explicitlyDefined && stage0->rgbGen == CGEN_LIGHTING_DIFFUSE ) {
+		stage0Local = *stage0;
+		stage0Local.rgbGen = CGEN_EXACT_VERTEX;
+		stage0 = &stage0Local;
+	}
 
 	for ( j = 0; j < numRefs; j++ ) {
 		const worldSurfRef_t *ref = &refs[j];
@@ -1028,8 +1033,29 @@ void vk_world_begin_frame( void ) {
 	s_dynBrushExtraRegionBase = slot * (uint32_t)BRUSH_DYN_CAPACITY;
 }
 
-void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
+// Shared by vk_world_draw/vk_world_draw_transparent: mvp/fog/portal-clip push constants, identical for both passes within a frame.
+static void PushWorldTransform( const float mvp[16], const float fogPush[12] ) {
 	float push_data[32];
+
+	memset( push_data, 0, sizeof( push_data ) );
+	memcpy( push_data, mvp, 16 * sizeof( float ) );
+	memcpy( push_data + 16, fogPush, 12 * sizeof( float ) );
+	if ( R_InPortalView() ) {
+		// push_data[28..31] is the Transform struct's clipPlane vec4 (world_lightmap.vert).
+		vec3_t normal;
+		float dist;
+		R_GetActivePortalPlane( normal, &dist );
+		push_data[28] = normal[0]; push_data[29] = normal[1]; push_data[30] = normal[2]; push_data[31] = dist;
+	}
+	qvkCmdPushConstants( vk.command_buffer, vk.lightmap_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+		0, sizeof( push_data ), push_data );
+}
+
+static qboolean IsTransparentBatch( const shader_t *shader ) {
+	return shader->stages[0].blendEnabled && shader->explicitlyDefined;
+}
+
+void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	VkDeviceSize lmVbOffset = (VkDeviceSize)s_dynLMRegionBase * sizeof( vkWorldVertex_t );
 	VkDeviceSize vb2dOffset = (VkDeviceSize)s_dyn2DRegionBase * sizeof( vk2d_vertex_t );
 	VkDeviceSize dlightVbOffset = (VkDeviceSize)s_dynDlightRegionBase * sizeof( vk2d_vertex_t );
@@ -1046,18 +1072,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		ri.Printf( PRINT_ALL, "...vk_world_draw checkpoint: first draw starting, %d batches\n", s_numBatches );
 	}
 
-	memset( push_data, 0, sizeof( push_data ) );
-	memcpy( push_data, mvp, 16 * sizeof( float ) );
-	memcpy( push_data + 16, fogPush, 12 * sizeof( float ) );
-	if ( R_InPortalView() ) {
-		// push_data[28..31] is the Transform struct's clipPlane vec4 (world_lightmap.vert).
-		vec3_t normal;
-		float dist;
-		R_GetActivePortalPlane( normal, &dist );
-		push_data[28] = normal[0]; push_data[29] = normal[1]; push_data[30] = normal[2]; push_data[31] = dist;
-	}
-	qvkCmdPushConstants( vk.command_buffer, vk.lightmap_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-		0, sizeof( push_data ), push_data );
+	PushWorldTransform( mvp, fogPush );
 
 	for ( i = 0; i < s_numBatches; i++ ) {
 		const worldBatch_t *batch = &s_batches[i];
@@ -1068,26 +1083,28 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		if ( batch->descriptor == VK_NULL_HANDLE ) {
 			continue;
 		}
-
-		if ( !( shader->stages[0].blendEnabled && shader->explicitlyDefined ) ) {
-			// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
-			pipeline = vk_getWorldLightmapPipeline( shader->cullType, shader->stages[0].alphaTestFunc );
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
-			}
-			if ( !lmBufferBound ) {
-				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
-				lmBufferBound = qtrue; bound2DBuffer = qfalse;
-			}
-
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
-				0, 1, &batch->descriptor, 0, NULL );
-
-			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader );
+		if ( IsTransparentBatch( shader ) ) {
+			continue; // drawn later by vk_world_draw_transparent, after opaque entities
 		}
 
-		for ( s = ( shader->stages[0].blendEnabled && shader->explicitlyDefined ) ? 0 : 1; s < shader->numStages; s++ ) {
+		// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
+		pipeline = vk_getWorldLightmapPipeline( shader->cullType, shader->stages[0].alphaTestFunc );
+		if ( pipeline != boundPipeline ) {
+			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+			boundPipeline = pipeline;
+		}
+		if ( !lmBufferBound ) {
+			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
+			lmBufferBound = qtrue; bound2DBuffer = qfalse;
+		}
+
+		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
+			0, 1, &batch->descriptor, 0, NULL );
+
+		ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader,
+			batch->lightmapIdx == s_whiteLightmapIdx );
+
+		for ( s = 1; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
 			image_t *stageImage = R_GetStageImage( stage );
 
@@ -1171,13 +1188,63 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			shader = R_GetShaderByHandle( batch->shader );
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
 				0, 1, &batch->descriptor, 0, NULL );
-			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader );
+			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader,
+				batch->lightmapIdx == s_whiteLightmapIdx );
 		}
 	}
 
 	if ( firstDraw ) {
 		ri.Printf( PRINT_ALL, "...vk_world_draw checkpoint: first draw recorded ok\n" );
 		firstDraw = qfalse;
+	}
+}
+
+void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] ) {
+	VkDeviceSize vb2dOffset = (VkDeviceSize)s_dyn2DRegionBase * sizeof( vk2d_vertex_t );
+	VkPipeline boundPipeline = VK_NULL_HANDLE;
+	qboolean bound2DBuffer = qfalse;
+	int i;
+
+	if ( !s_built ) {
+		return;
+	}
+
+	PushWorldTransform( mvp, fogPush );
+
+	for ( i = 0; i < s_numBatches; i++ ) {
+		const worldBatch_t *batch = &s_batches[i];
+		shader_t *shader = R_GetShaderByHandle( batch->shader );
+		int s;
+
+		if ( batch->descriptor == VK_NULL_HANDLE || !IsTransparentBatch( shader ) ) {
+			continue;
+		}
+
+		for ( s = 0; s < shader->numStages; s++ ) {
+			const shaderStage_t *stage = &shader->stages[s];
+			image_t *stageImage = R_GetStageImage( stage );
+			VkPipeline pipeline;
+
+			if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
+				continue;
+			}
+
+			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset, stage->depthWrite );
+			if ( pipeline != boundPipeline ) {
+				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+				boundPipeline = pipeline;
+			}
+			if ( !bound2DBuffer ) {
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dyn2DBuffer, &vb2dOffset );
+				bound2DBuffer = qtrue;
+			}
+
+			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+				0, 1, &stageImage->vk_descriptor, 0, NULL );
+
+			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, stage );
+		}
 	}
 }
 

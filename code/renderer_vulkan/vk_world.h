@@ -13,8 +13,9 @@ void vk_world_shutdown( void );
 // Resets the shared dynamic-buffer write cursors; call once per real frame (vk_world_draw can run more than once per frame).
 void vk_world_begin_frame( void );
 
-// Draws every visible PLANAR/TRIANGLE_SOUP/PATCH surface, batched by shader+lightmap (fogPush is tr_fog.h's push-constant block). No-op if no world is built.
 void vk_world_draw( const float mvp[16], const float fogPush[12] );
+
+void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] );
 
 // Draws one brush-model (func_door/etc.) entity, transformed by its current origin/axis. Call after vk_world_draw.
 void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const float mvp[16], const float fogPush[12] );

@@ -84,6 +84,35 @@ static void R_LoadPlanes( const lump_t *l ) {
 	}
 }
 
+static cvar_t *r_gamma;
+static byte s_vertexGammaTable[256];
+static float s_vertexGammaTableBuiltFor = -1.0f;
+
+static void R_BuildVertexGammaTableIfNeeded( void ) {
+	int i;
+
+	if ( !r_gamma ) {
+		r_gamma = ri.Cvar_Get( "r_gamma", "1.4", CVAR_ARCHIVE | CVAR_LATCH );
+	}
+	if ( r_gamma->value == s_vertexGammaTableBuiltFor ) {
+		return;
+	}
+
+	{
+		float g = r_gamma->value;
+		if ( g < 0.5f ) g = 0.5f;
+		if ( g > 3.0f ) g = 3.0f;
+
+		for ( i = 0; i < 256; i++ ) {
+			float corrected = 255.0f * powf( i / 255.0f, 1.0f / g ) + 0.5f;
+			if ( corrected < 0.0f ) corrected = 0.0f;
+			if ( corrected > 255.0f ) corrected = 255.0f;
+			s_vertexGammaTable[i] = (byte)corrected;
+		}
+		s_vertexGammaTableBuiltFor = r_gamma->value;
+	}
+}
+
 static void R_LoadDrawVerts( const lump_t *l ) {
 	int i, j, count;
 	drawVert_t *in, *out;
@@ -96,6 +125,8 @@ static void R_LoadDrawVerts( const lump_t *l ) {
 	tr_world.drawVerts = out;
 	tr_world.numDrawVerts = count;
 
+	R_BuildVertexGammaTableIfNeeded();
+
 	for ( i = 0; i < count; i++ ) {
 		for ( j = 0; j < 3; j++ ) {
 			out[i].xyz[j] = LittleFloat( out[i].xyz[j] );
@@ -106,6 +137,9 @@ static void R_LoadDrawVerts( const lump_t *l ) {
 			out[i].lightmap[j] = LittleFloat( out[i].lightmap[j] );
 		}
 		R_ShiftLightingBytes( out[i].color, out[i].color );
+		out[i].color[0] = s_vertexGammaTable[out[i].color[0]];
+		out[i].color[1] = s_vertexGammaTable[out[i].color[1]];
+		out[i].color[2] = s_vertexGammaTable[out[i].color[2]];
 	}
 }
 
@@ -346,10 +380,18 @@ static void R_LoadLightGrid( const lump_t *l ) {
 	tr_world.lightGridData = ri.Hunk_Alloc( l->filelen, h_low );
 	memcpy( tr_world.lightGridData, fileBase + l->fileofs, l->filelen );
 
+	R_BuildVertexGammaTableIfNeeded();
+
 	for ( i = 0; i < numGridPoints; i++ ) {
 		byte *data = tr_world.lightGridData + i * 8;
+		int c;
 		R_ShiftLightingBytes( data, data );         // ambient RGB
 		R_ShiftLightingBytes( data + 3, data + 3 ); // directed RGB
+
+		for ( c = 0; c < 3; c++ ) {
+			data[c] = s_vertexGammaTable[data[c]];
+			data[3 + c] = s_vertexGammaTable[data[3 + c]];
+		}
 	}
 }
 

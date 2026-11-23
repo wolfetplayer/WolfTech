@@ -807,9 +807,15 @@ static void ComputeEntityLighting( const refEntity_t *ent, vec3_t outAmbient, ve
 	dlights = R_GetSceneDlights( &numDlights );
 
 	if ( !hasGrid && numDlights == 0 ) {
-		VectorSet( outAmbient, 255.0f, 255.0f, 255.0f );
-		VectorClear( outDirected );
+		VectorSet( outAmbient, 150.0f, 150.0f, 150.0f );
+		VectorSet( outDirected, 150.0f, 150.0f, 150.0f );
 		return;
+	}
+
+	if ( ent->renderfx & RF_MINLIGHT ) {
+		outAmbient[0] += 32.0f;
+		outAmbient[1] += 32.0f;
+		outAmbient[2] += 32.0f;
 	}
 
 	for ( i = 0; i < numDlights; i++ ) {
