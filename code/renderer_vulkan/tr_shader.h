@@ -116,6 +116,7 @@ typedef struct shaderStage_s {
 	VkBlendFactor dstBlend;
 	qboolean blendEnabled;
 	int alphaTestFunc; // 0=none, 1=GT0, 2=LT128, 3=GE128
+	qboolean depthWrite;
 
 	colorGen_t rgbGen;
 	waveForm_t rgbWave;

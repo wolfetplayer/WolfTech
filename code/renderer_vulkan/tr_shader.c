@@ -131,6 +131,7 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	VkBlendFactor srcBlend = VK_BLEND_FACTOR_ONE;
 	VkBlendFactor dstBlend = VK_BLEND_FACTOR_ZERO;
 	int alphaTestFunc = 0;
+	qboolean depthWriteExplicit = qfalse;
 	colorGen_t rgbGen = CGEN_IDENTITY_LIGHTING;
 	qboolean rgbGenExplicit = qfalse;
 	waveForm_t rgbWave;
@@ -259,6 +260,8 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 			SkipRestOfLine( text );
 		} else if ( !Q_stricmp( token, "tcMod" ) ) {
 			ParseTexMod( text, stage );
+		} else if ( !Q_stricmp( token, "depthwrite" ) ) {
+			depthWriteExplicit = qtrue;
 		} else {
 			// tcGen, depthFunc, detail, etc. -- parsed-and-discarded.
 			SkipRestOfLine( text );
@@ -269,6 +272,8 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	stage->srcBlend = srcBlend;
 	stage->dstBlend = dstBlend;
 	stage->alphaTestFunc = alphaTestFunc;
+
+	stage->depthWrite = depthWriteExplicit || !hasBlend;
 
 	// If rgbGen wasn't given explicitly, default depends on blend (matches code/renderer's ParseStage).
 	if ( !rgbGenExplicit ) {

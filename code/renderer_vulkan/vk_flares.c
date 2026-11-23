@@ -275,7 +275,7 @@ static void DrawBillboard( const flare_t *f, const vec3_t right, const vec3_t up
 		EmitQuadFan( &s_mapped[s_writeOffset], corners, stageColors, stageUVs );
 
 		pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-			vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, VK_FALSE, VK_FALSE, shader->polygonOffset );
+			vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, VK_FALSE, VK_FALSE, shader->polygonOffset, stage->depthWrite );
 		if ( pipeline != *boundPipeline ) {
 			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 			*boundPipeline = pipeline;

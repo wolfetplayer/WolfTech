@@ -17,6 +17,8 @@ static VkFormat find_depth_format( void ) {
 		VkFormatProperties props;
 		qvkGetPhysicalDeviceFormatProperties( vk.physical_device, candidates[i], &props );
 		if ( props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT ) {
+			ri.Printf( PRINT_ALL, "Vulkan: depth format %s\n",
+				( candidates[i] == VK_FORMAT_D24_UNORM_S8_UINT ) ? "D24_UNORM_S8_UINT" : "D32_SFLOAT_S8_UINT (fallback)" );
 			return candidates[i];
 		}
 	}

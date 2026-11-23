@@ -524,6 +524,7 @@ typedef struct {
 	VkBool32 clipPlane;
 	VkBool32 mirror;
 	VkBool32 polygonOffset;
+	VkBool32 depthWrite;
 } cachedPipelineKey_t;
 
 static cachedPipelineKey_t s_cachedPipelineKeys[MAX_CACHED_3D_PIPELINES];
@@ -544,7 +545,7 @@ static void vk_destroyPipelineCache3D( void ) {
 
 VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 							  VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 clipPlane, VkBool32 mirror,
-							  VkBool32 polygonOffset ) {
+							  VkBool32 polygonOffset, VkBool32 depthWrite ) {
 	VkVertexInputBindingDescription binding2d;
 	VkVertexInputAttributeDescription attribs2d[3];
 	vk2d_spec_data_t spec_data;
@@ -557,7 +558,8 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 		const cachedPipelineKey_t *key = &s_cachedPipelineKeys[i];
 		if ( key->vertexStride == vertexStride && key->blendEnable == blendEnable && key->srcBlend == srcBlend &&
 			 key->dstBlend == dstBlend && key->cullMode == cullMode && key->alphaTestFunc == alphaTestFunc &&
-			 key->clipPlane == clipPlane && key->mirror == mirror && key->polygonOffset == polygonOffset ) {
+			 key->clipPlane == clipPlane && key->mirror == mirror && key->polygonOffset == polygonOffset &&
+			 key->depthWrite == depthWrite ) {
 			return s_cachedPipelines[i];
 		}
 	}
@@ -583,9 +585,10 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 	s_cachedPipelineKeys[s_numCachedPipelines].clipPlane = clipPlane;
 	s_cachedPipelineKeys[s_numCachedPipelines].mirror = mirror;
 	s_cachedPipelineKeys[s_numCachedPipelines].polygonOffset = polygonOffset;
+	s_cachedPipelineKeys[s_numCachedPipelines].depthWrite = depthWrite;
 	s_cachedPipelines[s_numCachedPipelines] = create_pipeline_ex( vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, 1, attribs2d, 3, blendEnable, srcBlend, dstBlend, VK_TRUE, mirror ? vk_flipCullMode( cullMode ) : cullMode,
-		VK_POLYGON_MODE_FILL, polygonOffset, VK_TRUE,
+		VK_POLYGON_MODE_FILL, polygonOffset, depthWrite,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
 

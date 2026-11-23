@@ -1,5 +1,6 @@
-// tr_marks.c -- see tr_marks.h; ported from code/renderer's tr_marks.c (GPLv2-or-later), simplified: no SF_FACE/SF_GRID/SF_TRIANGLES split (bspSurface_t is already pre-triangulated), a flat linear surface scan instead of R_BoxSurfaces_r's BSP walk, and always the "old mapping" raw-xyz output (cgame computes planar UVs itself) -- see R_MarkFragments.
+// tr_marks.c -- see tr_marks.h
 
+#include <math.h>
 #include <string.h>
 
 #include "tr_local.h"
@@ -76,7 +77,6 @@ static void R_ChopPolyBehindPlane( int numInPoints, vec3_t inPoints[MAX_VERTS_ON
 	}
 }
 
-// Clips one triangle against all numPlanes, appending the surviving fragment (raw xyz, no ST -- see tr_marks.h).
 static void R_AddMarkFragment( vec3_t triangle[3], int numPlanes, const vec3_t *normals, const float *dists,
 								int maxPoints, float *pointBuffer, int maxFragments, markFragment_t *fragmentBuffer,
 								int *returnedPoints, int *returnedFragments ) {
@@ -113,21 +113,135 @@ static void R_AddMarkFragment( vec3_t triangle[3], int numPlanes, const vec3_t *
 	( *returnedFragments )++;
 }
 
+static void ClipSurfaceOldStyle( const bspSurface_t *surf, const vec3_t *normals, const float *dists, int numPlanes,
+								  int maxPoints, float *pointBuffer, int maxFragments, markFragment_t *fragmentBuffer,
+								  int *returnedPoints, int *returnedFragments ) {
+	int k;
+
+	for ( k = 0; k < surf->numIndexes; k += 3 ) {
+		vec3_t triangle[3];
+		const drawVert_t *v0, *v1, *v2;
+
+		v0 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k]];
+		v1 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k + 1]];
+		v2 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k + 2]];
+
+		// No facing check here, matching upstream's SF_FACE/old-mapping path (which has one commented out).
+		VectorCopy( v0->xyz, triangle[0] );
+		VectorCopy( v1->xyz, triangle[1] );
+		VectorCopy( v2->xyz, triangle[2] );
+
+		R_AddMarkFragment( triangle, numPlanes, normals, dists, maxPoints, pointBuffer,
+						   maxFragments, fragmentBuffer, returnedPoints, returnedFragments );
+		if ( *returnedFragments >= maxFragments ) {
+			return;
+		}
+	}
+}
+
+static void ClipSurfaceNewMapping( const bspSurface_t *surf, const vec3_t center, const vec3_t projectionDir,
+									float radius, int orientation, int maxPoints, float *pointBuffer,
+									int maxFragments, markFragment_t *fragmentBuffer,
+									int *returnedPoints, int *returnedFragments ) {
+	static const float stCorner[4][2] = { { -1, -1 }, { 1, -1 }, { 1, 1 }, { -1, 1 } };
+	const float *surfNormal = tr_world.drawVerts[surf->firstVert].normal; // MST_PLANAR -- every vertex shares one normal
+	vec3_t axis0, axis1, axis2, rotated;
+	vec3_t newCenter;
+	vec3_t quadCorners[4];
+	vec3_t lnormals[4];
+	float ldists[4];
+	float surfDist, dot, texCoordScale;
+	int j, k;
+
+	surfDist = DotProduct( surfNormal, tr_world.drawVerts[surf->firstVert].xyz );
+
+	// Is this surface actually the (or a) one hit, close enough to the impact to matter?
+	dot = DotProduct( center, surfNormal ) - surfDist;
+	if ( ( dot < -0.5f && DotProduct( surfNormal, projectionDir ) >= 0.01f ) || fabsf( dot ) > radius ) {
+		return;
+	}
+
+	VectorMA( center, -dot, projectionDir, newCenter );
+	dot = DotProduct( newCenter, surfNormal ) - surfDist;
+	VectorMA( newCenter, -dot, surfNormal, newCenter );
+
+	// Build an in-plane tangent basis (axis1/axis2) at the mark's roll angle (orientation).
+	VectorCopy( surfNormal, axis0 );
+	VectorNormalize( axis0 );
+	PerpendicularVector( axis1, axis0 );
+	RotatePointAroundVector( rotated, axis0, axis1, (float)orientation );
+	VectorCopy( rotated, axis2 );
+	CrossProduct( axis0, axis2, axis1 );
+
+	texCoordScale = 0.5f / radius;
+
+	for ( j = 0; j < 4; j++ ) {
+		VectorMA( newCenter, stCorner[j][0] * radius, axis1, quadCorners[j] );
+		VectorMA( quadCorners[j], stCorner[j][1] * radius, axis2, quadCorners[j] );
+	}
+
+	for ( j = 0; j < 4; j++ ) {
+		vec3_t edge, toCenter;
+		VectorSubtract( quadCorners[( j + 1 ) % 4], quadCorners[j], edge );
+		CrossProduct( edge, axis0, lnormals[j] );
+		VectorNormalize( lnormals[j] );
+		VectorSubtract( newCenter, quadCorners[j], toCenter );
+		if ( DotProduct( toCenter, lnormals[j] ) < 0.0f ) {
+			VectorNegate( lnormals[j], lnormals[j] );
+		}
+		ldists[j] = DotProduct( lnormals[j], quadCorners[j] );
+	}
+
+	for ( k = 0; k < surf->numIndexes; k += 3 ) {
+		vec3_t triangle[3];
+		const drawVert_t *v0, *v1, *v2;
+		int oldReturnedPoints = *returnedPoints;
+		int p;
+
+		v0 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k]];
+		v1 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k + 1]];
+		v2 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k + 2]];
+
+		VectorCopy( v0->xyz, triangle[0] );
+		VectorCopy( v1->xyz, triangle[1] );
+		VectorCopy( v2->xyz, triangle[2] );
+
+		R_AddMarkFragment( triangle, 4, lnormals, ldists, maxPoints, pointBuffer,
+						   maxFragments, fragmentBuffer, returnedPoints, returnedFragments );
+
+		if ( *returnedPoints != oldReturnedPoints ) {
+			// cg_marks.c (CG_ImpactMark) checks for a negative numPoints to mean "ST is already filled in".
+			fragmentBuffer[*returnedFragments - 1].numPoints *= -1;
+			for ( p = oldReturnedPoints; p < *returnedPoints; p++ ) {
+				vec3_t delta;
+				float *dst = pointBuffer + 5 * p;
+				VectorSubtract( dst, newCenter, delta );
+				dst[3] = 0.5f + DotProduct( delta, axis1 ) * texCoordScale;
+				dst[4] = 0.5f + DotProduct( delta, axis2 ) * texCoordScale;
+			}
+		}
+
+		if ( *returnedFragments >= maxFragments ) {
+			return;
+		}
+	}
+}
+
 int R_MarkFragments( int orientation, const vec3_t *points, const vec3_t projection,
-					  int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t *fragmentBuffer ) {
+					  int maxPoints, float *pointBuffer, int maxFragments, markFragment_t *fragmentBuffer ) {
 	const int numPoints = 4; // cgame's CG_ImpactMark always passes a 4-corner quad
 	vec3_t projectionDir, negProjection;
 	vec3_t normals[6];
 	float dists[6];
-	float radius, clipDepth;
-	vec3_t mins, maxs;
+	float radius, aabbClipDepth, clipPlaneDepth;
+	vec3_t mins, maxs, center;
+	qboolean oldMapping = qfalse;
 	int returnedPoints = 0, returnedFragments = 0;
 	int i, surfIdx;
 
-	(void)orientation; // only meaningful for the surface-fitted UV mapping this port doesn't do, see tr_marks.c's header comment
-
 	if ( maxFragments < 0 ) {
-		maxFragments = -maxFragments; // upstream's "old mapping" request -- this port always behaves that way
+		maxFragments = -maxFragments;
+		oldMapping = qtrue;
 	}
 	if ( !tr_world.loaded || maxPoints <= 0 || maxFragments <= 0 ) {
 		return 0;
@@ -137,28 +251,26 @@ int R_MarkFragments( int orientation, const vec3_t *points, const vec3_t project
 	if ( radius <= 0.0f ) {
 		return 0;
 	}
-	clipDepth = radius * 11.0f; // matches code/renderer's old-mapping clip depth
+	aabbClipDepth = radius * 11.0f; // generous fixed bound for the coarse per-surface AABB reject below only
+	clipPlaneDepth = radius * ( 1.0f + ( oldMapping ? 10.0f : 0.0f ) ); // matches reference's radius*(1+oldMapping*10) for the real clip planes
+
+	VectorClear( center );
+	for ( i = 0; i < numPoints; i++ ) {
+		VectorAdd( center, points[i], center );
+	}
+	VectorScale( center, 1.0f / numPoints, center );
 
 	ClearBounds( mins, maxs );
 	for ( i = 0; i < numPoints; i++ ) {
 		vec3_t temp;
 		AddPointToBounds( points[i], mins, maxs );
-		VectorMA( points[i], clipDepth, projectionDir, temp );
+		VectorMA( points[i], aabbClipDepth, projectionDir, temp );
 		AddPointToBounds( temp, mins, maxs );
-		VectorMA( points[i], -clipDepth, projectionDir, temp );
+		VectorMA( points[i], -aabbClipDepth, projectionDir, temp );
 		AddPointToBounds( temp, mins, maxs );
 	}
 
-	// Self-corrects each edge plane's sign by requiring the quad's own center to be kept by it,
-	// rather than trusting the cross-product order to come out inward-pointing (it measured as not).
 	{
-		vec3_t center;
-		VectorClear( center );
-		for ( i = 0; i < numPoints; i++ ) {
-			VectorAdd( center, points[i], center );
-		}
-		VectorScale( center, 1.0f / numPoints, center );
-
 		VectorNegate( projection, negProjection );
 		for ( i = 0; i < numPoints; i++ ) {
 			vec3_t edge, toCenter;
@@ -173,9 +285,9 @@ int R_MarkFragments( int orientation, const vec3_t *points, const vec3_t project
 		}
 	}
 	VectorCopy( projectionDir, normals[numPoints] );
-	dists[numPoints] = DotProduct( normals[numPoints], points[0] ) - clipDepth;
+	dists[numPoints] = DotProduct( normals[numPoints], points[0] ) - clipPlaneDepth;
 	VectorNegate( projectionDir, normals[numPoints + 1] );
-	dists[numPoints + 1] = DotProduct( normals[numPoints + 1], points[0] ) - clipDepth;
+	dists[numPoints + 1] = DotProduct( normals[numPoints + 1], points[0] ) - clipPlaneDepth;
 
 	for ( surfIdx = 0; surfIdx < tr_world.numSurfaces; surfIdx++ ) {
 		const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
@@ -202,24 +314,15 @@ int R_MarkFragments( int orientation, const vec3_t *points, const vec3_t project
 			continue; // surface's bounds don't overlap the decal's -- see the AABB test above
 		}
 
-		for ( k = 0; k < surf->numIndexes; k += 3 ) {
-			vec3_t triangle[3];
-			const drawVert_t *v0, *v1, *v2;
-
-			v0 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k]];
-			v1 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k + 1]];
-			v2 = &tr_world.drawVerts[surf->firstVert + tr_world.drawIndexes[surf->firstIndex + k + 2]];
-
-			// No facing check here, matching upstream's SF_FACE/old-mapping path (which has one commented out).
-			VectorCopy( v0->xyz, triangle[0] );
-			VectorCopy( v1->xyz, triangle[1] );
-			VectorCopy( v2->xyz, triangle[2] );
-
-			R_AddMarkFragment( triangle, numPoints + 2, normals, dists, maxPoints, (float *)pointBuffer,
-							   maxFragments, fragmentBuffer, &returnedPoints, &returnedFragments );
-			if ( returnedFragments >= maxFragments ) {
-				return returnedFragments;
-			}
+		if ( !oldMapping && surf->surfaceType == MST_PLANAR ) {
+			ClipSurfaceNewMapping( surf, center, projectionDir, radius, orientation, maxPoints, pointBuffer,
+								   maxFragments, fragmentBuffer, &returnedPoints, &returnedFragments );
+		} else {
+			ClipSurfaceOldStyle( surf, normals, dists, numPoints + 2, maxPoints, pointBuffer,
+								maxFragments, fragmentBuffer, &returnedPoints, &returnedFragments );
+		}
+		if ( returnedFragments >= maxFragments ) {
+			return returnedFragments;
 		}
 	}
 

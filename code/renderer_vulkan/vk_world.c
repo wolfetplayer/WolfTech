@@ -909,7 +909,7 @@ static void DrawBrushSurfaceExtraStage( const shader_t *shader, int stageIdx, co
 	}
 
 	pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-		vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset );
+		vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset, stage->depthWrite );
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynBrushExtraBuffer, &vb_offset );
 	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout, 0, 1, &stageImage->vk_descriptor, 0, NULL );
@@ -1096,7 +1096,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			}
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
-				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset );
+				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset, stage->depthWrite );
 			if ( pipeline != boundPipeline ) {
 				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 				boundPipeline = pipeline;
@@ -1138,7 +1138,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 				}
 
 				pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), VK_TRUE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE,
-					vk_cullModeForShader( shader->cullType ), 0, R_InPortalView(), R_InMirrorView(), VK_FALSE );
+					vk_cullModeForShader( shader->cullType ), 0, R_InPortalView(), R_InMirrorView(), VK_FALSE, VK_FALSE );
 				if ( pipeline != boundPipeline ) {
 					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 					boundPipeline = pipeline;
