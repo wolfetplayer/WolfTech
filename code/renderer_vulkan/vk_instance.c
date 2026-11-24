@@ -51,6 +51,7 @@ PFN_vkCmdBindVertexBuffers                      qvkCmdBindVertexBuffers;
 PFN_vkCmdBeginQuery                              qvkCmdBeginQuery;
 PFN_vkCmdEndQuery                                qvkCmdEndQuery;
 PFN_vkCmdResetQueryPool                          qvkCmdResetQueryPool;
+PFN_vkCmdWriteTimestamp                          qvkCmdWriteTimestamp;
 PFN_vkCmdBlitImage                              qvkCmdBlitImage;
 PFN_vkCmdClearAttachments                       qvkCmdClearAttachments;
 PFN_vkCmdClearColorImage                        qvkCmdClearColorImage;
@@ -484,6 +485,7 @@ static void vk_loadDeviceFunctions( void ) {
 	INIT_DEVICE_FUNCTION( vkCmdBeginQuery )
 	INIT_DEVICE_FUNCTION( vkCmdEndQuery )
 	INIT_DEVICE_FUNCTION( vkCmdResetQueryPool )
+	INIT_DEVICE_FUNCTION( vkCmdWriteTimestamp )
 	INIT_DEVICE_FUNCTION( vkCreateBuffer )
 	INIT_DEVICE_FUNCTION( vkCreateCommandPool )
 	INIT_DEVICE_FUNCTION( vkCreateDescriptorPool )

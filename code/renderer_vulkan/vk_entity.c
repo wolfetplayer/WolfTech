@@ -21,6 +21,7 @@
 #include "tr_scene.h"
 #include "vk_world.h"
 #include "vk_shadows.h"
+#include "vk_profile.h"
 #include "vk_entity.h"
 
 // Same falloff shape the opengl1 renderer uses for dlight contributions to entity lighting.
@@ -1350,7 +1351,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				}
 
 				// Kept for tcMod turb/deformVertexes move (both need the real world-space position) and shadow volumes below -- DrawLerpSurface does the actual render-path position blend on the GPU now, so this is no longer uploaded anywhere.
+				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
 				LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
 
 				if ( animData && s < animData->numSurfaces ) {
 					const entitySurfAnimBuffer_t *animBuf = &animData->surfaces[s];
@@ -1398,7 +1401,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
 				}
 
+				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
 				LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch ); // see the MD3 branch's comment above
+				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
 
 				if ( animData && s < animData->numSurfaces ) {
 					const entitySurfAnimBuffer_t *animBuf = &animData->surfaces[s];
@@ -1425,7 +1430,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 
 			if ( animData ) {
 				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data ); // backlerp (push_data[28]) is unused by entity_skin.vert, harmless
+				vk_profile_cpu_zone_begin( VKPROF_ENTITY_BONES );
 				haveBones = WriteBoneMatricesMDS( model->mds, ent, &boneUboDynOffset );
+				vk_profile_cpu_zone_end( VKPROF_ENTITY_BONES );
 			}
 
 			for ( s = 0; s < model->mds->numSurfaces; s++ ) {
@@ -1447,7 +1454,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				}
 
 				// Kept for tcMod turb/deformVertexes move and shadow volumes below -- DrawSkinSurface does the actual render-path skin on the GPU now, so this is no longer uploaded anywhere.
+				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
 				LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
+				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
 
 				if ( haveBones && s < animData->numSurfaces ) {
 					DrawSkinSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
@@ -1471,7 +1480,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 
 			if ( animData ) {
 				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
+				vk_profile_cpu_zone_begin( VKPROF_ENTITY_BONES );
 				haveBones = WriteBoneMatricesMDM( ent, &boneUboDynOffset ); // identity bones (bind pose) if no MDX skeleton is linked yet -- see WriteBoneMatricesMDM
+				vk_profile_cpu_zone_end( VKPROF_ENTITY_BONES );
 			}
 
 			for ( s = 0; s < model->mdm->numSurfaces; s++ ) {
@@ -1492,7 +1503,9 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
 				}
 
+				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
 				LerpMDMSurfaceVerts( ent, surf, s_baseScratch ); // see the MDS branch's comment above
+				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
 
 				if ( haveBones && s < animData->numSurfaces ) {
 					DrawSkinSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,

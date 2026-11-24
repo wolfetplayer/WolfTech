@@ -47,6 +47,7 @@ extern PFN_vkCmdBindVertexBuffers                      qvkCmdBindVertexBuffers;
 extern PFN_vkCmdBeginQuery                             qvkCmdBeginQuery;
 extern PFN_vkCmdEndQuery                               qvkCmdEndQuery;
 extern PFN_vkCmdResetQueryPool                         qvkCmdResetQueryPool;
+extern PFN_vkCmdWriteTimestamp                         qvkCmdWriteTimestamp;
 extern PFN_vkCmdBlitImage                              qvkCmdBlitImage;
 extern PFN_vkCmdClearAttachments                       qvkCmdClearAttachments;
 extern PFN_vkCmdClearColorImage                        qvkCmdClearColorImage;

@@ -2003,6 +2003,7 @@ Q3RVOBJ = \
   $(B)/renderer_vulkan/vk_poly.o \
   $(B)/renderer_vulkan/vk_flares.o \
   $(B)/renderer_vulkan/vk_shadows.o \
+  $(B)/renderer_vulkan/vk_profile.o \
   $(B)/renderer_vulkan/vk_screenshot.o \
   $(B)/renderer_vulkan/shaders/Compiled/single_texture_vert.o \
   $(B)/renderer_vulkan/shaders/Compiled/single_texture_frag.o \

@@ -55,6 +55,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "vk_world.h"
 #include "vk_flares.h"
 #include "vk_shadows.h"
+#include "vk_profile.h"
 #include "vk_screenshot.h"
 #include "tr_portal.h"
 #include "tr_marks.h"
@@ -247,15 +248,23 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 		}
 
 		if ( isSkyboxPortalScene ) {
+			vk_profile_zone_begin( VKPROF_SKY );
 			vk_sky_draw( fd->vieworg, viewProj, fogPush, R_ComputeZFar( fd ) );
+			vk_profile_zone_end( VKPROF_SKY );
 			R_NotePortalSceneRendered();
 		} else if ( R_PortalSceneRenderedThisFrame() ) {
 			vk_clear_depth_only(); // reset depth for the real scene, but leave color so the sky room's background survives
 		} else {
+			vk_profile_zone_begin( VKPROF_SKY );
 			vk_sky_draw( fd->vieworg, viewProj, fogPush, R_ComputeZFar( fd ) ); // portal hasn't rendered yet this frame (or this map has none)
+			vk_profile_zone_end( VKPROF_SKY );
 		}
+		vk_profile_zone_begin( VKPROF_WORLD );
 		vk_world_draw( viewProj, fogPush );
+		vk_profile_zone_end( VKPROF_WORLD );
+		vk_profile_zone_begin( VKPROF_FOLIAGE );
 		vk_world_draw_foliage( fd, viewProj, fogPush );
+		vk_profile_zone_end( VKPROF_FOLIAGE );
 
 		if ( !isSkyboxPortalScene ) {
 			R_NoteMainSceneRendered();
@@ -265,22 +274,32 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 	{
 		int numEntities;
 		const refEntity_t *entities = R_GetSceneEntities( &numEntities );
+		vk_profile_zone_begin( VKPROF_ENTITIES );
 		vk_entity_draw_all( entities, numEntities, viewProj, fogPush );
 		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj, fogPush );
+		vk_profile_zone_end( VKPROF_ENTITIES );
 	}
 
 	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) ) {
+		vk_profile_zone_begin( VKPROF_TRANSPARENT );
 		vk_world_draw_transparent( viewProj, fogPush );
+		vk_profile_zone_end( VKPROF_TRANSPARENT );
 	}
 
 	// One-shot per real frame: only draws if some entity above actually stamped the stencil buffer.
+	vk_profile_zone_begin( VKPROF_SHADOWS );
 	vk_shadows_draw_darken( viewProj, fogPush );
+	vk_profile_zone_end( VKPROF_SHADOWS );
 
+	vk_profile_zone_begin( VKPROF_POLY );
 	vk_poly_draw( viewProj, fogPush );
+	vk_profile_zone_end( VKPROF_POLY );
 
 	// Coronas are real-world effects (torches, treasure glow, fuses) -- skip the sky room and any mirror/portal recursion.
 	if ( !( fd->rdflags & RDF_NOWORLDMODEL ) && !isSkyboxPortalScene && !R_InPortalView() ) {
+		vk_profile_zone_begin( VKPROF_FLARES );
 		vk_flares_draw( fd, viewProj, fogPush );
+		vk_profile_zone_end( VKPROF_FLARES );
 	}
 }
 
@@ -374,6 +393,7 @@ static void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	}
 
 	vk_flares_begin_frame(); // resets this frame's occlusion queries -- vkCmdResetQueryPool needs to run outside the render pass
+	vk_profile_frame_begin(); // ditto, for the r_vk_profile timestamp queries
 
 	vk_begin_render_pass( 0.0f, 0.0f, 0.0f, 1.0f );
 	vk_draw2d_begin_frame();
@@ -389,6 +409,7 @@ static void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 static void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 	if ( vk.isInitialized && s_frameActive ) {
 		vk_end_render_pass();
+		vk_profile_frame_end();
 		vk_end_frame();
 		s_frameActive = qfalse;
 		vk_screenshot_process_pending();
