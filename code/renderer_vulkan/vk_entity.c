@@ -37,10 +37,11 @@
 #define SKIN_SCRATCH_VERTS 40000
 static vec3_t s_skinScratch[SKIN_SCRATCH_VERTS];
 
-// Position + UV only, before any per-stage rgbGen/alphaGen/tcMod or shader-level deformVertexes is applied.
 typedef struct {
 	float pos[3];
 	float uv[2];
+	float localPos[3];
+	float normal[3];
 } entityBaseVert_t;
 static entityBaseVert_t s_baseScratch[SKIN_SCRATCH_VERTS];
 
@@ -231,7 +232,9 @@ qboolean vk_entity_has_mesh( const refEntity_t *ent ) {
 		   model->type == MOD_BRUSH;
 }
 
-// xyz is model-local (frontlerp*frame + backlerp*oldframe, MD3_XYZ_SCALE applied), then placed by the entity's axis/origin.
+static void DecodeMD3Normal( short packed, vec3_t out );
+
+
 static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, int frame, int oldframe, float backlerp, entityBaseVert_t *out ) {
 	const md3XyzNormal_t *base = (const md3XyzNormal_t *)( (const byte *)surf + surf->ofsXyzNormals );
 	const md3XyzNormal_t *newXyz = base + (size_t)frame * surf->numVerts;
@@ -242,6 +245,8 @@ static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, 
 
 	for ( i = 0; i < surf->numVerts; i++ ) {
 		float local[3];
+		vec3_t newN, oldN;
+
 		for ( k = 0; k < 3; k++ ) {
 			local[k] = ( frontlerp * (float)newXyz[i].xyz[k] + backlerp * (float)oldXyz[i].xyz[k] ) * MD3_XYZ_SCALE;
 		}
@@ -252,6 +257,15 @@ static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, 
 
 		out[i].uv[0] = st[i].st[0];
 		out[i].uv[1] = st[i].st[1];
+
+		out[i].localPos[0] = local[0]; out[i].localPos[1] = local[1]; out[i].localPos[2] = local[2];
+
+		DecodeMD3Normal( newXyz[i].normal, newN );
+		DecodeMD3Normal( oldXyz[i].normal, oldN );
+		out[i].normal[0] = frontlerp * newN[0] + backlerp * oldN[0];
+		out[i].normal[1] = frontlerp * newN[1] + backlerp * oldN[1];
+		out[i].normal[2] = frontlerp * newN[2] + backlerp * oldN[2];
+		VectorNormalize( out[i].normal );
 	}
 }
 
@@ -729,12 +743,14 @@ static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *sur
 	int i;
 
 	for ( i = 0; i < surf->numVerts; i++ ) {
-		vec3_t newXyz, oldXyz, local;
+		vec3_t newXyz, oldXyz, local, newN, oldN;
+		const mdcXyzCompressed_t *newCompVert = newComp >= 0 ? &compArray[(size_t)newComp * surf->numVerts + i] : NULL;
+		const mdcXyzCompressed_t *oldCompVert = oldComp >= 0 ? &compArray[(size_t)oldComp * surf->numVerts + i] : NULL;
+		const md3XyzNormal_t *newBaseVert = &baseArray[(size_t)newBase * surf->numVerts + i];
+		const md3XyzNormal_t *oldBaseVert = &baseArray[(size_t)oldBase * surf->numVerts + i];
 
-		DecodeMDCVertex( &baseArray[(size_t)newBase * surf->numVerts + i],
-			newComp >= 0 ? &compArray[(size_t)newComp * surf->numVerts + i] : NULL, newXyz );
-		DecodeMDCVertex( &baseArray[(size_t)oldBase * surf->numVerts + i],
-			oldComp >= 0 ? &compArray[(size_t)oldComp * surf->numVerts + i] : NULL, oldXyz );
+		DecodeMDCVertex( newBaseVert, newCompVert, newXyz );
+		DecodeMDCVertex( oldBaseVert, oldCompVert, oldXyz );
 
 		local[0] = frontlerp * newXyz[0] + backlerp * oldXyz[0];
 		local[1] = frontlerp * newXyz[1] + backlerp * oldXyz[1];
@@ -746,6 +762,15 @@ static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *sur
 
 		out[i].uv[0] = st[i].st[0];
 		out[i].uv[1] = st[i].st[1];
+
+		out[i].localPos[0] = local[0]; out[i].localPos[1] = local[1]; out[i].localPos[2] = local[2];
+
+		DecodeMDCNormal( newBaseVert, newCompVert, newN );
+		DecodeMDCNormal( oldBaseVert, oldCompVert, oldN );
+		out[i].normal[0] = frontlerp * newN[0] + backlerp * oldN[0];
+		out[i].normal[1] = frontlerp * newN[1] + backlerp * oldN[1];
+		out[i].normal[2] = frontlerp * newN[2] + backlerp * oldN[2];
+		VectorNormalize( out[i].normal );
 	}
 }
 
@@ -866,8 +891,17 @@ static qboolean ReserveLerpSurface( int numVerts, int numStages, int numTriangle
 		   idxWrite + (uint32_t)numTriangles * 3 <= ENTITY_MAX_INDEXES;
 }
 
-static void WriteLerpStageVertices( const shader_t *shader, const byte *entityColor,
-									  const float *shaderTexCoord, int numVerts, const entityBaseVert_t *base, vkEntityDynamicVert_t *out ) {
+static void CalcStageBaseST( const shaderStage_t *stage, const entityBaseVert_t *v, const float *localViewOrigin, float outBaseST[2] ) {
+	if ( stage->tcGen == TCGEN_ENVIRONMENT && localViewOrigin ) {
+		R_CalcEnvironmentTexCoord( v->normal, localViewOrigin, v->localPos, outBaseST );
+	} else {
+		outBaseST[0] = v->uv[0];
+		outBaseST[1] = v->uv[1];
+	}
+}
+
+static void WriteLerpStageVertices( const shader_t *shader, const byte *entityColor, const float *shaderTexCoord,
+									  const float *localViewOrigin, int numVerts, const entityBaseVert_t *base, vkEntityDynamicVert_t *out ) {
 	int v, s;
 	static const byte baseColor[4] = { 255, 255, 255, 255 };
 
@@ -879,10 +913,11 @@ static void WriteLerpStageVertices( const shader_t *shader, const byte *entityCo
 			const shaderStage_t *stage = &shader->stages[s];
 			vkEntityDynamicVert_t *dst = &out[(uint32_t)s * (uint32_t)numVerts + (uint32_t)v];
 			byte color[4];
-			float st[2];
+			float st[2], baseST[2];
 
 			R_CalcStageColorAlpha( stage, entityColor, baseColor, color );
-			R_CalcStageTexCoord( stage, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st );
+			CalcStageBaseST( stage, &base[v], localViewOrigin, baseST );
+			R_CalcStageTexCoord( stage, baseST[0], baseST[1], deformed, shaderTexCoord, st );
 
 			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
 			dst->uv[0] = st[0]; dst->uv[1] = st[1];
@@ -890,8 +925,8 @@ static void WriteLerpStageVertices( const shader_t *shader, const byte *entityCo
 	}
 }
 
-static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entityColor,
-										 const float *shaderTexCoord, int numVerts, const entityBaseVert_t *base, vkEntityDynamicMTVert_t *out ) {
+static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entityColor, const float *shaderTexCoord,
+										 const float *localViewOrigin, int numVerts, const entityBaseVert_t *base, vkEntityDynamicMTVert_t *out ) {
 	const shaderStage_t *stage0 = &shader->stages[0];
 	const shaderStage_t *stage1 = &shader->stages[1];
 	static const byte baseColor[4] = { 255, 255, 255, 255 };
@@ -900,12 +935,14 @@ static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entit
 	for ( v = 0; v < numVerts; v++ ) {
 		float deformed[3];
 		byte color[4];
-		float st0[2], st1[2];
+		float st0[2], st1[2], baseST0[2], baseST1[2];
 
 		R_DeformPosition( shader, base[v].pos, NULL, 0.0f, deformed ); // no per-vertex normal here -- wave/bulge pass through, same as before
 		R_CalcStageColorAlpha( stage0, entityColor, baseColor, color );
-		R_CalcStageTexCoord( stage0, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st0 );
-		R_CalcStageTexCoord( stage1, base[v].uv[0], base[v].uv[1], deformed, shaderTexCoord, st1 );
+		CalcStageBaseST( stage0, &base[v], localViewOrigin, baseST0 );
+		CalcStageBaseST( stage1, &base[v], localViewOrigin, baseST1 );
+		R_CalcStageTexCoord( stage0, baseST0[0], baseST0[1], deformed, shaderTexCoord, st0 );
+		R_CalcStageTexCoord( stage1, baseST1[0], baseST1[1], deformed, shaderTexCoord, st1 );
 
 		out[v].color[0] = color[0]; out[v].color[1] = color[1]; out[v].color[2] = color[2]; out[v].color[3] = color[3];
 		out[v].uv0[0] = st0[0]; out[v].uv0[1] = st0[1];
@@ -972,7 +1009,7 @@ static void BuildLerpPushConstants( const refEntity_t *ent, const float cameraMv
 static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 							   int numVerts, int numTriangles, const void *trianglesPtr, const entityBaseVert_t *baseVerts,
 							   const entitySurfAnimBuffer_t *animBuf, VkDeviceSize frameOffset, VkDeviceSize oldframeOffset,
-							   const float push_data[32], qboolean *curDepthHack ) {
+							   const float push_data[32], const float *localViewOrigin, qboolean *curDepthHack ) {
 	VkBuffer staticBufs[2];
 	VkDeviceSize staticOffsets[2];
 	qboolean depthHack = ( ent->renderfx & RF_DEPTHHACK ) != 0;
@@ -1011,7 +1048,7 @@ static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 			return;
 		}
 
-		WriteLerpMultiTexVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, numVerts, baseVerts,
+		WriteLerpMultiTexVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, localViewOrigin, numVerts, baseVerts,
 			&s_lerpMtVertexMapped[s_lerpMtVertRegionBase + s_lerpMtVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + s_idxWrite );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + s_idxWrite ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
@@ -1044,7 +1081,7 @@ static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 		int s;
 		uint32_t idxBase = s_idxWrite;
 
-		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, numVerts, baseVerts,
+		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, localViewOrigin, numVerts, baseVerts,
 			&s_lerpVertexMapped[s_lerpVertRegionBase + s_lerpVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + idxBase );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + idxBase ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
@@ -1173,7 +1210,7 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 			return;
 		}
 
-		WriteLerpMultiTexVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, numVerts, baseVerts,
+		WriteLerpMultiTexVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, NULL /* no env-mapped normal/localPos on the MDS/MDM skin path */, numVerts, baseVerts,
 			&s_lerpMtVertexMapped[s_lerpMtVertRegionBase + s_lerpMtVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + s_idxWrite );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + s_idxWrite ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
@@ -1207,7 +1244,7 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 		int s;
 		uint32_t idxBase = s_idxWrite;
 
-		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, numVerts, baseVerts,
+		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, NULL /* no env-mapped normal/localPos on the MDS/MDM skin path */, numVerts, baseVerts,
 			&s_lerpVertexMapped[s_lerpVertRegionBase + s_lerpVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + idxBase );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + idxBase ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
@@ -1258,7 +1295,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 	for ( e = 0; e < numEntities; e++ ) {
 		const refEntity_t *ent = &entities[e];
 		model_t *model = R_GetModelByHandle( ent->hModel );
-		vec3_t ambient, directed, lightDirWorld;
+		vec3_t ambient, directed, lightDirWorld, localViewOrigin, camDelta;
 		qboolean dbgWeapon = dbgFrame; // logs every entity, not just RF_DEPTHHACK ones -- held items like mines don't all set it
 		qboolean castsShadow;
 
@@ -1266,6 +1303,11 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			continue;
 		}
 		ComputeEntityLighting( ent, ambient, directed, lightDirWorld );
+
+		VectorSubtract( fogPush, ent->origin, camDelta );
+		localViewOrigin[0] = DotProduct( ent->axis[0], camDelta );
+		localViewOrigin[1] = DotProduct( ent->axis[1], camDelta );
+		localViewOrigin[2] = DotProduct( ent->axis[2], camDelta );
 
 		castsShadow = vk_shadows_entity_casts( ent );
 		if ( castsShadow ) {
@@ -1316,7 +1358,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 					VkDeviceSize oldframeOffset = (VkDeviceSize)oldframe * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
 					DrawLerpSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, animBuf, frameOffset, oldframeOffset,
-						push_data, &curDepthHack );
+						push_data, localViewOrigin, &curDepthHack );
 				}
 				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
 					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
@@ -1363,7 +1405,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 					VkDeviceSize oldframeOffset = (VkDeviceSize)oldframe * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
 					DrawLerpSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
 						(const byte *)surf + surf->ofsTriangles, s_baseScratch, animBuf, frameOffset, oldframeOffset,
-						push_data, &curDepthHack );
+						push_data, localViewOrigin, &curDepthHack );
 				}
 				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
 					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,

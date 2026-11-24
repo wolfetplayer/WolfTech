@@ -23,6 +23,7 @@ void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, const float worldPos[3],
 						   const float entityTranslate[2], float outST[2] );
 
+void R_CalcEnvironmentTexCoord( const float normal[3], const float viewerOrigin[3], const float pos[3], float outST[2] );
 
 void R_DeformPosition( const shader_t *shader, const float basePos[3], const float normal[3], float texS, float outPos[3] );
 

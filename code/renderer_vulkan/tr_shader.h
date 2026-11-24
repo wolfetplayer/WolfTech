@@ -73,6 +73,11 @@ typedef enum {
 	TMOD_ENTITY_TRANSLATE // scrolls by the entity's refEntity_t.shaderTexCoord; see tr_shade_calc.c
 } texMod_t;
 
+typedef enum {
+	TCGEN_BASE,
+	TCGEN_ENVIRONMENT
+} texCoordGen_t;
+
 typedef struct {
 	texMod_t type;
 	waveForm_t wave;	// TMOD_TURBULENT, TMOD_STRETCH
@@ -126,6 +131,8 @@ typedef struct shaderStage_s {
 
 	int numTexMods;
 	texModInfo_t texMods[TR_MAX_TEXMODS];
+
+	texCoordGen_t tcGen; // TCGEN_BASE (0) by default -- see ParseStage's memset
 } shaderStage_t;
 
 

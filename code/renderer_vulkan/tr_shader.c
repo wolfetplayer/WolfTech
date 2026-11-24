@@ -260,10 +260,16 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 			SkipRestOfLine( text );
 		} else if ( !Q_stricmp( token, "tcMod" ) ) {
 			ParseTexMod( text, stage );
+		} else if ( !Q_stricmp( token, "tcGen" ) ) {
+			token = COM_ParseExt( text, qfalse );
+			if ( !Q_stricmp( token, "environment" ) ) {
+				stage->tcGen = TCGEN_ENVIRONMENT;
+			}
+			SkipRestOfLine( text );
 		} else if ( !Q_stricmp( token, "depthwrite" ) ) {
 			depthWriteExplicit = qtrue;
 		} else {
-			// tcGen, depthFunc, detail, etc. -- parsed-and-discarded.
+			// depthFunc, detail, etc. -- parsed-and-discarded.
 			SkipRestOfLine( text );
 		}
 	}
@@ -631,6 +637,7 @@ qhandle_t RE_RegisterShaderInternal( const char *name, qboolean noMip ) {
 	shaderIndexEntry_t *entry;
 	image_t *image;
 	int imgFlags;
+	char strippedName[MAX_QPATH];
 
 	if ( !name || !name[0] ) {
 		return 0;
@@ -640,16 +647,18 @@ qhandle_t RE_RegisterShaderInternal( const char *name, qboolean noMip ) {
 		return 0; // procedural shaders (*white, *black, ...) aren't file-backed
 	}
 
-	shader = R_FindShaderInList( name );
+	COM_StripExtension( name, strippedName, sizeof( strippedName ) );
+
+	shader = R_FindShaderInList( strippedName );
 	if ( shader ) {
 		return shader->index;
 	}
 
 	// first use of this name: parse it from the index now, lazily
-	entry = R_FindShaderIndexEntry( name );
+	entry = R_FindShaderIndexEntry( strippedName );
 	if ( entry ) {
 		char *textCursor = entry->textAfterBrace;
-		if ( ParseShader( name, &textCursor ) ) {
+		if ( ParseShader( strippedName, &textCursor ) ) {
 			return shaders[numShaders - 1].index;
 		}
 	}
@@ -662,7 +671,7 @@ qhandle_t RE_RegisterShaderInternal( const char *name, qboolean noMip ) {
 		return 0;
 	}
 
-	return R_CreateSingleStageShader( name, image );
+	return R_CreateSingleStageShader( strippedName, image );
 }
 
 static qhandle_t R_CreateSingleStageShader( const char *name, image_t *image ) {

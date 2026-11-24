@@ -234,6 +234,23 @@ void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, 
 	outST[0] = s; outST[1] = t;
 }
 
+void R_CalcEnvironmentTexCoord( const float normal[3], const float viewerOrigin[3], const float pos[3], float outST[2] ) {
+	vec3_t viewer, reflected;
+	float d;
+
+	VectorSubtract( viewerOrigin, pos, viewer );
+	VectorNormalize( viewer );
+
+	d = DotProduct( normal, viewer );
+
+	reflected[0] = normal[0] * 2.0f * d - viewer[0];
+	reflected[1] = normal[1] * 2.0f * d - viewer[1];
+	reflected[2] = normal[2] * 2.0f * d - viewer[2];
+
+	outST[0] = 0.5f + reflected[1] * 0.5f;
+	outST[1] = 0.5f - reflected[2] * 0.5f;
+}
+
 void R_DeformPosition( const shader_t *shader, const float basePos[3], const float normal[3], float texS, float outPos[3] ) {
 	int i;
 
