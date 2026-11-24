@@ -133,6 +133,8 @@ typedef struct shaderStage_s {
 	texModInfo_t texMods[TR_MAX_TEXMODS];
 
 	texCoordGen_t tcGen; // TCGEN_BASE (0) by default -- see ParseStage's memset
+
+	qboolean isLightmap;
 } shaderStage_t;
 
 

@@ -44,6 +44,7 @@ typedef struct {
 	VkDeviceMemory memory;
 	VkImageView view;
 	VkSampler sampler;
+	VkDescriptorSet descriptor; // standalone single-texture descriptor (vk.set_layout), for "map $lightmap" extra-stage draws -- separate from worldBatch_t.descriptor's combined diffuse+lightmap set
 } lightmapTex_t;
 
 // Cached once at load (tessellation included); the per-frame source data for expansion below.
@@ -61,6 +62,7 @@ static worldSurfRef_t *s_surfRefs;
 static lightmapTex_t *s_lightmapTextures;
 static int s_numLightmapTextures; // tr_world.numLightmaps real ones, plus one synthetic white fallback
 static VkDescriptorPool s_lmDescriptorPool;
+static VkDescriptorPool s_lmSingleDescriptorPool; // backs lightmapTex_t.descriptor, one set per lightmap texture
 
 static qboolean s_built = qfalse;
 
@@ -205,6 +207,7 @@ void vk_world_clear( void ) {
 	s_numBrushLMDescCache = 0;
 
 	if ( s_lmDescriptorPool ) { qvkDestroyDescriptorPool( vk.device, s_lmDescriptorPool, NULL ); s_lmDescriptorPool = VK_NULL_HANDLE; }
+	if ( s_lmSingleDescriptorPool ) { qvkDestroyDescriptorPool( vk.device, s_lmSingleDescriptorPool, NULL ); s_lmSingleDescriptorPool = VK_NULL_HANDLE; }
 
 	for ( i = 0; i < s_numLightmapTextures; i++ ) {
 		vk_destroy_texture_image( s_lightmapTextures[i].image, s_lightmapTextures[i].memory,
@@ -332,6 +335,19 @@ static void BuildWhiteLightmapTexture( lightmapTex_t *out ) {
 	vk_create_texture_image( white, 1, 1, IMGFLAG_CLAMPTOEDGE, &out->image, &out->memory, &out->view, &out->sampler );
 }
 
+static qboolean ShaderHasExplicitLightmapStage( const shader_t *shader ) {
+	int s;
+	if ( !shader ) {
+		return qfalse;
+	}
+	for ( s = 0; s < shader->numStages; s++ ) {
+		if ( shader->stages[s].isLightmap ) {
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
 void vk_world_build( void ) {
 	vkWorldVertex_t *verts;
 	uint32_t *indexes;
@@ -420,6 +436,51 @@ void vk_world_build( void ) {
 	s_whiteLightmapIdx = whiteLightmapIdx; // brush-entity surfaces (vk_world_draw_brushmodel) need this too
 
 	{
+		VkDescriptorPoolSize poolSize;
+		VkDescriptorPoolCreateInfo poolDesc;
+
+		poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSize.descriptorCount = (uint32_t)s_numLightmapTextures;
+
+		poolDesc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolDesc.pNext = NULL;
+		poolDesc.flags = 0;
+		poolDesc.maxSets = (uint32_t)s_numLightmapTextures;
+		poolDesc.poolSizeCount = 1;
+		poolDesc.pPoolSizes = &poolSize;
+		VK_CHECK( qvkCreateDescriptorPool( vk.device, &poolDesc, NULL, &s_lmSingleDescriptorPool ) );
+
+		for ( i = 0; i < s_numLightmapTextures; i++ ) {
+			VkDescriptorSetAllocateInfo allocInfo;
+			VkDescriptorImageInfo imageInfo;
+			VkWriteDescriptorSet write;
+
+			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			allocInfo.pNext = NULL;
+			allocInfo.descriptorPool = s_lmSingleDescriptorPool;
+			allocInfo.descriptorSetCount = 1;
+			allocInfo.pSetLayouts = &vk.set_layout;
+			VK_CHECK( qvkAllocateDescriptorSets( vk.device, &allocInfo, &s_lightmapTextures[i].descriptor ) );
+
+			imageInfo.sampler = s_lightmapTextures[i].sampler;
+			imageInfo.imageView = s_lightmapTextures[i].view;
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			write.pNext = NULL;
+			write.dstSet = s_lightmapTextures[i].descriptor;
+			write.dstBinding = 0;
+			write.dstArrayElement = 0;
+			write.descriptorCount = 1;
+			write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			write.pImageInfo = &imageInfo;
+			write.pBufferInfo = NULL;
+			write.pTexelBufferView = NULL;
+			qvkUpdateDescriptorSets( vk.device, 1, &write, 0, NULL );
+		}
+	}
+
+	{
 		int curShaderNum = -1, curLightmapIdx = -1;
 
 		for ( i = 0; i < numDrawable; i++ ) {
@@ -472,7 +533,9 @@ void vk_world_build( void ) {
 			shader_t *shader = R_GetShaderByHandle( batches[i].shader );
 			image_t *diffuse = ( shader && shader->numStages >= 1 && shader->stages[0].image ) ?
 				shader->stages[0].image : R_GetDefaultImage();
-			lightmapTex_t *lm = &s_lightmapTextures[batches[i].lightmapIdx];
+
+			lightmapTex_t *lm = ShaderHasExplicitLightmapStage( shader ) ?
+				&s_lightmapTextures[s_whiteLightmapIdx] : &s_lightmapTextures[batches[i].lightmapIdx];
 			VkDescriptorSetAllocateInfo allocInfo;
 			VkDescriptorImageInfo imageInfos[2];
 			VkWriteDescriptorSet writes[2];
@@ -676,7 +739,11 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 			unpack_snorm16_3( src->normal, normal );
 			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
 			R_CalcStageColorAlpha( stage, NULL, src->color, color );
-			R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], deformed, NULL, uv );
+			if ( stage->isLightmap ) {
+				R_CalcStageTexCoord( stage, src->lmUv[0], src->lmUv[1], deformed, NULL, uv );
+			} else {
+				R_CalcStageTexCoord( stage, src->uv[0], src->uv[1], deformed, NULL, uv );
+			}
 
 			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
 			dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
@@ -1085,7 +1152,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		const worldBatch_t *batch = &s_batches[i];
 		shader_t *shader = R_GetShaderByHandle( batch->shader );
 		VkPipeline pipeline;
-		int s;
+		int s, firstExtraStage;
 
 		if ( batch->descriptor == VK_NULL_HANDLE ) {
 			continue;
@@ -1094,29 +1161,43 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			continue; // drawn later by vk_world_draw_transparent, after opaque entities
 		}
 
-		// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
-		pipeline = vk_getWorldLightmapPipeline( shader->cullType, shader->stages[0].alphaTestFunc );
-		if ( pipeline != boundPipeline ) {
-			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-			boundPipeline = pipeline;
+		if ( shader->stages[0].isLightmap ) {
+			firstExtraStage = 0;
+		} else {
+			// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
+			pipeline = vk_getWorldLightmapPipeline( shader->cullType, shader->stages[0].alphaTestFunc );
+			if ( pipeline != boundPipeline ) {
+				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+				boundPipeline = pipeline;
+			}
+			if ( !lmBufferBound ) {
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
+				lmBufferBound = qtrue; bound2DBuffer = qfalse;
+			}
+
+			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
+				0, 1, &batch->descriptor, 0, NULL );
+
+			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader,
+				batch->lightmapIdx == s_whiteLightmapIdx );
+			firstExtraStage = 1;
 		}
-		if ( !lmBufferBound ) {
-			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
-			lmBufferBound = qtrue; bound2DBuffer = qfalse;
-		}
 
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
-			0, 1, &batch->descriptor, 0, NULL );
-
-		ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader,
-			batch->lightmapIdx == s_whiteLightmapIdx );
-
-		for ( s = 1; s < shader->numStages; s++ ) {
+		for ( s = firstExtraStage; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
-			image_t *stageImage = R_GetStageImage( stage );
+			VkDescriptorSet stageDescriptor;
 
-			if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
-				continue;
+			if ( stage->isLightmap ) {
+				stageDescriptor = s_lightmapTextures[batch->lightmapIdx].descriptor;
+				if ( stageDescriptor == VK_NULL_HANDLE ) {
+					continue;
+				}
+			} else {
+				image_t *stageImage = R_GetStageImage( stage );
+				if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
+					continue;
+				}
+				stageDescriptor = stageImage->vk_descriptor;
 			}
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
@@ -1131,7 +1212,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			}
 
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stageImage->vk_descriptor, 0, NULL );
+				0, 1, &stageDescriptor, 0, NULL );
 
 			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, stage );
 		}
@@ -1229,11 +1310,20 @@ void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] ) {
 
 		for ( s = 0; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
-			image_t *stageImage = R_GetStageImage( stage );
+			VkDescriptorSet stageDescriptor;
 			VkPipeline pipeline;
 
-			if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
-				continue;
+			if ( stage->isLightmap ) {
+				stageDescriptor = s_lightmapTextures[batch->lightmapIdx].descriptor;
+				if ( stageDescriptor == VK_NULL_HANDLE ) {
+					continue;
+				}
+			} else {
+				image_t *stageImage = R_GetStageImage( stage );
+				if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
+					continue;
+				}
+				stageDescriptor = stageImage->vk_descriptor;
 			}
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
@@ -1248,7 +1338,7 @@ void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] ) {
 			}
 
 			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stageImage->vk_descriptor, 0, NULL );
+				0, 1, &stageDescriptor, 0, NULL );
 
 			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, stage );
 		}

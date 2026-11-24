@@ -138,6 +138,7 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	alphaGen_t alphaGen = AGEN_IDENTITY;
 	waveForm_t alphaWave;
 	byte constantColor[4];
+	qboolean isLightmapStage = qfalse;
 
 	imageName[0] = '\0';
 	memset( &rgbWave, 0, sizeof( rgbWave ) );
@@ -155,7 +156,11 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 			break;
 		} else if ( !Q_stricmp( token, "map" ) || !Q_stricmp( token, "clampmap" ) ) {
 			token = COM_ParseExt( text, qfalse );
-			Q_strncpyz( imageName, token, sizeof( imageName ) );
+			if ( !Q_stricmp( token, "$lightmap" ) ) {
+				isLightmapStage = qtrue;
+			} else {
+				Q_strncpyz( imageName, token, sizeof( imageName ) );
+			}
 			SkipRestOfLine( text );
 		} else if ( !Q_stricmp( token, "animmap" ) ) {
 			// animmap <frequency> <image1> <image2> ...
@@ -278,6 +283,7 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	stage->srcBlend = srcBlend;
 	stage->dstBlend = dstBlend;
 	stage->alphaTestFunc = alphaTestFunc;
+	stage->isLightmap = isLightmapStage;
 
 	stage->depthWrite = depthWriteExplicit || !hasBlend;
 
