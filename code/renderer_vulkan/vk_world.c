@@ -689,8 +689,8 @@ void vk_world_build( void ) {
 
 		for ( i = 0; i < numBatches; i++ ) {
 			shader_t *shader = R_GetShaderByHandle( batches[i].shader );
-			image_t *diffuse = ( shader && shader->numStages >= 1 && shader->stages[0].image ) ?
-				shader->stages[0].image : R_GetDefaultImage();
+			image_t *diffuse = ( shader && shader->numStages >= 1 && !shader->stages[0].isLightmap && shader->stages[0].image ) ?
+				shader->stages[0].image : R_GetWhiteImage();
 
 			lightmapTex_t *lm = ShaderHasExplicitLightmapStage( shader ) ?
 				&s_lightmapTextures[s_whiteLightmapIdx] : &s_lightmapTextures[batches[i].lightmapIdx];
@@ -1036,7 +1036,8 @@ static VkDescriptorSet GetBrushLightmapDescriptor( qhandle_t shaderHandle, int l
 	}
 
 	shader = R_GetShaderByHandle( shaderHandle );
-	diffuse = ( shader && shader->numStages >= 1 && shader->stages[0].image ) ? shader->stages[0].image : R_GetDefaultImage();
+	diffuse = ( shader && shader->numStages >= 1 && !shader->stages[0].isLightmap && shader->stages[0].image )
+		? shader->stages[0].image : R_GetWhiteImage();
 	lm = &s_lightmapTextures[lightmapIdx];
 
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1406,7 +1407,8 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 					continue;
 				}
 				shader = R_GetShaderByHandle( batch->shader );
-				diffuse = ( shader->numStages >= 1 && shader->stages[0].image ) ? shader->stages[0].image : R_GetDefaultImage();
+				diffuse = ( shader->numStages >= 1 && !shader->stages[0].isLightmap && shader->stages[0].image )
+					? shader->stages[0].image : R_GetWhiteImage();
 				if ( diffuse->vk_descriptor == VK_NULL_HANDLE ) {
 					continue;
 				}
