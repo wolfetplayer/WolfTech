@@ -118,7 +118,7 @@ static void bind_opaque_3d_for_draw( const float mvp[16], const float fogPush[12
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_3d_opaque );
 
 	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-		0, 1, &R_GetDefaultImage()->vk_descriptor, 0, NULL );
+		0, 1, &R_GetWhiteImage()->vk_descriptor, 0, NULL );
 }
 
 // r_vk_showEntityMarkers-gated: one small cube per scene entity, standing in for real model rendering.

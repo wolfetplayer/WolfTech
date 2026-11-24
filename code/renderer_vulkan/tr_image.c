@@ -14,6 +14,7 @@ static image_t r_images[MAX_DRAWIMAGES];
 static int r_numImages;
 
 static image_t *default_image;
+static image_t *white_image;
 
 typedef struct {
 	const char *ext;
@@ -134,6 +135,10 @@ image_t *R_GetDefaultImage( void ) {
 	return default_image;
 }
 
+image_t *R_GetWhiteImage( void ) {
+	return white_image;
+}
+
 int R_GetNumImages( void ) {
 	return r_numImages;
 }
@@ -145,15 +150,39 @@ image_t *R_GetImageByIndex( int index ) {
 	return &r_images[index];
 }
 
+#define DEFAULT_IMAGE_SIZE 16
+
 static void R_CreateDefaultImage( void ) {
-	// 1x1 white: serves both "hShader == 0 means white" and the not-found fallback
-	byte pixels[4] = { 255, 255, 255, 255 };
+	byte pixels[DEFAULT_IMAGE_SIZE * DEFAULT_IMAGE_SIZE * 4];
+	int x, y;
+
+	for ( y = 0; y < DEFAULT_IMAGE_SIZE; y++ ) {
+		for ( x = 0; x < DEFAULT_IMAGE_SIZE; x++ ) {
+			byte *p = &pixels[( y * DEFAULT_IMAGE_SIZE + x ) * 4];
+			qboolean border = ( x == 0 || y == 0 || x == DEFAULT_IMAGE_SIZE - 1 || y == DEFAULT_IMAGE_SIZE - 1 );
+			byte v = border ? 0 : 32;
+			p[0] = p[1] = p[2] = v;
+			p[3] = 255;
+		}
+	}
 
 	default_image = R_AllocImage( "*default" );
 	if ( default_image ) {
-		default_image->width = 1;
-		default_image->height = 1;
-		vk_create_texture( default_image, pixels, 1, 1, IMGFLAG_NOMIPMAP );
+		default_image->width = DEFAULT_IMAGE_SIZE;
+		default_image->height = DEFAULT_IMAGE_SIZE;
+		vk_create_texture( default_image, pixels, DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, IMGFLAG_NOMIPMAP );
+	}
+}
+
+
+static void R_CreateWhiteImage( void ) {
+	byte pixels[4] = { 255, 255, 255, 255 };
+
+	white_image = R_AllocImage( "*white" );
+	if ( white_image ) {
+		white_image->width = 1;
+		white_image->height = 1;
+		vk_create_texture( white_image, pixels, 1, 1, IMGFLAG_NOMIPMAP );
 	}
 }
 
@@ -161,8 +190,10 @@ void R_InitImages( void ) {
 	r_numImages = 0;
 	memset( r_images, 0, sizeof( r_images ) );
 	default_image = NULL;
+	white_image = NULL;
 
 	R_CreateDefaultImage();
+	R_CreateWhiteImage();
 }
 
 void R_ShutdownImages( void ) {
@@ -172,4 +203,5 @@ void R_ShutdownImages( void ) {
 	}
 	r_numImages = 0;
 	default_image = NULL;
+	white_image = NULL;
 }

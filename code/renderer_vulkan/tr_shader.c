@@ -139,6 +139,7 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	waveForm_t alphaWave;
 	byte constantColor[4];
 	qboolean isLightmapStage = qfalse;
+	qboolean isWhiteImageStage = qfalse;
 
 	imageName[0] = '\0';
 	memset( &rgbWave, 0, sizeof( rgbWave ) );
@@ -158,6 +159,8 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 			token = COM_ParseExt( text, qfalse );
 			if ( !Q_stricmp( token, "$lightmap" ) ) {
 				isLightmapStage = qtrue;
+			} else if ( !Q_stricmp( token, "$whiteimage" ) || !Q_stricmp( token, "*white" ) ) {
+				isWhiteImageStage = qtrue;
 			} else {
 				Q_strncpyz( imageName, token, sizeof( imageName ) );
 			}
@@ -301,9 +304,13 @@ static void ParseStage( shaderStage_t *stage, char **text ) {
 	stage->alphaWave = alphaWave;
 	memcpy( stage->constantColor, constantColor, 4 );
 
-	stage->image = imageName[0] ? R_FindImageFile( imageName, IMGFLAG_NONE ) : NULL;
-	if ( !stage->image ) {
-		stage->image = R_GetDefaultImage();
+	if ( isWhiteImageStage ) {
+		stage->image = R_GetWhiteImage();
+	} else {
+		stage->image = imageName[0] ? R_FindImageFile( imageName, IMGFLAG_NONE ) : NULL;
+		if ( !stage->image ) {
+			stage->image = R_GetDefaultImage();
+		}
 	}
 
 	if ( numAnimImageNames > 0 ) {
@@ -564,12 +571,13 @@ static void IndexShaderFile( char *text ) {
 	}
 }
 
-static void ScanAndLoadShaderFiles( void ) {
+
+static void ScanAndLoadShaderFilesWithExt( const char *ext ) {
 	char **shaderFiles;
 	int numShaderFiles;
 	int i;
 
-	shaderFiles = ri.FS_ListFiles( "scripts", ".shader", &numShaderFiles );
+	shaderFiles = ri.FS_ListFiles( "scripts", ext, &numShaderFiles );
 	if ( !shaderFiles ) {
 		return;
 	}
@@ -597,6 +605,11 @@ static void ScanAndLoadShaderFiles( void ) {
 	}
 
 	ri.FS_FreeFileList( shaderFiles );
+}
+
+static void ScanAndLoadShaderFiles( void ) {
+	ScanAndLoadShaderFilesWithExt( ".shader" );
+	ScanAndLoadShaderFilesWithExt( ".mtr" );
 }
 
 void R_InitShaders( void ) {

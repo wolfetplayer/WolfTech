@@ -317,8 +317,11 @@ void vk_flares_draw( const refdef_t *fd, const float viewProj[16], const float f
 	if ( numCoronas > 0 ) {
 		PushTransform( viewProj, fogPush );
 		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_occlusion_probe );
+		// Writes neither depth nor color (see vk.pipeline_occlusion_probe's creation) so the texture
+		// bound here never actually shows -- white anyway, to stay consistent with other vertex-colored
+		// debug/dummy draws rather than the unrelated "shader failed to resolve" default.
 		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-			0, 1, &R_GetDefaultImage()->vk_descriptor, 0, NULL );
+			0, 1, &R_GetWhiteImage()->vk_descriptor, 0, NULL );
 	}
 
 	for ( i = 0; i < numCoronas; i++ ) {

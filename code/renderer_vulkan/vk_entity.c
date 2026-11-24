@@ -864,7 +864,7 @@ static qhandle_t ResolveShaderDirect( qhandle_t customShader, qhandle_t customSk
 		return customShader;
 	}
 	if ( customSkin ) {
-		return R_SkinShaderForSurface( R_GetSkinByHandle( customSkin ), surfaceName, bakedShader );
+		return R_SkinShaderForSurface( R_GetSkinByHandle( customSkin ), surfaceName, 0 );
 	}
 	return bakedShader;
 }
@@ -1339,7 +1339,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMD3;
 				}
-				if ( !Q_stricmp( surf->name, "h_blink" ) && !( ent->renderfx & RF_BLINK ) ) {
+				if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
 					goto nextMD3;
 				}
 
@@ -1387,7 +1387,8 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDC;
 				}
-				if ( !Q_stricmp( surf->name, "h_blink" ) && !( ent->renderfx & RF_BLINK ) ) {
+				// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
+				if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
 					goto nextMDC;
 				}
 
@@ -1434,7 +1435,8 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDS;
 				}
-				if ( !Q_stricmp( surf->name, "h_blink" ) && !( ent->renderfx & RF_BLINK ) ) {
+				// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
+				if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
 					goto nextMDS;
 				}
 
@@ -1479,7 +1481,8 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
 					goto nextMDM;
 				}
-				if ( !Q_stricmp( surf->name, "h_blink" ) && !( ent->renderfx & RF_BLINK ) ) {
+				// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
+				if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
 					goto nextMDM;
 				}
 
