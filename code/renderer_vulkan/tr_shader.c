@@ -463,6 +463,22 @@ static qboolean ParseShader( const char *name, char **text ) {
 				}
 			}
 			SkipRestOfLine( text );
+		} else if ( !Q_stricmp( token, "distanceCull" ) ) {
+			int di;
+			for ( di = 0; di < 3; di++ ) {
+				token = COM_ParseExt( text, qfalse );
+				if ( !token[0] ) {
+					ri.Printf( PRINT_WARNING, "WARNING: missing distanceCull parms in shader '%s'\n", name );
+					break;
+				}
+				tempShader.distanceCull[di] = (float)atof( token );
+			}
+			if ( tempShader.distanceCull[1] - tempShader.distanceCull[0] > 0.0f ) {
+				tempShader.distanceCull[3] = 1.0f / ( tempShader.distanceCull[1] - tempShader.distanceCull[0] );
+			} else {
+				tempShader.distanceCull[0] = tempShader.distanceCull[1] = tempShader.distanceCull[2] = tempShader.distanceCull[3] = 0.0f;
+			}
+			SkipRestOfLine( text );
 		} else if ( !Q_stricmp( token, "fogParms" ) ) {
 			int i;
 			token = COM_ParseExt( text, qfalse ); // opening '('

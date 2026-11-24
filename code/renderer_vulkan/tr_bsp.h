@@ -10,7 +10,6 @@ typedef struct {
 	qhandle_t shader; // resolved once at load time via RE_RegisterShaderInternal
 } bspShader_t;
 
-// MST_PATCH is tessellated by tr_patch.c at build time; FLARE/FOLIAGE are stored but not yet drawable.
 typedef struct {
 	int shaderNum; // index into bspWorld_t.shaders
 	int surfaceType; // mapSurfaceType_t

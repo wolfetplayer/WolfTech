@@ -17,6 +17,8 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] );
 
 void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] );
 
+void vk_world_draw_foliage( const refdef_t *fd, const float mvp[16], const float fogPush[12] );
+
 // Draws one brush-model (func_door/etc.) entity, transformed by its current origin/axis. Call after vk_world_draw.
 void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const float mvp[16], const float fogPush[12] );
 

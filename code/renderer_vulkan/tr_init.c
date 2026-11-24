@@ -255,6 +255,7 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 			vk_sky_draw( fd->vieworg, viewProj, fogPush, R_ComputeZFar( fd ) ); // portal hasn't rendered yet this frame (or this map has none)
 		}
 		vk_world_draw( viewProj, fogPush );
+		vk_world_draw_foliage( fd, viewProj, fogPush );
 
 		if ( !isSkyboxPortalScene ) {
 			R_NoteMainSceneRendered();

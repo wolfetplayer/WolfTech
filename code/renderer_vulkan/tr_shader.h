@@ -162,6 +162,8 @@ typedef struct shader_s {
 
 	fogParms_t fogParms;
 
+	vec4_t distanceCull;
+
 	int numStages;
 	shaderStage_t stages[MAX_SHADER_STAGES];
 

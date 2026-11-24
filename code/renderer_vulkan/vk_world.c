@@ -17,6 +17,7 @@
 #include "tr_light.h"
 #include "tr_scene.h"
 #include "tr_portal.h"
+#include "tr_main.h"
 #include "vk_world.h"
 
 // Same falloff shape vk_entity.c's ComputeEntityTint uses for dlight contributions.
@@ -116,6 +117,33 @@ static qboolean s_dynBrushExtraOverflowWarned;
 
 static int s_whiteLightmapIdx;
 
+typedef struct {
+	qhandle_t shader;
+	int firstVert, numVerts;        // base mesh, into tr_world.drawVerts
+	int firstIndex, numIndexes;     // local indices (0..numVerts-1), into tr_world.drawIndexes
+	int firstInstance, numInstances; // into s_foliageInstances
+} foliageSurf_t;
+
+typedef struct {
+	vec3_t origin;
+	byte color[4]; // baked by q3map2, already overbright/gamma-shifted by R_LoadDrawVerts
+} foliageInstance_t;
+
+static foliageSurf_t *s_foliageSurfs;
+static int s_numFoliageSurfs;
+static foliageInstance_t *s_foliageInstances;
+
+static VkBuffer s_dynFoliageBuffer;
+static VkDeviceMemory s_dynFoliageMemory;
+static vk2d_vertex_t *s_dynFoliageMapped;
+static uint32_t s_dynFoliageCapacity;
+static uint32_t s_dynFoliageWriteOffset;
+static uint32_t s_dynFoliageRegionBase;
+static qboolean s_dynFoliageOverflowWarned;
+
+static cvar_t *r_drawfoliage;
+static cvar_t *r_foliageCullDistance;
+
 // Lazily-built (shader, lightmap) -> descriptor cache for brush-entity stage 0; a door's pair may not be among s_batches.
 #define MAX_BRUSH_LM_DESCRIPTORS 64
 typedef struct {
@@ -198,6 +226,14 @@ void vk_world_clear( void ) {
 	destroy_dynamic_vertex_buffer( s_dynBrushLMBuffer, s_dynBrushLMMemory, s_dynBrushLMMapped );
 	s_dynBrushLMBuffer = VK_NULL_HANDLE; s_dynBrushLMMemory = VK_NULL_HANDLE; s_dynBrushLMMapped = NULL;
 	s_dynBrushLMWriteOffset = 0; s_dynBrushLMOverflowWarned = qfalse;
+
+	destroy_dynamic_vertex_buffer( s_dynFoliageBuffer, s_dynFoliageMemory, s_dynFoliageMapped );
+	s_dynFoliageBuffer = VK_NULL_HANDLE; s_dynFoliageMemory = VK_NULL_HANDLE; s_dynFoliageMapped = NULL;
+	s_dynFoliageCapacity = 0; s_dynFoliageWriteOffset = 0; s_dynFoliageOverflowWarned = qfalse;
+
+	if ( s_foliageSurfs ) { free( s_foliageSurfs ); s_foliageSurfs = NULL; }
+	if ( s_foliageInstances ) { free( s_foliageInstances ); s_foliageInstances = NULL; }
+	s_numFoliageSurfs = 0;
 
 	destroy_dynamic_vertex_buffer( s_dynBrushExtraBuffer, s_dynBrushExtraMemory, s_dynBrushExtraMapped );
 	s_dynBrushExtraBuffer = VK_NULL_HANDLE; s_dynBrushExtraMemory = VK_NULL_HANDLE; s_dynBrushExtraMapped = NULL;
@@ -348,6 +384,124 @@ static qboolean ShaderHasExplicitLightmapStage( const shader_t *shader ) {
 	return qfalse;
 }
 
+static void BuildFoliageCache( void ) {
+	int firstWorldSurf = ( tr_world.numSubmodels > 0 ) ? tr_world.submodels[0].firstSurface : 0;
+	int numWorldSurfs = ( tr_world.numSubmodels > 0 ) ? tr_world.submodels[0].numSurfaces : tr_world.numSurfaces;
+	int surfIdx, numFoliageSurfs = 0, totalInstances = 0;
+	uint64_t totalExpandedVerts = 0;
+	foliageSurf_t *surfs;
+	foliageInstance_t *instances;
+	float heightScale;
+	int outSurf, outInst;
+
+	if ( !r_drawfoliage ) {
+		r_drawfoliage = ri.Cvar_Get( "r_drawfoliage", "1", CVAR_ARCHIVE );
+	}
+	if ( !r_foliageCullDistance ) {
+		r_foliageCullDistance = ri.Cvar_Get( "r_foliageCullDistance", "30", CVAR_ARCHIVE );
+		ri.Cvar_CheckRange( r_foliageCullDistance, 1, 400, qfalse );
+	}
+
+	for ( surfIdx = firstWorldSurf; surfIdx < firstWorldSurf + numWorldSurfs; surfIdx++ ) {
+		const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
+		shader_t *shader;
+
+		if ( surf->surfaceType != MST_FOLIAGE ) continue;
+		if ( tr_world.shaders[surf->shaderNum].surfaceFlags & SURF_NODRAW ) continue;
+		shader = R_GetShaderByHandle( tr_world.shaders[surf->shaderNum].shader );
+		if ( !shader || shader->isSky || shader->numStages < 1 ) continue;
+		// Foliage surfaces repurpose patchHeight/patchWidth for the real base-mesh vert count and
+		// instance count (the generic numVerts field spans both, like the reference's ParseFoliage).
+		if ( surf->patchHeight <= 0 || surf->patchWidth <= 0 || surf->numIndexes <= 0 ) continue;
+
+		numFoliageSurfs++;
+		totalInstances += surf->patchWidth;
+	}
+
+	if ( numFoliageSurfs == 0 ) {
+		return;
+	}
+
+	surfs = malloc( (size_t)numFoliageSurfs * sizeof( foliageSurf_t ) );
+	instances = malloc( (size_t)totalInstances * sizeof( foliageInstance_t ) );
+
+	// Changing r_drawfoliage takes effect on the next map load, not live -- matches the reference engine.
+	heightScale = r_drawfoliage->value;
+	if ( heightScale < 0.0f ) heightScale = 1.0f;
+	else if ( heightScale > 2.0f ) heightScale = 2.0f;
+
+	outSurf = 0; outInst = 0;
+	for ( surfIdx = firstWorldSurf; surfIdx < firstWorldSurf + numWorldSurfs; surfIdx++ ) {
+		const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
+		shader_t *shader;
+		int numVerts, numInstances, i2;
+		drawVert_t *instanceSrc;
+
+		if ( surf->surfaceType != MST_FOLIAGE ) continue;
+		if ( tr_world.shaders[surf->shaderNum].surfaceFlags & SURF_NODRAW ) continue;
+		shader = R_GetShaderByHandle( tr_world.shaders[surf->shaderNum].shader );
+		if ( !shader || shader->isSky || shader->numStages < 1 ) continue;
+		numVerts = surf->patchHeight;
+		numInstances = surf->patchWidth;
+		if ( numVerts <= 0 || numInstances <= 0 || surf->numIndexes <= 0 ) continue;
+
+		surfs[outSurf].shader = tr_world.shaders[surf->shaderNum].shader;
+		surfs[outSurf].firstVert = surf->firstVert;
+		surfs[outSurf].numVerts = numVerts;
+		surfs[outSurf].firstIndex = surf->firstIndex;
+		surfs[outSurf].numIndexes = surf->numIndexes;
+		surfs[outSurf].firstInstance = outInst;
+		surfs[outSurf].numInstances = numInstances;
+
+		// Bake the height scale into the base mesh once, like the reference engine's ParseFoliage --
+		// safe to mutate in place, this vertex range belongs solely to this surface.
+		if ( heightScale != 1.0f ) {
+			int v;
+			for ( v = 0; v < numVerts; v++ ) {
+				tr_world.drawVerts[surf->firstVert + v].xyz[2] *= heightScale;
+			}
+		}
+
+		// The instances are additional drawverts right after the base mesh: xyz is the world-space
+		// origin, color is the baked lighting (already overbright/gamma-shifted -- see R_LoadDrawVerts).
+		instanceSrc = &tr_world.drawVerts[surf->firstVert + numVerts];
+		for ( i2 = 0; i2 < numInstances; i2++ ) {
+			VectorCopy( instanceSrc[i2].xyz, instances[outInst + i2].origin );
+			instances[outInst + i2].color[0] = instanceSrc[i2].color[0];
+			instances[outInst + i2].color[1] = instanceSrc[i2].color[1];
+			instances[outInst + i2].color[2] = instanceSrc[i2].color[2];
+			instances[outInst + i2].color[3] = instanceSrc[i2].color[3];
+		}
+
+		totalExpandedVerts += (uint64_t)numInstances * (uint64_t)surf->numIndexes * (uint64_t)shader->numStages;
+
+		outInst += numInstances;
+		outSurf++;
+	}
+
+	if ( outSurf == 0 ) {
+		free( surfs );
+		free( instances );
+		return;
+	}
+
+	s_foliageSurfs = surfs;
+	s_numFoliageSurfs = outSurf;
+	s_foliageInstances = instances;
+
+	// Worst case for one frame: every instance visible/unculled, through every stage of its shader.
+	// No extra headroom for a same-frame portal/mirror recursion's second pass (like s_dynDlightCapacity,
+	// not like s_dynLM/s_dyn2D's *2) -- foliage is rare alongside portals; overflow just warns and drops.
+	s_dynFoliageCapacity = ( totalExpandedVerts > 0xFFFFFFFFu ) ? 0xFFFFFFFFu : (uint32_t)totalExpandedVerts;
+	if ( s_dynFoliageCapacity == 0 ) {
+		s_dynFoliageCapacity = 1; // keep create_dynamic_vertex_buffer from being asked for a zero-size buffer
+	}
+	create_dynamic_vertex_buffer( (VkDeviceSize)s_dynFoliageCapacity * VK_FRAMES_IN_FLIGHT * sizeof( vk2d_vertex_t ),
+		&s_dynFoliageBuffer, &s_dynFoliageMemory, (void **)&s_dynFoliageMapped );
+
+	ri.Printf( PRINT_ALL, "...vk_world_build: %d foliage surfaces, %d instances\n", outSurf, outInst );
+}
+
 void vk_world_build( void ) {
 	vkWorldVertex_t *verts;
 	uint32_t *indexes;
@@ -367,6 +521,10 @@ void vk_world_build( void ) {
 	if ( !tr_world.loaded || tr_world.numDrawVerts == 0 || tr_world.numShaders == 0 ) {
 		return;
 	}
+
+	// Independent of the normal batch/surfRef system below -- a map with foliage but no other
+	// drawable surfaces would otherwise never get here (see the numDrawable==0 early return further down).
+	BuildFoliageCache();
 
 	sortedSurfs = malloc( tr_world.numSurfaces * sizeof( int ) );
 
@@ -1099,12 +1257,14 @@ void vk_world_begin_frame( void ) {
 	s_dynBrushLMWriteOffset = 0;
 	s_dynBrushExtraWriteOffset = 0;
 	s_dynDlightWriteOffset = 0;
+	s_dynFoliageWriteOffset = 0;
 
 	s_dynLMRegionBase = slot * s_dynLMCapacity;
 	s_dyn2DRegionBase = slot * s_dyn2DCapacity;
 	s_dynDlightRegionBase = slot * s_dynDlightCapacity;
 	s_dynBrushLMRegionBase = slot * (uint32_t)BRUSH_DYN_CAPACITY;
 	s_dynBrushExtraRegionBase = slot * (uint32_t)BRUSH_DYN_CAPACITY;
+	s_dynFoliageRegionBase = slot * s_dynFoliageCapacity;
 }
 
 // Shared by vk_world_draw/vk_world_draw_transparent: mvp/fog/portal-clip push constants, identical for both passes within a frame.
@@ -1341,6 +1501,168 @@ void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] ) {
 				0, 1, &stageDescriptor, 0, NULL );
 
 			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, stage );
+		}
+	}
+}
+
+void vk_world_draw_foliage( const refdef_t *fd, const float mvp[16], const float fogPush[12] ) {
+	cullPlane_t frustum[NUM_FRUSTUM_PLANES];
+	qboolean haveFrustum = qfalse;
+	float fovScale = fd->fov_x * ( 1.0f / 90.0f );
+	float cullScale;
+	VkDeviceSize vb_offset = (VkDeviceSize)s_dynFoliageRegionBase * sizeof( vk2d_vertex_t );
+	int i;
+
+	if ( !s_built || s_numFoliageSurfs == 0 ) {
+		return;
+	}
+
+	cullScale = r_foliageCullDistance ? ( r_foliageCullDistance->value * 0.01f ) : 0.3f;
+	if ( cullScale < 0.01f ) {
+		cullScale = 0.01f; // keep a sliver of range so foliage still fades out near the player instead of collapsing to a point
+	}
+
+	PushWorldTransform( mvp, fogPush );
+	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynFoliageBuffer, &vb_offset );
+
+	for ( i = 0; i < s_numFoliageSurfs; i++ ) {
+		const foliageSurf_t *fsurf = &s_foliageSurfs[i];
+		shader_t *shader = R_GetShaderByHandle( fsurf->shader );
+		int s;
+
+		if ( !shader ) {
+			continue;
+		}
+
+		for ( s = 0; s < shader->numStages; s++ ) {
+			const shaderStage_t *stage = &shader->stages[s];
+			VkDescriptorSet stageDescriptor;
+			VkPipeline pipeline;
+			qboolean runOpen = qfalse;
+			uint32_t runStart = 0;
+			int inst;
+
+			if ( stage->isLightmap ) {
+				stageDescriptor = s_lightmapTextures[s_whiteLightmapIdx].descriptor; // vertex-lit only -- no real lightmap UVs here
+			} else {
+				image_t *stageImage = R_GetStageImage( stage );
+				if ( !stageImage || stageImage->vk_descriptor == VK_NULL_HANDLE ) {
+					continue;
+				}
+				stageDescriptor = stageImage->vk_descriptor;
+			}
+
+			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(),
+				shader->polygonOffset, stage->depthWrite );
+			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
+				0, 1, &stageDescriptor, 0, NULL );
+
+			for ( inst = 0; inst < fsurf->numInstances; inst++ ) {
+				const foliageInstance_t *instance = &s_foliageInstances[fsurf->firstInstance + inst];
+				byte baseColor[4] = { 0, 0, 0, 0 };
+				qboolean visible = qtrue;
+				int k;
+
+				if ( shader->distanceCull[1] > 0.0f ) {
+					vec3_t toInst;
+					float z;
+
+					if ( !haveFrustum ) {
+						R_SetupFrustumPlanes( fd, frustum );
+						haveFrustum = qtrue;
+					}
+
+					VectorSubtract( instance->origin, fd->vieworg, toInst );
+					z = fovScale * DotProduct( toInst, fd->viewaxis[0] );
+
+					if ( z < -64.0f ) {
+						visible = qfalse;
+					} else {
+						vec3_t mins, maxs;
+						mins[0] = instance->origin[0] - 64.0f; mins[1] = instance->origin[1] - 64.0f; mins[2] = instance->origin[2] - 64.0f;
+						maxs[0] = instance->origin[0] + 64.0f; maxs[1] = instance->origin[1] + 64.0f; maxs[2] = instance->origin[2] + 64.0f;
+						if ( !R_CullBoundsVsFrustum( mins, maxs, frustum ) ) {
+							visible = qfalse;
+						}
+					}
+
+					if ( visible ) {
+						float inner = shader->distanceCull[0] * cullScale;
+						float outer = shader->distanceCull[1] * cullScale;
+						float invRange = ( outer - inner > 0.0f ) ? ( 1.0f / ( outer - inner ) ) : 0.0f;
+						float zBias = z;
+						float alpha;
+
+						// Cheap per-instance dither so the fade band isn't a uniform ring around the player.
+						if ( inst & 1 ) {
+							zBias *= 1.25f;
+							if ( inst & 2 ) {
+								zBias *= 1.25f;
+							}
+						}
+
+						alpha = ( outer - zBias ) * invRange;
+						if ( alpha < shader->distanceCull[2] ) {
+							visible = qfalse;
+						} else {
+							baseColor[0] = instance->color[0]; baseColor[1] = instance->color[1]; baseColor[2] = instance->color[2];
+							baseColor[3] = ( alpha > 1.0f ) ? 255 : (byte)( alpha * 255.0f );
+						}
+					}
+				} else {
+					baseColor[0] = instance->color[0]; baseColor[1] = instance->color[1]; baseColor[2] = instance->color[2];
+					baseColor[3] = instance->color[3];
+				}
+
+				if ( visible && s_dynFoliageWriteOffset + (uint32_t)fsurf->numIndexes > s_dynFoliageCapacity ) {
+					if ( !s_dynFoliageOverflowWarned ) {
+						ri.Printf( PRINT_WARNING, "vk_world: dynamic foliage vertex buffer full, dropping remaining foliage this frame\n" );
+						s_dynFoliageOverflowWarned = qtrue;
+					}
+					visible = qfalse;
+				}
+
+				if ( !visible ) {
+					if ( runOpen ) {
+						qvkCmdDraw( vk.command_buffer, s_dynFoliageWriteOffset - runStart, 1, runStart, 0 );
+						runOpen = qfalse;
+					}
+					continue;
+				}
+
+				if ( !runOpen ) {
+					runStart = s_dynFoliageWriteOffset;
+					runOpen = qtrue;
+				}
+
+				for ( k = 0; k < fsurf->numIndexes; k++ ) {
+					int localIdx = tr_world.drawIndexes[fsurf->firstIndex + k];
+					const drawVert_t *src = &tr_world.drawVerts[fsurf->firstVert + localIdx];
+					vk2d_vertex_t *dst = &s_dynFoliageMapped[s_dynFoliageRegionBase + s_dynFoliageWriteOffset++];
+					vec3_t worldPos, deformed;
+					byte color[4];
+					float uv[2];
+
+					VectorAdd( src->xyz, instance->origin, worldPos );
+					R_DeformPosition( shader, worldPos, src->normal, src->st[0], deformed );
+					R_CalcStageColorAlpha( stage, NULL, baseColor, color );
+					if ( stage->isLightmap ) {
+						R_CalcStageTexCoord( stage, src->lightmap[0], src->lightmap[1], deformed, NULL, uv );
+					} else {
+						R_CalcStageTexCoord( stage, src->st[0], src->st[1], deformed, NULL, uv );
+					}
+
+					dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
+					dst->color[0] = color[0]; dst->color[1] = color[1]; dst->color[2] = color[2]; dst->color[3] = color[3];
+					dst->uv[0] = uv[0]; dst->uv[1] = uv[1];
+				}
+			}
+
+			if ( runOpen ) {
+				qvkCmdDraw( vk.command_buffer, s_dynFoliageWriteOffset - runStart, 1, runStart, 0 );
+			}
 		}
 	}
 }
