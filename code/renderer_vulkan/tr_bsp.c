@@ -29,6 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // tr_bsp.c -- loads .bsp lumps into flat arrays; no tree-walk/PVS/tessellation yet, see tr_bsp.h.
 
 #include <string.h>
+#include <stdio.h>
 #include <math.h>
 
 #include "tr_local.h"
@@ -342,14 +343,13 @@ static void R_LoadSubmodels( const lump_t *l ) {
 	}
 }
 
-// Grid cell size the map was compiled with; RTCW lets worldspawn override this, but we don't parse entity keys yet.
 #define LIGHTGRID_SIZE_X 64.0f
 #define LIGHTGRID_SIZE_Y 64.0f
 #define LIGHTGRID_SIZE_Z 128.0f
 
 // Bounds come from the world model, same simplification the opengl1 renderer itself falls back to.
 static void R_LoadLightGrid( const lump_t *l ) {
-	vec3_t gridSize = { LIGHTGRID_SIZE_X, LIGHTGRID_SIZE_Y, LIGHTGRID_SIZE_Z };
+	const float *gridSize = tr_world.lightGridSize;
 	const float *mins, *maxs;
 	vec3_t gridMaxs;
 	int numGridPoints;
@@ -427,14 +427,27 @@ static void R_LoadVisibility( const lump_t *l ) {
 	memcpy( tr_world.visData, fileBase + l->fileofs + 8, l->filelen - 8 );
 }
 
-// Stores the raw entity-lump text verbatim; R_GetEntityToken (tr_init.c) hands it to cgame token-by-token.
 static void R_LoadEntities( const lump_t *l ) {
-	const char *p = (const char *)( fileBase + l->fileofs );
+	char *p = (char *)( fileBase + l->fileofs );
+	char *scan;
+	char *token;
 
 	tr_world.entityString = ri.Hunk_Alloc( l->filelen + 1, h_low );
 	memcpy( tr_world.entityString, p, l->filelen );
 	tr_world.entityString[l->filelen] = '\0';
 	tr_world.entityParsePoint = tr_world.entityString;
+
+	tr_world.lightGridSize[0] = LIGHTGRID_SIZE_X;
+	tr_world.lightGridSize[1] = LIGHTGRID_SIZE_Y;
+	tr_world.lightGridSize[2] = LIGHTGRID_SIZE_Z;
+
+	scan = tr_world.entityString;
+	while ( ( token = COM_ParseExt( &scan, qtrue ) )[0] ) {
+		if ( !Q_stricmp( token, "gridsize" ) ) {
+			token = COM_ParseExt( &scan, qfalse );
+			sscanf( token, "%f %f %f", &tr_world.lightGridSize[0], &tr_world.lightGridSize[1], &tr_world.lightGridSize[2] );
+		}
+	}
 }
 
 void RE_LoadWorldMap( const char *name ) {
@@ -491,11 +504,11 @@ void RE_LoadWorldMap( const char *name ) {
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: leafs (%d)\n", tr_world.numLeafs );
 	R_LoadSubmodels( &header->lumps[LUMP_MODELS] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: submodels (%d)\n", tr_world.numSubmodels );
+	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
 	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: light grid (%s)\n", tr_world.lightGridData ? "loaded" : "absent" );
 	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
 	ri.Printf( PRINT_ALL, "...bsp checkpoint: visibility (%d clusters)\n", tr_world.numClusters );
-	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
 
 	ri.FS_FreeFile( buffer );
 

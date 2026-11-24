@@ -76,6 +76,7 @@ typedef struct {
 	byte *lightmapData; // RGB8, numLightmaps * LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 3 bytes
 
 	// Ambient/directed light samples on a regular 3D grid, used to shade entities (which have no lightmap of their own).
+	vec3_t lightGridSize;
 	vec3_t lightGridOrigin;
 	vec3_t lightGridInverseSize;
 	int lightGridBounds[3];
