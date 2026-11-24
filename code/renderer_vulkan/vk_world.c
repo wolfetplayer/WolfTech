@@ -1286,7 +1286,16 @@ static void PushWorldTransform( const float mvp[16], const float fogPush[12] ) {
 }
 
 static qboolean IsTransparentBatch( const shader_t *shader ) {
-	return shader->stages[0].blendEnabled && shader->explicitlyDefined;
+	const shaderStage_t *stage0 = &shader->stages[0];
+
+	if ( !stage0->blendEnabled || !shader->explicitlyDefined ) {
+		return qfalse;
+	}
+
+	if ( stage0->srcBlend == VK_BLEND_FACTOR_ONE && stage0->dstBlend == VK_BLEND_FACTOR_ZERO ) {
+		return qfalse;
+	}
+	return qtrue;
 }
 
 void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
