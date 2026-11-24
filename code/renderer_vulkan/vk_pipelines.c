@@ -471,6 +471,8 @@ static void GetSpecInfo( vk2d_spec_data_t *spec_data, VkSpecializationMapEntry s
 	specInfo->pData = spec_data;
 }
 
+static void vk_resetPipelineCache2D( void );
+
 void vk_create2DPipelines( void ) {
 	VkVertexInputBindingDescription binding;
 	VkVertexInputAttributeDescription attribs[3];
@@ -485,9 +487,72 @@ void vk_create2DPipelines( void ) {
 		&binding, attribs, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
 	vk.pipeline_2d_blend = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding, attribs, 3, VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_FALSE, VK_CULL_MODE_NONE );
+
+	vk_resetPipelineCache2D();
+}
+#define MAX_CACHED_2D_PIPELINES 16
+typedef struct {
+	VkBool32 blendEnable;
+	VkBlendFactor srcBlend;
+	VkBlendFactor dstBlend;
+} cachedPipeline2DKey_t;
+static cachedPipeline2DKey_t s_cachedPipeline2DKeys[MAX_CACHED_2D_PIPELINES];
+static VkPipeline s_cachedPipelines2D[MAX_CACHED_2D_PIPELINES];
+static int s_numCachedPipelines2D;
+
+static void vk_resetPipelineCache2D( void ) {
+	s_numCachedPipelines2D = 0;
+}
+
+static void vk_destroyPipelineCache2D( void ) {
+	int i;
+	for ( i = 0; i < s_numCachedPipelines2D; i++ ) {
+		qvkDestroyPipeline( vk.device, s_cachedPipelines2D[i], NULL );
+	}
+	s_numCachedPipelines2D = 0;
+}
+
+VkPipeline vk_getPipeline2D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend ) {
+	VkVertexInputBindingDescription binding;
+	VkVertexInputAttributeDescription attribs[3];
+	vk2d_spec_data_t spec_data;
+	VkSpecializationMapEntry spec_entries[4];
+	VkSpecializationInfo specInfo;
+	int i;
+
+	if ( !blendEnable ) {
+		return vk.pipeline_2d_opaque;
+	}
+	if ( srcBlend == VK_BLEND_FACTOR_SRC_ALPHA && dstBlend == VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA ) {
+		return vk.pipeline_2d_blend;
+	}
+
+	for ( i = 0; i < s_numCachedPipelines2D; i++ ) {
+		const cachedPipeline2DKey_t *key = &s_cachedPipeline2DKeys[i];
+		if ( key->blendEnable == blendEnable && key->srcBlend == srcBlend && key->dstBlend == dstBlend ) {
+			return s_cachedPipelines2D[i];
+		}
+	}
+
+	if ( s_numCachedPipelines2D >= MAX_CACHED_2D_PIPELINES ) {
+		ri.Printf( PRINT_WARNING, "MAX_CACHED_2D_PIPELINES hit, falling back to the default 2D blend pipeline\n" );
+		return vk.pipeline_2d_blend;
+	}
+
+	Get2DAttribs( &binding, attribs );
+	GetSpecInfo( &spec_data, spec_entries, &specInfo, qfalse, 0, qfalse ); // fog off -- 2D UI must never be fogged
+
+	s_cachedPipeline2DKeys[s_numCachedPipelines2D].blendEnable = blendEnable;
+	s_cachedPipeline2DKeys[s_numCachedPipelines2D].srcBlend = srcBlend;
+	s_cachedPipeline2DKeys[s_numCachedPipelines2D].dstBlend = dstBlend;
+	s_cachedPipelines2D[s_numCachedPipelines2D] = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
+		&binding, attribs, 3, blendEnable, srcBlend, dstBlend, VK_FALSE, VK_CULL_MODE_NONE );
+
+	return s_cachedPipelines2D[s_numCachedPipelines2D++];
 }
 
 void vk_destroy2DPipelines( void ) {
+	vk_destroyPipelineCache2D();
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_opaque, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_blend, NULL );
 }

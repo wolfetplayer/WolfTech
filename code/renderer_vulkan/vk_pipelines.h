@@ -82,6 +82,9 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 							  VkCullModeFlags cullMode, int32_t alphaTestFunc, VkBool32 clipPlane, VkBool32 mirror,
 							  VkBool32 polygonOffset, VkBool32 depthWrite );
 
+
+VkPipeline vk_getPipeline2D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend );
+
 // vk.pipeline_3d_lightmap[cullType][alphaTestFunc], auto-swapped for the clip-plane/mirror variant while tr_portal.c is recursing.
 VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType, int32_t alphaTestFunc );
 
