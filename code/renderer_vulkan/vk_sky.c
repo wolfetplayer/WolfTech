@@ -11,7 +11,9 @@
 #include "tr_shade_calc.h"
 #include "vk_sky.h"
 
-#define SKY_VERTS 36 // 6 faces * 2 triangles * 3 verts, non-indexed
+#define SKY_SUBDIVISIONS 8
+#define SKY_VERTS_PER_FACE ( SKY_SUBDIVISIONS * SKY_SUBDIVISIONS * 6 ) // 2 triangles * 3 verts per grid cell, non-indexed
+#define SKY_VERTS ( SKY_VERTS_PER_FACE * 6 ) // 6 faces
 #define SKY_ZFAR_SCALE ( 1.0f / 1.75f ) // matches code/renderer/tr_sky.c's MakeSkyVec: keeps the box's farthest corner inside zFar
 #define SKY_CLOUD_MAX_LAYERS MAX_SHADER_STAGES // one vertex block per potential cloud-layer stage, after the outer box's own block
 
@@ -86,26 +88,35 @@ static void sky_vec( float s, float t, int face, float size, vec3_t outOffset ) 
 	}
 }
 
+static void sky_grid_vert( float s, float t, int face, float size, const vec3_t camPos, vk2d_vertex_t *out ) {
+	vec3_t offset;
+	float u, v;
+
+	sky_vec( s, t, face, size, offset );
+	u = ( s + 1.0f ) * 0.5f;
+	v = 1.0f - ( t + 1.0f ) * 0.5f; // matches MakeSkyVec's own t = 1 - t flip
+	set_sky_vert( out, camPos, offset[0], offset[1], offset[2], u, v );
+}
+
 static void build_sky_box( vk2d_vertex_t *out, const vec3_t camPos, float size ) {
-	static const float stCorner[4][2] = { { -1, -1 }, { 1, -1 }, { 1, 1 }, { -1, 1 } };
-	static const int order[6] = { 0, 1, 2, 0, 2, 3 };
-	int face, i = 0;
+	int face, gs, gt, i = 0;
 
 	for ( face = 0; face < 6; face++ ) {
-		vec3_t offset[4];
-		float uv[4][2];
-		int c;
+		for ( gt = 0; gt < SKY_SUBDIVISIONS; gt++ ) {
+			float t0 = -1.0f + 2.0f * (float)gt / SKY_SUBDIVISIONS;
+			float t1 = -1.0f + 2.0f * (float)( gt + 1 ) / SKY_SUBDIVISIONS;
 
-		for ( c = 0; c < 4; c++ ) {
-			float s = stCorner[c][0], t = stCorner[c][1];
-			sky_vec( s, t, face, size, offset[c] );
-			uv[c][0] = ( s + 1.0f ) * 0.5f;
-			uv[c][1] = 1.0f - ( t + 1.0f ) * 0.5f; // matches MakeSkyVec's own t = 1 - t flip
-		}
+			for ( gs = 0; gs < SKY_SUBDIVISIONS; gs++ ) {
+				float s0 = -1.0f + 2.0f * (float)gs / SKY_SUBDIVISIONS;
+				float s1 = -1.0f + 2.0f * (float)( gs + 1 ) / SKY_SUBDIVISIONS;
 
-		for ( c = 0; c < 6; c++ ) {
-			int k = order[c];
-			set_sky_vert( &out[i++], camPos, offset[k][0], offset[k][1], offset[k][2], uv[k][0], uv[k][1] );
+				sky_grid_vert( s0, t0, face, size, camPos, &out[i++] );
+				sky_grid_vert( s1, t0, face, size, camPos, &out[i++] );
+				sky_grid_vert( s1, t1, face, size, camPos, &out[i++] );
+				sky_grid_vert( s0, t0, face, size, camPos, &out[i++] );
+				sky_grid_vert( s1, t1, face, size, camPos, &out[i++] );
+				sky_grid_vert( s0, t1, face, size, camPos, &out[i++] );
+			}
 		}
 	}
 }
@@ -208,7 +219,7 @@ void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[
 		}
 		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
 			0, 1, &img->vk_descriptor, 0, NULL );
-		qvkCmdDraw( vk.command_buffer, 6, 1, (uint32_t)face * 6, 0 );
+		qvkCmdDraw( vk.command_buffer, SKY_VERTS_PER_FACE, 1, (uint32_t)face * SKY_VERTS_PER_FACE, 0 );
 	}
 
 	for ( i = 0; i < numCloudLayers; i++ ) {
