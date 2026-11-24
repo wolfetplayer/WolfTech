@@ -149,7 +149,6 @@ static void RE_BeginRegistration( glconfig_t *config ) {
 		R_InitFog();
 		vk_screenshot_init();
 		r_showImages = ri.Cvar_Get( "r_showImages", "0", CVAR_TEMP );
-		s_testCubeInit = qfalse;
 	}
 
 	R_GetGlConfig( config );
