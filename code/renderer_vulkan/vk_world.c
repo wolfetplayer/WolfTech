@@ -361,6 +361,10 @@ void vk_world_build( void ) {
 		const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
 		shader_t *surfShader = R_GetShaderByHandle( tr_world.shaders[surf->shaderNum].shader );
 
+		if ( tr_world.shaders[surf->shaderNum].surfaceFlags & SURF_NODRAW ) {
+			continue;
+		}
+
 		if ( surfShader->isSky ) {
 			// Sky-shaded surfaces aren't batched/drawn here -- vk_sky.c paints the whole box every frame instead.
 			if ( !tr_world.hasSky ) {
@@ -972,6 +976,9 @@ void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const fl
 
 		if ( !shader || shader->isSky || shader->numStages < 1 ) {
 			continue;
+		}
+		if ( tr_world.shaders[surf->shaderNum].surfaceFlags & SURF_NODRAW ) {
+			continue; // see the static-world build's matching check in vk_world_build
 		}
 
 		if ( surf->surfaceType == MST_PLANAR || surf->surfaceType == MST_TRIANGLE_SOUP ) {
