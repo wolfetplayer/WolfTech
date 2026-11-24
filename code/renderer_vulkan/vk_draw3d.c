@@ -1,4 +1,4 @@
-// vk_draw3d.c -- depth-tested 3D geometry recording: a sanity test cube, and per-entity position markers until real model rendering lands.
+// vk_draw3d.c -- depth-tested 3D geometry recording: per-entity position markers until real model rendering lands.
 
 #include <string.h>
 
@@ -11,18 +11,12 @@
 #include "vk_draw3d.h"
 
 #define VERTS_PER_CUBE 36
-#define VK3D_MAX_VERTS 256
 #define VK3D_MAX_MARKER_VERTS ( MAX_REFENTITIES * VERTS_PER_CUBE )
-
-static VkBuffer s_vertexBuffer;
-static VkDeviceMemory s_vertexMemory;
-static vk2d_vertex_t *s_mapped;
 
 static VkBuffer s_markerVertexBuffer;
 static VkDeviceMemory s_markerVertexMemory;
 static vk2d_vertex_t *s_markerMapped;
 
-static cvar_t *r_vk_test3d;
 static cvar_t *r_vk_showEntityMarkers;
 
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
@@ -63,18 +57,13 @@ static void destroy_mapped_vertex_buffer( VkBuffer buffer, VkDeviceMemory memory
 }
 
 void vk_draw3d_init( void ) {
-	// Sanity check: draws a fixed RGB cube in the 3D scene. Off by default now that real world geometry renders.
-	r_vk_test3d = ri.Cvar_Get( "r_vk_test3d", "0", CVAR_ARCHIVE );
 	// Marker cube per entity lacking real mesh rendering. Off by default: a misplaced one (e.g. a bad tag attachment) can fill the whole view.
 	r_vk_showEntityMarkers = ri.Cvar_Get( "r_vk_showEntityMarkers", "0", CVAR_ARCHIVE );
 
-	create_mapped_vertex_buffer( (VkDeviceSize)VK3D_MAX_VERTS * VK_FRAMES_IN_FLIGHT, &s_vertexBuffer, &s_vertexMemory, &s_mapped );
 	create_mapped_vertex_buffer( (VkDeviceSize)VK3D_MAX_MARKER_VERTS * VK_FRAMES_IN_FLIGHT, &s_markerVertexBuffer, &s_markerVertexMemory, &s_markerMapped );
 }
 
 void vk_draw3d_shutdown( void ) {
-	destroy_mapped_vertex_buffer( s_vertexBuffer, s_vertexMemory, s_mapped );
-	s_mapped = NULL;
 	destroy_mapped_vertex_buffer( s_markerVertexBuffer, s_markerVertexMemory, s_markerMapped );
 	s_markerMapped = NULL;
 }
@@ -130,23 +119,6 @@ static void bind_opaque_3d_for_draw( const float mvp[16], const float fogPush[12
 
 	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
 		0, 1, &R_GetDefaultImage()->vk_descriptor, 0, NULL );
-}
-
-void vk_draw3d_test_cube( const vec3_t origin, float halfSize, const float mvp[16], const float fogPush[12] ) {
-	uint32_t regionBase;
-	VkDeviceSize vb_offset;
-
-	if ( !r_vk_test3d->integer ) {
-		return;
-	}
-
-	regionBase = vk_current_frame_slot() * (uint32_t)VK3D_MAX_VERTS;
-	vb_offset = (VkDeviceSize)regionBase * sizeof( vk2d_vertex_t );
-	build_cube( &s_mapped[regionBase], origin, halfSize );
-
-	bind_opaque_3d_for_draw( mvp, fogPush );
-	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
-	qvkCmdDraw( vk.command_buffer, VERTS_PER_CUBE, 1, 0, 0 );
 }
 
 // r_vk_showEntityMarkers-gated: one small cube per scene entity, standing in for real model rendering.

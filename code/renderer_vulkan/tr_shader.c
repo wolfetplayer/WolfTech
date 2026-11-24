@@ -331,8 +331,9 @@ static void ParseSkyParms( shader_t *shader, char **text ) {
 				shader->skyOuterBox[i] = R_GetDefaultImage();
 			}
 		}
-		shader->isSky = qtrue;
 	}
+	
+	shader->isSky = qtrue;
 
 	token = COM_ParseExt( text, qfalse ); // cloudheight
 	if ( token[0] && Q_stricmp( token, "-" ) ) {

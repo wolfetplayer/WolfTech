@@ -70,9 +70,6 @@ void R_DoneFreeType( void );
 // True while this frame's command buffer is open for recording.
 static qboolean s_frameActive = qfalse;
 
-// Set by RE_RenderScene the first time it runs after a fresh vk_initialize(); see RE_RenderScene.
-static qboolean s_testCubeInit = qfalse;
-static vec3_t s_testCubeOrigin;
 static qboolean s_firstRealSceneLogged = qfalse;
 
 static cvar_t *r_showImages;
@@ -265,8 +262,6 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 		}
 	}
 
-	vk_draw3d_test_cube( s_testCubeOrigin, 40.0f, viewProj, fogPush );
-
 	{
 		int numEntities;
 		const refEntity_t *entities = R_GetSceneEntities( &numEntities );
@@ -289,18 +284,12 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 	}
 }
 
-// Sanity test cube: fixed in world space on first run, so walking around it proves the camera matrices track correctly.
 static void RE_RenderScene( const refdef_t *fd ) {
 	if ( !vk.isInitialized || !s_frameActive ) {
 		return;
 	}
 
 	FIRST_CALL_CHECKPOINT( "RE_RenderScene (any)" );
-
-	if ( !s_testCubeInit ) {
-		VectorMA( fd->vieworg, 200.0f, fd->viewaxis[0], s_testCubeOrigin );
-		s_testCubeInit = qtrue;
-	}
 
 	if ( r_showImages->integer ) {
 		R_DrawShowImages();
