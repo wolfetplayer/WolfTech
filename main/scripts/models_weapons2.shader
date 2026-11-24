@@ -706,45 +706,6 @@ models/weapons/explosives/dynamite/wpn_base
         }
 }
 
-models/weapons/rifles/mauser/wpn_clip
-{
-	{
-		map models/weapons/rifles/mauser/wpn_clip.jpg
-		rgbGen lightingDiffuse
-	}
-	{
-		map textures/effects/envmap_slateH.tga
-		blendFunc GL_SRC_ALPHA GL_ONE
-        alphaGen const .16
-		tcGen environment
-		rgbGen lightingDiffuse
-        }
-}
-
-models/weapons/rifles/mauser/wpn_clip_upgraded
-{
-	{
-		map models/weapons/rifles/mauser/wpn_clip.jpg
-		rgbGen lightingDiffuse
-	}
-	{
-		map textures/effects/envmap_slateH.tga
-		blendFunc GL_SRC_ALPHA GL_ONE
-        alphaGen const .16
-		tcGen environment
-		rgbGen lightingDiffuse
-        }
-		
-		{
-        map textures/sfx/wpn_upgrade_1.tga 
-        blendFunc GL_SRC_ALPHA GL_ONE 
-        rgbGen const ( 0.15 0.15 0.15 )
-        tcGen environment 
-        tcMod scroll 0.025 -0.07625
-		tcMod scale 2.0 2.0
-        }
-}
-
 models/weapons/rifles/mauser/wpn_base
 {
 	{
@@ -757,30 +718,6 @@ models/weapons/rifles/mauser/wpn_base
          alphaGen const .1
 		tcGen environment
 		rgbGen lightingDiffuse
-        }
-}
-
-models/weapons/rifles/mauser/wpn_base_upgraded
-{
-	{
-		map models/weapons/rifles/mauser/wpn_base.jpg
-		rgbGen lightingDiffuse
-	}
-	{
-		map textures/effects/envmap_slateH.tga
-		blendFunc GL_SRC_ALPHA GL_ONE
-         alphaGen const .1
-		tcGen environment
-		rgbGen lightingDiffuse
-        }
-		
-		{
-        map textures/sfx/wpn_upgrade_1.tga 
-        blendFunc GL_SRC_ALPHA GL_ONE 
-        rgbGen const ( 0.15 0.15 0.15 )
-        tcGen environment 
-        tcMod scroll 0.025 -0.07625
-		tcMod scale 2.0 2.0
         }
 }
 
@@ -822,23 +759,6 @@ models/weapons/rifles/mauser/wpn_scope_upgraded
 		tcMod scale 2.0 2.0
         }
 }
-
-models/weapons/rifles/mauser/wpn_optic
-{
-	{
-		map models/weapons/rifles/mauser/wpn_optic.jpg
-		rgbGen lightingDiffuse
-	}
-	{
-		map textures/effects/envFG.tga
-		blendFunc GL_SRC_ALPHA GL_ONE
-                alphaGen const .50
-		tcGen environment
-                tcMod scale 8.5 8.5
-		rgbGen lightingDiffuse
-        }
-}
-
 
 models/weapons/heavy/mg42/wpn_base2
 {

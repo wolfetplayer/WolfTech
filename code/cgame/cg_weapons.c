@@ -3003,6 +3003,11 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	if ( ps ) {
 		gun.hModel = weapon->weaponModel[W_FP_MODEL];
+		// mauser carries its scope baked into a separate model once the scope mod is picked up
+		if ( weaponNum == WP_MAUSER && weapon->modModel[W_FP_MODEL_SWAP] &&
+			 COM_BitCheck( cg.predictedPlayerState.weapons, WP_SNIPERRIFLE ) ) {
+			gun.hModel = weapon->modModel[W_FP_MODEL_SWAP];
+		}
 	} else {
 		qhandle_t actionTpModel = cg_actionViewModel.integer ? CG_ActionView_EntityTpModel( cent ) : 0;
 
@@ -3184,19 +3189,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 				barrel.hModel = weapon->wpPartModels[W_TP_MODEL][W_PART_1];
 				CG_PositionRotatedEntityOnTag( &barrel, &gun, "tag_barrel" );
 				CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups, ps, cent );
-			}
-		}
-	}
-
-	// add the scope model to the rifle if you've got it
-	if ( isPlayer && !cg.renderingThirdPerson ) {      // (SA) for now just do it on the first person weapons
-		if ( weaponNum == WP_MAUSER ) {
-			if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_SNIPERRIFLE ) ) {
-				barrel.hModel = weapon->modModel[0];
-				if ( barrel.hModel ) {
-					CG_PositionEntityOnTag(&barrel, parent, "tag_scope", 0, NULL);
-					CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups, ps, cent );
-				}
 			}
 		}
 	}
