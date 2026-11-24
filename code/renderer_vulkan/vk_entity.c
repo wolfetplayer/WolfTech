@@ -270,6 +270,16 @@ static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, 
 	}
 }
 
+static void WriteMD3SurfaceUVOnly( const md3Surface_t *surf, entityBaseVert_t *out ) {
+	const md3St_t *st = (const md3St_t *)( (const byte *)surf + surf->ofsSt );
+	int i;
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		out[i].uv[0] = st[i].st[0];
+		out[i].uv[1] = st[i].st[1];
+	}
+}
+
 // Position only -- the compressed delta's normal byte is unused since entities aren't lit yet.
 static void DecodeMDCVertex( const md3XyzNormal_t *base, const mdcXyzCompressed_t *comp, vec3_t out ) {
 	out[0] = (float)base->xyz[0] * MD3_XYZ_SCALE;
@@ -775,6 +785,16 @@ static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *sur
 	}
 }
 
+static void WriteMDCSurfaceUVOnly( const mdcSurface_t *surf, entityBaseVert_t *out ) {
+	const md3St_t *st = (const md3St_t *)( (const byte *)surf + surf->ofsSt );
+	int i;
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		out[i].uv[0] = st[i].st[0];
+		out[i].uv[1] = st[i].st[1];
+	}
+}
+
 // Skins into s_skinScratch (model-local), then places by the entity's axis/origin like the MD3/MDC frame-morph verts.
 static void LerpMDSSurfaceVerts( const refEntity_t *ent, const mdsHeader_t *mds, const mdsSurface_t *surf, entityBaseVert_t *out ) {
 	const mdsVertex_t *v = (const mdsVertex_t *)( (const byte *)surf + surf->ofsVerts );
@@ -796,6 +816,17 @@ static void LerpMDSSurfaceVerts( const refEntity_t *ent, const mdsHeader_t *mds,
 	}
 }
 
+static void WriteMDSSurfaceUVOnly( const mdsSurface_t *surf, entityBaseVert_t *out ) {
+	const mdsVertex_t *v = (const mdsVertex_t *)( (const byte *)surf + surf->ofsVerts );
+	int i;
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		out[i].uv[0] = v->texCoords[0];
+		out[i].uv[1] = v->texCoords[1];
+		v = (const mdsVertex_t *)&v->weights[v->numWeights];
+	}
+}
+
 static void LerpMDMSurfaceVerts( const refEntity_t *ent, const mdmSurface_t *surf, entityBaseVert_t *out ) {
 	const mdmVertex_t *v = (const mdmVertex_t *)( (const byte *)surf + surf->ofsVerts );
 	int i;
@@ -812,6 +843,18 @@ static void LerpMDMSurfaceVerts( const refEntity_t *ent, const mdmSurface_t *sur
 		out[i].uv[0] = v->texCoords[0];
 		out[i].uv[1] = v->texCoords[1];
 
+		v = (const mdmVertex_t *)&v->weights[v->numWeights];
+	}
+}
+
+// Cheap substitute for LerpMDMSurfaceVerts above -- see WriteMDSSurfaceUVOnly's comment.
+static void WriteMDMSurfaceUVOnly( const mdmSurface_t *surf, entityBaseVert_t *out ) {
+	const mdmVertex_t *v = (const mdmVertex_t *)( (const byte *)surf + surf->ofsVerts );
+	int i;
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		out[i].uv[0] = v->texCoords[0];
+		out[i].uv[1] = v->texCoords[1];
 		v = (const mdmVertex_t *)&v->weights[v->numWeights];
 	}
 }
@@ -1277,6 +1320,30 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 	}
 }
 
+static qboolean ShaderNeedsRealVertexPosition( const shader_t *shader, qboolean envMappingPossible ) {
+	int s, m;
+
+	if ( !shader ) {
+		return qfalse;
+	}
+	if ( shader->numDeforms > 0 ) {
+		return qtrue;
+	}
+	for ( s = 0; s < shader->numStages; s++ ) {
+		const shaderStage_t *stage = &shader->stages[s];
+
+		if ( envMappingPossible && stage->tcGen == TCGEN_ENVIRONMENT ) {
+			return qtrue;
+		}
+		for ( m = 0; m < stage->numTexMods; m++ ) {
+			if ( stage->texMods[m].type == TMOD_TURBULENT ) {
+				return qtrue;
+			}
+		}
+	}
+	return qfalse;
+}
+
 // Temporary diagnostic for the weapon-visibility investigation: set r_vk_debugWeapon 1 and check rtcwconsole.log. Remove once root-caused.
 static cvar_t *r_vk_debugWeapon;
 static int s_weaponDbgFrame = 0;
@@ -1350,9 +1417,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
 				}
 
-				// Kept for tcMod turb/deformVertexes move (both need the real world-space position) and shadow volumes below -- DrawLerpSurface does the actual render-path position blend on the GPU now, so this is no longer uploaded anywhere.
 				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+				if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
+					LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+				} else {
+					WriteMD3SurfaceUVOnly( surf, s_baseScratch );
+				}
 				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
 
 				if ( animData && s < animData->numSurfaces ) {
@@ -1402,7 +1472,11 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				}
 
 				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch ); // see the MD3 branch's comment above
+				if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
+					LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch ); // see the MD3 branch's comment above
+				} else {
+					WriteMDCSurfaceUVOnly( surf, s_baseScratch );
+				}
 				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
 
 				if ( animData && s < animData->numSurfaces ) {
@@ -1453,9 +1527,12 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
 				}
 
-				// Kept for tcMod turb/deformVertexes move and shadow volumes below -- DrawSkinSurface does the actual render-path skin on the GPU now, so this is no longer uploaded anywhere.
 				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
+				if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qfalse ) ) {
+					LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
+				} else {
+					WriteMDSSurfaceUVOnly( surf, s_baseScratch );
+				}
 				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
 
 				if ( haveBones && s < animData->numSurfaces ) {
@@ -1504,7 +1581,11 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				}
 
 				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				LerpMDMSurfaceVerts( ent, surf, s_baseScratch ); // see the MDS branch's comment above
+				if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qfalse ) ) {
+					LerpMDMSurfaceVerts( ent, surf, s_baseScratch ); // see the MDS branch's comment above
+				} else {
+					WriteMDMSurfaceUVOnly( surf, s_baseScratch );
+				}
 				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
 
 				if ( haveBones && s < animData->numSurfaces ) {
