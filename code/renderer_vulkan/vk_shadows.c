@@ -1,5 +1,3 @@
-// vk_shadows.c -- stencil shadow volumes (r_shadows 2), same two-sided z-pass algorithm as code/renderer/tr_shadows.c. See vk_shadows.h.
-
 #include <string.h>
 #include <math.h>
 
@@ -43,6 +41,7 @@ static uint32_t s_writeOffset;
 static uint32_t s_regionBase; // vk_current_frame_slot() * SHADOW_SCRATCH_VERTS -- see vk_shadows_begin_frame
 
 static cvar_t *r_shadows;
+static cvar_t *r_vk_debugShadow; // temporary diagnostic for the 2026-11-24 shadow-corruption investigation; remove once root-caused
 static qboolean s_anyStamped; // qtrue once any entity has stamped the stencil buffer this frame
 
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
@@ -53,6 +52,7 @@ void vk_shadows_init( void ) {
 	VkMemoryAllocateInfo alloc_info;
 
 	r_shadows = ri.Cvar_Get( "r_shadows", "1", CVAR_ARCHIVE );
+	r_vk_debugShadow = ri.Cvar_Get( "r_vk_debugShadow", "0", 0 );
 
 	buf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	buf_desc.pNext = NULL;
@@ -92,6 +92,11 @@ qboolean vk_shadows_entity_casts( const refEntity_t *ent ) {
 void vk_shadows_begin_frame( void ) {
 	s_anyStamped = qfalse;
 	s_regionBase = vk_current_frame_slot() * (uint32_t)SHADOW_SCRATCH_VERTS;
+	// Once per real frame, not per entity -- see vk_shadows_finish_entity's comment. Every entity's draw
+	// commands are only RECORDED now and actually execute on the GPU later, after every CPU write for this
+	// frame has already happened; resetting this per entity made every entity (and the darken quad) share
+	// byte offset 0, so by GPU execution time every draw call read whichever write happened last, not its own.
+	s_writeOffset = 0;
 }
 
 void vk_shadows_begin_entity( void ) {
@@ -174,7 +179,8 @@ static void PushTransform( const float viewProj[16], const float fogPush[12] ) {
 
 void vk_shadows_finish_entity( const refEntity_t *ent, const float viewProj[16], const float fogPush[12] ) {
 	vec3_t origin, ambient, directed, lightDir;
-	VkDeviceSize vb_offset = (VkDeviceSize)s_regionBase * sizeof( vk2d_vertex_t );
+	VkDeviceSize vb_offset;
+	uint32_t entityStart;
 	int i;
 
 	if ( s_numVerts == 0 || s_numTris == 0 ) {
@@ -209,8 +215,11 @@ void vk_shadows_finish_entity( const refEntity_t *ent, const float viewProj[16],
 		AddEdgeDef( i3, i1, facing );
 	}
 
-	// an edge is a silhouette edge if it's front-facing and has no reverse-direction front-facing twin
-	s_writeOffset = 0;
+	// an edge is a silhouette edge if it's front-facing and has no reverse-direction front-facing twin.
+	// Append from the current frame-wide cursor -- NOT reset per entity -- so this entity's vertices land
+	// at their own offset instead of overwriting whatever an earlier entity (or the darken quad) already
+	// wrote there; see vk_shadows_begin_frame.
+	entityStart = s_writeOffset;
 	for ( i = 0; i < s_numVerts; i++ ) {
 		int c = s_numEdgeDefs[i], j;
 		for ( j = 0; j < c; j++ ) {
@@ -235,10 +244,42 @@ void vk_shadows_finish_entity( const refEntity_t *ent, const float viewProj[16],
 		}
 	}
 
-	if ( s_writeOffset == 0 ) {
+	if ( r_vk_debugShadow && r_vk_debugShadow->integer ) {
+		int c_edges = 0, c_rejected = 0, j;
+		for ( i = 0; i < s_numVerts; i++ ) {
+			int c = s_numEdgeDefs[i];
+			for ( j = 0; j < c; j++ ) {
+				int i2, k, c2;
+				qboolean hasTwin = qfalse;
+				if ( !s_edgeDefs[i][j].facing ) {
+					continue;
+				}
+				i2 = s_edgeDefs[i][j].i2;
+				c2 = s_numEdgeDefs[i2];
+				for ( k = 0; k < c2; k++ ) {
+					if ( s_edgeDefs[i2][k].i2 == i && s_edgeDefs[i2][k].facing ) {
+						hasTwin = qtrue;
+						break;
+					}
+				}
+				if ( hasTwin ) {
+					c_rejected++;
+				} else {
+					c_edges++;
+				}
+			}
+		}
+		ri.Printf( PRINT_ALL, "vk_shadows dbg: ent origin=(%.1f %.1f %.1f) renderfx=%d numVerts=%d numTris=%d "
+			"lightDir=(%.3f %.3f %.3f) silEdges=%d rejectedEdges=%d entityStart=%u writeOffset=%u\n",
+			ent->origin[0], ent->origin[1], ent->origin[2], ent->renderfx, s_numVerts, s_numTris,
+			lightDir[0], lightDir[1], lightDir[2], c_edges, c_rejected, entityStart, s_writeOffset );
+	}
+
+	if ( s_writeOffset == entityStart ) {
 		return;
 	}
 
+	vb_offset = (VkDeviceSize)( s_regionBase + entityStart ) * sizeof( vk2d_vertex_t );
 	PushTransform( viewProj, fogPush );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 	// Neither of these two passes writes color (pure stencil stamping), so this texture never shows --
@@ -247,23 +288,31 @@ void vk_shadows_finish_entity( const refEntity_t *ent, const float viewProj[16],
 		0, 1, &R_GetWhiteImage()->vk_descriptor, 0, NULL );
 
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_shadow_volume_incr );
-	qvkCmdDraw( vk.command_buffer, s_writeOffset, 1, 0, 0 );
+	qvkCmdDraw( vk.command_buffer, s_writeOffset - entityStart, 1, 0, 0 );
 
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_shadow_volume_decr );
-	qvkCmdDraw( vk.command_buffer, s_writeOffset, 1, 0, 0 );
+	qvkCmdDraw( vk.command_buffer, s_writeOffset - entityStart, 1, 0, 0 );
 
 	s_anyStamped = qtrue;
 }
 
 void vk_shadows_draw_darken( const float viewProj[16], const float fogPush[12] ) {
 	float identity[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
-	VkDeviceSize vb_offset = (VkDeviceSize)s_regionBase * sizeof( vk2d_vertex_t );
+	VkDeviceSize vb_offset;
 	vk2d_vertex_t quad[6];
 	static const float z = 0.0f;
 	int i;
 	(void)viewProj;
 
 	if ( !s_anyStamped ) {
+		return;
+	}
+
+	// Append after every entity's own data at the current cursor -- writing this at a fixed offset (as
+	// before) would overwrite whichever entity last claimed that spot, corrupting its still-unexecuted
+	// draw calls; see vk_shadows_begin_frame/vk_shadows_finish_entity.
+	if ( s_writeOffset + 6 > SHADOW_SCRATCH_VERTS ) {
+		s_anyStamped = qfalse; // can't resolve this scene's shadows -- drop them rather than leave stencil stamped with nothing to clear it
 		return;
 	}
 
@@ -279,10 +328,9 @@ void vk_shadows_draw_darken( const float viewProj[16], const float fogPush[12] )
 		quad[i].uv[0] = 0.0f; quad[i].uv[1] = 0.0f;
 	}
 
-	if ( SHADOW_SCRATCH_VERTS < 6 ) {
-		return; // never true -- keeps the memcpy below obviously in-bounds
-	}
-	memcpy( &s_mapped[s_regionBase], quad, sizeof( quad ) );
+	memcpy( &s_mapped[s_regionBase + s_writeOffset], quad, sizeof( quad ) );
+	vb_offset = (VkDeviceSize)( s_regionBase + s_writeOffset ) * sizeof( vk2d_vertex_t );
+	s_writeOffset += 6;
 
 	PushTransform( identity, fogPush );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
@@ -292,6 +340,14 @@ void vk_shadows_draw_darken( const float viewProj[16], const float fogPush[12] )
 		0, 1, &R_GetWhiteImage()->vk_descriptor, 0, NULL );
 	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_shadow_darken );
 	qvkCmdDraw( vk.command_buffer, 6, 1, 0, 0 );
+
+	// This renderer shares one render pass across every scene in a real frame (sky-portal, main, view-weapon --
+	// see tr_init.c's R_RenderViewInternal), so the stencil buffer is never cleared between them. Without this,
+	// a later scene's entities inherit this scene's already-resolved (and already-darkened) stencil marks: its
+	// own darken pass then re-darkens them on top, compounding a subtle 0.6-gray shadow into a near-black blob
+	// that bears no relation to that scene's own geometry. Clear it the moment this scene's marks are resolved
+	// so the next scene starts clean.
+	vk_clear_stencil_only();
 
 	s_anyStamped = qfalse;
 }

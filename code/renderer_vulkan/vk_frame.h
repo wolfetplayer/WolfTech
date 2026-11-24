@@ -18,4 +18,6 @@ void vk_end_frame( void );
 // Mid-render-pass depth-only clear (the render pass itself only clears at load); see tr_scene.h's sky-portal tracking.
 void vk_clear_depth_only( void );
 
+void vk_clear_stencil_only( void );
+
 #endif // VK_FRAME_H_

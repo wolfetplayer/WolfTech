@@ -263,7 +263,8 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 									VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend,
 									VkBool32 depthTestEnable, VkCullModeFlags cullMode, VkPolygonMode polygonMode,
 									VkBool32 polygonOffset, VkBool32 depthWriteEnable, VkColorComponentFlags colorWriteMask,
-									VkBool32 stencilTestEnable, VkCompareOp stencilCompareOp, VkStencilOp stencilPassOp ) {
+									VkBool32 stencilTestEnable, VkCompareOp stencilCompareOp, VkStencilOp stencilPassOp,
+									VkStencilOp stencilDepthFailOp ) {
 	VkPipeline pipeline;
 
 	VkPipelineShaderStageCreateInfo stages[2];
@@ -346,7 +347,7 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 	depth_stencil.stencilTestEnable = stencilTestEnable;
 	depth_stencil.front.failOp = VK_STENCIL_OP_KEEP;
 	depth_stencil.front.passOp = stencilPassOp;
-	depth_stencil.front.depthFailOp = VK_STENCIL_OP_KEEP;
+	depth_stencil.front.depthFailOp = stencilDepthFailOp;
 	depth_stencil.front.compareOp = stencilCompareOp;
 	depth_stencil.front.compareMask = 0xFF;
 	depth_stencil.front.writeMask = 0xFF;
@@ -421,7 +422,7 @@ static VkPipeline create_pipeline( VkShaderModule vs, VkShaderModule fs, VkPipel
 									   VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	return create_pipeline_ex( vs, fs, layout, specInfo, binding, 1, attribs, numAttribs,
 		blendEnable, srcBlend, dstBlend, depthTestEnable, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE,
-		depthTestEnable, fullMask, VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+		depthTestEnable, fullMask, VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 }
 
 // vk2d_vertex_t attribs, shared by the 2D pipelines and the (unused-for-world-now) opaque 3D one.
@@ -655,7 +656,7 @@ VkPipeline vk_getPipeline3D( VkDeviceSize vertexStride, VkBool32 blendEnable, Vk
 		&binding2d, 1, attribs2d, 3, blendEnable, srcBlend, dstBlend, VK_TRUE, mirror ? vk_flipCullMode( cullMode ) : cullMode,
 		VK_POLYGON_MODE_FILL, polygonOffset, depthWrite,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 
 	return s_cachedPipelines[s_numCachedPipelines++];
 }
@@ -707,7 +708,7 @@ VkPipeline vk_getPipelineSkyCloud( VkBlendFactor srcBlend, VkBlendFactor dstBlen
 		&binding2d, 1, attribs2d, 3, VK_TRUE, srcBlend, dstBlend, VK_FALSE, VK_CULL_MODE_NONE,
 		VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 
 	return s_skyCloudPipelines[s_numSkyCloudPipelines++];
 }
@@ -832,28 +833,27 @@ void vk_create3DPipelines( void ) {
 			&worldBinding, 1, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 			VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_LINE, VK_FALSE, VK_TRUE,
 			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-			VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP ) : VK_NULL_HANDLE;
+			VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP ) : VK_NULL_HANDLE;
 
 	// Coronas' occlusion-visibility probe (vk_flares.c): depth-tested like real geometry, writes neither depth nor color.
 	vk.pipeline_occlusion_probe = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, 1, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 		VK_TRUE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, 0,
-		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 
-	// Stencil shadow volumes (vk_shadows.c): two cull-flipped stamp passes plus one full-screen darken pass.
 	vk.pipeline_shadow_volume_incr = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, 1, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 		VK_TRUE, VK_CULL_MODE_FRONT_BIT, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, 0,
-		VK_TRUE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_INCREMENT_AND_CLAMP );
+		VK_TRUE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_INCREMENT_AND_CLAMP, VK_STENCIL_OP_KEEP );
 	vk.pipeline_shadow_volume_decr = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, 1, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 		VK_TRUE, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, 0,
-		VK_TRUE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_DECREMENT_AND_CLAMP );
+		VK_TRUE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_DECREMENT_AND_CLAMP, VK_STENCIL_OP_KEEP );
 	vk.pipeline_shadow_darken = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
 		&binding2d, 1, attribs2d, 3, VK_TRUE, VK_BLEND_FACTOR_DST_COLOR, VK_BLEND_FACTOR_ZERO,
 		VK_FALSE, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		VK_TRUE, VK_COMPARE_OP_NOT_EQUAL, VK_STENCIL_OP_KEEP );
+		VK_TRUE, VK_COMPARE_OP_NOT_EQUAL, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 
 	vk_resetPipelineCache3D();
 	vk_resetPipelineCacheSkyCloud();
@@ -1154,7 +1154,7 @@ VkPipeline vk_getPipelineEntityLerp( VkBool32 blendEnable, VkBlendFactor srcBlen
 		bindings, 3, attribs, 5, blendEnable, srcBlend, dstBlend, VK_TRUE, cullMode,
 		VK_POLYGON_MODE_FILL, polygonOffset, VK_TRUE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 
 	return s_cachedEntityLerpPipelines[s_numCachedEntityLerpPipelines++];
 }
@@ -1257,7 +1257,7 @@ VkPipeline vk_getPipelineEntityLerpMultiTex( int combineMode, VkCullModeFlags cu
 		vk.lightmap_pipeline_layout, &specInfo, bindings, 3, attribs, 6, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 		VK_TRUE, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE, VK_TRUE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 
 	return s_cachedEntityLerpMTPipelines[s_numCachedEntityLerpMTPipelines++];
 }
@@ -1351,7 +1351,7 @@ VkPipeline vk_getPipelineEntitySkin( VkBool32 blendEnable, VkBlendFactor srcBlen
 		bindings, 2, attribs, 9, blendEnable, srcBlend, dstBlend, VK_TRUE, cullMode,
 		VK_POLYGON_MODE_FILL, polygonOffset, VK_TRUE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 
 	return s_cachedEntitySkinPipelines[s_numCachedEntitySkinPipelines++];
 }
@@ -1435,7 +1435,7 @@ VkPipeline vk_getPipelineEntitySkinMultiTex( int combineMode, VkCullModeFlags cu
 		vk.skin_lightmap_pipeline_layout, &specInfo, bindings, 2, attribs, 10, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO,
 		VK_TRUE, cullMode, VK_POLYGON_MODE_FILL, VK_FALSE, VK_TRUE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP );
+		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
 
 	return s_cachedEntitySkinMTPipelines[s_numCachedEntitySkinMTPipelines++];
 }

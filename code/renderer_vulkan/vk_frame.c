@@ -156,6 +156,28 @@ void vk_clear_depth_only( void ) {
 	qvkCmdClearAttachments( vk.command_buffer, 1, &clearAttachment, 1, &clearRect );
 }
 
+void vk_clear_stencil_only( void ) {
+	int width, height;
+	VkClearAttachment clearAttachment;
+	VkClearRect clearRect;
+
+	R_GetWinResolution( &width, &height );
+
+	clearAttachment.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
+	clearAttachment.colorAttachment = 0; // unused for a stencil-only clear
+	clearAttachment.clearValue.depthStencil.depth = 1.0f;
+	clearAttachment.clearValue.depthStencil.stencil = 0;
+
+	clearRect.rect.offset.x = 0;
+	clearRect.rect.offset.y = 0;
+	clearRect.rect.extent.width = (uint32_t)width;
+	clearRect.rect.extent.height = (uint32_t)height;
+	clearRect.baseArrayLayer = 0;
+	clearRect.layerCount = 1;
+
+	qvkCmdClearAttachments( vk.command_buffer, 1, &clearAttachment, 1, &clearRect );
+}
+
 void vk_end_frame( void ) {
 	VK_CHECK( qvkEndCommandBuffer( vk.command_buffer ) );
 
