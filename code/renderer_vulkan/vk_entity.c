@@ -280,6 +280,31 @@ static void WriteMD3SurfaceUVOnly( const md3Surface_t *surf, entityBaseVert_t *o
 	}
 }
 
+
+static void LerpSurfacePositionOnly( const refEntity_t *ent, const md3Surface_t *surf, int frame, int oldframe, float backlerp, entityBaseVert_t *out ) {
+	const md3XyzNormal_t *base = (const md3XyzNormal_t *)( (const byte *)surf + surf->ofsXyzNormals );
+	const md3XyzNormal_t *newXyz = base + (size_t)frame * surf->numVerts;
+	const md3XyzNormal_t *oldXyz = base + (size_t)oldframe * surf->numVerts;
+	const md3St_t *st = (const md3St_t *)( (const byte *)surf + surf->ofsSt );
+	float frontlerp = 1.0f - backlerp;
+	int i, k;
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		float local[3];
+
+		for ( k = 0; k < 3; k++ ) {
+			local[k] = ( frontlerp * (float)newXyz[i].xyz[k] + backlerp * (float)oldXyz[i].xyz[k] ) * MD3_XYZ_SCALE;
+		}
+
+		out[i].pos[0] = ent->origin[0] + local[0] * ent->axis[0][0] + local[1] * ent->axis[1][0] + local[2] * ent->axis[2][0];
+		out[i].pos[1] = ent->origin[1] + local[0] * ent->axis[0][1] + local[1] * ent->axis[1][1] + local[2] * ent->axis[2][1];
+		out[i].pos[2] = ent->origin[2] + local[0] * ent->axis[0][2] + local[1] * ent->axis[1][2] + local[2] * ent->axis[2][2];
+
+		out[i].uv[0] = st[i].st[0];
+		out[i].uv[1] = st[i].st[1];
+	}
+}
+
 // Position only -- the compressed delta's normal byte is unused since entities aren't lit yet.
 static void DecodeMDCVertex( const md3XyzNormal_t *base, const mdcXyzCompressed_t *comp, vec3_t out ) {
 	out[0] = (float)base->xyz[0] * MD3_XYZ_SCALE;
@@ -795,6 +820,44 @@ static void WriteMDCSurfaceUVOnly( const mdcSurface_t *surf, entityBaseVert_t *o
 	}
 }
 
+
+static void LerpMDCSurfacePositionOnly( const refEntity_t *ent, const mdcSurface_t *surf, int frame, int oldframe, float backlerp, entityBaseVert_t *out ) {
+	const short *frameBaseFrames = (const short *)( (const byte *)surf + surf->ofsFrameBaseFrames );
+	const short *frameCompFrames = (const short *)( (const byte *)surf + surf->ofsFrameCompFrames );
+	const md3XyzNormal_t *baseArray = (const md3XyzNormal_t *)( (const byte *)surf + surf->ofsXyzNormals );
+	const mdcXyzCompressed_t *compArray = (const mdcXyzCompressed_t *)( (const byte *)surf + surf->ofsXyzCompressed );
+	const md3St_t *st = (const md3St_t *)( (const byte *)surf + surf->ofsSt );
+	qboolean hasComp = surf->numCompFrames > 0;
+	int newBase = frameBaseFrames[frame];
+	int oldBase = frameBaseFrames[oldframe];
+	int newComp = hasComp ? frameCompFrames[frame] : -1;
+	int oldComp = hasComp ? frameCompFrames[oldframe] : -1;
+	float frontlerp = 1.0f - backlerp;
+	int i;
+
+	for ( i = 0; i < surf->numVerts; i++ ) {
+		vec3_t newXyz, oldXyz, local;
+		const mdcXyzCompressed_t *newCompVert = newComp >= 0 ? &compArray[(size_t)newComp * surf->numVerts + i] : NULL;
+		const mdcXyzCompressed_t *oldCompVert = oldComp >= 0 ? &compArray[(size_t)oldComp * surf->numVerts + i] : NULL;
+		const md3XyzNormal_t *newBaseVert = &baseArray[(size_t)newBase * surf->numVerts + i];
+		const md3XyzNormal_t *oldBaseVert = &baseArray[(size_t)oldBase * surf->numVerts + i];
+
+		DecodeMDCVertex( newBaseVert, newCompVert, newXyz );
+		DecodeMDCVertex( oldBaseVert, oldCompVert, oldXyz );
+
+		local[0] = frontlerp * newXyz[0] + backlerp * oldXyz[0];
+		local[1] = frontlerp * newXyz[1] + backlerp * oldXyz[1];
+		local[2] = frontlerp * newXyz[2] + backlerp * oldXyz[2];
+
+		out[i].pos[0] = ent->origin[0] + local[0] * ent->axis[0][0] + local[1] * ent->axis[1][0] + local[2] * ent->axis[2][0];
+		out[i].pos[1] = ent->origin[1] + local[0] * ent->axis[0][1] + local[1] * ent->axis[1][1] + local[2] * ent->axis[2][1];
+		out[i].pos[2] = ent->origin[2] + local[0] * ent->axis[0][2] + local[1] * ent->axis[1][2] + local[2] * ent->axis[2][2];
+
+		out[i].uv[0] = st[i].st[0];
+		out[i].uv[1] = st[i].st[1];
+	}
+}
+
 // Skins into s_skinScratch (model-local), then places by the entity's axis/origin like the MD3/MDC frame-morph verts.
 static void LerpMDSSurfaceVerts( const refEntity_t *ent, const mdsHeader_t *mds, const mdsSurface_t *surf, entityBaseVert_t *out ) {
 	const mdsVertex_t *v = (const mdsVertex_t *)( (const byte *)surf + surf->ofsVerts );
@@ -847,7 +910,6 @@ static void LerpMDMSurfaceVerts( const refEntity_t *ent, const mdmSurface_t *sur
 	}
 }
 
-// Cheap substitute for LerpMDMSurfaceVerts above -- see WriteMDSSurfaceUVOnly's comment.
 static void WriteMDMSurfaceUVOnly( const mdmSurface_t *surf, entityBaseVert_t *out ) {
 	const mdmVertex_t *v = (const mdmVertex_t *)( (const byte *)surf + surf->ofsVerts );
 	int i;
@@ -1434,8 +1496,10 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				}
 
 				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
+				if ( ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
 					LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+				} else if ( castsShadow ) {
+					LerpSurfacePositionOnly( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
 				} else {
 					WriteMD3SurfaceUVOnly( surf, s_baseScratch );
 				}
@@ -1488,8 +1552,10 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 				}
 
 				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
+				if ( ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
 					LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch ); // see the MD3 branch's comment above
+				} else if ( castsShadow ) {
+					LerpMDCSurfacePositionOnly( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
 				} else {
 					WriteMDCSurfaceUVOnly( surf, s_baseScratch );
 				}
