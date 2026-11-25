@@ -58,6 +58,10 @@ static uint32_t s_numCachedVerts;
 static uint32_t *s_cachedIndices;
 static uint32_t s_numCachedIndices;
 
+static vec3_t *s_deformCache;
+static uint32_t *s_deformCacheStamp;
+static uint32_t s_deformFrameStamp;
+
 static worldBatch_t *s_batches;
 static int s_numBatches;
 static worldSurfRef_t *s_surfRefs;
@@ -263,6 +267,10 @@ void vk_world_clear( void ) {
 	s_numCachedVerts = 0;
 	s_numCachedIndices = 0;
 
+	if ( s_deformCache ) { free( s_deformCache ); s_deformCache = NULL; }
+	if ( s_deformCacheStamp ) { free( s_deformCacheStamp ); s_deformCacheStamp = NULL; }
+	s_deformFrameStamp = 0;
+
 	s_built = qfalse;
 }
 
@@ -287,6 +295,19 @@ static void unpack_snorm16_3( const int16_t in[4], vec3_t out ) {
 	out[0] = in[0] * ( 1.0f / 32767.0f );
 	out[1] = in[1] * ( 1.0f / 32767.0f );
 	out[2] = in[2] * ( 1.0f / 32767.0f );
+}
+
+
+static const float *GetDeformedWorldVertex( const shader_t *shader, uint32_t vertIdx ) {
+	if ( s_deformCacheStamp[vertIdx] != s_deformFrameStamp ) {
+		const vkWorldVertex_t *src = &s_cachedVerts[vertIdx];
+		vec3_t normal;
+
+		unpack_snorm16_3( src->normal, normal );
+		R_DeformPosition( shader, src->pos, normal, src->uv[0], s_deformCache[vertIdx] );
+		s_deformCacheStamp[vertIdx] = s_deformFrameStamp;
+	}
+	return s_deformCache[vertIdx];
 }
 
 // Raw BSP vertex color (already overbright-shifted by R_LoadDrawVerts) -- not stage-baked.
@@ -747,6 +768,10 @@ void vk_world_build( void ) {
 	s_cachedIndices = indexes;
 	s_numCachedIndices = writeOffset;
 
+	s_deformCache = malloc( s_numCachedVerts * sizeof( vec3_t ) );
+	s_deformCacheStamp = calloc( s_numCachedVerts, sizeof( uint32_t ) );
+	s_deformFrameStamp = 0; // stamp 0 means "never computed"; vk_world_begin_frame starts incrementing from 1
+
 	// *2: one full pass plus a same-frame r_showtris re-expansion's worth of headroom; each capacity below is ONE frame-in-flight region, VK_FRAMES_IN_FLIGHT of them back to back in the actual buffer (see vk_world_begin_frame).
 	s_dynLMCapacity = writeOffset * 2;
 	create_dynamic_vertex_buffer( (VkDeviceSize)s_dynLMCapacity * VK_FRAMES_IN_FLIGHT * sizeof( vkWorldVertex_t ),
@@ -844,16 +869,15 @@ static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const 
 		}
 
 		for ( k = 0; k < ref->indexCount; k++ ) {
-			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
+			uint32_t vertIdx = s_cachedIndices[ref->firstIndex + k];
+			const vkWorldVertex_t *src = &s_cachedVerts[vertIdx];
 			vkWorldVertex_t *dst = &s_dynLMMapped[s_dynLMRegionBase + s_dynLMWriteOffset++];
-			vec3_t normal;
-			float deformed[3];
+			const float *deformed;
 			const byte *color;
 			byte computedColor[4];
 			float uv[2];
 
-			unpack_snorm16_3( src->normal, normal );
-			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
+			deformed = GetDeformedWorldVertex( shader, vertIdx );
 			if ( stage0Invariant ) {
 				color = stage0Color;
 			} else {
@@ -919,16 +943,15 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 		}
 
 		for ( k = 0; k < ref->indexCount; k++ ) {
-			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
+			uint32_t vertIdx = s_cachedIndices[ref->firstIndex + k];
+			const vkWorldVertex_t *src = &s_cachedVerts[vertIdx];
 			vk2d_vertex_t *dst = &s_dyn2DMapped[s_dyn2DRegionBase + s_dyn2DWriteOffset++];
-			vec3_t normal;
-			float deformed[3];
+			const float *deformed;
 			const byte *color;
 			byte computedColor[4];
 			float uv[2];
 
-			unpack_snorm16_3( src->normal, normal );
-			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
+			deformed = GetDeformedWorldVertex( shader, vertIdx );
 			if ( stageInvariant ) {
 				color = stageColor;
 			} else {
@@ -1004,15 +1027,14 @@ static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, 
 		}
 
 		for ( k = 0; k < ref->indexCount; k++ ) {
-			const vkWorldVertex_t *src = &s_cachedVerts[s_cachedIndices[ref->firstIndex + k]];
+			uint32_t vertIdx = s_cachedIndices[ref->firstIndex + k];
+			const vkWorldVertex_t *src = &s_cachedVerts[vertIdx];
 			vk2d_vertex_t *dst = &s_dynDlightMapped[s_dynDlightRegionBase + s_dynDlightWriteOffset++];
-			vec3_t normal;
-			float deformed[3];
+			const float *deformed;
 			vec3_t sum = { 0.0f, 0.0f, 0.0f };
 			int r, g, b;
 
-			unpack_snorm16_3( src->normal, normal );
-			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
+			deformed = GetDeformedWorldVertex( shader, vertIdx );
 
 			for ( lightIdx = 0; lightIdx < numDlights; lightIdx++ ) {
 				vec3_t dir;
@@ -1333,6 +1355,11 @@ void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const fl
 // Resets the shared dynamic-buffer write cursors; call once per real frame (vk_world_draw can run more than once per frame -- resetting inside it, as before, let one scene's reset clobber another's).
 void vk_world_begin_frame( void ) {
 	uint32_t slot = vk_current_frame_slot();
+.
+	s_deformFrameStamp++;
+	if ( s_deformFrameStamp == 0 ) {
+		s_deformFrameStamp = 1;
+	}
 
 	s_dynLMWriteOffset = 0;
 	s_dyn2DWriteOffset = 0;
