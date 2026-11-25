@@ -107,33 +107,33 @@ void vk_profile_shutdown( void ) {
 	}
 }
 
+
 static void ReadbackSlot( uint32_t slot ) {
-	uint64_t results[VKPROF_ZONE_COUNT * GPU_QUERIES_PER_ZONE];
 	uint32_t base;
 	int i;
-	VkResult result;
 
 	if ( !s_gpuTimingSupported || !s_slotEverUsed[slot] ) {
 		return;
 	}
 
 	base = slot * VKPROF_ZONE_COUNT * GPU_QUERIES_PER_ZONE;
-	result = qvkGetQueryPoolResults( vk.device, s_queryPool, base, VKPROF_ZONE_COUNT * GPU_QUERIES_PER_ZONE,
-		sizeof( results ), results, sizeof( uint64_t ), VK_QUERY_RESULT_64_BIT );
-	if ( result != VK_SUCCESS ) {
-		return; // shouldn't happen -- vk_begin_frame's fence wait already guarantees this slot's GPU work is done
-	}
 
 	for ( i = 0; i < VKPROF_ZONE_COUNT; i++ ) {
-		uint64_t beginTicks, endTicks;
+		uint64_t pair[GPU_QUERIES_PER_ZONE];
+		VkResult result;
 
 		if ( !s_zoneRecorded[slot][i] ) {
 			continue; // this zone didn't run the last time this slot recorded -- nothing valid to read
 		}
-		beginTicks = results[i * GPU_QUERIES_PER_ZONE + 0];
-		endTicks = results[i * GPU_QUERIES_PER_ZONE + 1];
-		if ( endTicks > beginTicks ) {
-			s_gpuZoneAccumMs[i] += (double)( endTicks - beginTicks ) * s_timestampPeriodNs * 1e-6;
+
+		result = qvkGetQueryPoolResults( vk.device, s_queryPool, base + (uint32_t)i * GPU_QUERIES_PER_ZONE, GPU_QUERIES_PER_ZONE,
+			sizeof( pair ), pair, sizeof( uint64_t ), VK_QUERY_RESULT_64_BIT );
+		if ( result != VK_SUCCESS ) {
+			continue; // this zone's pair isn't available this cycle -- doesn't affect any other zone now
+		}
+
+		if ( pair[1] > pair[0] ) {
+			s_gpuZoneAccumMs[i] += (double)( pair[1] - pair[0] ) * s_timestampPeriodNs * 1e-6;
 		}
 	}
 }
