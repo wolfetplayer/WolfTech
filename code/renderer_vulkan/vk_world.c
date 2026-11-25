@@ -1355,7 +1355,6 @@ void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const fl
 // Resets the shared dynamic-buffer write cursors; call once per real frame (vk_world_draw can run more than once per frame -- resetting inside it, as before, let one scene's reset clobber another's).
 void vk_world_begin_frame( void ) {
 	uint32_t slot = vk_current_frame_slot();
-.
 	s_deformFrameStamp++;
 	if ( s_deformFrameStamp == 0 ) {
 		s_deformFrameStamp = 1;
