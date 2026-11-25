@@ -203,6 +203,8 @@ void vk_entity_init( void ) {
 	}
 }
 
+static void ClearNormalCache( void ); // defined below, alongside the cache it clears
+
 void vk_entity_shutdown( void ) {
 	int h, numModels = R_GetNumModels();
 	for ( h = 1; h < numModels; h++ ) {
@@ -221,6 +223,8 @@ void vk_entity_shutdown( void ) {
 	qvkDestroyDescriptorPool( vk.device, s_skinDescriptorPool, NULL ); // frees s_skinDescriptorSet too
 	destroy_mapped_buffer( s_boneUboBuffer, s_boneUboMemory, s_boneUboMapped );
 	s_boneUboMapped = NULL;
+
+	ClearNormalCache(); // defensive: a surf pointer could theoretically be reused by different model data after a full reload
 }
 
 qboolean vk_entity_has_mesh( const refEntity_t *ent ) {
@@ -235,6 +239,51 @@ qboolean vk_entity_has_mesh( const refEntity_t *ent ) {
 
 static void DecodeMD3Normal( short packed, vec3_t out );
 
+#define NORMAL_CACHE_SIZE 8
+typedef struct {
+	const void *surf;
+	int frame, oldframe;
+	float backlerp;
+	int numVerts;
+	vec3_t *normals; // malloc'd, numVerts entries
+} normalCacheEntry_t;
+static normalCacheEntry_t s_normalCache[NORMAL_CACHE_SIZE];
+static int s_normalCacheNext;
+
+static qboolean FindCachedNormals( const void *surf, int frame, int oldframe, float backlerp, int numVerts, const vec3_t **outNormals ) {
+	int i;
+	for ( i = 0; i < NORMAL_CACHE_SIZE; i++ ) {
+		if ( s_normalCache[i].surf == surf && s_normalCache[i].frame == frame && s_normalCache[i].oldframe == oldframe &&
+			 s_normalCache[i].backlerp == backlerp && s_normalCache[i].numVerts == numVerts ) {
+			*outNormals = s_normalCache[i].normals;
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
+// Claims the next ring slot for this key and returns its (uninitialized) normals buffer for the caller to fill in.
+static vec3_t *ClaimNormalCacheSlot( const void *surf, int frame, int oldframe, float backlerp, int numVerts ) {
+	normalCacheEntry_t *e = &s_normalCache[s_normalCacheNext];
+	s_normalCacheNext = ( s_normalCacheNext + 1 ) % NORMAL_CACHE_SIZE;
+	if ( e->numVerts != numVerts ) {
+		free( e->normals );
+		e->normals = malloc( (size_t)numVerts * sizeof( vec3_t ) );
+	}
+	e->surf = surf; e->frame = frame; e->oldframe = oldframe; e->backlerp = backlerp; e->numVerts = numVerts;
+	return e->normals;
+}
+
+static void ClearNormalCache( void ) {
+	int i;
+	for ( i = 0; i < NORMAL_CACHE_SIZE; i++ ) {
+		free( s_normalCache[i].normals );
+		s_normalCache[i].normals = NULL;
+		s_normalCache[i].surf = NULL;
+		s_normalCache[i].numVerts = 0;
+	}
+	s_normalCacheNext = 0;
+}
 
 static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, int frame, int oldframe, float backlerp, entityBaseVert_t *out ) {
 	const md3XyzNormal_t *base = (const md3XyzNormal_t *)( (const byte *)surf + surf->ofsXyzNormals );
@@ -242,11 +291,17 @@ static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, 
 	const md3XyzNormal_t *oldXyz = base + (size_t)oldframe * surf->numVerts;
 	const md3St_t *st = (const md3St_t *)( (const byte *)surf + surf->ofsSt );
 	float frontlerp = 1.0f - backlerp;
+	const vec3_t *cachedNormals = NULL;
+	vec3_t *writeNormals = NULL;
+	qboolean haveCache = FindCachedNormals( surf, frame, oldframe, backlerp, surf->numVerts, &cachedNormals );
 	int i, k;
+
+	if ( !haveCache ) {
+		writeNormals = ClaimNormalCacheSlot( surf, frame, oldframe, backlerp, surf->numVerts );
+	}
 
 	for ( i = 0; i < surf->numVerts; i++ ) {
 		float local[3];
-		vec3_t newN, oldN;
 
 		for ( k = 0; k < 3; k++ ) {
 			local[k] = ( frontlerp * (float)newXyz[i].xyz[k] + backlerp * (float)oldXyz[i].xyz[k] ) * MD3_XYZ_SCALE;
@@ -261,12 +316,18 @@ static void LerpSurfaceVerts( const refEntity_t *ent, const md3Surface_t *surf, 
 
 		out[i].localPos[0] = local[0]; out[i].localPos[1] = local[1]; out[i].localPos[2] = local[2];
 
-		DecodeMD3Normal( newXyz[i].normal, newN );
-		DecodeMD3Normal( oldXyz[i].normal, oldN );
-		out[i].normal[0] = frontlerp * newN[0] + backlerp * oldN[0];
-		out[i].normal[1] = frontlerp * newN[1] + backlerp * oldN[1];
-		out[i].normal[2] = frontlerp * newN[2] + backlerp * oldN[2];
-		VectorNormalize( out[i].normal );
+		if ( haveCache ) {
+			VectorCopy( cachedNormals[i], out[i].normal );
+		} else {
+			vec3_t newN, oldN;
+			DecodeMD3Normal( newXyz[i].normal, newN );
+			DecodeMD3Normal( oldXyz[i].normal, oldN );
+			out[i].normal[0] = frontlerp * newN[0] + backlerp * oldN[0];
+			out[i].normal[1] = frontlerp * newN[1] + backlerp * oldN[1];
+			out[i].normal[2] = frontlerp * newN[2] + backlerp * oldN[2];
+			VectorNormalize( out[i].normal );
+			VectorCopy( out[i].normal, writeNormals[i] );
+		}
 	}
 }
 
@@ -776,10 +837,17 @@ static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *sur
 	int newComp = hasComp ? frameCompFrames[frame] : -1;
 	int oldComp = hasComp ? frameCompFrames[oldframe] : -1;
 	float frontlerp = 1.0f - backlerp;
+	const vec3_t *cachedNormals = NULL;
+	vec3_t *writeNormals = NULL;
+	qboolean haveCache = FindCachedNormals( surf, frame, oldframe, backlerp, surf->numVerts, &cachedNormals );
 	int i;
 
+	if ( !haveCache ) {
+		writeNormals = ClaimNormalCacheSlot( surf, frame, oldframe, backlerp, surf->numVerts );
+	}
+
 	for ( i = 0; i < surf->numVerts; i++ ) {
-		vec3_t newXyz, oldXyz, local, newN, oldN;
+		vec3_t newXyz, oldXyz, local;
 		const mdcXyzCompressed_t *newCompVert = newComp >= 0 ? &compArray[(size_t)newComp * surf->numVerts + i] : NULL;
 		const mdcXyzCompressed_t *oldCompVert = oldComp >= 0 ? &compArray[(size_t)oldComp * surf->numVerts + i] : NULL;
 		const md3XyzNormal_t *newBaseVert = &baseArray[(size_t)newBase * surf->numVerts + i];
@@ -801,12 +869,18 @@ static void LerpMDCSurfaceVerts( const refEntity_t *ent, const mdcSurface_t *sur
 
 		out[i].localPos[0] = local[0]; out[i].localPos[1] = local[1]; out[i].localPos[2] = local[2];
 
-		DecodeMDCNormal( newBaseVert, newCompVert, newN );
-		DecodeMDCNormal( oldBaseVert, oldCompVert, oldN );
-		out[i].normal[0] = frontlerp * newN[0] + backlerp * oldN[0];
-		out[i].normal[1] = frontlerp * newN[1] + backlerp * oldN[1];
-		out[i].normal[2] = frontlerp * newN[2] + backlerp * oldN[2];
-		VectorNormalize( out[i].normal );
+		if ( haveCache ) {
+			VectorCopy( cachedNormals[i], out[i].normal );
+		} else {
+			vec3_t newN, oldN;
+			DecodeMDCNormal( newBaseVert, newCompVert, newN );
+			DecodeMDCNormal( oldBaseVert, oldCompVert, oldN );
+			out[i].normal[0] = frontlerp * newN[0] + backlerp * oldN[0];
+			out[i].normal[1] = frontlerp * newN[1] + backlerp * oldN[1];
+			out[i].normal[2] = frontlerp * newN[2] + backlerp * oldN[2];
+			VectorNormalize( out[i].normal );
+			VectorCopy( out[i].normal, writeNormals[i] );
+		}
 	}
 }
 
