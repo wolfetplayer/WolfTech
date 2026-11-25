@@ -1196,8 +1196,31 @@ static void DrawBrushSurfaceExtraStage( const shader_t *shader, int stageIdx, co
 	qvkCmdDraw( vk.command_buffer, (uint32_t)numIndexes, 1, base, 0 );
 }
 
-// Draws one brush-model entity: every surface in its submodel's range, transformed fresh each frame.
-void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const float mvp[16], const float fogPush[12] ) {
+static qboolean BrushModelCulled( const refEntity_t *ent, const dmodel_t *submodel, const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
+	vec3_t worldMins, worldMaxs;
+	int i;
+
+	if ( ent->nonNormalizedAxes ) {
+		return qfalse;
+	}
+
+	ClearBounds( worldMins, worldMaxs );
+	for ( i = 0; i < 8; i++ ) {
+		vec3_t local, world;
+		local[0] = ( i & 1 ) ? submodel->maxs[0] : submodel->mins[0];
+		local[1] = ( i & 2 ) ? submodel->maxs[1] : submodel->mins[1];
+		local[2] = ( i & 4 ) ? submodel->maxs[2] : submodel->mins[2];
+		world[0] = ent->origin[0] + local[0] * ent->axis[0][0] + local[1] * ent->axis[1][0] + local[2] * ent->axis[2][0];
+		world[1] = ent->origin[1] + local[0] * ent->axis[0][1] + local[1] * ent->axis[1][1] + local[2] * ent->axis[2][1];
+		world[2] = ent->origin[2] + local[0] * ent->axis[0][2] + local[1] * ent->axis[1][2] + local[2] * ent->axis[2][2];
+		AddPointToBounds( world, worldMins, worldMaxs );
+	}
+
+	return !R_CullBoundsVsFrustum( worldMins, worldMaxs, frustum );
+}
+
+void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const float mvp[16], const float fogPush[12],
+								 const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
 	const dmodel_t *submodel;
 	float push_data[32];
 	int surfIdx, s;
@@ -1206,6 +1229,10 @@ void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const fl
 		return;
 	}
 	submodel = &tr_world.submodels[bmodelIndex];
+
+	if ( BrushModelCulled( ent, submodel, frustum ) ) {
+		return;
+	}
 
 	memset( push_data, 0, sizeof( push_data ) );
 	memcpy( push_data, mvp, 16 * sizeof( float ) );

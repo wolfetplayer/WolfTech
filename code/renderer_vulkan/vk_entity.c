@@ -1747,7 +1747,7 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			}
 		} else if ( model->type == MOD_BRUSH ) {
 			// Geometry lives in tr_world, so draw it directly instead.
-			vk_world_draw_brushmodel( ent, model->bmodelIndex, mvp, fogPush );
+			vk_world_draw_brushmodel( ent, model->bmodelIndex, mvp, fogPush, frustum );
 		}
 
 		if ( castsShadow ) {

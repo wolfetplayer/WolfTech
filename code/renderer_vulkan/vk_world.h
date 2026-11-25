@@ -3,6 +3,8 @@
 #ifndef VK_WORLD_H_
 #define VK_WORLD_H_
 
+#include "tr_main.h" // cullPlane_t, NUM_FRUSTUM_PLANES
+
 // Called once after RE_LoadWorldMap finishes parsing a map; safe to call again for a new map.
 void vk_world_build( void );
 
@@ -19,8 +21,8 @@ void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] );
 
 void vk_world_draw_foliage( const refdef_t *fd, const float mvp[16], const float fogPush[12] );
 
-// Draws one brush-model (func_door/etc.) entity, transformed by its current origin/axis. Call after vk_world_draw.
-void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const float mvp[16], const float fogPush[12] );
+void vk_world_draw_brushmodel( const refEntity_t *ent, int bmodelIndex, const float mvp[16], const float fogPush[12],
+								 const cullPlane_t frustum[NUM_FRUSTUM_PLANES] );
 
 // First currently-visible isPortal surface (tr_shader.h), if any: its world-space plane plus a representative point (for tr_portal.c's RT_PORTALSURFACE search).
 qboolean vk_world_findVisiblePortalSurface( vec3_t outNormal, float *outDist, vec3_t outPoint );
