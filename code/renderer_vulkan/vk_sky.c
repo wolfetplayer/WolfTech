@@ -151,27 +151,41 @@ static void cloud_dir_to_uv( const vec3_t dir, float heightCloud, float outST[2]
 	outST[1] = acosf( ( v[1] < -1.0f ) ? -1.0f : ( v[1] > 1.0f ) ? 1.0f : v[1] );
 }
 
-// base is the already-built outer-box block (only its positions are reused; UV is recomputed per cloud_dir_to_uv above).
-static void write_cloud_layer( vk2d_vertex_t *out, const vk2d_vertex_t *base, const vec3_t camPos, float cloudHeight, const shaderStage_t *stage ) {
-	static const byte whiteBase[4] = { 255, 255, 255, 255 };
-	int i;
 
+static float s_cloudBaseST[SKY_VERTS][2];
+static qboolean s_cloudBaseSTValid = qfalse;
+static float s_cloudCachedSize = -1.0f;
+static float s_cloudCachedHeight = -1.0f;
+
+// outerBox is the already-built box block (block 0); camPos/size/cloudHeight identify when a rebuild is needed.
+static void RebuildCloudBaseST( const vk2d_vertex_t *outerBox, const vec3_t camPos, float cloudHeight ) {
+	int i;
 	for ( i = 0; i < SKY_VERTS; i++ ) {
 		vec3_t dir;
-		float baseST[2], st[2];
-		byte color[4];
+		VectorSubtract( outerBox[i].pos, camPos, dir );
+		cloud_dir_to_uv( dir, cloudHeight, s_cloudBaseST[i] );
+	}
+}
+
+// base is the already-built outer-box block (only its positions are reused; UV comes from the cached s_cloudBaseST).
+static void write_cloud_layer( vk2d_vertex_t *out, const vk2d_vertex_t *base, const shaderStage_t *stage ) {
+	static const byte whiteBase[4] = { 255, 255, 255, 255 };
+	byte color[4];
+	int i;
+
+	R_CalcStageColorAlpha( stage, NULL, whiteBase, color );
+
+	for ( i = 0; i < SKY_VERTS; i++ ) {
+		float st[2];
 
 		out[i].pos[0] = base[i].pos[0];
 		out[i].pos[1] = base[i].pos[1];
 		out[i].pos[2] = base[i].pos[2];
 
-		VectorSubtract( base[i].pos, camPos, dir );
-		cloud_dir_to_uv( dir, cloudHeight, baseST );
-		R_CalcStageTexCoord( stage, baseST[0], baseST[1], base[i].pos, NULL, st );
+		R_CalcStageTexCoord( stage, s_cloudBaseST[i][0], s_cloudBaseST[i][1], base[i].pos, NULL, st );
 		out[i].uv[0] = st[0];
 		out[i].uv[1] = st[1];
 
-		R_CalcStageColorAlpha( stage, NULL, whiteBase, color );
 		out[i].color[0] = color[0];
 		out[i].color[1] = color[1];
 		out[i].color[2] = color[2];
@@ -185,11 +199,13 @@ void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[
 	int face, i, numCloudLayers;
 	shader_t *skyShader;
 
+	float size = zFar * SKY_ZFAR_SCALE;
+
 	if ( !tr_world.hasSky || !s_mapped ) {
 		return;
 	}
 
-	build_sky_box( s_mapped, camPos, zFar * SKY_ZFAR_SCALE );
+	build_sky_box( s_mapped, camPos, size );
 
 	skyShader = tr_world.skyShader;
 	numCloudLayers = 0;
@@ -198,8 +214,16 @@ void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[
 		if ( numCloudLayers > SKY_CLOUD_MAX_LAYERS ) {
 			numCloudLayers = SKY_CLOUD_MAX_LAYERS;
 		}
+
+		if ( !s_cloudBaseSTValid || s_cloudCachedSize != size || s_cloudCachedHeight != skyShader->skyCloudHeight ) {
+			RebuildCloudBaseST( s_mapped, camPos, skyShader->skyCloudHeight );
+			s_cloudCachedSize = size;
+			s_cloudCachedHeight = skyShader->skyCloudHeight;
+			s_cloudBaseSTValid = qtrue;
+		}
+
 		for ( i = 0; i < numCloudLayers; i++ ) {
-			write_cloud_layer( s_mapped + SKY_VERTS * ( 1 + i ), s_mapped, camPos, skyShader->skyCloudHeight, &skyShader->stages[i] );
+			write_cloud_layer( s_mapped + SKY_VERTS * ( 1 + i ), s_mapped, &skyShader->stages[i] );
 		}
 	}
 
