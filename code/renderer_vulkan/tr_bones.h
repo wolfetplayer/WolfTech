@@ -13,4 +13,6 @@ void R_SkinMDMSurface( const mdmSurface_t *surf, const refEntity_t *refent, vec3
 void R_CalcAllBoneMatricesMDS( const mdsHeader_t *mds, const refEntity_t *refent, float outMat4[MDX_MAX_BONES][16] );
 qboolean R_CalcAllBoneMatricesMDM( const refEntity_t *refent, float outMat4[MDX_MAX_BONES][16] );
 
+qboolean R_MDM_GetFrameBounds( const refEntity_t *refent, vec3_t outNewOrigin, float *outNewRadius, vec3_t outOldOrigin, float *outOldRadius );
+
 #endif // TR_BONES_H_

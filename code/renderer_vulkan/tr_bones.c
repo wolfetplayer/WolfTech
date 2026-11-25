@@ -137,6 +137,31 @@ static qboolean R_MDM_ResolveSkeleton( qhandle_t hModel, mdxHeader_t **outHeader
 	return qtrue;
 }
 
+qboolean R_MDM_GetFrameBounds( const refEntity_t *refent, vec3_t outNewOrigin, float *outNewRadius, vec3_t outOldOrigin, float *outOldRadius ) {
+	mdxHeader_t *legsHeader, *oldLegsHeader;
+	mdxFrame_t *newFrame, *oldFrame;
+	int frameSize;
+
+	if ( !R_MDM_ResolveSkeleton( refent->frameModel, &legsHeader ) ) {
+		return qfalse;
+	}
+	if ( !R_MDM_ResolveSkeleton( refent->oldframeModel, &oldLegsHeader ) ) {
+		oldLegsHeader = legsHeader;
+	}
+
+	frameSize = (int)( sizeof( mdxFrame_t ) + legsHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+	newFrame = (mdxFrame_t *)( (byte *)legsHeader + legsHeader->ofsFrames + refent->frame * frameSize );
+
+	frameSize = (int)( sizeof( mdxFrame_t ) + oldLegsHeader->numBones * sizeof( mdxBoneFrameCompressed_t ) );
+	oldFrame = (mdxFrame_t *)( (byte *)oldLegsHeader + oldLegsHeader->ofsFrames + refent->oldframe * frameSize );
+
+	VectorCopy( newFrame->localOrigin, outNewOrigin );
+	*outNewRadius = newFrame->radius;
+	VectorCopy( oldFrame->localOrigin, outOldOrigin );
+	*outOldRadius = oldFrame->radius;
+	return qtrue;
+}
+
 // Single frame, no lerp.
 static void R_CalcBone( int torsoParentBoneNum, const refEntity_t *refent, int boneNum ) {
 	int j;
@@ -809,7 +834,7 @@ static void PackBoneMatrix( const mdxBoneFrame_t *bone, float out[16] ) {
 
 // Computes every one of refent's MDS bones (not just one surface's referenced subset, since GPU skinning needs the full set the model's vertices index into) and packs each as a GLSL-ready mat4, for vk_entity.c's GPU bone-skinning path. R_CalcBones resolves missing parents on its own (see its boneInfo[*boneRefs].parent checks), so passing every bone index in plain 0..numBones-1 order is safe regardless of the file's actual hierarchy order.
 void R_CalcAllBoneMatricesMDS( const mdsHeader_t *mds, const refEntity_t *refent, float outMat4[MDX_MAX_BONES][16] ) {
-	int boneList[MDX_MAX_BONES];
+	int boneList[MDX_MAX_BONES] = { 0 }; // zero-inited only to silence GCC's -Wmaybe-uninitialized (it can't prove numBones > 0); the loop below always fills [0, numBones) before use
 	int i, numBones = mds->numBones;
 
 	for ( i = 0; i < numBones; i++ ) {
@@ -824,7 +849,7 @@ void R_CalcAllBoneMatricesMDS( const mdsHeader_t *mds, const refEntity_t *refent
 
 // Same as R_CalcAllBoneMatricesMDS but for an MDM's linked MDX skeleton; qfalse (same meaning as R_MDM_CalcBones') if none is linked yet.
 qboolean R_CalcAllBoneMatricesMDM( const refEntity_t *refent, float outMat4[MDX_MAX_BONES][16] ) {
-	int boneList[MDX_MAX_BONES];
+	int boneList[MDX_MAX_BONES] = { 0 }; // zero-inited only to silence GCC's -Wmaybe-uninitialized, same reasoning as R_CalcAllBoneMatricesMDS above
 	mdxHeader_t *legsHeader;
 	int i, numBones;
 

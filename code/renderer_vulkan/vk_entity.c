@@ -1698,52 +1698,61 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			float push_data[32];
 			uint32_t boneUboDynOffset = 0;
 			qboolean haveBones = qfalse;
+			vec3_t mdmNewOrigin, mdmOldOrigin;
+			float mdmNewRadius, mdmOldRadius;
+			qboolean mdmCulled = qfalse;
 
-			if ( animData ) {
-				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
-				vk_profile_cpu_zone_begin( VKPROF_ENTITY_BONES );
-				haveBones = WriteBoneMatricesMDM( ent, &boneUboDynOffset ); // identity bones (bind pose) if no MDX skeleton is linked yet -- see WriteBoneMatricesMDM
-				vk_profile_cpu_zone_end( VKPROF_ENTITY_BONES );
+			if ( R_MDM_GetFrameBounds( ent, mdmNewOrigin, &mdmNewRadius, mdmOldOrigin, &mdmOldRadius ) ) {
+				mdmCulled = MD3StyleFrameCulled( ent, mdmNewOrigin, mdmNewRadius, mdmOldOrigin, mdmOldRadius, frustum );
 			}
 
-			for ( s = 0; s < model->mdm->numSurfaces; s++ ) {
-				qhandle_t shaderHandle = ResolveShaderDirect( ent->customShader, ent->customSkin, surf->name, surf->shaderIndex );
-				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
-
-				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
-					goto nextMDM;
-				}
-				// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
-				if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
-					goto nextMDM;
+			if ( !mdmCulled ) {
+				if ( animData ) {
+					BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
+					vk_profile_cpu_zone_begin( VKPROF_ENTITY_BONES );
+					haveBones = WriteBoneMatricesMDM( ent, &boneUboDynOffset ); // identity bones (bind pose) if no MDX skeleton is linked yet -- see WriteBoneMatricesMDM
+					vk_profile_cpu_zone_end( VKPROF_ENTITY_BONES );
 				}
 
-				if ( dbgWeapon ) {
-					ri.Printf( PRINT_ALL, "  MDM surf '%s' numVerts=%d numTriangles=%d shader='%s' stages=%d idxWrite=%u\n",
-						surf->name, surf->numVerts, surf->numTriangles,
-						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
-				}
+				for ( s = 0; s < model->mdm->numSurfaces; s++ ) {
+					qhandle_t shaderHandle = ResolveShaderDirect( ent->customShader, ent->customSkin, surf->name, surf->shaderIndex );
+					shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
 
-				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qfalse ) ) {
-					LerpMDMSurfaceVerts( ent, surf, s_baseScratch ); // see the MDS branch's comment above
-				} else {
-					WriteMDMSurfaceUVOnly( surf, s_baseScratch );
-				}
-				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
+					if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+						goto nextMDM;
+					}
+					// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
+					if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
+						goto nextMDM;
+					}
 
-				if ( haveBones && s < animData->numSurfaces ) {
-					DrawSkinSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
-						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &animData->surfaces[s],
-						push_data, boneUboDynOffset, &curDepthHack );
-				}
-				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
-					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
-						(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
-				}
+					if ( dbgWeapon ) {
+						ri.Printf( PRINT_ALL, "  MDM surf '%s' numVerts=%d numTriangles=%d shader='%s' stages=%d idxWrite=%u\n",
+							surf->name, surf->numVerts, surf->numTriangles,
+							shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
+					}
 
-			nextMDM:
-				surf = (const mdmSurface_t *)( (const byte *)surf + surf->ofsEnd );
+					vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
+					if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qfalse ) ) {
+						LerpMDMSurfaceVerts( ent, surf, s_baseScratch ); // see the MDS branch's comment above
+					} else {
+						WriteMDMSurfaceUVOnly( surf, s_baseScratch );
+					}
+					vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
+
+					if ( haveBones && s < animData->numSurfaces ) {
+						DrawSkinSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
+							(const byte *)surf + surf->ofsTriangles, s_baseScratch, &animData->surfaces[s],
+							push_data, boneUboDynOffset, &curDepthHack );
+					}
+					if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
+						vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
+							(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
+					}
+
+				nextMDM:
+					surf = (const mdmSurface_t *)( (const byte *)surf + surf->ofsEnd );
+				}
 			}
 		} else if ( model->type == MOD_BRUSH ) {
 			// Geometry lives in tr_world, so draw it directly instead.
