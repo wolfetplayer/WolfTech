@@ -5,6 +5,7 @@
 #include "vk_instance.h"
 #include "vk_pipelines.h"
 #include "vk_frame.h"
+#include "vk_cmd.h"
 #include "tr_light.h"
 #include "tr_image.h"
 #include "vk_shadows.h"
@@ -284,13 +285,12 @@ void vk_shadows_finish_entity( const refEntity_t *ent, const float viewProj[16],
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 	// Neither of these two passes writes color (pure stencil stamping), so this texture never shows --
 	// white anyway, not the unrelated "shader failed to resolve" default.
-	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-		0, 1, &R_GetWhiteImage()->vk_descriptor, 0, NULL );
+	vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, R_GetWhiteImage()->vk_descriptor, 0, NULL );
 
-	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_shadow_volume_incr );
+	vk_bind_pipeline_cached( vk.pipeline_shadow_volume_incr );
 	qvkCmdDraw( vk.command_buffer, s_writeOffset - entityStart, 1, 0, 0 );
 
-	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_shadow_volume_decr );
+	vk_bind_pipeline_cached( vk.pipeline_shadow_volume_decr );
 	qvkCmdDraw( vk.command_buffer, s_writeOffset - entityStart, 1, 0, 0 );
 
 	s_anyStamped = qtrue;
@@ -336,9 +336,8 @@ void vk_shadows_draw_darken( const float viewProj[16], const float fogPush[12] )
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 	// Must be white: the darken factor is baked into the quad's vertex color (0.6 gray) and multiplied
 	// by this texture (GLS_SRCBLEND_DST_COLOR) -- anything but flat white would pattern the darken.
-	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-		0, 1, &R_GetWhiteImage()->vk_descriptor, 0, NULL );
-	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_shadow_darken );
+	vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, R_GetWhiteImage()->vk_descriptor, 0, NULL );
+	vk_bind_pipeline_cached( vk.pipeline_shadow_darken );
 	qvkCmdDraw( vk.command_buffer, 6, 1, 0, 0 );
 
 	// This renderer shares one render pass across every scene in a real frame (sky-portal, main, view-weapon --

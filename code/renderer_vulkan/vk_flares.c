@@ -9,6 +9,7 @@
 #include "vk_instance.h"
 #include "vk_pipelines.h"
 #include "vk_frame.h"
+#include "vk_cmd.h"
 #include "tr_shader.h"
 #include "tr_shade_calc.h"
 #include "tr_scene.h"
@@ -234,7 +235,7 @@ static void UpdateFade( flare_t *f, qboolean nowVisible, int timeMs ) {
 	f->drawIntensity = fade < 0.0f ? 0.0f : ( fade > 1.0f ? 1.0f : fade );
 }
 
-static void DrawBillboard( const flare_t *f, const vec3_t right, const vec3_t up, VkPipeline *boundPipeline, image_t **boundImage ) {
+static void DrawBillboard( const flare_t *f, const vec3_t right, const vec3_t up ) {
 	shader_t *shader;
 	vec3_t corners[4];
 	static const float baseUV[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
@@ -279,15 +280,8 @@ static void DrawBillboard( const flare_t *f, const vec3_t right, const vec3_t up
 
 		pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 			vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, VK_FALSE, VK_FALSE, shader->polygonOffset, stage->depthWrite );
-		if ( pipeline != *boundPipeline ) {
-			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-			*boundPipeline = pipeline;
-		}
-		if ( stageImage != *boundImage ) {
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stageImage->vk_descriptor, 0, NULL );
-			*boundImage = stageImage;
-		}
+		vk_bind_pipeline_cached( pipeline );
+		vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, stageImage->vk_descriptor, 0, NULL );
 		qvkCmdDraw( vk.command_buffer, 6, 1, s_writeOffset, 0 );
 		s_writeOffset += 6;
 	}
@@ -298,8 +292,6 @@ void vk_flares_draw( const refdef_t *fd, const float viewProj[16], const float f
 	const sceneCorona_t *coronas;
 	vec3_t right, up;
 	VkDeviceSize vb_offset = 0;
-	VkPipeline boundPipeline = VK_NULL_HANDLE;
-	image_t *boundImage = NULL;
 
 	if ( !r_flares->integer || !s_queryPoolReady ) {
 		return;
@@ -316,12 +308,11 @@ void vk_flares_draw( const refdef_t *fd, const float viewProj[16], const float f
 	// Pass 1: this frame's scene coronas -- read back last frame's probe, fade, issue this frame's probe.
 	if ( numCoronas > 0 ) {
 		PushTransform( viewProj, fogPush );
-		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_occlusion_probe );
+		vk_bind_pipeline_cached( vk.pipeline_occlusion_probe );
 		// Writes neither depth nor color (see vk.pipeline_occlusion_probe's creation) so the texture
 		// bound here never actually shows -- white anyway, to stay consistent with other vertex-colored
 		// debug/dummy draws rather than the unrelated "shader failed to resolve" default.
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-			0, 1, &R_GetWhiteImage()->vk_descriptor, 0, NULL );
+		vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, R_GetWhiteImage()->vk_descriptor, 0, NULL );
 	}
 
 	for ( i = 0; i < numCoronas; i++ ) {
@@ -377,7 +368,7 @@ void vk_flares_draw( const refdef_t *fd, const float viewProj[16], const float f
 	for ( i = 0; i < MAX_FLARES; i++ ) {
 		const flare_t *f = &s_flares[i];
 		if ( f->inUse && f->drawIntensity > 0.0f ) {
-			DrawBillboard( f, right, up, &boundPipeline, &boundImage );
+			DrawBillboard( f, right, up );
 		}
 	}
 }

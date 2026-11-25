@@ -6,6 +6,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_pipelines.h"
+#include "vk_cmd.h"
 #include "tr_image.h"
 #include "tr_bsp.h"
 #include "tr_shade_calc.h"
@@ -233,7 +234,7 @@ void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[
 	qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0, sizeof( push_data ), push_data );
 
-	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_sky );
+	vk_bind_pipeline_cached( vk.pipeline_sky );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_vertexBuffer, &vb_offset );
 
 	for ( face = 0; face < 6; face++ ) {
@@ -241,8 +242,7 @@ void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[
 		if ( !img || img->vk_descriptor == VK_NULL_HANDLE ) {
 			continue;
 		}
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-			0, 1, &img->vk_descriptor, 0, NULL );
+		vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, img->vk_descriptor, 0, NULL );
 		qvkCmdDraw( vk.command_buffer, SKY_VERTS_PER_FACE, 1, (uint32_t)face * SKY_VERTS_PER_FACE, 0 );
 	}
 
@@ -258,9 +258,8 @@ void vk_sky_draw( const vec3_t camPos, const float mvp[16], const float fogPush[
 		pipeline = stage->blendEnabled ?
 			vk_getPipelineSkyCloud( stage->srcBlend, stage->dstBlend ) :
 			vk_getPipelineSkyCloud( VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO );
-		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-			0, 1, &img->vk_descriptor, 0, NULL );
+		vk_bind_pipeline_cached( pipeline );
+		vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, img->vk_descriptor, 0, NULL );
 		qvkCmdDraw( vk.command_buffer, SKY_VERTS, 1, (uint32_t)SKY_VERTS * ( 1 + i ), 0 );
 	}
 }

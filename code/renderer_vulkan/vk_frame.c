@@ -100,6 +100,9 @@ qboolean vk_begin_frame( void ) {
 
 	VK_CHECK( qvkBeginCommandBuffer( vk.command_buffer, &begin_info ) );
 
+	// Fresh/reused command buffer -- nothing is actually bound on it yet.
+	vk_reset_bind_cache();
+
 	return qtrue;
 }
 

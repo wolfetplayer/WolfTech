@@ -8,6 +8,7 @@
 #include "vk_instance.h"
 #include "vk_pipelines.h"
 #include "vk_frame.h"
+#include "vk_cmd.h"
 #include "vk_image.h"
 #include "glConfig.h"
 #include "tr_image.h"
@@ -1267,9 +1268,9 @@ static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 			shaderPtr->stages[0].rgbGen == CGEN_LIGHTING_DIFFUSE );
 		descSet = vk_getMultiTextureDescriptor( image0, image1 );
 
-		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+		vk_bind_pipeline_cached( pipeline );
 		qvkCmdBindVertexBuffers( vk.command_buffer, 2, 1, &s_lerpMtVertexBuffer, &dynOffset );
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout, 0, 1, &descSet, 0, NULL );
+		vk_bind_descriptor_set_cached( vk.lightmap_pipeline_layout, 0, descSet, 0, NULL );
 		qvkCmdDrawIndexed( vk.command_buffer, (uint32_t)numTriangles * 3, 1, 0, 0, 0 );
 
 		s_lerpMtVertWrite += (uint32_t)numVerts;
@@ -1289,8 +1290,6 @@ static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 	{
 		int s;
 		uint32_t idxBase = s_idxWrite;
-		VkPipeline boundPipeline = VK_NULL_HANDLE;
-		VkDescriptorSet boundDescSet = VK_NULL_HANDLE;
 
 		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, localViewOrigin, numVerts, baseVerts,
 			&s_lerpVertexMapped[s_lerpVertRegionBase + s_lerpVertWrite] );
@@ -1312,15 +1311,9 @@ static void DrawLerpSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 				vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc, shaderPtr->polygonOffset,
 				stage->rgbGen == CGEN_LIGHTING_DIFFUSE );
 
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
-			}
+			vk_bind_pipeline_cached( pipeline );
 			qvkCmdBindVertexBuffers( vk.command_buffer, 2, 1, &s_lerpVertexBuffer, &dynOffset ); // offset always differs per stage, nothing to dedup
-			if ( stageImage->vk_descriptor != boundDescSet ) {
-				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout, 0, 1, &stageImage->vk_descriptor, 0, NULL );
-				boundDescSet = stageImage->vk_descriptor;
-			}
+			vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, stageImage->vk_descriptor, 0, NULL );
 			qvkCmdDrawIndexed( vk.command_buffer, (uint32_t)numTriangles * 3, 1, 0, 0, 0 );
 		}
 
@@ -1437,10 +1430,10 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 			shaderPtr->stages[0].rgbGen == CGEN_LIGHTING_DIFFUSE );
 		texDescSet = vk_getMultiTextureDescriptor( image0, image1 );
 
-		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+		vk_bind_pipeline_cached( pipeline );
 		qvkCmdBindVertexBuffers( vk.command_buffer, 1, 1, &s_lerpMtVertexBuffer, &dynOffset );
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.skin_lightmap_pipeline_layout, 0, 1, &texDescSet, 0, NULL );
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.skin_lightmap_pipeline_layout, 1, 1, &s_skinDescriptorSet, 1, &boneUboDynOffset );
+		vk_bind_descriptor_set_cached( vk.skin_lightmap_pipeline_layout, 0, texDescSet, 0, NULL );
+		vk_bind_descriptor_set_cached( vk.skin_lightmap_pipeline_layout, 1, s_skinDescriptorSet, 1, &boneUboDynOffset );
 		qvkCmdDrawIndexed( vk.command_buffer, (uint32_t)numTriangles * 3, 1, 0, 0, 0 );
 
 		s_lerpMtVertWrite += (uint32_t)numVerts;
@@ -1460,14 +1453,12 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 	{
 		int s;
 		uint32_t idxBase = s_idxWrite;
-		VkPipeline boundPipeline = VK_NULL_HANDLE;
-		VkDescriptorSet boundDescSet = VK_NULL_HANDLE;
 
 		WriteLerpStageVertices( shaderPtr, ent->shaderRGBA, ent->shaderTexCoord, NULL /* no env-mapped normal/localPos on the MDS/MDM skin path */, numVerts, baseVerts,
 			&s_lerpVertexMapped[s_lerpVertRegionBase + s_lerpVertWrite] );
 		WriteIndices( numTriangles, trianglesPtr, s_idxRegionBase + idxBase );
 		qvkCmdBindIndexBuffer( vk.command_buffer, s_indexBuffer, (VkDeviceSize)( s_idxRegionBase + idxBase ) * sizeof( uint32_t ), VK_INDEX_TYPE_UINT32 );
-		qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.skin_pipeline_layout, 1, 1, &s_skinDescriptorSet, 1, &boneUboDynOffset );
+		vk_bind_descriptor_set_cached( vk.skin_pipeline_layout, 1, s_skinDescriptorSet, 1, &boneUboDynOffset );
 
 		for ( s = 0; s < shaderPtr->numStages; s++ ) {
 			const shaderStage_t *stage = &shaderPtr->stages[s];
@@ -1484,15 +1475,9 @@ static void DrawSkinSurface( const shader_t *shaderPtr, const refEntity_t *ent,
 				vk_cullModeForShader( shaderPtr->cullType ), stage->alphaTestFunc, shaderPtr->polygonOffset,
 				stage->rgbGen == CGEN_LIGHTING_DIFFUSE );
 
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
-			}
+			vk_bind_pipeline_cached( pipeline );
 			qvkCmdBindVertexBuffers( vk.command_buffer, 1, 1, &s_lerpVertexBuffer, &dynOffset ); // offset always differs per stage, nothing to dedup
-			if ( stageImage->vk_descriptor != boundDescSet ) {
-				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.skin_pipeline_layout, 0, 1, &stageImage->vk_descriptor, 0, NULL );
-				boundDescSet = stageImage->vk_descriptor;
-			}
+			vk_bind_descriptor_set_cached( vk.skin_pipeline_layout, 0, stageImage->vk_descriptor, 0, NULL );
 			qvkCmdDrawIndexed( vk.command_buffer, (uint32_t)numTriangles * 3, 1, 0, 0, 0 );
 		}
 

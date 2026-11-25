@@ -6,6 +6,7 @@
 #include "vk_instance.h"
 #include "vk_pipelines.h"
 #include "vk_frame.h"
+#include "vk_cmd.h"
 #include "tr_image.h"
 #include "vk_entity.h"
 #include "vk_draw3d.h"
@@ -115,10 +116,9 @@ static void bind_opaque_3d_for_draw( const float mvp[16], const float fogPush[12
 	qvkCmdPushConstants( vk.command_buffer, vk.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0, sizeof( push_data ), push_data );
 
-	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_3d_opaque );
+	vk_bind_pipeline_cached( vk.pipeline_3d_opaque );
 
-	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-		0, 1, &R_GetWhiteImage()->vk_descriptor, 0, NULL );
+	vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, R_GetWhiteImage()->vk_descriptor, 0, NULL );
 }
 
 // r_vk_showEntityMarkers-gated: one small cube per scene entity, standing in for real model rendering.

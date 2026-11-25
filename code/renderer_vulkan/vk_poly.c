@@ -6,6 +6,7 @@
 #include "vk_instance.h"
 #include "vk_pipelines.h"
 #include "vk_frame.h"
+#include "vk_cmd.h"
 #include "tr_shader.h"
 #include "tr_shade_calc.h"
 #include "tr_scene.h"
@@ -112,7 +113,6 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 	const polyVert_t *polyVerts = R_GetScenePolyVerts();
 	uint32_t writeOffset = s_writeOffset;
 	uint32_t mtWriteOffset = s_mtWriteOffset;
-	VkPipeline boundPipeline = VK_NULL_HANDLE;
 	VkBuffer boundVertexBuffer = s_vertexBuffer;
 
 	if ( numPolys <= 0 || !s_mapped ) {
@@ -178,13 +178,9 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 			}
 
 			pipeline = vk_getPipelineMultiTexture( combineMode, vk_cullModeForShader( shader->cullType ), stage0->alphaTestFunc );
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
-			}
+			vk_bind_pipeline_cached( pipeline );
 			descSet = vk_getMultiTextureDescriptor( image0, image1 );
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
-				0, 1, &descSet, 0, NULL );
+			vk_bind_descriptor_set_cached( vk.lightmap_pipeline_layout, 0, descSet, 0, NULL );
 			qvkCmdDraw( vk.command_buffer, vertCount, 1, firstVert, 0 );
 			continue;
 		}
@@ -225,12 +221,8 @@ void vk_poly_draw( const float mvp[16], const float fogPush[12] ) {
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, VK_FALSE, VK_FALSE, shader->polygonOffset, stage->depthWrite );
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
-			}
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stageImage->vk_descriptor, 0, NULL );
+			vk_bind_pipeline_cached( pipeline );
+			vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, stageImage->vk_descriptor, 0, NULL );
 			qvkCmdDraw( vk.command_buffer, vertCount, 1, firstVert, 0 );
 		}
 	}

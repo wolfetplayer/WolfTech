@@ -7,6 +7,7 @@
 #include "vk_instance.h"
 #include "vk_pipelines.h"
 #include "vk_frame.h"
+#include "vk_cmd.h"
 #include "vk_image.h"
 #include "tr_local.h"
 #include "tr_shader.h"
@@ -1171,9 +1172,9 @@ static void DrawBrushSurfaceStage0( const bspSurface_t *surf, const shader_t *sh
 
 	descriptor = GetBrushLightmapDescriptor( tr_world.shaders[surf->shaderNum].shader, lightmapIdx );
 	pipeline = vk_getWorldLightmapPipeline( shader->cullType, stage0->alphaTestFunc );
-	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+	vk_bind_pipeline_cached( pipeline );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynBrushLMBuffer, &vb_offset );
-	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout, 0, 1, &descriptor, 0, NULL );
+	vk_bind_descriptor_set_cached( vk.lightmap_pipeline_layout, 0, descriptor, 0, NULL );
 
 	base = s_dynBrushLMWriteOffset;
 	for ( k = 0; k < numIndexes; k++ ) {
@@ -1221,9 +1222,9 @@ static void DrawBrushSurfaceExtraStage( const shader_t *shader, int stageIdx, co
 
 	pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 		vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset, stage->depthWrite );
-	qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+	vk_bind_pipeline_cached( pipeline );
 	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynBrushExtraBuffer, &vb_offset );
-	qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout, 0, 1, &stageImage->vk_descriptor, 0, NULL );
+	vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, stageImage->vk_descriptor, 0, NULL );
 
 	base = s_dynBrushExtraWriteOffset;
 	for ( k = 0; k < numIndexes; k++ ) {
@@ -1411,7 +1412,6 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	VkDeviceSize vb2dOffset = (VkDeviceSize)s_dyn2DRegionBase * sizeof( vk2d_vertex_t );
 	VkDeviceSize dlightVbOffset = (VkDeviceSize)s_dynDlightRegionBase * sizeof( vk2d_vertex_t );
 	int i;
-	VkPipeline boundPipeline = VK_NULL_HANDLE;
 	qboolean lmBufferBound = qfalse, bound2DBuffer = qfalse;
 	static qboolean firstDraw = qtrue;
 
@@ -1443,17 +1443,13 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		} else {
 			// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
 			pipeline = vk_getWorldLightmapPipeline( shader->cullType, shader->stages[0].alphaTestFunc );
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
-			}
+			vk_bind_pipeline_cached( pipeline );
 			if ( !lmBufferBound ) {
 				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
 				lmBufferBound = qtrue; bound2DBuffer = qfalse;
 			}
 
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
-				0, 1, &batch->descriptor, 0, NULL );
+			vk_bind_descriptor_set_cached( vk.lightmap_pipeline_layout, 0, batch->descriptor, 0, NULL );
 
 			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader,
 				batch->lightmapIdx == s_whiteLightmapIdx );
@@ -1479,17 +1475,13 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset, stage->depthWrite );
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
-			}
+			vk_bind_pipeline_cached( pipeline );
 			if ( !bound2DBuffer ) {
 				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dyn2DBuffer, &vb2dOffset );
 				bound2DBuffer = qtrue; lmBufferBound = qfalse;
 			}
 
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stageDescriptor, 0, NULL );
+			vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, stageDescriptor, 0, NULL );
 
 			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, stage );
 		}
@@ -1502,7 +1494,6 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		if ( numDlights > 0 ) {
 			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynDlightBuffer, &dlightVbOffset );
 			lmBufferBound = qfalse; bound2DBuffer = qfalse;
-			boundPipeline = VK_NULL_HANDLE;
 
 			for ( i = 0; i < s_numBatches; i++ ) {
 				const worldBatch_t *batch = &s_batches[i];
@@ -1522,13 +1513,9 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 
 				pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), VK_TRUE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE,
 					vk_cullModeForShader( shader->cullType ), shader->stages[0].alphaTestFunc, R_InPortalView(), R_InMirrorView(), VK_FALSE, VK_FALSE );
-				if ( pipeline != boundPipeline ) {
-					qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-					boundPipeline = pipeline;
-				}
+				vk_bind_pipeline_cached( pipeline );
 
-				qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-					0, 1, &diffuse->vk_descriptor, 0, NULL );
+				vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, diffuse->vk_descriptor, 0, NULL );
 
 				ExpandAndDrawWorldDlights( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, dlights, numDlights );
 			}
@@ -1539,7 +1526,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 		r_showtris = ri.Cvar_Get( "r_showtris", "0", CVAR_CHEAT );
 	}
 	if ( r_showtris->integer && vk.pipeline_world_wireframe != VK_NULL_HANDLE ) {
-		qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_world_wireframe );
+		vk_bind_pipeline_cached( vk.pipeline_world_wireframe );
 		if ( !lmBufferBound ) {
 			qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
 			lmBufferBound = qtrue; bound2DBuffer = qfalse;
@@ -1552,8 +1539,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 				continue;
 			}
 			shader = R_GetShaderByHandle( batch->shader );
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.lightmap_pipeline_layout,
-				0, 1, &batch->descriptor, 0, NULL );
+			vk_bind_descriptor_set_cached( vk.lightmap_pipeline_layout, 0, batch->descriptor, 0, NULL );
 			ExpandAndDrawStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader,
 				batch->lightmapIdx == s_whiteLightmapIdx );
 		}
@@ -1567,7 +1553,6 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 
 void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] ) {
 	VkDeviceSize vb2dOffset = (VkDeviceSize)s_dyn2DRegionBase * sizeof( vk2d_vertex_t );
-	VkPipeline boundPipeline = VK_NULL_HANDLE;
 	qboolean bound2DBuffer = qfalse;
 	int i;
 
@@ -1606,17 +1591,13 @@ void vk_world_draw_transparent( const float mvp[16], const float fogPush[12] ) {
 
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(), shader->polygonOffset, stage->depthWrite );
-			if ( pipeline != boundPipeline ) {
-				qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-				boundPipeline = pipeline;
-			}
+			vk_bind_pipeline_cached( pipeline );
 			if ( !bound2DBuffer ) {
 				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dyn2DBuffer, &vb2dOffset );
 				bound2DBuffer = qtrue;
 			}
 
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stageDescriptor, 0, NULL );
+			vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, stageDescriptor, 0, NULL );
 
 			ExpandAndDrawExtraStage( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs, shader, stage );
 		}
@@ -1673,9 +1654,8 @@ void vk_world_draw_foliage( const refdef_t *fd, const float mvp[16], const float
 			pipeline = vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
 				vk_cullModeForShader( shader->cullType ), stage->alphaTestFunc, R_InPortalView(), R_InMirrorView(),
 				shader->polygonOffset, stage->depthWrite );
-			qvkCmdBindPipeline( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
-			qvkCmdBindDescriptorSets( vk.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk.pipeline_layout,
-				0, 1, &stageDescriptor, 0, NULL );
+			vk_bind_pipeline_cached( pipeline );
+			vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, stageDescriptor, 0, NULL );
 
 			for ( inst = 0; inst < fsurf->numInstances; inst++ ) {
 				const foliageInstance_t *instance = &s_foliageInstances[fsurf->firstInstance + inst];
