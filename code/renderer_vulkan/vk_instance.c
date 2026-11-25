@@ -177,8 +177,33 @@ static qboolean vk_validationLayerAvailable( const char *layer_name ) {
 #endif // !NDEBUG
 
 
+// vkEnumerateInstanceVersion is itself a 1.1+ loader entrypoint -- a pure-1.0 loader simply won't
+// resolve it, which is how a 1.0-only system is told apart from one that just reports 1.1/1.2/etc.
+// Called after vk_getInstanceProcAddrImpl() so qvkGetInstanceProcAddr is already valid.
+static uint32_t vk_queryInstanceVersion( void ) {
+	PFN_vkEnumerateInstanceVersion qvkEnumerateInstanceVersion =
+		(PFN_vkEnumerateInstanceVersion) qvkGetInstanceProcAddr( NULL, "vkEnumerateInstanceVersion" );
+	uint32_t version = VK_API_VERSION_1_0;
+
+	if ( qvkEnumerateInstanceVersion != NULL ) {
+		VK_CHECK( qvkEnumerateInstanceVersion( &version ) );
+	}
+	return version;
+}
+
 static void vk_createInstance( void ) {
 	ri.Printf( PRINT_ALL, " Creating instance: vk.instance\n" );
+
+	// 1.2 is as high as this renderer has any actual use for right now (it's the version the
+	// future bindless-texture work needs, see docs/vulkan-renderer-roadmap.md) -- request the
+	// lesser of that and whatever the loader actually reports, so this never asks for a version
+	// the loader doesn't have.
+	vk.instanceVersion = vk_queryInstanceVersion();
+	if ( vk.instanceVersion > VK_API_VERSION_1_2 ) {
+		vk.instanceVersion = VK_API_VERSION_1_2;
+	}
+	ri.Printf( PRINT_ALL, " Instance API version requested: %d.%d.%d\n",
+		VK_VERSION_MAJOR( vk.instanceVersion ), VK_VERSION_MINOR( vk.instanceVersion ), VK_VERSION_PATCH( vk.instanceVersion ) );
 
 	VkApplicationInfo appInfo;
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -187,7 +212,7 @@ static void vk_createInstance( void ) {
 	appInfo.applicationVersion = VK_MAKE_VERSION( 1, 0, 0 );
 	appInfo.pEngineName = "Wolf-Tech";
 	appInfo.engineVersion = VK_MAKE_VERSION( 1, 0, 0 );
-	appInfo.apiVersion = VK_MAKE_VERSION( 1, 0, 0 );
+	appInfo.apiVersion = vk.instanceVersion;
 
 	VkInstanceCreateInfo instanceCreateInfo;
 	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

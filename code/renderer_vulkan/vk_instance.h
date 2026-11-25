@@ -154,6 +154,8 @@ struct Vk_Instance {
 
 	VkPhysicalDeviceMemoryProperties devMemProperties;
 
+	uint32_t instanceVersion; // what vk_createInstance actually requested (vk_queryInstanceVersion, vk_instance.c) -- VK_API_VERSION_1_0 on a pure-1.0 loader, else min(loader-reported version, VK_API_VERSION_1_2)
+
 	uint32_t queue_family_index;
 	VkDevice device;
 	VkQueue queue;
