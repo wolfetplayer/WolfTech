@@ -163,6 +163,26 @@ void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 	outColor[0] = rgb[0]; outColor[1] = rgb[1]; outColor[2] = rgb[2]; outColor[3] = alpha;
 }
 
+qboolean R_StageColorAlphaIsVertexInvariant( const shaderStage_t *stage ) {
+	switch ( stage->rgbGen ) {
+	case CGEN_EXACT_VERTEX:
+	case CGEN_VERTEX:
+	case CGEN_ONE_MINUS_VERTEX:
+		return qfalse;
+	default:
+		break;
+	}
+	switch ( stage->alphaGen ) {
+	case AGEN_SKIP:
+	case AGEN_VERTEX:
+	case AGEN_ONE_MINUS_VERTEX:
+		return qfalse;
+	default:
+		break;
+	}
+	return qtrue;
+}
+
 void R_CalcStageTexCoord( const shaderStage_t *stage, float baseS, float baseT, const float worldPos[3],
 						   const float entityTranslate[2], float outST[2] ) {
 	float s = baseS, t = baseT;

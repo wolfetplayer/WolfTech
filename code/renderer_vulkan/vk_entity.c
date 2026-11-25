@@ -1011,6 +1011,16 @@ static void WriteLerpStageVertices( const shader_t *shader, const byte *entityCo
 	int v, s;
 	static const byte baseColor[4] = { 255, 255, 255, 255 };
 
+	byte stageColor[MAX_SHADER_STAGES][4];
+	qboolean stageInvariant[MAX_SHADER_STAGES];
+
+	for ( s = 0; s < shader->numStages; s++ ) {
+		stageInvariant[s] = R_StageColorAlphaIsVertexInvariant( &shader->stages[s] );
+		if ( stageInvariant[s] ) {
+			R_CalcStageColorAlpha( &shader->stages[s], entityColor, baseColor, stageColor[s] );
+		}
+	}
+
 	for ( v = 0; v < numVerts; v++ ) {
 		float deformed[3];
 		R_DeformPosition( shader, base[v].pos, NULL, 0.0f, deformed ); // no per-vertex normal here -- wave/bulge pass through, same as before
@@ -1018,10 +1028,16 @@ static void WriteLerpStageVertices( const shader_t *shader, const byte *entityCo
 		for ( s = 0; s < shader->numStages; s++ ) {
 			const shaderStage_t *stage = &shader->stages[s];
 			vkEntityDynamicVert_t *dst = &out[(uint32_t)s * (uint32_t)numVerts + (uint32_t)v];
-			byte color[4];
+			const byte *color;
+			byte computedColor[4];
 			float st[2], baseST[2];
 
-			R_CalcStageColorAlpha( stage, entityColor, baseColor, color );
+			if ( stageInvariant[s] ) {
+				color = stageColor[s];
+			} else {
+				R_CalcStageColorAlpha( stage, entityColor, baseColor, computedColor );
+				color = computedColor;
+			}
 			CalcStageBaseST( stage, &base[v], localViewOrigin, baseST );
 			R_CalcStageTexCoord( stage, baseST[0], baseST[1], deformed, shaderTexCoord, st );
 
@@ -1036,15 +1052,28 @@ static void WriteLerpMultiTexVertices( const shader_t *shader, const byte *entit
 	const shaderStage_t *stage0 = &shader->stages[0];
 	const shaderStage_t *stage1 = &shader->stages[1];
 	static const byte baseColor[4] = { 255, 255, 255, 255 };
+
+	qboolean stage0Invariant = R_StageColorAlphaIsVertexInvariant( stage0 );
+	byte stage0Color[4];
 	int v;
+
+	if ( stage0Invariant ) {
+		R_CalcStageColorAlpha( stage0, entityColor, baseColor, stage0Color );
+	}
 
 	for ( v = 0; v < numVerts; v++ ) {
 		float deformed[3];
-		byte color[4];
+		const byte *color;
+		byte computedColor[4];
 		float st0[2], st1[2], baseST0[2], baseST1[2];
 
 		R_DeformPosition( shader, base[v].pos, NULL, 0.0f, deformed ); // no per-vertex normal here -- wave/bulge pass through, same as before
-		R_CalcStageColorAlpha( stage0, entityColor, baseColor, color );
+		if ( stage0Invariant ) {
+			color = stage0Color;
+		} else {
+			R_CalcStageColorAlpha( stage0, entityColor, baseColor, computedColor );
+			color = computedColor;
+		}
 		CalcStageBaseST( stage0, &base[v], localViewOrigin, baseST0 );
 		CalcStageBaseST( stage1, &base[v], localViewOrigin, baseST1 );
 		R_CalcStageTexCoord( stage0, baseST0[0], baseST0[1], deformed, shaderTexCoord, st0 );
@@ -1543,9 +1572,10 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 					}
 
 					if ( dbgWeapon ) {
-						ri.Printf( PRINT_ALL, "  MD3 surf '%s' numVerts=%d numTriangles=%d numShaders=%d shader='%s' stages=%d idxWrite=%u\n",
+						ri.Printf( PRINT_ALL, "  MD3 surf '%s' numVerts=%d numTriangles=%d numShaders=%d shader='%s' stages=%d idxWrite=%u needsRealPos=%d castsShadow=%d\n",
 							surf->name, surf->numVerts, surf->numTriangles, surf->numShaders,
-							shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
+							shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite,
+							ShaderNeedsRealVertexPosition( shaderPtr, qtrue ), castsShadow );
 					}
 
 					vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );

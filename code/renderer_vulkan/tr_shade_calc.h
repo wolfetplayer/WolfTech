@@ -17,6 +17,8 @@ image_t *R_GetStageImage( const shaderStage_t *stage );
 void R_CalcStageColorAlpha( const shaderStage_t *stage, const byte *entityColor,
 							 const byte baseColor[4], byte outColor[4] );
 
+qboolean R_StageColorAlphaIsVertexInvariant( const shaderStage_t *stage );
+
 // worldPos is the vertex's world-space xyz (TMOD_TURBULENT wiggles by position, not just by UV).
 // entityTranslate is refEntity_t.shaderTexCoord (TMOD_ENTITY_TRANSLATE's scroll offset), or NULL where
 // there's no entity context (world surfaces, scene polys).

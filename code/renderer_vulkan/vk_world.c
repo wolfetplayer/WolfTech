@@ -806,6 +806,14 @@ static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const 
 		stage0 = &stage0Local;
 	}
 
+
+	qboolean stage0Invariant = R_StageColorAlphaIsVertexInvariant( stage0 );
+	byte stage0Color[4];
+	if ( stage0Invariant ) {
+		static const byte dummyBaseColor[4] = { 255, 255, 255, 255 }; // never read when stage0Invariant -- see R_StageColorAlphaIsVertexInvariant's contract
+		R_CalcStageColorAlpha( stage0, NULL, dummyBaseColor, stage0Color );
+	}
+
 	for ( j = 0; j < numRefs; j++ ) {
 		const worldSurfRef_t *ref = &refs[j];
 		uint32_t k;
@@ -840,12 +848,18 @@ static void ExpandAndDrawStage0( const worldSurfRef_t *refs, int numRefs, const 
 			vkWorldVertex_t *dst = &s_dynLMMapped[s_dynLMRegionBase + s_dynLMWriteOffset++];
 			vec3_t normal;
 			float deformed[3];
-			byte color[4];
+			const byte *color;
+			byte computedColor[4];
 			float uv[2];
 
 			unpack_snorm16_3( src->normal, normal );
 			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
-			R_CalcStageColorAlpha( stage0, NULL, src->color, color );
+			if ( stage0Invariant ) {
+				color = stage0Color;
+			} else {
+				R_CalcStageColorAlpha( stage0, NULL, src->color, computedColor );
+				color = computedColor;
+			}
 			R_CalcStageTexCoord( stage0, src->uv[0], src->uv[1], deformed, NULL, uv );
 
 			dst->pos[0] = deformed[0]; dst->pos[1] = deformed[1]; dst->pos[2] = deformed[2];
@@ -868,6 +882,12 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 	qboolean runOpen = qfalse;
 	uint32_t runStart = 0;
 	int j;
+	qboolean stageInvariant = R_StageColorAlphaIsVertexInvariant( stage );
+	byte stageColor[4];
+	if ( stageInvariant ) {
+		static const byte dummyBaseColor[4] = { 255, 255, 255, 255 }; // never read when stageInvariant -- see R_StageColorAlphaIsVertexInvariant's contract
+		R_CalcStageColorAlpha( stage, NULL, dummyBaseColor, stageColor );
+	}
 
 	for ( j = 0; j < numRefs; j++ ) {
 		const worldSurfRef_t *ref = &refs[j];
@@ -903,12 +923,18 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 			vk2d_vertex_t *dst = &s_dyn2DMapped[s_dyn2DRegionBase + s_dyn2DWriteOffset++];
 			vec3_t normal;
 			float deformed[3];
-			byte color[4];
+			const byte *color;
+			byte computedColor[4];
 			float uv[2];
 
 			unpack_snorm16_3( src->normal, normal );
 			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
-			R_CalcStageColorAlpha( stage, NULL, src->color, color );
+			if ( stageInvariant ) {
+				color = stageColor;
+			} else {
+				R_CalcStageColorAlpha( stage, NULL, src->color, computedColor );
+				color = computedColor;
+			}
 			if ( stage->isLightmap ) {
 				R_CalcStageTexCoord( stage, src->lmUv[0], src->lmUv[1], deformed, NULL, uv );
 			} else {
