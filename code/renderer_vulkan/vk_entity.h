@@ -4,6 +4,7 @@
 #define VK_ENTITY_H_
 
 #include "tr_model.h" // model_t
+#include "tr_main.h" // cullPlane_t, NUM_FRUSTUM_PLANES
 
 void vk_entity_init( void );
 void vk_entity_shutdown( void );
@@ -17,7 +18,7 @@ void vk_entity_begin_frame( void );
 // qtrue if this entity's model has real mesh data this module can draw (MD3/MDC/MDS/MDM).
 qboolean vk_entity_has_mesh( const refEntity_t *ent );
 
-// Draws every scene entity for which vk_entity_has_mesh is true (fogPush is tr_fog.h's push-constant block).
-void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16], const float fogPush[12] );
+void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16], const float fogPush[12],
+						  const cullPlane_t frustum[NUM_FRUSTUM_PLANES] );
 
 #endif // VK_ENTITY_H_

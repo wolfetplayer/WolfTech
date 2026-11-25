@@ -1422,11 +1422,62 @@ static qboolean ShaderNeedsRealVertexPosition( const shader_t *shader, qboolean 
 	return qfalse;
 }
 
-// Temporary diagnostic for the weapon-visibility investigation: set r_vk_debugWeapon 1 and check rtcwconsole.log. Remove once root-caused.
+static qboolean SphereFullyOutsideFrustum( const vec3_t center, float radius, const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
+	int i;
+	for ( i = 0; i < NUM_FRUSTUM_PLANES; i++ ) {
+		if ( DotProduct( frustum[i].normal, center ) - frustum[i].dist < -radius ) {
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
+static qboolean MD3StyleFrameCulled( const refEntity_t *ent, const vec3_t newLocalOrigin, float newRadius,
+									   const vec3_t oldLocalOrigin, float oldRadius, const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
+	vec3_t worldNew, worldOld;
+
+	if ( ent->nonNormalizedAxes ) {
+		return qfalse;
+	}
+
+	worldNew[0] = ent->origin[0] + newLocalOrigin[0] * ent->axis[0][0] + newLocalOrigin[1] * ent->axis[1][0] + newLocalOrigin[2] * ent->axis[2][0];
+	worldNew[1] = ent->origin[1] + newLocalOrigin[0] * ent->axis[0][1] + newLocalOrigin[1] * ent->axis[1][1] + newLocalOrigin[2] * ent->axis[2][1];
+	worldNew[2] = ent->origin[2] + newLocalOrigin[0] * ent->axis[0][2] + newLocalOrigin[1] * ent->axis[1][2] + newLocalOrigin[2] * ent->axis[2][2];
+
+	if ( !SphereFullyOutsideFrustum( worldNew, newRadius, frustum ) ) {
+		return qfalse; // new frame alone is potentially visible -- no need to even check the old one
+	}
+
+	worldOld[0] = ent->origin[0] + oldLocalOrigin[0] * ent->axis[0][0] + oldLocalOrigin[1] * ent->axis[1][0] + oldLocalOrigin[2] * ent->axis[2][0];
+	worldOld[1] = ent->origin[1] + oldLocalOrigin[0] * ent->axis[0][1] + oldLocalOrigin[1] * ent->axis[1][1] + oldLocalOrigin[2] * ent->axis[2][1];
+	worldOld[2] = ent->origin[2] + oldLocalOrigin[0] * ent->axis[0][2] + oldLocalOrigin[1] * ent->axis[1][2] + oldLocalOrigin[2] * ent->axis[2][2];
+
+	return SphereFullyOutsideFrustum( worldOld, oldRadius, frustum );
+}
+
+static qboolean EntityFrustumCulled_MD3( const refEntity_t *ent, const md3Header_t *header, int frame, int oldframe, const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
+	const md3Frame_t *frames = (const md3Frame_t *)( (const byte *)header + header->ofsFrames );
+	return MD3StyleFrameCulled( ent, frames[frame].localOrigin, frames[frame].radius, frames[oldframe].localOrigin, frames[oldframe].radius, frustum );
+}
+
+static qboolean EntityFrustumCulled_MDC( const refEntity_t *ent, const mdcHeader_t *header, int frame, int oldframe, const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
+	const md3Frame_t *frames = (const md3Frame_t *)( (const byte *)header + header->ofsFrames );
+	return MD3StyleFrameCulled( ent, frames[frame].localOrigin, frames[frame].radius, frames[oldframe].localOrigin, frames[oldframe].radius, frustum );
+}
+
+
+static qboolean EntityFrustumCulled_MDS( const refEntity_t *ent, const mdsHeader_t *header, int frame, int oldframe, const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
+	size_t frameSize = sizeof( mdsFrame_t ) - sizeof( mdsBoneFrameCompressed_t ) + (size_t)header->numBones * sizeof( mdsBoneFrameCompressed_t );
+	const mdsFrame_t *newF = (const mdsFrame_t *)( (const byte *)header + header->ofsFrames + (size_t)frame * frameSize );
+	const mdsFrame_t *oldF = (const mdsFrame_t *)( (const byte *)header + header->ofsFrames + (size_t)oldframe * frameSize );
+	return MD3StyleFrameCulled( ent, newF->localOrigin, newF->radius, oldF->localOrigin, oldF->radius, frustum );
+}
+
 static cvar_t *r_vk_debugWeapon;
 static int s_weaponDbgFrame = 0;
 
-void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16], const float fogPush[12] ) {
+void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const float mvp[16], const float fogPush[12],
+						  const cullPlane_t frustum[NUM_FRUSTUM_PLANES] ) {
 	int e, s;
 	qboolean dbgFrame;
 	// Shared across every entity's immediate lerp/skin draws below, and the final reset at the bottom of this function, so the view-weapon depth hack never goes stale between entities.
@@ -1473,53 +1524,56 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			float push_data[32];
 			if ( frame < 0 || frame >= model->md3->numFrames ) frame = 0;
 			if ( oldframe < 0 || oldframe >= model->md3->numFrames ) oldframe = 0;
-			if ( animData ) {
-				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
-			}
 
-			for ( s = 0; s < model->md3->numSurfaces; s++ ) {
-				qhandle_t shaderHandle = ResolveShader( ent->customShader, ent->customSkin, surf->name,
-					surf->numShaders, (const byte *)surf + surf->ofsShaders );
-				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
-
-				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
-					goto nextMD3;
-				}
-				if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
-					goto nextMD3;
+			if ( !EntityFrustumCulled_MD3( ent, model->md3, frame, oldframe, frustum ) ) {
+				if ( animData ) {
+					BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
 				}
 
-				if ( dbgWeapon ) {
-					ri.Printf( PRINT_ALL, "  MD3 surf '%s' numVerts=%d numTriangles=%d numShaders=%d shader='%s' stages=%d idxWrite=%u\n",
-						surf->name, surf->numVerts, surf->numTriangles, surf->numShaders,
-						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
-				}
+				for ( s = 0; s < model->md3->numSurfaces; s++ ) {
+					qhandle_t shaderHandle = ResolveShader( ent->customShader, ent->customSkin, surf->name,
+						surf->numShaders, (const byte *)surf + surf->ofsShaders );
+					shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
 
-				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				if ( ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
-					LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
-				} else if ( castsShadow ) {
-					LerpSurfacePositionOnly( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
-				} else {
-					WriteMD3SurfaceUVOnly( surf, s_baseScratch );
-				}
-				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
+					if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+						goto nextMD3;
+					}
+					if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
+						goto nextMD3;
+					}
 
-				if ( animData && s < animData->numSurfaces ) {
-					const entitySurfAnimBuffer_t *animBuf = &animData->surfaces[s];
-					VkDeviceSize frameOffset = (VkDeviceSize)frame * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
-					VkDeviceSize oldframeOffset = (VkDeviceSize)oldframe * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
-					DrawLerpSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
-						(const byte *)surf + surf->ofsTriangles, s_baseScratch, animBuf, frameOffset, oldframeOffset,
-						push_data, localViewOrigin, &curDepthHack );
-				}
-				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
-					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
-						(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
-				}
+					if ( dbgWeapon ) {
+						ri.Printf( PRINT_ALL, "  MD3 surf '%s' numVerts=%d numTriangles=%d numShaders=%d shader='%s' stages=%d idxWrite=%u\n",
+							surf->name, surf->numVerts, surf->numTriangles, surf->numShaders,
+							shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
+					}
 
-			nextMD3:
-				surf = (const md3Surface_t *)( (const byte *)surf + surf->ofsEnd );
+					vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
+					if ( ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
+						LerpSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+					} else if ( castsShadow ) {
+						LerpSurfacePositionOnly( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+					} else {
+						WriteMD3SurfaceUVOnly( surf, s_baseScratch );
+					}
+					vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
+
+					if ( animData && s < animData->numSurfaces ) {
+						const entitySurfAnimBuffer_t *animBuf = &animData->surfaces[s];
+						VkDeviceSize frameOffset = (VkDeviceSize)frame * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
+						VkDeviceSize oldframeOffset = (VkDeviceSize)oldframe * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
+						DrawLerpSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
+							(const byte *)surf + surf->ofsTriangles, s_baseScratch, animBuf, frameOffset, oldframeOffset,
+							push_data, localViewOrigin, &curDepthHack );
+					}
+					if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
+						vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
+							(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
+					}
+
+				nextMD3:
+					surf = (const md3Surface_t *)( (const byte *)surf + surf->ofsEnd );
+				}
 			}
 		} else if ( model->type == MOD_MDC && model->mdc ) {
 			const mdcSurface_t *surf = (const mdcSurface_t *)( (const byte *)model->mdc + model->mdc->ofsSurfaces );
@@ -1528,54 +1582,57 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			float push_data[32];
 			if ( frame < 0 || frame >= model->mdc->numFrames ) frame = 0;
 			if ( oldframe < 0 || oldframe >= model->mdc->numFrames ) oldframe = 0;
-			if ( animData ) {
-				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
-			}
 
-			for ( s = 0; s < model->mdc->numSurfaces; s++ ) {
-				qhandle_t shaderHandle = ResolveShader( ent->customShader, ent->customSkin, surf->name,
-					surf->numShaders, (const byte *)surf + surf->ofsShaders );
-				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
-
-				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
-					goto nextMDC;
-				}
-				// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
-				if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
-					goto nextMDC;
+			if ( !EntityFrustumCulled_MDC( ent, model->mdc, frame, oldframe, frustum ) ) {
+				if ( animData ) {
+					BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data );
 				}
 
-				if ( dbgWeapon ) {
-					ri.Printf( PRINT_ALL, "  MDC surf '%s' numVerts=%d numTriangles=%d numShaders=%d numCompFrames=%d shader='%s' stages=%d idxWrite=%u\n",
-						surf->name, surf->numVerts, surf->numTriangles, surf->numShaders, surf->numCompFrames,
-						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
-				}
+				for ( s = 0; s < model->mdc->numSurfaces; s++ ) {
+					qhandle_t shaderHandle = ResolveShader( ent->customShader, ent->customSkin, surf->name,
+						surf->numShaders, (const byte *)surf + surf->ofsShaders );
+					shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
 
-				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				if ( ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
-					LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch ); // see the MD3 branch's comment above
-				} else if ( castsShadow ) {
-					LerpMDCSurfacePositionOnly( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
-				} else {
-					WriteMDCSurfaceUVOnly( surf, s_baseScratch );
-				}
-				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
+					if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+						goto nextMDC;
+					}
+					// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
+					if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
+						goto nextMDC;
+					}
 
-				if ( animData && s < animData->numSurfaces ) {
-					const entitySurfAnimBuffer_t *animBuf = &animData->surfaces[s];
-					VkDeviceSize frameOffset = (VkDeviceSize)frame * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
-					VkDeviceSize oldframeOffset = (VkDeviceSize)oldframe * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
-					DrawLerpSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
-						(const byte *)surf + surf->ofsTriangles, s_baseScratch, animBuf, frameOffset, oldframeOffset,
-						push_data, localViewOrigin, &curDepthHack );
-				}
-				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
-					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
-						(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
-				}
+					if ( dbgWeapon ) {
+						ri.Printf( PRINT_ALL, "  MDC surf '%s' numVerts=%d numTriangles=%d numShaders=%d numCompFrames=%d shader='%s' stages=%d idxWrite=%u\n",
+							surf->name, surf->numVerts, surf->numTriangles, surf->numShaders, surf->numCompFrames,
+							shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
+					}
 
-			nextMDC:
-				surf = (const mdcSurface_t *)( (const byte *)surf + surf->ofsEnd );
+					vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
+					if ( ShaderNeedsRealVertexPosition( shaderPtr, qtrue ) ) {
+						LerpMDCSurfaceVerts( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch ); // see the MD3 branch's comment above
+					} else if ( castsShadow ) {
+						LerpMDCSurfacePositionOnly( ent, surf, frame, oldframe, ent->backlerp, s_baseScratch );
+					} else {
+						WriteMDCSurfaceUVOnly( surf, s_baseScratch );
+					}
+					vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
+
+					if ( animData && s < animData->numSurfaces ) {
+						const entitySurfAnimBuffer_t *animBuf = &animData->surfaces[s];
+						VkDeviceSize frameOffset = (VkDeviceSize)frame * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
+						VkDeviceSize oldframeOffset = (VkDeviceSize)oldframe * animBuf->numVertsPerFrame * sizeof( vkEntityFrameVert_t );
+						DrawLerpSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
+							(const byte *)surf + surf->ofsTriangles, s_baseScratch, animBuf, frameOffset, oldframeOffset,
+							push_data, localViewOrigin, &curDepthHack );
+					}
+					if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
+						vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
+							(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
+					}
+
+				nextMDC:
+					surf = (const mdcSurface_t *)( (const byte *)surf + surf->ofsEnd );
+				}
 			}
 		} else if ( model->type == MOD_MDS && model->mds ) {
 			const mdsSurface_t *surf = (const mdsSurface_t *)( (const byte *)model->mds + model->mds->ofsSurfaces );
@@ -1583,52 +1640,57 @@ void vk_entity_draw_all( const refEntity_t *entities, int numEntities, const flo
 			float push_data[32];
 			uint32_t boneUboDynOffset = 0;
 			qboolean haveBones = qfalse;
+			int cullFrame = ent->frame, cullOldframe = ent->oldframe;
+			if ( cullFrame < 0 || cullFrame >= model->mds->numFrames ) cullFrame = 0;
+			if ( cullOldframe < 0 || cullOldframe >= model->mds->numFrames ) cullOldframe = 0;
 
-			if ( animData ) {
-				BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data ); // backlerp (push_data[28]) is unused by entity_skin.vert, harmless
-				vk_profile_cpu_zone_begin( VKPROF_ENTITY_BONES );
-				haveBones = WriteBoneMatricesMDS( model->mds, ent, &boneUboDynOffset );
-				vk_profile_cpu_zone_end( VKPROF_ENTITY_BONES );
-			}
-
-			for ( s = 0; s < model->mds->numSurfaces; s++ ) {
-				qhandle_t shaderHandle = ResolveShaderDirect( ent->customShader, ent->customSkin, surf->name, surf->shaderIndex );
-				shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
-
-				if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
-					goto nextMDS;
-				}
-				// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
-				if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
-					goto nextMDS;
+			if ( !EntityFrustumCulled_MDS( ent, model->mds, cullFrame, cullOldframe, frustum ) ) {
+				if ( animData ) {
+					BuildLerpPushConstants( ent, mvp, fogPush, ambient, directed, lightDirWorld, push_data ); // backlerp (push_data[28]) is unused by entity_skin.vert, harmless
+					vk_profile_cpu_zone_begin( VKPROF_ENTITY_BONES );
+					haveBones = WriteBoneMatricesMDS( model->mds, ent, &boneUboDynOffset );
+					vk_profile_cpu_zone_end( VKPROF_ENTITY_BONES );
 				}
 
-				if ( dbgWeapon ) {
-					ri.Printf( PRINT_ALL, "  MDS surf '%s' numVerts=%d numTriangles=%d shader='%s' stages=%d idxWrite=%u\n",
-						surf->name, surf->numVerts, surf->numTriangles,
-						shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
-				}
+				for ( s = 0; s < model->mds->numSurfaces; s++ ) {
+					qhandle_t shaderHandle = ResolveShaderDirect( ent->customShader, ent->customSkin, surf->name, surf->shaderIndex );
+					shader_t *shaderPtr = R_GetShaderByHandle( shaderHandle );
 
-				vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
-				if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qfalse ) ) {
-					LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
-				} else {
-					WriteMDSSurfaceUVOnly( surf, s_baseScratch );
-				}
-				vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
+					if ( surf->numVerts > SKIN_SCRATCH_VERTS ) {
+						goto nextMDS;
+					}
+					// See the MD3 branch's comment above re: skipping an unresolved blink shader too.
+					if ( !Q_stricmp( surf->name, "h_blink" ) && ( !( ent->renderfx & RF_BLINK ) || shaderHandle == 0 ) ) {
+						goto nextMDS;
+					}
 
-				if ( haveBones && s < animData->numSurfaces ) {
-					DrawSkinSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
-						(const byte *)surf + surf->ofsTriangles, s_baseScratch, &animData->surfaces[s],
-						push_data, boneUboDynOffset, &curDepthHack );
-				}
-				if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
-					vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
-						(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
-				}
+					if ( dbgWeapon ) {
+						ri.Printf( PRINT_ALL, "  MDS surf '%s' numVerts=%d numTriangles=%d shader='%s' stages=%d idxWrite=%u\n",
+							surf->name, surf->numVerts, surf->numTriangles,
+							shaderPtr ? shaderPtr->name : "(null)", shaderPtr ? shaderPtr->numStages : -1, s_idxWrite );
+					}
 
-			nextMDS:
-				surf = (const mdsSurface_t *)( (const byte *)surf + surf->ofsEnd );
+					vk_profile_cpu_zone_begin( VKPROF_ENTITY_LERP );
+					if ( castsShadow || ShaderNeedsRealVertexPosition( shaderPtr, qfalse ) ) {
+						LerpMDSSurfaceVerts( ent, model->mds, surf, s_baseScratch );
+					} else {
+						WriteMDSSurfaceUVOnly( surf, s_baseScratch );
+					}
+					vk_profile_cpu_zone_end( VKPROF_ENTITY_LERP );
+
+					if ( haveBones && s < animData->numSurfaces ) {
+						DrawSkinSurface( shaderPtr, ent, surf->numVerts, surf->numTriangles,
+							(const byte *)surf + surf->ofsTriangles, s_baseScratch, &animData->surfaces[s],
+							push_data, boneUboDynOffset, &curDepthHack );
+					}
+					if ( castsShadow && shaderPtr && shaderPtr->numStages >= 1 && !shaderPtr->stages[0].blendEnabled ) {
+						vk_shadows_add_surface( s_baseScratch[0].pos, sizeof( s_baseScratch[0] ), surf->numVerts,
+							(const byte *)surf + surf->ofsTriangles, surf->numTriangles );
+					}
+
+				nextMDS:
+					surf = (const mdsSurface_t *)( (const byte *)surf + surf->ofsEnd );
+				}
 			}
 		} else if ( model->type == MOD_MDM && model->mdm ) {
 			const mdmSurface_t *surf = (const mdmSurface_t *)( (const byte *)model->mdm + model->mdm->ofsSurfaces );

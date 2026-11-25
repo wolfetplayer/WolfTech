@@ -225,7 +225,10 @@ static void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, fl
 // The guts of RE_RenderScene -- see tr_main.h; tr_portal.c calls this recursively for a mirror/portal's destination view.
 void R_RenderViewInternal( const refdef_t *fd ) {
 	float viewMatrix[16], projMatrix[16], viewProj[16], fogPush[12];
+	cullPlane_t frustum[NUM_FRUSTUM_PLANES];
 	qboolean isSkyboxPortalScene = ( fd->rdflags & RDF_SKYBOXPORTAL ) != 0;
+
+	R_SetupFrustumPlanes( fd, frustum );
 
 	R_SetFogFrameTime( fd->time );
 	R_SetShaderTime( fd->time );
@@ -275,7 +278,7 @@ void R_RenderViewInternal( const refdef_t *fd ) {
 		int numEntities;
 		const refEntity_t *entities = R_GetSceneEntities( &numEntities );
 		vk_profile_zone_begin( VKPROF_ENTITIES );
-		vk_entity_draw_all( entities, numEntities, viewProj, fogPush );
+		vk_entity_draw_all( entities, numEntities, viewProj, fogPush, frustum );
 		vk_draw3d_entity_markers( entities, numEntities, 16.0f, viewProj, fogPush );
 		vk_profile_zone_end( VKPROF_ENTITIES );
 	}
