@@ -704,8 +704,9 @@ VkPipeline vk_getPipelineSkyCloud( VkBlendFactor srcBlend, VkBlendFactor dstBlen
 
 	s_skyCloudSrc[s_numSkyCloudPipelines] = srcBlend;
 	s_skyCloudDst[s_numSkyCloudPipelines] = dstBlend;
+
 	s_skyCloudPipelines[s_numSkyCloudPipelines] = create_pipeline_ex( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &specInfo,
-		&binding2d, 1, attribs2d, 3, VK_TRUE, srcBlend, dstBlend, VK_FALSE, VK_CULL_MODE_NONE,
+		&binding2d, 1, attribs2d, 3, VK_TRUE, srcBlend, dstBlend, VK_FALSE, VK_CULL_MODE_FRONT_BIT,
 		VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE,
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 		VK_FALSE, VK_COMPARE_OP_ALWAYS, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP );
@@ -823,9 +824,9 @@ void vk_create3DPipelines( void ) {
 				&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, vk_flipCullMode( cull ) );
 		}
 	}
-	// Depth test/write off so draw order alone keeps the sky behind everything -- see vk_sky.c.
+
 	vk.pipeline_sky = create_pipeline( vk_single_texture_vs, vk_single_texture_fs, vk.pipeline_layout, &skySpecInfo,
-		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
+		&binding2d, attribs2d, 3, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_FRONT_BIT );
 
 	// r_showtris: VK_POLYGON_MODE_LINE needs fillModeNonSolid, which not every device supports.
 	vk.pipeline_world_wireframe = vk.features.fillModeNonSolid ?
