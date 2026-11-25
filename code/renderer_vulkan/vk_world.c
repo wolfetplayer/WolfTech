@@ -23,12 +23,14 @@
 // Same falloff shape vk_entity.c's ComputeEntityTint uses for dlight contributions.
 #define DLIGHT_AT_RADIUS 16.0f
 #define DLIGHT_MINIMUM_RADIUS 16.0f
+#define DLIGHT_CULL_RADIUS_FACTOR 8.0f
 
 // One entry per drawable surface; consecutive entries in a batch are contiguous in s_cachedIndices.
 typedef struct {
 	int surfaceIndex;
 	uint32_t firstIndex;
 	uint32_t indexCount;
+	vec3_t mins, maxs; // world-space AABB of this surface's static (undeformed) vertices; used to cull the per-vertex dlight pass
 } worldSurfRef_t;
 
 // Keyed by (shader, lightmapIdx); lightmapIdx always points at a real lightmap or the synthetic white fallback.
@@ -664,6 +666,16 @@ void vk_world_build( void ) {
 			surfRefs[numSurfRefs].surfaceIndex = sIdx;
 			surfRefs[numSurfRefs].firstIndex = firstIndex;
 			surfRefs[numSurfRefs].indexCount = indexCount;
+			{
+				vec3_t sMins, sMaxs;
+				uint32_t k;
+				ClearBounds( sMins, sMaxs );
+				for ( k = 0; k < indexCount; k++ ) {
+					AddPointToBounds( verts[indexes[firstIndex + k]].pos, sMins, sMaxs );
+				}
+				VectorCopy( sMins, surfRefs[numSurfRefs].mins );
+				VectorCopy( sMaxs, surfRefs[numSurfRefs].maxs );
+			}
 			numSurfRefs++;
 			batches[numBatches - 1].numSurfRefs++;
 		}
@@ -914,11 +926,7 @@ static void ExpandAndDrawExtraStage( const worldSurfRef_t *refs, int numRefs, co
 	}
 }
 
-// Additive dlight pass: diffuse texture modulated by the summed per-vertex dlight contribution,
-// blended ONE/ONE on top of the already-drawn lit surface. World surfaces got zero dlight effect
-// before this; this is a per-vertex distance falloff (same shape as vk_entity.c's ComputeEntityTint),
-// not true projected-texture dlights like vkQuake3's ProjectDlightTexture -- a scoped simplification,
-// not a faked feature: it's real per-vertex light falloff, just not a radial-blob projection.
+
 static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, const shader_t *shader, const dlight_t *dlights, int numDlights ) {
 	qboolean runOpen = qfalse;
 	uint32_t runStart = 0;
@@ -927,8 +935,24 @@ static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, 
 	for ( j = 0; j < numRefs; j++ ) {
 		const worldSurfRef_t *ref = &refs[j];
 		uint32_t k;
+		uint32_t activeMask = 0;
+		int lightIdx;
 
 		if ( !R_SurfaceIsVisible( ref->surfaceIndex ) ) {
+			if ( runOpen ) {
+				qvkCmdDraw( vk.command_buffer, s_dynDlightWriteOffset - runStart, 1, runStart, 0 );
+				runOpen = qfalse;
+			}
+			continue;
+		}
+
+		for ( lightIdx = 0; lightIdx < numDlights; lightIdx++ ) {
+			if ( BoundsIntersectSphere( ref->mins, ref->maxs, dlights[lightIdx].origin, dlights[lightIdx].radius * DLIGHT_CULL_RADIUS_FACTOR ) ) {
+				activeMask |= 1u << lightIdx;
+			}
+		}
+		if ( activeMask == 0 ) {
+			// no dlight reaches this surface -- same treatment as "not visible": skip the CPU deform+draw entirely
 			if ( runOpen ) {
 				qvkCmdDraw( vk.command_buffer, s_dynDlightWriteOffset - runStart, 1, runStart, 0 );
 				runOpen = qfalse;
@@ -959,7 +983,7 @@ static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, 
 			vec3_t normal;
 			float deformed[3];
 			vec3_t sum = { 0.0f, 0.0f, 0.0f };
-			int lightIdx, r, g, b;
+			int r, g, b;
 
 			unpack_snorm16_3( src->normal, normal );
 			R_DeformPosition( shader, src->pos, normal, src->uv[0], deformed );
@@ -967,6 +991,10 @@ static void ExpandAndDrawWorldDlights( const worldSurfRef_t *refs, int numRefs, 
 			for ( lightIdx = 0; lightIdx < numDlights; lightIdx++ ) {
 				vec3_t dir;
 				float dist, power, d;
+
+				if ( !( activeMask & ( 1u << lightIdx ) ) ) {
+					continue;
+				}
 
 				VectorSubtract( dlights[lightIdx].origin, deformed, dir );
 				dist = VectorNormalize( dir );
