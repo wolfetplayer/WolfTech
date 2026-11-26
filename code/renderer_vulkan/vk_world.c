@@ -539,6 +539,93 @@ static void BuildFoliageCache( void ) {
 	ri.Printf( PRINT_ALL, "...vk_world_build: %d foliage surfaces, %d instances\n", outSurf, outInst );
 }
 
+static void PrewarmStagePipelines( const shader_t *shader, int firstStage ) {
+	VkCullModeFlags cull = vk_cullModeForShader( shader->cullType );
+	int s;
+
+	for ( s = firstStage; s < shader->numStages; s++ ) {
+		const shaderStage_t *stage = &shader->stages[s];
+
+		vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+			cull, stage->alphaTestFunc, VK_FALSE, VK_FALSE, shader->polygonOffset, stage->depthWrite );
+		vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+			cull, stage->alphaTestFunc, VK_TRUE, VK_FALSE, shader->polygonOffset, stage->depthWrite );
+		vk_getPipeline3D( sizeof( vk2d_vertex_t ), stage->blendEnabled, stage->srcBlend, stage->dstBlend,
+			cull, stage->alphaTestFunc, VK_TRUE, VK_TRUE, shader->polygonOffset, stage->depthWrite );
+	}
+}
+
+static void PrewarmWorldBatchPipelines( void ) {
+	int i;
+
+	for ( i = 0; i < s_numBatches; i++ ) {
+		shader_t *shader = R_GetShaderByHandle( s_batches[i].shader );
+		VkCullModeFlags cull;
+
+		if ( !shader || shader->numStages < 1 ) {
+			continue;
+		}
+
+		if ( IsTransparentBatch( shader ) ) {
+			PrewarmStagePipelines( shader, 0 );
+			continue;
+		}
+
+		PrewarmStagePipelines( shader, shader->stages[0].isLightmap ? 0 : 1 );
+
+		cull = vk_cullModeForShader( shader->cullType );
+		vk_getPipeline3D( sizeof( vk2d_vertex_t ), VK_TRUE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE,
+			cull, shader->stages[0].alphaTestFunc, VK_FALSE, VK_FALSE, VK_FALSE, VK_FALSE );
+		vk_getPipeline3D( sizeof( vk2d_vertex_t ), VK_TRUE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE,
+			cull, shader->stages[0].alphaTestFunc, VK_TRUE, VK_FALSE, VK_FALSE, VK_FALSE );
+		vk_getPipeline3D( sizeof( vk2d_vertex_t ), VK_TRUE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE,
+			cull, shader->stages[0].alphaTestFunc, VK_TRUE, VK_TRUE, VK_FALSE, VK_FALSE );
+	}
+}
+
+static void PrewarmFoliagePipelines( void ) {
+	int i;
+
+	for ( i = 0; i < s_numFoliageSurfs; i++ ) {
+		shader_t *shader = R_GetShaderByHandle( s_foliageSurfs[i].shader );
+
+		if ( !shader || shader->numStages < 1 ) {
+			continue;
+		}
+		PrewarmStagePipelines( shader, 0 );
+	}
+}
+
+static void PrewarmBrushEntityPipelines( void ) {
+	int m;
+
+	for ( m = 1; m < tr_world.numSubmodels; m++ ) {
+		const dmodel_t *submodel = &tr_world.submodels[m];
+		int surfIdx;
+
+		for ( surfIdx = submodel->firstSurface; surfIdx < submodel->firstSurface + submodel->numSurfaces; surfIdx++ ) {
+			const bspSurface_t *surf = &tr_world.surfaces[surfIdx];
+			shader_t *shader;
+
+			if ( tr_world.shaders[surf->shaderNum].surfaceFlags & SURF_NODRAW ) {
+				continue;
+			}
+			shader = R_GetShaderByHandle( tr_world.shaders[surf->shaderNum].shader );
+			if ( !shader || shader->isSky || shader->numStages < 1 ) {
+				continue;
+			}
+
+			PrewarmStagePipelines( shader, ( shader->stages[0].blendEnabled && shader->explicitlyDefined ) ? 0 : 1 );
+		}
+	}
+}
+
+static void PrewarmPipelines( void ) {
+	PrewarmWorldBatchPipelines();
+	PrewarmFoliagePipelines();
+	PrewarmBrushEntityPipelines();
+}
+
 void vk_world_build( void ) {
 	vkWorldVertex_t *verts;
 	uint32_t *indexes;
@@ -839,6 +926,8 @@ void vk_world_build( void ) {
 	s_numBatches = numBatches;
 	s_surfRefs = surfRefs;
 	s_built = qtrue;
+
+	PrewarmPipelines();
 
 	ri.Printf( PRINT_ALL, "...vk_world_build: %d verts, %d indexes, %d batches, %d lightmaps\n",
 			   (int)nextVertSlot, (int)writeOffset, numBatches, tr_world.numLightmaps );

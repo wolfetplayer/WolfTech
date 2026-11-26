@@ -69,6 +69,9 @@ void vk_destroyFrameBuffers( void );
 void vk_createPipelineLayout( void );
 void vk_destroyPipelineLayout( void );
 
+void vk_createPipelineCache( void );
+void vk_destroyPipelineCache( void );
+
 void vk_create2DPipelines( void );
 void vk_destroy2DPipelines( void );
 

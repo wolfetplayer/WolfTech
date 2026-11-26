@@ -73,6 +73,8 @@ extern PFN_vkCreateGraphicsPipelines                   qvkCreateGraphicsPipeline
 extern PFN_vkCreateImage                               qvkCreateImage;
 extern PFN_vkCreateImageView                           qvkCreateImageView;
 extern PFN_vkCreatePipelineLayout                      qvkCreatePipelineLayout;
+extern PFN_vkCreatePipelineCache                       qvkCreatePipelineCache;
+extern PFN_vkGetPipelineCacheData                      qvkGetPipelineCacheData;
 extern PFN_vkCreateRenderPass                          qvkCreateRenderPass;
 extern PFN_vkCreateSampler                             qvkCreateSampler;
 extern PFN_vkCreateSemaphore                           qvkCreateSemaphore;
@@ -91,6 +93,7 @@ extern PFN_vkDestroyImage                              qvkDestroyImage;
 extern PFN_vkDestroyImageView                          qvkDestroyImageView;
 extern PFN_vkDestroyPipeline                           qvkDestroyPipeline;
 extern PFN_vkDestroyPipelineLayout                     qvkDestroyPipelineLayout;
+extern PFN_vkDestroyPipelineCache                      qvkDestroyPipelineCache;
 extern PFN_vkDestroyRenderPass                         qvkDestroyRenderPass;
 extern PFN_vkDestroySampler                            qvkDestroySampler;
 extern PFN_vkDestroySemaphore                          qvkDestroySemaphore;
@@ -179,6 +182,8 @@ struct Vk_Instance {
 
 	VkRenderPass render_pass;
 	VkFramebuffer framebuffers[MAX_SWAPCHAIN_IMAGES];
+
+	VkPipelineCache pipeline_cache;
 
 	VkDescriptorPool descriptor_pool;
 	VkDescriptorSetLayout set_layout;

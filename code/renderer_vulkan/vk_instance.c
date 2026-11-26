@@ -77,6 +77,8 @@ PFN_vkCreateGraphicsPipelines                   qvkCreateGraphicsPipelines;
 PFN_vkCreateImage                               qvkCreateImage;
 PFN_vkCreateImageView                           qvkCreateImageView;
 PFN_vkCreatePipelineLayout                      qvkCreatePipelineLayout;
+PFN_vkCreatePipelineCache                       qvkCreatePipelineCache;
+PFN_vkGetPipelineCacheData                      qvkGetPipelineCacheData;
 PFN_vkCreateRenderPass                          qvkCreateRenderPass;
 PFN_vkCreateSampler                             qvkCreateSampler;
 PFN_vkCreateSemaphore                           qvkCreateSemaphore;
@@ -95,6 +97,7 @@ PFN_vkDestroyImage                              qvkDestroyImage;
 PFN_vkDestroyImageView                          qvkDestroyImageView;
 PFN_vkDestroyPipeline                           qvkDestroyPipeline;
 PFN_vkDestroyPipelineLayout                     qvkDestroyPipelineLayout;
+PFN_vkDestroyPipelineCache                      qvkDestroyPipelineCache;
 PFN_vkDestroyRenderPass                         qvkDestroyRenderPass;
 PFN_vkDestroySampler                            qvkDestroySampler;
 PFN_vkDestroySemaphore                          qvkDestroySemaphore;
@@ -522,6 +525,8 @@ static void vk_loadDeviceFunctions( void ) {
 	INIT_DEVICE_FUNCTION( vkCreateImage )
 	INIT_DEVICE_FUNCTION( vkCreateImageView )
 	INIT_DEVICE_FUNCTION( vkCreatePipelineLayout )
+	INIT_DEVICE_FUNCTION( vkCreatePipelineCache )
+	INIT_DEVICE_FUNCTION( vkGetPipelineCacheData )
 	INIT_DEVICE_FUNCTION( vkCreateRenderPass )
 	INIT_DEVICE_FUNCTION( vkCreateSampler )
 	INIT_DEVICE_FUNCTION( vkCreateSemaphore )
@@ -537,6 +542,7 @@ static void vk_loadDeviceFunctions( void ) {
 	INIT_DEVICE_FUNCTION( vkDestroyImageView )
 	INIT_DEVICE_FUNCTION( vkDestroyPipeline )
 	INIT_DEVICE_FUNCTION( vkDestroyPipelineLayout )
+	INIT_DEVICE_FUNCTION( vkDestroyPipelineCache )
 	INIT_DEVICE_FUNCTION( vkDestroyRenderPass )
 	INIT_DEVICE_FUNCTION( vkDestroySampler )
 	INIT_DEVICE_FUNCTION( vkDestroySemaphore )

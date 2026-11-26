@@ -47,6 +47,7 @@ void vk_initialize( void ) {
 	vk_createFrameBuffers( (uint32_t)width, (uint32_t)height );
 
 	vk_createPipelineLayout();
+	vk_createPipelineCache();
 
 	vk_loadShaderModules();
 
@@ -83,6 +84,7 @@ void vk_shutdown( void ) {
 
 	vk_destroyShaderModules();
 
+	vk_destroyPipelineCache();
 	vk_destroyPipelineLayout(); // frees vk.descriptor_pool
 
 	vk_destroyFrameBuffers();

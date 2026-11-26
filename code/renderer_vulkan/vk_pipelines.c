@@ -1,5 +1,6 @@
 // vk_pipelines.c -- render pass, framebuffers, descriptor/pipeline layouts, and the 2D/3D pipeline variants.
 
+#include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
 
@@ -114,6 +115,50 @@ void vk_destroyFrameBuffers( void ) {
 #define MAX_MULTITEX_DESCRIPTORS 256
 static VkDescriptorPool s_multiTexDescriptorPool;
 static void vk_resetMultiTexDescriptorCache( void );
+
+#define VK_PIPELINE_CACHE_FILE "vk_pipeline_cache.bin"
+
+void vk_createPipelineCache( void ) {
+	void *data = NULL;
+	long size;
+	VkPipelineCacheCreateInfo desc;
+
+	size = ri.FS_ReadFile( VK_PIPELINE_CACHE_FILE, &data );
+	if ( size <= 0 ) {
+		data = NULL;
+		size = 0;
+	}
+
+	desc.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+	desc.pNext = NULL;
+	desc.flags = 0;
+	desc.initialDataSize = (size_t)size;
+	desc.pInitialData = data;
+	VK_CHECK( qvkCreatePipelineCache( vk.device, &desc, NULL, &vk.pipeline_cache ) );
+
+	if ( data ) {
+		ri.FS_FreeFile( data );
+	}
+}
+
+void vk_destroyPipelineCache( void ) {
+	size_t size = 0;
+
+	if ( vk.pipeline_cache == VK_NULL_HANDLE ) {
+		return;
+	}
+
+	if ( qvkGetPipelineCacheData( vk.device, vk.pipeline_cache, &size, NULL ) == VK_SUCCESS && size > 0 ) {
+		void *data = malloc( size );
+		if ( qvkGetPipelineCacheData( vk.device, vk.pipeline_cache, &size, data ) == VK_SUCCESS ) {
+			ri.FS_WriteFile( VK_PIPELINE_CACHE_FILE, data, (int)size );
+		}
+		free( data );
+	}
+
+	qvkDestroyPipelineCache( vk.device, vk.pipeline_cache, NULL );
+	vk.pipeline_cache = VK_NULL_HANDLE;
+}
 
 void vk_createPipelineLayout( void ) {
 	{
@@ -432,7 +477,7 @@ static VkPipeline create_pipeline_ex( VkShaderModule vs, VkShaderModule fs, VkPi
 	desc.basePipelineHandle = VK_NULL_HANDLE;
 	desc.basePipelineIndex = -1;
 
-	VK_CHECK( qvkCreateGraphicsPipelines( vk.device, VK_NULL_HANDLE, 1, &desc, NULL, &pipeline ) );
+	VK_CHECK( qvkCreateGraphicsPipelines( vk.device, vk.pipeline_cache, 1, &desc, NULL, &pipeline ) );
 	return pipeline;
 }
 
