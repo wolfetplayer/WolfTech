@@ -106,6 +106,7 @@ extern PFN_vkGetImageMemoryRequirements                qvkGetImageMemoryRequirem
 extern PFN_vkGetImageSubresourceLayout                 qvkGetImageSubresourceLayout;
 extern PFN_vkMapMemory                                 qvkMapMemory;
 extern PFN_vkUnmapMemory                               qvkUnmapMemory;
+extern PFN_vkInvalidateMappedMemoryRanges              qvkInvalidateMappedMemoryRanges;
 extern PFN_vkQueueSubmit                               qvkQueueSubmit;
 extern PFN_vkQueueWaitIdle                              qvkQueueWaitIdle;
 extern PFN_vkResetDescriptorPool                       qvkResetDescriptorPool;

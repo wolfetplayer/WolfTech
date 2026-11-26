@@ -110,6 +110,7 @@ PFN_vkGetImageMemoryRequirements                qvkGetImageMemoryRequirements;
 PFN_vkGetImageSubresourceLayout                 qvkGetImageSubresourceLayout;
 PFN_vkMapMemory                                 qvkMapMemory;
 PFN_vkUnmapMemory                               qvkUnmapMemory;
+PFN_vkInvalidateMappedMemoryRanges              qvkInvalidateMappedMemoryRanges;
 PFN_vkQueueSubmit                               qvkQueueSubmit;
 PFN_vkQueueWaitIdle                             qvkQueueWaitIdle;
 PFN_vkResetDescriptorPool                       qvkResetDescriptorPool;
@@ -551,6 +552,7 @@ static void vk_loadDeviceFunctions( void ) {
 	INIT_DEVICE_FUNCTION( vkGetImageSubresourceLayout )
 	INIT_DEVICE_FUNCTION( vkMapMemory )
 	INIT_DEVICE_FUNCTION( vkUnmapMemory )
+	INIT_DEVICE_FUNCTION( vkInvalidateMappedMemoryRanges )
 	INIT_DEVICE_FUNCTION( vkQueueSubmit )
 	INIT_DEVICE_FUNCTION( vkQueueWaitIdle )
 	INIT_DEVICE_FUNCTION( vkResetDescriptorPool )

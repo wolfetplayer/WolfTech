@@ -21,6 +21,19 @@ static qboolean s_pending = qfalse;
 static qboolean s_pendingJpeg = qfalse;
 static char s_pendingName[MAX_OSPATH];
 
+// Unlike vk_find_memory_type, failing to match is an expected outcome here, not a fatal error.
+static qboolean TryFindMemoryType( uint32_t type_bits, VkMemoryPropertyFlags properties, uint32_t *outIndex ) {
+	uint32_t i;
+	for ( i = 0; i < vk.devMemProperties.memoryTypeCount; i++ ) {
+		if ( ( type_bits & ( 1u << i ) ) &&
+			 ( vk.devMemProperties.memoryTypes[i].propertyFlags & properties ) == properties ) {
+			*outIndex = i;
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
 static qboolean GetChannelOrder( qboolean *outBgr ) {
 	switch ( vk.surface_format.format ) {
 	case VK_FORMAT_B8G8R8A8_UNORM:
@@ -130,6 +143,7 @@ void vk_screenshot_process_pending( void ) {
 	VkDeviceSize size;
 	void *mapped;
 	byte *rgb;
+	qboolean coherent;
 
 	if ( !s_pending ) {
 		return;
@@ -164,8 +178,13 @@ void vk_screenshot_process_pending( void ) {
 		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		alloc_info.pNext = NULL;
 		alloc_info.allocationSize = mem_reqs.size;
-		alloc_info.memoryTypeIndex = vk_find_memory_type( mem_reqs.memoryTypeBits,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+		if ( !TryFindMemoryType( mem_reqs.memoryTypeBits,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, &alloc_info.memoryTypeIndex ) ) {
+			alloc_info.memoryTypeIndex = vk_find_memory_type( mem_reqs.memoryTypeBits,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+		}
+		coherent = ( vk.devMemProperties.memoryTypes[alloc_info.memoryTypeIndex].propertyFlags
+			& VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) != 0;
 		VK_CHECK( qvkAllocateMemory( vk.device, &alloc_info, NULL, &memory ) );
 		VK_CHECK( qvkBindBufferMemory( vk.device, buffer, memory, 0 ) );
 	}
@@ -219,6 +238,16 @@ void vk_screenshot_process_pending( void ) {
 	}
 
 	VK_CHECK( qvkMapMemory( vk.device, memory, 0, size, 0, &mapped ) );
+
+	if ( !coherent ) {
+		VkMappedMemoryRange range;
+		range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+		range.pNext = NULL;
+		range.memory = memory;
+		range.offset = 0;
+		range.size = VK_WHOLE_SIZE;
+		VK_CHECK( qvkInvalidateMappedMemoryRanges( vk.device, 1, &range ) );
+	}
 
 	rgb = malloc( (size_t)width * height * 3 );
 	ConvertToBottomUpRGB( (const byte *)mapped, width, height, bgr, rgb );
