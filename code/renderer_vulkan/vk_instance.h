@@ -193,6 +193,9 @@ struct Vk_Instance {
 	VkPipelineLayout skin_pipeline_layout; // set0 = set_layout, set1 = skin_set_layout
 	VkPipelineLayout skin_lightmap_pipeline_layout; // set0 = lightmap_set_layout, set1 = skin_set_layout
 
+	qboolean staticWorldSupported;
+	VkPipelineLayout static_lightmap_pipeline_layout;
+
 	VkPipeline pipeline_2d_opaque;
 	VkPipeline pipeline_2d_blend;
 	VkPipeline pipeline_3d_opaque; // fallback only; see vk_getPipeline3D
@@ -200,6 +203,9 @@ struct Vk_Instance {
 	VkPipeline pipeline_3d_lightmap[3][4]; // indexed by [cullType_t][alphaTestFunc] (0=none/GT0/LT128/GE128, see tr_shade_calc.c's NameToAlphaTestFunc)
 	VkPipeline pipeline_3d_lightmap_portal[3][4]; // ditto, world-space clip plane active, no cull flip -- see tr_portal.h
 	VkPipeline pipeline_3d_lightmap_mirror[3][4]; // ditto, clip plane + cull flip (proper reflection)
+	VkPipeline pipeline_3d_static_lightmap[3][4];
+	VkPipeline pipeline_3d_static_lightmap_portal[3][4];
+	VkPipeline pipeline_3d_static_lightmap_mirror[3][4];
 	VkPipeline pipeline_sky; // single_texture shader, 2D vertex layout, depth test/write off, never fogged
 	VkPipeline pipeline_world_wireframe; // r_showtris overlay; VK_NULL_HANDLE if the device lacks fillModeNonSolid
 	VkPipeline pipeline_occlusion_probe; // coronas' visibility test; see vk_flares.c

@@ -2011,6 +2011,8 @@ Q3RVOBJ = \
   $(B)/renderer_vulkan/shaders/Compiled/world_lightmap_vert.o \
   $(B)/renderer_vulkan/shaders/Compiled/world_lightmap_frag.o \
   $(B)/renderer_vulkan/shaders/Compiled/world_lightmap_clip_vert.o \
+  $(B)/renderer_vulkan/shaders/Compiled/world_static_vert.o \
+  $(B)/renderer_vulkan/shaders/Compiled/world_static_clip_vert.o \
   $(B)/renderer_vulkan/shaders/Compiled/multi_texture_vert.o \
   $(B)/renderer_vulkan/shaders/Compiled/multi_texture_frag.o \
   $(B)/renderer_vulkan/shaders/Compiled/entity_lerp_vert.o \

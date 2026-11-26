@@ -87,6 +87,7 @@ VkPipeline vk_getPipeline2D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBle
 
 // vk.pipeline_3d_lightmap[cullType][alphaTestFunc], auto-swapped for the clip-plane/mirror variant while tr_portal.c is recursing.
 VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType, int32_t alphaTestFunc );
+VkPipeline vk_getWorldStaticLightmapPipeline( cullType_t cullType, int32_t alphaTestFunc );
 
 VkPipeline vk_getPipelineSkyCloud( VkBlendFactor srcBlend, VkBlendFactor dstBlend );
 

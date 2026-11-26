@@ -217,6 +217,27 @@ void vk_createPipelineLayout( void ) {
 		VK_CHECK( qvkCreatePipelineLayout( vk.device, &desc, NULL, &vk.skin_lightmap_pipeline_layout ) );
 	}
 
+	vk.staticWorldSupported = vk.deviceProperties.limits.maxPushConstantsSize >= 160;
+	if ( vk.staticWorldSupported ) {
+		VkPushConstantRange push_range;
+		VkPipelineLayoutCreateInfo desc;
+
+		push_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		push_range.offset = 0;
+		push_range.size = 160;
+
+		desc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		desc.pNext = NULL;
+		desc.flags = 0;
+		desc.setLayoutCount = 1;
+		desc.pSetLayouts = &vk.lightmap_set_layout;
+		desc.pushConstantRangeCount = 1;
+		desc.pPushConstantRanges = &push_range;
+		VK_CHECK( qvkCreatePipelineLayout( vk.device, &desc, NULL, &vk.static_lightmap_pipeline_layout ) );
+	} else {
+		vk.static_lightmap_pipeline_layout = VK_NULL_HANDLE;
+	}
+
 	{
 		// vk_getMultiTextureDescriptor's cache allocates from this -- same 2-binding layout as the world lightmap pass.
 		VkDescriptorPoolSize poolSize;
@@ -239,6 +260,9 @@ void vk_createPipelineLayout( void ) {
 
 void vk_destroyPipelineLayout( void ) {
 	qvkDestroyDescriptorPool( vk.device, s_multiTexDescriptorPool, NULL );
+	if ( vk.static_lightmap_pipeline_layout != VK_NULL_HANDLE ) {
+		qvkDestroyPipelineLayout( vk.device, vk.static_lightmap_pipeline_layout, NULL );
+	}
 	qvkDestroyPipelineLayout( vk.device, vk.skin_lightmap_pipeline_layout, NULL );
 	qvkDestroyPipelineLayout( vk.device, vk.skin_pipeline_layout, NULL );
 	qvkDestroyDescriptorSetLayout( vk.device, vk.skin_set_layout, NULL );
@@ -822,6 +846,27 @@ void vk_create3DPipelines( void ) {
 				&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, cull );
 			vk.pipeline_3d_lightmap_mirror[ct][at] = create_pipeline( worldPortalVs, vk_world_lightmap_fs, vk.lightmap_pipeline_layout, &lmPortalSpecInfo,
 				&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, vk_flipCullMode( cull ) );
+
+			if ( vk.staticWorldSupported ) {
+				VkShaderModule staticPortalVs = hwClip ? vk_world_static_clip_vs : vk_world_static_vs;
+				worldLightmapSpecData_t static_spec_data, static_portal_spec_data;
+				VkSpecializationMapEntry static_spec_entries[2], static_portal_spec_entries[2];
+				VkSpecializationInfo staticSpecInfo, staticPortalSpecInfo;
+
+				GetWorldLightmapSpecInfo( &static_spec_data, static_spec_entries, &staticSpecInfo, qfalse, at );
+				GetWorldLightmapSpecInfo( &static_portal_spec_data, static_portal_spec_entries, &staticPortalSpecInfo, !hwClip, at );
+
+				vk.pipeline_3d_static_lightmap[ct][at] = create_pipeline( vk_world_static_vs, vk_world_lightmap_fs, vk.static_lightmap_pipeline_layout, &staticSpecInfo,
+					&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, cull );
+				vk.pipeline_3d_static_lightmap_portal[ct][at] = create_pipeline( staticPortalVs, vk_world_lightmap_fs, vk.static_lightmap_pipeline_layout, &staticPortalSpecInfo,
+					&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, cull );
+				vk.pipeline_3d_static_lightmap_mirror[ct][at] = create_pipeline( staticPortalVs, vk_world_lightmap_fs, vk.static_lightmap_pipeline_layout, &staticPortalSpecInfo,
+					&worldBinding, lightmapAttribs, 7, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_TRUE, vk_flipCullMode( cull ) );
+			} else {
+				vk.pipeline_3d_static_lightmap[ct][at] = VK_NULL_HANDLE;
+				vk.pipeline_3d_static_lightmap_portal[ct][at] = VK_NULL_HANDLE;
+				vk.pipeline_3d_static_lightmap_mirror[ct][at] = VK_NULL_HANDLE;
+			}
 		}
 	}
 
@@ -881,6 +926,11 @@ void vk_destroy3DPipelines( void ) {
 			qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap[ct][at], NULL );
 			qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap_portal[ct][at], NULL );
 			qvkDestroyPipeline( vk.device, vk.pipeline_3d_lightmap_mirror[ct][at], NULL );
+			if ( vk.staticWorldSupported ) {
+				qvkDestroyPipeline( vk.device, vk.pipeline_3d_static_lightmap[ct][at], NULL );
+				qvkDestroyPipeline( vk.device, vk.pipeline_3d_static_lightmap_portal[ct][at], NULL );
+				qvkDestroyPipeline( vk.device, vk.pipeline_3d_static_lightmap_mirror[ct][at], NULL );
+			}
 		}
 	}
 	qvkDestroyPipeline( vk.device, vk.pipeline_sky, NULL );
@@ -902,6 +952,16 @@ VkPipeline vk_getWorldLightmapPipeline( cullType_t cullType, int32_t alphaTestFu
 		return vk.pipeline_3d_lightmap_portal[cullType][alphaTestFunc];
 	}
 	return vk.pipeline_3d_lightmap[cullType][alphaTestFunc];
+}
+
+VkPipeline vk_getWorldStaticLightmapPipeline( cullType_t cullType, int32_t alphaTestFunc ) {
+	if ( R_InMirrorView() ) {
+		return vk.pipeline_3d_static_lightmap_mirror[cullType][alphaTestFunc];
+	}
+	if ( R_InPortalView() ) {
+		return vk.pipeline_3d_static_lightmap_portal[cullType][alphaTestFunc];
+	}
+	return vk.pipeline_3d_static_lightmap[cullType][alphaTestFunc];
 }
 
 // vkMultiTexVertex_t attribs -- byte-identical layout to vkWorldVertex_t, described independently since the types aren't otherwise related.

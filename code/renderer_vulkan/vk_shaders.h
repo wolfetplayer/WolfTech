@@ -12,6 +12,9 @@ extern VkShaderModule vk_single_texture_fs;
 extern VkShaderModule vk_world_lightmap_vs;
 extern VkShaderModule vk_world_lightmap_fs;
 
+extern VkShaderModule vk_world_static_vs;
+extern VkShaderModule vk_world_static_clip_vs;
+
 extern VkShaderModule vk_multi_texture_vs;
 extern VkShaderModule vk_multi_texture_fs;
 

@@ -41,6 +41,7 @@ typedef struct {
 	int firstSurfRef;
 	int numSurfRefs;
 	VkDescriptorSet descriptor; // diffuse (binding 0) + lightmap (binding 1), built once at load time
+	qboolean staticEligible;
 } worldBatch_t;
 
 typedef struct {
@@ -58,6 +59,11 @@ static vkWorldVertex_t *s_cachedVerts;
 static uint32_t s_numCachedVerts;
 static uint32_t *s_cachedIndices;
 static uint32_t s_numCachedIndices;
+
+static VkBuffer s_staticVertexBuffer;
+static VkDeviceMemory s_staticVertexMemory;
+static VkBuffer s_staticIndexBuffer;
+static VkDeviceMemory s_staticIndexMemory;
 
 static vec3_t *s_deformCache;
 static uint32_t *s_deformCacheStamp;
@@ -175,6 +181,8 @@ static brushVert_t s_brushVertScratch[BRUSH_SURF_MAX_VERTS];
 
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
 
+static qboolean IsTransparentBatch( const shader_t *shader );
+
 static void create_dynamic_vertex_buffer( VkDeviceSize bytes, VkBuffer *outBuf, VkDeviceMemory *outMem, void **outMapped ) {
 	VkBufferCreateInfo buf_desc;
 	VkMemoryRequirements mem_reqs;
@@ -267,6 +275,11 @@ void vk_world_clear( void ) {
 	if ( s_cachedIndices ) { free( s_cachedIndices ); s_cachedIndices = NULL; }
 	s_numCachedVerts = 0;
 	s_numCachedIndices = 0;
+
+	if ( s_staticVertexBuffer ) { qvkDestroyBuffer( vk.device, s_staticVertexBuffer, NULL ); s_staticVertexBuffer = VK_NULL_HANDLE; }
+	if ( s_staticVertexMemory ) { qvkFreeMemory( vk.device, s_staticVertexMemory, NULL ); s_staticVertexMemory = VK_NULL_HANDLE; }
+	if ( s_staticIndexBuffer ) { qvkDestroyBuffer( vk.device, s_staticIndexBuffer, NULL ); s_staticIndexBuffer = VK_NULL_HANDLE; }
+	if ( s_staticIndexMemory ) { qvkFreeMemory( vk.device, s_staticIndexMemory, NULL ); s_staticIndexMemory = VK_NULL_HANDLE; }
 
 	if ( s_deformCache ) { free( s_deformCache ); s_deformCache = NULL; }
 	if ( s_deformCacheStamp ) { free( s_deformCacheStamp ); s_deformCacheStamp = NULL; }
@@ -809,6 +822,18 @@ void vk_world_build( void ) {
 		VK_CHECK( qvkCreateDescriptorPool( vk.device, &poolDesc, NULL, &s_brushLMDescriptorPool ) );
 	}
 	s_numBrushLMDescCache = 0;
+
+	for ( i = 0; i < numBatches; i++ ) {
+		shader_t *batchShader = R_GetShaderByHandle( batches[i].shader );
+		batches[i].staticEligible = vk.staticWorldSupported && batchShader && batchShader->numStages >= 1 &&
+			!batchShader->stages[0].isLightmap && !IsTransparentBatch( batchShader ) &&
+			batchShader->numDeforms == 0 && batchShader->stages[0].numTexMods == 0;
+	}
+
+	vk_create_device_local_buffer( verts, (VkDeviceSize)nextVertSlot * sizeof( vkWorldVertex_t ),
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &s_staticVertexBuffer, &s_staticVertexMemory );
+	vk_create_device_local_buffer( indexes, (VkDeviceSize)writeOffset * sizeof( uint32_t ),
+		VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &s_staticIndexBuffer, &s_staticIndexMemory );
 
 	s_batches = batches; // already sized to numDrawable, no need to shrink
 	s_numBatches = numBatches;
@@ -1394,6 +1419,81 @@ static void PushWorldTransform( const float mvp[16], const float fogPush[12] ) {
 		0, sizeof( push_data ), push_data );
 }
 
+static void PushStaticWorldTransform( const float mvp[16], const float fogPush[12], const float colorMul[4], const float colorAdd[4] ) {
+	float push_data[40];
+
+	memset( push_data, 0, sizeof( push_data ) );
+	memcpy( push_data, mvp, 16 * sizeof( float ) );
+	memcpy( push_data + 16, fogPush, 12 * sizeof( float ) );
+	if ( R_InPortalView() ) {
+		vec3_t normal;
+		float dist;
+		R_GetActivePortalPlane( normal, &dist );
+		push_data[28] = normal[0]; push_data[29] = normal[1]; push_data[30] = normal[2]; push_data[31] = dist;
+	}
+	memcpy( push_data + 32, colorMul, 4 * sizeof( float ) );
+	memcpy( push_data + 36, colorAdd, 4 * sizeof( float ) );
+	qvkCmdPushConstants( vk.command_buffer, vk.static_lightmap_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+		0, sizeof( push_data ), push_data );
+}
+
+static void ComputeStaticStageColor( const shader_t *shader, qboolean useBakedVertexColor, float colorMul[4], float colorAdd[4] ) {
+	shaderStage_t stage0Local;
+	const shaderStage_t *stage0 = &shader->stages[0];
+	static const byte zero[4] = { 0, 0, 0, 0 };
+	static const byte full[4] = { 255, 255, 255, 255 };
+	byte add[4], probe[4];
+	int c;
+
+	if ( useBakedVertexColor && !shader->explicitlyDefined && stage0->rgbGen == CGEN_LIGHTING_DIFFUSE ) {
+		stage0Local = *stage0;
+		stage0Local.rgbGen = CGEN_EXACT_VERTEX;
+		stage0 = &stage0Local;
+	}
+
+	R_CalcStageColorAlpha( stage0, NULL, zero, add );
+	R_CalcStageColorAlpha( stage0, NULL, full, probe );
+
+	for ( c = 0; c < 4; c++ ) {
+		colorAdd[c] = add[c] * ( 1.0f / 255.0f );
+		colorMul[c] = probe[c] * ( 1.0f / 255.0f ) - colorAdd[c];
+	}
+}
+
+static void DrawStaticStage0( const worldSurfRef_t *refs, int numRefs ) {
+	qboolean runOpen = qfalse;
+	uint32_t runStart = 0, runEnd = 0;
+	int j;
+
+	for ( j = 0; j < numRefs; j++ ) {
+		const worldSurfRef_t *ref = &refs[j];
+
+		if ( !R_SurfaceIsVisible( ref->surfaceIndex ) ) {
+			if ( runOpen ) {
+				qvkCmdDrawIndexed( vk.command_buffer, runEnd - runStart, 1, runStart, 0, 0 );
+				runOpen = qfalse;
+			}
+			continue;
+		}
+
+		if ( runOpen && ref->firstIndex == runEnd ) {
+			runEnd = ref->firstIndex + ref->indexCount;
+			continue;
+		}
+
+		if ( runOpen ) {
+			qvkCmdDrawIndexed( vk.command_buffer, runEnd - runStart, 1, runStart, 0, 0 );
+		}
+		runStart = ref->firstIndex;
+		runEnd = ref->firstIndex + ref->indexCount;
+		runOpen = qtrue;
+	}
+
+	if ( runOpen ) {
+		qvkCmdDrawIndexed( vk.command_buffer, runEnd - runStart, 1, runStart, 0, 0 );
+	}
+}
+
 static qboolean IsTransparentBatch( const shader_t *shader ) {
 	const shaderStage_t *stage0 = &shader->stages[0];
 
@@ -1412,7 +1512,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 	VkDeviceSize vb2dOffset = (VkDeviceSize)s_dyn2DRegionBase * sizeof( vk2d_vertex_t );
 	VkDeviceSize dlightVbOffset = (VkDeviceSize)s_dynDlightRegionBase * sizeof( vk2d_vertex_t );
 	int i;
-	qboolean lmBufferBound = qfalse, bound2DBuffer = qfalse;
+	qboolean lmBufferBound = qfalse, bound2DBuffer = qfalse, staticBufferBound = qfalse;
 	static qboolean firstDraw = qtrue;
 
 	if ( !s_built ) {
@@ -1440,13 +1540,32 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 
 		if ( shader->stages[0].isLightmap ) {
 			firstExtraStage = 0;
+		} else if ( batch->staticEligible ) {
+			float colorMul[4], colorAdd[4];
+			VkDeviceSize zeroOffset = 0;
+
+			pipeline = vk_getWorldStaticLightmapPipeline( shader->cullType, shader->stages[0].alphaTestFunc );
+			vk_bind_pipeline_cached( pipeline );
+			if ( !staticBufferBound ) {
+				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_staticVertexBuffer, &zeroOffset );
+				qvkCmdBindIndexBuffer( vk.command_buffer, s_staticIndexBuffer, 0, VK_INDEX_TYPE_UINT32 );
+				staticBufferBound = qtrue; lmBufferBound = qfalse; bound2DBuffer = qfalse;
+			}
+
+			vk_bind_descriptor_set_cached( vk.static_lightmap_pipeline_layout, 0, batch->descriptor, 0, NULL );
+
+			ComputeStaticStageColor( shader, batch->lightmapIdx == s_whiteLightmapIdx, colorMul, colorAdd );
+			PushStaticWorldTransform( mvp, fogPush, colorMul, colorAdd );
+			DrawStaticStage0( &s_surfRefs[batch->firstSurfRef], batch->numSurfRefs );
+			PushWorldTransform( mvp, fogPush );
+			firstExtraStage = 1;
 		} else {
 			// Batches are already split per-shader (worldBatch_t is keyed by shader+lightmap), so this is free to vary.
 			pipeline = vk_getWorldLightmapPipeline( shader->cullType, shader->stages[0].alphaTestFunc );
 			vk_bind_pipeline_cached( pipeline );
 			if ( !lmBufferBound ) {
 				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dynLMBuffer, &lmVbOffset );
-				lmBufferBound = qtrue; bound2DBuffer = qfalse;
+				lmBufferBound = qtrue; bound2DBuffer = qfalse; staticBufferBound = qfalse;
 			}
 
 			vk_bind_descriptor_set_cached( vk.lightmap_pipeline_layout, 0, batch->descriptor, 0, NULL );
@@ -1478,7 +1597,7 @@ void vk_world_draw( const float mvp[16], const float fogPush[12] ) {
 			vk_bind_pipeline_cached( pipeline );
 			if ( !bound2DBuffer ) {
 				qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_dyn2DBuffer, &vb2dOffset );
-				bound2DBuffer = qtrue; lmBufferBound = qfalse;
+				bound2DBuffer = qtrue; lmBufferBound = qfalse; staticBufferBound = qfalse;
 			}
 
 			vk_bind_descriptor_set_cached( vk.pipeline_layout, 0, stageDescriptor, 0, NULL );

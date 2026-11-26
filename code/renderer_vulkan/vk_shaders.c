@@ -10,6 +10,9 @@ VkShaderModule vk_single_texture_fs;
 VkShaderModule vk_world_lightmap_vs;
 VkShaderModule vk_world_lightmap_fs;
 
+VkShaderModule vk_world_static_vs;
+VkShaderModule vk_world_static_clip_vs;
+
 VkShaderModule vk_multi_texture_vs;
 VkShaderModule vk_multi_texture_fs;
 
@@ -41,6 +44,10 @@ void vk_loadShaderModules( void ) {
 	extern int world_lightmap_vert_spv_size;
 	extern unsigned char world_lightmap_frag_spv[];
 	extern int world_lightmap_frag_spv_size;
+	extern unsigned char world_static_vert_spv[];
+	extern int world_static_vert_spv_size;
+	extern unsigned char world_static_clip_vert_spv[];
+	extern int world_static_clip_vert_spv_size;
 	extern unsigned char multi_texture_vert_spv[];
 	extern int multi_texture_vert_spv_size;
 	extern unsigned char multi_texture_frag_spv[];
@@ -62,6 +69,8 @@ void vk_loadShaderModules( void ) {
 	create_shader_module( single_texture_frag_spv, single_texture_frag_spv_size, &vk_single_texture_fs );
 	create_shader_module( world_lightmap_vert_spv, world_lightmap_vert_spv_size, &vk_world_lightmap_vs );
 	create_shader_module( world_lightmap_frag_spv, world_lightmap_frag_spv_size, &vk_world_lightmap_fs );
+	create_shader_module( world_static_vert_spv, world_static_vert_spv_size, &vk_world_static_vs );
+	create_shader_module( world_static_clip_vert_spv, world_static_clip_vert_spv_size, &vk_world_static_clip_vs );
 	create_shader_module( multi_texture_vert_spv, multi_texture_vert_spv_size, &vk_multi_texture_vs );
 	create_shader_module( multi_texture_frag_spv, multi_texture_frag_spv_size, &vk_multi_texture_fs );
 	create_shader_module( single_texture_clip_vert_spv, single_texture_clip_vert_spv_size, &vk_single_texture_clip_vs );
@@ -77,6 +86,8 @@ void vk_destroyShaderModules( void ) {
 	qvkDestroyShaderModule( vk.device, vk_single_texture_fs, NULL );
 	qvkDestroyShaderModule( vk.device, vk_world_lightmap_vs, NULL );
 	qvkDestroyShaderModule( vk.device, vk_world_lightmap_fs, NULL );
+	qvkDestroyShaderModule( vk.device, vk_world_static_vs, NULL );
+	qvkDestroyShaderModule( vk.device, vk_world_static_clip_vs, NULL );
 	qvkDestroyShaderModule( vk.device, vk_multi_texture_vs, NULL );
 	qvkDestroyShaderModule( vk.device, vk_multi_texture_fs, NULL );
 	qvkDestroyShaderModule( vk.device, vk_single_texture_clip_vs, NULL );
