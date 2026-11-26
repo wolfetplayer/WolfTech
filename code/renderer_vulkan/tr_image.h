@@ -23,6 +23,7 @@ typedef struct image_s {
 	VkImageView vk_view;
 	VkSampler vk_sampler;
 	VkDescriptorSet vk_descriptor;
+	int vk_bindless_index; // -1 = none, else slot | (samplerIdx << 12)
 
 	qboolean registered;
 } image_t;

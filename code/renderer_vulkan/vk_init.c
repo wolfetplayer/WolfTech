@@ -48,6 +48,7 @@ void vk_initialize( void ) {
 
 	vk_createPipelineLayout();
 	vk_createPipelineCache();
+	vk_createBindlessResources();
 
 	vk_loadShaderModules();
 
@@ -84,6 +85,7 @@ void vk_shutdown( void ) {
 
 	vk_destroyShaderModules();
 
+	vk_destroyBindlessResources();
 	vk_destroyPipelineCache();
 	vk_destroyPipelineLayout(); // frees vk.descriptor_pool
 

@@ -10,6 +10,8 @@ struct Vk_Instance vk;
 
 // Vulkan API functions used by the renderer.
 PFN_vkGetInstanceProcAddr                       qvkGetInstanceProcAddr;
+PFN_vkGetPhysicalDeviceFeatures2                qvkGetPhysicalDeviceFeatures2;
+PFN_vkGetPhysicalDeviceProperties2              qvkGetPhysicalDeviceProperties2;
 
 PFN_vkEnumerateInstanceLayerProperties          qvkEnumerateInstanceLayerProperties;
 PFN_vkCreateInstance                            qvkCreateInstance;
@@ -320,6 +322,11 @@ static void vk_loadGlobalFunctions( void ) {
 
 	#undef INIT_INSTANCE_FUNCTION
 
+	qvkGetPhysicalDeviceFeatures2 = (PFN_vkGetPhysicalDeviceFeatures2)
+		qvkGetInstanceProcAddr( vk.instance, "vkGetPhysicalDeviceFeatures2" );
+	qvkGetPhysicalDeviceProperties2 = (PFN_vkGetPhysicalDeviceProperties2)
+		qvkGetInstanceProcAddr( vk.instance, "vkGetPhysicalDeviceProperties2" );
+
 	ri.Printf( PRINT_ALL, " Init global functions done. \n" );
 }
 
@@ -459,6 +466,40 @@ static void vk_createLogicalDevice( void ) {
 
 	qvkGetPhysicalDeviceFeatures( vk.physical_device, &vk.features );
 
+	VkPhysicalDeviceVulkan12Features enableFeatures12;
+	cvar_t *r_vkBindless = ri.Cvar_Get( "r_vkBindless", "1", CVAR_ARCHIVE | CVAR_LATCH );
+
+	vk.bindless = qfalse;
+	if ( r_vkBindless->integer && vk.instanceVersion >= VK_API_VERSION_1_2 &&
+			qvkGetPhysicalDeviceFeatures2 != NULL && qvkGetPhysicalDeviceProperties2 != NULL ) {
+		VkPhysicalDeviceVulkan12Features features12;
+		VkPhysicalDeviceFeatures2 features2;
+		VkPhysicalDeviceVulkan12Properties props12;
+		VkPhysicalDeviceProperties2 props2;
+
+		memset( &features12, 0, sizeof( features12 ) );
+		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		features2.pNext = &features12;
+		qvkGetPhysicalDeviceFeatures2( vk.physical_device, &features2 );
+
+		memset( &props12, 0, sizeof( props12 ) );
+		props12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+		props2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		props2.pNext = &props12;
+		qvkGetPhysicalDeviceProperties2( vk.physical_device, &props2 );
+
+		if ( features12.descriptorIndexing && features12.shaderSampledImageArrayNonUniformIndexing &&
+				features12.descriptorBindingPartiallyBound && features12.descriptorBindingSampledImageUpdateAfterBind &&
+				props12.maxPerStageDescriptorUpdateAfterBindSampledImages >= VK_BINDLESS_MAX_IMAGES &&
+				props12.maxDescriptorSetUpdateAfterBindSampledImages >= VK_BINDLESS_MAX_IMAGES &&
+				props12.maxPerStageDescriptorUpdateAfterBindSamplers >= VK_BINDLESS_NUM_SAMPLERS &&
+				props12.maxDescriptorSetUpdateAfterBindSamplers >= VK_BINDLESS_NUM_SAMPLERS ) {
+			vk.bindless = qtrue;
+		}
+	}
+	ri.Printf( PRINT_ALL, " Vulkan: bindless textures %s\n", vk.bindless ? "on" : "off" );
+
 	VkDeviceCreateInfo device_desc;
 	device_desc.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	device_desc.pNext = NULL;
@@ -470,6 +511,16 @@ static void vk_createLogicalDevice( void ) {
 	device_desc.enabledExtensionCount = 1;
 	device_desc.ppEnabledExtensionNames = device_extensions;
 	device_desc.pEnabledFeatures = &vk.features;
+
+	if ( vk.bindless ) {
+		memset( &enableFeatures12, 0, sizeof( enableFeatures12 ) );
+		enableFeatures12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		enableFeatures12.descriptorIndexing = VK_TRUE;
+		enableFeatures12.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+		enableFeatures12.descriptorBindingPartiallyBound = VK_TRUE;
+		enableFeatures12.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+		device_desc.pNext = &enableFeatures12;
+	}
 
 	ri.Printf( PRINT_ALL, " Create logical device: vk.device \n" );
 	VK_CHECK( qvkCreateDevice( vk.physical_device, &device_desc, NULL, &vk.device ) );

@@ -12,6 +12,13 @@ typedef struct {
 	float uv[2];
 } vk2d_vertex_t;
 
+typedef struct {
+	float pos[3];
+	byte color[4];
+	float uv[2];
+	uint32_t texture;
+} vk2dBindless_vertex_t;
+
 // World geometry: vk2d_vertex_t's layout plus a lightmap UV set and packed snorm16 normal/tangent/lightdir (VK_FORMAT_R16G16B16A16_SNORM auto-unpacks to float in the shader; xyz used, w is padding except tangent's, which is the bitangent handedness sign). normal is real (threaded from vk_world.c's BSP/patch/brush-entity data); tangent/lightdir are zeroed until their own later roadmap items (tangent precompute, light-grid sampling) populate them.
 typedef struct {
 	float pos[3];
@@ -71,6 +78,12 @@ void vk_destroyPipelineLayout( void );
 
 void vk_createPipelineCache( void );
 void vk_destroyPipelineCache( void );
+
+void vk_createBindlessResources( void );
+void vk_destroyBindlessResources( void );
+VkPipeline vk_getPipeline2DBindless( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend );
+uint32_t vk_bindlessSamplerIndex( qboolean mipmap, qboolean clampToEdge );
+void vk_bindlessWriteSlot( int slot, VkImageView view );
 
 void vk_create2DPipelines( void );
 void vk_destroy2DPipelines( void );

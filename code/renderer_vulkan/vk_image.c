@@ -6,6 +6,7 @@
 #include "VKimpl.h"
 #include "vk_instance.h"
 #include "vk_image.h"
+#include "vk_pipelines.h"
 
 // Baked into every texture at upload time: there's no hardware gamma ramp or postprocess pass yet
 // (see docs/vulkan-renderer-roadmap.md), so a changed r_gamma only affects textures loaded afterward.
@@ -451,9 +452,19 @@ void vk_destroy_texture_image( VkImage image, VkDeviceMemory memory, VkImageView
 }
 
 qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int height, int flags ) {
+	image->vk_bindless_index = -1;
+
 	if ( !vk_create_texture_image( pixels, width, height, flags,
 			&image->vk_image, &image->vk_memory, &image->vk_view, &image->vk_sampler ) ) {
 		return qfalse;
+	}
+
+	if ( vk.bindless && vk.bindless_num_free > 0 ) {
+		int slot = vk.bindless_free[--vk.bindless_num_free];
+		uint32_t samplerIdx = vk_bindlessSamplerIndex( ( flags & IMGFLAG_NOMIPMAP ) == 0, ( flags & IMGFLAG_CLAMPTOEDGE ) != 0 );
+
+		vk_bindlessWriteSlot( slot, image->vk_view );
+		image->vk_bindless_index = slot | (int)( samplerIdx << 12 );
 	}
 
 	VkDescriptorSetAllocateInfo set_alloc;
@@ -488,6 +499,9 @@ qboolean vk_create_texture( image_t *image, const byte *pixels, int width, int h
 void vk_destroy_texture( image_t *image ) {
 	if ( image->vk_descriptor ) {
 		qvkFreeDescriptorSets( vk.device, vk.descriptor_pool, 1, &image->vk_descriptor );
+	}
+	if ( vk.bindless && image->vk_bindless_index >= 0 && vk.bindless_num_free < VK_BINDLESS_MAX_IMAGES ) {
+		vk.bindless_free[vk.bindless_num_free++] = image->vk_bindless_index & 0xFFF;
 	}
 	vk_destroy_texture_image( image->vk_image, image->vk_memory, image->vk_view, image->vk_sampler );
 }

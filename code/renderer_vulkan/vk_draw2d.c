@@ -21,6 +21,13 @@ static vk2d_vertex_t *s_mapped;
 static uint32_t s_writeIndex;
 static uint32_t s_regionBase; // vk_current_frame_slot() * VK2D_MAX_VERTS -- see vk_draw2d_begin_frame
 
+#define VK2D_BINDLESS_MAX_VERTS ( VK2D_VERTEX_BUFFER_BYTES / sizeof( vk2dBindless_vertex_t ) )
+static VkBuffer s_bindlessVertexBuffer;
+static VkDeviceMemory s_bindlessVertexMemory;
+static vk2dBindless_vertex_t *s_bindlessMapped;
+static uint32_t s_bindlessWriteIndex;
+static uint32_t s_bindlessRegionBase;
+
 static float s_color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 extern uint32_t vk_find_memory_type( uint32_t type_bits, VkMemoryPropertyFlags properties );
@@ -52,6 +59,36 @@ void vk_draw2d_init( void ) {
 	VK_CHECK( qvkMapMemory( vk.device, s_vertexMemory, 0, VK_WHOLE_SIZE, 0, (void **)&s_mapped ) );
 
 	s_writeIndex = 0;
+
+	if ( vk.bindless ) {
+		VkBufferCreateInfo bbuf_desc;
+		VkMemoryRequirements bmem_reqs;
+		VkMemoryAllocateInfo balloc_info;
+
+		bbuf_desc.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bbuf_desc.pNext = NULL;
+		bbuf_desc.flags = 0;
+		bbuf_desc.size = (VkDeviceSize)VK2D_VERTEX_BUFFER_BYTES * VK_FRAMES_IN_FLIGHT;
+		bbuf_desc.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		bbuf_desc.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		bbuf_desc.queueFamilyIndexCount = 0;
+		bbuf_desc.pQueueFamilyIndices = NULL;
+		VK_CHECK( qvkCreateBuffer( vk.device, &bbuf_desc, NULL, &s_bindlessVertexBuffer ) );
+
+		qvkGetBufferMemoryRequirements( vk.device, s_bindlessVertexBuffer, &bmem_reqs );
+
+		balloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		balloc_info.pNext = NULL;
+		balloc_info.allocationSize = bmem_reqs.size;
+		balloc_info.memoryTypeIndex = vk_find_memory_type( bmem_reqs.memoryTypeBits,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+		VK_CHECK( qvkAllocateMemory( vk.device, &balloc_info, NULL, &s_bindlessVertexMemory ) );
+		VK_CHECK( qvkBindBufferMemory( vk.device, s_bindlessVertexBuffer, s_bindlessVertexMemory, 0 ) );
+
+		VK_CHECK( qvkMapMemory( vk.device, s_bindlessVertexMemory, 0, VK_WHOLE_SIZE, 0, (void **)&s_bindlessMapped ) );
+
+		s_bindlessWriteIndex = 0;
+	}
 }
 
 void vk_draw2d_shutdown( void ) {
@@ -61,6 +98,15 @@ void vk_draw2d_shutdown( void ) {
 	}
 	qvkDestroyBuffer( vk.device, s_vertexBuffer, NULL );
 	qvkFreeMemory( vk.device, s_vertexMemory, NULL );
+
+	if ( vk.bindless ) {
+		if ( s_bindlessMapped ) {
+			qvkUnmapMemory( vk.device, s_bindlessVertexMemory );
+			s_bindlessMapped = NULL;
+		}
+		qvkDestroyBuffer( vk.device, s_bindlessVertexBuffer, NULL );
+		qvkFreeMemory( vk.device, s_bindlessVertexMemory, NULL );
+	}
 }
 
 void vk_draw2d_begin_frame( void ) {
@@ -69,6 +115,11 @@ void vk_draw2d_begin_frame( void ) {
 
 	s_writeIndex = 0;
 	s_regionBase = vk_current_frame_slot() * (uint32_t)VK2D_MAX_VERTS;
+
+	if ( vk.bindless ) {
+		s_bindlessWriteIndex = 0;
+		s_bindlessRegionBase = vk_current_frame_slot() * (uint32_t)VK2D_BINDLESS_MAX_VERTS;
+	}
 
 	VkViewport viewport;
 	viewport.x = 0.0f;
@@ -105,6 +156,64 @@ static byte float_to_byte( float f ) {
 	return (byte)i;
 }
 
+#define RPIC_CORNER_SEGS   8
+#define RPIC_NUM_BOUNDARY  ( 4 * ( RPIC_CORNER_SEGS + 1 ) )
+#define RPIC_FEATHER       1.0f
+
+static void PushBindlessScaleOffset( void ) {
+	int width, height;
+	float scaleOffset[4];
+
+	R_GetWinResolution( &width, &height );
+	scaleOffset[0] = 2.0f / (float)width;
+	scaleOffset[1] = 2.0f / (float)height;
+	scaleOffset[2] = -1.0f;
+	scaleOffset[3] = -1.0f;
+	qvkCmdPushConstants( vk.command_buffer, vk.ui_bindless_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+		0, sizeof( scaleOffset ), scaleOffset );
+}
+
+static qboolean vk_draw2d_record_tris_bindless( const vk2d_vertex_t *verts, int count, shader_t *shader, qboolean forceBlend, image_t *stageImage ) {
+	vk2dBindless_vertex_t bverts[RPIC_NUM_BOUNDARY * 9];
+	VkPipeline pipeline;
+	VkDeviceSize vb_offset;
+	int i;
+
+	if ( stageImage->vk_bindless_index < 0 ) {
+		return qfalse;
+	}
+	if ( s_bindlessWriteIndex + (uint32_t)count > VK2D_BINDLESS_MAX_VERTS ) {
+		return qtrue; // out of room this frame, drop rather than overrun
+	}
+
+	for ( i = 0; i < count; i++ ) {
+		bverts[i].pos[0] = verts[i].pos[0];
+		bverts[i].pos[1] = verts[i].pos[1];
+		bverts[i].pos[2] = verts[i].pos[2];
+		memcpy( bverts[i].color, verts[i].color, 4 );
+		bverts[i].uv[0] = verts[i].uv[0];
+		bverts[i].uv[1] = verts[i].uv[1];
+		bverts[i].texture = (uint32_t)stageImage->vk_bindless_index;
+	}
+
+	vb_offset = (VkDeviceSize)( s_bindlessRegionBase + s_bindlessWriteIndex ) * sizeof( vk2dBindless_vertex_t );
+	memcpy( &s_bindlessMapped[s_bindlessRegionBase + s_bindlessWriteIndex], bverts, (size_t)count * sizeof( vk2dBindless_vertex_t ) );
+	s_bindlessWriteIndex += (uint32_t)count;
+
+	PushBindlessScaleOffset();
+
+	pipeline = forceBlend ? vk.pipeline_2d_bindless_blend
+		: vk_getPipeline2DBindless( shader->stages[0].blendEnabled, shader->stages[0].srcBlend, shader->stages[0].dstBlend );
+	vk_bind_pipeline_cached( pipeline );
+
+	vk_bind_descriptor_set_cached( vk.ui_bindless_pipeline_layout, 0, vk.bindless_set, 0, NULL );
+
+	qvkCmdBindVertexBuffers( vk.command_buffer, 0, 1, &s_bindlessVertexBuffer, &vb_offset );
+
+	qvkCmdDraw( vk.command_buffer, (uint32_t)count, 1, 0, 0 );
+	return qtrue;
+}
+
 // Non-indexed triangle list, shared by every DrawStretchPic* variant.
 static void vk_draw2d_record_tris( const vk2d_vertex_t *verts, int count, shader_t *shader, qboolean forceBlend ) {
 	int width, height;
@@ -118,6 +227,10 @@ static void vk_draw2d_record_tris( const vk2d_vertex_t *verts, int count, shader
 	}
 	stageImage = R_GetStageImage( &shader->stages[0] );
 	if ( !stageImage ) {
+		return;
+	}
+
+	if ( vk.bindless && vk_draw2d_record_tris_bindless( verts, count, shader, forceBlend, stageImage ) ) {
 		return;
 	}
 
@@ -265,11 +378,6 @@ void vk_draw2d_quad_gradient( float x, float y, float w, float h,
 
 	vk_draw2d_record_tris( verts, 6, shader, qfalse );
 }
-
-// segments per 90-degree corner, and the AA feather width in pixels
-#define RPIC_CORNER_SEGS   8
-#define RPIC_NUM_BOUNDARY  ( 4 * ( RPIC_CORNER_SEGS + 1 ) )
-#define RPIC_FEATHER       1.0f
 
 void vk_draw2d_quad_rounded( float x, float y, float w, float h,
 							  float s1, float t1, float s2, float t2,

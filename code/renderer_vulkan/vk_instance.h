@@ -6,7 +6,12 @@
 #include "VKimpl.h"
 #include "tr_local.h"
 
+#define VK_BINDLESS_MAX_IMAGES 4096
+#define VK_BINDLESS_NUM_SAMPLERS 4
+
 extern PFN_vkGetInstanceProcAddr                       qvkGetInstanceProcAddr;
+extern PFN_vkGetPhysicalDeviceFeatures2                qvkGetPhysicalDeviceFeatures2;
+extern PFN_vkGetPhysicalDeviceProperties2              qvkGetPhysicalDeviceProperties2;
 
 extern PFN_vkEnumerateInstanceLayerProperties          qvkEnumerateInstanceLayerProperties;
 extern PFN_vkCreateInstance                            qvkCreateInstance;
@@ -201,7 +206,18 @@ struct Vk_Instance {
 	qboolean staticWorldSupported;
 	VkPipelineLayout static_lightmap_pipeline_layout;
 
+	qboolean bindless;
+	VkDescriptorSetLayout bindless_set_layout;
+	VkDescriptorPool bindless_pool;
+	VkDescriptorSet bindless_set;
+	VkSampler bindless_samplers[VK_BINDLESS_NUM_SAMPLERS];
+	VkPipelineLayout ui_bindless_pipeline_layout;
+	int bindless_free[VK_BINDLESS_MAX_IMAGES];
+	int bindless_num_free;
+
 	VkPipeline pipeline_2d_opaque;
+	VkPipeline pipeline_2d_bindless_opaque;
+	VkPipeline pipeline_2d_bindless_blend;
 	VkPipeline pipeline_2d_blend;
 	VkPipeline pipeline_3d_opaque; // fallback only; see vk_getPipeline3D
 	VkPipeline pipeline_3d_blend;  // ditto, blended twin

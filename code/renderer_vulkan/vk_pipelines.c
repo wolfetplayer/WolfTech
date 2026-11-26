@@ -160,6 +160,192 @@ void vk_destroyPipelineCache( void ) {
 	vk.pipeline_cache = VK_NULL_HANDLE;
 }
 
+uint32_t vk_bindlessSamplerIndex( qboolean mipmap, qboolean clampToEdge ) {
+	return ( mipmap ? 1u : 0u ) | ( clampToEdge ? 2u : 0u );
+}
+
+static void CreateBindlessSamplers( void ) {
+	int i;
+
+	for ( i = 0; i < VK_BINDLESS_NUM_SAMPLERS; i++ ) {
+		qboolean mipmap = ( i & 1 ) != 0;
+		qboolean clampToEdge = ( i & 2 ) != 0;
+		VkSamplerAddressMode address_mode = clampToEdge ? VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE : VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		VkSamplerCreateInfo sampler_desc;
+
+		sampler_desc.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		sampler_desc.pNext = NULL;
+		sampler_desc.flags = 0;
+		sampler_desc.magFilter = VK_FILTER_LINEAR;
+		sampler_desc.minFilter = VK_FILTER_LINEAR;
+		sampler_desc.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		sampler_desc.addressModeU = address_mode;
+		sampler_desc.addressModeV = address_mode;
+		sampler_desc.addressModeW = address_mode;
+		sampler_desc.mipLodBias = 0.0f;
+		sampler_desc.anisotropyEnable = vk.features.samplerAnisotropy;
+		sampler_desc.maxAnisotropy = vk.features.samplerAnisotropy ? vk.deviceProperties.limits.maxSamplerAnisotropy : 1.0f;
+		sampler_desc.compareEnable = VK_FALSE;
+		sampler_desc.compareOp = VK_COMPARE_OP_ALWAYS;
+		sampler_desc.minLod = 0.0f;
+		sampler_desc.maxLod = mipmap ? VK_LOD_CLAMP_NONE : 0.0f;
+		sampler_desc.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		sampler_desc.unnormalizedCoordinates = VK_FALSE;
+		VK_CHECK( qvkCreateSampler( vk.device, &sampler_desc, NULL, &vk.bindless_samplers[i] ) );
+	}
+}
+
+void vk_createBindlessResources( void ) {
+	int i;
+
+	if ( !vk.bindless ) {
+		return;
+	}
+
+	CreateBindlessSamplers();
+
+	{
+		VkDescriptorSetLayoutBinding bindings[2];
+		VkDescriptorBindingFlags bindingFlags[2];
+		VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo;
+		VkDescriptorSetLayoutCreateInfo layoutInfo;
+
+		bindings[0].binding = 0;
+		bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		bindings[0].descriptorCount = VK_BINDLESS_MAX_IMAGES;
+		bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		bindings[0].pImmutableSamplers = NULL;
+		bindings[1].binding = 1;
+		bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+		bindings[1].descriptorCount = VK_BINDLESS_NUM_SAMPLERS;
+		bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		bindings[1].pImmutableSamplers = NULL;
+
+		bindingFlags[0] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+		bindingFlags[1] = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+
+		bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+		bindingFlagsInfo.pNext = NULL;
+		bindingFlagsInfo.bindingCount = 2;
+		bindingFlagsInfo.pBindingFlags = bindingFlags;
+
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.pNext = &bindingFlagsInfo;
+		layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+		layoutInfo.bindingCount = 2;
+		layoutInfo.pBindings = bindings;
+		VK_CHECK( qvkCreateDescriptorSetLayout( vk.device, &layoutInfo, NULL, &vk.bindless_set_layout ) );
+	}
+
+	{
+		VkDescriptorPoolSize poolSizes[2];
+		VkDescriptorPoolCreateInfo poolInfo;
+		VkDescriptorSetAllocateInfo allocInfo;
+
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		poolSizes[0].descriptorCount = VK_BINDLESS_MAX_IMAGES;
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+		poolSizes[1].descriptorCount = VK_BINDLESS_NUM_SAMPLERS;
+
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.pNext = NULL;
+		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+		poolInfo.maxSets = 1;
+		poolInfo.poolSizeCount = 2;
+		poolInfo.pPoolSizes = poolSizes;
+		VK_CHECK( qvkCreateDescriptorPool( vk.device, &poolInfo, NULL, &vk.bindless_pool ) );
+
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.pNext = NULL;
+		allocInfo.descriptorPool = vk.bindless_pool;
+		allocInfo.descriptorSetCount = 1;
+		allocInfo.pSetLayouts = &vk.bindless_set_layout;
+		VK_CHECK( qvkAllocateDescriptorSets( vk.device, &allocInfo, &vk.bindless_set ) );
+	}
+
+	{
+		VkDescriptorImageInfo samplerInfo[VK_BINDLESS_NUM_SAMPLERS];
+		VkWriteDescriptorSet write;
+
+		for ( i = 0; i < VK_BINDLESS_NUM_SAMPLERS; i++ ) {
+			samplerInfo[i].sampler = vk.bindless_samplers[i];
+			samplerInfo[i].imageView = VK_NULL_HANDLE;
+			samplerInfo[i].imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		}
+
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.pNext = NULL;
+		write.dstSet = vk.bindless_set;
+		write.dstBinding = 1;
+		write.dstArrayElement = 0;
+		write.descriptorCount = VK_BINDLESS_NUM_SAMPLERS;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+		write.pImageInfo = samplerInfo;
+		write.pBufferInfo = NULL;
+		write.pTexelBufferView = NULL;
+		qvkUpdateDescriptorSets( vk.device, 1, &write, 0, NULL );
+	}
+
+	{
+		VkPushConstantRange push_range;
+		VkPipelineLayoutCreateInfo desc;
+
+		push_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		push_range.offset = 0;
+		push_range.size = 16;
+
+		desc.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		desc.pNext = NULL;
+		desc.flags = 0;
+		desc.setLayoutCount = 1;
+		desc.pSetLayouts = &vk.bindless_set_layout;
+		desc.pushConstantRangeCount = 1;
+		desc.pPushConstantRanges = &push_range;
+		VK_CHECK( qvkCreatePipelineLayout( vk.device, &desc, NULL, &vk.ui_bindless_pipeline_layout ) );
+	}
+
+	vk.bindless_num_free = VK_BINDLESS_MAX_IMAGES;
+	for ( i = 0; i < VK_BINDLESS_MAX_IMAGES; i++ ) {
+		vk.bindless_free[i] = VK_BINDLESS_MAX_IMAGES - 1 - i;
+	}
+}
+
+void vk_destroyBindlessResources( void ) {
+	int i;
+
+	if ( !vk.bindless ) {
+		return;
+	}
+
+	qvkDestroyPipelineLayout( vk.device, vk.ui_bindless_pipeline_layout, NULL );
+	qvkDestroyDescriptorPool( vk.device, vk.bindless_pool, NULL );
+	qvkDestroyDescriptorSetLayout( vk.device, vk.bindless_set_layout, NULL );
+	for ( i = 0; i < VK_BINDLESS_NUM_SAMPLERS; i++ ) {
+		qvkDestroySampler( vk.device, vk.bindless_samplers[i], NULL );
+	}
+}
+
+void vk_bindlessWriteSlot( int slot, VkImageView view ) {
+	VkDescriptorImageInfo imageInfo;
+	VkWriteDescriptorSet write;
+
+	imageInfo.sampler = VK_NULL_HANDLE;
+	imageInfo.imageView = view;
+	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	write.pNext = NULL;
+	write.dstSet = vk.bindless_set;
+	write.dstBinding = 0;
+	write.dstArrayElement = (uint32_t)slot;
+	write.descriptorCount = 1;
+	write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	write.pImageInfo = &imageInfo;
+	write.pBufferInfo = NULL;
+	write.pTexelBufferView = NULL;
+	qvkUpdateDescriptorSets( vk.device, 1, &write, 0, NULL );
+}
+
 void vk_createPipelineLayout( void ) {
 	{
 		VkDescriptorPoolSize pool_size;
@@ -542,6 +728,8 @@ static void GetSpecInfo( vk2d_spec_data_t *spec_data, VkSpecializationMapEntry s
 }
 
 static void vk_resetPipelineCache2D( void );
+static void vk_resetPipelineCache2DBindless( void );
+static void GetBindlessUIAttribs( VkVertexInputBindingDescription *binding, VkVertexInputAttributeDescription attribs[4] );
 
 void vk_create2DPipelines( void ) {
 	VkVertexInputBindingDescription binding;
@@ -559,6 +747,20 @@ void vk_create2DPipelines( void ) {
 		&binding, attribs, 3, VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_FALSE, VK_CULL_MODE_NONE );
 
 	vk_resetPipelineCache2D();
+
+	if ( vk.bindless ) {
+		VkVertexInputBindingDescription bbinding;
+		VkVertexInputAttributeDescription battribs[4];
+
+		GetBindlessUIAttribs( &bbinding, battribs );
+
+		vk.pipeline_2d_bindless_opaque = create_pipeline( vk_ui_bindless_vs, vk_ui_bindless_fs, vk.ui_bindless_pipeline_layout, NULL,
+			&bbinding, battribs, 4, VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_FALSE, VK_CULL_MODE_NONE );
+		vk.pipeline_2d_bindless_blend = create_pipeline( vk_ui_bindless_vs, vk_ui_bindless_fs, vk.ui_bindless_pipeline_layout, NULL,
+			&bbinding, battribs, 4, VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_FALSE, VK_CULL_MODE_NONE );
+
+		vk_resetPipelineCache2DBindless();
+	}
 }
 #define MAX_CACHED_2D_PIPELINES 16
 typedef struct {
@@ -621,10 +823,91 @@ VkPipeline vk_getPipeline2D( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBle
 	return s_cachedPipelines2D[s_numCachedPipelines2D++];
 }
 
+static void GetBindlessUIAttribs( VkVertexInputBindingDescription *binding, VkVertexInputAttributeDescription attribs[4] ) {
+	binding->binding = 0;
+	binding->stride = sizeof( vk2dBindless_vertex_t );
+	binding->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	attribs[0].location = 0;
+	attribs[0].binding = 0;
+	attribs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attribs[0].offset = offsetof( vk2dBindless_vertex_t, pos );
+	attribs[1].location = 1;
+	attribs[1].binding = 0;
+	attribs[1].format = VK_FORMAT_R8G8B8A8_UNORM;
+	attribs[1].offset = offsetof( vk2dBindless_vertex_t, color );
+	attribs[2].location = 2;
+	attribs[2].binding = 0;
+	attribs[2].format = VK_FORMAT_R32G32_SFLOAT;
+	attribs[2].offset = offsetof( vk2dBindless_vertex_t, uv );
+	attribs[3].location = 3;
+	attribs[3].binding = 0;
+	attribs[3].format = VK_FORMAT_R32_UINT;
+	attribs[3].offset = offsetof( vk2dBindless_vertex_t, texture );
+}
+
+#define MAX_CACHED_2D_BINDLESS_PIPELINES 16
+static cachedPipeline2DKey_t s_cachedPipeline2DBindlessKeys[MAX_CACHED_2D_BINDLESS_PIPELINES];
+static VkPipeline s_cachedPipelines2DBindless[MAX_CACHED_2D_BINDLESS_PIPELINES];
+static int s_numCachedPipelines2DBindless;
+
+static void vk_resetPipelineCache2DBindless( void ) {
+	s_numCachedPipelines2DBindless = 0;
+}
+
+static void vk_destroyPipelineCache2DBindless( void ) {
+	int i;
+	for ( i = 0; i < s_numCachedPipelines2DBindless; i++ ) {
+		qvkDestroyPipeline( vk.device, s_cachedPipelines2DBindless[i], NULL );
+	}
+	s_numCachedPipelines2DBindless = 0;
+}
+
+VkPipeline vk_getPipeline2DBindless( VkBool32 blendEnable, VkBlendFactor srcBlend, VkBlendFactor dstBlend ) {
+	VkVertexInputBindingDescription binding;
+	VkVertexInputAttributeDescription attribs[4];
+	int i;
+
+	if ( !blendEnable ) {
+		return vk.pipeline_2d_bindless_opaque;
+	}
+	if ( srcBlend == VK_BLEND_FACTOR_SRC_ALPHA && dstBlend == VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA ) {
+		return vk.pipeline_2d_bindless_blend;
+	}
+
+	for ( i = 0; i < s_numCachedPipelines2DBindless; i++ ) {
+		const cachedPipeline2DKey_t *key = &s_cachedPipeline2DBindlessKeys[i];
+		if ( key->blendEnable == blendEnable && key->srcBlend == srcBlend && key->dstBlend == dstBlend ) {
+			return s_cachedPipelines2DBindless[i];
+		}
+	}
+
+	if ( s_numCachedPipelines2DBindless >= MAX_CACHED_2D_BINDLESS_PIPELINES ) {
+		ri.Printf( PRINT_WARNING, "MAX_CACHED_2D_BINDLESS_PIPELINES hit, falling back to the default bindless 2D blend pipeline\n" );
+		return vk.pipeline_2d_bindless_blend;
+	}
+
+	GetBindlessUIAttribs( &binding, attribs );
+
+	s_cachedPipeline2DBindlessKeys[s_numCachedPipelines2DBindless].blendEnable = blendEnable;
+	s_cachedPipeline2DBindlessKeys[s_numCachedPipelines2DBindless].srcBlend = srcBlend;
+	s_cachedPipeline2DBindlessKeys[s_numCachedPipelines2DBindless].dstBlend = dstBlend;
+	s_cachedPipelines2DBindless[s_numCachedPipelines2DBindless] = create_pipeline( vk_ui_bindless_vs, vk_ui_bindless_fs, vk.ui_bindless_pipeline_layout, NULL,
+		&binding, attribs, 4, blendEnable, srcBlend, dstBlend, VK_FALSE, VK_CULL_MODE_NONE );
+
+	return s_cachedPipelines2DBindless[s_numCachedPipelines2DBindless++];
+}
+
 void vk_destroy2DPipelines( void ) {
 	vk_destroyPipelineCache2D();
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_opaque, NULL );
 	qvkDestroyPipeline( vk.device, vk.pipeline_2d_blend, NULL );
+
+	if ( vk.bindless ) {
+		vk_destroyPipelineCache2DBindless();
+		qvkDestroyPipeline( vk.device, vk.pipeline_2d_bindless_opaque, NULL );
+		qvkDestroyPipeline( vk.device, vk.pipeline_2d_bindless_blend, NULL );
+	}
 }
 
 // Matches code/renderer's GL_Cull given this renderer's Y-flip + CLOCKWISE frontFace (no mirror flip: no mirrors yet).
